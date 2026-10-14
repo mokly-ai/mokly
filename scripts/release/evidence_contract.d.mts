@@ -88,8 +88,7 @@ export function classifyEvidence(
     taggedCommit: string;
     taggedTree: string;
     evidenceTree: string;
-    liveUnitFiles: readonly string[];
-    liveBrowserFiles: readonly string[];
+    liveNodeFiles: readonly string[];
   },
   validateReports: (
     reports: readonly unknown[],

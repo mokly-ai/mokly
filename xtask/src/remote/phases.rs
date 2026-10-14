@@ -22,7 +22,7 @@ impl DefaultRemoteRunner {
     ) -> Result<()> {
         let dependencies = &self.dependencies;
         let results = thread::scope(|scope| {
-            let workers: Vec<_> = (0..11)
+            let workers: Vec<_> = (0..2)
                 .map(|_| {
                     scope.spawn(|| {
                         if dependencies.interrupt.requested() {

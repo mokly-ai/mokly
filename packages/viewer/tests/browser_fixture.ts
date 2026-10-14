@@ -3,18 +3,16 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import { crossOriginFixture } from "../../../tests/browser/frame_adapter_fixture.js";
 import { renderViewer } from "../dist/server.js";
 import type {
   CatalogueComponent,
   CatalogueComponentVariant,
 } from "../src/catalogue/types.js";
 
-export async function viewerFixture(
-  extraConfig = "",
-  options?: Parameters<typeof crossOriginFixture>[0],
-) {
-  const fixture = await crossOriginFixture(options, extraConfig);
+import { crossOriginFixture } from "./standalone_fixture.js";
+
+export async function viewerFixture() {
+  const fixture = await crossOriginFixture();
   await build({
     entryPoints: [path.resolve("packages/viewer/tests/browser_entry.tsx")],
     outfile: path.join(fixture.root, "viewer.js"),
@@ -55,7 +53,7 @@ export async function viewerHydrationFixture() {
     logLevel: "silent",
   });
   const defaultSelection = {
-    screenPath: "action",
+    screenPath: "components/action",
     view: "all" as const,
     viewport: "mobile" as const,
     colorScheme: "light" as const,
@@ -65,11 +63,11 @@ export async function viewerHydrationFixture() {
   const catalogue = structuredClone(fixture.catalogue);
   const component = catalogue.components.find(
     (entry): entry is CatalogueComponent =>
-      entry.path === "action" && !("variantOf" in entry),
+      entry.path === "components/action" && !("variantOf" in entry),
   );
   const variant = catalogue.components.find(
     (entry): entry is CatalogueComponentVariant =>
-      "variantOf" in entry && entry.variantOf === "action",
+      "variantOf" in entry && entry.variantOf === "components/action",
   );
   const control = component?.controls.label;
   const schema = component?.propSchema.properties.label;

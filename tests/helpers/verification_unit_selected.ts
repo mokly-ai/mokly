@@ -40,7 +40,7 @@ export async function runSelected(
   report?: string,
 ): Promise<{ stdout: string; stderr: string }> {
   try {
-    return await runWrapper(harness.root, "run-unit-dev.mjs", {
+    return await runWrapper(harness.root, "run-viewer.mjs", {
       args,
       cwd: path.join(harness.root, "packages/viewer"),
       environment: {

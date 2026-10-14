@@ -59,10 +59,8 @@ It replaces any saved login for the same organization.
 The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
 
 [`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
-executes the lockfile stamp step and the environment step on Linux hosts with
-controlled inputs and asserts the written files. The environment run redirects
-`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
-pins are review-owned literals.
+executes the lockfile stamp step on Linux hosts with controlled inputs and
+asserts the written file. Step order and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 

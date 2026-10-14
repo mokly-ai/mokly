@@ -115,14 +115,14 @@ pub(super) fn client(
                 }
                 return Ok(result);
             }
-            assert_eq!(probes.load(Ordering::SeqCst), 11);
+            assert_eq!(probes.load(Ordering::SeqCst), 2);
             assert!(
                 log.unwrap()
                     .to_string_lossy()
                     .contains("20261006T120000Z-42")
             );
             run_events.lock().unwrap().push(format!("suite:{id}"));
-            if case == Case::PanicSuites && id == "tbx_0" {
+            if case == Case::PanicSuites && command.contains("--suite repository") {
                 panic!("suite dependency failed");
             }
             if matches!(case, Case::InterruptSuites | Case::InterruptCleanupSuites) {
@@ -149,7 +149,7 @@ pub(super) fn client(
                 .unwrap()
                 .push(format!("download:{id}"));
             assert!(target.to_string_lossy().contains("20261006T120000Z-42"));
-            if case == Case::Download && source.ends_with("unit-1-of-4.json") {
+            if case == Case::Download && source.ends_with("viewer.json") {
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),

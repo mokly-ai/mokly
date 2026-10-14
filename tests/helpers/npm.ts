@@ -1,30 +1,38 @@
 import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
-
-import { NodeBaselineExecutableResolver } from "../../dist/baseline/executable.js";
 
 const execute = promisify(execFile);
 
-/** Run npm without a shell, using the repository's Windows-safe resolver. */
+/** Run npm with Node when its CLI path is available, including on Windows. */
 export async function runNpm(
   args: readonly string[],
-  options: {
-    cwd: string;
-    env?: Readonly<Record<string, string | undefined>>;
-  },
+  options: { cwd: string; env?: Readonly<Record<string, string | undefined>> },
 ): Promise<{ stdout: string; stderr: string }> {
-  const env = Object.fromEntries(
-    Object.entries(options.env ?? process.env).filter(
-      (entry): entry is [string, string] => entry[1] !== undefined,
+  const environment = options.env ?? process.env;
+  const candidates = [
+    environment.npm_execpath,
+    path.resolve(
+      path.dirname(process.execPath),
+      "../lib/node_modules/npm/bin/npm-cli.js",
     ),
-  );
-  const command = await new NodeBaselineExecutableResolver().resolve({
-    argv: ["npm", ...args],
-    cwd: options.cwd,
-    env,
-  });
-  return await execute(command[0]!, command.slice(1), {
-    cwd: options.cwd,
-    env,
-  });
+    path.resolve(
+      path.dirname(process.execPath),
+      "node_modules/npm/bin/npm-cli.js",
+    ),
+  ];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      await fs.access(candidate);
+    } catch {
+      continue;
+    }
+    return await execute(process.execPath, [candidate, ...args], {
+      cwd: options.cwd,
+      env: environment,
+    });
+  }
+  return await execute("npm", args, { cwd: options.cwd, env: environment });
 }

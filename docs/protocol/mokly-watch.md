@@ -125,9 +125,8 @@ system; exhausting the range or another bind error fails with
 `server-failed` without leaking watchers. The resolved port stays stable for
 the life of the process.
 
-The repository's `npm run dev` command runs watched Serve on
-`examples/basic/mokly.config.json`; arguments after `--` are forwarded to Serve,
-for example `npm run dev -- --port 0`.
+Run watched Serve for the example with
+`npx mokly serve --config examples/basic/mokly.config.json --port 0`.
 
 Rebuild actions, configuration changes, Git observation, publication, and
 shutdown continue in [Watch Runtime And Recovery](./mokly-watch-runtime.md).

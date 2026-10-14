@@ -4,10 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { validateCiReports, readReports } from "../verification/aggregate.mjs";
-import {
-  discoverBrowserFiles,
-  discoverUnitFiles,
-} from "../verification/evidence.mjs";
+import { discoverNodeFiles } from "../verification/evidence.mjs";
 
 import {
   classifyCandidate,
@@ -90,8 +87,7 @@ export async function runReleaseEvidence(options = {}) {
       repositoryRoot,
       validateReports: options.validateReports ?? validateCiReports,
       read: options.readReports ?? readReports,
-      discoverUnit: options.discoverUnitFiles ?? discoverUnitFiles,
-      discoverBrowser: options.discoverBrowserFiles ?? discoverBrowserFiles,
+      discoverNode: options.discoverNodeFiles ?? discoverNodeFiles,
     });
     if (result.outcome === "applicable") {
       last = result;
@@ -180,10 +176,7 @@ async function evaluateCandidate(input) {
     if (tree.outcome !== "applicable") return tree;
     evidenceTree = tree.value;
   }
-  const [liveUnitFiles, liveBrowserFiles] = await Promise.all([
-    input.discoverUnit(input.repositoryRoot),
-    input.discoverBrowser(input.repositoryRoot),
-  ]);
+  const liveNodeFiles = await input.discoverNode(input.repositoryRoot);
   return classifyEvidence(
     {
       run: input.run,
@@ -193,8 +186,7 @@ async function evaluateCandidate(input) {
       taggedCommit: input.identity.taggedCommit,
       taggedTree: input.identity.taggedTree,
       evidenceTree,
-      liveUnitFiles,
-      liveBrowserFiles,
+      liveNodeFiles,
     },
     input.validateReports,
   );

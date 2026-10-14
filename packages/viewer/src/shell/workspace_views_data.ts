@@ -37,7 +37,7 @@ const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
  * The views this entry changed in, in canonical order. `variantPath` selects a
  * component's saved variant; a screen ignores it.
  */
-export function changedViews(
+function changedViews(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV7 | undefined,
@@ -51,7 +51,7 @@ export function changedViews(
 }
 
 /** Every known state for one screen or component saved variant. */
-export function viewStates(
+function viewStates(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV7 | undefined,

@@ -40,7 +40,7 @@ test("release evidence constants match the CI job and artifact namespace", async
   const workflow = parse(source) as Workflow;
   assert.equal(workflow.jobs.required?.name, REQUIRED_CI_JOB_NAME);
   const download = workflow.jobs.required?.steps.find(
-    (step) => step.name === "Download shard evidence",
+    (step) => step.name === "Download viewer evidence",
   );
   assert.equal(download?.with?.pattern, "verification-*");
   const profile = workflow.jobs.repository?.steps.find(
@@ -50,22 +50,19 @@ test("release evidence constants match the CI job and artifact namespace", async
     String(profile?.run),
     /verification-runtimes=node-22\.14\.0,node-24/,
   );
-  for (const jobName of ["unit", "browser", "hydration"]) {
+  for (const jobName of ["viewer"]) {
     const upload = workflow.jobs[jobName]?.steps.find((step) =>
       step.name?.startsWith("Retain "),
     );
     assert.equal(typeof upload?.with?.name, "string");
     assert.match(String(upload?.with?.name), VERIFICATION_ARTIFACT_PATTERN);
   }
-  const expectedReports = ["unit", "browser", "hydration"].reduce(
-    (total, jobName) => {
-      const matrix = workflow.jobs[jobName]?.strategy?.matrix;
-      return (
-        total +
-        RELEASE_VERIFICATION_RUNTIMES.length * (matrix?.shard?.length ?? 1)
-      );
-    },
-    0,
-  );
+  const expectedReports = ["viewer"].reduce((total, jobName) => {
+    const matrix = workflow.jobs[jobName]?.strategy?.matrix;
+    return (
+      total +
+      RELEASE_VERIFICATION_RUNTIMES.length * (matrix?.shard?.length ?? 1)
+    );
+  }, 0);
   assert.equal(expectedReports, VERIFICATION_REPORT_COUNT);
 });

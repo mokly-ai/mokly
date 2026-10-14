@@ -1,8 +1,7 @@
 # Published frame inspector
 
 The inspector is a dependency-free browser IIFE for the optional cross-origin
-frame adapter. The viewer package build emits `dist/browser/inspector.js`, and the root
-`scripts/package-check.mjs` enforces its 9,216-byte minified, uncompressed budget.
+frame adapter. The viewer package build emits `dist/browser/inspector.js`, and `packages/viewer/tests/inspector_budget.test.ts` enforces its 9,216-byte minified, uncompressed budget.
 Serve and export publish it at `/mokly-viewer/client/inspector.js`.
 The build uses esbuild, then [`scripts/inspector-pool.mjs`](../../scripts/inspector-pool.mjs) shares repeated strings
 and native references before Terser minification. The output is ordinary
@@ -55,16 +54,9 @@ minification.
 
 ```bash
 npm run build
-npm run package:check
-node --import tsx --test tests/inspector*.test.ts
-npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adapter_security.spec.ts
+cargo xtask check --suite viewer
 ```
 
 See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter.md),
 [published inspector contract](../../../../docs/protocol/mokly-published-inspector.md),
-[client adapters](../client/README.md), and [publication boundary](../../../../src/browse/README.md).
-
-## Delivery Status
-
-The completed component explorer plan
-records the measured inspector size and alternatives.
+[client adapters](../client/README.md), and [publication boundary](../../../../docs/protocol/mokly-export-delivery.md).

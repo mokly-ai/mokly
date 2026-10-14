@@ -103,6 +103,7 @@ test("local documentation and plan links resolve and anchors match GitHub headin
         .split(path.sep)
         .join("/");
       if (target.startsWith("..")) continue;
+      if (target.startsWith("examples/basic/mokly-generated/")) continue;
       if ((await fs.stat(candidate).catch(() => undefined))?.isDirectory()) {
         if (!hash) continue;
         target = path.posix.join(target, "README.md");

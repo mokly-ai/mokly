@@ -7,7 +7,7 @@ package-lock.json
 test-results
 playwright-report
 
-# Canonical protocol bytes are verified by catalogue conformance tests.
+# Protocol fixtures keep their canonical bytes.
 docs/protocol/fixtures/catalogue-v4.json
 docs/protocol/fixtures/catalogue-v5.json
 docs/protocol/fixtures/catalogue-v6.json

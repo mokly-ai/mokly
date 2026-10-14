@@ -4,7 +4,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Deployment Contract
 
-`.github/workflows/preview.yml` deploys a browsable copy of the example
+The repository preview workflow deploys a browsable copy of the example
 catalogue under `examples/basic` to the direct-upload Cloudflare Pages project
 `mokabook`. A `main` push updates the production deployment at
 `https://mokabook.pages.dev`. Same-repository pull requests, except Release

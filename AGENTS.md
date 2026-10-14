@@ -77,7 +77,7 @@ the rule. Rules for one application, package, or feature live in the
 - Mockup check, after you change an example entry, the renderer, the
   configuration, or a configured style: `npm run build`, then
   `npx mokly build --config examples/basic/mokly.config.json --strict --out .context/example`.
-  Then smoke-test the changed pages through `npm run dev`.
+  Then smoke-test the changed pages through `npx mokly serve`.
 
 ## Repository rules
 

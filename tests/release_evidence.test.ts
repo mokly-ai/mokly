@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -13,16 +12,20 @@ import {
 import { validateCiReports } from "../scripts/verification/aggregate.mjs";
 
 import {
-  browserInventory,
   gitExecutor,
   releaseReports,
   releaseRun,
   requiredJobs,
   TAG_COMMIT,
   TAG_TREE,
-  unitInventory,
+  nodeInventory,
   verificationArtifacts,
 } from "./helpers/release_evidence.js";
+import {
+  evidenceEnvironment,
+  githubFixture,
+  temporaryRoot,
+} from "./helpers/release_evidence_runtime.js";
 
 test("release verification mode is evidence by default and complete only by dispatch", () => {
   assert.equal(
@@ -104,8 +107,7 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
     taggedCommit: TAG_COMMIT,
     taggedTree: TAG_TREE,
     evidenceTree: TAG_TREE,
-    liveUnitFiles: unitInventory(reports),
-    liveBrowserFiles: browserInventory(reports),
+    liveNodeFiles: nodeInventory(reports),
   };
   assert.equal(classifyEvidence(base, validateCiReports).outcome, "applicable");
   assert.equal(
@@ -124,7 +126,7 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
   );
   assert.equal(
     classifyEvidence(
-      { ...base, artifacts: verificationArtifacts().slice(0, 8) },
+      { ...base, artifacts: verificationArtifacts().slice(0, 1) },
       validateCiReports,
     ).outcome,
     "absent",
@@ -166,14 +168,7 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
   );
   assert.equal(
     classifyEvidence(
-      { ...base, liveUnitFiles: ["tests/missing.test.ts"] },
-      validateCiReports,
-    ).outcome,
-    "invalid",
-  );
-  assert.equal(
-    classifyEvidence(
-      { ...base, liveBrowserFiles: ["tests/browser/missing.spec.ts"] },
+      { ...base, liveNodeFiles: ["tests/missing.test.ts"] },
       validateCiReports,
     ).outcome,
     "invalid",
@@ -191,8 +186,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     execute: gitExecutor(),
     createGithub: () => githubFixture(run),
     readReports: async () => reports,
-    discoverUnitFiles: async () => unitInventory(reports),
-    discoverBrowserFiles: async () => browserInventory(reports),
+    discoverNodeFiles: async () => nodeInventory(reports),
   });
   assert.deepEqual(record, {
     mode: "evidence",
@@ -202,7 +196,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     selectedRunId: run.id,
     selectedRunUrl: run.html_url,
     evidenceCommit: TAG_COMMIT,
-    reportCount: 18,
+    reportCount: 2,
     reason: `run ${run.id} proves tagged tree ${TAG_TREE}`,
   });
   assert.deepEqual(
@@ -253,8 +247,7 @@ test("invalid evidence records complete output and exits non-zero", async (t) =>
           execute: gitExecutor(),
           createGithub: () => githubFixture(releaseRun()),
           readReports: async () => reports,
-          discoverUnitFiles: async () => unitInventory(),
-          discoverBrowserFiles: async () => browserInventory(),
+          discoverNodeFiles: async () => nodeInventory(),
         }),
         item.pattern,
       );
@@ -288,42 +281,3 @@ test("complete mode performs no GitHub requests", async (t) => {
   assert.equal(record.mode, "complete");
   assert.equal(record.outcome, "complete");
 });
-
-function githubFixture(run: ReturnType<typeof releaseRun>) {
-  return {
-    listPulls: async () => ({ outcome: "applicable" as const, value: [] }),
-    listRuns: async (event: string) => ({
-      outcome: "applicable" as const,
-      value: event === "push" ? [run] : [],
-    }),
-    listJobs: async () => ({
-      outcome: "applicable" as const,
-      value: requiredJobs(),
-    }),
-    listArtifacts: async () => ({
-      outcome: "applicable" as const,
-      value: verificationArtifacts(),
-    }),
-    downloadArtifact: async () => ({ outcome: "applicable" as const }),
-    readCommitTree: async () => ({
-      outcome: "applicable" as const,
-      value: TAG_TREE,
-    }),
-  };
-}
-
-function evidenceEnvironment(output: string) {
-  return {
-    RELEASE_VERIFICATION: "evidence",
-    GITHUB_TOKEN: "token",
-    GITHUB_REPOSITORY: "mokly-ai/mokly",
-    GITHUB_SERVER_URL: "https://github.com",
-    GITHUB_OUTPUT: output,
-  };
-}
-
-async function temporaryRoot(t: test.TestContext): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-evidence-"));
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  return root;
-}

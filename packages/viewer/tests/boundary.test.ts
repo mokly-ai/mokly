@@ -35,10 +35,7 @@ test("React entry bundles for browsers without CLI, server or Node code", async 
     );
 });
 test("standalone browser modules isolate React to the hydration bundle", async () => {
-  const directories = [
-    path.join(root, "dist/browser"),
-    path.resolve(root, "../../dist/browser"),
-  ];
+  const directories = [path.join(root, "dist/browser")];
   let hydrationBundles = 0;
   for (const directory of directories) {
     for (const file of await fs.readdir(directory)) {

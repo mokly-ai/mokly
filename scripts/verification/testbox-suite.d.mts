@@ -1,8 +1,5 @@
-import type { VerificationShard } from "./evidence.mjs";
-
 /** The independently executable repository suites. */
-export type TestboxSuite =
-  "repository" | "package" | "unit" | "browser" | "hydration";
+export type TestboxSuite = "repository" | "viewer";
 
 /** Workspace audit policy forwarded to the repository suite. */
 export type TestboxDependencyAudit = "baseline" | "strict";
@@ -11,7 +8,6 @@ export type TestboxDependencyAudit = "baseline" | "strict";
 export interface TestboxArguments {
   expected: string;
   suite: TestboxSuite;
-  shard?: VerificationShard;
   dependencyAudit?: TestboxDependencyAudit;
   commandName: string;
 }

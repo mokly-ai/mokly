@@ -521,14 +521,14 @@ merges; the freeze applies to it from 2026-10-12.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
 - [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
-- [ ] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
+- [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
       captured scenario to the JSON table that the rebuild procedures define.
-- [ ] Capture reference outputs with the old CLI under
+- [x] Capture reference outputs with the old CLI under
       `.context/rust-rebuild/reference/`: the example catalogue, the large
       fixture's four scenarios, and the moved, removed, Markdown document,
       ignore-region, and renderer-change states; run the behaviour-table
       script over them.
-- [ ] Delete, with the recorded approval: `src/`; the backend tests under
+- [x] Delete, with the recorded approval: `src/`; the backend tests under
       `tests/` except the documentation, guide, and workflow policy tests that
       still apply; `scripts/package`, `scripts/preview`, `scripts/large`, and
       the verification runners that drive the old CLI; the
@@ -536,22 +536,24 @@ merges; the freeze applies to it from 2026-10-12.
       `files`, and publish configuration.
 - [x] Repoint or remove every live reference to the native engine contract
       before the teardown deletes `docs/protocol/mokly-native-engine.md`.
-- [ ] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
+- [x] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
       the length audits, Rust formatting, Clippy, tests, and the file-length
       audit; a viewer suite runs the viewer typecheck and tests and the tooling tests
       under `tests/`; the package,
       unit, browser, and hydration suites and their remote shards are removed
       until later milestones add new ones.
-- [ ] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
+- [x] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
       `.release-please-manifest.json` for the reduced tree; keep the viewer
       release path.
 - [x] Update `AGENTS.md` for the reduced tree: the commands, the repository
       rules, and the moment to read the `rust` skill, which then covers
       `crates/` as well as `xtask/`. Done on 2026-10-14 under Decision 38,
       ahead of the teardown.
-- [ ] Run `cargo xtask check` on the reduced tree until it passes.
-- [ ] Record the deleted top-level paths in the commit body.
-- [ ] Commit.
+- [x] Run `cargo xtask check` on the reduced tree until it passes.
+- [x] Record the deleted top-level paths in the commit body.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/reference/README.md`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m2.md`.
 
 ## Milestone 3: Workspace skeleton and native packaging
 
@@ -691,6 +693,8 @@ renders again.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
+- [ ] Update the example README's generated links to the static build routes
+      and validate them through the example smoke.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts

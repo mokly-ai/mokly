@@ -25,7 +25,7 @@ fn failed_cancellation_of_a_completed_run_prints_information() {
             .filter(|event| *event
                 == "message:information: GitHub run=123 already ended; cancellation not needed")
             .count(),
-        11
+        2
     );
 }
 
@@ -43,14 +43,14 @@ fn failed_cancellation_reads_the_run_state_before_warning() {
             .iter()
             .filter(|event| *event == "run-state:123")
             .count(),
-        11
+        2
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.contains("warning: cancellation for 123 failed:"))
             .count(),
-        11
+        2
     );
 }
 
@@ -68,13 +68,13 @@ fn a_failed_run_state_read_keeps_the_cancellation_warning() {
             .iter()
             .filter(|event| *event == "run-state:123")
             .count(),
-        11
+        2
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.contains("warning: cancellation for 123 failed:"))
             .count(),
-        11
+        2
     );
 }

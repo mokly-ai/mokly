@@ -55,32 +55,14 @@ for (const filePath of testPaths) {
 
 for (const filePath of [
   "tests/helpers/durations.ts",
-  "src/example.ts",
-  "scripts/large/example.mjs",
+  "packages/viewer/src/example.ts",
+  "scripts/rebuild/example.mjs",
 ]) {
   test(`timing lint allows clock subtraction outside its scope in ${filePath}`, async () => {
     for (const expression of elapsedExpressions) {
       const messages = await restrictedSyntaxMessages(expression, filePath);
       assert.deepEqual(messages, [], `${filePath}: ${expression}`);
     }
-  });
-}
-
-for (const filePath of [
-  "src/config/example.ts",
-  "src/build/discovery.ts",
-  "src/build/styles/example.ts",
-  "src/build/source_inventory.ts",
-  "src/build/package_owned_paths.ts",
-]) {
-  test(`timing lint preserves the localeCompare restriction in ${filePath}`, async () => {
-    const messages = await restrictedSyntaxMessages(
-      '"first".localeCompare("second")',
-      filePath,
-    );
-    assert.equal(messages.length, 1, filePath);
-    assert.equal(messages[0]!.severity, 2, filePath);
-    assert.match(messages[0]!.message, /compareCodeUnits/u);
   });
 }
 

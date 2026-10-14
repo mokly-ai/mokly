@@ -49,9 +49,7 @@ bar, supplied-input pairing, removed tree rows, workspace keys, breadcrumbs,
 details and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
 fails when a shell or viewer module outside the lookup reads `previousPaths`,
-follows a `variantOf`, or case-folds a path. The shared Git cases in
-[`branch_point_fixture.ts`](../../../../tests/helpers/branch_point_fixture.ts)
-are also accepted by the browser branch hosts.
+follows a `variantOf`, or case-folds a path.
 
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
