@@ -90,7 +90,7 @@ the browser, so an immediate interrupt closes Serve cleanly.
 
 ```text
   mokly 0.10.0                          comparing against origin/main
-  examples/basic/mokly.config.ts
+  examples/basic/mokly.config.json
 
   ┌─────────────────────────┐
   │  http://127.0.0.1:4175  │
@@ -130,7 +130,7 @@ Watched actions use one durable line after the action settles:
 ```text
   12:04:31  ↻ specs/home.screen.html         rebuilt                   312ms
   12:04:40  ⟳ styles/theme.css               reloaded
-  12:05:02  ↺ mokly.config.ts                config reloaded           1.8s
+  12:05:02  ↺ mokly.config.json                config reloaded           1.8s
   12:05:20  ⟲ origin/main moved              comparing again
 ```
 

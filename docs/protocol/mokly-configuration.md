@@ -9,14 +9,18 @@ resolves, and the validation that rejects an unsafe configuration.
 ## Configuration Discovery
 
 Mokly searches upward from the current working directory for
-`mokly.config.ts`, `mokly.config.mts`, `mokly.config.js`, or
-`mokly.config.mjs`, unless `--config` is supplied. Discovery stops at the
-filesystem root and reports every filename it attempted when none is found.
+`mokly.config.json`, unless `--config` names another JSON file. Discovery
+stops at the filesystem root and reports every directory it searched when
+none is found. The configuration is data: the core reads it without Node.js,
+and no sidecar starts for it.
 
 The config's filesystem paths resolve relative to the config file, never
 relative to the installed package or a transient npx cache.
-Repository-matching globs operate on repo-relative POSIX paths. `defineConfig`
-validates and types the following contract:
+Repository-matching globs operate on repo-relative POSIX paths. The core validates
+the file against the JSON Schema that the package ships as
+`@mokly/mokly/config.schema.json`; a `$schema` property that names it gives
+editors completion and inline validation. The schema and the core accept the
+following contract:
 
 - `roots`: the directories Mokly scans for HTML screens, components, pages,
   use cases, Markdown documents, entry modules, and stories files, each with
@@ -56,7 +60,7 @@ The normative configuration shape is:
 ```ts
 type ColorScheme = "dark" | "light";
 
-type SharedStylesheet = string | typeof componentStylesheets;
+type SharedStylesheet = string; // a stylesheet, or the "$componentStylesheets" token
 
 type ModuleLoader =
   | "base64"
@@ -123,8 +127,9 @@ defaults to `["light"]` and normalizes to light-first order.
 Shared `stylesheets` apply to every screen and component view of a matching
 route, with a matching `lightStylesheets` or `darkStylesheets` list appended
 in declaration order; pages link their own CSS. The shared list may contain
-the exported `componentStylesheets` symbol once; scheme-specific lists cannot
-contain it. It places validated component-declared CSS links at that point; by
+the `$componentStylesheets` token once; scheme-specific lists cannot contain
+it. A `$`-prefixed string in a stylesheet list is a token, and this is the
+only token. It places validated component-declared CSS links at that point; by
 default they follow shared and precede scheme-specific links. The
 [component stylesheets contract](./mokly-component-stylesheets.md) owns the
 validation and placement rules, and
@@ -141,6 +146,8 @@ naming the setting and the path:
 - path traversal, and a `dir`, `renderer`, `postcss`, package root, or local
   stylesheet outside `repoRoot`, including through symlinks;
 - duplicate stylesheet `match` values and duplicate watch paths;
+- a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
+  token in a scheme-specific list or more than once;
 - a watch path that cannot be classified safely;
 - a `moduleResolution` value outside the
   [module resolution contract](./mokly-configuration-discovery.md#module-resolution).
@@ -161,7 +168,7 @@ as `git rev-parse --show-toplevel` run from that directory. A nested root fails
 with `config-invalid`, naming both paths. This validation belongs to the Git
 boundary, not to unconditional config loading: Serve without a comparison and
 `build` without Changes work without Git, and an explicit comparison request
-keeps the typed configuration error. Missing refs or history keep their
+keeps the configuration error. Missing refs or history keep their
 command-specific errors. `publish` requires a clean checkout under the
 [upload contract](./mokly-upload.md). Serve, `build`, and Changes validate
 before their first Git read.

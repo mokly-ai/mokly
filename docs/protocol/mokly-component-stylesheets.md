@@ -65,31 +65,24 @@ follows the [graceful-handling rule](./README.md#graceful-handling).
 
 ## Configured Placement Marker
 
-The package root also exports `componentStylesheets`, a singleton opaque
-`unique symbol` value backed by
-`Symbol.for("@mokly/mokly/componentStylesheets")`, so separately bundled
-config and consumer modules share its identity. Configuration loading
-replaces the marker with its position in the shared list before the resolved
-configuration reaches the core. It is a position marker, not a filename, CSS
-URL, or renderer input. A literal string with the same spelling is not the
-marker.
+The shared `stylesheets` list of a configured rule may contain the token
+`$componentStylesheets` once. It is a position marker, not a filename, CSS
+URL, or renderer input; a `$`-prefixed string in a stylesheet list is
+reserved for tokens, and this is the only token.
 
-```ts
-import { componentStylesheets, defineConfig } from "@mokly/mokly";
-
-export default defineConfig({
-  stylesheets: [
+```json
+{
+  "stylesheets": [
     {
-      match: "design/**",
-      stylesheets: ["design/base.css", componentStylesheets],
-      lightStylesheets: ["design/light.css"],
-    },
-  ],
-});
+      "match": "design/**",
+      "stylesheets": ["design/base.css", "$componentStylesheets"],
+      "lightStylesheets": ["design/light.css"]
+    }
+  ]
+}
 ```
 
-The shared `stylesheets` list of a configured rule accepts public or HTTP(S)
-strings or that symbol, at most once. `lightStylesheets` and
+The shared `stylesheets` list of a configured rule accepts public or HTTP(S) strings or that token, at most once. `lightStylesheets` and
 `darkStylesheets` accept strings only; a marker there, a second marker in the
 shared list, or a marker in any other configuration position fails loading
 with `config-invalid`. Matching route rules stay unique. With a marker, the

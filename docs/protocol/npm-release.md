@@ -17,7 +17,8 @@ One release publishes seven packages from one reviewed commit:
 `package.json` describes the public ESM package `@mokly/mokly`: managed
 version, MIT license, Mokly authorship, exact repository metadata, Node range
 `>=22.14.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
-its types, and the file allowlist. It lists the five platform packages as exact
+its types, the configuration JSON Schema at `config.schema.json`, and the file
+allowlist. It lists the five platform packages as exact
 optional dependencies at its own version and `@mokly/viewer` as an exact
 dependency; React and React DOM are peer dependencies for React authoring only.
 The shim resolves the platform package for the host, rejects a version other

@@ -74,12 +74,10 @@ npm install --save-dev @mokly/mokly
 
 ### 2. Configure the catalogue
 
-Create `mokly.config.ts` in your repository root:
+Create `mokly.config.json` in your repository root:
 
-```ts
-import { defineConfig } from "@mokly/mokly";
-
-export default defineConfig({});
+```json
+{ "$schema": "./node_modules/@mokly/mokly/config.schema.json" }
 ```
 
 Paths are relative to the configuration file. Mokly reads the `specs`
@@ -145,7 +143,7 @@ When the first screen is working, continue with the guides for
 ## Command line
 
 Run the repository-local executable with `npx --no-install mokly`. Options
-follow the command, for example `mokly build --config tools/mokly.config.ts`.
+follow the command, for example `mokly build --config tools/mokly.config.json`.
 
 | Command                    | What it does                                                       |
 | -------------------------- | ------------------------------------------------------------------ |

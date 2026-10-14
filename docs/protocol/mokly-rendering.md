@@ -41,9 +41,8 @@ tokens, or app components. `@mokly/mokly` declares `react` and `react-dom`
 resolves both from the consumer and bundles every entry module, stories file,
 and the renderer module into one graph with one React instance, under the
 [bundling rules](./mokly-sidecar.md#bundling). The same holds when Mokly is
-installed locally and when npx fetches it into its cache; a configuration
-module's imports resolve from the configuration directory, never from the
-temporary directory or the npx cache.
+installed locally and when npx fetches it into its cache; the `renderer` and `postcss` modules resolve from the configuration
+directory, never from the temporary directory or the npx cache.
 
 ## Renderer Module
 

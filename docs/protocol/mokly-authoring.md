@@ -12,10 +12,8 @@ Markdown documents are files under the
 JavaScript form is the root export of `@mokly/mokly`, which supplies typed,
 documented helpers:
 
-- `defineConfig`;
 - `defineScreen`, `definePage`, `defineUseCase`, and `defineFolder`;
 - `defineComponent` and its schema-derived props, variant, and control types;
-- `componentStylesheets`, the configured-stylesheet position marker;
 - `mockLink` and `MockLink` for path-addressed links;
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
 

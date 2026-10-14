@@ -12,7 +12,7 @@ reference. Each input maps to the render graph node it feeds:
 
 | Input                                                                                                            | Node                              |
 | ---------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| the configuration file and its transitive imports                                                                | config                            |
+| the configuration file                                                                                           | config                            |
 | HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root | entry source                      |
 | entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports               | bundle generation                 |
 | the consumer PostCSS module and the file and directory dependencies `processCss` reports                         | stylesheet bundle                 |
@@ -84,7 +84,7 @@ repository and never watched.
   is a directory. Directory status comes from the watcher's event kind or
   stats, and a lookup runs only for a raw rename fallback, treating a failed
   lookup as a file.
-- Exact required files, including the configuration and its imports,
+- Exact required files, including the configuration,
   inventoried sources, the renderer module, the sidecar's reported modules,
   and configured stylesheets, keep their ancestor path and the file itself
   even when nested beneath a denied directory. Denied names apply to
@@ -126,7 +126,7 @@ system; exhausting the range or another bind error fails with
 the life of the process.
 
 The repository's `npm run dev` command runs watched Serve on
-`examples/basic/mokly.config.ts`; arguments after `--` are forwarded to Serve,
+`examples/basic/mokly.config.json`; arguments after `--` are forwarded to Serve,
 for example `npm run dev -- --port 0`.
 
 Rebuild actions, configuration changes, Git observation, publication, and

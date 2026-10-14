@@ -50,8 +50,7 @@ package may depend on.
   npm organization manages approved maintainer-team access and the release
   workflow.
 - The unscoped `mokly`, `mokabook`, and `mockbook` names are not package
-  aliases. The latter two are not executable aliases either. Config discovery
-  uses `mokly.config.*`, and `MOKLY_*` environment variables do not include
+  aliases. The latter two are not executable aliases either. Config discovery uses `mokly.config.json`, and `MOKLY_*` environment variables do not include
   the npm scope.
 
 ## CLI
@@ -117,10 +116,10 @@ plain text and do not render progress in either output mode.
 
 ## Configuration Discovery
 
-Mokly searches upward for `mokly.config.ts`, `.mts`, `.js`, or `.mjs`, unless
-`--config` is supplied. Filesystem fields resolve relative to that config
-file. The [configuration contract](./mokly-configuration.md) defines the
-complete typed shape, path validation, source and public-file boundaries,
+Mokly searches upward for `mokly.config.json`, unless `--config` names
+another JSON file. Filesystem fields resolve relative to that config file.
+The [configuration contract](./mokly-configuration.md) defines the complete
+shape, its JSON Schema, path validation, source and public-file boundaries,
 and individual field behavior.
 
 Only referenced, validated closure assets are served and built; see the

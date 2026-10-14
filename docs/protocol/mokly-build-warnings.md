@@ -56,7 +56,7 @@ type BuildDiagnostic = {
   It does not repeat the subject.
 - The printed subject is `<kind> <JSON-quoted-path>`, for example
   `entry "account/home"`, `component "ui/action"`, `folder "account"`,
-  `folder ""`, or `configuration "tools/mokly.config.ts"`.
+  `folder ""`, or `configuration "tools/mokly.config.json"`.
 
 Raw C0 and C1 control characters are invalid in a diagnostic. Producers
 render authored controls as visible lowercase JSON-style `\uXXXX` escapes

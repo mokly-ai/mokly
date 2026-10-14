@@ -18,7 +18,7 @@ versioned as v1. Earlier receivers reject this format with 426 under the
 
 ```bash
 npx mokly publish --endpoint https://api.mokly.ai/v1/projects/<projectId>/publications --token TOKEN
-npx mokly publish --config tools/mokly.config.ts --base main
+npx mokly publish --config tools/mokly.config.json --base main
 npx mokly publish --no-changes --repository git.example.com/team/project
 npx mokly publish --upload-concurrency 4
 ```

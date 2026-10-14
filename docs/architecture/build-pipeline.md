@@ -9,7 +9,7 @@ render graph; the protocol pages own the exact rules.
 ## Overview
 
 ```text
-mokly.config.ts
+mokly.config.json
         |
         v
 walk `roots` -> HTML screens and components, entry modules, stories files,
@@ -43,7 +43,7 @@ operating system's cache directory.
 
 ## 1. Configuration
 
-`mokly.config.ts` is discovered from the working directory upward under the
+`mokly.config.json` is discovered from the working directory upward under the
 [configuration discovery contract](../protocol/mokly-configuration-discovery.md).
 It names the `roots` that Mokly scans, the optional renderer module that wraps
 React renders with the product's providers, the configured stylesheets, the

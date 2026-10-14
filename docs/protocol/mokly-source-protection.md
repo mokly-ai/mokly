@@ -84,8 +84,7 @@ The inventory is the catalogue model's source set, held in memory and never
 written. It is the sorted, unique union of repository-relative POSIX paths
 of:
 
-- the configuration module and every repository-owned import it loads,
-  including the PostCSS module and its local imports;
+- the configuration file, and the PostCSS module with its local imports;
 - every entry source and Markdown document, and for JavaScript the
   transitive module graph that the sidecar's `bundle` reports, including
   inputs that tree shaking removes;

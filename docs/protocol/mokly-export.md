@@ -25,7 +25,7 @@ into its output directory.
 ```bash
 npx mokly build
 npx mokly build --out .context/site --strict
-npx mokly build --config docs/mokly.config.ts --base main
+npx mokly build --config docs/mokly.config.json --base main
 npx mokly build --no-changes
 ```
 
