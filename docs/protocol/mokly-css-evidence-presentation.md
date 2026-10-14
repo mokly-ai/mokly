@@ -110,12 +110,13 @@ Use these exact sentences when the page selector list is nonempty:
 
 Choose the column by whether any record with one of the displayed selectors
 has a component owner. The technical details stay in this
-secondary list. Keep the existing comparison-stage heading and catalogue row
-labels; do not expose rule keys, owner records, schema fields or internal status
-names in product copy. A whole-document page still has no comparison controls.
+secondary list. Keep the comparison-stage heading and catalogue row
+labels; do not expose owner records, schema fields or internal status names in
+product copy. A whole-document page still has no comparison controls.
 
 When the stylesheet has an `unresolved` rule owned by the entry, show a
-separate paragraph under that same path. Use the existing unresolved screen/component sentences, with
+separate paragraph under that same path. Use the unresolved screen and component sentences of the Details Copy table,
+with
 “saved view” in place of “component” for a component page reason, and “page” in
 place of “screen” for a whole-document page. A component page reason is an
 unresolved rule whose owner is not the workspace's component; one owned by it
@@ -137,11 +138,11 @@ own pages, its component-only selectors are not added to this page list.
 A screen-only `.checkout .action` rule shows that selector even though its
 matches are inside an unchanged component invocation.
 
-Component-only rules keep the existing matched-component copy and affected
-consumer links. They do not get an outside-component paragraph. An affected-only
-screen can retain its full matched-style evidence without a direct page reason.
-A component saved view with only a wrapper/page reason gets the saved-view
-copy above and no Affected screens from that rule.
+Component-only rules keep the matched-component copy and affected consumer
+links. They do not get an outside-component paragraph. An affected-only
+screen can retain its full matched-style evidence without an entry-owned rule.
+A component saved view whose rules are all owned by the entry gets the
+saved-view copy above and no Affected screens from those rules.
 
 Across all compared views of the selected entry, merge records by stylesheet
 and selector. Union page selectors separately from component-only and
@@ -183,7 +184,7 @@ unmodified. Each changed component that the entry consumes is linked as
 “Changed component: Title”. The sentence “Shared component changes affect this
 preview. This page has no independent entry in Changes.” appears only when the
 entry has no Changes row of its own, consumes at least one changed component,
-and a selected view changed. A saved view with only wrapper or page reasons
+and a selected view changed. A saved view whose rules are all owned by the entry
 therefore never says it. A whole-document page consumes no components, so its
 Details never link a changed component or say that sentence.
 

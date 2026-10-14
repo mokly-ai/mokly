@@ -783,8 +783,8 @@ entry`; decide whether to rename them now.
   - O: three pages state `serve --base <ref>` while Decision 14 names
     `--base` for `build` and `publish` only; record the extension or remove
     it.
-  - P: settled on 2026-10-14; the design pages verify through the served
-    example and the browser suite.
+  - P: settled on 2026-10-14; the five design pages verify through the
+    served example and the browser suite.
   - Q: settled on 2026-10-14; `ci-test-timing.md` is rewritten to the
     end-state suites.
   - R: the viewer page lists the root, `./browser`, and `./styles.css`

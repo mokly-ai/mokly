@@ -6,7 +6,8 @@ Required tests check correctness without depending on machine speed. This
 contract applies to every Node test file that the viewer suite discovers under
 `tests/` and `packages/viewer/tests/`, and to the browser specs under
 `tests/browser/`. Rust tests under `crates/` and `xtask/` follow the same
-assertion rule with Cargo's own test timeouts. It supplements
+assertion rule; the job timeout of the
+[CI workflow contract](./ci-workflow.md) is their hang guard. It supplements
 [CI suite evidence](./ci-suite-evidence.md).
 
 ## Assertion Rule
@@ -81,7 +82,8 @@ The following uses can still read a real clock:
 - Timestamps used as test data can come from a clock. For example,
   `new Date(Date.now() - 10_000)` represents an earlier timestamp.
 
-Waiting for the `ready` line of `mokly serve`, or for a frame's `ready` reply,
+Waiting for the `Catalogue ready` line of `mokly serve`, or for a frame's
+`ready` reply,
 is an expected-state wait. Its test-supplied allowance must allow at least
 10 seconds.
 

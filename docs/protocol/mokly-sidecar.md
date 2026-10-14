@@ -114,7 +114,7 @@ module resolution settings name the `node_modules` directory its dependency
 tiers chose: the working tree's or the installed base set.
 
 The bundle evaluates in the sidecar's own module context with the consumer's
-`require`. React and React DOM resolve from the consumer, as today. A bundle
+`require`. React and React DOM resolve from the consumer. A bundle
 or evaluation failure returns `bundle-failed` with the module and the
 diagnostic text.
 
@@ -176,10 +176,13 @@ fails `bundle` with `bundle-failed` naming the missing package.
 `argTypes` never enter the schema or validation. An entry's `options` become
 the choices of the derived select, its `control.min`, `control.max`, and
 `control.step` the bounds and step of the derived number control, and its
-`name` and `description` the control's label and help text. An arg with
-`control: false`, `table.disable: true`, an `action`, or a `function` type is
-not a prop: it is excluded from the props, the schema, and the fragment key
-without a warning, and the story renders with the file's own value for it.
+`name` and `description` the control's label and help text. An arg whose
+`argTypes` entry has `control: false`, `table.disable: true`, an `action`, or
+a `type` of `function` is not a prop: it is excluded from the props, the
+schema, and the fragment key without a warning, and the story renders with the
+file's own value for it. A function-valued arg with no `argTypes` entry is
+excluded with the `props-not-data` warning of the
+[entry props contract](./mokly-entry-props.md#schema-inference).
 
 ## Consumer PostCSS
 

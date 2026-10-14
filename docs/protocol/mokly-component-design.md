@@ -144,24 +144,24 @@ stylesheet stays scoped to its eleven owning entries. Watched Serve reloads
 configured and declared CSS. Shared fixtures and screen parts live beside their
 owning screen modules.
 
-`tests/component_design_attribution.test.ts` classifies all nine shared sheets
-once per scenario. Rendered stylesheet links pin 41, 11, 0, or all `design/`
-screens and 69 component saved-variant entries. A parent component renders its
-own views from its own props. The test keeps exact per-entry rendered-resource
-reasons and rule analysis, the exact
-changed-entry union, and no affected consumers for unresolved shared rules.
-It excludes unrelated design screens, product screens and their use case.
+The Rust behaviour tests over the design catalogue classify all nine shared
+sheets once per scenario. Rendered stylesheet links pin 41, 11, 0, or all
+`design/` screens and 69 component saved-variant entries. A parent component
+renders its own views from its own props. The tests keep exact per-entry
+rendered-resource records and rule records, the exact changed-entry union, and
+no affected consumers for unresolved shared rules. They exclude unrelated
+design screens, product screens and their use case.
 `design.css` is rendered-resource evidence; it supplies no shared impact.
 
-Build the example with `mokly build --strict`, and run
-`npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.
-The browser suite opens every artboard directly from disk, checks links,
-selection semantics, counts, missing states, responsive overflow, mask
+Run the component specs of the browser suite against `mokly serve` with
+`npm run test:browser -- tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.
+The browser suite opens every artboard in the served Browse frames, checks
+links, selection semantics, counts, missing states, responsive overflow, mask
 geometry, and the stacked frames' layers, blending, single scroller and drawn
-offset; `tests/design_component_stacks.test.ts` pins their structure,
-`tests/design_component_comparison_states.test.ts` ties every comparison
-caption to its recorded change and pins the Checklist's Changes. Visually inspect
-all rendered mobile and desktop pages, including both selected-instance states.
+offset; the Rust behaviour tests pin the stacked frames' structure, tie every
+comparison caption to its recorded change, and pin the Checklist's Changes.
+Visually inspect all rendered mobile and desktop pages in the served frames and
+in the `mokly build` output, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the
 `implementation-review` skill against `origin/main` and report findings
 without changing the implementation.
