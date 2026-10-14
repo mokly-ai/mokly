@@ -7,7 +7,7 @@ catalogues. Serve and export render the viewer's shell tree on the server and
 hydrate it with the package's bundled React; these CLI modules supply Serve's
 private capabilities to that tree. Reusable navigation, inspection and frame
 adapters live in [the viewer package](../../packages/viewer/README.md).
-The [live capability contract](../../docs/protocol/mokly-live-capabilities.md)
+The [live capability contract](../../docs/protocol/mokly-component-controls.md#rendering-boundary)
 defines the typed boundary.
 
 `react_host.ts` validates the private descriptor before hydrating.
