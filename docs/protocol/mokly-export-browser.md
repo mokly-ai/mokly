@@ -11,8 +11,9 @@ runtime replacement and its compatibility checks.
 The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the
 standalone inventory is a client-rendered shell bundle with no hydration
 entry, and the deployment identity covers the stubs, the index, and the
-details, under the [shell delivery contract](./mokly-shell-delivery.md)
-(Decision 21).
+details with their id fields zeroed while hashing, while generation files
+carry none, under the [shell delivery contract](./mokly-shell-delivery.md)
+(Decisions 21 and 27).
 
 ## Browser Modules
 

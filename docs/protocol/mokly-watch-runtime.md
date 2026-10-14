@@ -9,8 +9,10 @@ in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warni
 
 The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page:
 updates deliver JSON through the routes of the
-[shell delivery contract](./mokly-shell-delivery.md), no update reloads the
-page, and the one-shot reload recovery is retired (Decision 21).
+[shell delivery contract](./mokly-shell-delivery.md) under one revision that
+is also the event id, the shell reloads only the frames whose document hash
+changed, no update reloads the page, and the one-shot reload recovery is
+retired (Decisions 21 and 27).
 
 ## Adoption And Recovery
 

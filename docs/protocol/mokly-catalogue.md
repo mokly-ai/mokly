@@ -67,7 +67,9 @@ interface CatalogueReadModel {
   schemaVersion: 7;
   identity: { id: string; title: string };
   deploymentId: string;
-  revision: { content: number; evidence: number };
+  revision: number; // one counter per Serve state; fixed in a build
+  base?: string; // the Changes base ref when Changes is configured
+  live?: { generation: string | null }; // Serve only: the bundle generation
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
   tree: readonly CatalogueNode[];
@@ -129,6 +131,8 @@ interface CatalogueEntry {
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
+// Usage and resource evidence travel in the entry detail of the shell
+// delivery contract, not in the index.
 type CatalogueUsage =
   | {
       status: "ready";
@@ -140,9 +144,7 @@ type CatalogueUsage =
 interface CatalogueView {
   viewport: Viewport;
   colorScheme: ColorScheme;
-  usage: CatalogueUsage;
   comparison: ComparisonSelection;
-  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
@@ -157,7 +159,6 @@ interface CatalogueScreen extends CatalogueEntry {
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
-  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueDocument extends CatalogueEntry {
   kind: "document";

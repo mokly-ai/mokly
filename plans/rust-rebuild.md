@@ -44,7 +44,10 @@ delivery, and viewer appearance pages from kept to rewritten; the index lists
 settled the prop schema details, made `argTypes` control hints, unified the
 screen and component template language, required one definition per export,
 and added `renderPage` (Decisions 22 to 26); the five frozen pages that stated
-the old variant rules carry pointers.
+the old variant rules carry pointers. On 2026-10-14 the user simplified the
+shell's update model to one revision, document keys, and a per-process Serve
+deployment id (Decision 27), which settled findings 1 to 6 of the shell
+delivery review.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -185,6 +188,7 @@ more than re-deriving the behaviour from the requirements.
     [shell delivery contract](../docs/protocol/mokly-shell-delivery.md) owns
     the routes; the example-export measurements behind the decision are in
     `.context/rust-rebuild/shell-delivery-measurements-2026-10-13.md`.
+    Amended on 2026-10-14 under Decision 27.
 22. Prop schema details (2026-10-13): every object schema, the root included,
     carries `additionalProperties: false`, and a schema without it fails;
     inference reads the entry's own props and every variant's merged props,
@@ -213,6 +217,23 @@ more than re-deriving the behaviour from the requirements.
 26. Pages (2026-10-13): the sidecar's `renderPage` runs a `definePage`
     callback by its handle and returns the complete document, its resources,
     and warnings; the core applies the pages contract's document rules to it.
+27. One revision (2026-10-14, amends 21): the index carries one integer
+    `revision` that Serve raises by one per publication, in place of the
+    update version and the content and evidence revisions; each event stream
+    message carries the revision as its id and no data, and a new connection
+    receives the current revision at once; every detail view carries a
+    `documentKey`, the hash of its rendered bytes, and the shell reloads only
+    the frames whose key changed; a current entry's detail repeats the index's
+    `deploymentId` and `revision`, while a removed entry's detail inside a
+    comparison generation carries the generation and the snapshot id instead,
+    so generation files never change; `build` hashes the output with the id
+    fields zeroed and Serve keeps one `deploymentId` for the life of the
+    process, so a different id always means a full page load; the index
+    carries `base` and, in Serve, `live: { generation }`, and the live
+    descriptor v3 carries only the render capability; a page's resource
+    evidence and the workspace lists have typed shapes in the detail, and the
+    catalogue page's v7 types are revised in place. This settles findings 1
+    to 6 of the shell delivery review.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -250,6 +271,8 @@ adopted the JSON Schema profile for prop schemas, then settled the profile's
 closed objects, inference sets, control step and labels, made `argTypes`
 control hints, unified the template language, required one definition per
 export, added `renderPage`, and approved pointers on the five frozen pages.
+On 2026-10-14 the user settled findings 1 to 6 of the shell delivery review
+through Decision 27.
 
 **Architecture:**
 
@@ -486,8 +509,9 @@ without JavaScript.
 
 - [ ] Implement the server in `mokly-server`: the stub, the index and entry
       detail routes with `Cache-Control: no-store`, the document and asset
-      routes, the live descriptor, the update event stream, shutdown
-      ordering, and the terminal output contract in the CLI.
+      routes, the live descriptor, the event stream with the revision as the
+      message id, shutdown ordering, and the terminal output contract in the
+      CLI.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Commit.
@@ -589,7 +613,8 @@ Tags: ui
       dependencies, stylesheet dependencies, and PostCSS reports.
 - [ ] Implement the watcher with the denial rules, rebuild on change, bundle
       replay for HTML-only edits, and live updates to the viewer through the
-      live descriptor, index, and entry detail routes, with no page reload.
+      index and entry detail routes under one revision, with frames reloaded
+      by document key and no page reload.
 - [ ] Behaviour tests that count rebuilds and renders per change.
 - [ ] Commit.
 
@@ -649,23 +674,7 @@ Tags: ui
     `props-not-data` warning.
   - Open from the review of commit 1fdf5d95, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
-  - 1: a removed entry's detail inside an immutable comparison generation
-    carries `deploymentId` and `revision`, which move on every update, and
-    in `build` the deployment id hashes the generation whose details carry
-    that id; decide the fields and the fence for generation details.
-  - 2: the index and the detail carry no `updateVersion` and no Serve-mode
-    signal, so the update fence and the absent-descriptor rules cannot be
-    implemented; decide where the live state lives.
-  - 3: Serve derives `deploymentId` from the canonical index, so every
-    revision change reads as another deployment and forces a page load;
-    decide a Serve-stable deployment id.
-  - 4: page-level `resourceEvidence` has no home in the index or in entry
-    detail v1; decide where page CSS evidence travels.
-  - 5: the kept catalogue page's v7 type requires `usage` on every view while
-    the index reader rejects it; decide the type split and the page's
-    classification.
-  - 6: the detail's `workspace` member names a `WorkspaceData` shape that no
-    protocol page defines; decide its fields against review v8.
+  - 1 to 6: settled by Decision 27 on 2026-10-14.
   - 7: the live descriptor route carries the render token with no CORS or
     exposure rule; decide the rule.
   - 8: five kept viewer pages (catalogue tree, scroll together, frame

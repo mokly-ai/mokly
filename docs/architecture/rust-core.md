@@ -110,8 +110,11 @@ identical stub page per shell route, the catalogue index at
 `mokly-viewer/index.json`, and one entry detail per entry under
 `mokly-viewer/entries/`; Serve adds the live descriptor and the update event
 stream. The shell renders itself from the index and the current entry's
-detail and fetches the next detail on navigation. No process renders shell
-HTML, so a catalogue without JavaScript starts no sidecar. The
+detail and fetches the next detail on navigation. The index carries one
+revision per Serve state, every detail view carries the hash of its rendered
+document, and the shell reloads only the frames whose hash changed. No
+process renders shell HTML, so a catalogue without JavaScript starts no
+sidecar. The
 [shell delivery contract](../protocol/mokly-shell-delivery.md) owns the
 routes, the shapes, and the fences.
 
@@ -172,7 +175,7 @@ stable.
 | Shell bootstrap envelope               | none           | retired: the shell renders in the browser; pages embed no state       |
 | Baseline completion marker             | none           | retired: both sides render from sources; no baseline cache            |
 | Static delivery descriptor             | none           | retired: the index carries the deployment id and comparison URL       |
-| Live descriptor                        | 3              | a Serve JSON route; the workspace moved to the entry detail           |
+| Live descriptor                        | 3              | a Serve JSON route with the render capability only                    |
 | Inspector wire envelope                | 2              | unchanged                                                             |
 | Removed page/document preview metadata | 3              | unchanged                                                             |
 | Export ownership                       | 3              | unchanged; written by `build`                                         |
