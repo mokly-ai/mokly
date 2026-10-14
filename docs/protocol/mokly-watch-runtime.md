@@ -80,9 +80,9 @@ Each completed action publishes one state under the
 and the event stream carries the revision as the message id. The shell
 refetches the index and the current entry's detail, updates the navigation,
 the Changes marks, Usage, and the details panel in place, and reloads only
-the mounted frames whose `documentKey` changed. The page never reloads, and
-browser state such as search, filter, disclosure, scroll, and temporary prop
-edits survives every publication. A publication marks the comparison
+the mounted frames whose `documentKey` changed. Only a message from another
+server process reloads the page; browser state such as search, filter,
+disclosure, scroll, and temporary prop edits survives every other publication. A publication marks the comparison
 generations of the superseded state stale before the event is sent, and an
 open comparison returns to Current; the next explicit selection captures a
 new generation. A filesystem edit made of several operations can publish an

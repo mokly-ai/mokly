@@ -837,8 +837,8 @@ entry`; decide whether to rename them now.
     and `resources` records do not carry; decide the vocabulary mapping
     (recommended: map onto the records and drop the two names).
   - 9: `ViewEvidence` requires both arrays while review v8 omits an empty
-    `rules` list; decide whether a ready view always carries the field with
-    empty arrays allowed (recommended) or omits it when both are empty.
+    `rules` list; decide whether a ready view or page always carries the field
+    with empty arrays allowed (recommended) or omits it when both are empty.
   - 11: the format inventory page has no Status line but describes the
     unimplemented formats; decide whether it gains the line (recommended).
 

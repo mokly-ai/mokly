@@ -84,7 +84,7 @@ the machine.
 | dependency set    | the side's lockfile and package manifests and the package manager version                                                                                                                                        |
 | definitions       | the bundle generation, through the sidecar's `describe` call: every exported definition and the story inventory                                                                                                  |
 | catalogue model   | every entry record and the definitions                                                                                                                                                                           |
-| catalogue index   | the catalogue model without per-view usage and resource evidence, and the document keys of every view, page, and document                                                                                        |
+| catalogue index   | the catalogue model without per-view usage and resource evidence, the document keys of every view, page, and document, and, in Serve, the render generation                                                      |
 | entry detail      | the entry's views' usage and resource evidence from the composed trees, and its workspace lists from the catalogue model                                                                                         |
 
 A watched change hashes the changed file, finds the nodes whose keys moved, and
