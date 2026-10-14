@@ -57,9 +57,9 @@ only on selection, never while browsing.
 The public paths of a catalogue are `mokly-viewer/index.json`,
 `mokly-viewer/entries/**`, `static/**`, `mokly-viewer/client/**`,
 `mokly-viewer/shell.css`, `mokly-viewer/fonts/**`, and the immutable
-generations under `mokly-viewer/diffs/generations/**`. Serve adds
-`mokly-viewer/live.json` and `mokly-viewer/events`, which a static output
-never contains. These paths keep ordinary path confinement; the list grants
+generations under `mokly-viewer/diffs/generations/**`. Serve answers
+`mokly-viewer/live.json` and `mokly-viewer/events` to the same-origin shell
+only, outside the public paths; a static output never contains them. These paths keep ordinary path confinement; the list grants
 no access to sources, controls, or the watcher. The
 [viewer namespace](./mokly-viewer-namespace.md) owns the layout.
 

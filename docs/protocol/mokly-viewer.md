@@ -366,8 +366,8 @@ Shell state is one store scoped to a mounted viewer:
   the shell delivery contract: a publication raises `revision`, the shell
   fetches the index and the current entry's detail, adopts them in one store
   commit, updates the navigation, Changes marks, Usage and Details in place,
-  and reloads only the mounted frames whose `documentKey` changed. The page
-  never reloads. A React host supplies newer data by replacing `index`.
+  and reloads only the mounted frames whose `documentKey` changed; only a
+  message from another server process reloads the page. A React host supplies newer data by replacing `index`.
 
 A source change (index object identity, URL value, object base origin, or
 `detail` function identity) or an adapter change remounts the shell tree,

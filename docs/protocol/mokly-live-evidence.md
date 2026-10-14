@@ -79,7 +79,7 @@ commits.
 
 ## Workspace evidence
 
-The detail's `workspace` updates entry statuses, comparison eligibility,
+The detail's `workspace` updates comparison eligibility,
 Details evidence, and the complete Used by and Affected lists in place. While
 the detail is in flight the Usage panel shows the loading copy of the
 on-demand contract without counts, an empty state, or rows; a failed or

@@ -160,9 +160,10 @@ controls derive from the Changes evidence of the index and the detail under
 the [Changes contract](./mokly-changes.md#changes-membership); a pending
 calculation shows a spinner, an unavailable one keeps All browsable, and a
 removed entry opens its base render under
-[removed previews](./mokly-removed-previews.md). No update reloads the page:
-the shell replaces the index and the details in place and reloads only the
-frames whose `documentKey` changed.
+[removed previews](./mokly-removed-previews.md). An event message from
+another server process reloads the page; no other update does: the shell
+replaces the index and the details in place and reloads only the frames
+whose `documentKey` changed.
 
 ## Component Workspaces
 

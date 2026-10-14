@@ -104,7 +104,7 @@ References are read from the tree with the owner of the referencing element:
 `url()` and `@import` chains. The closure follows them through the
 [public closure policy](./mokly-public-closure.md) and embedded documents; the
 head side reads files from the working tree, the base side from Git blobs, and
-bytes are compared as today.
+bytes are compared.
 A changed referenced resource is conservative evidence of a rendering change
 for every view that reaches it, attributed to the owner of the reference. A
 resource is never discovered by joining text across a removed region.
@@ -182,10 +182,9 @@ interface ResourceEvidence {
 
 The [component comparison records](./mokly-component-comparison-records.md)
 page defines `ReviewEntry`, `AffectedConsumer`, and `ReviewDiagnostic`.
-Entries keep the path-keyed shape of review v7: kind, path, `previousPath` on
-moved pairs, metadata reasons, views, and component variants grouped under
-their parent. Per-rule evidence replaces the offset-bearing inline evidence,
-and every record names its owner. The catalogue change snapshot v4 pairs
+Entries are path-keyed: kind, path, `previousPath` on moved pairs, metadata
+reasons, views, and component variants grouped under their parent. Every
+evidence record names its owner. The catalogue change snapshot v4 pairs
 review v8 with the base commit for Serve, the static build, and publication. The generated
 TypeScript types are the normative shapes.
 

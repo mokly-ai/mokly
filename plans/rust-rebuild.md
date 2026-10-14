@@ -248,7 +248,7 @@ more than re-deriving the behaviour from the requirements.
     descriptor v3 carries only the render capability; a page's resource
     evidence and the workspace lists have typed shapes in the detail, and the
     catalogue page's v7 types are revised in place. This settles findings 1
-    to 6 of the shell delivery review.
+    to 6 of the shell delivery review. Amended on 2026-10-14 under Decision 30.
 28. Documentation reset (2026-10-14): protocol pages define the intended end
     state. No page describes the previous implementation, a former format, or
     delivery history; a page whose behaviour is not implemented starts with
@@ -826,6 +826,21 @@ entry`; decide whether to rename them now.
   - Open from the review of commit 7cb14ebf, report under
     `.context/rust-rebuild/review-2026-10-14-one-revision.md`:
   - 1, 2, 3, 4, 7, 8, and 9: settled by Decision 30 on 2026-10-14.
+  - Open from the review of commit c0f61254, report under
+    `.context/rust-rebuild/review-2026-10-14-shell-settled.md`:
+  - 2: the live capabilities page fences live renders by generation while
+    the controls contract's render request and response carry `revision`
+    only and name a stale-revision code; decide the fence value
+    (recommended: the revision, with a rerender after a generation change).
+  - 4: the CSS evidence presentation page reads `screenEvidence`, reasons,
+    exclusions, retained paths, and `material`, which the detail's `rules`
+    and `resources` records do not carry; decide the vocabulary mapping
+    (recommended: map onto the records and drop the two names).
+  - 9: `ViewEvidence` requires both arrays while review v8 omits an empty
+    `rules` list; decide whether a ready view always carries the field with
+    empty arrays allowed (recommended) or omits it when both are empty.
+  - 11: the format inventory page has no Status line but describes the
+    unimplemented formats; decide whether it gains the line (recommended).
 
 ## Post-merge follow-up (non-blocking)
 

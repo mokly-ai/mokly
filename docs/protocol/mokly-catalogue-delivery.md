@@ -57,8 +57,9 @@ state in one publication, and `build` writes both for every entry.
 
 Never emit source file lists, declared or owned dependencies, `movedFrom`,
 folder `exclude` globs, resolved dependency evidence, changed-path
-inventories, source graphs, Git commands, render cache keys or contents,
-content digests of source inputs, style offsets, style or resource ownership
+inventories, source graphs, Git commands, render cache contents, any
+render-graph key other than the `documentKey` the index carries, content
+digests of source inputs, style offsets, style or resource ownership
 tables, absolute filesystem paths, credentials, or render-capability tokens.
 No source bytes, HTML, runtime React values, or source maps belong in this
 JSON. The rule applies recursively, including removed entries and extension
