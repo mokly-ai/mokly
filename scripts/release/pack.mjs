@@ -1,18 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { createPackageArchive } from "./archive.mjs";
 import { writeWorkflowOutput } from "./context.mjs";
+import { packViewer } from "./viewer.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const destination = path.resolve(
   repositoryRoot,
   process.argv[2] ?? ".context/release-artifact",
 );
-const { archivePath, report } = await createPackageArchive(
-  path.join(repositoryRoot, "packages/viewer"),
-  path.join(destination, "viewer"),
-);
+const { archivePath, report } = await packViewer(repositoryRoot, destination);
 await fs.promises.writeFile(
   path.join(destination, "viewer/pack-report.json"),
   `${JSON.stringify(report, null, 2)}\n`,

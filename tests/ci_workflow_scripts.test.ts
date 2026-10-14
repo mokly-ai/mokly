@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { minVersion } from "semver";
 import { parse } from "yaml";
 
 import { RELEASE_VERIFICATION_RUNTIMES } from "../scripts/release/evidence_contract.mjs";
@@ -45,7 +46,11 @@ test("the Node profile selector adds release runtimes only for release pull requ
       `\${{ steps.${id}.outputs.${output} }}`,
       `the selector's job must expose its ${output} output`,
     );
-  const minimumTestedNode = "22.14.0";
+  const manifest = JSON.parse(
+    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+  ) as { engines: { node: string } };
+  const minimumTestedNode = minVersion(manifest.engines.node)?.version;
+  assert.ok(minimumTestedNode);
   const [ordinaryRuntime] = RELEASE_VERIFICATION_RUNTIMES;
   for (const profile of [
     { release: false, nodes: [minimumTestedNode], runtimes: [ordinaryRuntime] },
@@ -82,6 +87,39 @@ test("the Testbox lockfile stamp holds only the lockfile digest and a newline", 
       "utf8",
     ),
     `${createHash("sha256").update(lockfile).digest("hex")}\n`,
+  );
+});
+
+test("Testbox sessions receive the job PATH only", async (context) => {
+  const original = await testboxScript(
+    "Expose job environment to Testbox sessions",
+  );
+  assert.ok(
+    original.includes("/etc/environment"),
+    "the step must write /etc/environment, which this test redirects",
+  );
+  if (process.platform !== "linux") return;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-testbox-env-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const file = path.join(root, "environment");
+  await fs.writeFile(
+    file,
+    "LANG=en_US.UTF-8\nPATH=old\nKEEP=value\nPATH=duplicate\n",
+  );
+  const script = original.replaceAll(
+    "/etc/environment",
+    '"$MOKLY_TESTBOX_ENVIRONMENT"',
+  );
+  const output = await runBash(`sudo() { "$@"; }\n${script}`, root, {
+    PATH: process.env.PATH,
+    UNEXPORTED_SECRET: "must-not-leak",
+    MOKLY_TESTBOX_ENVIRONMENT: file,
+  });
+  assert.equal(output.stdout, "");
+  assert.equal(output.stderr, "");
+  assert.equal(
+    await fs.readFile(file, "utf8"),
+    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\n`,
   );
 });
 

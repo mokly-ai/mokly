@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 import { adaptLegacyScenario } from "./legacy-adapter.mjs";
 
 /** Sort sets and object keys without retaining deployment or source-format ids. */
-export function behaviourTable(scenario) {
-  return canonical({ schemaVersion: 1, ...adaptLegacyScenario(scenario) });
+export function behaviourTable(scenario, adapter) {
+  return canonical({ schemaVersion: 2, ...adapter(scenario) });
 }
 
 function canonical(value) {
@@ -56,7 +56,10 @@ if (
   const [directory, destination] = process.argv.slice(2);
   if (!directory)
     throw new Error("Usage: behaviour-table.mjs SCENARIO [OUTPUT]");
-  const table = behaviourTable(await readScenario(directory));
+  const table = behaviourTable(
+    await readScenario(directory),
+    adaptLegacyScenario,
+  );
   await fs.writeFile(
     destination ?? path.join(directory, "behaviour-table.json"),
     `${JSON.stringify(table, null, 2)}\n`,

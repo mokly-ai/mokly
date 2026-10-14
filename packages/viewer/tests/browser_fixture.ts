@@ -53,7 +53,7 @@ export async function viewerHydrationFixture() {
     logLevel: "silent",
   });
   const defaultSelection = {
-    screenPath: "components/action",
+    screenPath: "action",
     view: "all" as const,
     viewport: "mobile" as const,
     colorScheme: "light" as const,
@@ -63,11 +63,11 @@ export async function viewerHydrationFixture() {
   const catalogue = structuredClone(fixture.catalogue);
   const component = catalogue.components.find(
     (entry): entry is CatalogueComponent =>
-      entry.path === "components/action" && !("variantOf" in entry),
+      entry.path === "action" && !("variantOf" in entry),
   );
   const variant = catalogue.components.find(
     (entry): entry is CatalogueComponentVariant =>
-      "variantOf" in entry && entry.variantOf === "components/action",
+      "variantOf" in entry && entry.variantOf === "action",
   );
   const control = component?.controls.label;
   const schema = component?.propSchema.properties.label;

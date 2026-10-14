@@ -50,7 +50,7 @@ export function scenarioFixture() {
                         status: "matched",
                         selectors: [".start"],
                         changedComponentPaths: ["action"],
-                        pageSelectors: [],
+                        pageSelectors: [] as string[],
                       },
                     ],
                   },

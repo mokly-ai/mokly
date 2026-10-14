@@ -6,11 +6,16 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  behaviourTable,
+  behaviourTable as reduceTable,
   readScenario,
 } from "../scripts/rebuild/behaviour-table.mjs";
+import { adaptLegacyScenario } from "../scripts/rebuild/legacy-adapter.mjs";
+import type { LegacyScenario } from "../scripts/rebuild/legacy-adapter.mjs";
 
 import { axes, scenarioFixture } from "./helpers/rebuild_scenario.js";
+
+const behaviourTable = (scenario: LegacyScenario) =>
+  reduceTable(scenario, adaptLegacyScenario);
 
 test("legacy capture keeps entry kinds, removals, states, and reasons", () => {
   const table = behaviourTable(scenarioFixture());
@@ -61,20 +66,20 @@ test("legacy view evidence keeps ignored regions, matched rules, and exclusions"
     kept: [
       {
         resource: "theme.css",
-        ruleKey: "rule-1",
-        status: "matched",
+        key: '["theme.css",[".start"]]',
+        status: "applies",
         selectors: [".start"],
-        components: ["action"],
-        pageSelectors: [],
+        owners: [{ kind: "component", path: "action", selectors: [] }],
       },
     ],
-    excluded: [{ resource: "unused.css", reason: "no-matching-rule" }],
+    excluded: [{ resource: "unused.css", reason: "no-selector-hit" }],
   });
   assert.deepEqual(table.resourceClosures, [
     {
       kind: "screen",
       path: "start",
       ...axes,
+      side: "after",
       resources: ["mark.svg", "theme.css"],
     },
   ]);
@@ -88,7 +93,7 @@ test("legacy view evidence keeps ignored regions, matched rules, and exclusions"
           kind: "screen",
           path: "start",
           ...axes,
-          via: [{ depth: 0, componentId: "action", instanceKey: "primary" }],
+          via: [{ depth: 0, component: "action" }],
         },
       ],
     },
@@ -132,8 +137,20 @@ test("component variants and unresolved resource evidence stay per view", () => 
   const variant = table.views.find((view) => view.path === "action/primary");
   assert.equal(variant?.kind, "component");
   assert.deepEqual(variant?.kept, [
-    { resource: "icon.svg", selectors: [], status: "resource" },
-    { resource: "theme.css", selectors: [], status: "unresolved" },
+    {
+      key: '["icon.svg",[]]',
+      resource: "icon.svg",
+      selectors: [],
+      status: "resource-change",
+      owners: [],
+    },
+    {
+      key: '["theme.css",[]]',
+      resource: "theme.css",
+      selectors: [],
+      status: "uncertain",
+      owners: [],
+    },
   ]);
 });
 
@@ -219,4 +236,51 @@ test("moved base resource closures keep the entry kind and the before side", () 
       resources: ["base.css"],
     },
   ]);
+});
+
+test("inventory contributes resource paths and sides, without deployment ids or file hashes", () => {
+  const input = scenarioFixture();
+  const before = behaviourTable(input);
+  assert.deepEqual(before.exportedResources, [
+    { path: "theme.css", side: "after" },
+  ]);
+  input.inventory.files.push({
+    path: "static/extra.svg",
+    sha256: "not-retained",
+    size: 200,
+  });
+  const after = behaviourTable(input);
+  assert.deepEqual(after.exportedResources, [
+    { path: "extra.svg", side: "after" },
+    { path: "theme.css", side: "after" },
+  ]);
+  assert.notDeepEqual(before, after);
+});
+
+test("adapters supply the same neutral table without legacy keys or status words", () => {
+  const input = scenarioFixture();
+  const first = behaviourTable(input);
+  const via = input.review.affectedConsumers[0]!.evidence[0]!.via[0]!;
+  via.instanceKey = "another-hash";
+  input.review.screens[0]!.views[0]!.reasons[0]!.analysis.rules[0]!.ruleKey =
+    "another-rule-hash";
+  assert.deepEqual(behaviourTable(input), first);
+  const records = adaptLegacyScenario(input);
+  assert.deepEqual(
+    reduceTable({ records }, ({ records }) => records),
+    first,
+  );
+  for (const text of [
+    "instanceKey",
+    "ruleKey",
+    "matched",
+    "unresolved",
+    "pageSelectors",
+    "changedComponentPaths",
+  ])
+    assert.equal(JSON.stringify(first).includes(text), false, text);
+  assert.equal(
+    first.changes.find((change) => change.path === "start")?.previousPath,
+    "previous-start",
+  );
 });

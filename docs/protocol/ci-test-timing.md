@@ -99,8 +99,8 @@ An expected-state allowance inside a test can be longer than the runner timeout.
 The runner timeout then bounds the whole test.
 The inner allowance sets the failure message when it expires first.
 
-Fixture phases report durations as text under
-[CI suite evidence](./ci-suite-evidence.md).
+The fixture setup budgets live in `tests/helpers/fixture_timing.ts`. Fixture
+phase reporting follows [CI suite evidence](./ci-suite-evidence.md).
 
 ## Shared Evidence Helpers
 

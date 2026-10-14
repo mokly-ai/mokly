@@ -66,6 +66,7 @@ jobs:
     needs:
       - release-please
       - select-release
+    # npm trusted publishing creates provenance only on GitHub-hosted runners.
     runs-on: ubuntu-24.04
     environment: npm
     permissions:
@@ -103,6 +104,8 @@ jobs:
       - name: Set up Rust
         if: steps.evidence.outputs.mode != 'evidence'
         run: rustup toolchain install
+      # A manual retry dispatches from main, whose head can be newer than the
+      # checked-out tag; the suite runners require GITHUB_SHA to match HEAD.
       - name: Run complete verification
         if: steps.evidence.outputs.mode != 'evidence'
         run: GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict
@@ -114,7 +117,7 @@ jobs:
         env:
           ARCHIVE_PATH: ${{ steps.package.outputs.viewer_archive_path }}
       - name: Recheck immutable tags and source
-        run: node scripts/release/verify-ref.mjs "$VIEWER_REF"
+        run: node scripts/release/verify-ref.mjs "$VIEWER_REF" --artifacts .context/release-artifact
       - name: Preserve checked artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

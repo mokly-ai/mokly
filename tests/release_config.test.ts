@@ -28,3 +28,48 @@ test("the workspace is private and only the viewer has a release path", async ()
   assert.equal(viewer.publishConfig.access, "public");
   assert.equal(manifest.devDependencies["@mokly/viewer"], viewer.version);
 });
+
+test("viewer releases update every root version edge", async () => {
+  const config = await json("release-please-config.json");
+  assert.equal(
+    config["bootstrap-sha"],
+    "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
+  );
+  assert.deepEqual(config.plugins, [
+    { type: "node-workspace", updateAllPackages: true },
+  ]);
+  assert.deepEqual(config.packages["packages/viewer"], {
+    "release-type": "node",
+    component: "viewer",
+    "initial-version": "0.1.0",
+    "changelog-path": "CHANGELOG.md",
+    "include-component-in-tag": true,
+    "include-v-in-tag": true,
+    "bump-minor-pre-major": true,
+    "extra-files": [
+      {
+        type: "json",
+        path: "/package-lock.json",
+        jsonpath: "$['packages']['']['devDependencies']['@mokly/viewer']",
+      },
+      {
+        type: "json",
+        path: "/package.json",
+        jsonpath: "$['devDependencies']['@mokly/viewer']",
+      },
+      {
+        type: "json",
+        path: "/package-lock.json",
+        jsonpath: "$['packages']['packages/viewer']['version']",
+      },
+    ],
+  });
+  const manifest = await json("package.json");
+  const lock = await json("package-lock.json");
+  const viewer = await json("packages/viewer/package.json");
+  assert.equal(
+    lock.packages[""].devDependencies["@mokly/viewer"],
+    manifest.devDependencies["@mokly/viewer"],
+  );
+  assert.equal(lock.packages["packages/viewer"].version, viewer.version);
+});

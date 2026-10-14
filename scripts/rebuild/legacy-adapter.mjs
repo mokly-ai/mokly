@@ -24,13 +24,12 @@ export function adaptLegacyScenario({
   const removed = catalogue?.removedEntries?.map(({ entry }) => entry) ?? [];
   const entries = [...current, ...removed];
   const results = [
-    ...(review?.screens ?? []).map((entry) => ({ ...entry, kind: "screen" })),
+    ...(review?.screens ?? []).map((entry) => reviewEntry(entry, "screen")),
     ...(review?.components ?? []).flatMap((entry) => [
-      { ...entry, kind: "component" },
-      ...(entry.variants ?? []).map((variant) => ({
-        ...variant,
-        kind: "component",
-      })),
+      reviewEntry(entry, "component"),
+      ...(entry.variants ?? []).map((variant) =>
+        reviewEntry(variant, "component"),
+      ),
     ]),
   ];
   const resultFor = (kind, path) =>
@@ -84,17 +83,19 @@ export function adaptLegacyScenario({
         path: entry.path,
         viewport: view.viewport ?? null,
         colorScheme: view.colorScheme ?? null,
-        state: fromReview ? view.state : (previous?.state ?? null),
+        state: fromReview ? (view.state ?? null) : (previous?.state ?? null),
         ignoredIds: fromReview
           ? (view.ignoredIds ?? [])
           : (previous?.ignoredIds ?? []),
         kept: evidence
-          ? (evidence.reasons ?? []).flatMap(keptRules)
+          ? (evidence.reasons ?? []).flatMap((reason) =>
+              keptRules(reason, entry),
+            )
           : (previous?.kept ?? []),
         excluded: evidence
           ? (evidence.excludedResources ?? []).map((resource) => ({
               resource: resource.path,
-              reason: resource.reason,
+              reason: "no-selector-hit",
             }))
           : (previous?.excluded ?? []),
       });
@@ -118,7 +119,7 @@ export function adaptLegacyScenario({
     changes,
     affectedConsumers: (review?.affectedConsumers ?? []).map((consumer) => ({
       component: consumer.changedComponentId,
-      consumer: consumer.consumer,
+      consumer: { kind: consumer.consumer.kind, path: consumer.consumer.path },
       evidence: consumer.evidence.map((item) => ({
         side: item.side,
         kind: item.context.kind,
@@ -126,12 +127,20 @@ export function adaptLegacyScenario({
         variantPath: item.context.variantPath,
         viewport: item.context.viewport,
         colorScheme: item.context.colorScheme,
-        via: item.via.map((edge, depth) => ({ depth, ...edge })),
+        via: item.via.map((edge, depth) => ({
+          depth,
+          component: edge.componentId,
+        })),
       })),
     })),
     views: [...views.values()],
+    exportedResources: (inventory?.files ?? []).flatMap(exportedResource),
     resourceClosures: (closures ?? []).map((closure) => ({
-      ...closure,
+      path: closure.path,
+      side: closure.side ?? "after",
+      viewport: closure.viewport ?? null,
+      colorScheme: closure.colorScheme ?? null,
+      resources: closure.resources,
       kind:
         entries.find(
           (entry) =>
@@ -142,24 +151,60 @@ export function adaptLegacyScenario({
 }
 
 function reason(value) {
-  return { kind: value.kind, path: value.path, screenPath: value.screenPath };
+  return { kind: value.kind, path: value.path, ownerPath: value.screenPath };
 }
 
-function keptRules(value) {
-  if (!value.analysis?.rules?.length)
-    return [
-      {
-        resource: value.path,
-        status: value.analysis?.status ?? "resource",
-        selectors: value.analysis?.selectors ?? [],
-      },
-    ];
-  return value.analysis.rules.map((rule) => ({
-    resource: value.path,
-    status: rule.status,
-    ruleKey: rule.ruleKey,
-    selectors: rule.selectors,
-    components: rule.changedComponentPaths,
-    pageSelectors: rule.pageSelectors,
-  }));
+function keptRules(value, entry) {
+  const rules = value.analysis?.rules?.length
+    ? value.analysis.rules
+    : [
+        {
+          status: value.analysis?.status,
+          selectors: value.analysis?.selectors ?? [],
+        },
+      ];
+  return rules.map((rule) => {
+    const selectors = [...new Set(rule.selectors)].sort();
+    const owners = (rule.changedComponentPaths ?? []).map((path) => ({
+      kind: "component",
+      path,
+      selectors: [],
+    }));
+    if (rule.pageSelectors?.length)
+      owners.push({
+        kind: entry.kind,
+        path: entry.path,
+        selectors: rule.pageSelectors,
+      });
+    return {
+      key: JSON.stringify([value.path, selectors]),
+      resource: value.path,
+      status:
+        rule.status === "matched"
+          ? "applies"
+          : value.analysis
+            ? "uncertain"
+            : "resource-change",
+      selectors,
+      owners,
+    };
+  });
+}
+
+function exportedResource(file) {
+  const match =
+    /^(static|mokly-viewer\/diffs\/generations\/[^/]+\/snapshots\/(before|after))\/(.*)$/.exec(
+      file.path,
+    );
+  if (!match || /^mokly-generated\/.*\.html?$/.test(match[3])) return [];
+  return [
+    {
+      side: match[2] ?? "after",
+      path: match[3].replace(/^mokly-generated\//, ""),
+    },
+  ];
+}
+
+function reviewEntry(entry, kind) {
+  return { kind, path: entry.path, state: entry.state, views: entry.views };
 }

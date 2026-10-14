@@ -143,11 +143,7 @@ release-managed version state. Before the next release:
 
 ## Development Evidence
 
-`tests/release_bootstrap_viewer.test.ts` uses real isolated Git/npm fixtures to prove
-dirty/ref/name/version rejection, scoped archive naming with the unchanged
-`mokly` executable, exclusion of stale ignored output, source/hash
-evidence, destination preservation, symlinked temporary roots, partial source
-clones with missing historical blobs, and rejection of lifecycle input mutations.
-Run it with `node --import tsx --test tests/release_bootstrap_viewer.test.ts`.
-`tests/release_bootstrap_viewer.test.ts` additionally proves the isolated viewer
-first-publish identity, version restriction and lifecycle mutation rejection.
+`tests/release_bootstrap_viewer.test.ts` uses isolated Git/npm fixtures to prove
+viewer first-publish identity, the version restriction, and rejection of
+lifecycle input mutations. Run it with
+`node --import tsx --test tests/release_bootstrap_viewer.test.ts`.

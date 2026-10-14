@@ -15,15 +15,16 @@ may differ where the spec says so.
 
 Scenarios, one directory each:
 
-| Directory          | Repository state                                                           |
-| ------------------ | -------------------------------------------------------------------------- |
-| `example`          | the example catalogue at the tag, built, served, and exported              |
-| `large/<scenario>` | the large fixture's four benchmark scenarios                               |
-| `moved-screen`     | the example with one screen file moved and its `movedFrom` hint absent     |
-| `removed-screen`   | the example with one screen deleted                                        |
-| `markdown-edit`    | the example with one document's body changed                               |
-| `ignore-edit`      | the example with a change inside a paired Review-ignore region only        |
-| `renderer-change`  | the example with a renderer edit that changes head styles for every screen |
+| Directory          | Repository state                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `example`          | the example catalogue at the tag, built, served, and exported                                                                             |
+| `large/<scenario>` | the large fixture's four benchmark scenarios                                                                                              |
+| `moved-screen`     | the example with one screen file moved and its `movedFrom` hint absent                                                                    |
+| `removed-screen`   | the example with one screen deleted                                                                                                       |
+| `markdown-edit`    | the example with one document's body changed                                                                                              |
+| `ignore-edit`      | the example with a change inside a paired Review-ignore region only                                                                       |
+| `stylesheet-edit`  | the example with one changed rule that matches rendered elements and one changed rule that matches none, in a stylesheet that screens use |
+| `renderer-change`  | the example with a renderer edit that changes head styles for every screen                                                                |
 
 For each scenario keep the review artifact, the catalogue read model, the
 export inventory, and the terminal output of build, check, serve startup, and
