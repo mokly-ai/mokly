@@ -96,7 +96,7 @@ from its peers. Chromium is installed only in browser and hydration jobs. Rust
 formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate. Every cargo-running CI and
 release job runs `rustup toolchain install` before cargo. rustup installs the
-`rust-toolchain.toml` pin, Rust 1.95.0 with rustfmt and Clippy, and that file
+`rust-toolchain.toml` pin, Rust 1.99.0 with rustfmt and Clippy, and that file
 selects the toolchain for every cargo command in the checkout.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
@@ -169,7 +169,7 @@ The push run registers the workflow before merge.
 One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout.
 It has `contents: read` permission and no secrets.
 It checks out full history with `persist-credentials: false`.
-It prepares Node 22.14.0, npm 11.21.0, Rust 1.95.0 from `rust-toolchain.toml`,
+It prepares Node 22.14.0, npm 11.21.0, Rust 1.99.0 from `rust-toolchain.toml`,
 and Chromium.
 It records the installed lockfile digest and exposes the job environment to
 Testbox SSH sessions. `run-testbox` keeps the job alive until the idle timeout.
