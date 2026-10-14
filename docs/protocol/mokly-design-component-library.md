@@ -20,7 +20,7 @@ from its render context rather than pinning them in its fixture, so the top
 bar's samples name the scheme they rendered for; a fixture sets such a prop only
 to depict a different setting, as the `auto-appearance` sample does.
 
-| Group / slug                  | Existing implementation                                             | Variant names                                                                                                                                 |
+| Group / slug                  | Implementation                                                      | Variant names                                                                                                                                 |
 | ----------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
@@ -49,7 +49,7 @@ viewport presentation is supported. Comparison-mode segments stay.
 
 ## Data, Slots And Controls
 
-Use literal object schemas and the existing validator/codec. Lists are typed
+Use literal object schemas and the shared validator/codec. Lists are typed
 arrays of plain records; optional means omitted, distinct from an empty value.
 Numbers are finite, counts/depth are nonnegative integers and flow numbers start
 at one. Logical destinations are existing catalogue paths from the design-link

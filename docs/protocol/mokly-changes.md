@@ -10,7 +10,7 @@ views with a material change; entries whose reviewable metadata changed; and
 use cases whose steps name a changed screen. This page states the rules that
 project that list onto entries, variants, views, and resources. Every rule
 reads the composed trees of the two [sides](./mokly-comparison.md#sides). No
-rule reads a source file, a text offset, or a repository path on its own.
+rule reads a source file or a repository path on its own.
 
 - A source edit alone never lists an entry. An unreferenced public file alone
   never lists an entry and never supplies evidence. A changed Git path is
@@ -108,8 +108,8 @@ publication replaces the index and the details together and raises
 `revision` by one. The index's `changesStatus` is `preparing` while the base
 side's sources are extracted and its dependencies install, when the base side
 needs them; `pending` while the base side renders and the comparison runs;
-then `ready` or `unavailable`. `disabled` means the catalogue carries no
-Changes: no base is configured, or the catalogue was built without them. A
+then `ready` or `unavailable`. `disabled` means the catalogue was built with `--no-changes`; Serve never
+publishes it, because the configuration always has a base. A
 content change clears the result, publishes `pending`, and publishes a
 terminal status only for the latest generation; a result from a superseded
 generation is discarded. A change to the base ref alone reclassifies the

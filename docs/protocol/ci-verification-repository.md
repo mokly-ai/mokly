@@ -18,10 +18,10 @@ gate. An explicit mode flag with any other suite returns a typed error before
 subprocesses start. Release Please and dependency update pull requests select
 strict mode; the scheduled `main` audit and release publish step also stay
 strict. The [baseline contract](./dependency-audit-baseline.md) defines the
-implemented mode selection and comparison rules. Reviewed path and expiry
+mode selection and comparison rules. Reviewed path and expiry
 rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
 
-The Rust file-length auditor is implemented inside `xtask` rather than as a
+The Rust file-length auditor runs inside `xtask` rather than as a
 subprocess in the command list; it has the same failure semantics as the
 listed commands. The source/protocol auditor is an xtask-invoked Node command:
 it checks files changed against fetched `origin/main`, plus working-tree and
@@ -33,7 +33,7 @@ subprocess starts at the workspace root, even when xtask starts elsewhere.
 Use `cargo xtask source-file-length-lint --all` to audit every scoped file
 instead of only the changed set. Source modules have a 300-line limit;
 protocol pages have a 250-line limit or their exact reviewed cap in
-`xtask/protocol-document-caps.json`. The independent ratchets remain
+`xtask/protocol-document-caps.json`. The independent ratchets are
 additional gates under [Repository Verification Ratchets](./verification-ratchets.md).
 During an uncommitted merge, the changed-file audit uses the resolved tree
 against `origin/main`; outside a merge, it uses the branch-point diff and

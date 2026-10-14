@@ -50,10 +50,9 @@ of the [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot
 the entry detail v1 of every removed entry; and the snapshots of both sides
 with their transitive resources. No HTML report, no summary file, and no
 navigation payload is written; the terminal reports the counts and the
-diagnostics. The result's membership is the Changes count: each entry with a
-Changes row counts once across its viewports and colour schemes, a moved
-entry counts as moved, and an `ignored-only` view is a separate diagnostic
-count. A source-only or ignored-only edit never enters any count.
+diagnostics. The [catalogue change contract](./mokly-catalogue-changes.md#changes-count)
+defines the Changes count; the terminal reports it with the moved count and
+the ignored-only diagnostic count beside it.
 
 Base and head panes live under separate snapshot roots named by
 `snapshotViewPath` in the [artifact path contract](./mokly-artifact-paths.md),

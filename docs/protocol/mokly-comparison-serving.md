@@ -58,8 +58,8 @@ admission and drains active generation work before the server exits.
 
 ## Build And Publish
 
-`build` writes one complete comparison into the output directory when the
-configuration names a base: it resolves the merge base once, renders both
+`build` writes one complete comparison into the output directory unless
+`--no-changes` is given: it resolves the merge base once, renders both
 sides through the render graph, classifies every entry and view, and writes
 the generation beside the index, whose `comparisonUrl` names it and whose
 `changesStatus` is `ready`. A static host serves the generation as plain
@@ -68,13 +68,16 @@ hosting rules, and a generation URL is never rewritten to another generation.
 The viewer fetches and validates snapshot documents under the generation and
 presents them in script-disabled frames; it never loads them as frame URLs.
 
-A base whose sources fail the current validation, or a repository without
-the base commit, makes Changes unavailable: the build completes with
+A base whose sources fail the current validation makes Changes unavailable:
+the build completes with
 `comparisonUrl: null`, `changesStatus: "unavailable"`, no generation, and the
-diagnostics in the terminal. A comparison that fails for another reason fails
+diagnostics in the terminal. A repository that cannot resolve the base ref or
+the merge base fails `build` and `publish` with `git-failed` under the
+[terminal errors contract](./mokly-terminal-errors.md). A comparison that
+fails for another reason fails
 the build before its output transaction writes, so the output directory is
-unchanged. A configuration without a base writes no generation and no
-removed entry, and its `changesStatus` is `disabled`.
+unchanged. A build with `--no-changes` writes no generation and no removed entry, and
+its `changesStatus` is `disabled`.
 
 `publish` builds into its own directory outside the repository and uploads the
 generation with the rest of the output through the unchanged

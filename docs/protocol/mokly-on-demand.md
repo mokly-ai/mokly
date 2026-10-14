@@ -5,7 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the
-hierarchy, the prop schemas, and the source inventory before it listens.
+hierarchy, the prop schemas, and the source set before it listens.
 Validation creates one immutable route set from the model's identities; a
 request for a route outside that set is 404, and a new catalogue state
 creates a new set. Serve does not render every document, classify Git
@@ -87,8 +87,9 @@ entry. The shell then requests `/mokly-viewer/diffs/review.json?path=<path>`
 for the selected screen or component entry, with `refresh=1` for an explicit
 retry, under the
 [selected comparison contract](./mokly-selected-comparisons.md). Serve takes
-both sides of that entry's views from the render cache, renders what is
-missing, writes the review result v8 and the two snapshot trees into one
+both sides of that entry's views from the render cache, recomputes only
+evicted views from the same inputs, treats missing or pending evidence as the
+retryable failure, writes the review result v8 and the two snapshot trees into one
 immutable in-memory generation, and redirects to
 `/mokly-viewer/diffs/generations/<generation>/review.json`. Snapshot files
 are the real bytes of both sides. Generation files are served with

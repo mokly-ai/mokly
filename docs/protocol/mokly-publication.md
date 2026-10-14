@@ -60,7 +60,7 @@ control route, and the stub is the same document. The shell never starts an
 URLs are ordinary missing files. This holds for the home, the missing-route,
 and the removed-entry routes alike.
 
-Building over a earlier output that holds a comparison replaces the complete
+Building over an earlier output that holds a comparison replaces the complete
 owned output transactionally and removes the obsolete generation files; they
 are never left reachable through an earlier generation or a stale copy.
 
@@ -98,7 +98,7 @@ to the same directory still contribute their own logical fingerprint paths.
 Exclude the active stage and the destination from input enumeration by their
 canonical paths as well as by the usual output rules. This keeps the build's
 own writes out of its input digest when `.context` or a parent directory is an
-in-repository symlink. Explicit inventoried authoring inputs stay included
+in-repository symlink. Explicit discovered authoring inputs stay included
 even when directory enumeration excludes their location.
 
 Construct one catalogue model from that fingerprinted input set and use it for
@@ -109,7 +109,7 @@ model independently.
 
 Write rendered documents under `static/mokly-generated/` and exactly the
 referenced authored closure under `static/` as regular files; never publish a
-directory merely because it is under `mockupsDir`. Each selected closure file
+directory merely because it is under a configured root. Each selected closure file
 must be a confined regular file, not a symlink or a protected input; apply the
 stage and destination exclusions to both logical and resolved identities.
 Validate the presence of every current page, document, and light and dark view

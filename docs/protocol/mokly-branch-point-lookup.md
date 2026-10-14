@@ -1,5 +1,7 @@
 # Branch-Point Entry Lookup
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Scope
 
 This page owns the lookup between base identities and the current
@@ -53,7 +55,7 @@ The counterpart of a current entry is its base identity:
 3. Otherwise return no counterpart. The current entry is new.
 
 A pair proves the counterpart identity even when base entries are not
-available to the caller. Without a pair or a supplied base inventory,
+available to the caller. Without a pair or a supplied base commit's sources,
 the lookup cannot prove a counterpart and returns none. The embedded public
 catalogue has no base usage; its input details follow the
 [viewer boundary](./mokly-viewer.md).

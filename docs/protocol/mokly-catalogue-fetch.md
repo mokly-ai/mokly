@@ -5,7 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Serve And Fetch Rules
 
 Serve answers the catalogue index, every entry detail, the live descriptor,
-and every comparison generation file with GET and HEAD,
+and every JSON file of a comparison generation with GET and HEAD,
 `application/json; charset=utf-8`, `X-Content-Type-Options: nosniff`, and
 `Cache-Control: no-store`, because a publication replaces bytes at stable
 URLs. A GET of the index or of a detail returns the current published state

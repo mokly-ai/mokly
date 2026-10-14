@@ -22,8 +22,8 @@ their parents were deleted. Pages and documents have no visual comparisons.
 
 The build resolves the effective base and `HEAD` once and pins their merge
 base for both entry impact and view comparisons. The head side renders from
-the working tree, or from the tracked files of the checked-out commit for
-`publish`, and the base side from the base commit under
+the working tree, which `publish` requires to be a clean checkout of
+`headSha`, and the base side from the base commit under
 [Sides](./mokly-comparison.md#sides); base dependencies follow the three
 tiers. One generation renders every view of both sides and compares them; a
 source change during the build fails the build instead of mixing

@@ -46,7 +46,7 @@ SVG and CSS identifiers keep their resource policy; historical snapshot
 navigation is not modified and receives resource-only validation.
 
 The shared public-file confinement check is a minimum boundary, not permission
-to copy the whole repository. Prune entry trees, inventoried sources, the
+to copy the whole repository. Prune entry trees, discovered sources, the
 configuration and the renderer module, inventoried source modules, dotfiles
 and dot directories, Git, dependency, and cache trees, the output directory,
 and the reservation paths for each selected closure file. Explicit HTTP(S) and
@@ -54,9 +54,9 @@ data resources keep the resource policy and are not downloaded; a build that
 references remote resources is not guaranteed to work offline.
 
 One resource policy applies to current copies and comparison snapshots.
-Exclude configured consumer package roots strictly inside `mockupsDir`,
-including their metadata and non-source payloads. A package root equal to
-`mockupsDir` fails explicitly; ancestor roots such as `packageRoots: ["."]`
+Exclude configured consumer package roots strictly inside a configured root,
+including their metadata and non-source payloads. A package root equal to a
+configured root fails explicitly; ancestor roots such as `packageRoots: ["."]`
 are supported. The
 [package-root error](./mokly-public-closure.md#one-policy-per-compilation) is
 a build policy error, not a configuration-load check.

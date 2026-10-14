@@ -28,9 +28,9 @@ identifier and not a document.
 Resources share the namespace: a root's bundled stylesheet at
 `styles/<repository-relative module path>.css` and a CSS asset at
 `assets/<repository-relative asset path>` under the
-[imported stylesheet contract](./mokly-imported-styles.md), and a Markdown
-document's copied resource at `<folder path>/<relative path>` under the
-[documents contract](./mokly-documents.md). `styles` and `assets` are
+[imported stylesheet contract](./mokly-imported-styles.md). A Markdown
+document's resource is a closure file at `static/<repository-relative path>`
+under the [documents contract](./mokly-documents.md); nothing is copied. `styles` and `assets` are
 reserved as the first segment of a document route. An entry's first path
 segment cannot equal `mokly-generated`, compared case-insensitively, under
 the [segment grammar](./mokly-paths.md#segment-grammar). No kind prefix
@@ -79,7 +79,7 @@ Property names inherited from JavaScript objects, including `constructor`,
 catalogue like any other and never against object prototypes.
 
 Entry and view routes are relative to `mokly-generated/`; `GENERATED_DIRECTORY`
-names that segment. The resource helpers
+names that route segment. The resource helpers
 `generatedResourcePath` and `generatedResourceRoute` join and remove that
 exact prefix. `currentDocumentPath` adds `static/` for a frame URL. Authored
 closure resource paths stay repository-relative under `static/`.
@@ -161,8 +161,7 @@ of a path with no entry opens the missing view.
 
 `view/`, `static/`, `mokly-viewer/`, `snapshots/`, `previews/`, and
 `mokly-generated/` are reserved artifact prefixes. `static/mokly-generated/`
-holds only rendered documents, bundled stylesheets, CSS assets, and document
-resource copies. `static/<repository-relative path>` holds the referenced
+holds only rendered documents, bundled stylesheets, and CSS assets. `static/<repository-relative path>` holds the referenced
 authored closure, whose paths cannot start with `mokly-generated/`. Each
 helper keeps its stated scope: namespace-relative, static-relative,
 generation-relative, or origin-relative; `viewHref` and

@@ -61,7 +61,7 @@ The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`;
 owns the shell component tree and CSS, the browser entry, navigation, frame
 adapters, the inspector, and the readers of the catalogue index and entry
 detail. Shared shapes come from the generated types of the Rust model crate.
-The CLI retains configuration, rendering, comparison, Serve, the static build,
+The CLI keeps configuration, rendering, comparison, Serve, the static build,
 publish, and the private control and live transports. The viewer never imports
 the CLI, Node built-ins, Git, or consumer application code, and it renders only
 in the browser under the
@@ -78,7 +78,7 @@ static output load the viewer's standalone bundle, which includes React; React
 hosts render the viewer with their own React. React slots and marker content
 stay host-owned; the viewer positions that content from instance geometry but
 owns no comment model, tenant, authentication, or persistence. Pack the viewer
-first and install both archives in clean consumers; release automation
+first and install every archive in clean consumers; release automation
 publishes the platform packages, then the viewer, then the CLI.
 
 ## Rust Core Boundary

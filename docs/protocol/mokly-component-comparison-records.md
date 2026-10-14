@@ -117,10 +117,11 @@ display that prop.
 
 Every current and base screen, component, variant, and use case appears in
 `entries`, including unchanged and affected-only ones; the array is not the
-Changes filter. `included` is the sole membership source under the
-[Changes membership](./mokly-comparison.md#changes-membership) rules, and the
-number of included entries, with each variant counted as an entry, is the
-Changes count. A changed variant is included as its own entry of kind
+Changes filter. `included` is the membership flag of a review entry under the
+[Changes membership](./mokly-comparison.md#changes-membership) rules. The
+[catalogue change contract](./mokly-catalogue-changes.md#changes-count)
+defines the Changes count over index records of every kind, because pages and
+documents have no review entry. A changed variant is included as its own entry of kind
 `component`, exactly as a screen variant is its own screen entry. A pure move
 is included with an empty `reasons` list. Usages and ancestor folders add no
 entries. The [component comparison schema](./mokly-component-review.md) owns

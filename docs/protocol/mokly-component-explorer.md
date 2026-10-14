@@ -27,7 +27,7 @@ authored order, and marks the shown entry; a variant page shows that variant's
 view. The heading uses the parent component's title on the parent page and on
 every variant page. The path chip, status beside the heading, Details, and URL
 describe the shown entry. Screen variants have no variant bar and keep their
-own title as the heading. The canvas uses the consumer renderer and gives a
+own title as the heading. The canvas uses the entry's render and gives a
 small component suitable space without implying it is a whole phone screen.
 Mobile and desktop still select distinct viewport contexts; controls must not
 fake scaling or modify consumer props to fit. Long or full-width components

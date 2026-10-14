@@ -99,8 +99,7 @@ No marker emits a literal `<link>`. A rule for another route has no effect.
 
 A local file may be both configured and declared through the same validated
 public file. On a matching route the document carries one link, at the
-configured position, and the declaration still counts as rendered for
-provenance. A declaration whose configured rule does not match the route
+configured position. A declaration whose configured rule does not match the route
 follows ordinary component linking. Configuration supplies placement;
 declarations supply required links, not CSS ownership. This overlap is not an
 error or an ignored input.
@@ -118,9 +117,8 @@ Walk the rendered instances in first-render order, root first for a component
 document. Within each first-seen component append its authored stylesheet
 list. Group repeated declarations by their validated file. Emit one link per
 file. The first occurrence decides the link's position within the component
-block and the declared public path its href uses; every rendered declaring
-path is recorded for provenance. A component absent from this render
-contributes neither a link nor provenance; the union of registered or saved
+block and the declared public path its href uses. A component absent from this
+render contributes no link; the union of registered or saved
 components is never linked. This order is stable in Serve, `build`,
 on-demand renders, and both sides of a comparison.
 
@@ -129,9 +127,7 @@ marker's position among the configured links, or after the shared links and
 before the scheme-specific links. Each href is a relative URL from the
 document's route under `static/mokly-generated/` to the public file's route,
 which the [public closure policy](./mokly-public-closure.md) assigns, with the
-same per-segment URL encoding as configured local stylesheet links. The path
-recorded for provenance is the decoded, config-relative public path, not the
-encoded href or the real filesystem path. The renderer module wraps React
+same per-segment URL encoding as configured local stylesheet links. The renderer module wraps React
 renders and emits no
 links, so no authored link is reused or anchored on; the configured
 stylesheet order of the [rendering contract](./mokly-rendering.md) is
@@ -162,7 +158,7 @@ validated declaration is a watch target before Serve reports readiness, even
 if no view renders its component, and a successful configuration reload
 refreshes that set from the new declarations. Changing the declaration or the
 component source rebuilds the bundle generation. On-demand and comparison
-renders use the same linking, provenance, and warning rules as `build`. A
+renders use the same linking and warning rules as `build`. A
 missing or newly non-public file fails validation; Serve keeps its last good
 documents.
 

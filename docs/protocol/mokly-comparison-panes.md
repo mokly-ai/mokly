@@ -1,5 +1,7 @@
 # Comparison Pane Presentation
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Behavior
 
 Overlay and Difference show both versions inside one device chrome; Side by
@@ -11,8 +13,8 @@ full-height sections, fixed bars, and sticky headers look as they do in
 Current. Links and forms do nothing, anchors and scroll keys reach inner
 regions before the page, and text stays selectable. Readers compare a linked
 screen through the catalogue, where every screen has its own comparison.
-Loading, failed, refreshed, and renewed comparisons keep the existing product
-copy, and Try again repeats the request. Individual browser expansion stays
+Loading, failed, refreshed, and renewed comparisons keep the product copy,
+and Try again repeats the request. Individual browser expansion stays
 available only in Current. No pixel counts or percentages are ever shown.
 
 ## Presentation
@@ -72,8 +74,8 @@ sizing, page spacers and measurement, instant writes, shorter-document
 translation, value-based echoes, inner-region mirroring, keys, and anchors; the
 [region pairing contract](./mokly-comparison-region-pairing.md) owns how regions
 pair, and the [Scroll together contract](./mokly-comparison-scroll-together.md)
-owns the reader preference. Sizing a frame to its document remains rejected:
-it distorted viewport units, fixed bars, and sticky headers and could feed a
+owns the reader preference. Sizing a frame to its document is rejected: it
+distorts viewport units, fixed bars, and sticky headers and can feed a
 document's height back into itself without converging.
 
 ## Layout

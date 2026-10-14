@@ -40,7 +40,6 @@ separate [suite evidence contract](./ci-suite-evidence.md).
 
 The [remote verification contract](./remote-verification.md) defines this
 execution and secret boundary.
-The workflow secret boundary and executor key handling are implemented.
 Explicit and automatic modes use the same key handling.
 
 Xtask reads the org key only from `BLACKSMITH_ORG_TOKEN`.
@@ -68,7 +67,7 @@ publishing, even if an org key is present.
 
 ### Child Environment
 
-`SECRET_VARIABLES` defines secret variables for xtask children. It currently
+`SECRET_VARIABLES` defines secret variables for xtask children. It
 contains only `BLACKSMITH_ORG_TOKEN`.
 `GIT_REPOSITORY_VARIABLES` holds the 15 repository-local names from
 `git rev-parse --local-env-vars` in Git 2.50.1. Git can export these variables

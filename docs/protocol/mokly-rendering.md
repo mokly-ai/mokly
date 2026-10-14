@@ -126,8 +126,8 @@ route, with each segment URL-encoded: from `home/index.mobile.html` to
 `../styles/src/home.mockup.tsx.css`. The same order applies to dark views,
 component parents, variants, and stories. A `definePage` page, a `.page.html`
 page, and a Markdown document receive no configured link and no bundled link;
-a `definePage` module that imports CSS still has a bundled stylesheet route
-and links it with a relative URL. A configured file that a declaration also
+a `definePage` module that imports CSS still has a bundled stylesheet route,
+which the page's author may link with a relative URL. A configured file that a declaration also
 names is linked once, at the configured position. A pending bundled route is
 a valid link and resource target during validation, before anything is
 written. Shell and device-frame CSS is package-owned and self-contained;

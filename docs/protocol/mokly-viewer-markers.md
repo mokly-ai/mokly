@@ -152,7 +152,6 @@ before mounting the new runtime. Unmount removes observers, scroll listeners,
 scheduled animation frames, marker containers and adapter subscriptions, and no
 late marker state or error callback may fire.
 
-The adapter wire schema and embedded inspector bundle are unchanged. Markers and
-multi-highlight compose existing `list`, `highlight`, `geometry` and host-side
+Markers and multi-highlight compose the adapter's `list`, `highlight`, `geometry` and host-side
 frame identity primitives described by the
 [frame adapter protocol](./mokly-frame-adapter.md).

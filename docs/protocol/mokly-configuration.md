@@ -182,15 +182,6 @@ the same catalogue paths under the [path contract](./mokly-paths.md). The
 globs select; the file kinds are those of the
 [HTML screens contract](./mokly-html-screens.md#file-kinds-without-javascript).
 
-## Removed Review Setting
-
-`review.sharedImpact`, like every other undeclared field, fails with
-`config-invalid` under the unknown-field rule; no warning exists for it.
-Shared-component impact needs no setting: linked stylesheets are attributed by
-rule under [CSS change attribution](./mokly-css-attribution.md), and a changed
-component lists its consumers as affected under the
-[comparison contract](./mokly-comparison.md#changes-membership).
-
 ## Roots
 
 The [root field contract](./mokly-root-discovery.md#root-fields) defines the

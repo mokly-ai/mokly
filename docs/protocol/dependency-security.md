@@ -14,7 +14,7 @@ configuration would otherwise omit a category. The Node entry point is
 Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
 transport, report, and input errors always fail. The
 [baseline audit contract](./dependency-audit-baseline.md) defines the
-implemented modes, CLI, JSON summary, and comparison rules.
+modes, CLI, JSON summary, and comparison rules.
 
 `npm run dependencies:check` stays strict. Under this contract,
 `cargo xtask check` runs the baseline audit first by default. Ordinary pull
@@ -28,7 +28,7 @@ branches with human commits. Audit command, registry, report, and input failures
 do not change pull requests.
 Dependency fixes, pinned-parent overrides, and reviewed exceptions land there.
 
-The release workflow retains its strict live audit immediately after install,
+The release workflow runs a strict live audit immediately after install,
 before reusable evidence or the complete fallback. Complete mode runs
 `cargo xtask check --dependency-audit strict` and repeats the strict live audit
 when its gate starts. Evidence mode never reuses an earlier audit

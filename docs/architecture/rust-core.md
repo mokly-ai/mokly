@@ -1,7 +1,8 @@
 # Rust Core Architecture
 
-The [Rust rebuild plan](../../plans/rust-rebuild.md) replaces the TypeScript
-backend with a Rust core and a Node sidecar. This document is the map: the
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
+Mokly's backend is a Rust core and a Node sidecar. This document is the map: the
 processes, the crates, the render graph, the comparison model, the memory
 bounds, and the format inventory. The protocol documents own the exact rules.
 
@@ -44,7 +45,7 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-server`    | HTTP, the shell stub, the catalogue index and entry detail routes, documents and assets, the live descriptor, live updates, on-demand comparison, shutdown.       | `graph`, `compare`, `sidecar`   |
 | `mokly-watch`     | Watch rules, invalidation, rebuilds, replay.                                                                                                                      | `graph`, `server`               |
 | `mokly-static`    | The static output of `build`: the stubs, the catalogue index, the entry details, documents, the comparison generation, ownership markers, the output transaction. | `graph`, `compare`, `platform`  |
-| `mokly-publish`   | The unchanged upload exchange v1: plan, blobs, complete, retries, accounting.                                                                                     | `static`                        |
+| `mokly-publish`   | The upload exchange v1: plan, blobs, complete, retries, accounting.                                                                                               | `static`                        |
 | `mokly-cli`       | The `mokly` binary: clap grammar, output modes, reporters, shortcuts, the composition root.                                                                       | everything above                |
 
 Dependencies point downward only. Every impure boundary is a trait consumed
@@ -60,7 +61,7 @@ the required sections, 300-line files, and `_tests_` directories.
   dependencies.
 - `@mokly/native-<target>`: one binary per platform: `linux-x64-gnu`,
   `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`, `win32-x64-msvc`.
-- `@mokly/viewer`: unchanged in purpose; it renders the Browse shell in the
+- `@mokly/viewer`: renders the Browse shell in the
   browser from the catalogue index and entry detail routes, and its data
   readers follow the generated types.
 
@@ -131,7 +132,7 @@ Comparison works on trees, never on text offsets. The
   elements, owned and unowned, are removed; styles count through rule
   evidence only. Attribute order, entity spelling, and formatting
   differences are not changes.
-- CSS attribution keeps today's rule-level diff, selector matching, and
+- CSS attribution uses a rule-level diff, selector matching, and
   conservative keep list, on the `lightningcss` and `selectors` crates.
 - A sidecar-rendered component returns the styles its render produced, so
   their owner is known by construction. Head styles of a whole-screen render
@@ -154,37 +155,35 @@ Comparison works on trees, never on text offsets. The
   dependency cache are bounded by bytes; a dependency install has a time limit.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap; the fragment cache makes a recycle cheap.
-- The acceptance milestone of the plan records the time and memory budgets for
-  the large fixture, with the sidecar count held constant.
+- The [diagnostics contract](../protocol/mokly-timings.md) records the time and
+  memory budgets for the large fixture, with the sidecar count held constant.
 
 ## Format Inventory
 
-Numbers continue the sequence of the previous formats. A number changes only when its
+A number changes only when its
 shape or interpretation changes. No reader accepts an earlier number; readers
 reject before interpreting any field. Package 1.0.0 is the first number held
 stable.
 
-| Boundary                               | Version | Change                                                                |
-| -------------------------------------- | ------- | --------------------------------------------------------------------- |
-| Private generated manifest             | none    | retired: the catalogue model lives in memory; nothing is written      |
-| Public catalogue read model            | 7       | the catalogue index: the source-rendered model without per-view usage |
-| Entry detail                           | 1       | new: one entry's usage, resource evidence, and workspace lists        |
-| Review result                          | 8       | tree materiality, owner-attributed rules, no offsets                  |
-| Catalogue change snapshot              | 4       | pairs review v8 with the base commit                                  |
-| Live descriptor                        | 3       | a Serve JSON route with the render capability only                    |
-| Inspector wire envelope                | 2       | unchanged                                                             |
-| Removed page/document preview metadata | 3       | unchanged                                                             |
-| Export ownership                       | 3       | unchanged; written by `build`                                         |
-| Upload metadata, plan exchange         | 2, 1    | unchanged; Mokly Cloud implements them                                |
-| Export transaction marker              | 2       | unchanged; written by `build`                                         |
-| Navigation disclosure storage          | v4      | unchanged                                                             |
-| Timing and verification records        | 1       | unchanged                                                             |
+| Boundary                               | Version | Content                                                   |
+| -------------------------------------- | ------- | --------------------------------------------------------- |
+| Public catalogue read model            | 7       | the catalogue index at `mokly-viewer/index.json`          |
+| Entry detail                           | 1       | one entry's usage, resource evidence, and workspace lists |
+| Review result                          | 8       | tree materiality and owner-attributed rules               |
+| Catalogue change snapshot              | 4       | pairs review v8 with the base commit                      |
+| Live descriptor                        | 3       | the Serve JSON route with the render capability           |
+| Inspector wire envelope                | 2       | the frame adapter messages                                |
+| Removed page/document preview metadata | 3       | the preview of a removed page or document                 |
+| Export ownership                       | 3       | the ownership marker `build` writes                       |
+| Upload metadata, plan exchange         | 2, 1    | the publish exchange Mokly Cloud implements               |
+| Export transaction marker              | 2       | the output transaction marker `build` writes              |
+| Navigation disclosure storage          | v4      | the shell's navigation disclosure state                   |
+| Timing and verification records        | 1       | the timing and verification evidence records              |
 
 The render graph keeps generations in memory; there is no private IPC format.
 
 ## Related Docs
 
-- [Rust rebuild plan](../../plans/rust-rebuild.md)
 - [Sidecar contract](../protocol/mokly-sidecar.md)
 - [HTML screens](../protocol/mokly-html-screens.md) and
   [HTML components](../protocol/mokly-html-components.md)

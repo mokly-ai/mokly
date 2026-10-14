@@ -62,7 +62,7 @@ identify the uploaded revision. With comparisons enabled, the base side renders
 from the pinned merge base's sources under the
 [comparison contract](./mokly-comparison.md#sides). `--no-changes` requires no
 base history. Publish requires a clean
-checkout. `headSha` names the commit whose tracked files produced the catalogue.
+checkout. `headSha` names the commit whose clean checkout produced the catalogue.
 Dependencies and other ignored build products come from the local environment.
 The CLI enforces this rule; a receiver cannot verify it. A receiver keeps the
 first publication it completes for a `headSha` and `configPath`.

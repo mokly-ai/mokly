@@ -1,5 +1,7 @@
 # Published Inspector And Overlay
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Publication Boundary
 
 The static build injects the dependency-free inspector IIFE from
@@ -55,8 +57,9 @@ Served documents and comparison snapshots stay byte-unmodified. Snapshots never
 embed the script or negotiate a session. Local script-disabled frames retain
 parent-owned highlighting even when published copies contain the inert script.
 No React, server module, cookie, network request, or host-specific integration is
-included in the IIFE. The repository gate enforces a **9 KiB (9,216 bytes)
-minified, uncompressed** script budget; the separately bounded
+included in the IIFE. A viewer-suite test under
+`packages/viewer/tests` checks the built `client/inspector.js` against a
+**9 KiB (9,216 bytes) minified, uncompressed** script budget; the separately bounded
 per-document inert metadata is not executable code and is excluded.
 
 ## Related Docs

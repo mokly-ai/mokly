@@ -61,7 +61,6 @@ package exports `definePage` and its input and definition types:
 ```ts
 interface PageInput extends EntryInput {
   render: () => string;
-  tags?: readonly string[];
 }
 ```
 

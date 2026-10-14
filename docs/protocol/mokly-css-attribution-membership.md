@@ -41,8 +41,8 @@ analysis fills it.
   nothing produces none. A rule that matches no element on either side
   produces no record. A stylesheet whose changed rules all match nothing on
   this view has one record with status `excluded`.
-- `stylesheet` is the public route of the delivered stylesheet, repository
-  relative, including a bundle under `static/mokly-generated/`. It never names
+- `stylesheet` is the public route of the delivered stylesheet, relative to
+  the artifact root, including a bundle under `static/mokly-generated/`. It never names
   a private source.
 - `selector` is the serialized selector as the parser wrote it, including `&`
   before nesting substitution. A selector-less at-rule's record carries the
@@ -111,8 +111,7 @@ changed-component set from the selected entry alone.
   each owner against the recorded own-page match sets, never against the
   result's own rows and never against consumer-instance matches.
 - An `unresolved` record is owned by the entry.
-- A record never carries a private source path, a text offset, or a match
-  node.
+- A record never carries a private source path or a match node.
 - Serve's background classification, the selected comparison, `build`, and
   `publish` produce the same records for one view. The cache key of a record
   set includes both sides' document keys, both sides' stylesheet bytes, and

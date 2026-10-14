@@ -6,7 +6,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 `mokly serve` watches by default; `--no-watch` serves one snapshot. Watch
 belongs to Serve alone: `build` and `publish` run once and start no watcher.
-The watch set derives from the resolved configuration, the source inventory,
+The watch set derives from the resolved configuration, the source set,
 the sidecar's module graph, and the resources the composed documents
 reference. Each input maps to the render graph node it feeds:
 
@@ -85,7 +85,7 @@ repository and never watched.
   stats, and a lookup runs only for a raw rename fallback, treating a failed
   lookup as a file.
 - Exact required files, including the configuration and its imports,
-  inventoried sources, the renderer module, the sidecar's reported modules,
+  discovered sources, the renderer module, the sidecar's reported modules,
   and configured stylesheets, keep their ancestor path and the file itself
   even when nested beneath a denied directory. Denied names apply to
   discovery and directory scans, not to inventoried files or their

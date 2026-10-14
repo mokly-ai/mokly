@@ -193,8 +193,8 @@ A socket that disappears during a failed close prints no close output.
 - Remote execution for a selected `--suite`.
 - A selected base commit that GitHub no longer has.
 - Reusing boxes between checks.
-- Native macOS and Windows tests. They remain in hosted CI.
-- The Node 24 release profile. It remains in hosted CI.
+- Native macOS and Windows tests. They run in hosted CI.
+- The Node 24 release profile. It runs in hosted CI.
 - Changes to the report schema or release evidence acceptance.
 
 ## Related Docs

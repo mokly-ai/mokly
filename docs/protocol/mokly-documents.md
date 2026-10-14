@@ -9,13 +9,13 @@ are not recognised. The leaf is the file name up to its first `.`, so
 `getting-started.md` gives `getting-started`, and `README.md` or `index.md`,
 compared case-insensitively as complete file names, is the folder's index document.
 `release.notes.md` gives `release`; `index.draft.md` is an ordinary `index` leaf. A directory with
-both is a [duplicate index](./mokly-paths.md#diagnostics). A file name outside
+both is a [duplicate index](./mokly-paths.md#diagnostics); index duplicates use
+the exact directory spelling, and differently cased directories reach the
+shared `case-collision` rule instead. A file name outside
 the [segment grammar](./mokly-paths.md#segment-grammar) fails the build; Mokly
 does not rename it. Documents have no variants and no `defineX` helper; the
 file is the definition. The core parses and composes a document in Rust; no
 sidecar starts for it.
-Index duplicates use the exact directory spelling; differently cased directories
-reach the shared `case-collision` rule instead.
 
 ## Front Matter
 

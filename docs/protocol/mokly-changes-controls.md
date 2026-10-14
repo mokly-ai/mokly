@@ -14,7 +14,7 @@ Changed, `added` to Added, `removed` to Removed, and `unchanged` or
 `ignored-only` to Unmodified. While Both is selected, the shown status is
 Changed when any shown view is Changed, else Added when any is Added, else
 Removed when any is Removed, else Unmodified. Comparison eligibility follows
-that shown status under the existing kind rule: Changed is eligible, and
+that shown status under the kind rule: Changed is eligible, and
 Removed is eligible only for a component variant. Thus an entry with
 changes can show Unmodified with no comparison band while the marks on the view
 controls and the `Changed views` row point to the views that changed.
@@ -29,7 +29,7 @@ eligibility without a page load, as does a background evidence refresh;
 selecting a sibling variant is navigation to that entry.
 
 Controlled selection and comparison deep links use the same decision; a deep link is honored only after it confirms eligibility. Nonmatching
-evidence retains the existing fallback decision.
+evidence uses the fallback decision.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
 band beneath the heading. Added and Unmodified views retain their current

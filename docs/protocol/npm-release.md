@@ -39,8 +39,9 @@ tracks release-please's version state, and `package-lock.json` mirrors package
 metadata. Release pull requests update these together. `publishConfig` targets
 the public npm registry with public access.
 
-Runtime dependencies are intentional and minimal: the sidecar's bundler and its
-PostCSS orchestration, and nothing for the binary's own work. CSS parsing,
+Runtime dependencies are intentional and minimal: the exact `@mokly/viewer`
+dependency, the five exact optional platform packages, and the sidecar's
+bundler and its PostCSS orchestration; the binary's own work needs none. CSS parsing,
 exclusive directory rename, Git access, and archive encoding are in the Rust
 binary and need no npm dependency. Mokly does not depend on React Native,
 consumer applications, their component systems, or Playwright. Development and
@@ -102,7 +103,8 @@ Rust commands from the workspace root and include:
   invalid exception; both fail on audit errors. Mode selection and reviewed
   path exceptions follow [dependency security](./dependency-security.md);
 - Prettier and ESLint;
-- the file-length audits and the export ratchets;
+- the file-length audits, the export and unused-member ratchets, and the
+  public API report check;
 - Rust formatting, workspace Clippy with warnings denied, and the Rust tests of
   every crate, which cover discovery, rendering, comparison, Serve, the static
   build, and publish against fixtures and the captured reference scenarios;
@@ -128,7 +130,7 @@ expected frame URL and the complete document state together, not only the
 outer Browse URL or an iframe `src` attribute. Delayed-stylesheet regressions
 exercise this boundary while keeping strict single-preview and control-state
 checks. The shared browser example waits for initial `ready` or `unavailable`
-Changes before opening test pages; completing Usage is not final publication.
+Changes before opening test pages.
 Loading, watch-update, and startup tests keep their independent fixtures and
 exercise pending states and command-to-preview timings under the
 [test timing contract](./ci-test-timing.md).

@@ -22,7 +22,8 @@ runs over every resolved file at discovery under the
 
 Public reads and the static output deny an entry source's lexical path and
 its realpath aliases. An entry cannot sit inside a consumer package tree or
-the static output directory. Mokly writes nothing into the repository, so no
+the static output directory. No command writes into the repository except
+`build` into its output directory, which this policy excludes, so no other
 file of the repository is Mokly-owned. The base-side extraction cache and the
 dependency install cache live outside the repository and never enter the
 inventory or the closure.

@@ -32,7 +32,7 @@ In a static build the shell never requests the live descriptor, the event
 stream, or a render; controls are read-only. It fetches the index and the
 details under the [fetch rules](./mokly-shell-delivery.md#fetch-and-fences)
 of the shell delivery contract and applies the stored or system appearance
-before its first render, so no pre-paint script and no hydration entry exist.
+before its first render, so no pre-paint script exists.
 Removed-content requests are limited to the generation that the index's
 `comparisonUrl` names: the removed entry's detail, the preview metadata, and
 the snapshot documents beneath that generation's permitted sides. There is no
@@ -43,9 +43,7 @@ the [published inspector contract](./mokly-published-inspector.md). It runs
 inside consumer documents under the [frame adapter](./mokly-frame-adapter.md)
 and shares nothing with the shell bundle. No server module, watcher entry, or
 live-host module enters the inventory. Module changes alter the deployment
-identity as required below. A build from a changed working tree also records
-its `changedPaths` in `review.json`, which changes that generation's hash;
-snapshot and comparison resource bytes do not change.
+identity as required below.
 
 ## Deployment Identity
 

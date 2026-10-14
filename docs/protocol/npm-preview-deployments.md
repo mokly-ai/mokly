@@ -15,8 +15,7 @@ write-capable execution.
 
 A preview job installs dependencies, builds Mokly with `npm run build`, and
 builds the example with `mokly build` into an output directory under
-`.context/`, outside the example root, so nothing is written into the
-repository. The `main` job builds the current catalogue. A pull request job
+`.context/`, outside the example root and ignored by Git. The `main` job builds the current catalogue. A pull request job
 builds with `--base origin/main`, so the preview includes Changes against the
 branch point; the job resolves `origin/main` from its full-history checkout.
 The [static build contract](./mokly-export.md) owns the command, its options,

@@ -8,8 +8,8 @@ Entry identity is its path under [paths](./mokly-paths.md). Every document
 and resource route derives from it under the
 [artifact path contract](./mokly-artifact-paths.md), which owns the layout;
 this page states only what readers and frames derive from it. The catalogue
-index and the entry details carry paths and view axes and no route,
-`documentPath`, `fragmentPath`, or layout-prefix field. A reader derives
+index and the entry details carry paths and view axes and no route or
+layout-prefix field. A reader derives
 every current URL from the path and the fixed `static/mokly-generated/`
 namespace through the shared functions; disk existence, host settings, and
 payload metadata select no other layout. A reader rejects another

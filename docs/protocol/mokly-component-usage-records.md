@@ -5,8 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Record Shapes
 
 Usage records derive from the ownership regions of the composed trees under
-the [comparison contract](./mokly-comparison.md#tree-model). No usage file
-exists. A view's usage travels as the `usage` of that view in the
+the [comparison contract](./mokly-comparison.md#tree-model). A view's usage travels as the `usage` of that view in the
 [entry detail](./mokly-shell-delivery.md#entry-detail) and feeds the
 [comparison records](./mokly-component-comparison-records.md).
 
@@ -127,7 +126,7 @@ is valid and supplies no tree.
 
 Readers accept the root target as a boundary without presenting it as a
 nested component or adding an instance count. Public usage carries no DOM
-elements and no text offsets.
+elements.
 
 ## Style And Resource Ownership
 

@@ -108,7 +108,7 @@ type CatalogueChanges =
   | { status: Exclude<ChangesStatus, "ready"> };
 type ComparisonSelection =
   | { status: "ready"; kind: ChangeKind; eligible: boolean }
-  | { status: "pending" | "unavailable" | "disabled" };
+  | { status: "preparing" | "pending" | "unavailable" | "disabled" };
 interface CatalogueDetails {
   description: string;
   rationale?: string;

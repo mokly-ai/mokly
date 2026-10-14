@@ -1,5 +1,7 @@
 # Comparison Scroll Together
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Reader Control
 
 The comparison toolbar places a native `input type="checkbox"` with

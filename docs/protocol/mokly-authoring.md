@@ -42,7 +42,6 @@ no `navPath`. The common input boundary is:
 
 ```ts
 interface EntryInput {
-  dependencies?: readonly string[];
   description: string;
   movedFrom?: string;
   path?: string;
@@ -207,8 +206,8 @@ native HTML/SVG links so Browse can open the canonical catalogue page without
 changing standalone or Review behavior. Metadata-only references use
 `data-nav-href`, and resource elements must keep real resource URLs. A
 document with an activatable logical `href` must not contain `<base href>`;
-the core rejects that combination during final validation while continuing
-to support `<base target>`. The complete behavior is defined by the
+the core rejects that combination during final validation and accepts
+`<base target>`. The complete behavior is defined by the
 [catalogue navigation contract](./mokly-navigation.md). `MockLink asChild`
 explicitly adapts one consumer-styled control into that native-link contract
 under [Styled catalogue link controls](./mokly-link-controls.md). Local

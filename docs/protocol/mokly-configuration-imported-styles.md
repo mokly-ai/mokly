@@ -20,14 +20,13 @@ Rust core bundles them all:
 - component-declared stylesheets under the
   [component stylesheets contract](./mokly-component-stylesheets.md).
 
-A local stylesheet, its `@import` chain, and its `url()` assets are bundled on
-`lightningcss`, or through the consumer's PostCSS module when `postcss` is
-set. The bundle is a node of the render graph, keyed by its sources, assets,
+A local stylesheet, its `@import` chain, and its `url()` assets are transformed by the consumer's PostCSS module when `postcss` is set, then
+bundled on `lightningcss`. The bundle is a node of the render graph, keyed by its sources, assets,
 PostCSS module, and resolution settings; it is kept in the render cache,
 served from there, and written by `build` into `--out`. Nothing is written
 into the repository. The
 [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
-owns the complete `RenderInput.stylesheets` list and its order, including
+owns the complete stylesheet list of a document and its order, including
 delivery without a configured rule and how pages link CSS. The styles a
 sidecar render produces are not stylesheet inputs; they enter the document
 head as owned style elements under the

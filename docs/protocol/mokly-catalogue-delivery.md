@@ -42,12 +42,11 @@ state in one publication, and `build` writes both for every entry.
   variant of it moved, without inventing variants. Variants follow their
   parent in authored order.
 - Ready usage copies only the instance, slot, and root regions that the
-  composed trees carry, with validated props and supplied slot names, and no
-  text offsets. A ready empty list means proven empty usage, never a failed
+  composed trees carry, with validated props and supplied slot names. A ready
+  empty list means proven empty usage, never a failed
   or incomplete render; a view whose render is not complete is `pending`.
 - Ready `resourceEvidence` on a view or a page copies only public evidence:
-  rendered-resource paths, selectors, rule keys, changed component paths, and
-  owners. No match node, source path, declaration, or offset enters it. A
+  rendered-resource paths, selectors, statuses, and owners. No match node, source path, declaration, or offset enters it. A
   root boundary creates no instance.
 - `details` keeps the authored display metadata the inspector shows.
   `sourcePath` and the related-document paths are repository-relative

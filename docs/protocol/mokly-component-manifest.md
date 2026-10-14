@@ -4,7 +4,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Entries, Folders, And Variants
 
-The catalogue model lives in process memory; no manifest is written. Its
+The catalogue model lives in process memory. Its
 entry records are the private form of the
 [catalogue read model](./mokly-catalogue.md), which is their public form. The
 generated TypeScript types of the model crate are the normative shapes.

@@ -9,7 +9,7 @@ The host must serve ordinary files with their correct MIME types, `index.html`
 directory indexes, query-insensitive file lookup, and normal missing-file
 responses. Serve `mokly-viewer/` and `static/` under the
 [portable-name rules](./mokly-viewer-namespace.md#names-and-acceptance). No
-SPA fallback, URL rewriting, worker, API, or server-side rendering is required;
+SPA fallback, URL rewriting, or server-side rendering is required;
 no process renders shell HTML, so the host runs nothing.
 
 The output includes a `404.html` stub. Hosts may configure it as their error
@@ -112,7 +112,6 @@ CORS and `nosniff` headers and a `text/html` MIME type.
 
 ## Static Navigation
 
-No page carries a delivery descriptor, a bootstrap, or workspace evidence.
 The stub is identical for every route; the shell reads the route from
 `location`, fetches `mokly-viewer/index.json`, resolves the route against the
 index, and fetches the routed entry's detail under the
@@ -176,7 +175,7 @@ so its shell marks hidden changed views and lists them in Details without
 fetching that JSON. Added entries keep their current preview without
 comparison modes. Removed screens and pages have no comparison modes;
 selecting one requests the packaged historical version under removed previews.
-Side by side, Overlay, and Difference keep the existing UI and the
+Side by side, Overlay, and Difference keep the UI and the
 missing-current state for removed component variants. Refresh and retry reload
 the same generation; only another build and deployment produce new comparison
 content. Hosts may keep prior generations for old tabs; if they remove them,

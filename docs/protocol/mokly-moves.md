@@ -1,5 +1,7 @@
 # Moves
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Candidates And Uniqueness
 
 Pairing runs once per comparison after the base and current catalogues are
@@ -77,7 +79,7 @@ view or document is identical and the set of views is the same.
 The canonical form keeps real URLs separately for resource traversal and CSS
 selector matching. Link canonicalization changes equality
 material only; it never changes captured documents or the selector matching tree.
-Resource references compare by their resolved mockups-relative route, with query
+Resource references compare by their resolved catalogue route, with query
 and fragment retained. Relative spelling and directory depth are not material.
 During candidate matching, bundled stylesheets, assets and copied document
 resources at different routes can use equal content digests; same-route resources keep
@@ -148,10 +150,10 @@ The review result and the public read model carry `previousPath` on every
 paired current entry; the field is absent on unpaired entries. A paired
 entry's `changes.kind` follows the ordinary classification of its comparison
 with the paired base entry: `unmodified` when nothing material or
-reviewable differs, otherwise `changed`. The four change kinds are unchanged.
-A paired entry is `included` in Changes even when unmodified, so a pure move is
-visible, and the summary counts it under `moved` beside the existing counts
-without adding it to `output changes`. The paired base entry is not
+reviewable differs, otherwise `changed`. A paired entry is `included` in
+Changes even when unmodified, so a pure move is visible, and the
+[Changes count](./mokly-catalogue-changes.md#changes-count) counts it under
+`moved`. The paired base entry is not
 removed: no removed record, removed preview, or removed row is produced for it.
 A paired entry's comparison, previous version, and per-view evidence use the
 paired base entry's documents as the before side. The
@@ -160,12 +162,11 @@ counterpart and parent resolution, including supplied-input pairing.
 
 Review v8 contains screen, component and use-case records only.
 Each moved record carries `previousPath`; a pure move has an explicit empty
-`ChangedEntry.reasons` list. Page/document membership and prior paths belong to
+`ReviewEntry.reasons` list. Page/document membership and prior paths belong to
 the catalogue snapshot and read model, not synthetic visual review records.
 The comparison keeps its pairing,
 `{ moves: { kind, path, previousPath }[], diagnostics: string[] }`, for all
-kinds; the summary's all-kind `moved` count and the exact diagnostics come
-from it. Serve reports each diagnostic through its terminal
+kinds; the terminal's `moved` count and the exact diagnostics come from it. Serve reports each diagnostic through its terminal
 reporter when the classification generation is accepted. Superseded generations
 stay silent. `build` and `publish` report them during comparison. Plain
 mode writes the exact diagnostic and a newline; rich mode uses the existing

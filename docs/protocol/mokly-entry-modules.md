@@ -149,16 +149,16 @@ link surface.
 
 ## Diagnostics
 
-| Code                   | Exact text                                                                                                             |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `duplicate-export`     | `definition <title> is exported by two entry modules:` then one `  <location>` line per export, sorted in UTF-16 order |
-| `empty-module`         | `<location> exports no Mokly definition`                                                                               |
-| `array-export`         | `<location>: export <name> is an array; export one definition per export`                                              |
-| `unknown-link-target`  | `<location>: referenced definition <title> from <definedIn> is not exported by an entry module`                        |
-| `invalid-definition`   | `<location>: export <name> is not a Mokly definition`                                                                  |
-| `invalid-moved-from`   | `<location>: movedFrom <path> equals the entry's own path`                                                             |
-| `moved-from-current`   | `<location>: movedFrom <path> names a current entry`                                                                   |
-| `duplicate-moved-from` | `movedFrom <path> is declared twice:` then one `  <location>` line                                                     |
+| Code                      | Exact text                                                                                                             |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `duplicate-export`        | `definition <title> is exported by two entry modules:` then one `  <location>` line per export, sorted in UTF-16 order |
+| `empty-module`            | `<location> exports no Mokly definition`                                                                               |
+| `array-export`            | `<location>: export <name> is an array; export one definition per export`                                              |
+| `unknown-link-definition` | `<location>: referenced definition <title> from <definedIn> is not exported by an entry module`                        |
+| `invalid-definition`      | `<location>: export <name> is not a Mokly definition`                                                                  |
+| `invalid-moved-from`      | `<location>: movedFrom <path> equals the entry's own path`                                                             |
+| `moved-from-current`      | `<location>: movedFrom <path> names a current entry`                                                                   |
+| `duplicate-moved-from`    | `movedFrom <path> is declared twice:` then one `  <location>` line                                                     |
 
 A location is the repository-relative module path followed by
 ` export <name>`. Every code is a `build-invalid` failure. A definition

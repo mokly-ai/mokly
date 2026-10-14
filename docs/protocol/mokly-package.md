@@ -26,8 +26,9 @@ screens may exist only under examples and test fixtures.
 dependencies and depends on the exact coordinated `@mokly/viewer` version. It
 declares `react` and `react-dom` `>=19.0.0` as peer dependencies, needed only
 when screens or components are written in React; an HTML-only catalogue runs
-without them and never starts the sidecar. The shim needs Node.js 22.14 or
-newer and rejects an older version with an actionable error before it starts
+without them and never starts the sidecar. The shim needs the Node.js range of the
+[CI workflow contract](./ci-workflow.md), 22.14 or newer except 24.14 through
+24.18, and rejects another version with an actionable error before it starts
 the binary. It resolves the platform package for the current platform,
 requires its version to equal the CLI package version, and runs the binary
 with inherited standard streams; it never falls back to a JavaScript
@@ -81,9 +82,9 @@ directory. Every warning follows the count and failure boundary in
 Common options are `--config <path>`, `--sidecars <n>` under the sidecar
 contract, and the opt-in `--debug-timings` of the
 [diagnostic contract](./mokly-timings.md). Serve accepts `--port`, `--base`,
-`--watch`, `--no-watch`, and `--open`. `build` accepts `--out` and `--base`.
-`publish` accepts an optional `--out` and the options of the upload
-contract. `--out` on `serve` is rejected. Screen comparisons are requested
+`--watch`, `--no-watch`, and `--open`. `build` accepts `--out`, `--base`, `--strict`, and `--no-changes`. `publish`
+accepts `--base`, `--no-changes`, and the options of the upload contract; it
+has no `--out`. `--out` on `serve` is rejected. Screen comparisons are requested
 from the catalogue. A flag after the package name belongs to Mokly; docs must
 show npx arguments in a form that is unambiguous to current npm.
 

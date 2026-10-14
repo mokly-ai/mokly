@@ -41,7 +41,7 @@ under the [HTML screens](./mokly-html-screens.md#variants) and
 story of a stories file is a variant of its component entry under the
 [render sidecar contract](./mokly-sidecar.md#storybook). A screen variant may
 also declare `description`, `tags`, `colorSchemes`, `address`, `rationale`,
-`relatedDocs`, `dependencies`, `useCasePaths`, and `movedFrom`; a component
+`relatedDocs`, `useCasePaths`, and `movedFrom`; a component
 variant may also declare `description`, `tags`, `movedFrom`, and `slots`.
 
 ```tsx
@@ -119,8 +119,7 @@ above. Once both parent validations succeed, preparation validates each
 variant's merged props and slots against the parent exactly once.
 
 Every other rule of a valid parent's kind applies unchanged: path and tag
-grammar, color-scheme subsets, reciprocal use-case membership, dependency
-paths, prop validation against the schema, and source attribution to the
+grammar, color-scheme subsets, reciprocal use-case membership, prop validation against the schema, and source attribution to the
 defining module or file.
 
 ## Rendering And Catalogue Model

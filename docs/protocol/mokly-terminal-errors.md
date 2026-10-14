@@ -26,7 +26,7 @@ Mokly catalogue already published for this commit.
 
 The counted lines show the exact plural rule for any counted summary:
 singular only for one. `<outDir>` is the output directory relative to the
-repository, `.` for the repository root. `Mokly cache: <directory>` appears
+repository. `Mokly cache: <directory>` appears
 at most once per process, when the command first opens the base-side
 extraction cache or the dependency install cache, and names the directory
 under the operating system's cache directory. `<uploaded>` and `<unchanged>`

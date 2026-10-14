@@ -5,8 +5,9 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Changes Membership
 
 Changes counts directly changed entries, components and component variants
-included, once per entry. Instances and affected consumers do not increase
-that count. Folder ancestor disclosure and screen-to-use-case propagation
+included, once per entry, under the
+[Changes count](./mokly-catalogue-changes.md#changes-count). Instances and
+affected consumers do not increase that count. Folder ancestor disclosure and screen-to-use-case propagation
 apply as for every entry; an affected-only screen does not make its use cases
 changed. The [comparison contract](./mokly-comparison.md#changes-membership)
 owns the membership list. This page states how a component edit is attributed.

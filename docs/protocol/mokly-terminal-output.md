@@ -191,8 +191,7 @@ line and the durable completion line. Completion summaries are:
   ✔ Mokly catalogue already published for this commit (2.1s)
 ```
 
-`build` names its output directory relative to the repository, with `.` for
-the repository root, and follows its summary with the unstyled guidance
+`build` names its output directory relative to the repository and follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
 Publish follows its summary with the receiver's viewer URL on its own unstyled
 line when the completion response supplied an accepted URL, and adds nothing

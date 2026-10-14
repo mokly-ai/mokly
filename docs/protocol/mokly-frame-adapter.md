@@ -229,7 +229,7 @@ The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
 Historical [removed previews](./mokly-removed-previews.md) and
 [comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
 viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
-Existing local memory previews retain their authenticated private transport.
+Local memory previews use their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
 locally. Panes gain no inspection, geometry, markers, or navigation messages.
 
@@ -351,14 +351,14 @@ change this adapter's handshake, wire messages, or same-origin behavior.
 
 ## Acceptance
 
-Retain same-origin browser tests unchanged. Add an adversarial same-origin case
+Same-origin browser tests include an adversarial same-origin case
 where a frame navigates itself to an unowned document carrying a syntactically
 valid marker, then starts a replacement mount: the unowned document keeps native
 activation and emits no host navigation, while the authenticated replacement
 regains host-owned navigation. Repeat that case with the unowned document's URL
 exactly equal to the next assigned resource, proving the starting object is
-excluded while a different object loaded from that URL authenticates. Retain a
-first-mount initial-`src` case proving its matching starting document remains
+excluded while a different object loaded from that URL authenticates. A
+first-mount initial-`src` case proves its matching starting document remains
 eligible. Cross-origin fixtures must cover handshake and inertness, wrong
 origins/sources/nonces, opaque origins, limits, unknown fields, navigation,
 null/multi-root ranges, clipping, overlays, scroll, view swaps, timeout and
