@@ -702,7 +702,8 @@ Tags: ui
     an on-demand render completes; decide whether Serve renders an entry's
     views before it answers its detail (recommended).
   - 7: the live descriptor v3 and the render capability have no typed shape;
-    decide the field list.
+    decide where the shape lives (recommended: a `LiveDescriptorV3` block on
+    the shell delivery page).
   - 8: `ResourceEvidence` in the detail names a type the catalogue page no
     longer declares, and review v8 uses the name for an array; decide the
     detail's shape (recommended: the review v8 per-view records).
