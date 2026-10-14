@@ -80,7 +80,7 @@ unchanged. A build with `--no-changes` writes no generation and no removed entry
 its `changesStatus` is `disabled`.
 
 `publish` builds into its own directory outside the repository and uploads the
-generation with the rest of the output through the unchanged
+generation with the rest of the output through the
 [upload exchange](./mokly-upload-exchange.md). A published catalogue serves
 one generation until the next publication replaces it. Refresh and retry in a
 built or published catalogue fetch the same generation. Only a new build and

@@ -78,7 +78,8 @@ static output load the viewer's standalone bundle, which includes React; React
 hosts render the viewer with their own React. React slots and marker content
 stay host-owned; the viewer positions that content from instance geometry but
 owns no comment model, tenant, authentication, or persistence. Pack the viewer
-first and install every archive in clean consumers; release automation
+first and install the CLI, its host platform package, and the viewer archives
+in clean consumers; release automation
 publishes the platform packages, then the viewer, then the CLI.
 
 ## Rust Core Boundary

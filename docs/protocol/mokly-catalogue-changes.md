@@ -126,17 +126,6 @@ visible there. Removed variant placement, fallback, and order follow
 [variant navigation](./mokly-variant-navigation.md). Search and tag filtering
 use base path segments, title, and tags like current leaves. Home totals and the tag picker use current entries.
 
-## Changes Count
-
-Changes counts the index records whose `changes` is `ready` and `included`:
-current entries of every kind, screens, pages, documents, use cases, and
-components, with each variant as its own entry; every selected removed record;
-and every paired moved entry once, counted under `moved` as well. The shell
-shows this count, and the terminal's `Changes ready` line reports the same
-number with the moved count and the `ignored-only` diagnostic count beside it.
-Instances, affected consumers, source-only edits, and ignored-only views never
-enter the count.
-
 The removed page or document view shows the base document from the same
 snapshot, under the [removed previews](./mokly-removed-previews.md) contract.
 Its details show the base title, path, description, tags, related docs, and
@@ -149,6 +138,18 @@ For example, removing the last entry in `Documents` leaves a flat
 `Statement · Removed` row in Changes. Details keep its old `Documents` folder
 title; neither navigation nor the home view recreates the old folder. The
 design mockups cover this exact state at mobile and desktop widths.
+
+## Changes Count
+
+Changes counts the index records whose `changes.status` is `ready` and
+whose `changes.included` is true:
+current entries of every kind, screens, pages, documents, use cases, and
+components, with each variant as its own entry; every selected removed record;
+and every paired moved entry once, counted under `moved` as well. The shell
+shows this count, and the terminal's `Changes ready` line reports the same
+number with the moved count and the `ignored-only` diagnostic count beside it.
+Instances, affected consumers, source-only edits, and ignored-only views never
+enter the count.
 
 ## Watch And Publication
 

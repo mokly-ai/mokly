@@ -7,7 +7,7 @@ Continuation of [Static Build](./mokly-export.md).
 ## Output Inventory
 
 `build` trusts only the files of its own render: the rendered views, the
-pages, the document scheme files, the copied document resources, and the
+pages, the document scheme files, the document resources of the closure, and the
 bundled stylesheets and assets, all taken from the render cache. It never
 walks a directory on disk to find output, and nothing on disk is read back.
 Entry segments such as `coverage`, `dist`, `node_modules`, and `README` do not

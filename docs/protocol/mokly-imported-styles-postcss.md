@@ -78,7 +78,7 @@ a change to either path rebuilds.
 For a directory message, the core walks regular files from the reported
 directory with the discovery walk's denied directory list, does not honour
 `.gitignore`, and matches each path relative to the reported directory with
-its glob `glob`, or `**/*` when absent, with `dot: true` and
+its `glob` pattern, or `**/*` when absent, with `dot: true` and
 case-sensitive matching. The reported in-repository directory must exist and
 be a directory even when it matches no file. The walk skips
 `node_modules`, denied trees, and paths outside the repository, and never

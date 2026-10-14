@@ -66,7 +66,7 @@ context.
 
 ### 1. Install
 
-Mokly needs Node.js 22.14 or newer, except 24.14 through 24.18. The `mokly` binary ships for Linux x64 and
+Mokly needs Node.js `>=22.14.0 <24.14.0 || >=24.19.0`: 22.14 or newer, except 24.14 through 24.18. The `mokly` binary ships for Linux x64 and
 arm64 with glibc, macOS x64 and arm64, and Windows x64. React 19 or newer is
 needed only when screens or components are written in React.
 

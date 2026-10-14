@@ -81,8 +81,8 @@ selector matching. Link canonicalization changes equality
 material only; it never changes captured documents or the selector matching tree.
 Resource references compare by their resolved catalogue route, with query
 and fragment retained. Relative spelling and directory depth are not material.
-During candidate matching, bundled stylesheets, assets and copied document
-resources at different routes can use equal content digests; same-route resources keep
+During candidate matching, bundled stylesheets, assets and the document
+resources of the closure at different routes can use equal content digests; same-route resources keep
 route identity. CSS digests resolve their URL tokens recursively. Accepted entry
 moves map root-module stylesheet routes and assets under corresponding source
 directories. Document resources map by their source-relative reference. Re-exporting entry roots use the corresponding accepted view's rendered

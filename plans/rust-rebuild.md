@@ -778,6 +778,20 @@ entry`; decide whether to rename them now.
     decide the milestone (recommended: Milestone 8).
   - U: `AGENTS.md` describes the present tree; decide whether it waits for
     the teardown item (recommended) or follows now.
+  - Open from the re-review of commit 9f834234, report under
+    `.context/rust-rebuild/review-2026-10-14-rewrite-fix.md`:
+  - 1: `mokly-frame-adapter.md` sits at its 366-line cap and has no Status
+    line; decide which two lines to remove so the line fits (recommended)
+    or whether its end-state sentences revert to pointers.
+  - 2: three pages cite a `Changes ready` terminal line with a moved count
+    and an ignored-only count that the terminal output page does not
+    define; decide the exact line (recommended) or drop the claims.
+  - 6: the fix commit replaced "inventoried" on seven lines with "source
+    set" and "discovered sources" while the source protection page owns the
+    term "complete source inventory"; decide the one term (recommended:
+    restore the owner's term and link it).
+  - 7: the branch point lookup page supplies its cases to "node and browser
+    tests"; decide the owner (recommended: Rust and browser tests).
   - Open from the review of commit 9a7aa5e2, report under
     `.context/rust-rebuild/review-2026-10-13-nine-decisions.md`:
   - 5: a function-valued story arg with no `argTypes` entry has no stated

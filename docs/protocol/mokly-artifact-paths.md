@@ -30,7 +30,8 @@ Resources share the namespace: a root's bundled stylesheet at
 `assets/<repository-relative asset path>` under the
 [imported stylesheet contract](./mokly-imported-styles.md). A Markdown
 document's resource is a closure file at `static/<repository-relative path>`
-under the [documents contract](./mokly-documents.md); nothing is copied. `styles` and `assets` are
+under the [documents contract](./mokly-documents.md); no copy is made under
+`static/mokly-generated/`. `styles` and `assets` are
 reserved as the first segment of a document route. An entry's first path
 segment cannot equal `mokly-generated`, compared case-insensitively, under
 the [segment grammar](./mokly-paths.md#segment-grammar). No kind prefix
