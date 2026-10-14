@@ -7,16 +7,17 @@ The [error catalogue](./mokly-imported-styles-errors.md) gives exact messages.
 
 ## CSS Modules And Import Loaders
 
-A `*.module.css` import is a CSS Module. Mokly applies the rename-only
-scoping that css-loader and Vite apply by default, in the sidecar: `bundle`
-scopes the file to produce the class map that the JavaScript import receives,
-and `processCss` returns the scoped text that the core bundles under the
-[delivery contract](./mokly-imported-styles.md#bundling). Both use one naming
-rule, so the map and the delivered stylesheet agree by construction; a
-generation whose map and text disagree fails before anything is served.
-Scoping runs after renderer pruning and after the consumer's PostCSS plugins,
-with `map: false`, so a `sourceMappingURL` comment never loads a map or reads
-a file. Diagnostic positions refer to the CSS that the scoper receives.
+A `*.module.css` import is a CSS Module. The core applies the rename-only
+scoping that css-loader and Vite apply by default, on `lightningcss`: it
+scopes the file to produce the class map that the JavaScript import receives
+and the scoped text that it bundles under the
+[delivery contract](./mokly-imported-styles.md#bundling). One naming rule
+produces both, so the map and the delivered stylesheet agree by construction.
+The sidecar's [`bundle`](./mokly-sidecar.md#bundling) compiles the import to a
+stub that reads the map from the generation's table, which the core supplies
+through `cssModules` before the first render. Scoping runs after renderer
+pruning and after the consumer's PostCSS plugins, with no source map, so a
+`sourceMappingURL` comment never loads a map or reads a file. Diagnostic positions refer to the CSS that the scoper receives.
 
 ### Names
 

@@ -9,7 +9,7 @@ Use the maintained `@microsoft/api-extractor` package installed with
 version. Generate reports from the package declaration outputs after the build.
 Commit one report per typed public export-map entry under `etc/api/`: the
 `@mokly/mokly` root, which is the authoring API, and the viewer's root,
-`runtime`, `browser`, and `data` entries. The side-effect-only browser entry
+`browser`, and `data` entries. The side-effect-only browser entry
 still needs a report. A committed export-map inventory also records the
 viewer's `styles.css` resource entry, which has no TypeScript signature, and
 the root package's `mokly` bin, which is the shim. Public subpaths must not

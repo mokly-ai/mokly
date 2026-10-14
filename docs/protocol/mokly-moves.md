@@ -139,7 +139,7 @@ value on two current entries, under the
 [entry module diagnostics](./mokly-entry-modules.md#diagnostics). Pairing
 rejects nothing: a `movedFrom` that names no removed base entry of the same
 kind leaves the entry `added` and records the comparison diagnostic
-`<path>: movedFrom <path> matched no removed baseline entry of kind <kind>`.
+`<path>: movedFrom <path> matched no removed base entry of kind <kind>`.
 A nonmatching declaration excludes that added entry from later signals.
 A declaration may be removed once the base branch contains the move; keeping
 it is harmless, because it names no removed entry.

@@ -55,6 +55,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 | `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                |
 | `renderPage`      | generation, handle                                                                            | `{ html, resources, warnings }`                              |
 | `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                     |
+| `cssModules`      | generation, class maps by stylesheet path                                                     | nothing                                                      |
 | `dispose`         | generation                                                                                    | nothing                                                      |
 | `shutdown`        | none                                                                                          | nothing                                                      |
 
@@ -104,7 +105,12 @@ The bundle compiles JSX in development mode and resolves
 `react/jsx-dev-runtime` to a Mokly-owned shim inside the consumer graph; the
 shim forwards to the consumer's `react/jsx-runtime` and attaches the invocation
 source only to `defineComponent` wrappers, as the
-[instances contract](./mokly-instances.md) reads it. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
+[instances contract](./mokly-instances.md) reads it. A `*.module.css` import
+compiles to a stub that reads the file's class map from the generation's map
+table; the core scopes the file under the
+[CSS Modules contract](./mokly-imported-styles-modules.md) and supplies every
+map of the generation through `cssModules` before the first render, and a
+render of a generation without its table fails closed. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
 attributed authoring facade directly, and its metafile is the module inventory. Rolldown is reviewed again after the first release.
 
 The source root is the repository root for the head side of a comparison. For

@@ -149,8 +149,8 @@ written into the repository:
 - Component instances, slots, and ignore regions are node annotations of the
   tree under the [comparison contract](./mokly-comparison.md#markers); ignore
   scopes are resolved during composition and leave nothing in the output.
-  Served and built documents carry no markers and embed no catalogue
-  data.
+  Served and built documents keep the instance and slot markers of the
+  comparison contract and embed no catalogue data.
 - After composition the core adapts `to` controls under the
   [link control contract](./mokly-link-controls.md), rewrites every complete
   or relative `mock:<path>[#fragment]` value in `href` and `data-nav-href`

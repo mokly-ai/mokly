@@ -25,24 +25,26 @@ detail, a URL, local storage, or the shell store.
 ## Render Capability
 
 The descriptor carries the temporary-render capability of the component
-controls contract, bound to the render `generation` it names, which equals
-the index's `live.generation` for HTML and JavaScript entries alike. The shell holds
+controls contract and names the render `generation`, which equals the index's
+`live.generation` for HTML and JavaScript entries alike. A render request and
+its response carry the installed `revision`; Serve rejects an older revision
+with the stale-revision code of the controls contract. The shell holds
 the capability in one closure that performs the render request and exposes
 `temporaryPreviews.render` and `temporaryPreviews.expired` through one React
 context; `useViewerCapabilities()` returns them in Serve and `undefined`
 elsewhere. React invokes rendering through the closure, so the token cannot
-enter store state. A render response is accepted only when its generation
+enter store state. A render response is accepted only when its revision
 equals the installed one and its view matches the request; expiry checks
 cover only preview URLs the shell received.
 
 Every capability call carries the current route and the installed
-`deploymentId`, `revision`, and generation. A result whose values differ from
+`deploymentId` and `revision`. A result whose values differ from
 the installed ones is discarded. Navigation, a sibling-variant change, a
 revision adoption, and unmount abort work in flight and release nothing to
-the store. When the index's `live.generation` changes, the shell refetches
-the descriptor and replaces the capability; a render request against the old
-generation fails with the stale-generation code of the controls contract, and
-the shell rerenders the current validated props against the new one.
+the store. When the index's `live.generation` changes, the shell refetches the
+descriptor, replaces the capability, and rerenders the current validated props
+against the new one; a response of the old revision is discarded. There is no
+stale-generation code.
 
 When the descriptor fetch fails while the index carries `live`, browsing
 works and live prop editing is unavailable with a browser warning; the shell
@@ -76,5 +78,4 @@ import resolves within that inventory. The static output contains no
 descriptor, no token, no event stream, and no control route, and its shell
 issues no request to one. Browser coverage proves that a static page and an
 embedded viewer make no live request, that a Serve page with the stream
-denied still browses, and that a stale-generation render response never
-replaces a preview.
+denied still browses, and that a stale render response never replaces a preview.

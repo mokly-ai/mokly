@@ -125,7 +125,7 @@ link cannot also submit a form. Ordinary unmarked buttons and metadata-only
 Adaptation runs on the composed tree, after the renderer and before
 logical-link rewriting, for screen, component, and page documents alike. In an
 HTML body the element that carries `to` is the control. In a sidecar render,
-`MockLink asChild` wraps the child in a `mokly-` comment marker pair under the
+`MockLink asChild` wraps the child in a `mokly-link` marker pair under the
 markers rule of the [comparison contract](./mokly-comparison.md#markers); the
 core reads the pair into the control's region and drops it, so no marker is
 served. A pair that consumer output authors, and a malformed, unmatched,

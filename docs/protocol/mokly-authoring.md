@@ -62,7 +62,9 @@ protection only. Components declare public CSS through
 
 ## Entry Kinds
 
-A screen is a render over props. `defineScreen` takes `render(props)`, which
+A screen is a render over props. `defineScreen` takes
+`render(props, context)`, where `context` is `{ viewport, colorScheme }` and
+may be ignored, which
 returns the React node of one view, an optional `propSchema` under the
 [prop schema profile](./mokly-entry-props.md#prop-schema-profile), the
 screen's own `props`, optional `variants`, and optional `controls`. The

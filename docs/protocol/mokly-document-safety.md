@@ -28,8 +28,8 @@ Only HTML-namespace elements in this table are allowed in the rendered body:
 The template additionally owns its direct-body `main` wrapper with no attributes.
 Every other body element or attribute is rejected, including `script`, `style`,
 `iframe`, `object`, `embed`, `svg`, `math`, `form`, any `on*` attribute and any
-body `style` attribute. Comments are inert; a served or built document carries
-no comment markers under the [comparison contract](./mokly-comparison.md).
+body `style` attribute. Comments are inert; the only comments Mokly writes are the instance and slot
+markers of the [comparison contract](./mokly-comparison.md).
 
 `href` and `src` permit only `http:`, `https:` and `mailto:` schemes, or portable
 relative/fragment URLs. Reject other schemes, controls, backslashes, leading or

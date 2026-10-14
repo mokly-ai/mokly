@@ -64,8 +64,8 @@ entry's own view is the entry owner and is not a used instance.
 
 Instance and slot keys are lowercase 64-hex SHA-256 digests of UTF-8 JSON,
 without a final LF. Their preimages are
-`["mokabook-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
-and `["mokabook-slot-v1", instanceKey, name]`. Those domain strings are permanent
+`["mokly-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
+and `["mokly-slot-v1", instanceKey, name]`. Those domain strings are permanent
 protocol identifiers. Readers recompute keys and reject mismatches or
 conflicting duplicates. Keys are not entry paths, selectors, or file names.
 

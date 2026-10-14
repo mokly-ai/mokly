@@ -65,8 +65,9 @@ Copy public resources into the owned output as ordinary files, never
 symlinks. Reject selected symlink files and directories and escaping
 references explicitly; do not traverse a symlinked directory. Base-side files
 come from Git blobs under the comparison contract's regular-file rules.
-Documents in the output and in the snapshots carry no markers; the composed
-trees of the comparison contract hold ownership in memory.
+Documents in the output and in the snapshots carry the instance and slot
+markers of the comparison contract; its composed trees hold ownership in
+memory, and canonical form removes the markers before comparison.
 
 Ship the package shell assets and the complete browser module graph from the
 installed package. Do not ship consumer inputs, source maps, configuration

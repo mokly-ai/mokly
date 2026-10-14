@@ -90,7 +90,7 @@ stable across renders of the same inputs; two regions with one id in one
 document fail closed with the entry and view named, as does a start marker
 without its end. Regions pair by id across the sides. A region whose id exists
 on one side only is ordinary content and compares as such. The region adds no
-layout wrapper, and served and built documents carry no marker.
+layout wrapper; its markers are comments.
 
 Stateful repeated chrome supplies a deterministic material key derived from
 the complete typed props used to render it. The key stays outside the ignored

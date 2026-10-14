@@ -17,7 +17,7 @@ Rust model crate. The package has three entry points:
   `data-mokly-shell` element of the stub that the
   [shell delivery contract](./mokly-shell-delivery.md) defines. Serve and
   `build` deliver it as `/mokly-viewer/client/shell.js`.
-- `./styles.css` is the scoped stylesheet of an embedded root.
+- `./data` exports the pure path functions of the [artifact path contract](./mokly-artifact-paths.md) with no React dependency, and `./styles.css` is the scoped stylesheet of an embedded root.
 
 Every delivery renders the shell from data in the browser.
 

@@ -87,18 +87,18 @@ interface EntryDetailV1 {
   generation?: string; // removed entries: the comparison generation
   entry: { path: string; kind: CatalogueRecord["kind"]; snapshotId?: string };
   views: readonly DetailView[]; // empty for pages, documents, and use cases
-  resourceEvidence?: ViewEvidence; // pages only
+  resourceEvidence?: ViewEvidence; // pages only; present when ready
   workspace?: Workspace; // screens and components only
 }
 interface DetailView {
   viewport: Viewport;
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
-  resourceEvidence?: ViewEvidence;
+  resourceEvidence?: ViewEvidence; // present on every ready view
 }
 interface ViewEvidence {
-  rules: readonly RuleEvidence[]; // review v8, with the owner of each rule
-  resources: readonly ResourceEvidence[]; // review v8, with the owner of each
+  rules: readonly RuleEvidence[]; // review v8 with owners; [] when it omits the list
+  resources: readonly ResourceEvidence[]; // review v8 with owners; [] when omitted
 }
 interface Workspace {
   comparisonEligible: boolean;

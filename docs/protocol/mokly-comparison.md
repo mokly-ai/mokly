@@ -14,18 +14,24 @@ it never splices document text.
 ## Markers
 
 The core attaches ownership and ignore regions to tree nodes while it
-composes a document. The one place that information crosses a process
-boundary is the HTML fragment a sidecar returns: the fragment carries it as
-the comment markers below, and the core reads them into node annotations and
-drops them when it grafts the fragment. Served and exported documents carry no
-markers. Every comment name with the `mokly-` prefix is reserved for markers.
+composes a document. A fragment a sidecar returns carries its regions as the
+comment markers below, and the core reads them into node annotations when it
+grafts the fragment. Served and built documents keep the `mokly-instance` and
+`mokly-slot` markers of every region the core composed, whatever rendered the
+instance, so the [published inspector](./mokly-published-inspector.md)
+resolves each `r-n` region in the live page. Ignore regions resolve at
+composition, and `mokly-link` pairs are consumed by
+[link adaptation](./mokly-link-controls.md); neither is written. The canonical
+form below removes every marker before comparison. Every comment name with
+the `mokly-` prefix is reserved for markers.
 
-| Marker                                                                 | Meaning                                                              |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<!--mokly-instance:start id="r-3" path="…" instance="…" props="…"-->` | a rendered component instance; `props` is the canonical props digest |
-| `<!--mokly-slot:start id="r-3" name="children"-->`                     | slot content supplied to instance `r-3` by its enclosing owner       |
-| `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                |
-| `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                       |
+| Marker                                                                 | Meaning                                                                         |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `<!--mokly-instance:start id="r-3" path="…" instance="…" props="…"-->` | a rendered component instance; `props` is the canonical props digest            |
+| `<!--mokly-slot:start id="r-3" name="children"-->`                     | slot content supplied to instance `r-3` by its enclosing owner                  |
+| `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                           |
+| `<!--mokly-link:start id="…" to="…"-->`                                | a `MockLink asChild` control in a sidecar fragment; consumed by link adaptation |
+| `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                                  |
 
 A region is the sequence of sibling nodes between its start and end markers,
 which share one parent. Regions nest. Ids are unique within a document and
@@ -93,8 +99,11 @@ renderer wrote, follow the inline rule: diff their rules between the sides
 with the stylesheet rule diff, match each changed rule's selectors against
 both trees, and attribute it to the one component whose regions contain every
 matched element, to the entry when a matched element lies outside every
-region or the matches span several components, and to the entry as `unresolved` when the keep list applies. A rule that
-matches no element on either side produces no evidence record. An excluded rule never makes a view material; a rule attributed to a
+region or the matches span several components, and to the entry as `unresolved` when the keep list applies. A rule that matches no element on either side produces no record of its own;
+a stylesheet whose changed rules all match nothing on a view produces one
+record with status `excluded`, an empty `selector`, and the entry as owner, so
+the shell can say that the stylesheet changed without applying. An excluded
+record never makes a view material; a rule attributed to a
 component is that component's change and keeps the screen listed as affected.
 
 ## Resources

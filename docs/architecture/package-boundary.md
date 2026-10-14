@@ -56,7 +56,8 @@ variants and inspection without the live capability. See the
 
 ## Viewer Package Boundary
 
-The repository uses npm workspaces with `packages/viewer` as `@mokly/viewer`;
+The repository uses npm workspaces with `packages/mokly` as
+`@mokly/mokly` and `packages/viewer` as `@mokly/viewer`;
 `@mokly/mokly` depends on its exact coordinated release version. The viewer
 owns the shell component tree and CSS, the browser entry, navigation, frame
 adapters, the inspector, and the readers of the catalogue index and entry

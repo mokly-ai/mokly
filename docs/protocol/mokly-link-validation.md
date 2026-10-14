@@ -33,7 +33,8 @@ supply complete documents, from a `.page.html` file or through the sidecar's
 `renderPage`; the core assembles screen and component documents from the
 HTML bodies and the fragments the sidecar returns for React entries. A composed
 document carries the `data-mokly-link` marker attribute of an activatable link
-and no comment marker. [Markdown documents](./mokly-documents.md) also pass
+and the instance and slot comment markers of the comparison contract.
+[Markdown documents](./mokly-documents.md) also pass
 the element, attribute and URL allowlist of
 [Document Rendering Safety](./mokly-document-safety.md) after link rewriting;
 that check keeps the owned document template and rejects unsafe body markup.

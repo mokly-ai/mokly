@@ -31,13 +31,11 @@ detail's bytes change exactly when its content changes.
 `["mokly-historical-snapshot-v3", catalogueIdentity, sourceKind,
 sourceIdentity, entryKind, entryPath]`. `mokly-historical-snapshot-v3` is a
 permanent hash namespace, not a format version. `sourceKind` is the literal
-`baseline` when the comparison names one base commit; that commit is the
-`sourceIdentity`, and every comparison input of the state must agree on it.
-That identity takes precedence over a generation, so a Changes completion
-does not invalidate a selection. When no base commit is known, the exact
-64-hex generation from `comparisonUrl` supplies `sourceKind: "generation"`.
-With neither, the projection omits the field instead of deriving it from
-`revision`, `deploymentId`, metadata, time, or randomness.
+`base`; the comparison's base commit is the `sourceIdentity`, and every
+comparison input of the state must agree on it. That identity takes
+precedence over a generation, so a Changes completion does not invalidate a
+selection. Without a base commit the projection omits the field instead of
+deriving it from `revision`, `deploymentId`, metadata, time, or randomness.
 
 Readers validate supplied snapshot ids and require uniqueness. They never
 derive a missing id. A removed record with a non-null `comparisonUrl` must

@@ -15,6 +15,7 @@ capitalization, spacing, and trailing newlines:
 Mokly listening at <url> (watching)
 Mokly listening at <url>
 Mokly cache: <directory>
+Mokly publish build: <directory>
 Built Mokly to <outDir> (<n> files).
 Deploy this directory at your site's root with your hosting provider.
 Published Mokly catalogue. 0 files uploaded, <unchanged> unchanged.
@@ -26,8 +27,9 @@ Mokly catalogue already published for this commit.
 
 The counted lines show the exact plural rule for any counted summary:
 singular only for one. `<outDir>` is the output directory relative to the
-repository. `Mokly cache: <directory>` appears
-at most once per process, when the command first opens the base-side
+repository. `Mokly publish build: <directory>` appears once per `publish` process, before
+its build starts, and names the private directory that `publish` keeps after
+a failed upload. `Mokly cache: <directory>` appears at most once per process, when the command first opens the base-side
 extraction cache or the dependency install cache, and names the directory
 under the operating system's cache directory. `<uploaded>` and `<unchanged>`
 use the same decimal counts as rich mode. A publish prints one counted line

@@ -60,6 +60,8 @@ lists 151 pages by subject. Later on 2026-10-14 the user settled the eleven
 open shell delivery findings: document keys in the index, the live descriptor
 for every catalogue, the deployment id in each event message, and no usage
 route (Decision 30).
+On 2026-10-14 the user settled the remaining review items of the end-state
+rewrite as Decisions 31 to 38.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -136,18 +138,17 @@ more than re-deriving the behaviour from the requirements.
     returns; ignore scopes resolve at render time; the `mokly-` prefix is
     reserved for element names in authored HTML and for comment names in
     fragments. A changed style rule that matches no element produces no
-    evidence record.
+    evidence record. Amended by Decision 31 on 2026-10-14.
 14. Two verbs (2026-10-13): `serve` and `build`. `build` validates the
     catalogue, renders every view, fails on errors and, with `--strict`, on
     warnings, and writes the static output into the directory `--out` names,
     `mokly-static/` at the repository root by default, which Git must ignore.
     `publish` builds into its own directory outside the repository and
-    uploads. Amended on 2026-10-14 by the end-state rewrite: `build` and
-    `publish` take `--base <ref>` and `--no-changes`; `publish` builds into
-    a private directory that the terminal names and keeps after a failed
-    upload. There is no `check`
-    and no `export`; a validation-only run is a build to a temporary
-    directory.
+    uploads. Amended on 2026-10-14 by the end-state rewrite: `serve`, `build`, and `publish` take `--base <ref>`, and `build` and
+    `publish` take `--no-changes`; `publish` builds into a private directory
+    that the terminal names and keeps after a failed upload. There is no
+    `check` and no `export`; a validation-only run is a build to a temporary
+    directory. Amended by Decision 36 on 2026-10-14.
 15. Caches (2026-10-13): the render cache is process memory. The base-side
     extraction cache and the dependency install cache live outside the
     repository, in the operating system's cache directory under a key derived
@@ -280,7 +281,57 @@ more than re-deriving the behaviour from the requirements.
     comparison serving contract as the owner of the comparison routes; and
     per-view usage has no route of its own, so a detail carries `pending`
     until the next publication. This settles the open findings of the shell
-    delivery reviews of commits 1fdf5d95, 62223201, and 7cb14ebf.
+    delivery reviews of commits 1fdf5d95, 62223201, and 7cb14ebf. Amended by
+    Decision 34 on 2026-10-14.
+
+31. Markers in output (2026-10-14, amends 13): served and built documents
+    keep the `mokly-instance` and `mokly-slot` comment markers of every region
+    the core composed, whatever rendered the instance, so the published
+    inspector resolves `r-n` regions in the live page. Ignore regions resolve
+    at composition, and the `mokly-link` marker of a `MockLink asChild`
+    control is the fourth reserved marker; both are consumed and never
+    written. Canonical form removes every marker before comparison. A
+    stylesheet whose changed rules all match nothing on a view produces one
+    `excluded` record with an empty selector, owned by the entry.
+32. One render signature (2026-10-14): `defineScreen` and `defineComponent`
+    take `render(props, context)`, where `context` is
+    `{ viewport, colorScheme }` and a render may ignore it.
+33. CSS Modules in the core (2026-10-14): the core scopes `*.module.css` on
+    `lightningcss` after the consumer's PostCSS step and derives the class map
+    with the path-hash naming rule; `bundle` compiles each module CSS import
+    to a stub that reads the generation's map table, which the core supplies
+    through the sidecar's `cssModules` call before the first render.
+34. Live render fence (2026-10-14, amends 30): the live render request and
+    response carry the installed `revision`, and Serve rejects an older
+    revision with the stale-revision code; a change of the index's
+    `live.generation` refetches the descriptor, replaces the capability, and
+    rerenders the current validated props. There is no stale-generation code.
+35. Wire literals (2026-10-14): `sourceKind` is always `"base"` and the
+    `"generation"` kind does not exist; the instance and slot key domains are
+    `mokly-instance-v1` and `mokly-slot-v1`; the move diagnostic reads
+    `matched no removed base entry`.
+36. CLI, packaging, and read model settlements (2026-10-14, amends 14):
+    `serve` also takes `--base <ref>`; `publish` prints
+    `Mokly publish build: <directory>` once, before its build; the viewer's
+    public entries are the root, `./browser`, `./data`, and `./styles.css`;
+    `packages/mokly` holds the `@mokly/mokly` shim, sidecar, and authoring
+    API, and `src/` is deleted at the teardown; the `Changes ready` line
+    reports the Changes count with the moved and ignored-only counts, zero
+    segments omitted; every ready view and page of the entry detail carries
+    `resourceEvidence` with both arrays, empty allowed.
+37. Data-only configuration (2026-10-14): the configuration is
+    `mokly.config.json`, read by the core, with a JSON Schema the package
+    ships for editors; `--config` names another JSON file. A `$`-prefixed
+    string in a stylesheet list is a token, and `$componentStylesheets` is the
+    only token. There is no `defineConfig`, no TypeScript or JavaScript
+    configuration, no sidecar at startup, and no configuration import to
+    watch.
+38. Documentation settlements (2026-10-14): the six duplicate pages
+    (generated delivery, catalogue fetch, live capabilities, removed preview
+    frames, publication changes, configuration discovery) merge into their
+    owners and `verification-protocol-index.md` is deleted; the viewer package
+    README, the xtask README, the guides, and `AGENTS.md` follow the end state
+    now.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -511,8 +562,8 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `mokly-git` (command runner, bounded batches), and `mokly-sidecar` (the
       client of the sidecar protocol). Later milestones add their own crates.
       Each crate has a README with the required sections.
-- [ ] Add the five `@mokly/native-<target>` workspace packages, the shim in
-      `@mokly/mokly` that resolves the binary and checks versions, and the
+- [ ] Add the five `@mokly/native-<target>` workspace packages, the shim in `@mokly/mokly` under `packages/mokly` that resolves the
+      binary and checks versions, and the
       `cargo xtask build-native` and `generate-types` commands; `npm run build`
       builds the host target.
 - [ ] Extend `xtask check`: Rust formatting, Clippy, tests, file length, the
@@ -743,65 +794,38 @@ Tags: ui
       re-review once, and report the rest.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
-  - A: served and built documents carry no markers (Decision 13), but the
-    frame adapter, the viewer markers, and the published inspector locate
-    instance regions inside the mounted document; decide the locator.
-  - B: `defineComponent` keeps `render(props, { viewport, colorScheme })`
-    while screens take `render(props)`; decide one signature.
-  - C: the comparison contract lists an `excluded` rule status that the
-    per-rule rule makes unreachable, while the CSS membership page writes
-    one per-stylesheet `excluded` record; decide whether that record exists.
-  - D: seven pages are merge candidates after the rewrite (generated
-    delivery, catalogue entry records, catalogue fetch, live capabilities,
-    removed preview frames, publication changes, configuration discovery).
-  - E: the viewer package README, the xtask README, and the guides still
-    describe the previous product; decide whether they follow now or at
-    their milestones.
-  - F: the source directory of the `@mokly/mokly` shim, sidecar, and
-    authoring API after the teardown is unnamed; the README assumes
-    `packages/mokly`.
+  - A: settled by Decision 31 on 2026-10-14.
+  - B: settled by Decision 32 on 2026-10-14.
+  - C: settled by Decision 31 on 2026-10-14.
+  - D: settled by Decision 38 on 2026-10-14.
+  - E: settled by Decision 38 on 2026-10-14.
+  - F: settled by Decision 36 on 2026-10-14.
   - G: settled on 2026-10-14; the release management page follows the
     seven packages of the release contract.
   - H: settled on 2026-10-14; the components contract states that a
     variant's `slots` maps declared slot names to React nodes.
-  - I: the CSS Modules page scopes classes in the sidecar, the PostCSS and
-    imported-styles pages scope them in the core after `processCss`, and the
-    sidecar contract has no scoping call; decide the scoping engine.
-  - J: no page says which process evaluates `mokly.config.ts`; the sidecar
-    method table has no configuration call; decide the loader.
-  - K: `MockLink asChild` wraps its child in a comment marker pair that the
-    comparison contract does not define; decide the marker kind.
+  - I: settled by Decision 33 on 2026-10-14.
+  - J: settled by Decision 37 on 2026-10-14.
+  - K: settled by Decision 31 on 2026-10-14.
   - L: settled on 2026-10-14; the sidecar contract reports the module graph
     with its import edges and names the JSX development shim.
-  - M: the terminal line that names the private build directory of `publish`
-    has no owner; decide the line (recommended: a plain
-    `Mokly publish build: <directory>` line in the terminal errors contract).
-  - N: wire literals keep retired words: `sourceKind: "baseline"`, the
-    unreachable `"generation"` source kind, `mokabook-instance-v1`,
-    `mokabook-slot-v1`, and the diagnostic `matched no removed baseline
-entry`; decide whether to rename them now.
-  - O: three pages state `serve --base <ref>` while Decision 14 names
-    `--base` for `build` and `publish` only; record the extension or remove
-    it.
+  - M: settled by Decision 36 on 2026-10-14.
+  - N: settled by Decision 35 on 2026-10-14.
+  - O: settled by Decision 36 on 2026-10-14.
   - P: settled on 2026-10-14; the five design pages verify through the
     served example and the browser suite.
   - Q: settled on 2026-10-14; `ci-test-timing.md` is rewritten to the
     end-state suites.
-  - R: the viewer page lists the root, `./browser`, and `./styles.css`
-    entries while the API-report page requires `runtime` and `data`
-    reports; decide the viewer's public entries.
+  - R: settled by Decision 36 on 2026-10-14.
   - S: settled on 2026-10-14; the README keeps the Status line and the
     `plans/` directory link only, and the policy names that link.
   - T: settled on 2026-10-14; Milestone 8 restores the browser suite.
-  - U: `AGENTS.md` describes the present tree; decide whether it waits for
-    the teardown item (recommended) or follows now.
+  - U: settled by Decision 38 on 2026-10-14.
   - Open from the re-review of commit 9f834234, report under
     `.context/rust-rebuild/review-2026-10-14-rewrite-fix.md`:
   - 1: settled on 2026-10-14; `mokly-frame-adapter.md` carries the Status
     line within its cap.
-  - 2: three pages cite a `Changes ready` terminal line with a moved count
-    and an ignored-only count that the terminal output page does not
-    define; decide the exact line (recommended) or drop the claims.
+  - 2: settled by Decision 36 on 2026-10-14.
   - 6: settled on 2026-10-14; the seven lines use the source inventory term
     of the source protection contract and link it.
   - 7: settled on 2026-10-14; the lookup cases feed Rust and browser tests.
@@ -820,15 +844,10 @@ entry`; decide whether to rename them now.
   - 1, 2, 3, 4, 7, 8, and 9: settled by Decision 30 on 2026-10-14.
   - Open from the review of commit c0f61254, report under
     `.context/rust-rebuild/review-2026-10-14-shell-settled.md`:
-  - 2: the live capabilities page fences live renders by generation while
-    the controls contract's render request and response carry `revision`
-    only and name a stale-revision code; decide the fence value
-    (recommended: the revision, with a rerender after a generation change).
+  - 2: settled by Decision 34 on 2026-10-14.
   - 4: settled on 2026-10-14; the CSS evidence presentation page reads the
     detail's `rules` and `resources` records only.
-  - 9: `ViewEvidence` requires both arrays while review v8 omits an empty
-    `rules` list; decide whether a ready view or page always carries the field
-    with empty arrays allowed (recommended) or omits it when both are empty.
+  - 9: settled by Decision 36 on 2026-10-14.
   - 11: settled on 2026-10-14; the format inventory page carries the Status
     line.
 

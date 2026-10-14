@@ -17,7 +17,7 @@ The key algorithm is:
 
 ```ts
 const preimage = [
-  "mokabook-instance-v1",
+  "mokly-instance-v1",
   owner.kind,
   owner.kind === "instance" ? owner.instanceKey : null,
   slotKey ?? null,
@@ -28,7 +28,7 @@ const key = sha256(JSON.stringify(preimage)); // lowercase hex
 
 Hash UTF-8 bytes with no trailing newline, salt, whitespace, or path prefix.
 The result is exactly 64 lowercase hexadecimal characters. The
-`mokabook-instance-v1` domain string is a fixed protocol identifier,
+`mokly-instance-v1` domain string is a fixed protocol identifier,
 including its spelling. `id` is the validated local instance id: the
 `mokly-instance` attribute of a component element, or the `moklyInstance`
 prop of a wrapper, defaulting to the final segment of the registered
@@ -36,7 +36,7 @@ component's resolved path, including after index collapse or a declared path
 override. Explicit values use lowercase kebab-case grammar; inferred defaults
 follow the component path's segment grammar. `owner` is `{ kind: "entry" }`
 or `{ kind: "instance", instanceKey }`. The receiving-slot key is the same
-digest operation over `["mokabook-slot-v1", instanceKey, name]`.
+digest operation over `["mokly-slot-v1", instanceKey, name]`.
 
 The containing entry path, viewport, colour scheme, `componentId`, props, and
 source location are **not** in the instance preimage. In particular, moving an
@@ -181,8 +181,10 @@ props digest. The core attaches the region itself for a component element it
 renders in Rust and for the root of a component page, which has id `r-0` and
 no marker. For a sidecar render, the fragment carries each instance as a
 `mokly-instance` comment pair and each supplied slot as a `mokly-slot` pair;
-the core reads them into regions and drops them when it grafts the fragment.
-Served and built documents carry no markers. Region ids `r-n` are allocated in
+the core reads them into regions when it grafts the fragment and writes the
+same pairs around every composed region, HTML components included. Served and
+built documents keep those markers, so the inspector resolves each region in
+the live page. Region ids `r-n` are allocated in
 document order and recorded in the view's usage with each region's parent.
 
 Every instance of a view has at least one region. Slot content that a

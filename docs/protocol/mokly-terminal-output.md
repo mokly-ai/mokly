@@ -109,7 +109,7 @@ interactive stdin. Serve then reports its lifecycle boundaries:
 ```text
   ✔ Catalogue ready · 96 screens · 12 pages · 18 components            4.9s
   ◐ Comparing with origin/main…
-  ✔ Changes ready · 3 changed screens                                  3.6s
+  ✔ Changes ready · 5 changes · 1 moved · 2 ignored-only              3.6s
 ```
 
 Catalogue counts come from the catalogue model; zero-valued kinds are omitted.
@@ -119,8 +119,11 @@ All browsable. Serve reports each state's
 `Catalogue ready`; on-demand renders never repeat them, and the
 `base-dependencies` warning of the
 [comparison contract](./mokly-comparison.md#sides) prints before
-`Changes ready`. Counted nouns use singular only for one, including
-`1 changed screen` and `2 changed screens`.
+`Changes ready`. `Changes ready` reports the
+[Changes count](./mokly-catalogue-changes.md#changes-count) as `<n> changes`,
+then `<n> moved` and `<n> ignored-only` when those counts are not zero; a zero
+count omits its segment, and `0 changes` stays. Counted nouns use singular
+only for one, including `1 change` and `2 changes`.
 
 Watched actions use one durable line after the action settles:
 
