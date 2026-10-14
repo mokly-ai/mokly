@@ -4,8 +4,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Package And Props
 
-`@mokly/viewer` is an MIT, ESM npm package with declarations and React and
-React DOM peers. `@mokly/mokly` depends on its exact released version. The
+`@mokly/viewer` is an MIT, ESM npm package with declarations and React and React DOM
+`>=19.0.0` peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
 renders only in the browser. Its shared shapes are the generated types of the
 Rust model crate. The package has four entry points:

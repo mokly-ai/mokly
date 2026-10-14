@@ -399,10 +399,12 @@ The embedded viewer reports the same failure through `onError` with code
 [version gates](../../docs/protocol/mokly-viewer-namespace.md#version-matrix)
 list every boundary.
 
-`@mokly/viewer/data` exports the pure path functions and the generated
-directory names of the
-[artifact path contract](../../docs/protocol/mokly-artifact-paths.md), which
-lists every export; it has no React dependency.
+`@mokly/viewer/data` exports the path functions and `GENERATED_DIRECTORY` of
+the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md) and
+the grammar functions `isPathSegment`, `isEntryPath`, and
+`isWindowsDeviceName` of the
+[path contract](../../docs/protocol/mokly-paths.md); it has no React
+dependency.
 
 ## Theming
 

@@ -804,8 +804,10 @@ Tags: ui
   - C: settled by Decision 31 on 2026-10-14.
   - D: settled by Decision 38 on 2026-10-14.
   - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38. The guides are blocked: the root tests `guides_cli`, `guides_ci`, and
-    `guides_upload_validation` compare them with the current CLI, and the
-    guides contract requires shipped behaviour; decide whether to rewrite the
+    `guides_upload_validation` compare them with the current CLI,
+    `guides_authoring` compares the authoring guides with the current exports
+    and `MoklyConfig` fields, and the guides contract requires shipped
+    behaviour; decide whether to rewrite the
     guides now and reduce those tests to structure, links, and versions, or
     to rewrite them at Milestone 12 (recommended).
   - F: settled by Decision 36 on 2026-10-14.
