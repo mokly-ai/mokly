@@ -740,6 +740,44 @@ Tags: ui
     the CLI; `npm-release.md` publishes seven packages.
   - H: a React variant may declare `slots` as a map from slot name to a
     React node, by analogy with HTML components; confirm.
+  - I: the CSS Modules page scopes classes in the sidecar, the PostCSS and
+    imported-styles pages scope them in the core after `processCss`, and the
+    sidecar contract has no scoping call; decide the scoping engine.
+  - J: no page says which process evaluates `mokly.config.ts`; the sidecar
+    method table has no configuration call; decide the loader.
+  - K: `MockLink asChild` wraps its child in a comment marker pair that the
+    comparison contract does not define; decide the marker kind.
+  - L: the sidecar `bundle` result reports `modules` as a flat list while the
+    imported-styles page reads import edges from it, and the JSX dev-runtime
+    shim is specified only on the instances page; decide whether the sidecar
+    contract owns both (recommended).
+  - M: the terminal line that names the private build directory of `publish`
+    has no owner; decide the line (recommended: a plain
+    `Mokly publish build: <directory>` line in the terminal errors contract).
+  - N: wire literals keep retired words: `sourceKind: "baseline"`, the
+    unreachable `"generation"` source kind, `mokabook-instance-v1`,
+    `mokabook-slot-v1`, and the diagnostic `matched no removed baseline
+entry`; decide whether to rename them now.
+  - O: three pages state `serve --base <ref>` while Decision 14 names
+    `--base` for `build` and `publish` only; record the extension or remove
+    it.
+  - P: the design pages verify through a built example, artboards opened
+    from disk, and backend Node tests that the gate pages forbid; decide
+    their verification sections.
+  - Q: `ci-test-timing.md` binds its rules to the TypeScript backend (the
+    output lock, Minimatch, the metafile, `scripts/large`); decide whether
+    to rewrite it now or at the teardown.
+  - R: the viewer page lists the root, `./browser`, and `./styles.css`
+    entries while the API-report page requires `runtime` and `data`
+    reports; decide the viewer's public entries.
+  - S: the README keeps the "previous TypeScript backend" sentence and two
+    plan links beside its Status line, and the policy gives two rules for
+    the README's `plans/` link; decide the README's allowed references.
+  - T: no milestone restores the browser suite, its shards, the Testbox
+    commands, and the five-report aggregate that the CI pages define;
+    decide the milestone (recommended: Milestone 8).
+  - U: `AGENTS.md` describes the present tree; decide whether it waits for
+    the teardown item (recommended) or follows now.
   - Open from the review of commit 9a7aa5e2, report under
     `.context/rust-rebuild/review-2026-10-13-nine-decisions.md`:
   - 5: a function-valued story arg with no `argTypes` entry has no stated
