@@ -1,11 +1,19 @@
 import path from "node:path";
 
 import { verifyReleaseRefs } from "./refs.mjs";
+import { inspectViewerArchive } from "./viewer.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const ref = process.argv[2];
-const viewerRef = process.argv[3];
-if (!ref || !viewerRef || process.argv.length !== 4)
-  throw new Error("usage: verify-ref.mjs <vX.Y.Z> <viewer-vX.Y.Z>");
-const head = await verifyReleaseRefs(repositoryRoot, ref, viewerRef);
-process.stdout.write(`Verified ${viewerRef} and ${ref} at ${head}.\n`);
+const viewerRef = process.argv[2];
+const [flag, artifacts] = process.argv.slice(3);
+if (
+  !viewerRef ||
+  ![3, 5].includes(process.argv.length) ||
+  (flag && (flag !== "--artifacts" || !artifacts))
+)
+  throw new Error(
+    "usage: verify-ref.mjs {viewer-vX.Y.Z} [--artifacts {directory}]",
+  );
+const head = await verifyReleaseRefs(repositoryRoot, viewerRef);
+if (artifacts) await inspectViewerArchive(artifacts);
+process.stdout.write(`Verified ${viewerRef} at ${head}.\n`);

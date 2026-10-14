@@ -12,9 +12,7 @@ export const TESTBOX_ARGUMENTS = [
   "--expect",
   TESTBOX_FINGERPRINT,
   "--suite",
-  "unit",
-  "--shard",
-  "1/4",
+  "viewer",
 ];
 
 export function testboxHarness() {

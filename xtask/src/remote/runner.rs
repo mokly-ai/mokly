@@ -99,7 +99,7 @@ impl DefaultRemoteRunner {
             .workspace
             .join(".context/verification-reports/remote")
             .join(run);
-        let downloads = 9 - completed
+        let downloads = 1 - completed
             .iter()
             .filter(|completion| completion.report_downloaded)
             .count();
@@ -118,7 +118,7 @@ impl DefaultRemoteRunner {
             }
         };
         let changed = self.fingerprint(&dependencies.workspace)? != identity.fingerprint();
-        let failures = 11 - completed.len()
+        let failures = 2 - completed.len()
             + completed
                 .iter()
                 .filter(|completion| !completion.passed)
@@ -137,9 +137,9 @@ impl DefaultRemoteRunner {
             ));
         }
         dependencies.reporter.progress(&format!(
-            "summary: commands={}/11 reports={}/9 aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
-            11 - failures,
-            9 - downloads,
+            "summary: commands={}/2 reports={}/1 aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
+            2 - failures,
+            1 - downloads,
             if aggregate_failed { "failed" } else { "passed" },
             !changed,
             identity.base().sha

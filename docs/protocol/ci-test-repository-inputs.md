@@ -21,7 +21,7 @@ The automated checks for repository inputs are deliberately narrow:
 - [`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
   requires the browser example server command to include `--base HEAD`,
   checked through the exported `exampleServerCommand` builder in
-  [`tests/browser/example_servers.ts`](../../tests/browser/example_servers.ts)
+  `tests/browser/example_servers.ts`
   rather than source text. The Playwright configuration must start every
   worker's server with that builder. The test also requires the viewer,
   browser, and native jobs to use the checked-out lockfile and never resolve

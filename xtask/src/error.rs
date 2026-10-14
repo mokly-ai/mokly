@@ -44,7 +44,7 @@ pub(crate) enum Error {
         shard: String,
     },
     /// Sharding was requested without selecting a suite.
-    #[error("[xtask/check] --shard requires --suite unit or --suite browser")]
+    #[error("[xtask/check] --shard is unavailable in the reduced gate")]
     ShardRequiresSuite,
     /// Sharding was requested for an unsupported suite.
     #[error("[xtask/check] --shard is not supported with suite {suite}")]

@@ -6,12 +6,7 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./fixture.js";
-import { GUIDE_PATHS } from "./guides.js";
-import {
-  packageReport,
-  viewerPackageReport,
-  type PackageReport,
-} from "./release_fixture.js";
+import { viewerPackageReport, type PackageReport } from "./release_fixture.js";
 
 const execute = promisify(execFile);
 
@@ -54,17 +49,9 @@ export async function bootstrapFixture(
     version: options.version ?? "0.8.0",
     type: "module",
     license: "MIT",
-    bin: { mokly: "./dist/cli/bin.js" },
+    private: true,
     workspaces: ["packages/viewer"],
-    dependencies: { "@mokly/viewer": "0.1.0" },
-    files: [
-      "dist",
-      "docs/guides",
-      "docs/protocol",
-      "README.md",
-      "LICENSE",
-      "CHANGELOG.md",
-    ],
+    devDependencies: { "@mokly/viewer": "0.1.0" },
     scripts: { prepack: "node build.mjs" },
   };
   const viewerPackage = {
@@ -75,14 +62,9 @@ export async function bootstrapFixture(
     files: ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
     scripts: { prepack: "node ../../build.mjs" },
   };
-  const distFiles = packageReport()
-    .files.map((file) => file.path)
-    .filter((file) => file.startsWith("dist/"))
-    .concat(
-      viewerPackageReport()
-        .files.filter((file) => file.path.startsWith("dist/"))
-        .map((file) => `packages/viewer/${file.path}`),
-    );
+  const distFiles = viewerPackageReport()
+    .files.filter((file) => file.path.startsWith("dist/"))
+    .map((file) => `packages/viewer/${file.path}`);
   for (const [name, content] of Object.entries({
     "package.json": JSON.stringify(packageJson),
     "package-lock.json": JSON.stringify({
@@ -105,27 +87,6 @@ export async function bootstrapFixture(
     "packages/viewer/CHANGELOG.md": "# Viewer test release\n",
     ".gitignore": "dist/\nnode_modules/\n.context/\n",
     "README.md": "# Bootstrap test fixture\n",
-    ...Object.fromEntries(
-      GUIDE_PATHS.map((guidePath) => [
-        guidePath,
-        "# Packaged guide test fixture\n",
-      ]),
-    ),
-    "docs/protocol/mokly-upload.md": "# Upload protocol test fixture\n",
-    "docs/protocol/mokly-upload-exchange.md":
-      "# Upload exchange protocol test fixture\n",
-    "docs/protocol/mokly-upload-validation.md":
-      "# Upload validation protocol test fixture\n",
-    "docs/protocol/mokly-export-ownership.md":
-      "# Ownership protocol test fixture\n",
-    "docs/protocol/fixtures/export-ownership-v3.json":
-      '{"schemaVersion":1,"cases":[]}\n',
-    "docs/protocol/fixtures/upload-plan-v1.json":
-      '{"schemaVersion":1,"endpoint":"https://example.com","marker":[],"cases":[]}\n',
-    "docs/protocol/mokly-frame-adapter.md": "# Frame protocol test fixture\n",
-    "docs/protocol/mokly-rendering.md": "# Rendering protocol test fixture\n",
-    "docs/protocol/mokly-catalogue.md": "# Catalogue protocol test fixture\n",
-    "docs/protocol/fixtures/catalogue-v6.json": '{"schemaVersion":1}\n',
     LICENSE: "MIT\n",
     "CHANGELOG.md": "# Test release\n",
     "source.txt": "reviewed source\n",

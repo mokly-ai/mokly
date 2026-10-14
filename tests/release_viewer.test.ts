@@ -8,29 +8,23 @@ import { promisify } from "node:util";
 import { bootstrapFixture } from "./helpers/bootstrap_fixture.js";
 
 const execute = promisify(execFile);
-test("release fixtures install viewer and CLI tarballs without registry links", async (t) => {
+
+test("a viewer tarball installs without a workspace link or CLI package", async (t) => {
   const fixture = await bootstrapFixture(t);
-  const pack = async (cwd: string) => {
-    const { stdout } = await execute(
-      "npm",
-      ["pack", "--json", "--pack-destination", fixture.destination],
-      { cwd },
-    );
-    return JSON.parse(stdout)[0].filename as string;
-  };
   await fs.mkdir(fixture.destination);
-  const viewer = await pack(path.join(fixture.root, "packages/viewer"));
-  const cli = await pack(fixture.root);
+  const { stdout } = await execute(
+    "npm",
+    ["pack", "--json", "--pack-destination", fixture.destination],
+    { cwd: path.join(fixture.root, "packages/viewer") },
+  );
+  const filename = JSON.parse(stdout)[0].filename as string;
   const consumer = path.join(fixture.destination, "consumer");
   await fs.mkdir(consumer);
   await fs.writeFile(
     path.join(consumer, "package.json"),
     JSON.stringify({
       private: true,
-      dependencies: {
-        "@mokly/viewer": `file:../${viewer}`,
-        "@mokly/mokly": `file:../${cli}`,
-      },
+      dependencies: { "@mokly/viewer": `file:../${filename}` },
     }),
   );
   await execute(
@@ -38,24 +32,15 @@ test("release fixtures install viewer and CLI tarballs without registry links", 
     ["install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund"],
     { cwd: consumer },
   );
-  const installed = JSON.parse(
-    await fs.readFile(
-      path.join(consumer, "node_modules/@mokly/mokly/package.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(installed.dependencies["@mokly/viewer"], "0.1.0");
+  const installed = path.join(consumer, "node_modules/@mokly/viewer");
+  assert.equal((await fs.lstat(installed)).isSymbolicLink(), false);
   assert.equal(
-    (
-      await fs.lstat(path.join(consumer, "node_modules/@mokly/viewer"))
-    ).isSymbolicLink(),
-    false,
+    JSON.parse(await fs.readFile(path.join(installed, "package.json"), "utf8"))
+      .version,
+    "0.1.0",
   );
-  const viewerPackage = JSON.parse(
-    await fs.readFile(
-      path.join(consumer, "node_modules/@mokly/viewer/package.json"),
-      "utf8",
-    ),
+  await assert.rejects(
+    fs.stat(path.join(consumer, "node_modules/@mokly/mokly")),
+    { code: "ENOENT" },
   );
-  assert.equal(viewerPackage.version, "0.1.0");
 });

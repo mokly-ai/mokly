@@ -101,12 +101,10 @@ local export remains under the config-relative `.context/mokly-publish` path.
 ## Development
 
 ```bash
-npm run build
-node --import tsx --test tests/publish_action.test.ts tests/publish_cli.test.ts
-npm run package:smoke
+npm test -- tests/publish_action.test.ts
+cargo xtask check --suite viewer
 ```
 
 The action tests run its actual composite shell steps with an injected npm
-installer. Packed-consumer smoke tests install the real package archive, run
-publish against a local HTTP receiver, and inspect the plan archive and every
-content-addressed blob.
+installer. The viewer release smoke installs and imports the exact viewer archive.
+The static build and publish contracts define the CLI consumer checks.

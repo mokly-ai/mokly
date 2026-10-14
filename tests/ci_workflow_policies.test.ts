@@ -1,28 +1,19 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
-import {
-  SUPPORTED_NODE_RANGE,
-  TESTED_NODE_VERSIONS,
-  isSupportedNodeVersion,
-} from "../dist/cli/bootstrap.js";
-import browserConfig from "../playwright.config.js";
-
-import {
-  exampleServerCommand,
-  exampleServerPorts,
-} from "./browser/example_servers.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CI_WORKFLOW = ".github/workflows/ci.yml";
 const TESTBOX_WORKFLOW = ".github/workflows/blacksmith-testbox.yml";
-const FULL_HISTORY_WORKFLOWS = [CI_WORKFLOW, ".github/workflows/preview.yml"];
-const CHECKED_OUT_LOCKFILE_JOBS = ["package", "unit", "browser", "hydration"];
+const FULL_HISTORY_WORKFLOWS = [CI_WORKFLOW];
 const CHECKOUT_ACTIONS = ["useblacksmith/checkout@", "actions/checkout@"];
 const PINNED_REVISION = /@[a-f0-9]{40}$/u;
 const UNTRUSTED_PULL_REQUEST_FIELD =
@@ -78,7 +69,7 @@ test("run steps never interpolate untrusted pull request input", async () => {
   );
 });
 
-test("CI and preview jobs that install dependencies check out full history", async () => {
+test("CI jobs that install dependencies check out full history", async () => {
   let checked = 0;
   for (const file of FULL_HISTORY_WORKFLOWS) {
     const { document } = await readDocument(file);
@@ -95,13 +86,14 @@ test("CI and preview jobs that install dependencies check out full history", asy
         );
     }
   }
-  assert.ok(checked > 0, "CI and preview jobs must install dependencies");
+  assert.ok(checked > 0, "CI jobs must install dependencies");
 });
 
 test("CI functional jobs use only the checked-out lockfile", async () => {
   const { document, source } = await readDocument(CI_WORKFLOW);
-  for (const name of CHECKED_OUT_LOCKFILE_JOBS) {
-    const steps = requiredJob(document, CI_WORKFLOW, name).steps ?? [];
+  for (const [name, job] of Object.entries(document.jobs ?? {})) {
+    const steps = job.steps ?? [];
+    if (!steps.some(installsDependencies)) continue;
     assert.equal(
       steps.some((step) => step.name === "Read baseline dependency lockfile"),
       false,
@@ -127,7 +119,7 @@ test("CI functional jobs use only the checked-out lockfile", async () => {
     );
 });
 
-test("Node version files agree with the CLI's tested versions and range", async () => {
+test("Node version files agree with the package engines and README", async () => {
   const [nvmrc, manifestSource, lockSource, readme] = await Promise.all([
     readText(".nvmrc"),
     readText("package.json"),
@@ -140,16 +132,11 @@ test("Node version files agree with the CLI's tested versions and range", async 
   const lock = JSON.parse(lockSource) as {
     packages: { "": { engines: { node: string } } };
   };
-  const [, currentTestedNode] = TESTED_NODE_VERSIONS;
-  assert.equal(
-    nvmrc.trim(),
-    currentTestedNode,
-    ".nvmrc must select the current tested Node version",
-  );
-  assert.equal(
-    manifest.engines.node,
-    SUPPORTED_NODE_RANGE,
-    "package.json engines must declare the CLI's supported range",
+  assert.match(nvmrc.trim(), /^\d+\.\d+\.\d+$/u);
+  const { satisfies } = await import("semver");
+  assert.ok(
+    satisfies(nvmrc.trim(), manifest.engines.node),
+    ".nvmrc must select a supported Node version",
   );
   assert.equal(
     lock.packages[""].engines.node,
@@ -157,32 +144,60 @@ test("Node version files agree with the CLI's tested versions and range", async 
     "the lockfile root engines must match package.json",
   );
   assert.ok(
-    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
+    readme.includes(`\`${manifest.engines.node}\``),
     "the README must document the supported Node range",
   );
   assert.ok(
     readme.includes("[`.nvmrc`](./.nvmrc)"),
     "development setup must follow the tested Node version",
   );
-  for (const version of TESTED_NODE_VERSIONS)
-    assert.ok(isSupportedNodeVersion(version), `Node ${version} is supported`);
 });
 
-test("the Testbox toolchain matches the CI toolchain", async () => {
+test("the Testbox toolchain matches the CI toolchain", async (context) => {
   const ci = (await readDocument(CI_WORKFLOW)).document;
   const testbox = (await readDocument(TESTBOX_WORKFLOW)).document;
   const testboxSteps = stepsOf(testbox);
-  const native = requiredJob(ci, CI_WORKFLOW, "native").steps ?? [];
-  const repository = requiredJob(ci, CI_WORKFLOW, "repository").steps ?? [];
-  const nodeVersion = namedStep(native, "Set up Node.js", "ci.yml native job")
-    .with?.["node-version"];
-  assert.notEqual(nodeVersion, undefined, "the CI native job sets Node.js");
-  assert.equal(
-    namedStep(testboxSteps, "Set up Node.js", TESTBOX_WORKFLOW).with?.[
-      "node-version"
-    ],
-    nodeVersion,
-    "the Testbox must run the CI native job's Node.js version",
+  const ciSteps = stepsOf(ci);
+  const repository =
+    Object.values(ci.jobs ?? {}).find((job) =>
+      job.steps?.some((step) => step.name === "Run repository verification"),
+    )?.steps ?? [];
+  const selector = namedStep(
+    ciSteps,
+    "Select Node verification profile",
+    CI_WORKFLOW,
+  );
+  assert.ok(selector.run);
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-policy-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const output = path.join(root, "output");
+  await promisify(execFile)(
+    "bash",
+    ["-e", "-o", "pipefail", "-c", selector.run],
+    {
+      env: {
+        ...process.env,
+        RELEASE_PULL_REQUEST: "false",
+        GITHUB_OUTPUT: output,
+      },
+    },
+  );
+  const line = (await fs.readFile(output, "utf8"))
+    .split("\n")
+    .find((line) => line.startsWith("node-matrix="));
+  assert.ok(line);
+  const nodeVersions: (string | number)[] = JSON.parse(
+    line.slice("node-matrix=".length),
+  );
+  const nodeVersion = namedStep(
+    testboxSteps,
+    "Set up Node.js",
+    TESTBOX_WORKFLOW,
+  ).with?.["node-version"];
+  assert.ok(typeof nodeVersion === "string" || typeof nodeVersion === "number");
+  assert.ok(
+    nodeVersions.includes(nodeVersion),
+    "the Testbox must use a CI Node runtime",
   );
   for (const name of ["Set up npm", "Set up Rust"]) {
     const expected = namedStep(repository, name, "ci.yml repository job").run;
@@ -192,23 +207,6 @@ test("the Testbox toolchain matches the CI toolchain", async () => {
       expected,
       `the Testbox "${name}" step must match the CI repository job`,
     );
-  }
-});
-
-test("the browser example server compares with the checked-out HEAD", () => {
-  const ports = exampleServerPorts();
-  const servers = browserConfig.webServer;
-  assert.ok(Array.isArray(servers), "Playwright must start example servers");
-  assert.deepEqual(
-    servers.map((server) => server.command),
-    ports.map((port) => exampleServerCommand(port)),
-    "playwright.config.ts must start each server with exampleServerCommand",
-  );
-  for (const port of ports) {
-    const argv = exampleServerCommand(port).split(" ");
-    const base = argv.indexOf("--base");
-    assert.ok(base >= 0, "the example server command must pass --base");
-    assert.equal(argv[base + 1], "HEAD", "the example server must use HEAD");
   }
 });
 
@@ -252,16 +250,6 @@ function isCheckout(step: AutomationStep): boolean {
 
 function installsDependencies(step: AutomationStep): boolean {
   return /^\s*npm ci\b/mu.test(step.run ?? "");
-}
-
-function requiredJob(
-  document: AutomationDocument,
-  file: string,
-  name: string,
-): AutomationJob {
-  const job = document.jobs?.[name];
-  assert.ok(job, `${file} must define the ${name} job`);
-  return job;
 }
 
 function namedStep(

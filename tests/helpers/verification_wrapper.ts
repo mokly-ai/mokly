@@ -3,13 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { EXAMPLE_SNAPSHOT_PATH } from "../../scripts/verification/example-snapshot-key.mjs";
-
 import { repositoryRoot } from "./fixture.js";
 
 const execute = promisify(execFile);
 
 export async function createHarness(): Promise<string> {
+  await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/verification-wrapper-"),
   );
@@ -24,27 +23,8 @@ export async function createHarness(): Promise<string> {
     process.platform === "win32" ? "junction" : "dir",
   );
   const files = new Map([
-    ["dist/cli/bin.js", ""],
+    ["packages/viewer/dist/index.js", ""],
     ["packages/viewer/dist/browser/inspector.js", ""],
-    ["examples/basic/mokly-generated/mokly-manifest.json", "{}\n"],
-    [EXAMPLE_SNAPSHOT_PATH, "{}\n"],
-    [
-      "playwright.config.mjs",
-      "export default " +
-        JSON.stringify({
-          fullyParallel: false,
-          outputDir: path.join(root, "playwright-output"),
-          projects: [{ name: "chromium" }],
-          retries: 0,
-          testDir: "tests/browser",
-          workers: 1,
-        }) +
-        ";\n",
-    ],
-    [
-      "tests/browser/passing.spec.ts",
-      'import { test } from "@playwright/test";\ntest("real reporter identity", () => {});\n',
-    ],
     [
       "tests/failing.test.ts",
       'import test from "node:test";\ntest("retained unit diagnostic", () => {\n  throw new Error("retained unit diagnostic sentinel");\n});\n',

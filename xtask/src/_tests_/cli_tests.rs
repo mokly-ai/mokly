@@ -17,8 +17,8 @@ use crate::rust_file_length::RustFileLengthAuditorRunMock;
 use super::{Application, Cli, Command, Xtask};
 
 #[test]
-fn parses_every_suite_and_a_valid_shard() {
-    for suite in ["repository", "package", "unit", "browser", "hydration"] {
+fn parses_every_reduced_suite() {
+    for suite in ["repository", "viewer"] {
         let cli =
             Cli::try_parse_from(["xtask", "check", "--suite", suite]).expect("known suite parses");
         let Command::Check {
@@ -34,13 +34,6 @@ fn parses_every_suite_and_a_valid_shard() {
         assert!(shard.is_none());
         assert!(dependency_audit.is_none());
     }
-
-    let cli = Cli::try_parse_from(["xtask", "check", "--suite", "browser", "--shard", "3/4"])
-        .expect("browser shard parses");
-    let Command::Check { shard, .. } = cli.command else {
-        panic!("check command expected");
-    };
-    assert_eq!(shard.expect("shard exists").to_string(), "3/4");
 }
 
 #[test]
@@ -199,12 +192,7 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
         interrupt: unused(),
         workspace: PathBuf::from("/workspace"),
     };
-    for suite in [
-        VerificationSuite::Package,
-        VerificationSuite::Unit,
-        VerificationSuite::Browser,
-        VerificationSuite::Hydration,
-    ] {
+    for suite in [VerificationSuite::Viewer] {
         for mode in ["baseline", "strict"] {
             let cli = Cli::try_parse_from([
                 "xtask",

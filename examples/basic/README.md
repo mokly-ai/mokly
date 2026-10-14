@@ -212,10 +212,8 @@ and linked component changes. These rows do not generate descriptions of visual
 changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
-Open `/view/design/components/overview/` in Browse, or open
-[`mokly-generated/design/components/overview/index.desktop.html`](./mokly-generated/design/components/overview/index.desktop.html)
-and [`mokly-generated/design/components/overview/index.mobile.html`](./mokly-generated/design/components/overview/index.mobile.html)
-directly from disk after `npm run build && npm run example:build`.
+Open `/view/design/components/overview/` in Browse. Its desktop and mobile views
+share the authored [Components overview](./specs/design/components/index.mockup.ts).
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
 component pages, variants, and consuming screens. The Controls folder

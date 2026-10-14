@@ -15,11 +15,10 @@ const verification = resolveVerificationMode({
   eventName,
   manualVerification: process.env.MANUAL_VERIFICATION ?? "",
 });
-writeWorkflowOutput("publish_ref", refs?.cli ?? "");
 writeWorkflowOutput("viewer_ref", refs?.viewer ?? "");
 writeWorkflowOutput("verification", verification);
 process.stdout.write(
   refs
-    ? `Selected immutable releases ${refs.viewer}, ${refs.cli} with ${verification} verification.\n`
+    ? `Selected immutable releases ${refs.viewer} with ${verification} verification.\n`
     : "No release artifact selected.\n",
 );

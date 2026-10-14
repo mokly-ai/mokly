@@ -155,8 +155,8 @@ an old override is not proof that the current tree is clean.
 
 Record each hold below a compatible release with its reason and removal
 condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
-for a declared floor; `tests/dependency_security.test.ts` matches each one to
-a `package-lock.json` install.
+for a declared floor. Dependency audit tests check the committed exception
+against the installed lockfile.
 
 List only reviewed exceptions, overrides, exact pins and holds here, because
 later updates must respect them. Explain a one-time update in its pull request,
@@ -176,15 +176,6 @@ The current maintenance choices are:
   or when Metro drops Micromatch. Re-run the live audit and complete gate after
   that dependency update. Remove a stale record; expiry requires removal or
   a new explicit risk review, not an automatic extension.
-- `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
-  versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
-  copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
-  The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
-  whose bundled native image libraries include the librsvg fix for
-  [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
-  Remove each override when a deliberately upgraded Wrangler/Miniflare version
-  resolves a patched version without it and passes the complete gate. These
-  overrides do not apply to unrelated dependency parents.
 - `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
   Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
   through 0.12), which the root `^0.8.3` range excludes. Move to one of them
@@ -194,6 +185,7 @@ The current maintenance choices are:
   0.15.0 and 4.0.0, accepts only React Native below 0.86. Move to 4.7 only
   after `@firna/ui` accepts React Native 0.86, in a reviewed change that also
   moves `react-native-worklets` to 0.13.
+
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
   status 1 when a reporter event write fails, but the wrapper test in
   `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that

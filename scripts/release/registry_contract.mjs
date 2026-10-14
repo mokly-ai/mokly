@@ -1,4 +1,4 @@
-import { validatePackageReport } from "../package/archive.mjs";
+import { validatePackageReport } from "./archive.mjs";
 
 /** Require registry bytes and metadata to match the immutable local artifact. */
 export function comparePublishedPackage(local, remote, metadata, commit) {

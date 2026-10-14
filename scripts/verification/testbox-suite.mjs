@@ -4,20 +4,13 @@ import { constants } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { parseShardArgument } from "./evidence.mjs";
 import { runCaptured, runInherited } from "./process.mjs";
 import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
 
-const SUITES = new Set([
-  "repository",
-  "package",
-  "unit",
-  "browser",
-  "hydration",
-]);
+const SUITES = new Set(["repository", "viewer"]);
 const AUDIT_MODES = new Set(["baseline", "strict"]);
 const USAGE =
-  "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL] [--dependency-audit baseline|strict]";
+  "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--dependency-audit baseline|strict]";
 
 /** Validate the suite request and derive its stable command name. */
 export function parseTestboxArguments(args) {
@@ -26,9 +19,7 @@ export function parseTestboxArguments(args) {
     const flag = args[index];
     const value = args[index + 1];
     if (
-      !["--expect", "--suite", "--shard", "--dependency-audit"].includes(
-        flag,
-      ) ||
+      !["--expect", "--suite", "--dependency-audit"].includes(flag) ||
       values.has(flag) ||
       !value ||
       value.startsWith("--")
@@ -44,11 +35,6 @@ export function parseTestboxArguments(args) {
   }
   const suite = values.get("--suite");
   if (!SUITES.has(suite)) throw new Error(`invalid suite; ${USAGE}`);
-  const shard = parseShardArgument(
-    values.has("--shard") ? ["--shard", values.get("--shard")] : [],
-  );
-  if (shard && suite !== "unit" && suite !== "browser")
-    throw new Error("shard is valid only for unit or browser suites");
   const dependencyAudit = values.get("--dependency-audit");
   if (dependencyAudit !== undefined && !AUDIT_MODES.has(dependencyAudit))
     throw new Error(`invalid dependency audit mode; ${USAGE}`);
@@ -59,9 +45,8 @@ export function parseTestboxArguments(args) {
   return {
     expected,
     suite,
-    ...(shard ? { shard } : {}),
     ...(dependencyAudit ? { dependencyAudit } : {}),
-    commandName: shard ? `${suite}-${shard.index}-of-${shard.total}` : suite,
+    commandName: suite,
   };
 }
 
@@ -125,10 +110,6 @@ export async function runTestboxSuite(args, dependencies) {
   }
   if (stamp !== digest) {
     await requireSuccess(command("npm", ["ci"]), "npm install");
-    await requireSuccess(
-      command("npx", ["playwright", "install", "chromium"]),
-      "Chromium install",
-    );
     await writeFile(stampFile, `${digest}\n`);
   }
 
@@ -140,8 +121,6 @@ export async function runTestboxSuite(args, dependencies) {
     "--suite",
     request.suite,
   ];
-  if (request.shard)
-    suiteArgs.push("--shard", `${request.shard.index}/${request.shard.total}`);
   if (request.dependencyAudit)
     suiteArgs.push("--dependency-audit", request.dependencyAudit);
   const outcome = await runCommand({

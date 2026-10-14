@@ -1,8 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { runCommandResult } from "../package/command.mjs";
-
+import { runCommandResult } from "./command.mjs";
 import {
   comparePublishedPackage,
   isMissingPackage,
