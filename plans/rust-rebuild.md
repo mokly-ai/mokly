@@ -558,23 +558,29 @@ merges; the freeze applies to it from 2026-10-12.
 At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 `--version`, and the platform packages, shim, and CI build steps exist.
 
-- [ ] Add the crates: `mokly-model` (shared shapes, canonical JSON, the prop
+- [x] Add the crates: `mokly-model` (shared shapes, canonical JSON, the prop
       schema profile and its validator on the `jsonschema` crate, generated
       TypeScript), `mokly-cli` (the binary, clap grammar, terminal output),
       `mokly-platform` (exclusive rename, process groups, Windows job objects),
       `mokly-git` (command runner, bounded batches), and `mokly-sidecar` (the
       client of the sidecar protocol). Later milestones add their own crates.
       Each crate has a README with the required sections.
-- [ ] Add the five `@mokly/native-<target>` workspace packages, the shim in `@mokly/mokly` under `packages/mokly` that resolves the
+- [x] Add the five `@mokly/native-<target>` workspace packages, the shim in `@mokly/mokly` under `packages/mokly` that resolves the
       binary and checks versions, and the
       `cargo xtask build-native` and `generate-types` commands; `npm run build`
       builds the host target.
+- [ ] Resolve npm installation of platform-constrained native workspaces.
+      npm rejects non-host workspaces before optional dependency selection;
+      Phase A uses a forced local install for verification.
 - [ ] Extend `xtask check`: Rust formatting, Clippy, tests, file length, the
       generated-type byte-identity check and the Rust advisory audit once
       approved, and the viewer suite. CI builds the native artifacts in every
       job and on the Testbox through `rust-toolchain.toml`.
 - [ ] Record the gate approvals from the Status section before adding the gates.
 - [ ] Commit.
+
+Evidence: `.context/rust-rebuild/delegation/m3/report-1.md` and
+`.context/rust-rebuild/sweeps/m3-phase-a.md`.
 
 ## Milestone 4: Catalogue model and discovery
 

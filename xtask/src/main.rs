@@ -3,6 +3,7 @@
 #![warn(unreachable_pub)]
 
 mod application;
+mod artifacts;
 mod check;
 mod child_environment;
 mod cli;

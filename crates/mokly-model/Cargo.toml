@@ -1,0 +1,18 @@
+[package]
+name = "mokly-model"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+jsonschema = { version = "0.58.6", default-features = false }
+num-cmp = "0.1.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+thiserror = "2.0.21"
+ts-rs = { version = "12.0.1", features = ["no-serde-warnings", "serde-json-impl"] }
+
+[dev-dependencies]
+insta = "1.49.0"

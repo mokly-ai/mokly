@@ -13,3 +13,6 @@ target/
 test-results/
 playwright-report/
 .superpowers/
+
+# Host and release binaries are build output.
+packages/native-*/bin/

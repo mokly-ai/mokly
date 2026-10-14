@@ -1,5 +1,5 @@
 {
-  "name": "@mokly/mokly",
+  "name": "mokly-workspace",
   "version": "0.14.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
@@ -40,7 +40,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "npm run -s build --workspace @mokly/viewer && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "cargo xtask build-native && npm run -s build --workspace @mokly/mokly && npm run -s build --workspace @mokly/viewer",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dev": "npm run -s build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
@@ -135,6 +135,9 @@
     }
   },
   "workspaces": [
-    "packages/viewer"
-  ]
+    "packages/viewer",
+    "packages/mokly",
+    "packages/native-*"
+  ],
+  "private": true
 }

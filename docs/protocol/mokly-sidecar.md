@@ -21,9 +21,9 @@ output belong to the binary.
 - The pool holds between one and the machine's core count of sidecars; the
   `--sidecars <n>` option and `MOKLY_SIDECARS` override it. A catalogue that
   needs no JavaScript starts none.
-- The first frame on each side is `hello`. The sidecar reports its package
-  version; the binary rejects a version other than its own with
-  `sidecar-version`.
+- The binary's first request is `hello`. The sidecar's first frame is the
+  matching hello response with its package version. The binary rejects a
+  version other than its own with `sidecar-version` before other traffic.
 - A sidecar is recycled after 500 renders or when its resident set passes
   1 GiB, whichever comes first. Recycling waits for in-flight requests, then
   replaces the process. Loaded generations are reloaded on demand.
@@ -32,9 +32,11 @@ output belong to the binary.
 
 ## Transport
 
-Frames are newline-delimited JSON, UTF-8, at most 64 MiB each. A request has
-`id`, `method`, and `params`. A response repeats `id` with `result` or
-`error`. An event has `event` and `params` and no `id`. Requests on one
+Frames are newline-delimited UTF-8 JSON, with at most 64 MiB of JSON bytes
+per frame, excluding its LF delimiter. A request has `id`, `method`, and
+`params`; a method without parameters uses `{}`. A response repeats `id` with
+exactly one of `result` or `error`; a method without a return value uses
+`result: null`. An event has `event` and `params` and no `id`. Requests on one
 sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json

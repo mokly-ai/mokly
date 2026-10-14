@@ -1,0 +1,24 @@
+{
+  "name": "@mokly/native-win32-x64-msvc",
+  "version": "0.14.0",
+  "description": "Mokly native CLI for win32-x64-msvc.",
+  "license": "MIT",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/mokly.exe"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/native-win32-x64-msvc"
+  }
+}

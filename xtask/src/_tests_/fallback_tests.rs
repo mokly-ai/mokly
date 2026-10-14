@@ -63,6 +63,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
             Unimock::new(InterruptArmMock.next_call(matching!()).answers(&|_| Ok(())))
         });
         let app = Application {
+            artifacts: Arc::new(Unimock::new(())),
             selector,
             remote_runner: runner,
             check_runner: checks,
@@ -92,6 +93,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
 fn executor_emits_one_result_and_never_calls_the_runner() {
     let unused = Arc::new(Unimock::new(()));
     let app = Application {
+        artifacts: Arc::new(Unimock::new(())),
         selector: Arc::new(Unimock::new(
             SelectorSelectMock
                 .next_call(matching!(Executor::Auto))
@@ -128,6 +130,7 @@ fn fallback_releases_before_local_run_and_checks_the_flag_after_release() {
         let request_state = released.clone();
         let unused = Arc::new(Unimock::new(()));
         let app = Application {
+            artifacts: Arc::new(Unimock::new(())),
             selector: Arc::new(Unimock::new(
                 SelectorSelectMock
                     .next_call(matching!(Executor::Auto))

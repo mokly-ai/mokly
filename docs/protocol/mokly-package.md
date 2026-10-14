@@ -183,7 +183,7 @@ diagnostics; it never fails the current output.
 
 ## Packaged Documentation
 
-The root package ships the plain-Markdown CLI guides under `docs/guides` and
+The `@mokly/mokly` package ships the plain-Markdown CLI guides under `docs/guides` and
 the protocol sources under `docs/protocol`. The package version is the
 documentation version. The private cloud repository renders those files into
 the public documentation site and owns its cloud, review, changelog, legal,

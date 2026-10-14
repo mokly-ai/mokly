@@ -120,7 +120,7 @@ mapping and rejects a path that escapes the repository.
 ## Versions And Releases
 
 Guides write package versions as literals, never placeholders. Every semantic
-version literal in `docs/guides/` equals the root `package.json` version.
+version literal in `docs/guides/` equals the `packages/mokly/package.json` version.
 `start/install.md` uses it both in the pinned install command and in the
 sentence naming the documented version. `ci/github-action.md` uses it as the
 example Action `version`.
@@ -134,15 +134,15 @@ The version-bearing prose or fenced block is here.
 <!-- x-release-please-end -->
 ```
 
-Markers sit outside a fenced block rather than inside it. The root package's
+Markers sit outside a fenced block rather than inside it. The `@mokly/mokly` package's
 Release Please configuration lists both Markdown files as `generic`
-`extra-files`, so a release PR updates the literals with `package.json`. Root
+`extra-files`, so a release PR updates the literals with `packages/mokly/package.json`. Root
 tests reject a missing marker, a stale literal, or any other version literal
 that differs from the package version.
 
 ## Package Publication
 
-The root package `files` allowlist contains both `docs/guides` and
+The `@mokly/mokly` package `files` allowlist contains both `docs/guides` and
 `docs/protocol`. A packed package contains the complete guide tree, all protocol
 documents, `CHANGELOG.md`, and the existing runtime surface. Tests, plans,
 examples, site sources, and repository-only tooling remain excluded.

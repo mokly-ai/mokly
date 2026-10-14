@@ -1,0 +1,59 @@
+{
+  "name": "@mokly/mokly",
+  "version": "0.14.0",
+  "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Mokly",
+  "homepage": "https://github.com/mokly-ai/mokly#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/mokly"
+  },
+  "bugs": {
+    "url": "https://github.com/mokly-ai/mokly/issues"
+  },
+  "engines": {
+    "node": ">=22.14.0 <24.14.0 || >=24.19.0"
+  },
+  "bin": {
+    "mokly": "./bin/mokly.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {
+    "@mokly/viewer": "0.5.0"
+  },
+  "optionalDependencies": {
+    "@mokly/native-linux-x64-gnu": "0.14.0",
+    "@mokly/native-linux-arm64-gnu": "0.14.0",
+    "@mokly/native-darwin-x64": "0.14.0",
+    "@mokly/native-darwin-arm64": "0.14.0",
+    "@mokly/native-win32-x64-msvc": "0.14.0"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "npm run build"
+  }
+}

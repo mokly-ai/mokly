@@ -26,7 +26,7 @@ the [entry props contract](./mokly-entry-props.md).
 
 ## Authoring Boundary
 
-The root package exports `defineComponent`. It returns one definition, which
+The `@mokly/mokly` package exports `defineComponent`. It returns one definition, which
 an entry module exports to register it under the
 [entry module contract](./mokly-entry-modules.md). The definition carries a
 typed `Component` wrapper that renders the consumer's real component through

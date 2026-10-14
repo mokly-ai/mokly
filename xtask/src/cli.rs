@@ -8,6 +8,7 @@ use std::sync::Arc;
 use clap::{Parser, Subcommand};
 
 use crate::application::{Application, Xtask};
+use crate::artifacts::{DefaultArtifacts, Host, SystemArtifactFiles};
 use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
 use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
@@ -45,6 +46,10 @@ pub(crate) struct Cli {
 #[derive(Debug, Subcommand)]
 /// Repository task variants.
 pub(crate) enum Command {
+    /// Build and install the host native binary.
+    BuildNative,
+    /// Write TypeScript declarations from mokly-model.
+    GenerateTypes,
     /// Run the full gate or one selected verification suite.
     Check {
         /// Run one partial verification suite.
@@ -96,7 +101,20 @@ pub(crate) fn main() -> ExitCode {
     let selector: Arc<dyn Selector + Send + Sync> = Arc::new(DefaultSelector {
         dependencies: dependencies.clone(),
     });
+    let host = match Host::resolve(std::env::consts::OS, std::env::consts::ARCH) {
+        Ok(host) => host,
+        Err(error) => {
+            let _ = writeln!(io::stderr().lock(), "{error}");
+            return ExitCode::FAILURE;
+        }
+    };
     let app: Arc<dyn Xtask> = Arc::new(Application {
+        artifacts: Arc::new(DefaultArtifacts {
+            workspace: workspace.clone(),
+            host,
+            commands: Arc::clone(&command_runner),
+            files: Arc::new(SystemArtifactFiles),
+        }),
         selector,
         check_runner: Arc::new(DefaultCheckRunner::new(
             command_runner,

@@ -6,8 +6,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 Audit regular `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` modules
 beneath the three source roots when they are added, renamed, or changed
-relative to the comparison commit. The roots are the root package's source
-directory, which holds the shim, the sidecar, and the authoring API;
+relative to the comparison commit. The roots are `packages/mokly/src/`, which holds the shim, the sidecar,
+and the authoring API;
 `packages/viewer/src/`; and `scripts/`. Normalize CRLF to LF and count
 LF-delimited physical lines; a final LF does not add an empty line. Deleted
 files do not participate.

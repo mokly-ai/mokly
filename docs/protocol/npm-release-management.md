@@ -22,12 +22,12 @@ that title from `main`. It accepts generated release titles such as
 `BREAKING CHANGE:` footer in the squash body; the title check does not replace
 or generate that body.
 
-The root component also owns the literal documentation version in
+The `@mokly/mokly` component also owns the literal documentation version in
 `docs/guides/start/install.md` and `docs/guides/ci/github-action.md` through
 `generic` `extra-files`. Each version-bearing region is bounded by the Release
 Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
-those literals with the root package version; root tests reject drift.
+those literals with the `@mokly/mokly` package version; root tests reject drift.
 
 The release manifest records each package's latest released version. The viewer
 uses `initial-version: 0.1.0` only before its first release; the setting has no

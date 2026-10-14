@@ -1,8 +1,12 @@
 [workspace]
-members = ["xtask"]
+members = ["xtask", "crates/*"]
 resolver = "3"
 
 [workspace.package]
 edition = "2024"
 license = "MIT"
 rust-version = "1.95"
+
+[workspace.dependencies]
+mokly-model = { path = "crates/mokly-model" }
+mokly-platform = { path = "crates/mokly-platform" }

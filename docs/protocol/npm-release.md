@@ -14,7 +14,7 @@ One release publishes seven packages from one reviewed commit:
 | `@mokly/viewer`          | the Browse shell: shell assets, the index and detail readers, adapters, React mounting, and the browser entry      |
 | `@mokly/mokly`           | the Node shim behind the `mokly` bin, the sidecar entry, the authoring API, the guides, and the protocol documents |
 
-`package.json` describes the public ESM package `@mokly/mokly`: managed
+`packages/mokly/package.json` describes the public ESM package `@mokly/mokly`: managed
 version, MIT license, Mokly authorship, exact repository metadata, Node range
 `>=22.14.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
 its types, the configuration JSON Schema at `config.schema.json`, and the file
@@ -35,7 +35,7 @@ version, so the cloud documentation site and independent upload receivers
 implement that release's documented boundaries. Source fixtures, tests, plans,
 caches, review artifacts, and build output other than `dist` are not published.
 
-Read the checkout's version from `package.json`; `.release-please-manifest.json`
+Read the CLI version from `packages/mokly/package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
 metadata. Release pull requests update these together. `publishConfig` targets
 the public npm registry with public access.

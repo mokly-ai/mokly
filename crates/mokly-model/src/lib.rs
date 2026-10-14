@@ -1,0 +1,14 @@
+//! Shared wire shapes and pure validation for the Mokly core.
+
+#![warn(unreachable_pub)]
+
+pub mod canonical;
+pub mod diagnostic;
+pub mod error;
+pub mod limits;
+mod numeric;
+mod profile;
+pub mod prop_schema;
+pub mod typescript;
+pub mod validation;
+pub mod versions;

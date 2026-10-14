@@ -55,7 +55,7 @@ no control depends on a second evidence fetch.
 
 ## React API
 
-The root package exports a documented `ViewerTheme` type:
+The `@mokly/viewer` package exports a documented `ViewerTheme` type:
 
 ```ts
 export type ViewerTheme = "auto" | "dark" | "light";

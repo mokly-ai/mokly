@@ -12,7 +12,7 @@ Commit one report per typed public export-map entry under `etc/api/`: the
 `browser`, and `data` entries. The side-effect-only browser entry
 still needs a report. A committed export-map inventory also records the
 viewer's `styles.css` resource entry, which has no TypeScript signature, and
-the root package's `mokly` bin, which is the shim. Public subpaths must not
+the `@mokly/mokly` package's `mokly` bin, which is the shim. Public subpaths must not
 disappear from reporting when the export map changes. A platform package
 exports no JavaScript and has no report.
 
@@ -52,7 +52,7 @@ satisfy the check.
 
 Use a small script under `scripts/verification/` built on the installed
 TypeScript language service and `findReferences`. It checks class methods,
-getters, setters, and properties in the root package's source directory and in
+getters, setters, and properties in `packages/mokly/src/` and in
 `packages/viewer/src/`, including members on otherwise-used classes. Report
 members with no reference outside their own declaration. An unused-export scan
 is not sufficient. Include real test, sidecar, interface, and package-entry uses

@@ -13,6 +13,14 @@ pub(crate) type Result<T> = std::result::Result<T, Error>;
 /// Failures surfaced by xtask commands.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// No native npm package exists for the host.
+    #[error("[xtask/native] unsupported host {os}/{architecture}")]
+    NativeHost {
+        /// Host operating system.
+        os: String,
+        /// Host architecture.
+        architecture: String,
+    },
     /// An explicit dependency audit mode was requested for another suite.
     #[error(
         "[xtask/check] --dependency-audit is not supported with suite {suite}; select the complete gate or --suite repository"
