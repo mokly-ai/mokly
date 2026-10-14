@@ -543,9 +543,10 @@ merges; the freeze applies to it from 2026-10-12.
 - [ ] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
       `.release-please-manifest.json` for the reduced tree; keep the viewer
       release path.
-- [ ] Update `AGENTS.md` for the reduced tree: the commands, the repository
+- [x] Update `AGENTS.md` for the reduced tree: the commands, the repository
       rules, and the moment to read the `rust` skill, which then covers
-      `crates/` as well as `xtask/`.
+      `crates/` as well as `xtask/`. Done on 2026-10-14 under Decision 38,
+      ahead of the teardown.
 - [ ] Run `cargo xtask check` on the reduced tree until it passes.
 - [ ] Record the deleted top-level paths in the commit body.
 - [ ] Commit.
@@ -653,7 +654,8 @@ Tags: ui
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
       index and detail sources, the `server` entry and `renderViewer` go,
-      and the package README follows.
+      and the package README, rewritten under Decision 38, is checked
+      against the package.
 - [ ] Run the viewer suite against the Milestone 6 routes.
 - [ ] Commit.
 
