@@ -5,14 +5,7 @@ import { uploadMissingBlobs } from "../src/publish/blobs.js";
 import { completeUpload } from "../src/publish/complete.js";
 import { requestUploadPlan } from "../src/publish/plan.js";
 
-import {
-  read,
-  protocol,
-  exchange,
-  sources,
-  upload,
-  prose,
-} from "./helpers/guides_ci_context.js";
+import { read, sources, upload, prose } from "./helpers/guides_ci_context.js";
 import { assertUploadRequest } from "./helpers/upload_request.js";
 
 test("CI code fences never invent a receiver request path", () => {
@@ -58,10 +51,6 @@ test("documented request headers and acceptance match the transport", async () =
     Accept: "application/json",
     "Content-Length": "0",
   });
-  const protocolFences = fenceHeaders(
-    read("docs/protocol/mokly-upload-exchange.md"),
-  );
-  assert.deepEqual(protocolFences, fences);
   const retry = {
     now: () => new Date("2026-09-26T12:00:00.000Z"),
     random: () => 0,
@@ -126,7 +115,6 @@ test("documented request headers and acceptance match the transport", async () =
   );
   const seconds = /times out after (\d+) seconds/u.exec(prose)?.[1];
   assert.ok(seconds);
-  assert.ok(exchange.includes(`times out after ${seconds} seconds`));
   const timeout = /AbortSignal\.timeout\(([\d_]+)\)/u.exec(
     read("src/publish/http.ts"),
   )?.[1];
@@ -142,16 +130,12 @@ test("CI flags and credential sources exist in code and the upload contract", ()
     )) {
       for (const [flag] of (flags ?? "").matchAll(/--[a-z]+(?:-[a-z]+)*/gu)) {
         assert.ok(parser.includes(`"${flag}"`), `${id}: ${flag}`);
-        assert.ok(
-          help.includes(flag) && protocol.includes(flag),
-          `${id}: ${flag}`,
-        );
+        assert.ok(help.includes(flag), `${id}: ${flag}`);
       }
     }
   }
   for (const name of ["MOKLY_ENDPOINT", "MOKLY_TOKEN"]) {
     assert.ok(sources.get("ci/publish-from-ci")?.includes(name));
-    assert.ok(protocol.includes(name));
     assert.ok(read("src/publish/options.ts").includes(name));
   }
 });

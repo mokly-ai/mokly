@@ -1,12 +1,10 @@
 # Component Review Validation
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
 Canonical order enforcement and the shared affected-consumer key are
 implemented by both the producer and strict path-keyed review result v7 reader.
-
-## Delivery Status
-
-Rule-specific source proof and own-page CSS impact validation are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Validation And Canonical Output
 
@@ -116,7 +114,7 @@ records retain the views belonging to each component side.
 Baseline and current documents come from validated manifest-v10 output and
 retain their original bytes. Style offsets and component ranges share each
 document's UTF-16 coordinate space. Only a canonical, valid v10 baseline reaches
-attribution, under the [baseline compatibility contract](./mokly-baseline-compatibility.md).
+attribution, under the baseline compatibility contract.
 
 Use the existing merge base with `origin/main` or the configured base; staged,
 unstaged, and untracked current edits still participate. Cross-kind path reuse

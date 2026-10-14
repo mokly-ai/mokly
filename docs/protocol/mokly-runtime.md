@@ -1,32 +1,17 @@
 # Mokly Build And Browse Runtime
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 [Whole-document pages](./mokly-pages.md) share the same path-derived folder
 hierarchy as screens and flows. Current and baseline output use manifest v10
-under the [compatibility contract](./mokly-baseline-compatibility.md).
+under the compatibility contract.
 
 ## Source Of Truth
 
 Authored entry modules, Markdown and imported helpers define the catalogue.
 Build writes the whole `mokly-generated/` tree. Serve and comparisons consume
 the accepted generation without another renderer. Git tracking and per-commit
-baselines follow [generated output](./mokly-generated-output.md).
-
-## Delivery Status
-
-This document defines the release-ready runtime contract. The Build, Check,
-watch, server, and comparison engines, the responsive package-owned catalogue,
-on-demand screen diffs, packed-package consumers, CI/release
-automation, and Playwright browser coverage are implemented. Both npm packages
-have completed their [initial registration](./npm-bootstrap.md); subsequent
-versions follow the [coordinated release contract](./npm-release.md).
-Canonical outer navigation from links inside fragment frames, request-visible
-fragment transport, manifest-bound preview adaptation, and active-tree
-disclosure are implemented. Their delivery history is recorded in the completed
-[in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-Path identity, manifest v10, Markdown documents, and move detection are
-implemented. The [Rust rebuild plan](../../plans/rust-rebuild.md) renders the catalogue from sources with no generated tree and serves a `live-index-3` index with that entry shape.
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+baselines follow generated output.
 
 ## Component Workspaces
 
@@ -101,7 +86,7 @@ The tracked failure report groups missing, stale, and extra paths. Run
 `mokly build` and commit the whole tree, or untrack and ignore `mokly-generated/`.
 `check` never rewrites output; plain Serve, export, and publication never write it.
 Only `build`, `build --watch`, and `serve --build` write after a complete
-successful compilation, as specified in [generated output](./mokly-generated-output.md).
+successful compilation, as specified in generated output.
 
 ## Catalogue And Routes
 
@@ -209,7 +194,7 @@ shows an explicit unavailable message when Changes is selected. Pending calculat
 shows a spinner in the reserved count slot and, when selected, in the sidebar.
 A derived-baseline rebuild precedes that calculation with its own `preparing`
 state, which uses the same spinner and adds a secondary sidebar line; see the
-[derived baselines contract](./mokly-derived-baselines.md).
+derived baselines contract.
 All remains available throughout; a completed empty result shows zero. See the
 [on-demand lifecycle](./mokly-on-demand.md).
 Route attribution compares each current manifest entry with its base entry and

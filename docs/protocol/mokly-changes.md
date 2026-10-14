@@ -1,40 +1,6 @@
 # Changes and screen comparisons
 
-## Delivery Status
-
-Uniform CSS membership and evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md); comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-
-The remaining contract is implemented.
-
-The implemented [component attribution extension](./mokly-component-changes.md)
-keeps affected-only consumers out of Changes and links them from the component.
-Screen and Review-ignore behavior remains below. Pairing uses kind and path,
-then the move signals; review result v7 carries `previousPath` on paired moves.
-Documents use the page material rules. The viewer presents paired entries under
-the [move contract](./mokly-moves.md). The
-[Rust rebuild plan](../../plans/rust-rebuild.md) produces this result as review v8
-under the [comparison contract](./mokly-comparison.md).
-
-The catalogue's All / Changes filter narrows one navigation tree. There is no
-Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
-
-[Pages](./mokly-pages.md) and [documents](./mokly-documents.md) participate in
-Changes and removed-entry states, while comparison controls remain exclusive
-to changed screens and eligible component variants. Each
-[variant](./mokly-variants.md) is an entry of its parent's kind with its own
-path, row, count, views, and comparison; only its navigation placement under
-the parent is variant-specific. The
-[shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
-independently of screen results; removed pages and documents are flat
-Changes-only rows with baseline folder titles, and an entry the
-[move contract](./mokly-moves.md) pairs with its baseline keeps one row
-labelled Moved. Review reads follow the [source policy](./mokly-source-protection.md).
-
-Opt into [Published Changes](./mokly-publication.md) with
-`npm run preview:build -- --include-changes`; default repository-preview publication omits Changes,
-comparisons, history, and removals. Both options omit live updates. Strict
-baseline admission and pairing/order fixes run in Serve, export, and publish.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Changes membership
 
@@ -157,12 +123,12 @@ component-evidence snapshot arrives, Browse keeps both tabs without inventing a
 Changes count. A spinner occupies the reserved count slot, and selecting Changes
 shows a loading sidebar. A baseline rebuild publishes a distinct `preparing`
 state before `pending` while it runs; see the
-[derived baselines contract](./mokly-derived-baselines.md). Content updates clear the previous snapshot and publish
+derived baselines contract. Content updates clear the previous snapshot and publish
 pending status before notifying the browser, then publish a terminal ready or
 unavailable status only when the latest sequence finishes. Empty ready results
 show zero; unavailable results show a dash and a plain unavailable message.
 Earlier baseline output follows the command and copy contract in
-[Baseline Compatibility](./mokly-baseline-compatibility.md).
+Baseline Compatibility.
 Tabs, count allocation and the tree origin remain fixed throughout;
 late results from superseded generations are ignored. Non-watched Serve uses the
 same asynchronous startup boundary, without observing later edits. Watched Git-only

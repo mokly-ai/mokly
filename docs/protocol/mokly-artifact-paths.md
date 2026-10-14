@@ -1,14 +1,6 @@
 # Path-Derived Artifact Paths
 
-## Delivery Status
-
-Path-derived documents, snapshots, previews and canonical shell URLs are
-implemented for every entry kind, including Markdown documents.
-
-This is the single contract for entry documents, generated view names,
-comparison snapshot names, preview metadata, shell documents, URL parsing, and
-reserved prefixes. Every name derives from an entry's path under the
-[path contract](./mokly-paths.md); authors never supply any of them.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Layout
 
@@ -154,7 +146,7 @@ generated HTML, the private manifest, compiled CSS and copied resources beneath
 entry's first path segment cannot equal `mokly-generated`, compared
 case-insensitively, under the [path grammar](./mokly-paths.md#segment-grammar).
 Generated HTML also reserves `styles` and `assets` as its first segment under
-the [unified output contract](./mokly-unified-output.md#one-owned-tree). No kind prefix exists, so a top-level folder may be
+the unified output contract. No kind prefix exists, so a top-level folder may be
 named `screens`, `pages`, or `components`. Generated file names use the
 authored case of each segment; the output inventory rejects two files whose
 case-folded paths collide, including a resource against a document directory.

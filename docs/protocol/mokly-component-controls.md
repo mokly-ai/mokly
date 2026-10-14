@@ -1,12 +1,6 @@
 # Component Controls
 
-## Delivery Status
-
-Local Serve edits props through the registered renderer; published controls are
-read-only. [Controls mockups](./mokly-component-controls-design.md) share the
-icon inspector and lifecycle. Forwarded loopback ports follow the rule below.
-The render request names entries by path and keeps a separate page id for
-coalescing requests from one open page. The [Rust rebuild plan](../../plans/rust-rebuild.md) derives every control from the prop schema under the [entry props contract](./mokly-entry-props.md): the tab lists every data prop with a derived control, a derived number step counts from zero as `multipleOf` does, select labels come from `title` or the value, and the render request also names screens.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Scope And User Behavior
 

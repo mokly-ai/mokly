@@ -1,16 +1,6 @@
 # Component Stylesheets
 
-## Delivery Status
-
-Linking and provenance are implemented. The removal of CSS ownership records
-and uniform rule attribution are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-Configured-only placement anchors, shared link discovery, body-link reuse and
-Review-ignore-safe inserted-link discovery are implemented in
-[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
-
-The [ownership and comparison contract](./mokly-component-stylesheet-ownership.md) defines final link provenance and evidence.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Declaration And Public Files
 
@@ -145,7 +135,7 @@ The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
 owns the complete `RenderInput.stylesheets` list and its order. The marker and
 component declarations add no hrefs to this list. Its component
 `entry` omits `stylesheets` at runtime and in its public type. The renderer
-emits the supplied links. Use the [shared link finder](./mokly-stylesheet-links.md)
+emits the supplied links. Use the shared link finder
 for placement, reuse, provenance and resource discovery, with the scope defined
 for each step. If resource discovery finds a renderer-authored local stylesheet
 link to the same validated public file as a declaration, including in `<body>`,
@@ -188,7 +178,7 @@ See the [graceful-handling rule](./README.md#graceful-handling).
 
 ## Ownership And Comparison
 
-The linked [ownership and comparison contract](./mokly-component-stylesheet-ownership.md)
+The linked ownership and comparison contract
 defines private inserted-link provenance, the removal of CSS owner records, comparison-only
 link projection and Changes attribution. It retains renderer-authored links as
 page content and keeps CSS evidence based on final linked documents.
@@ -226,7 +216,7 @@ of stylesheet loading from manually declared review dependencies.
 - [Rendering](./mokly-rendering.md) and
   [component manifest](./mokly-component-manifest.md) define generated links
   and private view records.
-- [Ownership and comparison](./mokly-component-stylesheet-ownership.md)
+- Ownership and comparison
   defines final-document provenance and rule-based comparison.
 - [Watch](./mokly-watch.md), [export](./mokly-export.md), and
   [publication](./mokly-publication.md) define delivery boundaries.

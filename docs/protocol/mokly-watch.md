@@ -1,14 +1,6 @@
 # Watched Catalogue Development
 
-## Delivery Status
-
-CSS rule attribution and ignored stylesheet owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
-
-The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery history.
-
-The generation-scoped warning channel and supervisor-factory cleanup are
-implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
-Other watch behavior is implemented.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Watch Inputs
 
@@ -242,7 +234,7 @@ The [disclosure persistence contract](./mokly-disclosure-persistence.md#recovery
 owns these checks. The watched host stores no Browse record when a captured
 general shell snapshot has no live status.
 
-The [shared watch setup](./mokly-watch-writers.md) was approved for the
+The shared watch setup was approved for the
 TypeScript backend and is frozen with it; it never landed. The current Build
 watcher shares classification helpers but does not share Serve's full
 inventory and resource lifecycle.

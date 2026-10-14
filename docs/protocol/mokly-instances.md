@@ -1,17 +1,6 @@
 # Component Instance Identity
 
-## Delivery Status
-
-The explicit root output target is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-Implemented as recorded in the
-[viewer library plan](../../plans/mokly-viewer-library.md), including resolution
-and source capture. Key and boundary formats are unchanged; this document
-approves no new UI or visible local behavior.
-
-The rule for comments with the former spelling is implemented in
-[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Identity And Scope
 
@@ -231,7 +220,7 @@ spelling is ordinary page content. Mokly never reads it as a marker or removes
 it as one. The comment alone is not a validation error. It creates no component
 range, Review-ignore region or material marker. If baseline records require
 ranges that its document cannot prove, follow
-[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
+Invalid Or Missing Data.
 The frozen instance and slot key domain strings are unchanged.
 
 ## Acceptance

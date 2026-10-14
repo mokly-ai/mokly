@@ -1,13 +1,6 @@
 # Entry Props And Variants
 
-## Delivery Status
-
-Approved target of the [Rust rebuild plan](../../plans/rust-rebuild.md); not
-implemented. The frozen TypeScript backend has two variant models under the
-[variants contract](./mokly-variants.md): a component variant is a saved props
-set, and a screen variant is a second screen with its own React trees. This
-page replaces both with one model for every kind. The metadata inheritance,
-slug, path, navigation, and Changes rules of the variants contract stay.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## One Model
 

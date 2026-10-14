@@ -1,12 +1,6 @@
 # Public File Policy And Referenced Closure
 
-## Delivery Status
-
-This contract defines the implemented public-file boundary tracked by
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-It applies to compilation, on-demand rendering, Watch, Serve, export and
-publication. The [source protection contract](./mokly-source-protection.md)
-defines which authored inputs remain private.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## One Policy Per Compilation
 

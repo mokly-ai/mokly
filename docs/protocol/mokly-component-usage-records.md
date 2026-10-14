@@ -1,23 +1,6 @@
 # Component Usage Records
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Implemented for manifest v10. Root output ranges, non-CSS-only resource records and independent
-stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md), within v10.
-
-The rule for comments with the former spelling is implemented in
-[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
-Implemented for manifest v10, including strict admission of baseline usage
-records. `componentId` names a component parent by its path.
-
-This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v10](./mokly-component-manifest.md).
-Stable instance-key behavior is defined separately by
-[Component Instance Identity](./mokly-instances.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Record Shapes
 
@@ -129,7 +112,7 @@ spelling is ordinary page content. Mokly never reads it as a marker or removes
 it as one. The comment alone is not a validation error. It creates no component
 range, Review-ignore region or material marker. Required baseline ranges that
 its document cannot prove follow
-[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
+Invalid Or Missing Data.
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings above are unchanged.
 
@@ -194,7 +177,7 @@ ownership. Each persisted v10 usage record must contain this array, even when
 empty. A missing array is invalid data; readers never guess provenance or
 normalize its absence to an empty array. Public inspection still omits this
 private field. It needs no corresponding `resources` record. The
-[stylesheet provenance contract](./mokly-component-stylesheet-ownership.md)
+stylesheet provenance contract
 defines final-link validation and the root-link comparison exception.
 
 ## Validation

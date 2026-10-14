@@ -1,5 +1,7 @@
 # Npm Release Verification Evidence
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Verification Modes
 
 The npm release workflow has two verification modes. A release push and a manual

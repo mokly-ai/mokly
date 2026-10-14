@@ -1,13 +1,5 @@
 # Viewer Markers And Multi-Instance Highlights
 
-## Delivery Status
-
-Implemented. Delivery and verification are tracked by the active
-[viewer comment anchoring plan](../../plans/viewer-comment-anchoring.md). The
-viewer composes the existing instance identity and frame adapter without adding
-a comment model or changing the adapter wire protocol. References name entries
-by path under the [instance contract](./mokly-instances.md).
-
 ## Purpose And Boundary
 
 `@mokly/viewer` positions host-owned React content on component instances and

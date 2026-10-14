@@ -1,12 +1,5 @@
 # Dependency Security
 
-## Delivery Status
-
-Implemented. Baseline and strict audits share the reviewed exception rules.
-The scheduled workflow maintains the dependency update pull request.
-The [Rust rebuild plan](../../plans/rust-rebuild.md) proposes a `cargo audit` gate for
-the Rust workspace; that gate is not yet approved.
-
 ## Verification Boundary
 
 `npm run dependencies:check` audits the workspace lockfile against the

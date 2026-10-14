@@ -1,17 +1,10 @@
 # Rust Rebuild Procedures
 
-## Delivery Status
-
-Working procedures of the [Rust rebuild plan](../../plans/rust-rebuild.md):
-how the frozen TypeScript backend's outputs are captured as references, how
-each Rust subsystem runs its gap sweep before its milestone closes, and how
-every protocol page is classified for the rebuild. The shared skills that
-[`AGENTS.md`](../../AGENTS.md) names hold the always-on rules; this page holds
-the steps. Until the teardown, the build commands in `AGENTS.md` and the
-example catalogue belong to the frozen TypeScript backend. After the rebuild
-the same authored content renders through the Rust binary and the
-[render sidecar](./mokly-sidecar.md), and HTML screens and components join it
-under the [HTML screens contract](./mokly-html-screens.md).
+Procedures of the [Rust rebuild plan](../../plans/rust-rebuild.md): how the
+previous backend's outputs are captured as references, and how each milestone
+runs its gap sweep against the previous protocol before it closes. The plan
+names the commit that holds the previous protocol and the `ts-backend-final`
+tag that pins it.
 
 ## Reference Capture
 
@@ -34,8 +27,8 @@ Scenarios, one directory each:
 
 For each scenario keep the review artifact, the catalogue read model, the
 export inventory, and the terminal output of build, check, serve startup, and
-export; the frozen manifest and generated tree are not kept, because the Rust
-core writes neither. Then run
+export; the previous manifest and generated tree are not kept, because the
+Rust core writes neither. Then run
 the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
 rebuild branch, over the saved outputs; it reduces a scenario to one JSON table: entries by kind and path, listed
 changes with states and reasons, affected consumers, kept and excluded rules
@@ -44,11 +37,11 @@ per view, and resource closures per view.
 ## Gap Sweep
 
 Each Rust subsystem replacement runs one bounded sweep before its milestone
-closes. The sweep is a reading exercise against the frozen contracts and the
+closes. The sweep is a reading exercise against the previous protocol and the
 old test names, not a port.
 
-1. List the frozen contracts and the test files that owned the subsystem, from
-   the protocol triage under `.context/rust-rebuild/protocol-triage.md`.
+1. List the previous protocol pages and the test files that owned the
+   subsystem, read at the commit the plan names.
 2. For each rule or test case, decide one of three outcomes with one line of
    reason: adopt, adopt with a change, or drop.
 3. Write the adopted and changed rules into the new spec page in the same
@@ -63,12 +56,3 @@ old test names, not a port.
 
 Accepted differences are listed in the breaking-change release note. A
 regression blocks the milestone.
-
-## Protocol Triage
-
-Every page under `docs/protocol` carries one classification in the triage
-file: keep (true for both lines, kept as is), rewrite (true in spirit,
-rewritten for the Rust core in the milestone that owns the subsystem), or
-delete (describes the frozen implementation only, removed at the teardown).
-The [protocol index](./README.md) groups pages by that classification until
-the rewrite milestones replace it with the final index.

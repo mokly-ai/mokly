@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The uniform CSS rule policy below is implemented in Milestone 19 of the
-[source-path removal plan](../../../../../plans/remove-source-path-evidence.md).
+source-path removal plan.
 
 That plan delivered component stylesheet declarations in Milestone 3, removed
 source-path evidence in Milestone 4 and removed declarations in Milestone 6.

@@ -2,11 +2,6 @@
 
 Continuation of [CI Verification](./ci-verification.md).
 
-## Delivery Status
-
-Implemented. The repository suite selects baseline or strict mode.
-The separate scheduled workflow handles strict findings on `main`.
-
 ## Repository Boundary
 
 The repository suite

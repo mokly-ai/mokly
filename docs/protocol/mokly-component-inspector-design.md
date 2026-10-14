@@ -1,16 +1,5 @@
 # Component Inspector Design
 
-## Delivery Status
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-
-The [component explorer plan](../../plans/component-explorer.md) delivered this
-replacement for the crowded Details disclosure. Runtime and mockups share the
-layout; non-component artboards retain the shell. Removed
-consumer stages retain this inspector around the previous version delivered by
-the [removed content previews plan](../../plans/removed-content-previews.md).
-The design catalogue and its entry files use paths.
-
 ## One Inspector
 
 Component pages and consuming-screen designs share one inspector: beneath the

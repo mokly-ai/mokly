@@ -141,9 +141,9 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../src/browse/README.md),
 [logical navigation](../../../../docs/protocol/mokly-navigation.md),
-[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md).
+standalone bootstrap.
 
-The approved [frame identity boundary](../../../../docs/protocol/mokly-boundary-results.md#delivered-frame-identity)
+The approved frame identity boundary
 uses one same-origin URL comparison for readiness and later inspection. It
 accepts the provider's final `.html` removal and decodes each path only once;
 no cross-origin response-path access is assumed.

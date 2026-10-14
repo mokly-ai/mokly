@@ -1,25 +1,6 @@
 # Viewer Appearance
 
-## Delivery Status
-
-This is the implemented canonical viewer-appearance contract. Embedded: `theme` on `MoklyViewerProps` and
-`ServerViewerProps`, applied to every viewer root and resolved for Auto through
-CSS; per-frame preview `color-scheme`; and preview controls renamed to name the
-preview they change. Standalone: one Appearance selector in the top bar on
-every document, the classic `appearance-startup.js` asset that restores the
-appearance before the first paint, and the documented precedence over the
-`scheme` pin, the stored override and the server-supplied initial theme. The
-standalone scheme switches and the workspace Dark preview button are gone from
-standalone documents; an embedded root keeps its own preview control. Markdown
-documents follow the implemented [document contract](./mokly-documents.md).
-
-One package-owned semantic palette carries the recorded swatches and their
-three Light corrections, in [mokly-viewer-palette.md](./mokly-viewer-palette.md).
-The appearance mockups are delivered: every appearance entry renders in both
-schemes, the depicted top bar component owns the one Appearance control, and
-separate head-band scheme depictions are gone.
-
-The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work. The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the shell renders only in the browser under the [shell delivery contract](./mokly-shell-delivery.md), so the pre-paint startup asset and the server-supplied initial theme go (Decision 21).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## One Control In Standalone, Two Inputs When Embedded
 

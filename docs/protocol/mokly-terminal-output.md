@@ -1,8 +1,6 @@
 # CLI Terminal Output
 
-## Delivery Status
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Scope
 
@@ -241,5 +239,5 @@ is a warning and does not stop Serve.
 The writer target that makes `build --watch` and `serve --build` use one summary helper
 as `build`, with `.` for an empty relative catalogue path and completed writes
 only, was approved for the TypeScript backend and is frozen with it; it never
-landed. The [watch-writer contract](./mokly-watch-writers.md) records it; plain
+landed. The watch-writer contract records it; plain
 Serve performs no write.

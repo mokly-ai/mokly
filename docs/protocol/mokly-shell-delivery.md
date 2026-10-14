@@ -1,16 +1,6 @@
 # Shell Delivery And Read Model Routes
 
-## Delivery Status
-
-Approved target of the [Rust rebuild plan](../../plans/rust-rebuild.md),
-Decision 21 as revised by Decision 27; not implemented. The frozen TypeScript
-backend renders the Browse shell on the server and hydrates it in the browser
-under the [viewer SSR contract](./mokly-viewer-ssr.md), embeds an
-[entry-scoped bootstrap](./mokly-shell-bootstrap.md) in every page, serves one
-complete `mokly-viewer/catalogue.json`, and marks static pages with the
-delivery descriptor of the [static delivery contract](./mokly-export-delivery.md).
-This page replaces all four for the Rust core: the shell renders in the
-browser from JSON routes, and no page carries data.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 

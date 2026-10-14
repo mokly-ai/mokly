@@ -1,23 +1,6 @@
 # Component Comparison Schema
 
-## Delivery Status
-
-CSS per-rule attribution and the revised v7 evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
-of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-
-The producer, source validator, artifact publisher, exporter, and browser
-decoder implement this path-keyed component-aware schema v7 for
-[change attribution](./mokly-component-changes.md). `ReviewResult`,
-`ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
-[Changes contract](./mokly-changes.md) and
-[named result interfaces](../../packages/viewer/src/review/types.ts).
-Manifest/usage types come from the
-[component manifest](./mokly-component-manifest.md). Version 7 addresses
-screens, components, variants, and views by entry path and view axes, carries
-`previousPath` for paired moves, and stores no artifact path. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) replaces review v7 with review v8, whose
-owner-attributed rule evidence the [comparison contract](./mokly-comparison.md)
-defines.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Normative Result
 
@@ -109,6 +92,6 @@ not by pretending instance keys are legacy ignore ids.
 The [validation contract](./mokly-component-review-validation.md) owns source
 coverage, affected-consumer proof, canonical ordering, snapshot confinement,
 and strict reader admission. Its rules apply to both background classification
-and captured comparisons. The [fast-path contract](./mokly-component-review-fast-path.md)
+and captured comparisons. The fast-path contract
 requires the complete and unchanged-view decisions to produce equivalent records.
 Every catalogue writes version 7; older public comparisons must be regenerated.

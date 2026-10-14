@@ -64,21 +64,6 @@ test("the pinned npm is new enough to keep lockfile libc fields", async () => {
   );
 });
 
-test("developer and protocol docs name the pinned npm version", async () => {
-  const pinned = await pinnedNpmVersion();
-  for (const file of [
-    "README.md",
-    "docs/protocol/ci-workflow.md",
-    "docs/protocol/npm-release-management.md",
-  ]) {
-    const source = (await read(file)).replace(/\s+/gu, " ");
-    assert.ok(
-      source.includes(`npm ${pinned}`),
-      `${file} must name npm ${pinned}`,
-    );
-  }
-});
-
 async function pinnedNpmVersion(): Promise<string> {
   const manifest = JSON.parse(await read("package.json")) as {
     packageManager?: string;

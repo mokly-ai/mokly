@@ -6,16 +6,6 @@ import { GUIDES } from "./guides.js";
 
 export const read = (...parts: string[]) =>
   readFileSync(path.join(repositoryRoot, ...parts), "utf8");
-export const protocol = read("docs/protocol/mokly-upload.md").replace(
-  /\s+/gu,
-  " ",
-);
-export const exchange = [
-  read("docs/protocol/mokly-upload-exchange.md"),
-  read("docs/protocol/mokly-upload-validation.md"),
-]
-  .join("\n")
-  .replace(/\s+/gu, " ");
 export const sources = new Map(
   GUIDES.filter((page) => page.frontmatter.section === "ci").map((page) => [
     page.id,

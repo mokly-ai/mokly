@@ -1,13 +1,6 @@
 # Removed Preview Frames And Lifecycle
 
-## Delivery Status
-
-Implemented. This document is split from
-[Removed Content Previews](./mokly-removed-previews.md#frames-and-lifecycle)
-and owns how the viewer fetches, validates, presents, and guards a historical
-document once its preview metadata has been accepted. The
-[path identity plan](../../plans/path-identity.md) changes none of these rules
-beyond the path-derived snapshot names they reference.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Frames And Lifecycle
 

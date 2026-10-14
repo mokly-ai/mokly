@@ -1,5 +1,7 @@
 # Mokly CI And Npm Release Contract
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 ## Package Metadata

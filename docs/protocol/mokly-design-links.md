@@ -1,11 +1,5 @@
 # Mokly Design Mockup Links
 
-## Delivery Status
-
-Implemented in the 73 Browse/Changes design screens and two example screens with `MockLink`/`MockLink asChild`.
-Those 73 Browse/Changes designs retain canonical links; [components](./mokly-component-design.md) and [removed previews](./mokly-removed-previews.md) extend the contract. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery; [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state) adds the excluded-only state, splits the stylesheet gallery into child pages and gives the paired Excluded and Matched designs one Details card.
-Links use complete paths under the [path contract](./mokly-paths.md).
-
 ## Scope And Ownership
 
 The catalogue under `examples/basic/specs/design/` is a navigable prototype

@@ -1,19 +1,8 @@
 # CSS Rule Membership And Identity
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
-
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
-element matching, rule identity, component membership and page reasons. The
-comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). These rules replace stylesheet
-owner attribution for every CSS delivery path.
-
-The inserted-link Review-ignore exception is implemented in
-[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 
 ## Matched Elements
 
@@ -36,7 +25,7 @@ ignored content contributes no element. One-sided adoption retains the existing
 paired policy; do not normalize either side again. A missing view has no tree.
 Recover Mokly-inserted links from validated `insertedStylesheets` spans for
 resource discovery and CSS rule scope, including inside paired Review-ignore.
-Use the same [link finder and scopes](./mokly-stylesheet-links.md) on complete
+Use the same link finder and scopes on complete
 and fast comparisons. Ignored authored markup still supplies no selector
 matches; its own links and styles stay ignored. Comparison-only removal of
 inserted links still applies to document material.

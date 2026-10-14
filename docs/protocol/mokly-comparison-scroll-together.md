@@ -1,18 +1,5 @@
 # Comparison Scroll Together
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of this reader control. It decides whether the versions of an
-open comparison scroll together under the
-[comparison scrolling contract](./mokly-comparison-scrolling.md). The
-[shell design](./mokly-shell-design.md#in-place-comparisons) fixes how the
-switch is drawn and placed. The runtime implements it in
-`packages/viewer/src/shell/comparison_toolbar.tsx`,
-`comparison_scroll_preference.ts`, `use_scroll_together.ts`,
-`comparison_scroll_owner.ts`, and the section controller
-`comparison_scroll_sync.ts`.
-
 ## Reader Control
 
 The comparison toolbar places a native `input type="checkbox"` with

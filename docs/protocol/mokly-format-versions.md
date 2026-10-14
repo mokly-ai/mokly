@@ -1,15 +1,5 @@
 # Combined Path And Output Format Versions
 
-## Delivery Status
-
-The frozen TypeScript backend implements manifest v10, catalogue v6, and
-review v7 under [path identity in one generated tree](./mokly-path-output-integration.md).
-The [Rust rebuild plan](../../plans/rust-rebuild.md) is the approved target for
-the numbers below; that line writes no generated tree and no baseline cache.
-One format number denotes one shape and interpretation.
-Readers accept only the current number; checking older data is not a content
-compatibility reader, and no reader for an earlier number exists.
-
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                           |

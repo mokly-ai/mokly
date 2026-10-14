@@ -1,18 +1,5 @@
 # Folders
 
-## Delivery Status
-
-Folder records, title resolution, order, exclusions, path trees, the Specs
-and Components rows, the `Overview` row, entry rows for a folder's own screen
-or component, and breadcrumb links and folder reveals are implemented. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) keeps this contract unchanged.
-
-A folder is a path with entries below it. It has no definition of its own, no
-status, and no Changes row. This contract owns the optional folder record that
-gives a folder a readable title, a display order, a hidden flag, and file
-exclusions, and it owns how a folder and its own page render in the navigation
-tree. Path derivation lives in the [path contract](./mokly-paths.md).
-
 ## Folder Record
 
 A folder record describes exactly one folder, keyed by its path:

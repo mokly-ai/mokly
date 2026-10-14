@@ -1,5 +1,7 @@
 # Catalogue Serialization, Identity And Versions
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Sort object keys recursively by UTF-16 code units; preserve authored steps and
 tags. Entry arrays sort by kind and path in UTF-16 order, yielding `component`,
 `document`, `page`, `screen`, `use-case`; a parent's variants instead follow it

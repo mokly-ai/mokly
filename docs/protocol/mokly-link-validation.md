@@ -1,5 +1,7 @@
 # Final Logical Link Validation
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 The [navigation contract](./mokly-navigation.md) owns logical links, markers
 and Browse behavior. Build and on-demand rendering use the same final checks.
 

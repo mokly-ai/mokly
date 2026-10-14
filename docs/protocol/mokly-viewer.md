@@ -1,8 +1,6 @@
 # Embeddable Mokly Viewer
 
-## Delivery Status
-
-Implemented: the viewer library renders one React shell in Serve, export and embedded hosts, and Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md). The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the shell renders only in the browser from the index and detail sources of the [shell delivery contract](./mokly-shell-delivery.md), updates follow one revision with no page reload, and `renderViewer` is retired (Decisions 21 and 27). The same plan gives a component parent its own view from its own props, shown first on its page, under the [entry props contract](./mokly-entry-props.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Package And Props
 
@@ -441,11 +439,11 @@ omission.
 
 Server rendering, `viewerId`, hydration in every delivery mode, the React-free
 inspector exception, and the viewer's host-independence and network boundary
-are defined by [viewer SSR and hydration](./mokly-viewer-ssr.md).
+are defined by viewer SSR and hydration.
 
 Acceptance includes all props, slots, events, handle methods, controlled-state
 round trips, multiple independent mounts, SSR/client lifecycle cleanup,
-hydration without mismatches on one fixture route per [entry shape](./ci-verification-hydration.md#entry-shapes),
+hydration without mismatches on one fixture route per entry shape,
 source replacement, same/cross-origin frames and the existing local browser tests
 passing against the hydrated shell. Standalone coverage enforces the scoped-bootstrap
 contract. Behavioural parity under `tests/browser` is the bar; shell module bytes and

@@ -1,23 +1,5 @@
 # Registered Components In Mokly's Design Catalogue
 
-## Delivery Status
-
-Uniform CSS attribution in the acceptance table is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
-of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The basic consumer records shared instances without changing existing design
-screens. Registered entries live under Components → Design → Shared components,
-beside Example Action and Toolbar. The generated manifest owns all counts;
-the library and its consuming screens use paths.
-
-The remaining contract is implemented. Under the [Rust rebuild plan](../../plans/rust-rebuild.md)
-a parent's page shows its own view first, rendered from its own props, under
-the [entry props contract](./mokly-entry-props.md).
-
-This contract and the [library inventory](./mokly-design-component-library.md)
-define delivery; [shell design](./mokly-shell-design.md) and
-[design links](./mokly-design-links.md) retain presentation/navigation authority.
-
 ## Outcome And Scope
 
 Give Mokly's shared design UI its own real component pages, saved variants,

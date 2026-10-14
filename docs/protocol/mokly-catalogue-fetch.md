@@ -1,17 +1,6 @@
 # Catalogue Read Model Fetch Rules
 
-## Delivery Status
-
-Implemented. This contract is split from the
-[public catalogue read model](./mokly-catalogue.md) and keeps the serving and
-fetch rules for `mokly-viewer/catalogue.json` and the files it points at. The read
-model's shape, projection, and versions stay in that contract.
-
-The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page for
-the index and entry detail routes of the
-[shell delivery contract](./mokly-shell-delivery.md); `catalogue.json` is
-retired, and Serve uses one revision and a per-process deployment id
-(Decisions 21 and 27).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Serve And Fetch Rules
 

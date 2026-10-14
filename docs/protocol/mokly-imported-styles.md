@@ -1,11 +1,6 @@
 # Imported Stylesheet Delivery
 
-## Delivery Status
-
-CSS/asset compilation, fragment stylesheet links, optional consumer PostCSS,
-Serve/watch, export, publication, and Changes ship together. The
-[implementation plan](../../plans/imported-css-delivery.md) records the rollout
-and reviews.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Delivery
 
@@ -25,7 +20,7 @@ Pages, screen/component views and the private v10 manifest share the same tree.
 Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
 `styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
 must carry identical bytes; disagreeing bytes fail Build. Sources stay private.
-The [unified layout](./mokly-unified-output.md#one-owned-tree) reserves `styles`
+The unified layout reserves `styles`
 and `assets` as the first segment of generated HTML routes. Path-derived HTML routes use `<path>/index[.<axes>].html`; the generated
 root prefix is not part of those routes.
 
@@ -37,7 +32,7 @@ stale files and empty directories. Plain Serve, export, publication and
 untracked Check do not inspect old output. CLI Publish separately checks the
 checkout and committed generation or requires ignored derived output under the
 [upload contract](./mokly-upload.md). The
-[tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
+tracking rules
 apply equally to generated CSS, assets, HTML and the manifest.
 
 Reject root directories and `roots[].files` static prefixes, renderer,
@@ -46,7 +41,7 @@ violate the generated-tree boundary, including physical aliases. Discovery
 skips this tree; broad entry globs remain valid. Entry modules below
 `mockupsDir` remain protected sources, but a root directory equal to `mockupsDir` is
 invalid. `publicExclude` is removed. Other authored files become public only
-through the validated [asset closure](./mokly-generated-output.md#closure-urls-and-publication).
+through the validated asset closure.
 
 Generated route segments allow a leading letter, digit, underscore or hyphen;
 subsequent characters may also include dot and tilde. Device-name stems and

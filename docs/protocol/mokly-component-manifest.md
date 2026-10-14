@@ -1,27 +1,6 @@
 # Manifest Schema
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). The combined manifest v10 retains these proof fields.
-
-Builds emit manifest v10 with paths, folder records, and rendered Markdown
-documents. Copied document resources also remain private watched source inputs.
-
-These are the normative interfaces for the generated `mokly-manifest.json`.
-`Viewport` retains the [package contract](./mokly-package.md) and the named
-[registry interfaces](../../packages/viewer/src/registry/types.ts).
-`ColorScheme` is `"light" | "dark"`. Prop and wire types come from the
-[prop schema](./mokly-component-props.md); `ComponentControl` comes from the
-[controls contract](./mokly-component-controls.md). The optional instance
-`source` field is defined by the
-[usage-record contract](./mokly-component-usage-records.md).
-
-The optional instance `source` follows the [usage-record contract](./mokly-component-usage-records.md). Readers accept instances with or without it.
-Version 9 carries paths and authored data only: no entry stores a route, view
-path, or other value derivable from its path, kind, and configuration.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Entries, Folders, And Variants
 
@@ -198,7 +177,7 @@ Emit v10 for every catalogue, including one without components or documents.
 Its sorted private `sourceFiles` inventory, explicit page and document
 entries, folder records, component records, and usage proof are required.
 Current and baseline readers accept only v10; the
-[baseline compatibility contract](./mokly-baseline-compatibility.md) owns the
+baseline compatibility contract owns the
 clean unavailable outcome for earlier output. Contract fixtures, schema round
 trips, deterministic output, and ownership and path regressions cover these
 rules.

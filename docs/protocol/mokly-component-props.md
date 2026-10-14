@@ -1,15 +1,6 @@
 # Component Prop Schema
 
-## Delivery Status
-
-The shared runtime validator, canonical codec, and schema-derived authoring types
-are implemented and shared by the public authoring API and local controls. This defines the input contract for
-[registered components](./mokly-components.md), following the approved review
-recommendations in the [component explorer plan](../../plans/component-explorer.md).
-The [Rust rebuild plan](../../plans/rust-rebuild.md) replaces this schema language with
-a strict profile of JSON Schema 2020-12 under the
-[entry props contract](./mokly-entry-props.md); the closed-object, no-default,
-and plain-data rules stay.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Normative Schema
 

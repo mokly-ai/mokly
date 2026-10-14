@@ -1,12 +1,5 @@
 # Shell Destination Queries
 
-## Delivery Status
-
-Implemented in Serve, export, and embedded hosts. This contract holds the
-destination query rules that the
-[navigation contract](./mokly-navigation.md#active-catalogue-visibility)
-applies after every route change.
-
 ## View Axes
 
 Shell destinations may explicitly request `viewport=mobile|desktop|both` and

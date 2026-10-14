@@ -1,14 +1,5 @@
 # Dependency Audit Baseline
 
-## Delivery Status
-
-The strict and baseline scripts, structured issues, byte comparison, JSON
-reports, xtask defaults, and CI mode selection are implemented. The scheduled
-strict audit and update script maintain the
-[dependency update pull request](./dependency-audit-update-pr.md).
-The [dependency security contract](./dependency-security.md) owns reviewed
-exceptions and dependency update policy.
-
 ## Modes And Command
 
 `npm run dependencies:check` runs the strict workspace audit.

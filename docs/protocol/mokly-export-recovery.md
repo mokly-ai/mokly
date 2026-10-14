@@ -1,5 +1,7 @@
 # Export Recovery
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This supplements the [consumer export contract](./mokly-export.md). The same
 rules apply to consumer export and repository previews with current ownership.
 No new CLI options or supported JavaScript API are introduced.

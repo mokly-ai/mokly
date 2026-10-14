@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-The [React Browse shell plan](../../../../plans/react-browse-shell.md) records
+The React Browse shell plan records
 how Serve, export and the public viewer converged on this tree.
 Retaining the known branch name in the exported navigation fallback is
-implemented in [M31](../../../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+implemented in M31.
 The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
 keeps the sentence during loading; a nameless embedded catalogue still omits it.
 
@@ -319,7 +319,7 @@ navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
 defines route loading, revision fencing and export omission.
-The [standalone bootstrap contract](../../../../docs/protocol/mokly-shell-bootstrap.md)
+The standalone bootstrap contract
 defines usage scope, strict readers, serialization and capture invariants.
 
 Before standalone hydration, stored disclosure and split-width preferences are

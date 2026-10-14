@@ -1,10 +1,5 @@
 # Standalone viewer host
 
-## Delivery Status
-
-The [React Browse shell plan](../../plans/react-browse-shell.md) records delivery
-of the typed live capability boundary.
-
 ## Scope
 
 These modules compose `@mokly/viewer/runtime` for local Serve and exported
@@ -51,5 +46,5 @@ through hydration, so subsequent shell renders do not serialize either state.
 
 Run `npm test`, `npm run test:browser`, and `cargo xtask check` from the repository
 root. See the [viewer contract](../../docs/protocol/mokly-viewer.md), the
-[bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md), and the
+bootstrap contract, and the
 [Serve lifecycle](../server/README.md).

@@ -1,11 +1,12 @@
 # CI Suite Evidence
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This document supplements the [CI verification contract](./ci-verification.md)
 with fixture ownership, test concurrency, failure cleanup, unit shard balance
 and scenario grouping, browser shard balance, and acceptance measurement rules
-for the unit, browser, and hydration suites. Test timing follows
-[CI Test Timing](./ci-test-timing.md).
-The [example compilation snapshot](./ci-example-snapshot.md) contract defines
+for the unit, browser, and hydration suites. Test timing follows [CI Test
+Timing](./ci-test-timing.md). The example compilation snapshot contract defines
 the compiled example that unit test files share.
 
 ## Fixture Lifetime And Cleanup
@@ -212,15 +213,14 @@ checks the bound with synthetic shard reports.
 
 ## Acceptance Measurement
 
-The baseline is the 18 September 2026
-[main run](https://github.com/mokly-ai/mokly/actions/runs/35364820627), which
-took 32m43s, and the
-[successful PR run](https://github.com/mokly-ai/mokly/actions/runs/35360449325),
-which took 31m19s. The main run's Node 22.14 job recorded 13m06s for 1,807 unit
-tests, 14m54s for 452 browser tests, 2m18s for package checks and five
-consumers, and 36s for dependency and Chromium installation. The run consumed
-65.667 summed job minutes. These counts and consumption describe the baseline
-only.
+The baseline is the 18 September 2026 [main
+run](https://github.com/mokly-ai/mokly/actions/runs/35364820627), which took
+32m43s, and the [successful PR
+run](https://github.com/mokly-ai/mokly/actions/runs/35360449325), which took
+31m19s. The main run's Node 22.14 job recorded 13m06s for 1,807 unit tests,
+14m54s for 452 browser tests, 2m18s for package checks and five consumers, and
+36s for dependency and Chromium installation. The run consumed 65.667 summed job
+minutes. These counts and consumption describe the baseline only.
 
 Acceptance uses two successful PR workflow runs of the same implementation
 commit: one after a controlled fresh npm workflow cache and one with restored
@@ -235,11 +235,11 @@ an acceptance waiver. Queue time and the up-to-22 downstream verification jobs
 must be reported separately from execution. Compare shard balance and the
 measured setup/teardown phases of the slow export fixtures before changing
 partitioning. Coverage, assertion deadlines, worker limits, audits and zero
-retry behavior are never relaxed to meet the timing target. The
-[entry-shape contract](./ci-verification-hydration.md) defines development
-hydration route coverage. For that suite, this rule protects the measured shell
-code coverage that a shape-key change must keep. Hosted runners keep the worker
-limits that [Test Concurrency](#test-concurrency) derives for their CPU count.
+retry behavior are never relaxed to meet the timing target. The entry-shape
+contract defines development hydration route coverage. For that suite, this rule
+protects the measured shell code coverage that a shape-key change must keep.
+Hosted runners keep the worker limits that [Test Concurrency](#test-concurrency)
+derives for their CPU count.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The

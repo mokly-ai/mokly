@@ -1,14 +1,8 @@
 # CSS Attribution Membership
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
-
-## Delivery Status
-
-Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
-rule and page evidence, classification and strict readers. Comparison details
-for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence); the
-whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). Comparison result v7, catalogue read model v6 and
-manifest v10 replace the shapes released in 0.14.0.
 
 ## Membership Rule
 

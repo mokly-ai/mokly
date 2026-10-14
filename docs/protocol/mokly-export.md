@@ -1,12 +1,6 @@
 # Consumer Static Export
 
-## Delivery Status
-
-The consumer CLI, shared engine, and repository preview reuse artifact
-validation, [static delivery](./mokly-export-delivery.md), and one transaction.
-Serve/export share the viewer's server-rendered, hydrated React shell; consumer
-and comparison frames remain static. Build and comparison contracts stay
-authoritative. Exports use path identity and nested artifact directories.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Scope
 
@@ -14,7 +8,7 @@ Current files, comparisons and removed previews follow the exact
 [generated inventory rule](./mokly-export-public-files.md#generated-inventory),
 including entries named like build directories. Imported CSS capture uses
 accepted in-memory stylesheet and opaque asset bytes under the
-[unified output contract](./mokly-unified-output.md). Private stylesheet and
+unified output contract. Private stylesheet and
 PostCSS inputs never enter the static inventory. Validate decoded relative links
 to scoped npm assets against accepted routes; copied scoped-package assets are
 generated public output. Export never walks the generated tree on disk.
@@ -67,7 +61,7 @@ their existing execution boundary; export adds no hosting network calls.
 ## Baseline And Comparisons
 
 The `export` command always requests Changes; an incompatible base follows the
-[baseline contract](./mokly-baseline-compatibility.md). `publish --no-changes` uses
+baseline contract. `publish --no-changes` uses
 the same transactional engine with current-only assembly, no baseline reads,
 and the same source/public-byte consistency checks. It omits removed entries,
 diff files and comparison controls; delivery metadata has a null comparison URL.
@@ -77,12 +71,12 @@ The separate repository preview keeps its optional Changes contract.
 A comparison export requires a Git checkout with `HEAD`, the selected base,
 and their merge base. Per-commit selection reads complete Git blobs or rebuilds
 the pinned commit before capture under the
-[baseline contract](./mokly-derived-baselines.md). CI must fetch
+baseline contract. CI must fetch
 sufficient history before invoking the command; export never fetches it.
 Missing or invalid baselines fail explicitly, including shallow history.
 Recognized earlier output is the one exception: export succeeds with Changes
 unavailable, no history files, and the exact diagnostic defined by
-[baseline compatibility](./mokly-baseline-compatibility.md).
+baseline compatibility.
 
 Resolve and pin one merge-base commit for the operation. Both entry-level
 Changes attribution and screen comparisons use that commit, the same current

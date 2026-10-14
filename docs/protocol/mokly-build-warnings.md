@@ -1,13 +1,6 @@
 # Build Warnings
 
-## Delivery Status
-
-Implemented. The warning record, transport, reporters, strict command boundary,
-and first link-control producers were delivered by the
-[styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
-
-Configuration, registry and stylesheet producers and build-attempt fencing
-share this channel under [M30A](../../plans/remove-source-path-evidence.md#milestone-30a-integrate-main-124-140-and-141).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Scope
 
@@ -91,7 +84,7 @@ The other messages belong to [authoring](./mokly-authoring.md#removed-input-warn
 [folders](./mokly-folders.md#removed-input-warnings),
 [configuration](./mokly-configuration.md#removed-review-setting),
 [component stylesheets](./mokly-component-stylesheets.md#warning-messages), and
-[stylesheet ownership](./mokly-component-stylesheet-ownership.md#ignored-owner-warning).
+stylesheet ownership.
 Future producers add a row here and define their own messages in their own
 contract.
 

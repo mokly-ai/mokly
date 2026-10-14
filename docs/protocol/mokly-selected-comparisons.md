@@ -1,13 +1,10 @@
 # Selected live comparisons
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 A live comparison reads only the selected screen or component variant and its
 resources. It never compiles the consumer, checks unrelated output, reclassifies
 the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
-
-## Delivery Status
-
-Implemented with entries selected by path and review result v7. Removed pages
-and Markdown documents use the shared selected-preview boundary.
 
 ## Requests and evidence
 
@@ -43,7 +40,7 @@ failures use the existing comparison failure state and explicit retry.
 
 The live server uses the accepted complete manifest and background Changes
 snapshot. Background classification retains the pinned branch-point commit,
-the [baseline catalogue descriptor](./mokly-baseline-addressing.md#comparison-namespaces)
+the baseline catalogue descriptor
 for route/resource addressing across historical catalogue roots,
 changed paths, and SHA-256 digests of current generated views and resources it
 reads. Those digests are private IPC data, not published comparison fields.

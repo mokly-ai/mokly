@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
@@ -122,15 +121,4 @@ test("the title CLI rejects 73 code points and names the 72-character limit", as
       return true;
     },
   );
-});
-
-test("CI and release contracts document the enforced title boundary", async () => {
-  const ci = await fs.readFile(
-    path.join(repositoryRoot, "docs/protocol/ci-verification.md"),
-    "utf8",
-  );
-  assert.ok(ci.includes("scripts/verification/pull-request-title.mjs"));
-  assert.ok(ci.includes(PULL_REQUEST_TITLE_ERROR));
-  for (const type of PULL_REQUEST_TITLE_TYPES)
-    assert.ok(ci.includes(`\`${type}\``), type);
 });

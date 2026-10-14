@@ -1,19 +1,5 @@
 # Mokly Design Component Library Inventory
 
-## Delivery Status
-
-CSS provenance without derived owners is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The remaining contract is implemented.
-Delivered inventory for [design component adoption](./mokly-design-components.md).
-Source paths below are relative to `examples/basic/specs/design/` and identify
-the original composition points, which now delegate to registered implementations
-in `library/{group}/{slug}.view.tsx`. Saved pages and consuming artboards share
-those implementations and use path identity. The navigation designs include
-the `document` row kind, browse-only folders, and `Overview`; runtime delivery
-is tracked by the [path identity plan](../../plans/path-identity.md).
-
 ## Components And Saved Examples
 
 Each row defines parent `design/library/{group}/{slug}` and its variant entries under the

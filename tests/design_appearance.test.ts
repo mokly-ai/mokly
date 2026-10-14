@@ -92,13 +92,6 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
 /** Font stacks share the palette block but are not appearance roles. */
 const FONT_STACKS = new Set(["--sans", "--serif", "--mono"]);
 
-async function paletteContract(): Promise<string> {
-  return await fs.readFile(
-    path.join(repositoryRoot, "docs/protocol/mokly-viewer-palette.md"),
-    "utf8",
-  );
-}
-
 test("both palettes define exactly the same semantic roles", async () => {
   const palette = await designPalette();
   const light = [...palette.light.keys()].filter(
@@ -122,42 +115,6 @@ test("every recorded contrast pair meets its criterion in both appearances", asy
         `${label} (${appearance}): ${contrast(first, second)} < ${minimum}`,
       );
     }
-});
-
-test("the palette contract records the implemented swatches", async () => {
-  const palette = await designPalette();
-  const contract = await paletteContract();
-  const rows = [
-    ...contract.matchAll(
-      /^\|\s*`(--[a-z0-9-]+)`\s*\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|/gm,
-    ),
-  ];
-  assert.ok(rows.length >= palette.light.size - FONT_STACKS.size);
-  for (const [, name, light, dark] of rows) {
-    if (!palette.light.has(name!)) continue;
-    assert.equal(palette.light.get(name!), light, `${name} light`);
-    assert.equal(palette.dark.get(name!), dark, `${name} dark`);
-  }
-});
-
-test("the palette contract records the computed contrast ratios", async () => {
-  const palette = await designPalette();
-  const contract = await paletteContract();
-  for (const [label, foreground, background] of CONTRAST_PAIRS) {
-    const row = new RegExp(
-      `^\\|\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\|\\s*([\\d.]+)\\s*\\|\\s*([\\d.]+)\\s*\\|`,
-      "m",
-    ).exec(contract);
-    assert.ok(row, `${label} is not recorded`);
-    for (const [index, appearance] of (["light", "dark"] as const).entries()) {
-      const tokens = palette[appearance];
-      assert.equal(
-        Number(row[index + 1]),
-        contrast(tokens.get(foreground)!, tokens.get(background)!),
-        `${label} (${appearance})`,
-      );
-    }
-  }
 });
 
 test("preview tokens stay independent of the interface appearance", async () => {

@@ -6,12 +6,6 @@ the [folder contract](./mokly-folders.md#order). The
 [runtime](./mokly-runtime.md) owns Browse interaction; the
 [watch contract](./mokly-watch.md) owns the reload lifecycle.
 
-## Delivery Status
-
-The v4 storage format, the Specs and Components keys, early activation capture,
-active-route reveal, breadcrumb folder reveal, filtered-recovery fallback, and
-in-place reconciliation are implemented.
-
 ## Keys
 
 Every disclosure in the current navigation has exactly one key:

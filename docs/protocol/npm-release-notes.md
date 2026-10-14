@@ -1,25 +1,5 @@
 # npm Release Notes
 
-## Delivery Status
-
-### Unreleased Breaking-Change Coverage
-
-The squash-merge commit uses `!` and `BREAKING CHANGE:` footers for the
-contracts below. Release Please owns package versions and changelogs. The
-[public API report target](./verification-api-members.md#public-api-reports) covers
-all typed package entry points and the non-code export inventory. Any report
-change relative to `origin/main` requires a release-note change in that diff.
-The existing released-export-name check remains independent.
-
-- `fcae6390 feat!: complete source-path evidence removal` — combined below.
-- `e5407723 feat!: remove authoring dependencies` — combined below.
-- `43404882 feat!: derive entry identity from paths` — the path identity note
-  below.
-- `b39d89a4 feat!: simplify generated output and delivery` — generated output,
-  removed options, current-only formats and the portable namespace below.
-- `acac1c73 feat(publish)!: require a clean checkout` — the Publish note below.
-- The Rust rebuild pull request — the Rust rebuild note below.
-
 ## Generated Output And Manifest API
 
 `MoklyConfig` no longer accepts `generatedOutput` or `publicExclude`.

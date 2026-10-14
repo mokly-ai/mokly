@@ -1,27 +1,10 @@
 # Mokly Configuration Contract
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). These settings describe current
 behavior, including imported CSS and optional PostCSS.
-
-## Delivery Status
-
-Uniform CSS membership, independent of configured or declared delivery, is
-implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The removed `review.sharedImpact` field's type guard below is implemented in
-[M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
-The generic configuration and spread-input type cases are verified in
-[M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
-The other configuration behavior is implemented.
-
-Roots and their defaults, globs, prefixes and transparent directories are
-implemented. Matched Markdown files become document entries. Their sources and
-resource inputs remain protected and watched. A catalogue may contain only
-documents. Other settings below are implemented.
-The reserved CSS output directory, CSS delivery and `postcss` key are
-implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
-and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.
 
 ## Configuration Discovery
 
@@ -58,7 +41,7 @@ module may be nested below `mockupsDir` as protected authored source, but not
 inside `mokly-generated/`, including through aliases. Configured entries, renderer
 and package roots in that child fail `config-invalid` with the
 setting and path; imported authoring sources fail with their path. See
-[generated output](./mokly-generated-output.md).
+generated output.
 
 Before reading Git, `repoRoot` must resolve through symlinks to the same path
 as `git rev-parse --show-toplevel` run from that directory. A nested root fails
@@ -162,13 +145,13 @@ they follow shared and precede scheme-specific links. Pages are unchanged.
 See [component stylesheets](./mokly-component-stylesheets.md) for the complete
 validation and placement contract.
 `review.baselineBuild` is valid in every repository; its argv contract and
-per-commit selection follow [baseline selection](./mokly-derived-baselines.md).
+per-commit selection follow baseline selection.
 The removed keys fail `config-invalid` with their exact guidance:
 `generatedOutput was removed; use Git tracking for check and run mokly build to write output`
 and `publicExclude was removed; remove it; only referenced authored assets are public`.
 Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
 tracked, untracked or mixed output; mixed output fails `build-invalid` with
-both remedies as specified in [generated output](./mokly-generated-output.md).
+both remedies as specified in generated output.
 Tracked Check compares the entire tree with disk; untracked Check ignores
 local output. Publish separately validates committed or ignored generated output.
 Build writes transactionally. Serve and export await preparation

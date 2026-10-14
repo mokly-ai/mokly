@@ -1,9 +1,5 @@
 # Static catalogue export
 
-## Delivery Status
-
-The [plans directory](../../plans/) records delivery.
-
 ## Scope
 
 This internal package module builds complete consumer sites for ordinary static
@@ -258,7 +254,7 @@ npm run package:smoke
 
 See the [export contract](../../docs/protocol/mokly-export.md),
 [static delivery contract](../../docs/protocol/mokly-export-delivery.md),
-[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
+shell bootstrap contract.
 
 Registered components export through the same transactional delivery boundary.
 The manifest, variant entries and validated comparison evidence supply the
@@ -267,13 +263,13 @@ Controls have no rendering capability in exported pages, while usage,
 highlighting and navigation between variant entries remain available without
 the consumer repository.
 
-The implemented [boundary contract](../../docs/protocol/mokly-boundary-results.md)
+The implemented boundary contract
 keeps static-delivery parsing nonthrowing and converts invalid/unsupported
 metadata to `export-invalid`. Ownership refusals name the destination and any
 unexpected files. The [shared closure](../../docs/protocol/mokly-public-closure.md)
 removes extension/build-folder-only denials while preserving source privacy.
 
-The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+The approved path/output integration keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
 v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands

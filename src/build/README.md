@@ -1,20 +1,5 @@
 # Catalogue compilation
 
-## Delivery Status
-
-Removal of baseline compatibility below is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Root output boundaries, independent stylesheet provenance and warnings for all
-CSS resource-owner records below are implemented in Milestone 19 of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-Configured-only placement and shared link discovery are implemented in M28.
-Generation-scoped Serve warnings and removal of the unread
-`ComponentRuntime.warnings` field and its writers are implemented in M29.
-The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
-defines producer tagging, child messages and completion without replay.
-
 ## Scope
 
 Build and Check load consumer definitions, validate their paths and relationships,
@@ -394,7 +379,7 @@ See the [build pipeline](../../docs/architecture/build-pipeline.md),
 
 The implemented [public closure contract](../../docs/protocol/mokly-public-closure.md)
 uses one policy instance per compile for configured stylesheets, renderer seeds
-and transitive links. The approved [post-render edit target](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
+and transitive links. The approved post-render edit target
 will replace positional style rebinding with exact text-patch offset mapping.
 
 `config/public_policy.ts` caches authored-file decisions for one compilation;
@@ -404,7 +389,7 @@ will replace positional style rebinding with exact text-patch offset mapping.
 retains the route that declares each renderer resource. Requested documents
 carry those seeds through the existing preview observation.
 
-The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+The approved path/output integration keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
 v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands

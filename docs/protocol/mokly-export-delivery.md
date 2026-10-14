@@ -1,11 +1,6 @@
 # Static Export Delivery
 
-## Delivery Status
-
-Implemented portable serving for [consumer export](./mokly-export.md), with Cloudflare normalization confined to its repository adapter. Public catalogue,
-viewer, inspector, and [removed previews](./mokly-removed-previews.md) share delivery descriptor v5 and one path-derived `/view/<path>/` shell page per entry.
-The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: `build` writes one identical stub per shell route, the catalogue index, and one entry
-detail per entry under the [shell delivery contract](./mokly-shell-delivery.md), and the delivery descriptor is retired (Decision 21).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Hosting Contract
 
@@ -154,7 +149,7 @@ and match both bootstrap revisions and the catalogue identity. Only then may
 React hydrate the existing server tree. A missing, redirected, malformed, or
 mismatched catalogue leaves the complete server-rendered page and its ordinary
 links in place without installing partial interaction. Serve retains its
-self-contained [entry-scoped read model](./mokly-shell-bootstrap.md), performs
+self-contained entry-scoped read model, performs
 no initial catalogue fetch, and never puts `omitted` in the shared catalogue.
 
 The pre-hydration disclosure and navigation-width handoff remains active until
@@ -233,7 +228,7 @@ to product screens. The existing light/dark, mobile/desktop shell design applies
 When the selected base was built by an earlier Mokly, export contains no
 comparison generation, sets `comparisonUrl: null`, and advertises Changes as
 unavailable while still completing successfully, exactly as defined by
-[baseline compatibility](./mokly-baseline-compatibility.md).
+baseline compatibility.
 
 ## Browser Runtime And Deployment Identity
 

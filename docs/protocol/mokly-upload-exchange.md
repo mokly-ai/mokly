@@ -1,8 +1,7 @@
 # Catalogue Upload Exchange v1
 
-## Delivery Status And Boundary
+## Boundary
 
-The installed `mokly publish` implements this Plan → Blobs → Complete exchange.
 The [CLI and manifest contract](./mokly-upload.md) owns repository metadata; the
 [ownership contract](./mokly-export-ownership.md) owns the content address
 list. This document owns all exchange and receiver behavior.

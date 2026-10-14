@@ -1,32 +1,5 @@
 # CSS Evidence In The Shell
 
-## Delivery Status
-
-Existing compact evidence is implemented. The [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence)
-mockups of the [source-path removal plan](../../plans/remove-source-path-evidence.md)
-depict the outside-component evidence and the per-file layout below; the shell
-implements them for screens and component saved views in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
-mockup depicts the whole-document page rule below; the shell implements it in
-[M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-Omitting the branch-point sentence when its name is unknown is implemented in
-[M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
-The known-name rule needs no new mockup; existing mockups already show a name.
-
-Keeping the export's known branch name during navigation is implemented in
-[M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
-The excluded-only screen depiction, the linked child pages and the shared
-Excluded/Matched Details card are implemented in
-[M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
-M31 checked the viewer's excluded-only state against that depiction at both
-widths. The viewer already matched it, and a browser test now keeps them
-aligned.
-
-This document owns visual rules for evidence defined by
-[CSS change attribution](./mokly-css-attribution.md); the
-[presentation contract](./mokly-css-evidence-presentation.md) owns derivation
-and exact copy.
-
 ## Shell Presentation
 
 The inspector groups kept selectors by stylesheet and rule outcome, including

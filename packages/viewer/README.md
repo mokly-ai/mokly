@@ -463,7 +463,7 @@ Full-document rendering serializes each bootstrap and capability descriptor
 once. Hydration reuses the exact embedded text across later React renders;
 canonical parse/validation plus serialization is tested to reproduce those
 bytes. See the
-[standalone bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
+standalone bootstrap contract.
 
 ### Standalone reader preferences
 
@@ -643,7 +643,7 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
 
 ### Related Docs
 
-The [path/output contract](../../docs/protocol/mokly-path-output-integration.md)
+The path/output contract
 defines the generated catalogue layout and format boundaries.
 
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
@@ -651,7 +651,7 @@ defines the generated catalogue layout and format boundaries.
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
 - [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
 - [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
-- [Standalone shell bootstrap](../../docs/protocol/mokly-shell-bootstrap.md)
+- Standalone shell bootstrap
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
 - [Package ownership boundary](../../docs/architecture/package-boundary.md)
@@ -660,7 +660,3 @@ defines the generated catalogue layout and format boundaries.
 ## License
 
 Mokly Viewer is available under the [MIT License](./LICENSE).
-
-## Delivery Status
-
-The [viewer library plan](../../plans/mokly-viewer-library.md) records delivery.

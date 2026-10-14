@@ -2,11 +2,6 @@
 
 Continuation of [CI Verification](./ci-verification.md).
 
-## Delivery Status
-
-Implemented. Baseline and strict modes share the live lockfile audit.
-Scheduled strict failures use the dependency update pull request workflow.
-
 ## Dependency Cache And Security
 
 CI caches npm's download cache only. `actions/setup-node` keys it from the

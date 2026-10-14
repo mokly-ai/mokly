@@ -1,12 +1,6 @@
 # Optional Changes In Published Catalogues
 
-## Delivery Status
-
-The repository preview builder publishes current content by default; an option
-adds a pinned comparison. [Optional Published Changes](../../plans/optional-published-changes.md)
-records verification, and [removed previews](./mokly-removed-previews.md) owns
-packaged history. The npm CLI is unchanged. Shell and preview file names use
-the [path-derived artifact layout](./mokly-artifact-paths.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Publication Option
 

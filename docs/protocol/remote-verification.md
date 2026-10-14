@@ -1,30 +1,5 @@
 # Remote Verification
 
-## Delivery Status
-
-The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-defines this approved target. Explicit remote execution, the scripts and the
-Testbox workflow are implemented. Automatic remote selection and
-`cargo xtask executor` are implemented. The complete automatic smoke check passes.
-The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
-implemented. The complete explicit remote smoke check passes.
-The [Testbox execution contract](./remote-verification-testbox.md) defines the
-workflow, commands, probe, suite wrapper, source-tree fingerprint, report
-download and aggregation.
-The [cleanup contract](./remote-verification-cleanup.md) is fully implemented.
-It closes the shared SSH connection, cancels a known run once before stop and
-keeps one bounded diagnostic line for cleanup command failures.
-The complete default remote smoke check passes with prompt shutdown.
-The [base commit sync plan](../../plans/remote-verification-base-commit.md)
-approves the base lookup, snapshot and identity contract below. Base selection,
-snapshot sync and identity evidence are implemented. Automatic and explicit
-remote checks accept unpushed `HEAD` when local origin history provides a base.
-The [base sync contract](./remote-verification-base.md) defines this behavior.
-The complete automatic gate passed after a local, unpushed merge of `main`.
-It selected the main tip as the base. All 11 commands and nine reports passed.
-The aggregate passed. The checkout stayed unchanged. Cleanup stopped every
-box and removed the snapshot and temporary index.
-
 ## Executor Selection
 
 `cargo xtask check` accepts `--executor auto|local|remote`. The flag overrides

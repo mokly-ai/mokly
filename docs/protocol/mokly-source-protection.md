@@ -1,13 +1,6 @@
 # Catalogue Source Protection
 
-## Delivery Status
-
-Ignoring all CSS owner records after safety checks remains implemented.
-
-Build, Check, Serve, Review, export and publication share validated manifest-v10
-source inventories. Exact generated files and the checked authored closure are
-public under the [shared policy](./mokly-public-closure.md). Source, alias and
-metadata denials win. Preview replacement requires current export ownership.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Protected Inputs
 
@@ -100,7 +93,7 @@ and referring routes even when a file's alias cannot be resolved.
 ## Referenced Public Assets
 
 Only files reachable in the validated
-[asset closure](./mokly-generated-output.md#closure-urls-and-publication) are
+asset closure are
 public. Files under `mockupsDir` are not implicitly served or published;
 hand-written HTML is not an independently published route, but referenced
 authored HTML can be a closure asset and its links must be traversed. `README`, `tsconfig`, and
@@ -192,7 +185,7 @@ retargeted symlink is not an accepted closure file.
 
 For baseline Review resources, use the accepted v10 inventory, entry sources,
 and reserved-name rules. Never execute baseline config with the current package;
-a [derived baseline](./mokly-derived-baselines.md) is built by its own commit's
+a derived baseline is built by its own commit's
 tooling and then read through the v10 boundary. The accepted baseline's closure is the only public authored set. Baseline
 paths use the reader's validated file kinds, never current disk targets. Git and
 derived-baseline resource readers reject symlinks rather than
@@ -201,7 +194,7 @@ Current-side resource reads always use the current validated policy.
 
 ## Acceptance
 
-The [source protection acceptance contract](./mokly-source-protection-acceptance.md)
+The source protection acceptance contract
 lists the required boundary and lifecycle checks.
 
 The [shared policy](./mokly-public-closure.md) centralizes checks once per

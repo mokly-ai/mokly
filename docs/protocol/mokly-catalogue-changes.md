@@ -1,25 +1,6 @@
 # Catalogue Change Metadata And Removed Pages
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-The [Rust rebuild plan](../../plans/rust-rebuild.md) raises the snapshot to
-`schemaVersion: 4`, paired with review v8 and the base commit; no manifest
-exists.
-
-Uniform CSS page membership and catalogue evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
-of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the screen and saved-view details display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-
-Implemented with [pages](./mokly-pages.md), variants, and publication. Catalogue
-impact/removal metadata is independent of the visual
-[comparison result](./mokly-changes.md); [removed previews](./mokly-removed-previews.md)
-owns baseline documents and delivery descriptors.
-Catalogue impact/removal metadata uses kind and path, with baseline folder
-titles for removed entries. Documents use page-style material and removal rules. Move pairing and its viewer
-presentation are implemented. This snapshot is
-independent of the visual [comparison result](./mokly-changes.md);
-[removed previews](./mokly-removed-previews.md) owns baseline capture and delivery.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Shared Metadata Contract
 
@@ -136,7 +117,7 @@ served or captured. A failed baseline read cannot become a successful empty
 removal list. Preserve the runtime's unavailable-Git behavior and watch's
 last-good generation. Invalid or missing history keeps existing command failure
 rules; recognized earlier output follows the successful unavailable result in
-the [baseline compatibility contract](./mokly-baseline-compatibility.md).
+the baseline compatibility contract.
 
 ## Removed Page And Document Presentation
 

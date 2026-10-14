@@ -1,19 +1,5 @@
 # Viewer Frame Adapter
 
-## Delivery Status
-
-Implemented in `@mokly/viewer`. Local Serve/export retain the same-origin
-sandbox and visible behavior; explicit cross-origin hosts use inspector
-transport. Host markers and trailing geometry refresh are implemented. Navigation
-messages name entries by `screenPath`. Same-origin frame identity accepts an
-`index.html` page at its containing directory with or without a trailing slash,
-and other HTML files without their final `.html`, while retaining origin and
-query identity.
-Historical pages and screens use the viewer-owned presentation defined by the
-[removed previews contract](./mokly-removed-previews.md). Neither adapter mounts
-those frames or enters an inspection handshake; the viewer presents a
-same-origin document and enforces the read-only guard in every host.
-
 ## Public Interface
 
 The viewer exports these types; `CatalogueUsage` follows the [read model](./mokly-catalogue.md).

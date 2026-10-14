@@ -6,5 +6,5 @@ input.
 
 ## Delivery Status
 
-The [source-path removal plan](../../../../plans/remove-source-path-evidence.md)
+The source-path removal plan
 records that migration.

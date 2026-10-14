@@ -1,13 +1,6 @@
 # Comparison Generation And Serving
 
-## Delivery Status
-
-Implemented. This document is split from
-[Changes and screen comparisons](./mokly-changes-serving.md#generation-and-serving) and
-owns on-demand comparison generation in development and packaged comparisons
-in published catalogues. The
-[path identity plan](../../plans/path-identity.md) changes none of these rules
-beyond the path-derived snapshot names they reference.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Generation And Serving
 

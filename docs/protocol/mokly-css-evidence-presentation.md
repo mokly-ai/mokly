@@ -1,31 +1,5 @@
 # CSS Evidence Presentation
 
-## Delivery Status
-
-Existing stylesheet details are implemented. Rule and page evidence delivery
-is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-The per-file grouping and exact copy for screens and component saved views are
-implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence),
-as the [M18](../../plans/remove-source-path-evidence.md#milestone-18-depict-the-outside-component-evidence) mockups depict them.
-The [M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)
-mockup, `design/changes/impact/styles/page`, depicts the whole-document page display;
-the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-
-Omitting the branch-point sentence when its name is unknown is implemented in
-[M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
-The known-name rule needs no new mockup; existing mockups already show a name.
-
-Retaining the export's known branch name during navigation is implemented in
-[M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
-The excluded-only screen mockup and the shared Excluded/Matched Details card
-are implemented in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
-Implemented; this split records the existing shell projection and corrected
-field names without changing behavior. Evidence is keyed by kind and path.
-
-This contract owns how the shell derives and presents the rule-aware evidence
-defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
-visual rules remain in [CSS Evidence In The Shell](./mokly-css-evidence-shell.md).
-
 ## Shell Derivation
 
 Live classification retains resource evidence for every entry kind, including

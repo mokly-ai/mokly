@@ -1,22 +1,5 @@
 # Comparison Scrolling
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of the page-scrolling, inner-region, key, anchor, and
-reader-control rules. The design catalogue depicts them in
-`design/changes/diff-controls/overlay-panel`, `design/changes/diff-controls/side-by-side-apart`, and the
-switch in every diff-mode band of the
-[shell design](./mokly-shell-design.md#in-place-comparisons).
-
-This contract owns every scroll interaction in the Before and Current panes
-defined by the [pane presentation contract](./mokly-comparison-panes.md). The
-[region pairing contract](./mokly-comparison-region-pairing.md) owns how a
-region finds its counterpart, and the
-[Scroll together contract](./mokly-comparison-scroll-together.md) owns the
-reader control and realignment. Removed previews keep their independent
-in-frame scrolling and are unchanged.
-
 ## Page Scroller
 
 Each comparison frame stays exactly the size of its device viewport. Viewport

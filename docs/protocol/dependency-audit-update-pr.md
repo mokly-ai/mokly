@@ -1,14 +1,5 @@
 # Dependency Update Pull Request
 
-## Delivery Status
-
-The scheduled strict workflow and update script are implemented. They create,
-refresh, and close update pull requests under this contract. Unit tests use
-injected boundaries. Local smoke tests use a temporary Git remote and API server.
-The `sharp` and `shell-quote` fixes already landed on `main` in
-[PR #146](https://github.com/mokly-ai/mokly/pull/146). The strict audit passes
-with the reviewed `braces` exception. This workflow owns future audit failures.
-
 ## Workflow Boundary
 
 `.github/workflows/dependency-audit.yml` runs daily off the hour and on

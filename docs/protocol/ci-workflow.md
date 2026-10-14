@@ -1,12 +1,6 @@
 # CI Workflow Graph
 
-## Delivery Status
-
-Implemented. CI selects baseline or strict mode by event and pull request.
-The Dependency Audit workflow maintains strict findings on `main`.
-The workflow verification tests below replace the former literal workflow
-tests. The [Rust rebuild plan](../../plans/rust-rebuild.md) adds the Rust
-workspace's build steps and the native package build matrix to this graph.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Workflow Boundary
 

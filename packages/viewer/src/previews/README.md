@@ -103,6 +103,6 @@ and the [comparison scrolling contract](../../../../docs/protocol/mokly-comparis
 
 ## Delivery Status
 
-The [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
+The comparison pane scroll alignment plan
 delivered the shared loader and documented fetch set in Milestone 3 and the
 aligned panes in Milestone 4.

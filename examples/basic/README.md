@@ -1,21 +1,5 @@
 # Basic Mokly Consumer
 
-## Delivery Status
-
-See the [implementation plans](../../plans/).
-
-Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The example declares component CSS with `stylesheets`, uses manifest v10 and
-classifies Changes from rendered output rather than source-path declarations.
-The [source-path removal plan](../../plans/remove-source-path-evidence.md)
-records the delivered migration. Its M27 implements the excluded-only screen
-mockup, the split stylesheet evidence gallery and the shared Excluded/Matched
-Details card. M31 is planned to check the viewer against those mobile and
-desktop depictions.
-The [plans directory](../../plans/) lists active and completed work.
-
 ## Example Catalogue
 
 This is a synthetic external-consumer fixture. It contains two distinct mobile
@@ -357,7 +341,7 @@ in-memory compilation of the example to
 `.context/verification/example-compilation.json`; when the snapshot is still
 fresh, it keeps that file. Unit tests that read compiled output load it instead
 of compiling the example again, as the
-[snapshot contract](../../docs/protocol/ci-example-snapshot.md)
+snapshot contract
 defines. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,

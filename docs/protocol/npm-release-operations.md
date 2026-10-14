@@ -1,5 +1,7 @@
 # Npm Release Operations
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This document supplements the [CI and npm release contract](./npm-release.md)
 with registry bootstrap history, maintainer setup, retained evidence, and
 related documentation.

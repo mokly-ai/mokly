@@ -1,20 +1,5 @@
 # Moves
 
-## Delivery Status
-
-Pairing, validation, diagnostics, comparison delivery, and the viewer's `Moved`
-labels and details implement this contract. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) keeps pairing under the
-[comparison contract](./mokly-comparison.md).
-
-Because an entry's path is its identity, moving a file or renaming a
-directory changes identity. This contract pairs a removed baseline entry with
-an added current entry when the evidence says they are the same entry, the way
-Git detects renames, and carries the result as `previousPath`. It owns the
-candidate set, the signals and their order, uniqueness, normalisation, the
-similarity metric, authored `movedFrom`, the review and read model fields, and
-the Changes presentation.
-
 ## Candidates And Uniqueness
 
 Pairing runs once per comparison after the baseline and current catalogues are

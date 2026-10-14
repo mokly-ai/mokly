@@ -1,5 +1,7 @@
 # Imported Stylesheet CSS Modules
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 The [error catalogue](./mokly-imported-styles-errors.md) gives exact messages.
 

@@ -1,5 +1,7 @@
 # Configuration Discovery
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Configuration uses [roots](./mokly-configuration.md#roots). Every matched file
 has exactly one root. The [root discovery contract](./mokly-root-discovery.md)
 defines traversal, physical confinement, filesystem races and source ownership.
@@ -50,7 +52,7 @@ Discovery and watch share these boundaries. The
 `publicExclude` was removed. Supplying it, including as `undefined`, fails
 with `config-invalid` and the documented migration diagnostic. Public files
 are the validated referenced
-[asset closure](./mokly-generated-output.md#closure-urls-and-publication).
+asset closure.
 Runtime source protection remains mandatory.
 
 ## Removed Review Setting

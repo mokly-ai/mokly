@@ -2,15 +2,6 @@
 
 Continuation of [Remote Verification](./remote-verification.md).
 
-## Delivery Status
-
-The [Blacksmith plan](../../plans/blacksmith-remote-verification.md) defines the implemented workflow,
-fingerprint, wrapper, automatic selection and executor command. The wrapper uses `--executor local`.
-Workflow validation executes its scripts. Both box suite smokes and complete explicit and automatic checks pass.
-Main's dependency fixes are merged. The [base sync plan](../../plans/remote-verification-base-commit.md) defines implemented snapshot and base identity.
-Xtask accepts unpushed `HEAD`. The type-change fix passes the complete gate.
-A one-box spike syncs a file-to-directory and a directory-to-file change; its probe and staged fingerprints pass.
-
 ## Workflow
 
 `.github/workflows/blacksmith-testbox.yml` prepares one Testbox per dispatch.

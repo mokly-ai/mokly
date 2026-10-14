@@ -1,15 +1,5 @@
 # Comparison Region Pairing
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of this pairing. It decides which inner scroll region of
-another version follows a region the reader scrolls, under the
-[comparison scrolling contract](./mokly-comparison-scrolling.md#inner-scroll-regions),
-which defines regions, their axes, and how a pair is written. The runtime
-implements it in `packages/viewer/src/shell/comparison_region_identity.ts`,
-`comparison_region_match.ts`, and `comparison_region_mirror.ts`.
-
 ## Counterpart Algorithm
 
 For each source region and other pane document, cache one counterpart or no

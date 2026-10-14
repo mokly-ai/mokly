@@ -1,12 +1,5 @@
 # Published Inspector And Overlay
 
-## Delivery Status
-
-Implemented for current HTML copies produced by repository preview and static
-export. The cross-origin host activates the inspector through the
-[frame adapter handshake](./mokly-frame-adapter.md#cross-origin-mount-and-handshake).
-Same-origin local frames keep their parent-owned inspection path.
-
 ## Publication Boundary
 
 The Browse document adapter injects the dependency-free inspector IIFE from

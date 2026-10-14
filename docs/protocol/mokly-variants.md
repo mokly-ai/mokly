@@ -1,18 +1,5 @@
 # Variants
 
-## Delivery Status
-
-Variants use slugs and derived parent paths. The manifest and public tree retain
-those relationships and authored sibling order. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) replaces the two models below with
-one, in the [entry props contract](./mokly-entry-props.md): every screen and
-component is a render over props, a variant is a props set that replaces
-top-level keys, components need no variant, `defineScreen` takes
-`render(props)` with `propSchema`, `props`, `variants`, and `controls`, HTML
-and YAML front matter declare the same keys, and each Storybook story is a
-variant of its file's component entry. The path, slug, inheritance,
-navigation, and Changes rules below stay.
-
 ## Purpose And Boundary
 
 A variant records one entry with one deliberate shift: the same kind, the same

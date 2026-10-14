@@ -1,5 +1,7 @@
 # Root Discovery And Source Membership
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary shared by Build, Check, Serve and export.
 
@@ -39,7 +41,7 @@ component runtime; later stages consume it and never repeat the walk within
 one compilation. Registry attribution accepts only a resolved entry module or
 an inventoried source. The generated tree contains output only and is replaced
 as a whole. Accepted generations retain the immutable
-[route set](./mokly-generation-routes.md); source-path headers do not grant
+route set; source-path headers do not grant
 replacement authority or affect discovery.
 
 A matched barrel that re-exports another matched module's definition object

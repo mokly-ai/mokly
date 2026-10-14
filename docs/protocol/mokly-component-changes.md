@@ -1,20 +1,6 @@
 # Component Change Attribution
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Document and non-CSS attribution are implemented. Uniform CSS classification
-is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-Its comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-The classifier, Browse/watch cache, comparison artifacts, and static exporter
-share this attribution policy and its path-keyed result and changed-entry set. The
-[component explorer plan](../../plans/component-explorer.md) records delivery.
-Unregistered catalogues retain their ordinary behavior. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) runs this attribution on trees
-under the [comparison contract](./mokly-comparison.md), with rule evidence
-attributed to owners.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Changes Membership
 
@@ -72,7 +58,7 @@ comparison even when the screen has no row in Changes.
 Affected describes dependency/usage evidence, not proof of a visual regression.
 For any baseline source, pair generated views by route and authored assets by
 their side's catalogue-relative path, using the
-[baseline descriptor](./mokly-baseline-addressing.md#comparison-namespaces).
+baseline descriptor.
 Git changed-path evidence remains repository-relative; it does not translate
 historical roots. A non-CSS resource-byte difference without a changed Git path
 is a material change. Preserve actual public-pipeline CSS rule evidence. Without
@@ -137,7 +123,7 @@ Its own Mokly-inserted stylesheet links stay in its comparison material; a
 child-only inserted link does not. A screen's inserted component links never
 count as screen material. Renderer-authored links stay material even when
 Mokly reuses them for declared stylesheets. The
-[stylesheet provenance contract](./mokly-component-stylesheet-ownership.md#provenance-and-comparison-material)
+stylesheet provenance contract
 defines the private final-document spans that distinguish those cases.
 Nested registered components use the same boundary rules, so a child-only
 implementation edit does not create duplicate direct changes on every parent.
@@ -168,7 +154,7 @@ catalogues without component boundaries remain byte-compatible.
 
 ### Unchanged view decision
 
-The [component review fast-path contract](./mokly-component-review-fast-path.md)
+The component review fast-path contract
 owns the ordered decision, usage exceptions, actual/projected resource proof,
 cache reuse, one-sided validation, and equivalence tests.
 
@@ -195,7 +181,7 @@ per-rule facts before merging evidence by path. See the
 
 Mokly derives no CSS resource ownership records. Renderer `resources` records
 for any stylesheet are ignored with the
-[stylesheet-owner warning](./mokly-component-stylesheet-ownership.md#ignored-owner-warning), after
+stylesheet-owner warning, after
 public-path safety checks. Declarations still control links and
 `insertedStylesheets` provenance. Adding or removing a declaration changes
 material only if retained document content changes, or CSS/resource evidence

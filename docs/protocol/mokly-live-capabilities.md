@@ -1,30 +1,11 @@
 # Live Viewer Capabilities
 
-## Delivery Status
-
-Implemented for the hydrated React shell served during local Serve. Static
-export and application-owned `MoklyViewer` hosts do not receive these
-capabilities. Serve uses the React host composition for every shell request.
-Static export has a separate inert destination-page evidence reader so
-same-shell navigation can retain the route-scoped data already present in each
-exported page; it has no live behavior, update transport, or private token.
-Scoped public-bootstrap adoption, every-target route evidence, loading/failed
-Usage, exact-scoped emission and strict live reading are implemented by the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-Only the separate static state form remains external and complete after
-resolution.
-
-The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the
-descriptor becomes the live descriptor v3 at `/mokly-viewer/live.json` with
-the render capability only, the workspace moves to the entry detail, route
-evidence and updates fetch the index and the entry detail of the
-[shell delivery contract](./mokly-shell-delivery.md) under one revision, and
-no update reloads the page (Decisions 21 and 27).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Boundary
 
 The public catalogue is the shell's portable read model. A live page embeds its
-[route-scoped bootstrap projection](./mokly-shell-bootstrap.md), while the
+route-scoped bootstrap projection, while the
 complete model remains available at `mokly-viewer/catalogue.json`. Local Serve adds
 a private descriptor in a separate `application/json` script with
 `data-mokly-host-capability-state`. Private workspace evidence and the

@@ -1,19 +1,6 @@
 # Component Pages And Screen Inspection
 
-## Delivery Status
-
-The shared component and screen workspace is implemented in Serve and static
-exports: saved variants, usage, comparison evidence, highlighting, and a resizable
-icon inspector. Local Serve additionally provides editable controls. The
-path-based identity, `/view/<path>/` links, the Specs and Components sections,
-and path chips are implemented, with Markdown documents and `Moved` Changes
-rows. See the
-[component contract](./mokly-components.md), [attribution contract](./mokly-component-changes.md),
-and [component design catalogue](./mokly-component-design.md). Removed
-consumers open their historical screen through the behavior implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md).
-Loading and failed route-evidence Usage presentation is implemented by the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Catalogue And Component Pages
 

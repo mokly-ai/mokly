@@ -87,7 +87,3 @@ npm run package:smoke
 
 See the [action usage](../../.github/actions/publish/README.md),
 [export internals](../export/README.md).
-
-## Delivery Status
-
-See the [implementation plans](../../plans/).

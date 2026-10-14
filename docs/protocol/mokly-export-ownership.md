@@ -1,13 +1,5 @@
 # Export Ownership v3
 
-## Delivery Status
-
-Schema 3 is implemented by the exporter and every local ownership reader.
-[Delta Publishing](../../plans/delta-publishing.md) records the completed
-exporter, CLI and receiver-side compatibility work. Receivers built against
-this document accept only schema 3. Schemas 1 and 2 are unsupported. Version 3
-retains v2 digests and limits while gating the new `mokly-viewer/` paths.
-
 ## Boundary
 
 Every complete [export](./mokly-export.md) contains a regular root file named
@@ -157,6 +149,6 @@ packed-consumer smoke checks these installed fixtures with an independent
 reader, then verifies an actual published inventory against the extracted bytes.
 
 The frozen TypeScript backend implements the
-[refusal contract](./mokly-boundary-results.md#export-refusals): it names the
+refusal contract: it names the
 output folder in every refusal, lists unexpected files when known, adds no
 adoption or upgrade path, and preserves every existing file.

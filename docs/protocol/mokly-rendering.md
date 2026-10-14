@@ -1,20 +1,12 @@
 # Mokly Rendering And Generated Output Contract
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This contract expands the [package contract](./mokly-package.md) for the
 [authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md) and the
-[referenced closure](./mokly-generated-output.md#closure-urls-and-publication).
-
-## Delivery Status
-
-Removing derived CSS owners, filtering renderer CSS owners and recording root
-output boundaries are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The remaining contract is implemented.
-Rendering and the generated-output lifecycle use path-derived file names and
-manifest v10. Mokly renders discovered Markdown definitions under the
-[document contract](./mokly-documents.md); source Markdown stays private.
+referenced closure.
 
 ## Rendering Boundary
 
@@ -136,7 +128,7 @@ declared component stylesheets beside the renderer's configured links after
 rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
 placement and nearest-present-link fallback, and the linked
-[ownership contract](./mokly-component-stylesheet-ownership.md) for private
+ownership contract for private
 inserted-link provenance, final-link validation and style-offset rebasing.
 Only links that Mokly inserts receive recorded spans after the package
 finishes ordinary link edits. No transient token is written. No CSS resource
@@ -150,5 +142,5 @@ never copied into the npm package.
 ## Generated Contract
 
 The deterministic generated views, manifest v10 shape, CSS/assets and ownership
-rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
+rules are defined in the linked Generated Rendering Contract.
 Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).

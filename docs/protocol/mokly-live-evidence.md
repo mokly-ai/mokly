@@ -1,19 +1,6 @@
 # Live catalogue evidence updates
 
-## Delivery Status
-
-Live evidence updates and bounded affected-usage deduplication are implemented.
-Deduplication verification is recorded in the
-[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
-Affected-usage links use `entryPath`, matching the implemented
-[path identity contract](./mokly-paths.md).
-Adoption of the current entry's scoped bootstrap with its complete private
-workspace when applicable, exact-scoped Serve responses, and rejection of
-complete live catalogues are implemented.
-
-The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page:
-evidence arrives through the index and entry detail routes of the
-[shell delivery contract](./mokly-shell-delivery.md) (Decision 21).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Revisions and publication
 
@@ -40,7 +27,7 @@ edits can be ignored.
 
 For a newer update or reconnect `ready`, the browser requests its current durable
 shell URL without caching. It validates that page's
-[entry-scoped public bootstrap](./mokly-shell-bootstrap.md) and paired private
+entry-scoped public bootstrap and paired private
 capability descriptor; it introduces no manifest endpoint and does not transfer
 the internal catalogue or baseline inventories. It does not request comparison
 snapshots or replace the current iframe documents.
@@ -63,7 +50,7 @@ removed screens/components in All and removed pages and documents only in
 Changes still apply.
 Changes preparing, loading and empty/unavailable states use the existing
 sidebar design; `preparing` precedes loading only in
-[a per-commit rebuild](./mokly-derived-baselines.md). A status-only evidence update
+a per-commit rebuild. A status-only evidence update
 carries no changed paths or snapshot, so entering and leaving `preparing` replaces the
 count slot and the selected-Changes sidebar without touching the tree, the
 current documents, or the focused control. The tree stays `aria-busy` while

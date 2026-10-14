@@ -96,12 +96,10 @@ the rule. Rules for one application, package, or feature live in the
 - [CI test timing](./docs/protocol/ci-test-timing.md) holds the timing
   contract for the unit, browser, and hydration suites. Read it with the
   `deterministic-tests` skill.
-- Read a plan item that names the removed `cargo xtask review` command as a
-  review item that uses the `implementation-review` skill.
 - Read the
   [Rust rebuild procedures](./docs/protocol/rust-rebuild-procedures.md)
-  before you capture references from the frozen TypeScript backend, close a
-  rebuild milestone, or classify a protocol page for the rebuild.
+  before you capture references from the previous backend or close a rebuild
+  milestone.
 
 ## Product
 
@@ -119,8 +117,10 @@ the rule. Rules for one application, package, or feature live in the
 
 - App independence, generated-output safety, server and watcher lifecycle,
   comparison behaviour, and protocol alignment.
-- The current-documentation rule in the
-  [documentation policy](./docs/protocol/documentation-policy.md).
+- The end-state rule in the
+  [documentation policy](./docs/protocol/documentation-policy.md): a page
+  describes intended behaviour only, with a `Status: In progress` line when it
+  is not implemented yet.
 
 ## Status
 

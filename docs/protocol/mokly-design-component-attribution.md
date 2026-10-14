@@ -2,11 +2,6 @@
 
 Continuation of [design component adoption](./mokly-design-components.md).
 
-## Delivery Status
-
-Uniform CSS attribution is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
-The implementation and caller-input rules are already implemented.
-
 ## Acceptance
 
 Acceptance after a registered baseline exists:

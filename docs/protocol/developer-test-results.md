@@ -1,5 +1,7 @@
 # Selected Developer Test Results
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Developer Test Commands](./developer-test-commands.md).
 
 ## Internal Evidence And Complete Reports

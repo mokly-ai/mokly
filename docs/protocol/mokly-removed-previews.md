@@ -1,27 +1,13 @@
 # Removed Content Previews
 
-## Delivery Status
-
-The [removed content previews plan](../../plans/removed-content-previews.md)
-delivered typed capture, the Serve generation lifecycle, consumer export,
-repository preview, upload packaging, and the shared shell and viewer. The
-[viewer-owned historical previews plan](../../plans/viewer-owned-historical-previews.md)
-defines the host-independent presentation. Preview names derive from paths.
-Document previews, their `Light only` note, and suppression for paired moves
-are implemented. Nothing here changes ordinary
-browsing, Added entries, changed-screen comparisons, or removed component
-variants.
-
-The note for a selected viewport with no captured historical view is fixed
-here and depicted by the design catalogue's
-[no-captured-view screen](./mokly-shell-design-inventory.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Behavior
 
 Opening a removed screen, page, or document shows the version from the pinned
 Changes baseline: the same branch-point commit that produced its Changes row,
 whether the commit has complete generated blobs or needs a
-[rebuilt baseline](./mokly-derived-baselines.md). The heading keeps
+rebuilt baseline. The heading keeps
 its Removed badge, breadcrumbs keep the textual baseline ancestry, and Details
 keeps its historical metadata. A quiet label above the stage reads “Showing
 previous version.” No Current selector, comparison band, refresh control, Props

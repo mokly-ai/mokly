@@ -1,14 +1,9 @@
 # CLI Terminal Compatibility And Errors
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This document supplements [CLI Terminal Output](./mokly-terminal-output.md)
 with exact plain output and rich error presentation.
-
-## Delivery Status
-
-The paragraph labelled **Frozen target** records notice-stream changes from
-[Generated Output Simplification](../../plans/generated-output-simplification.md)
-that were approved for the TypeScript backend and are frozen with it, unlanded.
-The remaining plain and rich output rules describe current behaviour.
 
 ## Plain Compatibility
 
@@ -46,7 +41,7 @@ baseline notes, build warnings and existing failures.
 
 **Frozen target:** successful baseline preparation notes and the exact
 earlier-version notice were to use stdout, under the
-[watch-writer contract](./mokly-watch-writers.md#summaries-and-plain-notices).
+watch-writer contract.
 Warning-free successful plain commands write nothing to stderr except requested
 timing JSON. Build warnings and errors remain on stderr.
 

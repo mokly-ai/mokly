@@ -203,8 +203,3 @@ still must follow the assertion and duration-reporting rules above.
 
 The lint message must name `docs/protocol/ci-test-timing.md`. Rule tests use
 `ESLint.lintText` to check rejected and allowed forms in each scoped path.
-
-## Delivery Status
-
-Implemented. Required tests use deterministic assertions and the shared
-evidence helpers. The ESLint guard rejects the patterns above.

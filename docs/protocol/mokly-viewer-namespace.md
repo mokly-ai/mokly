@@ -1,24 +1,13 @@
 # Portable Viewer Namespace And Version Gates
 
-## Delivery Status
-
-The `mokly-viewer/` namespace and its version gates are implemented in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-Delivery uses catalogue v6, delivery v5, bootstrap v2, ownership v3 and upload v2.
-Content-delta uploads and Plan v1 remain unchanged. The current Cloud service
-must support those versions and paths before accepting a publication.
-
-The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: under
-the [shell delivery contract](./mokly-shell-delivery.md) the namespace gains
-`index.json`, `entries/**`, and `live.json`, and `catalogue.json` is retired
-(Decision 21).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Paths And Single Ownership
 
 Define `VIEWER_DIRECTORY = "mokly-viewer"` alongside `GENERATED_DIRECTORY` in
 `packages/viewer/src/catalogue/delivery_paths.ts`, exported from
 `@mokly/viewer/data`. Every CLI, viewer and preview-script path builder imports
-it directly. The [directory lint](./mokly-directory-lint.md) covers both names.
+it directly. The directory lint covers both names.
 Identifiers, DOM attributes and protocol names containing `mokly` do not change.
 
 All package-owned public and private Serve routes use this root:
@@ -212,7 +201,7 @@ the fixed deployed names Mokly chooses and checks the same rule. Include
 Changes-enabled example artifacts so `generations/`, removed previews and
 binary CSS resources are covered. Stop every server after testing.
 
-The approved [path/output integration](./mokly-path-output-integration.md)
+The approved path/output integration
 defines the current path-derived layout. Its
 [format inventory](./mokly-format-versions.md) defines manifest v10, catalogue v6,
 review v7 and all other boundaries. Only v10 baseline content is readable after

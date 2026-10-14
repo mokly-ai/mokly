@@ -9,41 +9,6 @@ this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
 
-## Delivery Status
-
-The shared [React shell](./mokly-viewer.md#shell-tree-and-state) preserves these
-tokens, dimensions and interactions in Serve, export and embedded hosts.
-The [component explorer designs](./mokly-component-design.md) own component
-states. Specs, browse-only folders, Overview rows, path chips, documents and
-Moved rows use the designs listed in the [inventory](./mokly-shell-design-inventory.md).
-
-Auto/Light/Dark interface appearance is designed in the
-`design/browse/appearance/**` mockups and specified by the
-[semantic palette](./mokly-viewer-palette.md). The shell now carries that
-palette in both appearances, selected on a viewer root, and an embedded host
-chooses one with `theme`. A standalone document carries the delivered Appearance
-control at every width and uses it for both the shell and the previews.
-
-The page and publication designs are implemented in the example catalogue and
-shared shell. Whole documents use a plain bordered pane and omit
-device/comparison controls. Removed pages are flat Changes rows; baseline
-breadcrumbs are text even after their parents are deleted. Ordinary
-publications omit the Changes filter and comparison band while preserving the
-same navigation, search, tags, and variants. `design/changes/impact/styles/page` depicts a changed page's stylesheet evidence in Details ([M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)); the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-
-The comparison designs implement the [pane](./mokly-comparison-panes.md),
-[scrolling](./mokly-comparison-scrolling.md), and
-[Scroll together](./mokly-comparison-scroll-together.md) contracts, including
-stacked component frames, paired app-shell panels, and the switched-off state.
-
-The removed-document and removed-screen designs depict the shipped
-[removed previews](./mokly-removed-previews.md) behavior: the previous version
-under a quiet "Showing previous version" label, with loading, unavailable, and
-long-content states in their own child pages. The shell renders those states at
-runtime. The removed-screen family also designs a viewport with no captured
-previous view; the shell renders the note fixed by the
-[removed content previews plan](../../plans/removed-content-previews.md).
-
 ## Design Mockups
 
 The approved screens are authored in `examples/basic/specs/design/`. The
@@ -183,7 +148,7 @@ scrollable region scrolls internally:
   the preparing and failed states inside the complete shell, where Changes is
   selected and the chosen screen stays available. The preparing state exists only
   for derived baselines; see
-  [derived baselines](./mokly-derived-baselines.md) for when it is published.
+  derived baselines for when it is published.
   - The tree begins with separate `Specs` and `Components` native disclosures,
     both open by default and both closed by `Collapse all`. Search and Changes
     hide sections when they hide every row in them. Both sections are views of

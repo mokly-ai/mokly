@@ -1,18 +1,12 @@
 # Developer Test Commands
 
-## Delivery Status
-
-The `test:unit` command, `npm test` forwarding, and developer file and name
-selection are implemented. Public test preparation and the strict prepared
-runners retain their existing behavior. This page owns public developer
-commands. [CI verification](./ci-verification.md)
-owns prepared commands, strict discovery, shards, and complete report evidence.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Public Commands And Preparation
 
 - `npm run test:unit` prepares package and example output with
   `npm run prepare:unit`, which also writes the
-  [example compilation snapshot](./ci-example-snapshot.md), then calls the
+  example compilation snapshot, then calls the
   developer unit runner. With no arguments, it runs the complete discovered
   unit inventory under the existing developer skip policy and writes the
   existing evidence report.

@@ -88,7 +88,7 @@ publishing job independently resolves the latest Node 24.
 
 Hydration coverage discovers a separate browser test for one representative
 route per example entry shape, as
-[development hydration coverage](../docs/protocol/ci-verification-hydration.md)
+development hydration coverage
 defines. A new screen adds a test only when it adds a new shape, and no route
 shares a test deadline. The unsharded `hydration` suite runs those
 filename-selected specs separately from `browser`.
@@ -119,7 +119,7 @@ cargo xtask source-file-length-lint --all
 runs the full selected suite. Package, unit, browser, and hydration suites
 prepare their required output before invoking prepared npm scripts. The unit
 suite runs `npm run prepare:unit`, which also writes the
-[example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
+example compilation snapshot
 that unit tests load instead of compiling the example in every test file; the
 other suites run `npm run prepare:verification`.
 
@@ -356,7 +356,7 @@ global config file and system config disabled. Code under test still uses
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
 - [CI suite evidence](../docs/protocol/ci-suite-evidence.md)
-- [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
+- CI example compilation snapshot
 - [Remote verification](../docs/protocol/remote-verification.md)
 - [Base commit sync](../docs/protocol/remote-verification-base.md)
 - [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
@@ -364,10 +364,3 @@ global config file and system config disabled. Code under test still uses
 - [Dependency security](../docs/protocol/dependency-security.md)
 - [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)
 - [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md)
-
-## Delivery Status
-
-The [prompt shutdown plan](../plans/testbox-prompt-shutdown.md) records verification
-and open findings. The [Rust rebuild plan](../plans/rust-rebuild.md) trims this
-crate's suites at the teardown and adds the `build-native` command; the Rust
-advisory audit is proposed, not yet approved.

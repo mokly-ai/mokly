@@ -1,25 +1,6 @@
 # Mokly Public Authoring Contract
 
-## Delivery Status
-
-The path-based TypeScript API, Markdown authoring, move pairing, and their
-viewer presentation are implemented. Under the [Rust rebuild plan](../../plans/rust-rebuild.md)
-a screen is a render over props: `defineScreen` takes `render(props)` with
-`propSchema`, `props`, `variants`, and `controls`, a variant is a `Partial`
-props set with no nodes of its own, and the [entry props contract](./mokly-entry-props.md) owns the model.
-
-This contract expands the [package API](./mokly-package.md). Configuration
-follows the [configuration contract](./mokly-configuration.md); consumer
-rendering follows the [rendering contract](./mokly-rendering.md).
-
-CSS rule attribution and ignored stylesheet owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
-Other behavior below remains implemented.
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-
-The configuration guard is implemented in
-[M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
-Stronger removed-field type tests are implemented in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Public Authoring API
 
@@ -231,7 +212,7 @@ transitively referenced HTML/CSS must likewise resolve to regular, unprotected
 files in the referenced closure beneath `mockupsDir`. Generated links target
 the accepted in-memory `mokly-generated/` tree, never stale on-disk output.
 Closure collection and href computation follow
-[generated output](./mokly-generated-output.md).
+generated output.
 
 All public exports ship ESM JavaScript and declarations usable by NodeNext and
 bundler TypeScript resolution. The package export map and packed-tarball tests

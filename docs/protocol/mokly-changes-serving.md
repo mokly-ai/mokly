@@ -1,14 +1,8 @@
 # Changes Serving And Comparison
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
-
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-The expanded v7 per-rule and page evidence is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md); its comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 ## Generation and serving
 
@@ -26,7 +20,7 @@ and [shell](./mokly-shell-design.md) contracts own each state.
 Live background classification, complete comparison generation, and publishing
 with `--include-changes` compare the workspace with a configured base ref, defaulting
 to `origin/main`. It resolves the merge base shared by `HEAD` and that ref, then
-reads the `mockupsDir` tree at that branch point without checking it out. [Per-commit selection](./mokly-derived-baselines.md) uses verified v10 Git blobs
+reads the `mockupsDir` tree at that branch point without checking it out. Per-commit selection uses verified v10 Git blobs
 or a cached rebuild produced with that commit's own code. The baseline is
 never rendered with the current tree's code. Commits reachable only from the
 configured base do not enter the comparison. Head generated artifacts come from

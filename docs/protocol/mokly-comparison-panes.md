@@ -1,23 +1,5 @@
 # Comparison Pane Presentation
 
-## Delivery Status
-
-The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-records delivery of the presentation below: the existing design references,
-generation-confined snapshot loader, and device-sized pane runtime. Its
-[scrolling contract](./mokly-comparison-scrolling.md) records the implemented
-page scroller and inner-region mirroring. The
-[region pairing](./mokly-comparison-region-pairing.md) and
-[Scroll together](./mokly-comparison-scroll-together.md) contracts are also
-implemented and depicted in the design catalogue. This contract governs the
-Before and Current panes that
-[Changes and screen comparisons](./mokly-changes.md) offer for changed screens
-and eligible component variants in Side by side, Overlay and Difference. It
-changes nothing about comparison eligibility, capture, generation, publishing,
-current previews, or [removed previews](./mokly-removed-previews.md) beyond the
-shared pipeline named here. Snapshot addresses below derive from paths under
-the [artifact path contract](./mokly-artifact-paths.md) and review v7.
-
 ## Behavior
 
 Overlay and Difference show both versions inside one device chrome; Side by

@@ -1,14 +1,5 @@
 # Component Workspace Design
 
-## Delivery Status
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-
-The [component explorer plan](../../plans/component-explorer.md) delivered these
-component, controls, and consuming-screen artboards in the package-owned layout.
-Owning mobile/desktop screens remain review entry points, aligned with
-the [removed content previews plan](../../plans/removed-content-previews.md).
-
 ## View Controls
 
 Place one compact icon toolbar beside the page title. It contains a native

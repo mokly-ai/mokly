@@ -1,34 +1,5 @@
 # Component Explorer Design
 
-## Delivery Status
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-
-The [component explorer plan](../../plans/component-explorer.md) records
-delivery of the complete mobile/desktop mockup set for sign-off. The
-[icon inspector revision](./mokly-component-inspector-design.md) and
-[prop controls designs](./mokly-component-controls-design.md) extend the
-original pages and inspection states. The [workspace revision](./mokly-component-workspace-design.md) owns the grouped view controls, bounded panes, resizable inspector, and comparison eligibility. Runtime registration, attribution,
-inspection, and local editable previews implement these designs. Published
-catalogues expose read-only saved props. These designs
-extend the [shell design](./mokly-shell-design.md) and depict the
-[component explorer contract](./mokly-component-explorer.md). The former
-consumer's previous-version state is implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md).
-
-The stacked component comparisons depict the implemented
-[comparison pane contract](./mokly-comparison-panes.md): the explorer holds a
-saved variant's two versions in one bordered frame whose viewport scrolls both
-as one. Their comparison bands also depict the implemented Scroll together
-switch of the
-[Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
-The path-derived files, the Specs section, and the component paths in Details
-below are the approved contract. These designs depict the kind-filtered
-sections and component paths, and the catalogue uses paths. The runtime renders
-the same Specs section.
-The Loading and recovery child gallery depicts entry-scoped Usage loading,
-inspection waiting, and retryable delivery failure.
-
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists

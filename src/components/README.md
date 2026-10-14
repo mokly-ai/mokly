@@ -1,22 +1,5 @@
 # Registered Components
 
-## Delivery Status
-
-Root output ranges, CSS owner removal and uniform CSS attribution below are
-implemented in Milestone 19 of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The rule for comments with the former spelling in the
-[instance contract](../../docs/protocol/mokly-instances.md#rendered-boundaries)
-is implemented in Milestone 23 of that plan.
-
-That plan delivered `stylesheets` in Milestone 3 and removed source-path inputs
-in Milestone 6. Milestone 11 groups declarations by real file and reuses
-renderer-authored links. Milestone 28 restricts placement to configured
-anchors, shares link discovery, reuses body links and recovers inserted links from
-their spans inside Review-ignore regions. The
-[link-scope contract](../../docs/protocol/mokly-stylesheet-links.md) defines each step.
-
 ## Authoring
 
 Use `defineComponent` to give a shared React component its own catalogue page,
@@ -138,7 +121,7 @@ are linked once with a warning. The comparison omits Mokly-inserted links from
 consumer page material but retains a component page's own links; final
 rendered links determine which inserted spans remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
-The [ownership and comparison contract](../../docs/protocol/mokly-component-stylesheet-ownership.md)
+The ownership and comparison contract
 defines final-link validation and private link provenance.
 `../html_links.ts` finds active head and body links with decoded attributes
 and source spans. Placement uses only configured head links. Reuse keeps body
@@ -162,7 +145,7 @@ On both baseline and current sides, a comment with the former `mokabook-`
 spelling is ordinary page content. Mokly never reads it as a marker or removes
 it as one. The comment alone is not a validation error. Required baseline
 ranges that its document cannot prove follow the
-[invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
+invalid-baseline contract.
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings are unchanged.
 Compatible v10 baselines preserve each document’s UTF-16 coordinates when

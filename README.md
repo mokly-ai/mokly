@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>
-    Build browsable, reviewable mockup catalogues from real React components.
+    Build browsable, reviewable mockup catalogues from HTML, React, and Storybook.
   </strong>
 </p>
 
@@ -22,19 +22,20 @@
   <a href="./docs/protocol/README.md">Protocols</a>
 </p>
 
-Mokly is an open-source TypeScript toolkit for turning React-authored product
-screens into a searchable static catalogue. It renders the components and themes
-from your repository, presents every screen at mobile and desktop sizes, and
-shows which screens changed from a Git baseline.
+Mokly is an open-source toolkit for turning product screens into a searchable
+static catalogue. A screen is an HTML file with YAML front matter, a React
+component, or a Storybook story. Mokly renders every screen at mobile and
+desktop sizes, in light and dark, and shows which screens changed between two
+Git commits.
 
-Run Mokly locally while you build, export the same catalogue as static files, or
-embed its viewer in another React application. Local Serve and static exports
-share the standalone presentation, whose single Auto/Light/Dark Appearance
-selector changes the interface and previews together. Embedded hosts render the
-same shell but choose its interface appearance independently with `theme`. The
-Dark interface uses warm neutral surfaces aligned with Mokly Cloud. Mokly owns
-the catalogue; your repository keeps ownership of its UI, data, styling, and
-rendering context.
+Status: In progress under the [Rust rebuild plan](./plans/rust-rebuild.md).
+The released `@mokly/mokly` packages run the previous TypeScript backend; this
+README describes the product that the plan delivers.
+
+Run Mokly locally while you build, write the same catalogue as static files,
+or embed its viewer in another React application. Mokly owns the catalogue;
+your repository keeps ownership of its UI, data, styling, and rendering
+context.
 
 > Mokly is pre-1.0. The package is
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) and the
@@ -42,33 +43,35 @@ rendering context.
 
 ## Why Mokly
 
-- **Use real product UI.** Screens are React nodes composed from the same
-  components, providers, styles, and assets as the product.
+- **Author in HTML or in code.** An HTML screen is a file with front matter
+  and a body that uses your components by element name. A React screen or a
+  Storybook story renders through your own components and providers.
 - **See the whole product in one place.** Folders that mirror your spec tree,
-  search, tags, mobile and desktop views, color schemes, pages, Markdown documents, components, screen and component variants, and user flows share
-  one catalogue. Variants remain grouped beneath their parent while keeping
-  their own path and address.
-- **Review outcomes, not file lists.** The Changes view compares rendered
-  screens and their reachable resources with the branch point of your Git base,
-  while removed screens, pages and documents retain a read-only previous version.
-- **Inspect reusable components.** Register typed props, variants, slots, and
-  local controls, then see where each component is used.
-- **Keep delivery simple.** A catalogue can be exported as static files and
-  hosted without a Mokly server, source checkout, or Git installation.
-- **Stay app-independent.** Plain React, React Native Web, design systems, and
-  custom themes connect through a consumer-owned renderer and explicit module
-  resolution.
+  search, tags, mobile and desktop views, colour schemes, pages, Markdown
+  documents, components, variants, and user flows share one catalogue.
+- **Review outcomes, not file lists.** The Changes view renders both commits
+  from their sources and compares the rendered screens and the CSS rules that
+  reach them. Removed screens, pages, and documents keep a read-only previous
+  version.
+- **Inspect reusable components.** Declare a prop schema, saved variants, and
+  slots, edit props live, and see where each component is used.
+- **Keep delivery simple.** `build` writes a static site that any host serves
+  without a Mokly server, a source checkout, or a Git installation. Nothing is
+  written into your repository.
+- **Stay app-independent.** A Rust core renders HTML; JavaScript runs only in
+  a sidecar that bundles your components with your module resolution and your
+  React.
 
 ## Quick start
 
 ### 1. Install
 
-Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18. The
-supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11 and
-React 19 or newer.
+Mokly needs Node.js 22.14 or newer. The `mokly` binary ships for Linux x64 and
+arm64 with glibc, macOS x64 and arm64, and Windows x64. React 19 or newer is
+needed only when screens or components are written in React.
 
 ```bash
-npm install --save-dev @mokly/mokly react react-dom
+npm install --save-dev @mokly/mokly
 ```
 
 ### 2. Configure the catalogue
@@ -78,105 +81,67 @@ Create `mokly.config.ts` in your repository root:
 ```ts
 import { defineConfig } from "@mokly/mokly";
 
-export default defineConfig({
-  mockupsDir: "specs/generated",
-});
+export default defineConfig({});
 ```
 
-Paths are relative to the config file. Mokly reads the `specs` directory
-beside the config by default: every `.mockup.ts` or `.mockup.tsx` file in it
-is an entry module and every `.md` file is a document. A file's location
-in that tree is its place in the catalogue. List `roots` to read other
-directories, such as a component library with
-`{ dir: "packages/ui/src", path: "components" }`. The co-located alternative
-uses `{ dir: "src/features", transparent: ["__mockups__"] }`, so
-`src/features/checkout/__mockups__/summary.mockup.tsx` becomes
-`checkout/summary`. Every root must match at least one file.
-
-The default renderer is deliberately neutral; point `renderer` at your own
-module when screens need product theme providers, custom document markup, or
-React Native Web style collection. See the
+Paths are relative to the configuration file. Mokly reads the `specs`
+directory beside it by default: every `.screen.html`, `.component.html`,
+`.page.html`, `.use-case.yaml`, `.mockup.tsx`, and `.stories.tsx` file is an
+entry, and every `.md` file is a document. A file's place in that tree is its
+place in the catalogue. List `roots` to read other directories, such as a
+component library with `{ dir: "packages/ui/src", path: "components" }`.
+Point `renderer` at your own module when React screens need product theme
+providers or React Native Web style collection. See the
 [configuration guide](./docs/guides/start/configure.md).
 
 ### 3. Add a screen
 
-Create `specs/account/account-home.mockup.tsx`:
+Create `specs/account/home.screen.html`:
 
-```tsx
-import { defineScreen } from "@mokly/mokly";
+```html
+---
+title: Account home
+description: The account landing screen.
+props:
+  user: { name: Ada, plan: pro }
+  renews: true
+variants:
+  - slug: free
+    title: Account home, free plan
+    props: { user: { name: Ada, plan: free }, renews: false }
+---
 
-export default defineScreen({
-  title: "Account home",
-  description: "The account landing screen.",
-  mobile: <main>Account on mobile</main>,
-  desktop: <main>Account on desktop</main>,
-  relatedDocs: [],
-});
+<ui-header user="$user"></ui-header>
+<main class="account">
+  <h1>Welcome back, {{user.name}}</h1>
+  <ui-button label="Manage billing" to="account/billing"></ui-button>
+  <ui-card tone="info" mokly-if="$renews">
+    <p>Your plan renews on 1 November.</p>
+  </ui-card>
+</main>
 ```
 
-Replace the example `<main>` nodes with your product components. Rendered
-resources and output determine Changes. Components declare public CSS with
-`stylesheets`. An entry file ends in
-`.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
-default or named. Mokly derives everything else from the file's place: this
-screen is `account/account-home`, it lives at `/view/account/account-home/`,
-and its views are written under `mockupsDir/mokly-generated/` as
-`account/account-home/index.mobile.html` and `index.desktop.html`, one file
-per viewport and color scheme. Serve exposes them below `/static/mokly-generated/`; export
-writes them below `static/mokly-generated/`. The `account`
-directory is a folder in the catalogue; a `_folder.json` file or a
-`defineFolder` export gives it a title and an order.
-
-Keep generated output local by ignoring its dedicated directory and cache:
-
-```gitignore
-.mokly-cache/
-/specs/generated/mokly-generated/
-```
-
-For this configuration, `build` writes only under `specs/generated/mokly-generated/`; referenced authored
-assets stay under `specs/generated/` and are served and exported in place. To
-commit generated output instead, commit every generated file. `check`
-compares compiled output only when the generated tree is indexed; a partial
-index fails with both remedies. A committed baseline's v10 inventory must
-match its Git blobs; otherwise the baseline is rebuilt.
-Build and Serve do not inspect head tracking: a new route builds successfully,
-and `check` then lists it under `untracked:` until staged. Only `check` rejects
-an indexed `.mokly-cache/` path.
-Current output uses manifest v10. The manifest records the referenced asset closure and Git blob-hash
-inventory. Earlier baseline formats make Changes unavailable under
-[baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
-
-Add `specs/account/README.md` to give Account its own Overview row:
-
-```markdown
-# Account
-
-Manage account details and billing.
-
-[Open account home](mock:./account-home)
-```
-
-Folder rows expand without changing the content area. The Overview row opens
-the document at `/view/account/`. Specs contains screens, pages, documents and
-flows; Components contains registered components.
-
-For an existing catalogue, follow the
-[path identity migration note](./docs/protocol/npm-release-notes.md#breaking-path-identity-release-note).
+`ui-header`, `ui-button`, and `ui-card` are components: `.component.html`
+files with a prop schema and a body, or React components registered with
+`defineComponent`. The screen is `account/home`, it lives at
+`/view/account/home/`, and `account/home/free` is its variant. A React screen
+is a `.mockup.tsx` file that exports `defineScreen({ title, render })`. The
+`account` directory is a folder; a `_folder.json` file gives it a title and
+an order, and a `README.md` gives it an Overview row.
 
 ### 4. Open the catalogue
 
 ```bash
-npx --no-install mokly --open
+npx --no-install mokly serve --open
 ```
 
-The development server prints its URL, renders previews on demand, watches
-authored inputs, and prepares Git change evidence in the background. The default
+The development server prints its URL, renders screens on request, watches
+the sources, and prepares Git change evidence in the background. The default
 port is `4173`; use `--port 0` to choose any available port.
 
 When the first screen is working, continue with the guides for
-[theming and configuration](./docs/guides/authoring/config.md),
-[screen authoring](./docs/guides/authoring/screens.md), and
+[screen authoring](./docs/guides/authoring/screens.md),
+[components](./docs/guides/authoring/components.md), and
 [viewports and color schemes](./docs/guides/authoring/viewports-and-color-schemes.md).
 
 ## Command line
@@ -184,117 +149,84 @@ When the first screen is working, continue with the guides for
 Run the repository-local executable with `npx --no-install mokly`. Options
 follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
-| Command                     | What it does                                                 |
-| --------------------------- | ------------------------------------------------------------ |
-| `mokly`                     | Serve the catalogue, render on demand, and watch for changes |
-| `mokly serve --open`        | Serve and open the local URL in a browser                    |
-| `mokly build`               | Validate and transactionally write generated output          |
-| `mokly build --watch`       | Write after each successful compilation while watching       |
-| `mokly serve --build`       | Browse and write complete output after successful compiles   |
-| `mokly check`               | Validate; compare disk when Git tracks generated output      |
-| `mokly export --out <path>` | Compile and export without writing catalogue output          |
-| `mokly publish`             | Export and upload to a compatible catalogue service          |
-| `mokly --help`              | Show every command and option                                |
+| Command                    | What it does                                                     |
+| -------------------------- | ---------------------------------------------------------------- |
+| `mokly serve`              | Serve the catalogue, render on demand, and watch for changes     |
+| `mokly serve --open`       | Serve and open the local URL in a browser                        |
+| `mokly build`              | Validate, render every view, and write the static site           |
+| `mokly build --out <path>` | Write the static site to `path` instead of `mokly-static/`       |
+| `mokly build --strict`     | Fail on warnings as well as on errors                            |
+| `mokly publish`            | Build into a private directory and upload to a catalogue service |
+| `mokly --help`             | Show every command and option                                    |
 
 The CLI uses stable plain output in CI and a richer interactive display in a
-terminal. During watched Serve, press `h` to see shortcuts for opening,
-rebuilding, clearing, and quitting. Build warnings print on standard error
-without changing the exit status; `--strict` turns them into a failed command.
-Publish requires a clean Git checkout. It ignores Git-ignored files, its own
-output directory, and Mokly caches and temporary files. Committed generated
-files must match the build; derived generated output must be ignored by Git.
-
-Ignored-input warnings use the same channel as link-control warnings. They
-name the affected page or authored input. `--strict` counts every warning
-before Build, Check, export or publish can write or upload output.
+terminal. Warnings print on standard error without changing the exit status;
+`--strict` turns them into a failed command. No command writes into the
+repository: `build` writes its output directory, which Git must ignore, and
+the caches live in the operating system's cache directory. `publish` requires
+a clean Git checkout.
 
 Detailed command references:
 
 - [`serve`](./docs/guides/cli/serve.md)
-- [`build`](./docs/guides/cli/build.md) and
-  [`check`](./docs/guides/cli/check.md)
-- [`export`](./docs/guides/cli/export.md) and
-  [`publish`](./docs/guides/cli/publish.md)
+- [`build`](./docs/guides/cli/build.md)
+- [`publish`](./docs/guides/cli/publish.md)
 - [Options and exit status](./docs/guides/cli/options-and-exit-status.md)
 
 ## Authoring
 
-Mokly's public API is declarative. Definitions describe what belongs in a
-catalogue; your React tree still owns what each screen looks like.
+Mokly's authoring model is declarative. A file describes what belongs in the
+catalogue; your components still own what each screen looks like.
 
-| Concept          | Use it for                                                                                | Guide                                                               |
-| ---------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Screens          | Product states, view renders, and full-screen variants                                    | [Screens](./docs/guides/authoring/screens.md)                       |
-| Folders and tags | Folders from file paths, titles and order from `_folder.json` or `defineFolder`, and tags | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
-| Components       | Typed props, variants, controls, and usage inspection                                     | [Components](./docs/guides/authoring/components.md)                 |
-| Use-case flows   | Ordered journeys composed from existing screens                                           | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
-| Pages            | Existing complete HTML documents without device variants                                  | [Pages and documents](./docs/guides/authoring/pages.md)             |
-| Documents        | Markdown files rendered as catalogue documents, including a folder's README               | [Pages and documents](./docs/guides/authoring/pages.md)             |
-| `MockLink`       | Portable links between catalogue entries by path                                          | [Links](./docs/guides/authoring/links.md)                           |
-| Styles           | Imported CSS, modules, assets and optional PostCSS                                        | [Styles](./docs/guides/authoring/styles.md)                         |
+| Concept          | Use it for                                                                            | Guide                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Screens          | Product states as HTML files or React renders, with props and variants                | [Screens](./docs/guides/authoring/screens.md)                       |
+| Components       | HTML or React components with a prop schema, saved variants, slots, and live controls | [Components](./docs/guides/authoring/components.md)                 |
+| Stories          | Existing Storybook stories, rendered as component variants                            | [Components](./docs/guides/authoring/components.md)                 |
+| Folders and tags | Folders from file paths, titles and order from `_folder.json`, and tags               | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
+| Use-case flows   | Ordered journeys composed from existing screens                                       | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
+| Pages            | Complete HTML documents without device variants                                       | [Pages and documents](./docs/guides/authoring/pages.md)             |
+| Documents        | Markdown files rendered as catalogue documents, including a folder's README           | [Pages and documents](./docs/guides/authoring/pages.md)             |
+| Links            | Portable `mock:` links between catalogue entries by path                              | [Links](./docs/guides/authoring/links.md)                           |
+| Styles           | Configured stylesheets, imported CSS, assets, and optional PostCSS                    | [Styles](./docs/guides/authoring/styles.md)                         |
 
-A custom renderer is the integration boundary for product providers, themes,
-stylesheets, fonts, and full-document markup. Mokly resolves React from the
-consumer repository and bundles all authoring inputs into one build-time graph,
-so component trees use one React runtime.
-Use `stylesheets` for separately authored public CSS. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
-compiles CSS Modules, per-root stylesheets and assets. Fragment renderers
-receive links under the [renderer stylesheet contract](./docs/protocol/mokly-rendering.md#renderer-stylesheets),
-which owns the complete list and its order. Pages link their own CSS explicitly.
-An optional consumer PostCSS module processes imported CSS; see the Styles guide
-for plugin setup.
-The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
-preflight-free Tailwind v4 utilities to exercise this delivery end to end.
-
-## Delivery Status
-
-The [implementation plans](./plans/) lists active and completed work.
-
-Removal of baseline compatibility below is implemented in
-[M23B](./plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Uniform CSS attribution is implemented in Milestone 19 of the
-[source-path removal plan](./plans/remove-source-path-evidence.md); comparison
-details for screens and saved views are implemented in Milestone 20, and for
-whole-document pages in Milestone 20B. Configured, declared and imported stylesheets
-use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
-Components change through own-page matches kept after nested filtering. Outside matches
-and unresolved rules give a page its own row. Stylesheet owner records have no
-role in that decision.
+Every screen and component is a render over props: a variant changes the
+props, not the render. The prop schema is a JSON Schema object under the
+[entry props contract](./docs/protocol/mokly-entry-props.md), declared for
+components and inferred from the saved props for screens and stories. The
+[HTML screens contract](./docs/protocol/mokly-html-screens.md) defines the
+file kinds, the front matter, and the template language. A custom renderer
+module is the integration boundary for product providers, themes, and fonts
+around React renders; the sidecar resolves React from your repository and
+bundles every JavaScript input into one graph.
 
 ## Review and share
 
 The local **Changes** view compares the working tree with the merge base of
-`HEAD` and `origin/main` by default. It accounts for generated documents,
-reachable resources, catalogue metadata, registered components, and applicable
-stylesheet changes. Changed screens, screen variants, and component variants
-generate comparisons only when an eligible shown view is opened. Per-view
-evidence keeps known unchanged views marked Unmodified without offering a
-comparison. A light-only screen or component variant uses its effective Light
-view for status and marks even while Dark stays selected for the rest of the
-catalogue. Missing per-view evidence preserves the selected entry's existing
-comparison eligibility. Removed screens, pages and documents load their read-only
-[previous version](./docs/protocol/mokly-removed-previews.md) from the branch
-point. Changes pairs a moved entry with its earlier version when the evidence
-is unique, labels its row Moved, and names the previous path in Details. Use
-`movedFrom` to declare the previous path when needed. Pure moves stay included
-without counting as output changes; see the
+`HEAD` and `origin/main` by default. Both sides render from their sources with
+the same Mokly version, so a Mokly upgrade alone changes nothing. Changes lists
+added, removed, moved, and changed screens, pages, and documents, and the
+screens that a changed component affects. Removed screens, pages, and documents
+load their read-only [previous version](./docs/protocol/mokly-removed-previews.md)
+from the base commit. Changes pairs a moved entry with its earlier version
+when the evidence is unique, labels its row Moved, and names the previous
+path; declare `movedFrom` when needed, under the
 [move contract](./docs/protocol/mokly-moves.md).
 
-Read [how Changes works](./docs/guides/catalogue/changes.md), then export a
+Read [how Changes works](./docs/guides/catalogue/changes.md), then write a
 standalone site:
 
 ```bash
-npx --no-install mokly export --out .context/mokly-site
+npx --no-install mokly build --out .context/mokly-site
 ```
 
-The export contains the catalogue, its assets, navigation, available Git
-comparisons, and previous versions for removed screens, pages and documents. Serve the
-directory at the root of an HTTP(S) origin. The
+The site contains the catalogue, its assets, navigation, the available Git
+comparison, and the previous versions of removed entries. Serve the directory
+at the root of an HTTP origin. The
 [export and hosting guide](./docs/guides/catalogue/export-and-host.md) covers
-the required headers and deployment model.
+the required headers and the deployment model.
 
-For automated uploads, Mokly also provides a
+For automated uploads, Mokly provides a
 [public composite GitHub Action](./.github/actions/publish/README.md) and a
 documented [upload protocol](./docs/protocol/mokly-upload.md) for hosted or
 self-hosted receivers.
@@ -303,20 +235,15 @@ self-hosted receivers.
 
 | Package                                                      | Purpose                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) | Authoring API, CLI, build, local server, comparisons, export, and publish                         |
+| [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) | The `mokly` command, the authoring API, the render sidecar, and the guides                        |
+| `@mokly/native-<target>`                                     | The Rust binary for one platform; `@mokly/mokly` installs the one that matches                    |
 | [`@mokly/viewer`](./packages/viewer/README.md)               | Embeddable React catalogue viewer with navigation, inspection, markers, slots, and frame adapters |
 
 Use `@mokly/mokly` to create and deliver a catalogue. Use `@mokly/viewer` when
 another React application owns the surrounding navigation, branding,
 authentication, or discussion experience. Embedded viewer roots accept `theme`
-independently from `selection.colorScheme`, so hosts can pair any interface
-appearance with any preview scheme. See the
-[viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
-[semantic palette](./docs/protocol/mokly-viewer-palette.md).
-
-The [Rust rebuild plan](./plans/rust-rebuild.md) replaces the TypeScript
-backend with a Rust core and a Node sidecar for JavaScript rendering; the
-TypeScript backend is frozen while that work lands.
+independently from the preview colour scheme; see the
+[viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md).
 
 ## Documentation
 
@@ -324,26 +251,19 @@ TypeScript backend is frozen while that work lands.
 - [Browsing the catalogue](./docs/guides/catalogue/browse.md)
 - [Configuration reference](./docs/guides/authoring/config.md)
 - [Protocol and specification index](./docs/protocol/README.md)
+- [HTML screens, pages, and use cases](./docs/protocol/mokly-html-screens.md)
 - [Paths, roots, and identity](./docs/protocol/mokly-paths.md)
-- [Removed content previews](./docs/protocol/mokly-removed-previews.md)
-- [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Variants](./docs/protocol/mokly-variants.md)
-- [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Rust core architecture](./docs/architecture/rust-core.md)
-- [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
+- [Render pipeline](./docs/architecture/build-pipeline.md)
+- [Package and consumer boundary](./docs/architecture/package-boundary.md)
+- [Implementation plans](./plans/)
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)
 
-The guides are user-facing and ship with the npm package. The protocol documents
-are the detailed implementation contracts used to keep the CLI, viewer,
-generated output, and tests aligned.
-
-The [path/output contract](./docs/protocol/mokly-path-output-integration.md) defines
-one [unified layout](./docs/protocol/mokly-unified-output.md) for generated pages,
-imported styles and assets. The portable
-[viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
-Older receivers reject the new upload format. Mokly Cloud needs the documented
-receiver and viewer update before publication.
+The guides are user-facing and ship with the npm package. The protocol
+documents are the specification that keeps the Rust core, the sidecar, the
+viewer, and the tests aligned.
 
 ## Develop Mokly
 
@@ -352,15 +272,8 @@ For repository development, use the tested Node.js version in
 `package.json`), the Rust toolchain in
 [`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
 Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
-the repository before the npm commands below to install and use that Node.js
-version. A global npm install applies only to the active Node.js version.
-rustup reads the toolchain file and installs the pinned Rust the first time
-`cargo` runs in the repository. Use the pinned npm version for dependency
-changes.
-The TypeScript backend under `src/` is frozen: the
-[Rust rebuild](./plans/rust-rebuild.md) replaces it with the crates described
-in the [Rust core architecture](./docs/architecture/rust-core.md). Until those
-crates land, Rust is used only by `cargo xtask`.
+the repository before the npm commands below. rustup reads the toolchain file
+and installs the pinned Rust the first time `cargo` runs in the repository.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -368,234 +281,85 @@ cd mokly
 npm install --global npm@11.21.0
 npm ci
 npm run build
-npm run example:build
-npm run dev
-```
-
-`npm run dev` serves the synthetic consumer in
-[`examples/basic`](./examples/basic/README.md) and watches its entries,
-renderer, and stylesheets. Changes to Mokly's own `src/` files require
-restarting the command so the CLI is rebuilt.
-
-Run tests that cover the change while you develop:
-
-```bash
-npm test -- tests/ci_workflow_policies.test.ts
-npm run test:unit -- tests/ci_workflow_policies.test.ts --test-name-pattern="pins uses"
-npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
-```
-
-Put every test argument after `--`. npm consumes flags before that separator.
-The developer runner rejects consumed name-pattern and shard flags.
-
-`npm test`, `npm run test:unit`, and `npm run test:browser` always prepare
-package and example output, so they test the current `src/`. The raw commands
-`node --import tsx --test <file>` and `npx playwright test <spec>` use the last
-build; run `npm run prepare:verification` after a `src/` change before using
-them. Browser tests reject `.only`; select by path and `-g`. These selected runs
-are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
-for the argument and report rules.
-Selected unit runs print the number of tests that ran. They print a warning
-for each named file that reports zero tests; skipped and todo tests count
-as reported tests. A pattern-only run warns once if no file reports a test.
-Argument errors and selected-run failures print a short
-report without a stack trace. Internal faults keep the full error report.
-
-Run the complete repository gate before submitting a change:
-
-```bash
 cargo xtask check
 ```
 
-That command runs formatting, linting, type checks, unit and integration tests,
-packed-package smoke tests, sharded browser coverage, the separate hydration
-suite, dependency checks, and Rust checks. See the
-[xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
-functional suites on the minimum Node 22.14 runtime for ordinary changes and
-adds Node 24 to the complete matrix before a Release Please pull request can
-merge.
+The Rust core lives in a Cargo workspace under `crates/`, one crate per
+subsystem, with the viewer under `packages/viewer`, the verification task
+runner under `xtask/`, and the reference consumer under
+[`examples/basic`](./examples/basic/README.md). The
+[Rust core architecture](./docs/architecture/rust-core.md) is the map of the
+crates and the npm packages, and the
+[rebuild plan](./plans/rust-rebuild.md) gives the order in which they land.
 
-Large ordinary-preview browser fixtures build in an owned Node child, then
-serve that real artifact in the worker. This keeps Playwright's diagnostic
-stack capture out of the build while retaining the same catalogue and checks.
+Run the tests that cover a change while you develop:
 
-ESLint requires shared directory constants, locale-independent source ordering,
-and unique imports. Tests probe every covered source folder through the real
-flat config. See the [lint contract](./docs/protocol/mokly-directory-lint.md).
+```bash
+npm test -- tests/markdown_links.test.ts
+npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
+cargo test -p mokly-html
+```
 
-Browser global setup prepares one real example baseline and cache. Ordinary
-export fixtures use isolated, validated copies; dedicated tests retain cold
-baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
+Put every npm test argument after `--`. Selected runs are partial
+verification; `cargo xtask check` is the complete gate. It runs formatting,
+linting, type checks, the Rust and viewer suites, the browser suite,
+dependency checks, and the length audits. See
+[developer test commands](./docs/protocol/developer-test-commands.md) for the
+argument and report rules, the [xtask README](./xtask/README.md) for focused
+suites, and [CI test timing](./docs/protocol/ci-test-timing.md) for the rule
+that tests never assert elapsed time.
 
 The [remote verification contract](./docs/protocol/remote-verification.md)
-defines the Testbox gate. A remote check needs a pushed ancestor in the local
-origin refs. Checkout `HEAD` can include unpushed commits:
+defines the Testbox gate, which runs the same suites on Blacksmith boxes:
 
 ```bash
 cargo xtask check --executor remote
 ```
 
-Warmup uses the Testbox workflow from `main`.
-Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
-before it merges. This variable changes neither the source fingerprint nor
-the selected base commit.
-Remote runs sync from a separate snapshot. The
-[base sync contract](./docs/protocol/remote-verification-base.md) defines
-checkout preservation, run identity and snapshot cleanup.
+It needs `blacksmith`, `rsync`, and `ssh`, and `BLACKSMITH_ORG_TOKEN` or the
+current CLI login. The default `auto` executor selects remote mode when the
+token and every availability check pass; `--executor local` and a selected
+`--suite` stay local. The
+[base sync](./docs/protocol/remote-verification-base.md) and
+[cleanup](./docs/protocol/remote-verification-cleanup.md) contracts define
+checkout preservation, run identity, and the box lifecycle.
 
-Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
-login, or use the current CLI login. The remote gate runs 11 commands in parallel.
-Login saves the key in `~/.blacksmith/credentials`.
-It replaces any saved login for the same organization.
-Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
-Each ended command downloads its report and cleans up its box at once.
-The gate requires nine reports. Cleanup closes the shared SSH connection first.
-When `gh` is available, it cancels a known GitHub run right after the close.
-An ID first found in status is cancelled before stop. A completed status skips
-stop and any cancellation not tried yet. The
-[cleanup contract](./docs/protocol/remote-verification-cleanup.md)
-defines this order. A failed stop gets retries after
-5 seconds and 10 more seconds. A recovered stop does not fail the gate.
-Final cleanup counts each box once if it is neither stopped nor proven completed.
-After the suites start, a nonzero count does not fail the gate. Before the
-first suite, it blocks local fallback. Interrupts report the same count.
-Warnings name each remaining box's manual stop command and its idle timeout.
-Cleanup records run IDs from warmup and probe output for the first cancellation.
-A failed GitHub cancellation checks the run state. An ended run gets an
-information line. Logs stay under `.context/`.
-Availability checks name all missing programs with install hints.
-Every xtask child removes `BLACKSMITH_ORG_TOKEN` from its environment.
-It also removes the shared Git repository variable list. These variables select
-which repository, work tree and index Git uses. Git in each child then finds
-its repository from the child's own working directory. Request-specific
-temporary indexes still apply. Settings carried by `GIT_CONFIG_PARAMETERS` or
-`GIT_CONFIG_COUNT`, including `git -c` settings, are removed with the list.
-Other variables, such as `GIT_ASKPASS` and `GIT_SSH_COMMAND`, stay.
-The source check names any unsupported nested repository or worktree path.
-Ignore or remove that path before retrying. The repository ignores agent
-worktrees under `.claude/worktrees/`.
-`--executor local` skips remote checks. The default `auto` selects remote mode
-when an org key and all availability checks pass. It otherwise runs locally.
-Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes.
-Automatic fallback runs the full local gate only before a remote suite starts.
-An interrupt never starts local fallback.
-`MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
-A selected `--suite` stays local.
-Explicit `remote` with `--suite` fails before work starts.
+`npm run dependencies:check` runs the strict audit of every workspace
+dependency category from the lockfile, and `--baseline` reports issues already
+present at the comparison commit as notices. Baseline mode is the default for
+`cargo xtask check`, ordinary pull requests, and pushes; Release Please,
+dependency update pull requests, release publishing, and the daily `main`
+audit stay strict. See the
+[baseline audit](./docs/protocol/dependency-audit-baseline.md),
+[dependency update pull request](./docs/protocol/dependency-audit-update-pr.md),
+and [dependency security](./docs/protocol/dependency-security.md) contracts.
 
-Local test runs scale with the machine. Unit tests run half the available CPUs'
-worth of test files at once, never fewer than two, and the hydration suite uses
-half the CPUs as Playwright workers. Other browser runs use one worker. Set
-`MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a positive integer to
-choose a different value. Playwright worker N serves the example on port
-`MOKLY_PLAYWRIGHT_PORT` + N, and `MOKLY_PLAYWRIGHT_PORT` defaults to 4517:
-
-```bash
-MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
-```
-
-Required tests follow [CI test timing](./docs/protocol/ci-test-timing.md).
-Use the shared helpers in `tests/helpers/operation_counts.ts` and
-`tests/helpers/durations.ts` for operation counts and duration text.
-
-Pull request titles use Conventional Commits and at most 72 Unicode code points.
-The separate title check runs when a PR opens, changes, or receives a push; see
-the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
-
-`npm test` and `npm run test:unit` run `npm run prepare:unit` and then the
-Node unit tests.
-`prepare:unit` builds the package and the example. When the saved snapshot is
-not fresh, it then compiles the example once more in memory and saves the
-result to `.context/verification/example-compilation.json`; when the snapshot
-is still fresh, it skips that compile. Test files that read the
-compiled example load this snapshot instead of compiling the example again. The
-snapshot keeps resource seeds and both route and subject warnings. The
-snapshot stores a key of the example sources, the built package and the
-lockfile, and a test file uses it only while that key still matches. When you
-run one file by hand, for example
-`node --import tsx --test tests/design_screens.test.tsx`, the file uses a fresh
-snapshot or compiles the full example itself, which is much slower.
-Run `npm run prepare:unit` again after you change the example or rebuild the
-package. The
-[snapshot contract](./docs/protocol/ci-example-snapshot.md)
-gives the details.
-
-`npm run dependencies:check` runs the strict live audit of every workspace
-dependency category from the lockfile. It fails on uncovered Low-or-higher
-advisories and invalid exception records. Use
-`npm run dependencies:check -- --baseline` to report issues already present at
-the comparison commit as notices and fail on new issues. The
-[baseline audit contract](./docs/protocol/dependency-audit-baseline.md) defines
-byte comparison and inheritance. Baseline mode is the default for
-`cargo xtask check`, ordinary pull requests, and pushes. Select strict local
-verification with `cargo xtask check --dependency-audit strict`.
-Either mode can write a JSON summary with `--report <file>`.
-
-Release Please and dependency update pull requests, release publishing, and
-the daily `main` audit stay strict. The scheduled workflow creates or refreshes
-the [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md)
-for findings and exception issues. It preserves human commits and closes the
-update pull request when `main` passes. It needs no installed dependencies for
-the audit or script load; only the failure path installs and updates packages.
-Reviewed exceptions keep their exact dev-only path, inclusive UTC end date,
-and maximum 31-day window. The packed ESM consumer's production audit stays
-strict with no exceptions. See [dependency security](./docs/protocol/dependency-security.md)
-for the review rules and temporary Braces exception.
+Pull request titles use Conventional Commits and at most 72 Unicode code
+points; see the
+[title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
 ### Key code
 
-- [`src/index.ts`](./src/index.ts) — supported public authoring exports.
-- [`src/config`](./src/config) — config discovery, loading, and path policy.
-- [`src/build`](./src/build) — bundling, rendering, validation, and generated
-  output transactions; see the [imported CSS contract](./docs/protocol/mokly-imported-styles.md)
-  for the stylesheet pass and binary output boundary.
-- [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
-  identity-derived logical-link targets and portable artifact URLs.
-- [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v10 component-entry validation.
-- [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and
-  [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v10 boundary.
-- [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
-  [`src/server/classification_result.ts`](./src/server/classification_result.ts)
-  — the typed earlier-baseline outcome from admission through Serve.
-- [`src/cli`](./src/cli/README.md) — command parsing, reporting, and
-  composition.
-- [`src/server`](./src/server/README.md) — local HTTP server and watched
-  runtime.
-- [`src/server/http_request_handler.ts`](./src/server/http_request_handler.ts) —
-  request dispatch against the server's current accepted snapshot.
-- [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
-  attribution.
-- [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
-  and
-  [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)
-  — flat variant classification and review-result assembly.
-- [`src/review/artifact_files.ts`](./src/review/artifact_files.ts) and
-  [`component_classification_entries.ts`](./src/review/component_classification_entries.ts)
-  — collision-safe artifact writes and per-entry comparison preparation.
-- [`src/review/deleted_resource.ts`](./src/review/deleted_resource.ts) — the
-  shared verified-deletion and byte-comparison decision used by both Changes
-  classifiers.
-- [`src/export`](./src/export/README.md) — static catalogue export.
-- [`src/publication`](./src/publication/README.md) — shared static shell and
-  previous-version publication.
-- [`src/publish`](./src/publish/README.md) — content-addressed publication exchange.
-- [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
-  model, navigation, frames, and inspection.
-- [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
-  [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
-  baseline-availability and provider-path adapters.
-- [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
-  computes the source fingerprint, including uncommitted changes and file or
-  directory type changes.
-- [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
-  checks the fingerprint, stages the synced tree and prepares one suite through
-  injected commands.
-- [`xtask/src/remote`](./xtask/src/remote) runs the complete Testbox gate and
-  owns report downloads, logs and interrupt cleanup.
-- [`examples/basic`](./examples/basic/README.md) — reference consumer and design
-  catalogue.
+- `crates/mokly-model` — every shared shape, the prop schema profile, and the
+  generated TypeScript types.
+- `crates/mokly-catalogue` and `crates/mokly-html` — discovery, the catalogue
+  model, HTML screens and components, and document composition.
+- `crates/mokly-sidecar` and `packages/mokly/sidecar` — the render sidecar
+  protocol and the Node process that runs React, pages, and stories.
+- `crates/mokly-css`, `crates/mokly-graph`, and `crates/mokly-compare` —
+  stylesheets and attribution, the render graph and cache, and comparison.
+- `crates/mokly-server`, `crates/mokly-watch`, `crates/mokly-static`, and
+  `crates/mokly-publish` — Serve, the watcher, the static build, and the
+  upload exchange.
+- `crates/mokly-cli` — the `mokly` binary and its terminal output.
+- [`packages/viewer`](./packages/viewer/README.md) — the React shell, the
+  index and detail readers, navigation, frames, and inspection.
+- [`xtask/src/remote`](./xtask/src/remote) — the Testbox gate, report
+  downloads, logs, and interrupt cleanup.
+- [`scripts/verification`](./scripts/verification) — the verification scripts
+  that CI and the gate share.
+- [`examples/basic`](./examples/basic/README.md) — the reference consumer and
+  design catalogue.
 
 ## License
 

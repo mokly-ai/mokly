@@ -1,10 +1,6 @@
 # Public API Reports And Unused Members
 
-## Delivery Status
-
-This is the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-These checks extend the [repository ratchets](./verification-ratchets.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Public API Reports
 

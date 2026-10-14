@@ -1,9 +1,6 @@
 # Repository Preview Deployments
 
-## Delivery Status
-
-The main-branch and pull-request preview workflows, static capture, publication,
-replacement, and cleanup behavior are implemented.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Deployment Contract
 
@@ -51,7 +48,7 @@ isolated resources under an immutable generation path; visitors fetch them only
 after selecting a diff. Refresh loads that same published result. Unavailable
 history or invalid comparisons abort the build without replacing previous output.
 A recognized earlier baseline instead publishes current content with Changes
-unavailable under [baseline compatibility](./mokly-baseline-compatibility.md).
+unavailable under baseline compatibility.
 
 Both options omit the live-update entrypoint, watch-only modules, event routes,
 and stale comparison directories. Full history remains available in both jobs.

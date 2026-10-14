@@ -1,16 +1,5 @@
 # Shell Device Chrome And Preview Scheme
 
-## Delivery Status
-
-Implemented in the shared `@mokly/viewer` shell and depicted in Mokly's design
-catalogue, as the [shell design contract](./mokly-shell-design.md) records.
-This document owns the device frames, the whole-document pane, and the preview
-color-scheme tokens and containment rules those frames use; the shell design
-contract owns the surrounding layout, tokens, and responsive behavior, and the
-[viewer appearance contract](./mokly-viewer-appearance.md) owns the interface
-appearance around the frames. The document pane's Markdown document follows
-the implemented [document contract](./mokly-documents.md).
-
 ## Device Chrome
 
 - **Phone frame** — 390×844, 12px bezel padding, `#171a18` body,

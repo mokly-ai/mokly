@@ -1,24 +1,6 @@
 # CSS Change Attribution
 
-## Delivery Status
-
-Parsing, diffing and conservative exclusion are implemented. Element sets and
-uniform rule membership are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-
-Rule parsing, diffing, document matching, and classification apply to
-screen-only and component catalogues, live Serve, watched updates, and
-publication. The inspector receives retained and excluded stylesheet evidence
-for both catalogue kinds, including before a comparison is loaded. Screen-only
-delivery reuses accepted classification without a second resource analysis.
-See [CSS Change Attribution](../../plans/css-change-attribution.md).
-The [Rust rebuild plan](../../plans/rust-rebuild.md) keeps these stages on parsed trees under
-the [comparison contract](./mokly-comparison.md); recorded spans, text
-normalization, and the generated-tree inputs are not used there.
-
-Discovery of inserted links inside Review-ignore is implemented in
-[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose
 
@@ -48,7 +30,7 @@ The analysis runs only for a CSS resource that is already in `changedPaths`
 and already reachable from a view's document through the existing resource
 graph: linked stylesheets, transitive `@import` chains, and stylesheets
 referenced by embedded documents. For differing catalogue roots/layouts,
-[baseline addressing](./mokly-baseline-addressing.md#comparison-namespaces)
+baseline addressing
 pairs CSS by each side's catalogue-relative path, then reads its bytes from
 each side's real location. A changed-path trigger remains repository-relative
 and may name either side's path; it never translates roots. A resource-byte
@@ -60,14 +42,14 @@ uses. It never widens the set of examined files; unreferenced public files and
 source paths add nothing on their own. Declared component CSS is eligible only
 when linked in a rendered document, under the
 [component stylesheet contract](./mokly-component-stylesheets.md) and its
-[ownership rules](./mokly-component-stylesheet-ownership.md).
+ownership rules.
 The comparison-only removal of Mokly-inserted links does not remove those
 links from the actual final document used to discover CSS and match changed
 rules. An unlinked declaration has no CSS evidence. No stylesheet ownership
 record controls resource eligibility or attribution.
 Use validated `insertedStylesheets` spans to recover those links even inside
 paired Review-ignore on both comparison paths and for CSS rule scope. The
-[shared link contract](./mokly-stylesheet-links.md) keeps authored ignored
+shared link contract keeps authored ignored
 content ignored and template content inert.
 
 Resources that are not stylesheets, including fonts, images, and embedded

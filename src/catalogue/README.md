@@ -121,13 +121,8 @@ npx playwright test tests/browser/catalogue_fetch.spec.ts
 ```
 
 See the [catalogue contract](../../docs/protocol/mokly-catalogue.md),
-[bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md),
+bootstrap contract,
 [export boundary](../export/README.md), and [Serve lifecycle](../server/README.md).
 
 Hidden folders remain explicit tree nodes. The viewer filters All/search while
 Changes keeps hidden ancestry; every current entry remains present in the wire tree.
-
-## Delivery Status
-
-The [source-path removal plan](../../plans/remove-source-path-evidence.md)
-removed `details.dependencies` and retired the v1 to v3 public catalogue formats.

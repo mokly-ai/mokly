@@ -1,34 +1,6 @@
 # Registered Components
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Uniform CSS attribution and warnings for all stylesheet owner records are
-implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-The remaining contract is implemented.
-
-The [Rust rebuild plan](../../plans/rust-rebuild.md) adds an optional `element` to the
-`defineComponent` input: a lowercase name that starts with a letter, holds at
-least one hyphen, and is none of the names the HTML standard reserves, nor any
-name with the `mokly-` prefix. It
-registers the component for [HTML screens](./mokly-html-screens.md). The name
-must be unique across HTML and JavaScript components; a collision fails the
-build and names both files. An `element` whose schema declares `to`,
-`fragment`, `slot`, `moklyViewport`, or `moklyIf` fails registration. The plan also makes
-`variants` optional, adds an optional `props` map for the component's own
-view, which its page shows first, makes `variants[].props` a partial of the
-derived props type that replaces top-level keys, derives `controls` from
-the schema when none are declared, and makes `propSchema` a JSON Schema object
-under the profile of the [entry props contract](./mokly-entry-props.md), with
-the props type derived by `json-schema-to-ts`.
-
-The public `defineComponent` API, saved variants, ownership attribution,
-explorer, inspection, and local controls are implemented. The
-[component explorer plan](../../plans/component-explorer.md) records delivery.
-Existing unregistered catalogues retain their output and Review-ignore behavior.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Product Contract
 
@@ -192,7 +164,7 @@ variants; no entry stores a route or view path. The
 [manifest schema](./mokly-component-manifest.md) defines every record,
 reference, ordering rule, and validation boundary. Baseline readers accept the
 same current v10 shape without conversion, with availability defined by
-[baseline compatibility](./mokly-baseline-compatibility.md).
+baseline compatibility.
 
 Inert, package-owned DOM markers bind generated ranges to their usage records.
 The collector is scoped to a render, not a process-global mutable registry.

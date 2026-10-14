@@ -1,7 +1,8 @@
 # Rust Rebuild
 
 Status: Active. Created 2026-10-12 with the user's consent. It supersedes the
-[native engine plan](./native-rust-engine.md), which stays closed as history.
+native engine plan, which the documentation reset of 2026-10-14 deleted with
+every other plan; the branch history before commit `d4bac78d` keeps it.
 On 2026-10-12 the user decided to freeze the TypeScript backend immediately,
 to remove the replaced JavaScript and its tests together instead of
 incrementally, to treat the old outputs as guidance rather than an exact
@@ -16,8 +17,8 @@ Milestone 1 is complete: the Rust core architecture, the sidecar, HTML
 screens, HTML components, and comparison contracts exist, the format
 inventory names review v8, read model v7 and snapshot v4, and
 every protocol page is classified. The structural test that binds the
-catalogue page's format table to the old code fails until the teardown
-removes that test. On 2026-10-12 the branch was rebased onto the
+catalogue page's format table to the old code was deleted on 2026-10-14 with
+the other protocol-content tests. On 2026-10-12 the branch was rebased onto the
 `AGENTS.md` that names the shared skills, and the rebuild procedures moved
 from the removed `docs/dev` directory to
 [the protocol page](../docs/protocol/rust-rebuild-procedures.md). Later that day
@@ -48,6 +49,12 @@ the old variant rules carry pointers. On 2026-10-14 the user simplified the
 shell's update model to one revision, document keys, and a per-process Serve
 deployment id (Decision 27), which settled findings 1 to 6 of the shell
 delivery review.
+Later on 2026-10-14 the user reset the documentation (Decisions 28 and 29):
+protocol pages define the end state only, the 24 pages that described the
+previous backend alone are deleted, every status section and history pointer
+is gone, the 78 pages that described it in part are rewritten now, no test
+asserts protocol content, and every other plan is deleted. The previous
+protocol is `main` commit `0bbd737e`.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -234,6 +241,21 @@ more than re-deriving the behaviour from the requirements.
     evidence and the workspace lists have typed shapes in the detail, and the
     catalogue page's v7 types are revised in place. This settles findings 1
     to 6 of the shell delivery review.
+28. Documentation reset (2026-10-14): protocol pages define the intended end
+    state. No page describes the previous implementation, a former format, or
+    delivery history; a page whose behaviour is not implemented starts with
+    `Status: In progress under the Rust rebuild plan`, its only plan
+    reference. The 24 pages that described only the previous backend are
+    deleted now, the 78 pages that described it in part are rewritten now so
+    that the whole specification is reviewed before code lands, the root
+    README and the architecture pages follow the same rule, and the guides
+    follow at their milestones. The previous protocol is `main` commit
+    `0bbd737e`; the `ts-backend-final` tag pins it at the teardown. No test
+    asserts protocol page content; the link check and the 250-line cap stay.
+29. Plans (2026-10-14): every other plan is deleted, and their open
+    follow-ups are void under this reset. `main` commit `0bbd737e` keeps the
+    merged plans; the branch history before commit `d4bac78d` keeps the
+    native engine plan.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -388,11 +410,36 @@ their owning milestones, 14 retired at the teardown.
 
 ## Milestone 2: Reference capture and teardown
 
-At completion the branch holds the viewer, the kept specs, the authored
-example content, a trimmed `xtask`, and a green reduced gate. No CLI exists
+At completion the protocol set describes the end state, and the branch holds
+the viewer, the authored example content, a trimmed `xtask`, and a green
+reduced gate. No CLI exists
 until Milestone 6. `main` keeps the old backend until this pull request
 merges; the freeze applies to it from 2026-10-12.
 
+- [x] Documentation reset (Decision 28): delete the 24 pages that described
+      only the previous backend, strip every status section and history
+      pointer from the remaining pages and READMEs, mark the 84 new and
+      rewritten pages `In progress`, regroup the protocol index by subject,
+      and rewrite the documentation policy and the rebuild procedures.
+- [x] Delete the protocol-content tests (`component_protocol_docs`,
+      `protocol_structure`, `protocol_split_links`, `protocol_doc_history`,
+      `path_protocol_examples`, `design_links_inventory`,
+      `design_screen_counts`, `imported_styles_error_catalogue`) and the
+      protocol-page assertions inside six other test files.
+- [x] Delete every other plan (Decision 29).
+- [ ] Rewrite the root `README.md` and the architecture pages to the end
+      state.
+- [ ] Rewrite the 78 pages that described the previous backend in part, by
+      subject, each at or under 250 lines with the `Status` line:
+  - [ ] authoring;
+  - [ ] rendering;
+  - [ ] comparison and Changes;
+  - [ ] read model and delivery;
+  - [ ] Serve, watch, and the CLI;
+  - [ ] static build and publish;
+  - [ ] viewer;
+  - [ ] design mockups;
+  - [ ] CI, verification, and release.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
 - [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
@@ -406,14 +453,11 @@ merges; the freeze applies to it from 2026-10-12.
 - [ ] Delete, with the recorded approval: `src/`; the backend tests under
       `tests/` except the documentation, guide, and workflow policy tests that
       still apply; `scripts/package`, `scripts/preview`, `scripts/large`, and
-      the verification runners that drive the old CLI; the protocol pages
-      classified delete; the superseded plans, which git history keeps; the
+      the verification runners that drive the old CLI; the
       preview deployment workflow; and the root package's `bin`, `exports`,
       `files`, and publish configuration.
 - [x] Repoint or remove every live reference to the native engine contract
       before the teardown deletes `docs/protocol/mokly-native-engine.md`.
-- [ ] Close every active plan that the rebuild supersedes with a Completed
-      status paragraph that names this plan.
 - [ ] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
       the length audits, Rust formatting, Clippy, tests, and the file-length
       audit; a viewer suite runs the viewer typecheck and tests; the package,

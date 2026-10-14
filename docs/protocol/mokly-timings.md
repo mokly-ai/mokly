@@ -1,8 +1,6 @@
 # Startup Diagnostics And Scale Fixtures
 
-## Delivery Status
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Opt-in timings
 

@@ -1,16 +1,6 @@
 # On-demand Serve
 
-## Delivery Status
-
-CSS owner removal, root output boundaries and uniform rule evidence are
-implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-On-demand startup, rendering and evidence completion are implemented. The
-route-evidence loading and failed Usage states are implemented by the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-
-Generation-tagged background and preview-process warnings are implemented in
-[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Startup and completeness
 
@@ -20,7 +10,7 @@ Output collision and confinement checks create one immutable in-memory route
 set from validated identities and retained generated resources. Private runtime
 transfer preserves that set. Demand and background workers reject undeclared
 routes; they never scan disk output or acquire its writer lock. A new generation
-creates a new checked set under the [route-set contract](./mokly-generation-routes.md).
+creates a new checked set under the route-set contract.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 

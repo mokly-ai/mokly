@@ -1,17 +1,5 @@
 # Serving catalogues
 
-## Delivery Status
-
-Removal of baseline compatibility below is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Generation-scoped warning delivery and supervisor-factory startup cleanup are
-implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
-The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
-defines suppression as soon as a newer attempt starts, including when a failed
-attempt leaves the old child serving. Background completion must not replay
-`compilation.diagnostics`. The supervisor factory runs inside watcher cleanup.
-
 ## Scope
 
 Serve publishes a validated catalogue, renders requested documents and exposes
@@ -167,7 +155,7 @@ Shutdown cancels the current generation before draining preparation, preventing
 an in-flight Git resolution from launching a replacement during the drain.
 `demand/generation.ts` passes each generation's cancellation signal to its
 output write, so a superseded generation or a closing Serve stops waiting for
-the [generated-output writer lock](../../docs/protocol/mokly-rendering-generated.md#concurrent-writers)
+the generated-output writer lock
 that a concurrent Build or Serve writer holds.
 
 Watched Serve sends the commit and selected reader (`blobs` or `rebuild`) on the
@@ -191,7 +179,7 @@ the same config-owned validation.
 
 Both readers accept only manifest v10. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
-[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
+baseline compatibility contract.
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
 unsupported newer or malformed v10 data keeps the normal safe diagnostic path.
@@ -264,7 +252,7 @@ records. Ordinary on-demand link diagnostics wait for exhaustive compilation;
 child-only and transient producers use the same sink after readiness.
 No diagnostic enters an HTTP response.
 
-The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
+The referenced asset closure
 is the only authored public surface: generated routes live
 under `mokly-generated/`, referenced assets remain catalogue-relative, and unreferenced
 requests return 404. Manifest/cache privacy, realpath confinement and authoring
@@ -291,7 +279,7 @@ Route and live-evidence reads return ordinary scoped shell pages. The client
 adopts a page's scoped catalogue and optional complete private workspace
 atomically, replacing the prior route scope. Failed current reads expose
 retryable Usage rather than a partial or zero-consumer list. See the
-[bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
+bootstrap contract.
 
 Run the server tests with `npm test` and the navigation/comparison smoke tests
 with `npm run test:browser`. `tests/derived_child_repository.test.ts` covers revocation,
@@ -314,7 +302,7 @@ Worker-exit tests wait for the watch failure report before checking shutdown;
 Serve startup is not subject to the worker-request timeout.
 
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
-and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).
+and the derived baseline protocol.
 
 Snapshot validation reuses the compilation associated with an accepted manifest
 when its effective configuration matches. A fresh in-memory compilation already
@@ -324,7 +312,7 @@ check. This avoids a second PostCSS pass merely to recover accepted head bytes.
 The implemented [shared closure](../../docs/protocol/mokly-public-closure.md)
 replaces the separate Watch list with checked serving membership. Serve still
 rechecks each listed file without following symlinks. The approved
-[shared watch setup](../../docs/protocol/mokly-watch-writers.md) will also supply
+shared watch setup will also supply
 `build --watch`, including initial edits and interruptible lock waits.
 
 `watch_resources.ts` uses Build's closure builder. Invalid recovery edges can
@@ -345,7 +333,7 @@ in a restarted child's startup message. `serve_watched.ts` discards it only when
 `reconfigure` reloads the config file; a rebuild that only replaces the source
 watcher keeps it. The child ignores a list that `isAuthoredClosure` rejects.
 
-The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+The approved path/output integration keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
 v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands

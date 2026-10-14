@@ -1,14 +1,8 @@
 # Imported Stylesheet Assets And Delivery
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
-
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Imported delivery is implemented. Uniform rule identity and Changes attribution
-are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Assets, Links And Delivery
 
@@ -22,7 +16,7 @@ both tracking remedies. An untracked Check validates compilation without
 reading old generated output. Build writes the tree regardless of ignore rules.
 CLI Publish separately checks committed or ignored generated output under the
 [upload contract](./mokly-upload.md).
-See [the command contract](./mokly-generated-output.md#tracked-state-and-commands).
+See the command contract.
 
 Quoted local string URLs inside `image-set()` are not validated by esbuild's
 `url-token` hook; reject them, including in authored public CSS, with guidance
@@ -140,5 +134,5 @@ only from kept own-page matches after nested filtering; outside matches and
 unresolved rules give a page its own row. Consumer invocation matches alone
 never change that component. Private CSS inputs are rebuild inputs only.
 Both comparison sides use v10. Earlier output at the selected generated location
-or after the base's own rebuild returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
+or after the base's own rebuild returns Changes unavailable, with no old
 resource reader or one-time cross-layout stylesheet comparison.

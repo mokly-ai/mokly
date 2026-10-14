@@ -1,5 +1,7 @@
 # Mokly Package And Authoring Contract
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Scope
 
 Mokly is shared developer tooling for repositories that keep visual mockups
@@ -11,25 +13,6 @@ product output.
 The package must be usable by structurally different applications without
 importing them or recognizing application-specific route names. Synthetic screens
 may exist only under examples and test fixtures.
-
-## Delivery Status
-
-This document describes implemented pre-release package and authoring behavior.
-The catalogue-link implementation and its verification history are recorded in
-the completed
-[in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-The [Rust rebuild plan](../../plans/rust-rebuild.md) replaces the package's JavaScript
-backend with the Rust binary of the `@mokly/native-<target>` packages behind a
-Node shim, under the [Rust core architecture](../architecture/rust-core.md).
-[Whole-document pages](./mokly-pages.md) use the same paths and hierarchy as
-screens and flows, and [Markdown documents](./mokly-documents.md) join them by
-file. Current and comparison-base manifests require v10; consumers use ordinary
-page definitions. Path identity, `roots` discovery, Markdown documents, and move
-detection are implemented. The earlier
-co-located layout was delivered by the
-[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
 ## Package Identity
 
@@ -120,7 +103,7 @@ The [configuration contract](./mokly-configuration.md) defines the complete type
 shape, path validation, source/output boundaries, and individual field behavior.
 
 Only referenced, validated closure assets are served and exported; see
-[generated output](./mokly-generated-output.md#closure-urls-and-publication).
+generated output.
 
 Two layouts are recommended. A dedicated spec tree uses the default `specs`
 root for screens, pages, Markdown documents, and flows by product area, with
@@ -160,7 +143,7 @@ Register complete synchronous HTML with `definePage`; Markdown documents need
 no registration. Current reads require canonical manifest v10 and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons use
 the same version boundary; the
-[baseline compatibility contract](./mokly-baseline-compatibility.md) defines
+baseline compatibility contract defines
 how earlier output makes Changes unavailable without failing current output.
 Baseline readers never execute consumer code through the current package.
 
@@ -189,7 +172,7 @@ literals, and package boundary.
 
 ## Related Docs
 
-- [Generated output and manifest v10](./mokly-rendering-generated.md#generated-contract)
+- Generated output and manifest v10
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

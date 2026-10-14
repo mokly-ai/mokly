@@ -16,9 +16,9 @@ Continuation of the [protocol index](./README.md).
 
 - [Repository verification ratchets](./verification-ratchets.md)
 
-- [CI fixture preparation](./ci-fixture-preparation.md) — shared browser baseline preparation and cleanup.
+- CI fixture preparation — shared browser baseline preparation and cleanup.
 
-- [Directory constants and import lint](./mokly-directory-lint.md)
+- Directory constants and import lint
   — approved independent literal guard, retained source-ordering rule and
   duplicate-import enforcement with folder coverage probes.
 

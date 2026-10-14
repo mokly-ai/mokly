@@ -1,12 +1,5 @@
 # Mokly Shell Brand
 
-## Delivery Status
-
-Implemented in the shared `@mokly/viewer` shell and in Mokly's design
-catalogue. Serve, static export, embedded viewers, and the mockups render the
-same package-owned mark and wordmark without a cloud dependency or network
-request.
-
 ## Identity Boundary
 
 The top-bar brand is Mokly identity, not a consumer accent. The public

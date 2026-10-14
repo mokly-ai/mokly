@@ -1,10 +1,6 @@
 # Render Sidecar
 
-## Delivery Status
-
-Approved target of the [Rust rebuild plan](../../plans/rust-rebuild.md); not
-implemented. The frozen TypeScript backend renders in its own process and
-worker threads instead.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 

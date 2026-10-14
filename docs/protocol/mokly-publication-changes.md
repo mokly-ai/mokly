@@ -1,5 +1,7 @@
 # Publication Changes And Acceptance
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Optional Changes In Publication](./mokly-publication.md).
 
 ## Explicitly Include Changes
@@ -41,7 +43,7 @@ page paths from the development server used during capture.
 Missing history, an invalid v10 baseline, capture inconsistency, or comparison
 failure aborts publication and preserves previous output. Recognized earlier
 output instead completes with Changes unavailable under the
-[baseline compatibility contract](./mokly-baseline-compatibility.md). Preserve
+baseline compatibility contract. Preserve
 source protection, snapshot isolation, resource confinement, and sandbox rules.
 Both options apply the
 [shared source policy](./mokly-source-protection.md), including unimported

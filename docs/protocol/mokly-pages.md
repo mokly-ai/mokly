@@ -1,18 +1,6 @@
 # Pages In The Catalogue
 
-## Delivery Status
-
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-Pages use file-derived paths and complete-document rendering. The
-[removed content previews plan](../../plans/removed-content-previews.md)
-implements page-only historical capture and delivery. Under the
-[Rust rebuild plan](../../plans/rust-rebuild.md) the [render sidecar](./mokly-sidecar.md)
-runs a JavaScript page's `render` callback through `renderPage` and returns the
-complete document; the core applies the document rules below to it and to
-`.page.html` files alike.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 
@@ -132,7 +120,7 @@ Reserved source basenames stay protected even when unimported. Serving, resource
 validation, Review, and publication share that policy.
 
 Current and baseline readers accept the same v10 shape under the
-[compatibility contract](./mokly-baseline-compatibility.md). Catalogue lookup,
+compatibility contract. Catalogue lookup,
 hierarchy, navigation, breadcrumbs, details, search, route targets, and static
 publication consume one validated entry model. Page leaves use
 `entry:<path>`; folder identities follow the

@@ -1,13 +1,6 @@
 # HTML Screens, Pages, And Use Cases
 
-## Delivery Status
-
-Approved target of the [Rust rebuild plan](../../plans/rust-rebuild.md); not
-implemented. The frozen TypeScript backend accepts only TypeScript entry
-modules and Markdown documents. The format adopts the decisions of the HTML
-screens design on branch `calummoore/yaml-vs-html-screens`, with one change:
-the screen suffix is `.screen.html`, not `.mockup.html`, so that screens,
-components, and pages written in HTML follow one naming rule.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## File Kinds Without JavaScript
 

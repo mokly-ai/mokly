@@ -1,10 +1,8 @@
 # Catalogue Projection And Delivery
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of the [public catalogue contract](./mokly-catalogue.md).
-
-## Delivery Status
-
-Path-based projection, root usage ranges and resource evidence are implemented.
 
 ## Projection And Privacy
 

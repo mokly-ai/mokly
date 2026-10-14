@@ -1,12 +1,5 @@
 # Component Controls Design
 
-## Delivery Status
-
-The completed [component explorer plan](../../plans/component-explorer.md) and
-[inspector revision](./mokly-component-inspector-design.md) shipped these states
-through registered components and local controls. The design catalogue and
-its entry files use paths.
-
 ## Controls Panel
 
 Reuse the component page, saved-variant strip, canvas, comparison band, and

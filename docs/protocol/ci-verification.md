@@ -1,18 +1,6 @@
 # CI Verification
 
-## Delivery Status
-
-The suite CLI, evidence, workflow graph, fixture reuse, and every repository
-ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
-record timing and coverage. `cargo xtask check` is the complete gate.
-A validated hosted aggregate is reusable evidence for its exact tree.
-Public argument forwarding, cancellation and title validation are implemented.
-Remote execution and automatic selection are implemented. Dependency audit
-modes and scheduled update pull requests are implemented under the
-[audit contracts](./dependency-audit-update-pr.md).
-The [Rust rebuild plan](../../plans/rust-rebuild.md) adds the Rust workspace's
-build steps and the native package build matrix; a Rust advisory audit is
-proposed, not yet approved.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Verification Boundary
 
@@ -103,7 +91,7 @@ missing; prepared package commands may instead receive the gate's archive pair.
 Xtask prepares output per suite and calls only prepared consumers; output is
 reused only within that suite. `npm test` and the xtask unit suite run
 `npm run prepare:unit`; a complete unit run requires the example compilation
-[snapshot](./ci-example-snapshot.md) it writes.
+snapshot it writes.
 
 Builds under test are not removed. Package dry-run allowlist inspection retains
 `--ignore-scripts`, while real packing keeps lifecycle builds. Historical
@@ -172,7 +160,7 @@ output as well as its standard error.
 
 Development hydration registers one browser test per entry shape of the
 generated example catalogue at discovery time, plus the home and missing-route
-cases, as [development hydration coverage](./ci-verification-hydration.md)
+cases, as development hydration coverage
 defines. Each test keeps the normal deadline and error assertions, and unit
 coverage checks that discovery lists each shape exactly once. That page also
 owns the generated resource audit. Browser error assertions accept only Chrome's
@@ -232,6 +220,6 @@ complete gate.
 The cache and audit continuation is [Dependency Cache And Security](./ci-verification-security.md).
 
 Global setup currently prepares one baseline and cache for isolated fixture
-copies. The [fixture preparation contract](./ci-fixture-preparation.md) recorded a
+copies. The fixture preparation contract recorded a
 replacement with committed-output fixtures that is frozen with the TypeScript
 backend and never landed; the 600-second limit stays. Existing workflow and audit contracts remain in force.

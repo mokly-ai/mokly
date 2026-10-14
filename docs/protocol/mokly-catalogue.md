@@ -1,16 +1,5 @@
 # Public Catalogue Read Model
 
-## Delivery Status
-
-Read model v6 is the shape the frozen TypeScript backend serves. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) is the approved target for read model
-v7 below, which follows the source-rendered catalogue model and review v8; no reader accepts an
-earlier number. `ResourceEvidence` follows the
-[CSS evidence schema](./mokly-css-attribution-membership.md) with the owner
-field of the [comparison contract](./mokly-comparison.md). Screens and
-component parents carry `propSchema`, `props`, `controls`, and their own
-`views` under the [entry props contract](./mokly-entry-props.md).
-
 ## Supported Formats
 
 | Line                      | Generated manifest | Comparison result | Read model |
@@ -30,7 +19,7 @@ metadata is v3 on both lines; delivery descriptors are v5 on the frozen line onl
 inventory lists exact paths, the manifest retains authored hints only, Markdown
 documents and their resource copies are implemented, and current and baseline
 manifest readers accept only one version; earlier output follows
-[baseline compatibility](./mokly-baseline-compatibility.md). Accepted move
+baseline compatibility. Accepted move
 pairs carry `previousPath` in review records and the public read model on both
 lines.
 

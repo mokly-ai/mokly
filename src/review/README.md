@@ -1,20 +1,5 @@
 # Historical catalogue comparisons
 
-## Delivery Status
-
-Removal of baseline compatibility below is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Uniform CSS classification and evidence fields below are implemented in Milestone 19;
-comparison details are implemented in Milestones 20 and 20B of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md).
-
-Milestone 4 removed source-path comparison evidence. Milestone 23 removed
-historical marker translation. Milestone 28 uses recorded inserted-link
-spans inside Review-ignore for both comparison paths and the CSS rule scope.
-Milestone 29 removes the unused one-sided `page` material formerly computed for
-`component_view.ts`. Range/span validation and resource work remain.
-
 ## Scope
 
 This internal module compares current validated output with a historical
@@ -39,7 +24,7 @@ Baseline and current documents use the same marker grammar. Former-spelling
 comments and script text stay ordinary content; comparison never renames them.
 Missing recorded ranges fail normal validation: Serve keeps Browse usable with Changes
 unavailable, while explicit export and publish captures fail safely under the
-[invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
+invalid-baseline contract.
 Component-aware page comparison excludes only proven Mokly-inserted declared
 stylesheet links, except a component page's root-owned links. It uses private
 final-document spans on both complete and unchanged-view fast paths; actual
@@ -59,7 +44,7 @@ ignored. Renderer links reused for declarations remain page content.
 normalizes one-sided resources without computing unused page material,
 while `component_view.ts` and `component_view_fast_path.ts` preserve the full
 documents for actual resource closure and CSS rule evidence. See the
-[stylesheet ownership contract](../../docs/protocol/mokly-component-stylesheet-ownership.md).
+stylesheet ownership contract.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary
@@ -96,7 +81,7 @@ resource traversal and 64 MiB bound as screen panes. It returns typed
 strictly validated `preview.json` without creating page records in `review.json`.
 Current and baseline manifests both require v10; recognized earlier output is
 handled before comparison under the
-[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
+baseline compatibility contract.
 Review result v7 first pairs by kind and case-folded path, then by the
 [move contract](../../docs/protocol/mokly-moves.md). `ReviewArtifact.pairing`
 retains all-kind moves and diagnostics beside the visual result, so pages and
@@ -131,7 +116,7 @@ historical manifest exists with a complete matching inventory, and rebuilds it o
 `marker` (undefined for Git-blob baselines), `selection`, and `assertUnchanged()`
 for the publication recheck. The historical v10 catalogue descriptor
 pairs routes and authored assets; Git changed paths remain repository-relative. See
-[baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
+baseline addressing.
 Only that factory constructs the prepared type.
 
 `repository.ts` contains read-only factories and has no import path to the
@@ -161,7 +146,7 @@ node --import tsx --test tests/review*.test.ts tests/server_changed.test.ts
 ```
 
 See the [Changes contract](../../docs/protocol/mokly-changes.md),
-[derived baselines contract](../../docs/protocol/mokly-derived-baselines.md),
+derived baselines contract,
 and [export boundary](../export/README.md).
 
 ## CSS rule attribution
@@ -456,7 +441,7 @@ and [component result schema](../../docs/protocol/mokly-component-review.md).
 Imported CSS change detection and resource classification share those bytes,
 so a generated stylesheet or asset is read once within the accepted comparison.
 
-The approved [comparison inventory contract](../../docs/protocol/mokly-comparison-inventory.md)
+The approved comparison inventory contract
 provides one reader per side. It distinguishes absent counterparts from invalid
 listed files, preserves targeted screen-only base reads and removes both
 historical and current generated roots from Git dependency evidence.

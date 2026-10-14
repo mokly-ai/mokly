@@ -1,19 +1,9 @@
 # Static Export Browser And Identity
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This document supplements [Static Export Delivery](./mokly-export-delivery.md)
 with the standalone browser inventory and deployment identity algorithm.
-
-## Delivery Status
-
-The [React Browse shell plan](../../plans/react-browse-shell.md) records the
-runtime replacement and its compatibility checks.
-
-The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the
-standalone inventory is a client-rendered shell bundle with no hydration
-entry, and the deployment identity covers the stubs, the index, and the
-details with their id fields zeroed while hashing, while generation files
-carry none, under the [shell delivery contract](./mokly-shell-delivery.md)
-(Decisions 21 and 27).
 
 ## Browser Modules
 

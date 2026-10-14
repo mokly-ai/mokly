@@ -1,5 +1,7 @@
 # Imported Stylesheet PostCSS And Dependency Inventory
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This is the PostCSS and inventory companion to the [imported stylesheet
 contract](./mokly-imported-styles.md). [Exact diagnostics](./mokly-imported-styles-errors.md)
 apply throughout.

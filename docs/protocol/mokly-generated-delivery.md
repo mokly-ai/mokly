@@ -1,12 +1,6 @@
 # Identity-Derived Generated Document Delivery
 
-## Delivery Status
-
-This contract defines identity-derived HTML addresses for v10 output and the
-strict catalogue-v6 policy. The current viewer namespace is `mokly-viewer/`;
-[the namespace contract](./mokly-viewer-namespace.md) defines its version gates.
-Implementation and verification are tracked by
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Routes And Layout Signal
 
@@ -24,7 +18,7 @@ parents have shell pages at `/view/<path>/` but no generated document of their
 own. Folder Overview entries use the folder's path. Compiled CSS and copied
 CSS assets use `styles/` and `assets/`; Markdown copies use their derived
 resource paths. The private manifest has one fixed name. The
-[reserved HTML segments](./mokly-unified-output.md#one-owned-tree) remain enforced.
+reserved HTML segments remain enforced.
 
 Public catalogue v6 contains no layout-prefix field. The viewer always uses
 `GENERATED_DIRECTORY` from `@mokly/viewer/data` to derive current paths.
@@ -45,7 +39,7 @@ export stores it at `static/mokly-generated/<generated route>`. Generated CSS
 and assets use the same prefix with their generated-relative resource paths.
 Authored closure resources remain under
 `static/<catalogue-relative authored path>`. Use the single generation/closure
-reference rule in [unified output](./mokly-unified-output.md#one-reference-rule).
+reference rule in unified output.
 
 Derive paths from the same shared helpers in shell frames, component stages,
 geometry, inspection and navigation; do not construct a second route map.
@@ -77,7 +71,7 @@ Provider-normalized extensionless URLs remain supported under shared
 normalization helpers and must identify the same derived document. This work
 adds no new route validator or removes a mainline path check. The already
 approved reserved first segments for raw generated HTML remain in
-[unified output](./mokly-unified-output.md#one-owned-tree).
+unified output.
 
 ## Static Artifacts And Compatibility
 
@@ -88,7 +82,7 @@ nor includes `static/mokly-generated/mokly-manifest.json`. Relative HTML/CSS
 references behave the same on disk and through `/static/`.
 
 Only v10 baselines provide comparison content. A pre-v10 base follows the exact
-[earlier-baseline outcome](./mokly-generated-manifest.md#earlier-baseline-outcome);
+earlier-baseline outcome;
 it supplies no older-layout snapshots or removed-entry previews. Snapshot
 publication uses its existing generation-local layout for accepted v10 content.
 

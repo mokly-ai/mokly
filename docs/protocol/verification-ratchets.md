@@ -1,32 +1,6 @@
 # Repository Verification Ratchets
 
-## Delivery Status
-
-The file-length, protocol-cap, unused-internal-export, and
-public-package-export ratchets are implemented. Every ratchet in this document
-runs in the repository suite and the complete gate. The baseline dependency
-audit uses the same comparison-commit resolver. The protocol caps live in the
-JSON table `xtask/protocol-document-caps.json`, with a legacy reader for older
-comparison commits.
-
-This contract owns the maintainability ratchets run by the repository suite of
-`cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
-ratchets resolve one comparison commit with
-`git merge-base HEAD origin/main`, then compare the working tree, including
-untracked files, with the tree or policy at that commit. Outside an uncommitted
-merge, the tip of `origin/main` is never their comparison tree. The
-public-package-export ratchet
-is the sole exception: it compares with release tags reachable from `HEAD` and
-never uses the merge base. CI must fetch `origin/main`, enough history to
-resolve the merge base, and release tags; failure to obtain required history or
-refs fails the applicable gate.
-While a merge is uncommitted, use `MERGE_HEAD` only if it equals `origin/main`.
-If it is an ancestor of `origin/main`, main moved during the merge and the
-gate fails until the merge is refreshed. For any other merge, including a
-local `main` ahead of `origin/main`, retain the normal merge-base rule. The
-source-file-length audit uses the same Git comparison boundary. The
-[baseline dependency audit](./dependency-audit-baseline.md) also shares this
-comparison-commit rule through `GitWorkspace.requireBase()`.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## JavaScript And TypeScript File Length
 

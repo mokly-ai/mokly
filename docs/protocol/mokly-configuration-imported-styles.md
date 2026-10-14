@@ -1,5 +1,7 @@
 # Imported CSS Configuration
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.
@@ -32,7 +34,7 @@ entry discovery skips it. Local configured stylesheet paths and authored
 inputs cannot live there, including through symlink aliases. `publicExclude`
 is removed; supplying it fails configuration validation. Authored public CSS
 belongs elsewhere below `mockupsDir` and enters the referenced asset closure.
-The [unified output contract](./mokly-unified-output.md) defines route reservation,
+The unified output contract defines route reservation,
 source boundaries and output-independent command behavior.
 
 The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)

@@ -1,18 +1,5 @@
 # Variant Navigation And Changes
 
-## Delivery Status
-
-Variant entry navigation, component-shaped icons, sibling comparison
-continuity, removed-variant Dark availability, fallback breadcrumbs, the Specs
-section, entry rows for a folder's own screen or component, and the Changes
-activation of a container row whose changed rows are only folder members
-(`design/browse/index-entries/**`), and the `Moved` label are implemented with
-path-keyed rows and the `variants:<path>` disclosure key.
-
-This contract owns the shell presentation of screen and component variants.
-Variant authoring, inheritance, manifest relationships, and generated views are
-defined by [Variants](./mokly-variants.md).
-
 ## Navigation Rows
 
 The catalogue groups variants under their parent's row in Specs or Components,

@@ -119,7 +119,7 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)
 
-The approved [watch-writer contract](../../docs/protocol/mokly-watch-writers.md)
+The approved watch-writer contract
 shares summaries across writing commands and sends successful plain baseline
-notes to stdout. [Check boundaries](../../docs/protocol/mokly-boundary-results.md#git-state-for-check)
+notes to stdout. Check boundaries
 use machine-readable Git results without matching localized messages.

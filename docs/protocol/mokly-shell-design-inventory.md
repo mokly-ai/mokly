@@ -1,16 +1,5 @@
 # Shell Design Inventory
 
-## Delivery Status
-
-Implemented in the path-addressed design catalogue. The designs depict the approved path-identity shell: the Specs
-section, browse-only folder rows, `Overview` rows, a folder's own screen
-listing the folder's members, path chips, Markdown documents, and `Moved`
-Changes rows, which the shell renders.
-
-This document is the inventory of Browse and Changes design screens for the
-[shell design contract](./mokly-shell-design.md), which owns their tokens,
-dimensions, and responsive rules.
-
 ## Inventory
 
 The approved screens are authored in `examples/basic/specs/design/` and

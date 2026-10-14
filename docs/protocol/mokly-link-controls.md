@@ -1,11 +1,6 @@
 # Styled Catalogue Link Controls
 
-## Delivery Status
-
-Implemented. The Placement Tiers were delivered by the
-[styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
-The original `MockLink asChild` delivery is recorded in the
-[MockLink child controls plan](../../plans/mocklink-child-controls.md).
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Authoring Contract
 

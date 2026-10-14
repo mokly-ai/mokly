@@ -1,19 +1,6 @@
 # Imported Stylesheet Diagnostics
 
-## Delivery Status
-
-The diagnostics for [imported stylesheet delivery](./mokly-imported-styles.md).
-Each message below is the complete `MoklyError` message body; the CLI adds
-its normal `[mokly/<code>]` prefix. Placeholders are unquoted POSIX paths
-relative to `repoRoot` unless named `config-path` (config-relative), `url`
-(the authored URL), `glob` (authored pattern) or `detail` (underlying error).
-`stylesheet` means the repo-relative physical CSS file that ran PostCSS;
-`plugin` is its PostCSS plugin name. List multiple failures in stable
-repo-relative path order and report the first according to the precedence
-in the parent contract.
-For CSS Modules errors, `{line}:{column}` identifies the effective stylesheet
-text after renderer pruning and consumer PostCSS, not a synthetic bundle path;
-the message never includes a PostCSS plugin name or absolute filename.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Configuration (`config-invalid`)
 
@@ -106,7 +93,7 @@ file, sorted by path. The explicit-generated check precedes the
 public-file check. Directory reports skip the generated tree. Ignored outside-root and
 `node_modules` paths are not errors. Existing `manifest-invalid` stale-source
 guidance remains `source inventory is stale; run mokly build before serving or publishing`.
-Generated paths use the [unified output admission rule](./mokly-unified-output.md).
+Generated paths use the unified output admission rule.
 The reserved-tree filesystem check runs only at a writer boundary or tracked
 Check, before replacement; in-memory consumers never inspect stale disk output.
 An HTML or CSS reference to a reserved route absent from the current pending

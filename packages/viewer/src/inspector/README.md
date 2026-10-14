@@ -66,5 +66,5 @@ See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter
 
 ## Delivery Status
 
-The completed [component explorer plan](../../../../plans/component-explorer.md)
+The completed component explorer plan
 records the measured inspector size and alternatives.

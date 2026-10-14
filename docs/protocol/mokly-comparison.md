@@ -1,13 +1,6 @@
 # Tree Comparison And Changes
 
-## Delivery Status
-
-Approved target of the [Rust rebuild plan](../../plans/rust-rebuild.md); not
-implemented. The frozen TypeScript backend compares normalized text with
-recorded offsets instead; its rules live in
-[Changes and screen comparisons](./mokly-changes.md) and the component
-attribution contracts until the rebuild replaces them. Both sides render from
-sources; there is no generated tree and no baseline cache.
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Inputs
 

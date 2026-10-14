@@ -1,5 +1,7 @@
 # Export Public Files And Package Boundary
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Consumer Static Export](./mokly-export.md).
 
 ## Generated Inventory
