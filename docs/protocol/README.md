@@ -32,7 +32,6 @@ How a catalogue is written: paths and roots, entry modules, HTML screens and com
 - [Component Instance Identity](./mokly-instances.md)
 - [Component Prop Schema](./mokly-component-props.md)
 - [Component Stylesheets](./mokly-component-stylesheets.md)
-- [Configuration Discovery](./mokly-configuration-discovery.md)
 - [Entry Modules](./mokly-entry-modules.md)
 - [Entry Props And Variants](./mokly-entry-props.md)
 - [Final Logical Link Validation](./mokly-link-validation.md)
@@ -59,7 +58,6 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Build Warnings](./mokly-build-warnings.md)
 - [Catalogue Source Protection](./mokly-source-protection.md)
 - [Document Rendering Safety](./mokly-document-safety.md)
-- [Identity-Derived Document Delivery](./mokly-generated-delivery.md)
 - [Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md)
 - [Imported Stylesheet CSS Modules](./mokly-imported-styles-modules.md)
 - [Imported Stylesheet Delivery](./mokly-imported-styles.md)
@@ -91,10 +89,8 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 - [CSS Document Matching](./mokly-css-document-matching.md)
 - [CSS Rule Membership And Identity](./mokly-css-attribution-rules.md)
 - [Moves](./mokly-moves.md)
-- [Publication Changes And Acceptance](./mokly-publication-changes.md)
 - [Removed Content Previews](./mokly-removed-previews.md)
 - [Removed Preview Acceptance](./mokly-removed-preview-acceptance.md)
-- [Removed Preview Frames And Lifecycle](./mokly-removed-preview-frames.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Tree Comparison And Changes](./mokly-comparison.md)
 
@@ -103,12 +99,10 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 What the shell reads: the catalogue index and entry detail, their routes, identity and versions, live capabilities, and the viewer namespace.
 
 - [Catalogue Projection And Delivery](./mokly-catalogue-delivery.md)
-- [Catalogue Read Model Fetch Rules](./mokly-catalogue-fetch.md)
 - [Catalogue Serialization, Identity And Versions](./mokly-catalogue-serialization.md)
 - [Catalogue Tree](./mokly-catalogue-tree.md)
 - [Combined Path And Output Format Versions](./mokly-format-versions.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
-- [Live Viewer Capabilities](./mokly-live-capabilities.md)
 - [Portable Viewer Namespace And Version Gates](./mokly-viewer-namespace.md)
 - [Public Catalogue Read Model](./mokly-catalogue.md)
 - [Shell Delivery And Read Model Routes](./mokly-shell-delivery.md)
@@ -217,7 +211,6 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Repository Preview Deployments](./npm-preview-deployments.md)
 - [Repository Verification Ratchets](./verification-ratchets.md)
 - [Selected Developer Test Results](./developer-test-results.md)
-- [Verification And Release Protocols](./verification-protocol-index.md)
 
 ## Process
 

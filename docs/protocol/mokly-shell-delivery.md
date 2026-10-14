@@ -38,8 +38,8 @@ Every JSON route answers GET and HEAD with `application/json; charset=utf-8`
 and `X-Content-Type-Options: nosniff`. Serve sends no
 `Access-Control-Allow-Origin` header on any route; a host that serves the
 static output to another origin applies the
-[cross-origin rules](./mokly-catalogue-fetch.md#cross-origin-hosts) to the
-public paths, which never include the live descriptor or the event stream.
+[cross-origin rules](./mokly-export-delivery.md#headers-caching-and-revalidation)
+to the public paths of the [viewer namespace](./mokly-viewer-namespace.md#public-paths), which never include the live descriptor or the event stream.
 
 ## The Stub
 
@@ -180,8 +180,9 @@ removed entry's detail only when `identity` equals the index, `generation`
 equals the generation that the index's `comparisonUrl` names, and
 `snapshotId` equals the index's removed record for that path.
 
-Every fetch uses `credentials: "omit"`, stays same-origin, and rejects a
-redirect outside the origin. Serve sends `Cache-Control: no-store` on every
+Every fetch is an ordinary GET without custom headers, uses
+`credentials: "omit"`, stays same-origin, and rejects a redirect outside the
+origin; a URL source is HTTP(S) without userinfo or fragment. Serve sends `Cache-Control: no-store` on every
 JSON route. The index and the details of one build are immutable: a static
 host may cache them under the static delivery contract's revalidation rules,
 and the shell keeps them for the page's lifetime.
@@ -190,7 +191,9 @@ and the shell keeps them for the page's lifetime.
 
 Serve publishes one state per completed action: a rebuild after a source
 change, a Changes completion or status move, a bundle change, or a completed
-on-demand render, and may combine several completions into one publication.
+on-demand render, and may combine several completions into one publication. A GET of the index
+or a detail starts no render and no Git command, and a failed candidate
+leaves the last published state in place.
 Each publication replaces the index and the details in one step and raises
 `revision` by one. The event stream writes one message per publication whose
 `id` is the new revision and whose `data` is the server's `deploymentId`, and
@@ -236,15 +239,7 @@ shell into the stub's mount element. The
 
 | Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                         |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion`                                                                                                                                                                                                       | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract |
+| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract |
 | a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` in an embedded host             |
 | a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing is unavailable with a browser warning                 |
 | a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                |
-
-## Related Docs
-
-- [Rust core architecture](../architecture/rust-core.md)
-- [Public catalogue read model](./mokly-catalogue.md)
-- [Live viewer capabilities](./mokly-live-capabilities.md)
-- [Embeddable Mokly viewer](./mokly-viewer.md)
-- [Format inventory](./mokly-format-versions.md)

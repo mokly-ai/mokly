@@ -39,7 +39,7 @@ npx mokly build --no-changes
   error and change neither the output nor the exit status. `publish` fails on
   warnings like `build --strict`.
 - `--config <path>` uses the
-  [configuration discovery](./mokly-configuration-discovery.md) rules.
+  [configuration discovery](./mokly-configuration.md#configuration-discovery) rules.
 - `--base <ref>` overrides `review.base`; omission uses that setting, whose
   default is `origin/main`. `--no-changes` writes a current-only build under
   the [publication contract](./mokly-publication.md) and rejects `--base`.

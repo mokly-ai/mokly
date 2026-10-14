@@ -532,7 +532,7 @@ an HTTP(S) origin with correct MIME types and without an SPA fallback.
 Catalogue v6 serves current documents only under
 `/static/mokly-generated/<route>`. The viewer uses the shared directory constant,
 not a model field or mount option. Older catalogue versions fail the version
-gate before URL derivation; no prefixless layout is supported. See the [generated delivery contract](../../docs/protocol/mokly-generated-delivery.md).
+gate before URL derivation; no prefixless layout is supported. See the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
 
 - **Same origin:** no CORS configuration is needed. Omit `frameAdapter` or pass
   `sameOriginAdapter()` explicitly.
@@ -649,7 +649,7 @@ defines the generated catalogue layout and format boundaries.
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
-- [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
+- [Artifact paths](../../docs/protocol/mokly-artifact-paths.md)
 - [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
 - Standalone shell bootstrap
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)

@@ -150,7 +150,7 @@ naming the setting and the path:
   token in a scheme-specific list or more than once;
 - a watch path that cannot be classified safely;
 - a `moduleResolution` value outside the
-  [module resolution contract](./mokly-configuration-discovery.md#module-resolution).
+  [module resolution rules](#module-resolution) below.
 
 Additional watch rules cannot override the package-owned classifications: the
 rebuild of configured sources and modules, the reload for configured and
@@ -193,8 +193,8 @@ globs select; the file kinds are those of the
 
 The [root field contract](./mokly-root-discovery.md#root-fields) defines the
 strict `dir`, `files`, `path`, and `transparent` fields and their defaults.
-The [discovery contract](./mokly-configuration-discovery.md) defines
-traversal, folder-record ownership, filesystem races, and the source
+The [root discovery contract](./mokly-root-discovery.md#traversal-and-ownership)
+defines traversal, folder-record ownership, filesystem races, and the source
 inventory.
 
 Every matched file belongs to exactly one root. The
@@ -206,3 +206,18 @@ when their file sets are disjoint. The
 [Imported CSS](./mokly-configuration-imported-styles.md) defines `postcss` and
 the loader boundary; public files use the
 [referenced closure](./mokly-public-closure.md).
+
+## Module Resolution
+
+`moduleResolution` has no defaults beyond esbuild's platform behaviour in the
+[sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
+directories containing `package.json`; their `node_modules` directories
+supplement consumer lookup. Aliases accept bare package specifiers only.
+Conditions, package fields, and extensions are ordered, deduplicated lists,
+while loader keys are extensions and values are supported JavaScript-safe
+esbuild loader names. The `css` loader is rejected for every extension because
+it would emit an undelivered sibling stylesheet. React and React DOM resolve
+from the consumer through the sidecar's bundle, so these options cannot
+introduce a second React runtime. For the base side of a comparison the
+settings name the `node_modules` directory that the
+[dependency tiers](./mokly-comparison.md#sides) chose.

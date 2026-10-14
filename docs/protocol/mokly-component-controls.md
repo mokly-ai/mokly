@@ -128,6 +128,25 @@ client-side prop interpolation or arbitrary HTML execution substitutes for
 the server render. A failed validation or render keeps the last valid
 preview, shows an actionable error, and offers retry and reset.
 
+Only the standalone shell that Serve delivers builds this capability; a
+React host that embeds `MoklyViewer` and the static output have none, their
+controls are read-only, and they open no event stream. The shell holds the
+capability in one closure that performs the render request and exposes
+`temporaryPreviews.render` and `temporaryPreviews.expired` through one React
+context; `useViewerCapabilities()` returns them in Serve and `undefined`
+elsewhere, so the token never enters the index, a detail, a URL, local
+storage, or the shell store. Every call carries the current route and the
+installed `deploymentId` and `revision`; a result whose values differ from
+the installed ones is discarded, and navigation, a sibling-variant change, a
+revision adoption, and unmount abort work in flight. A response is accepted
+only when its revision equals the installed one and its view matches the
+request; expiry checks cover only preview URLs the shell received. When the
+index's `live.generation` changes, the shell refetches the live descriptor,
+replaces the capability, and rerenders the current validated props. No
+client module, host marker, or host loader is live-only: the client bundle
+is the same in Serve and in the static output, and a capability is behaviour
+the shell builds in the browser from Serve JSON, never catalogue data.
+
 ## Request And Lifecycle Rules
 
 The route exists only in local Serve; the static output has no route and

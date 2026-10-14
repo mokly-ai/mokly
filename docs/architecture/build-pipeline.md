@@ -44,7 +44,7 @@ operating system's cache directory.
 ## 1. Configuration
 
 `mokly.config.json` is discovered from the working directory upward under the
-[configuration discovery contract](../protocol/mokly-configuration-discovery.md).
+[configuration contract](../protocol/mokly-configuration.md#configuration-discovery).
 It names the `roots` that Mokly scans, the optional renderer module that wraps
 React renders with the product's providers, the configured stylesheets, the
 module resolution settings the sidecar bundles with, and the comparison base.

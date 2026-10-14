@@ -66,6 +66,14 @@ folder may be collapsed on purpose, and an update cannot clear that search,
 open the disclosure, or scroll the route into view. Explicit navigation still
 reveals its destination under the normal rules.
 
+One effect-scoped subscription owns one `EventSource` on
+`/mokly-viewer/events`, opened when the index carries `live`; abort, page
+exit, or effect replay closes it and any refresh in flight. `EventSource` is
+an optional browser facility: when it is missing, denied, or throws, the shell
+still renders the catalogue, reports the transport failure as a browser
+warning, and leaves only live updates unavailable; a page load fetches the
+current state.
+
 ## Navigation races
 
 In-shell navigation commits the route from the installed index at once and

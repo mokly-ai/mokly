@@ -158,6 +158,30 @@ query, fragment, encoded separator, dot segment, or other prefix returns
 `undefined`; callers preserve an already separated query and hash. `viewHref`
 of a path with no entry opens the missing view.
 
+## Frames And Reverse Mapping
+
+The catalogue index and the entry details carry paths and view axes and no
+route or layout-prefix field; a reader derives every current URL from the path
+through the shared functions, and disk existence, host settings, and payload
+metadata select no other layout. A reader rejects another `schemaVersion`
+before it derives a URL. The shell, component stages, geometry, inspection,
+and navigation derive paths from the same functions and construct no second
+route map: validated segments are encoded once, a query and a fragment are
+kept under the [navigation contract](./mokly-navigation.md), and an
+artifact-relative path resolves at the source origin root, not at the JSON
+directory or an embedding application's URL. An adapter validates a current
+document's path under `/static/mokly-generated/`, strips that fixed prefix
+once, resolves the logical route through the path functions, and keeps a
+valid fragment separately; authored closure URLs are resources, not entry
+routes. Comparison snapshots and removed previews resolve from the generation
+that the index's `comparisonUrl` names; their `snapshots/before/` and
+`snapshots/after/` paths are generation-local, never current `/static/`
+paths, and use their own adapters, as do transient renders under
+`mokly-viewer/components/renders/` of the
+[component controls contract](./mokly-component-controls.md). A
+provider-normalized extensionless URL identifies the same document through
+`providerNormalizedHtmlPath`.
+
 ## Reserved Prefixes And Validation
 
 `view/`, `static/`, `mokly-viewer/`, `snapshots/`, `previews/`, and

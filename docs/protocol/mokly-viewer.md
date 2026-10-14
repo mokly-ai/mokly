@@ -375,7 +375,7 @@ cancelling stale loads, pick and frame sessions. Selection changes do not
 remount it. Cleanup tolerates React effect setup and cleanup replay with no
 duplicate listeners or requests. The standalone shell in Serve reads the
 temporary-render capability from the live descriptor under the
-[live capability contract](./mokly-live-capabilities.md); a static build has
+[component controls contract](./mokly-component-controls.md#rendering-boundary); a static build has
 no descriptor, and a React host has no live capability, so its controls are
 read-only under the [controls contract](./mokly-component-controls.md).
 Private tokens never enter the index or a detail.
@@ -384,7 +384,7 @@ Private tokens never enter the index or a detail.
 
 The viewer fetches only the index, the details, documents, removed previews,
 and comparison generation files of its artifact origin root, under the fetch
-rules of the shell delivery and [catalogue fetch](./mokly-catalogue-fetch.md)
+rules of the [shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences)
 contracts. It sends no telemetry and reads no cookies. Consumer code never
 enters the browser through the viewer. The in-frame inspector script of the
 frame adapter contract is the one React-free part of the package. Several

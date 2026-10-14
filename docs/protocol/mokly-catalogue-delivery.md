@@ -111,5 +111,5 @@ validation follows the [catalogue tree](./mokly-catalogue-tree.md).
 ## Serve And Fetch Rules
 
 Headers, caching, public paths, and the fetch rules of the shell follow the
-[fetch contract](./mokly-catalogue-fetch.md); publication follows the
+[shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences); publication follows the
 [shell delivery updates](./mokly-shell-delivery.md#updates-in-serve).

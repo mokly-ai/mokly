@@ -22,8 +22,13 @@ answers GET and HEAD with `Cache-Control: no-store` and
 The [catalogue index](./mokly-shell-delivery.md#catalogue-index) names the
 generation: `comparisonUrl` is the artifact-root-relative path of its
 `review.json`, or `null` while Changes is not ready, is unavailable, or is
-disabled. The shell derives every snapshot and preview URL from that response
-URL and the entry's path; no descriptor and no second pointer exists.
+disabled. A selected-only generation of the
+[on-demand contract](./mokly-on-demand.md) leaves it `null`, and a superseded
+completion cannot set it. Only reading a generation renews its retention;
+publishing the pointer does not. A route whose generation is gone returns 404
+and never redirects or starts work. The shell derives every snapshot and
+preview URL from that response URL and the entry's path; no descriptor and no
+second pointer exists.
 
 ## Serve
 

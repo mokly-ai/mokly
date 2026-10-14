@@ -104,7 +104,7 @@ and `mokly-viewer/diffs/generations/**`. Send correct MIME types,
 responses. Use `Vary: Origin` when selecting an allowed origin dynamically. No
 wildcard CORS, cookies, authorization headers, or credentials are used; clients
 fetch with `credentials: "omit"`. CORS is unnecessary for same-origin reads.
-The [catalogue fetch rules](./mokly-catalogue-fetch.md#serve-and-fetch-rules)
+The [shell delivery fences](./mokly-shell-delivery.md#fetch-and-fences)
 own the client side. Removed-preview and comparison HTML beneath a
 generation's `snapshots/before/` and `snapshots/after/` trees is fetched and
 validated by the viewer rather than loaded as a frame URL; it needs the same
@@ -214,7 +214,9 @@ navigation, search, tags, and Changes, details, both viewports and schemes,
 use cases, component variants, ordinary fallback links, every logical-link
 activation mode, fragments, Back/Forward, and removed screens. Assert that
 every local request resolves and that Current makes no comparison, live
-descriptor, or event-stream request.
+descriptor, or event-stream request; prove that a static page and an embedded
+viewer make no live request, that a Serve page with the event stream denied
+still browses, and that a stale render response never replaces a preview.
 
 Exercise all three diff modes, missing sides, ignored regions, rule and
 resource evidence, refresh, errors, interrupted navigation, and resource

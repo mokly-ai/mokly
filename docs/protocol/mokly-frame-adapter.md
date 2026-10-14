@@ -70,7 +70,7 @@ declare function postMessageAdapter(options: {
 
 Current frames derive routes from `url` under `/static/mokly-generated/`; no prefix or route override exists.
 
-Mount validation follows [generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
+Mount validation follows the [artifact path contract](./mokly-artifact-paths.md#frames-and-reverse-mapping).
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
 React shell retains its initial portable `src` after an adapter takes ownership.

@@ -64,7 +64,7 @@ inspector script for authenticated link and frame behavior. That CSP would block
 the package's instrumentation too. Raw Markdown is literal text, and the
 independent final allowlist prevents a renderer error from introducing executable
 elements or attributes. Historical frames keep their existing script-disabled
-sandbox under the [removed-preview contract](./mokly-removed-preview-frames.md).
+sandbox under the [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle).
 
 ## Verification
 

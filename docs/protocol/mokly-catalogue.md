@@ -221,4 +221,4 @@ bytes, historical snapshot identities, deployment identity and reader versions.
 
 Serve headers, revisions, comparison pointers, public paths, and the fetch
 rules for cross-origin artifact hosts live in the
-[catalogue fetch contract](./mokly-catalogue-fetch.md).
+[shell delivery contract](./mokly-shell-delivery.md#fetch-and-fences).
