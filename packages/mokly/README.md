@@ -80,7 +80,10 @@ byte limit. Requests run in order. Consumer logs go to standard error.
 `bundle` compiles an unevaluated esbuild generation and reports its module
 graph with stable names for selected installation files. Repository-owned
 workspace packages and PostCSS presets use the side's own source copy.
-`cssModules` installs the core's class maps before evaluation.
+`cssModules` installs the core's class maps before evaluation and runs no
+compiler. CSS import stubs read that table at evaluation, including named
+exports supplied by PostCSS. Runtime style adapters capture the bundled
+consumer libraries in the same compilation.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
+import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
 
 import {
@@ -44,7 +45,16 @@ test("CSS module maps expose Unicode and namespace-shaped names without CJS inte
     result.html,
     '<main class="scoped-module scoped-module scoped-constructor scoped-cafe">Maps</main>',
   );
-  await sidecar.call("shutdown");
+  await assert.rejects(
+    sidecar.call("cssModules", {
+      generation: bundle.generation,
+      classMaps: {},
+    }),
+    {
+      code: "sidecar-protocol",
+      message: "CSS Modules maps cannot change after evaluation",
+    },
+  );
 });
 
 test("failed class-map installation leaves the generation unevaluated", async (context) => {
@@ -61,13 +71,55 @@ test("failed class-map installation leaves the generation unevaluated", async (c
   await assert.rejects(
     sidecar.call("cssModules", {
       generation: bundled.generation,
-      classMaps: { "exports.module.css": {} },
+      classMaps: {},
     }),
-    { code: "bundle-failed" },
+    {
+      code: "bundle-failed",
+      message: "missing CSS Modules map: exports.module.css",
+    },
   );
   await assert.rejects(
     sidecar.call("describe", { generation: bundled.generation }),
     /cssModules/,
   );
+  await sidecar.call("shutdown");
+});
+
+test("CSS module namespaces expose only valid names and preserve the default map", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["module-namespace.mockup.ts"],
+      renderer: null,
+      storiesFiles: [],
+    }),
+  );
+  const map = Object.fromEntries([
+    ["__esModule", "module"],
+    ["__proto__", "proto"],
+    ["café", "cafe"],
+    ["constructor", "constructor"],
+    ["default", "default-class"],
+    ["while", "reserved"],
+    ["with-dash", "hyphen"],
+  ]);
+  await sidecar.call("cssModules", {
+    generation,
+    classMaps: { "exports.module.css": map },
+  });
+  await installBindings(sidecar, generation);
+  const result = await sidecar.call<PageResult>("renderPage", {
+    generation,
+    handle: "module-namespace.mockup.ts#default",
+  });
+  assert.deepEqual(JSON.parse(result.html), {
+    map,
+    names: ["__esModule", "__proto__", "café", "constructor", "default"],
+    sameDefault: true,
+    module: "module",
+    prototype: "proto",
+  });
   await sidecar.call("shutdown");
 });

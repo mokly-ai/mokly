@@ -1133,8 +1133,10 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Milestone 13 integration follow-up: resolve the full example's CSS-module
-    startup failure so strict build and `npm run dev` smoke checks pass.
+  - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
+        startup failure so strict build and `npm run dev` smoke checks pass.
+        Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
+        `.context/rust-rebuild/m8-css-modules-smoke/`.
   - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
     workflow path in `evidence_contract.mjs`; review numeric workflow identity
     matching so a GitHub `path` ending in `@main` can select valid evidence.
