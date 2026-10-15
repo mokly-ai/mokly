@@ -85,8 +85,8 @@ Rich Serve begins with the installed version, the comparison base, and the
 config path, followed by its stable URL in a compact bordered panel. The
 panel contains only the address so it stays the primary action; watch state
 and shortcut guidance are dim secondary copy beneath it. Serve installs its
-`SIGINT` and `SIGTERM` handling before it writes the ready layout or opens
-the browser, so an immediate interrupt closes Serve cleanly.
+`SIGINT`, `SIGTERM`, and `SIGHUP` handling before it writes the ready layout
+or opens the browser, so an immediate interrupt closes Serve cleanly.
 
 ```text
   mokly 0.10.0                          comparing against origin/main

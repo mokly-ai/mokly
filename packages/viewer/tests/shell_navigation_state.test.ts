@@ -12,13 +12,15 @@ import {
 } from "../src/shell/search_query.js";
 import { shellStore } from "../src/shell/store_actions.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
+import { withHostRoute } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
+import { viewTitle } from "../src/shell/view_title.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { withoutTreeEntries } from "./catalogue_fixture.js";
 import { catalogue, context, model } from "./shell_state_fixture.js";
 
-test("component variant heads keep the parent heading and shown entry path", () => {
+test("component variant heads show the parent heading, its crumbs, and the shown path", () => {
   const parent = catalogue.byPath.get("components/action");
   assert.ok(parent?.kind === "component" && !("variantOf" in parent));
   assert.deepEqual(targetHead(catalogue, { kind: "entry", entry: parent }), {
@@ -36,9 +38,48 @@ test("component variant heads keep the parent heading and shown entry path", () 
   const head = targetHead(catalogue, { kind: "entry", entry: variant });
   assert.equal(head.title, "Action");
   assert.equal(head.path, "components/action/default");
-  assert.deepEqual(head.crumbs.at(-1), {
-    href: "/view/components/action/",
-    label: "Action",
+  assert.deepEqual(
+    head.crumbs,
+    targetHead(catalogue, { kind: "entry", entry: parent }).crumbs,
+  );
+});
+
+test("the browser title and the announcement name the shown entry, then a different heading", () => {
+  const entry = (path: string) => {
+    const found = catalogue.byPath.get(path);
+    assert.ok(found);
+    return found;
+  };
+  const title = (path: string) =>
+    viewTitle(catalogue, {
+      kind: "target",
+      target: { kind: "entry", entry: entry(path) },
+    });
+  assert.equal(title("components/action"), "Action · Mokly");
+  assert.equal(title("components/action/default"), "Default · Action · Mokly");
+  const route = routeFromUrl(
+    catalogue,
+    new URL("https://example.test/view/components/action/default/"),
+  );
+  const sections = catalogueNavSections(catalogue);
+  const state = createInitialShellState(catalogue, context, route, undefined);
+  assert.equal(
+    withRoute(state, route, catalogue, sections).announcement,
+    "Loaded Default · Action · Mokly",
+  );
+  assert.equal(
+    withHostRoute(state, route, sections, catalogue).announcement,
+    "Loaded Default · Action · Mokly",
+  );
+  assert.equal(title("product/browse/home/empty"), "Empty · Mokly");
+  const screen = targetHead(catalogue, {
+    kind: "entry",
+    entry: entry("product/browse/home/empty"),
+  });
+  assert.equal(screen.title, "Empty");
+  assert.deepEqual(screen.crumbs.at(-1), {
+    href: "/view/product/browse/home/",
+    label: "Home",
   });
 });
 

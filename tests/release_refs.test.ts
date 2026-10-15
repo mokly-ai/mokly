@@ -14,23 +14,41 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-test("viewer releases select immutable tags without a CLI release", () => {
+test("releases require a complete immutable CLI and viewer tag pair", () => {
   const input = {
     eventName: "push",
+    releaseCreated: "true",
+    releaseTag: "v0.8.0",
     viewerReleaseCreated: "true",
     viewerReleaseTag: "viewer-v0.1.0",
   };
-  assert.deepEqual(resolvePublishRefs(input), { viewer: "viewer-v0.1.0" });
+  assert.deepEqual(resolvePublishRefs(input), {
+    cli: "v0.8.0",
+    viewer: "viewer-v0.1.0",
+  });
+  assert.throws(
+    () => resolvePublishRefs({ ...input, releaseCreated: "false" }),
+    /tag pair/,
+  );
+  assert.throws(
+    () => resolvePublishRefs({ ...input, viewerReleaseCreated: "false" }),
+    /tag pair/,
+  );
   assert.equal(
-    resolvePublishRefs({ ...input, viewerReleaseCreated: "false" }),
+    resolvePublishRefs({
+      ...input,
+      releaseCreated: "false",
+      viewerReleaseCreated: "false",
+    }),
     undefined,
   );
   assert.deepEqual(
     resolvePublishRefs({
       eventName: "workflow_dispatch",
+      manualRef: "v0.8.0",
       manualViewerRef: "viewer-v0.2.0",
     }),
-    { viewer: "viewer-v0.2.0" },
+    { cli: "v0.8.0", viewer: "viewer-v0.2.0" },
   );
   for (const tag of [
     "main",
@@ -44,6 +62,7 @@ test("viewer releases select immutable tags without a CLI release", () => {
     assert.throws(() =>
       resolvePublishRefs({
         eventName: "workflow_dispatch",
+        manualRef: "v0.8.0",
         manualViewerRef: tag,
       }),
     );
@@ -51,6 +70,17 @@ test("viewer releases select immutable tags without a CLI release", () => {
 
 async function taggedFixture(t: test.TestContext) {
   const fixture = await bootstrapFixture(t);
+  await fs.mkdir(path.join(fixture.root, "packages/mokly"), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    path.join(fixture.root, "packages/mokly/package.json"),
+    JSON.stringify({ name: "@mokly/mokly", version: "0.8.0" }),
+  );
+  await fixture.git("add", "packages/mokly");
+  await fixture.git("commit", "-m", "test: CLI manifest");
+  fixture.expectedCommit = await fixture.git("rev-parse", "HEAD");
+  await fixture.git("tag", "v0.8.0");
   await fixture.git("tag", "-a", "viewer-v0.1.0", "-m", "test viewer tag");
   const remote = path.join(path.dirname(fixture.root), "origin.git");
   await execute("git", ["clone", "--bare", fixture.root, remote]);
@@ -61,21 +91,21 @@ async function taggedFixture(t: test.TestContext) {
 test("viewer tags must match the package version, origin, and clean checkout", async (t) => {
   const fixture = await taggedFixture(t);
   assert.equal(
-    await verifyReleaseRefs(fixture.root, "viewer-v0.1.0"),
+    await verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.1.0"),
     fixture.expectedCommit,
   );
   await assert.rejects(
-    verifyReleaseRefs(fixture.root, "viewer-v0.2.0"),
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.2.0"),
     /does not match package version/,
   );
   await fs.writeFile(path.join(fixture.root, "untracked.txt"), "unreviewed");
   await assert.rejects(
-    verifyReleaseRefs(fixture.root, "viewer-v0.1.0"),
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.1.0"),
     /clean source/,
   );
   await fixture.git("add", "untracked.txt");
   await assert.rejects(
-    verifyReleaseRefs(fixture.root, "viewer-v0.1.0"),
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.1.0"),
     /clean source/,
   );
   await fixture.git(
@@ -86,7 +116,7 @@ test("viewer tags must match the package version, origin, and clean checkout", a
     "test: other commit",
   );
   await assert.rejects(
-    verifyReleaseRefs(fixture.root, "viewer-v0.1.0"),
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.1.0"),
     /one commit/,
   );
 });
@@ -97,7 +127,7 @@ test("a missing remote viewer tag fails closed", async (t) => {
     cwd: fixture.remote,
   });
   await assert.rejects(
-    verifyReleaseRefs(fixture.root, "viewer-v0.1.0"),
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.1.0"),
     /origin does not contain/,
   );
 });
@@ -109,6 +139,9 @@ test("release selection entrypoint writes the verification mode for each event",
   t.after(() => fs.rm(root, { force: true, recursive: true }));
   const shared = {
     MANUAL_VERIFICATION: "",
+    MANUAL_REF: "v0.8.0",
+    RELEASE_CREATED: "true",
+    RELEASE_TAG: "v0.8.0",
     MANUAL_VIEWER_REF: "",
     VIEWER_RELEASE_CREATED: "true",
     VIEWER_RELEASE_TAG: "viewer-v0.1.0",
@@ -120,6 +153,7 @@ test("release selection entrypoint writes the verification mode for each event",
       MANUAL_VERIFICATION: "complete",
     }),
     {
+      publish_ref: "v0.8.0",
       viewer_ref: "viewer-v0.1.0",
       verification: "evidence",
     },
@@ -132,6 +166,7 @@ test("release selection entrypoint writes the verification mode for each event",
       MANUAL_VIEWER_REF: "viewer-v0.1.0",
     }),
     {
+      publish_ref: "v0.8.0",
       viewer_ref: "viewer-v0.1.0",
       verification: "complete",
     },

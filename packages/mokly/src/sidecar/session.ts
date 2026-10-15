@@ -1,3 +1,5 @@
+import { build } from "esbuild";
+
 import { isEntryPath } from "@mokly/viewer/data";
 
 import { definitionData } from "../authoring/runtime.js";
@@ -21,6 +23,7 @@ export class Session {
   constructor(
     private readonly version: string,
     diagnostic: (message: string) => void,
+    private readonly compile: typeof build = build,
   ) {
     this.workers = new PostcssWorkers(diagnostic);
   }
@@ -55,7 +58,10 @@ export class Session {
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const { generation, result } = await bundle(request.params);
+        const { generation, result } = await bundle(
+          request.params,
+          this.compile,
+        );
         if (!this.generations.has(generation.id)) {
           this.generations.set(generation.id, generation);
         }
@@ -73,16 +79,12 @@ export class Session {
             Object.fromEntries(Object.entries(map)),
           ]),
         );
-        if (generation.cssModules.size) {
-          const compiled = await bundle(generation.params, maps);
-          if (compiled.generation.id !== generation.id)
+        for (const file of generation.cssModules)
+          if (!Object.hasOwn(maps, file))
             throw new SidecarError(
               "bundle-failed",
-              "generation changed while installing CSS Modules maps",
+              `missing CSS Modules map: ${file}`,
             );
-          generation.code = compiled.generation.code;
-          generation.runtimeKey = compiled.generation.runtimeKey;
-        }
         generation.maps = maps;
         return null;
       }

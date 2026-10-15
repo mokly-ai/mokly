@@ -77,7 +77,10 @@ test("the version gate runs before any other field is read", () => {
         error.supported === 7 &&
         error.code === "unsupported-mokly-version",
     );
-  assert.match(VERSION_ERROR_MESSAGE, /compatible Mokly viewer/);
+  assert.equal(
+    VERSION_ERROR_MESSAGE,
+    "This catalogue needs a compatible viewer",
+  );
 });
 
 test("no index record carries usage or resource evidence", () => {

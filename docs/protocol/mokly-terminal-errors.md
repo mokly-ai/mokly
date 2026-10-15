@@ -87,10 +87,10 @@ An exhausted retry or transport failure has exact plain output:
 
 ## Exit Statuses
 
-Every command exits `0` on success, including Serve closed by `q`, Ctrl+C,
-`SIGINT`, or `SIGTERM` after its URL was reported, and `--help` and
-`--version`. Every failure exits `1`, including `cli-invalid`, a `--strict`
-warning failure, a cancelled `build` or `publish`, and a Serve that cannot
+Every command exits `0` on success, including `--help` and `--version`.
+Serve exits `0` when closed by `q`, Ctrl+C, `SIGINT`, `SIGTERM`, or `SIGHUP`.
+A stop signal during startup also exits `0`. Every failure exits `1`, including
+`cli-invalid`, a `--strict` warning failure, a cancelled `build` or `publish`, and a Serve that cannot
 bind. No other status exists, so automation branches on the `[mokly/<code>]`
 prefix, not on the number. A `build` that fails leaves its last successful
 output directory unchanged; a failed `publish` leaves its local build

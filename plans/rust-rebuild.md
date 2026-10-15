@@ -686,7 +686,7 @@ from Milestone 12.
   - [x] Rewrite `examples/basic/README.md` to the end state.
   - [ ] Add HTML fixtures and run the gap sweep against the rendering
         contracts.
-  - [ ] Render the example's HTML part and check it at both viewports and in
+  - [x] Render the example's HTML part and check it at both viewports and in
         both schemes. Its stylesheets pass through the example's PostCSS
         module, which runs in the Milestone 8 sidecar.
 - [x] Write the HTML authoring guides under `docs/guides`.
@@ -838,7 +838,7 @@ renders again.
         and comparison integration land.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
-  - [ ] Render both catalogues through the integrated sidecar and check every
+  - [x] Render both catalogues through the integrated sidecar and check every
         page at both viewports and in both schemes.
   - [ ] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
@@ -884,10 +884,10 @@ renders again.
       the descriptor loads), "No editable props are declared for this
       entry.", and "Check the highlighted values." for a whole-props error
       that highlights no field.
-- [ ] Settle the component stage layout in the design port: with Both, the
-      shell places the 390px mobile and 1024px desktop canvases side by side
-      (below 760px, stacked at the stage's left edge), while the component
-      mockups stack the two views and centre the mobile canvas.
+- [x] Settle the component stage layout in the design port: with Both, the
+      component mockups place the 390px mobile canvas and the desktop canvas
+      side by side, as the shell does, and stack them from the stage's left
+      edge below 760px.
 - [x] Write the JavaScript authoring guides.
 
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
@@ -897,6 +897,7 @@ decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
+Example and design catalogue render and visual check: `.context/rust-rebuild/example-visual/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
@@ -905,6 +906,7 @@ Core review fixes: `.context/rust-rebuild/delegation/m8-core/report-2.md`.
 Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
 Serve integration: `.context/rust-rebuild/delegation/m8-core/report-4.md`;
 smoke artifacts: `.context/rust-rebuild/m8-serve-smoke/`.
+Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-5.md`.
 
 - [ ] Commit.
 
@@ -1018,7 +1020,7 @@ Tags: ui
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
-- [ ] Make the viewer follow the settled design copy and states of the design
+- [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
       `design/components/controls/**`,
@@ -1027,6 +1029,13 @@ Tags: ui
       `mokly-shell-delivery.md`, and `mokly-component-controls-design.md`. The
       copy tables in `.context/rust-rebuild/delegation/m5-example/report-2.md`
       and `report-3.md` there list the differences from the viewer.
+
+Settled copy and states with their Serve run: `.context/rust-rebuild/m10-copy-run/log.md`.
+Review fixes of the copy and states with their Serve run:
+`.context/rust-rebuild/m10-copy-run-2/log.md`.
+Final review fixes and their check logs:
+`.context/rust-rebuild/delegation/m7/report-9.md`.
+
 - [ ] Commit.
 
 ## Milestone 11: Watch and incremental rendering
@@ -1093,26 +1102,46 @@ Publish client final review and merge decisions:
 
 ## Milestone 13: Release packaging
 
-- [ ] Build and pack the viewer before the CLI authoring declarations and
+- [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
-- [ ] Add the release build matrix for the five targets, the package set
+- [x] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
-- [ ] Update Release Please for the package set and write the breaking-change
+  - [x] Restore paired tags, native archive inspection, all package manifests,
+        registry guards, and native/viewer/CLI publication ordering.
+  - [x] Add Linux x64, Linux ARM64, macOS ARM64, and Windows x64 jobs.
+  - [x] Settle the Intel macOS runner-policy exception and add its matrix row.
+- [x] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
-- [ ] Make Release Please update the exact `@mokly/viewer` pin in
+- [x] Make Release Please update the exact `@mokly/viewer` pin in
       `packages/mokly/package.json` with the viewer release. Test the manifest
       and lockfile updates together.
-- [ ] Verify that Release Please preserves the private root native `file:`
+- [x] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
 - [ ] Verify native TLS on macOS and Windows CI. Build all five target
       binaries with a target C toolchain and check `ldd`, `otool -L`, or
       `dumpbin /dependents` for an unintended crypto shared-library dependency.
-- [ ] Reconnect the Node agreement and profile-selector tests to the shim's
+- [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
-- [ ] Commit.
+- [ ] Settle Release Please selection for core-only commits under the
+      Milestone 15 review decision.
+- [ ] Run the installed static output and Serve smoke after their integration.
+  - [x] Run installed Serve with the tiny HTML catalogue.
+  - [ ] Run installed static output after Milestone 12 supplies the writer.
+- [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
+      can pass; the bumped-copy sidecar tests and version-path regression stay
+      required.
+- [x] Commit.
+
+Release package evidence: `.context/rust-rebuild/delegation/m13/report-1.md`.
+Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
+Release review and merge decisions: `.context/rust-rebuild/delegation/m13/report-2.md`
+and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
+Final release review fixes: `.context/rust-rebuild/delegation/m13/report-3.md`.
+Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
+`.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1138,6 +1167,9 @@ Publish client final review and merge decisions:
 
 ## Milestone 15: Verification, close-out, and review
 
+- [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
+      the history page at close-out; retain their links and migration content.
+
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Open the pull request. Its description and squash body write `{target}`
@@ -1147,6 +1179,16 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
+        startup failure so strict build and `npm run dev` smoke checks pass.
+        Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
+        `.context/rust-rebuild/m8-css-modules-smoke/`.
+  - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
+    workflow path in `evidence_contract.mjs`; review numeric workflow identity
+    matching so a GitHub `path` ending in `@main` can select valid evidence.
+  - Milestone 13 review 1, finding 5: the user must settle the Release Please
+    component for core-only commits; keep the `packages/mokly` layout until
+    that decision. Native builds and paired-tag publication remain unchanged.
   - Milestone 6 review 2, finding 6: decide failed-render detail status and
     Usage copy; keep all Used by lists unavailable after one unavailable view
     until the next generation while the user decision is pending.
@@ -1184,6 +1226,17 @@ Publish client final review and merge decisions:
   - Milestone 8 example port review 2, finding 9: `mokly-design-links.md` sits
     at its 321-line cap with prose lines over 80 columns; split the page at
     its next edit.
+  - Example visual check (report 6), open findings for the user:
+    1. Use-case steps ignore the mobile layout. Severity Medium, effort
+       Medium. Recommended: A, the shell shows each step's mobile view in a
+       phone frame below 760px, as the use-case mockup does, and
+       `mokly-shell-device-chrome.md` follows.
+    2. Desktop component canvas width differs. Severity Low, effort Small.
+       Recommended: B, the component design and the mockups adopt the shell's
+       fixed 1024px desktop canvas.
+    3. The shell stub declares no icon. Severity Low, effort Small.
+       Recommended: A, the stub declares an icon, so no `/favicon.ico`
+       request fails.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
@@ -1254,6 +1307,9 @@ Publish client final review and merge decisions:
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Replace the Intel macOS release runner before GitHub retires its Intel
+      images, preserving native build and execution coverage.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.

@@ -49,8 +49,13 @@ attaches invocation metadata only to `defineComponent` wrappers under the
 [instance rules](./mokly-instances.md#optional-invocation-source).
 
 A `*.module.css` import compiles to a stub that reads its class map from the
-generation table. The core scopes the stylesheet after PostCSS and supplies
-all maps with `cssModules` before `describe` evaluates the bundle. CSS Modules
+generation table at evaluation. The core scopes the stylesheet after PostCSS
+and supplies all maps with `cssModules` before `describe` evaluates the bundle.
+`cssModules` installs the table without bundling or reading source files.
+One esbuild compilation builds each generation, including its runtime style
+adapters. The adapters capture the same library instances that the consumer
+imports. Peer resolution uses that compiler's resolver from the configuration
+directory. Virtual modules do not enter the source inventory. CSS Modules
 in dependencies use the same logical dependency names as their graph records.
 The sidecar fails closed when a map is absent. Installing maps after
 evaluation is a protocol failure; callers dispose and re-bundle first.

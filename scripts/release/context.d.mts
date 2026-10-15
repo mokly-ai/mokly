@@ -1,9 +1,12 @@
 export function resolvePublishRefs(input: {
   eventName: string;
+  manualRef?: string;
+  releaseCreated?: string;
+  releaseTag?: string;
   manualViewerRef?: string;
   viewerReleaseCreated?: string;
   viewerReleaseTag?: string;
-}): { viewer: string } | undefined;
+}): { cli: string; viewer: string } | undefined;
 export function validateTagVersion(
   ref: string,
   version: string,

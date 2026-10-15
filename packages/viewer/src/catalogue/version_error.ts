@@ -1,6 +1,8 @@
-/** Product copy for a rejected viewer boundary; version numbers stay in diagnostics. */
-export const VERSION_ERROR_MESSAGE =
-  "This catalogue needs a compatible Mokly viewer. Update the viewer and reload.";
+/**
+ * The one headline of a rejected viewer boundary in every host; version
+ * numbers stay in the diagnostic.
+ */
+export const VERSION_ERROR_MESSAGE = "This catalogue needs a compatible viewer";
 
 /** A wire-format version rejected before the viewer interprets paths or entries. */
 export class MoklyVersionError extends Error {

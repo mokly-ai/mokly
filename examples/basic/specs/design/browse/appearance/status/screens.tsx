@@ -133,6 +133,7 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
             name="arrival"
             number={1}
             title="Welcome"
+            screenTitle="Welcome"
             description="The tour starts on the landing screen."
             screenPath={DESTINATIONS.appearance}
           >
@@ -142,6 +143,7 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
             name="detail"
             number={2}
             title="Details"
+            screenTitle="Details"
             description="The tour ends on the details screen."
             screenPath={DESTINATIONS.appearanceLightOnly}
           >

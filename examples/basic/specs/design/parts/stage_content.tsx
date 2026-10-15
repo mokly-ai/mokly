@@ -12,6 +12,7 @@ export function FlowStep({
   description,
   number,
   screenPath,
+  screenTitle,
   title,
 }: {
   children: ReactNode;
@@ -19,6 +20,7 @@ export function FlowStep({
   description: string;
   number: number;
   screenPath: DesignDestination;
+  screenTitle: string;
   title: string;
 }) {
   return (
@@ -27,6 +29,7 @@ export function FlowStep({
       number={number}
       title={title}
       description={description}
+      screenTitle={screenTitle}
       screenPath={screenPath}
     >
       {children}

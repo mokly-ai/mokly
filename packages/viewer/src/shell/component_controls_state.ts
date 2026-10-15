@@ -1,21 +1,41 @@
 /** Shared state and scope helpers for temporary prop editing. */
 
+import { decodeProps } from "../components/codec.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
-import type { ComponentRenderSuccess } from "../components/render_types.js";
+import {
+  ComponentRenderError,
+  type ComponentRenderSuccess,
+} from "../components/render_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
-import type { ControlDraft, ControlTarget } from "./control_values.js";
+import {
+  WHOLE_PROPS_ERROR,
+  type ControlDraft,
+  type ControlTarget,
+} from "./control_values.js";
+import type { LiveEditingStatus } from "./data_descriptor.js";
+
+/**
+ * What the panel says about the edits: the reset confirmation, a render in
+ * flight, or why the preview shows other props than the fields.
+ */
+export type ControlsNotice =
+  | "restored"
+  | "pending"
+  | "invalid"
+  | "invalid-together"
+  | "failed"
+  | "expired";
 
 /** One edit scope's current draft and last valid previews. */
 export interface ComponentEditorState {
   draft: ControlDraft;
   errors: Readonly<Record<string, string>>;
-  failure: string | undefined;
   dirty: boolean;
+  notice: ControlsNotice | undefined;
   previews: ReadonlyMap<string, ComponentRenderSuccess>;
   props: ComponentWireProps;
   scope: string;
-  status: string;
 }
 
 /** Reset state for a new entry or comparison mode. */
@@ -27,28 +47,95 @@ export function initialComponentEditorState(
   return {
     draft: target ? draft : {},
     errors: {},
-    failure: undefined,
     dirty: false,
+    notice: undefined,
     previews: new Map(),
     props: target?.props ?? {},
     scope,
-    status: "Saved props",
   };
 }
 
-/** Explain why controls are read-only in the current product context. */
-export function controlsUnavailable(
-  target: ControlTarget | undefined,
+/**
+ * The state the panel shows. Edits of the shown scope stay; a reset shows
+ * the current saved props with its confirmation; otherwise the saved props
+ * show. The saved props are compared by scope, not identity, because the
+ * workspace builds its target again on every render.
+ */
+export function shownEditorState(
+  stored: ComponentEditorState,
+  initial: ComponentEditorState,
+): ComponentEditorState {
+  if (stored.scope !== initial.scope) return initial;
+  if (stored.dirty) return stored;
+  return stored.notice === "restored"
+    ? { ...initial, notice: "restored" }
+    : initial;
+}
+
+/**
+ * What the Props panel offers: fields to edit, fields that wait for or
+ * failed to start editing in Serve, or the saved props without fields.
+ */
+export type ControlsMode =
+  | "editable"
+  | "preparing"
+  | "preparing-failed"
+  | "comparison"
+  | "published"
+  | "removed"
+  | "read-only"
+  | "no-props";
+
+/** The Props panel's mode for the shown entry in the current product context. */
+export function controlsMode(
+  target: ControlTarget,
   comparing: boolean,
-  live: boolean,
-): string | undefined {
-  if (!target || target.removed)
-    return "Choose an available entry to edit props.";
-  if (comparing)
-    return "Comparisons show the saved props. Return to Current to edit props.";
-  if (!live) return "Open this catalogue locally to edit props.";
+  editing: LiveEditingStatus | undefined,
+): ControlsMode {
+  if (target.removed) return "removed";
   if (!Object.keys(target.controls).length)
-    return "No editable props are declared for this entry.";
+    return Object.keys(decodeProps(target.props)).length ||
+      target.suppliedSlots.length
+      ? "read-only"
+      : "no-props";
+  if (comparing) return "comparison";
+  if (editing === "ready") return "editable";
+  if (editing === "preparing") return "preparing";
+  return editing === "failed" ? "preparing-failed" : "published";
+}
+
+/** A rejected draft names its fields, or says its values fail together. */
+export function draftNotice(
+  errors: Readonly<Record<string, string>>,
+): ControlsNotice {
+  return Object.hasOwn(errors, WHOLE_PROPS_ERROR)
+    ? "invalid-together"
+    : "invalid";
+}
+
+/**
+ * A failed render keeps the edits and the last valid preview. The shell
+ * checks each field and the props as a whole first, so Serve's 400 means
+ * the values fail together. A 409 stays pending: the shell renders again
+ * once it adopts the new revision.
+ */
+export function withRenderFailure(
+  state: ComponentEditorState,
+  error: unknown,
+): ComponentEditorState {
+  const code = error instanceof ComponentRenderError ? error.code : undefined;
+  if (code === "stale-revision") return { ...state, notice: "pending" };
+  return {
+    ...state,
+    notice: code === "invalid-input" ? "invalid-together" : "failed",
+  };
+}
+
+/** Serve discarded the previews: the stage shows the saved props, the edits stay. */
+export function withExpiredPreview(
+  state: ComponentEditorState,
+): ComponentEditorState {
+  return { ...state, notice: "expired", previews: new Map() };
 }
 
 /** Context identity for saved and temporary preview results. */

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { renderToStaticMarkup } from "react-dom/server";
+
+import { MoklyVersionError } from "../src/catalogue/version_error.js";
+import { ComparisonFailure, reviewReload } from "../src/shell/diffs.js";
+import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
 import { rawIndexFixture } from "./catalogue_v7_fixture.js";
@@ -48,8 +53,13 @@ for (const screenPath of [
   test(`the embedded viewer renders ${screenPath ?? "the catalogue home"} from catalogue data`, () => {
     const html = embeddedMarkup({ defaultSelection: { screenPath } });
     assert.match(html, /data-mokly-shell/);
-    if (screenPath === "unknown-item") assert.match(html, /Item not found/);
-    else if (screenPath) {
+    if (screenPath === "unknown-item") {
+      assert.match(
+        html,
+        /<h2>Item not found<\/h2><p>Nothing in the catalogue matches <code>unknown-item<\/code><\/p><a class="mbk-empty-link" href="\/">Go to the catalogue home<\/a>/,
+      );
+      assert.doesNotMatch(html, /mokly build|renamed or removed/);
+    } else if (screenPath) {
       // The first render waits for the entry's detail; its frames follow it.
       assert.match(html, /aria-busy="true"[^>]*><p role="status">Loading/);
       assert.doesNotMatch(html, /<iframe/);
@@ -141,7 +151,7 @@ test("independent embedded viewers keep IDs and references root-local", () => {
   assert.ok(htmlReferences(second).every((id) => secondIds.has(id)));
 });
 
-test("distinct identifier prefixes cannot absorb dynamic control IDs", () => {
+test("distinct identifier prefixes keep roots apart; published props have no fields", () => {
   const index = rawIndexFixture();
   const component = index.components[0]!;
   if (component.variantOf !== undefined)
@@ -160,24 +170,97 @@ test("distinct identifier prefixes cannot absorb dynamic control IDs", () => {
     };
     entry.props = { ...entry.props, "mb-main": entry.props.label! };
   }
-  const render = (identifierPrefix: string) =>
-    htmlIds(
-      embeddedMarkup({
-        index,
-        defaultSelection: { screenPath: component.path },
-        identifierPrefix,
-      }),
-    );
-  const firstIds = render("x");
-  const secondIds = render("x-mb-prop-action");
+  const markup = (identifierPrefix: string) =>
+    embeddedMarkup({
+      index,
+      defaultSelection: { screenPath: component.path },
+      identifierPrefix,
+    });
+  const first = markup("x");
+  const firstIds = htmlIds(first);
+  const secondIds = htmlIds(markup("x-mb-prop-action"));
 
-  assert.ok(
-    [...firstIds].some((id) =>
-      id.endsWith(`mb-prop-${component.path}-mb-main`),
-    ),
+  const props = first.slice(
+    first.indexOf('data-inspector-panel="props"'),
+    first.indexOf('data-inspector-panel="usage"'),
   );
+  assert.match(
+    props,
+    /<h3 tabindex="-1">Saved props<\/h3><p>Action<\/p><\/div><\/div><p class="mbk-controls-notice">Open this catalogue locally to edit props\.<\/p>/,
+  );
+  assert.match(props, /<dt>mb-main<\/dt>/);
+  assert.doesNotMatch(props, /<input|<select|mb-prop-/);
   assert.deepEqual(
     [...firstIds].filter((id) => secondIds.has(id)),
     [],
   );
+});
+
+test("an index of another version shows the version headline without an action", () => {
+  const index = { ...fixture, schemaVersion: 8 } as unknown as typeof fixture;
+  const html = embeddedMarkup({ index });
+  assert.match(
+    html,
+    /role="alert"[^>]*><h2>This catalogue needs a compatible viewer<\/h2><\/div>/,
+  );
+  assert.doesNotMatch(html, /<button|Try again|Reload/);
+});
+
+test("an index that cannot be read offers Try again under its headline", () => {
+  const index = { ...fixture, tree: "not a tree" } as unknown as typeof fixture;
+  const html = embeddedMarkup({ index });
+  assert.match(
+    html,
+    /<h2>The catalogue could not be loaded<\/h2><button class="mbk-empty-link" type="button">Try again<\/button>/,
+  );
+});
+
+test("the embedded viewer is one busy status line while its index loads", () => {
+  const html = renderToStaticMarkup(
+    <MoklyViewer
+      detail={(path) => `https://catalogue.example/entries/${path}.json`}
+      index="https://catalogue.example/mokly-viewer/index.json"
+    />,
+  );
+  assert.match(
+    html,
+    /^<div aria-busy="true" class="mokly-viewer mbk-empty" tabindex="-1"[^>]*><p role="status">Loading catalogue…<\/p><\/div>$/,
+  );
+});
+
+test("a rejected review shows the headline; only the standalone shell offers Reload", () => {
+  const failure = (reload?: () => void) =>
+    renderToStaticMarkup(
+      <ComparisonFailure
+        details="Unsupported Mokly review version 9; this viewer supports version 8."
+        {...(reload ? { reload } : {})}
+        retry={() => undefined}
+        versionError={new MoklyVersionError("review", 9, 8)}
+      />,
+    );
+  assert.match(
+    failure(),
+    /^<p role="alert">This catalogue needs a compatible viewer<\/p><details data-comparison-failure="">/,
+  );
+  assert.match(
+    failure(() => undefined),
+    /^<p role="alert">This catalogue needs a compatible viewer <button class="mbk-empty-link" data-diff-reload="" type="button">Reload<\/button><\/p>/,
+  );
+  assert.doesNotMatch(
+    failure(() => undefined),
+    /Try again/,
+  );
+  assert.match(
+    renderToStaticMarkup(
+      <ComparisonFailure details="offline" retry={() => undefined} />,
+    ),
+    /^<p>The comparison could not be loaded\. <button class="mbk-empty-link" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
+  );
+});
+
+test("only the standalone shell's context offers Reload for a rejected review", () => {
+  const reload = () => undefined;
+  assert.equal(reviewReload({ embedded: false }, reload), reload);
+  assert.equal(reviewReload({ embedded: true }, reload), undefined);
+  assert.equal(reviewReload(undefined, reload), undefined);
 });

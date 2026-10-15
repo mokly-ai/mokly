@@ -7,6 +7,7 @@ export function FlowStepView({
   description,
   number,
   screenPath,
+  screenTitle,
   title,
 }: FlowStepProps) {
   return (
@@ -18,7 +19,7 @@ export function FlowStepView({
           <p>{description}</p>
           <DesignLink to={screenPath}>
             <span className="flow-step-link">
-              This screen in the catalogue: #{screenPath} →
+              This screen in the catalogue: {screenTitle} →
             </span>
           </DesignLink>
         </div>

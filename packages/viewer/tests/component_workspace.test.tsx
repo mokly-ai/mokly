@@ -92,10 +92,7 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     count: { supplied: true, value: "11" },
   });
   assert.equal(invalid.overrides, undefined);
-  assert.equal(
-    invalid.errors["count"],
-    "Enter a number within the allowed range.",
-  );
+  assert.equal(invalid.errors["count"], "Enter a number from -1 to 10.");
 
   const valid = validateControlDraft(target, {
     ...draft,

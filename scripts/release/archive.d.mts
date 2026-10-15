@@ -10,17 +10,14 @@ export interface PackageReport {
 export function createPackageArchive(
   repositoryRoot: string,
   destination: string,
-  name?: "@mokly/viewer",
+  name?: string,
 ): Promise<{ archivePath: string; report: PackageReport }>;
 
 export function inspectDryRun(
   repositoryRoot: string,
-  name?: "@mokly/viewer",
+  name?: string,
 ): Promise<PackageReport>;
 
-export function validatePackageReport(
-  report: unknown,
-  name?: "@mokly/viewer",
-): void;
+export function validatePackageReport(report: unknown, name?: string): void;
 
 export function inspectRuntimeLicenses(repositoryRoot: string): Promise<void>;

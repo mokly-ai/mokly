@@ -1,5 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { CONTROLS_COPY } from "../../components/controls/parts/copy.js";
 import { libraryMetadata } from "../metadata.js";
 import { flag, text, type LibraryProps } from "../schemas.js";
 
@@ -72,7 +73,7 @@ export const propField = defineComponent({
         ...sample,
         label: "cornerRadius",
         inputId: "sample-radius",
-        error: "Enter a number from 0 to 24.",
+        error: CONTROLS_COPY.numberError(0, 24, 1),
       },
       slots: {
         control: (
@@ -116,7 +117,7 @@ export const propField = defineComponent({
           <div>
             <label className="ce-check-value">
               <input type="checkbox" />
-              <span>Set hint</span>
+              <span>{CONTROLS_COPY.set("hint")}</span>
             </label>
             <input
               className="ce-hint-value"
@@ -124,7 +125,7 @@ export const propField = defineComponent({
               type="text"
               defaultValue=""
             />
-            <p className="ce-unset-value">Not set</p>
+            <p className="ce-unset-value">{CONTROLS_COPY.notSet}</p>
           </div>
         ),
       },

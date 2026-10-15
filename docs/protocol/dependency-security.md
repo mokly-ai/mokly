@@ -165,6 +165,11 @@ uses it.
 
 The current maintenance choices are:
 
+- `release-please` 17.6.0 is an exact development pin. Release tests exercise
+  its real manifest parser, changelog writer, workspace plugin, and version
+  updaters. Update the pin with the workflow action and schema in a reviewed
+  tooling change. It is not a runtime dependency of any published package.
+
 - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
   / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
   on 2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only

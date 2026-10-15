@@ -67,6 +67,7 @@
     "react-native-svg": "^15.15.5",
     "react-native-web": "^0.21.3",
     "react-native-worklets": "^0.8.3",
+    "release-please": "17.6.0",
     "semver": "^7.7.3",
     "styled-components": "^6.6.0",
     "tailwindcss": "^4.3.3",
