@@ -33,6 +33,7 @@ export default function render(input: RenderInput): ReactNode {
         <div
           data-color-scheme={input.colorScheme}
           data-example-renderer={input.viewport}
+          lang="en"
         >
           {input.entry.kind === "component" &&
           input.entry.path.startsWith("design/library/") ? (

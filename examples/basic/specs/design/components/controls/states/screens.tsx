@@ -72,7 +72,7 @@ export const preparingScreen = defineScreen({
         slug: "failed",
         title: "Editing could not start",
         description:
-          "The saved props stay visible and read-only; Try again prepares editing once more.",
+          "The saved props stay visible and read-only; browsing keeps working, and Try again fetches the live descriptor again.",
         desktop: <PreparingFailedControlsDesktop />,
         mobile: <PreparingFailedControlsMobile />,
       },

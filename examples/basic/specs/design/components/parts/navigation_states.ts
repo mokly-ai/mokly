@@ -4,6 +4,7 @@ import {
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
+  LIMIT_PAGES,
   type ComponentDesignDestination,
 } from "./destinations.js";
 
@@ -17,6 +18,7 @@ export const actionModes = {
 
 /** Shared shell controls do not inherit unrelated Browse transitions. */
 export const COMPONENT_NAVIGATION_STATES = {
+  [CONTROLS_PAGES["parent"]]: {},
   [CONTROLS_PAGES["default"]]: {},
   [CONTROLS_PAGES["edited"]]: {},
   [CONTROLS_PAGES["unset"]]: {},
@@ -30,6 +32,11 @@ export const COMPONENT_NAVIGATION_STATES = {
   [CONTROLS_PAGES["comparison"]]: {},
   [CONTROLS_PAGES["readonly"]]: {},
   [CONTROLS_PAGES["readonly-variant"]]: {},
+  [CONTROLS_PAGES["invalid-together"]]: {},
+  [CONTROLS_PAGES["expired"]]: {},
+  [LIMIT_PAGES["removed"]]: {},
+  [LIMIT_PAGES["read-only"]]: {},
+  [LIMIT_PAGES["no-props"]]: {},
   [COMPONENT_PAGES.closed]: {},
   [INSPECTION_PAGES.closed]: {},
   [COMPONENT_PAGES.default]: {},

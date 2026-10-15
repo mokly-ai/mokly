@@ -1,6 +1,6 @@
 import { MockLink } from "@mokly/mokly";
 
-import { ActionPropValues, actionVariants } from "../../parts/action_props.js";
+import { ActionPropValues, actionEntries } from "../../parts/action_props.js";
 
 import { CONTROLS_COPY } from "./copy.js";
 import { ControlFields } from "./fields.js";
@@ -12,7 +12,7 @@ import {
 
 export function ControlsPanel({ state }: { state: ControlsState }) {
   const fixture = controlsFixtures[state];
-  const variant = actionVariants[fixture.variant];
+  const variant = actionEntries[fixture.variant];
   const readonly = isPublished(state) || state === "comparison";
   const preparing = state === "preparing" || state === "preparing-failed";
   return (
@@ -56,7 +56,7 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
           {state === "comparison" ? (
             <MockLink
               className="ce-detail-links"
-              to="design/components/controls/controls"
+              to="design/components/controls/controls/default"
             >
               {CONTROLS_COPY.switchToCurrent}
             </MockLink>
@@ -78,6 +78,23 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
             <p className="ce-control-alert" role="alert">
               {CONTROLS_COPY.invalid}
             </p>
+          ) : null}
+          {state === "invalid-together" ? (
+            <p className="ce-control-alert" role="alert">
+              {CONTROLS_COPY.invalidTogether}{" "}
+              <MockLink to="design/components/controls/editing/reset">
+                {CONTROLS_COPY.reset(variant.title)}
+              </MockLink>
+            </p>
+          ) : null}
+          {state === "expired" ? (
+            <div className="ce-control-alert" role="alert">
+              <strong>{CONTROLS_COPY.expiredTitle}</strong>
+              <p>{CONTROLS_COPY.expiredBody}</p>
+              <MockLink to="design/components/controls/states/pending">
+                {CONTROLS_COPY.expiredAction}
+              </MockLink>
+            </div>
           ) : null}
           {state === "reset" ? (
             <p className="ce-reset-status" role="status">

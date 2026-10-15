@@ -4,6 +4,7 @@ import {
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
+  LIMIT_PAGES,
 } from "../components/parts/destinations.js";
 import { DESTINATIONS } from "../parts/destinations.js";
 
@@ -29,6 +30,7 @@ export const destination = {
       ...Object.values(COMPONENT_PAGES),
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
+      ...Object.values(LIMIT_PAGES),
     ]),
   ],
 } as const;

@@ -44,7 +44,8 @@ export const INSPECTION_PAGES = {
 } as const satisfies Record<ScreenPageState, string>;
 
 export const CONTROLS_PAGES = {
-  default: "design/components/controls/controls",
+  parent: "design/components/controls/controls",
+  default: "design/components/controls/controls/default",
   edited: "design/components/controls/editing/edited",
   unset: "design/components/controls/editing/unset",
   variant: "design/components/controls/editing/variant",
@@ -57,9 +58,19 @@ export const CONTROLS_PAGES = {
   comparison: "design/components/controls/states/comparison",
   readonly: "design/components/controls/published/readonly",
   "readonly-variant": "design/components/controls/published/readonly-variant",
+  "invalid-together": "design/components/controls/limits/invalid-together",
+  expired: "design/components/controls/limits/expired",
 } as const satisfies Record<ControlsState, string>;
+
+/** Props-tab limits drawn on existing component and screen pages. */
+export const LIMIT_PAGES = {
+  removed: "design/components/controls/limits/removed",
+  "read-only": "design/components/controls/limits/read-only",
+  "no-props": "design/components/controls/limits/no-props",
+} as const;
 
 export type ComponentDesignDestination =
   | (typeof CONTROLS_PAGES)[keyof typeof CONTROLS_PAGES]
+  | (typeof LIMIT_PAGES)[keyof typeof LIMIT_PAGES]
   | (typeof COMPONENT_PAGES)[keyof typeof COMPONENT_PAGES]
   | (typeof INSPECTION_PAGES)[keyof typeof INSPECTION_PAGES];

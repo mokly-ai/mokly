@@ -108,10 +108,10 @@ directory holds the plain component, its `defineComponent` definition in
 `*.mokly.tsx`, and the entry module `*.mockup.tsx`, which re-exports the
 definition. A definition declares a JSON prop schema, its own props, and its
 variants as props sets. A variant's props replace the own props key by key,
-so the own props hold only the keys that every variant sets. Action has
-`default`, `disabled`, and `secondary` variants and live controls. Toolbar
-composes two Action instances and takes caller content in its `children`
-slot; its variant fills the slot. Both declare `example-components.css`. No
+so the own props hold only the keys that every variant sets, with the first
+variant's values. Action has `default`, `disabled`, and `secondary` variants
+and live controls. Toolbar composes two Action instances and takes caller
+content in its `children` slot; its variant fills the slot. Both declare `example-components.css`. No
 HTML file uses them, so neither declares an `element` name.
 
 `WorkspaceNote` combines a CSS Module, a stylesheet that references
@@ -153,10 +153,14 @@ modules. A design screen draws a separate artboard for each viewport:
 `artboards()` in `specs/design/parts/artboards.ts` selects the artboard from
 the render context's viewport. `artboardStates()` makes one screen whose
 variants show other states: a `state` prop names the state, and each variant
-sets it. `specs/design/browse/loading/` shows the shell before the catalogue
-arrives, its failure and version states, and the stage while a preview
-loads. `specs/design/components/controls/parts/copy.ts` holds the settled
-copy of the Props tab's controls.
+sets it. The helper adapts design artboards, each a different tree; a product
+screen derives its states from real props instead.
+`specs/design/browse/loading/` shows the shell before the catalogue arrives,
+its failure and version states, and the stage while a preview loads.
+`specs/design/components/controls/parts/copy.ts` holds the settled copy of the
+Props tab's controls, and the Read-only and recovery gallery under
+`specs/design/components/controls/limits/` draws the states that offer no
+editing or one way back to valid props.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),

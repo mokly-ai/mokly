@@ -9,11 +9,14 @@ import {
 import { VariantBar } from "./variant_bar.js";
 
 /**
- * Stories whose other saved variants changed too, but own no artboard. Their
- * options stay visible without a link to an unrelated story's page.
+ * Stories whose other entries have no artboard in the same scenario: in
+ * Component with changed styles the other saved variants changed too, and
+ * Additions is a scenario of its own. Their options stay visible without a
+ * link into another story.
  */
 const UNLINKED_SIBLINGS: ReadonlySet<ComponentPageState> = new Set([
   "style-changed",
+  "added",
 ]);
 
 interface SavedVariant {
@@ -69,13 +72,7 @@ const SAVED_VARIANTS: Record<ComponentId, readonly SavedVariant[]> = {
   "help-hint": [
     { path: "example/components/help-hint/default", title: "Default" },
   ],
-  badge: [
-    {
-      path: COMPONENT_ENTRIES.badgeDefault.path,
-      title: "Default",
-      to: COMPONENT_PAGES.added,
-    },
-  ],
+  badge: [{ path: COMPONENT_ENTRIES.badgeDefault.path, title: "Default" }],
   checklist: [
     {
       path: COMPONENT_ENTRIES.checklistDefault.path,
@@ -88,10 +85,17 @@ const SAVED_VARIANTS: Record<ComponentId, readonly SavedVariant[]> = {
 /**
  * The parent's own entry first, then its saved variants, with the shown entry
  * selected. The removed Compact variant keeps its place in the removed story.
+ * A Props-tab limit page links only its own shown entry.
  */
-export function VariantPicker({ state }: { state: ComponentPageState }) {
+export function VariantPicker({
+  limit,
+  state,
+}: {
+  limit?: string | undefined;
+  state: ComponentPageState;
+}) {
   const shown = COMPONENT_ENTRY_BY_STATE[state];
-  const unlinked = UNLINKED_SIBLINGS.has(state);
+  const unlinked = limit !== undefined || UNLINKED_SIBLINGS.has(state);
   const entries: SavedVariant[] = [
     PARENTS[shown.component],
     ...SAVED_VARIANTS[shown.component],
@@ -109,7 +113,7 @@ export function VariantPicker({ state }: { state: ComponentPageState }) {
       options={entries.map((entry) => {
         const current = entry.path === shown.path;
         const to = current
-          ? COMPONENT_PAGES[state]
+          ? (limit ?? COMPONENT_PAGES[state])
           : unlinked
             ? undefined
             : entry.to;

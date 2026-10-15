@@ -821,6 +821,12 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Add the design catalogue checks that `mokly-design-component-library.md`,
+      `mokly-component-design.md`, and `mokly-design-links.md` define: the
+      browser specs over the served design artboards (links, selection,
+      counts, missing and transient states, responsive layout, mask geometry,
+      and the stacked frames) and the adoption checks of the shared design
+      components (registered `.Component` calls, owner chains, and slots).
 - [x] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,
@@ -887,6 +893,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+- [ ] Add the stylesheet attribution tests over the design catalogue that
+      `mokly-component-design.md` defines: the nine shared sheets per
+      scenario, the pinned rendered stylesheet links of the design screens and
+      the component saved-variant entries, and the changed-entry union.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -909,6 +919,12 @@ Tags: ui
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Make the viewer follow the settled design copy and states of the design
+      catalogue (version failure, controls copy and states, loading states).
+      Source: the copy table in
+      `.context/rust-rebuild/delegation/m5-example/report-2.md`, with the
+      changes in `report-3.md` there, and
+      `examples/basic/specs/design/components/controls/parts/copy.ts`.
 - [ ] Commit.
 
 ## Milestone 11: Watch and incremental rendering
@@ -1031,6 +1047,13 @@ Publish client final review and merge decisions:
     `{{open-seats}}` to `{{ open - seats }}` and stops on a literal `{`.
   - Milestone 5: settled on 2026-10-15; the example drops its `watch.rules`
     reload rule, which had no effect.
+  - Milestone 8 example port review 1: the Milestone 10 TODO that makes the
+    viewer follow the settled design copy changes the viewer's presentation,
+    a non-goal of this plan; it needs the user's approval.
+  - Milestone 8 example port review 1, finding 6: option B (a component parent
+    renders without caller slot content) is documented; decide option C,
+    which lets a component parent supply its own slot content (a contract
+    change).
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

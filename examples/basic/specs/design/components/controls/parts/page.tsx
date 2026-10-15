@@ -1,11 +1,12 @@
 import { COMPONENT_NAVIGATION } from "../../../parts/component_nav_data.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
+import type { ActionEntry } from "../../parts/action_props.js";
 import { ComparisonDetails } from "../../parts/comparison_details.js";
 import { actionComparison } from "../../parts/comparison_fixtures.js";
 import { ComponentInfo } from "../../parts/component_info.js";
 import { ComponentLayout } from "../../parts/component_layout.js";
 import { UsedBy } from "../../parts/component_usage.js";
-import { COMPONENT_PAGES, CONTROLS_PAGES } from "../../parts/destinations.js";
+import { CONTROLS_PAGES } from "../../parts/destinations.js";
 import { Inspector } from "../../parts/inspector.js";
 import { COMPONENT_ENTRIES } from "../../parts/metadata.js";
 import {
@@ -24,42 +25,57 @@ import {
 import { ControlsPanel } from "./panel.js";
 
 /**
- * Action's own entry first, then its saved variants. The controls stories
- * edit a saved variant, so the parent opens the component page, which local
- * Serve and a published catalogue share.
+ * Action's own entry first, then its saved variants. Each option opens that
+ * entry's controls in the same context. A published catalogue has no page for
+ * the parent's own entry, so there its option is a depiction.
  */
 function ControlsVariants({ state }: { state: ControlsState }) {
   const fixture = controlsFixtures[state];
   const published = isPublished(state);
-  const current = (variant: "default" | "disabled") =>
-    fixture.variant === variant;
+  const option = (
+    entry: ActionEntry,
+    label: string,
+    local: string,
+    readonly?: string,
+  ) => {
+    const current = fixture.variant === entry;
+    const to = current ? CONTROLS_PAGES[state] : published ? readonly : local;
+    return { label, ...(to ? { to } : {}), ...(current ? { current } : {}) };
+  };
   return (
     <VariantBar
       options={[
-        { label: "Action", to: COMPONENT_PAGES.default },
-        {
-          label: "Default",
-          to: current("default")
-            ? CONTROLS_PAGES[state]
-            : published
-              ? CONTROLS_PAGES.readonly
-              : CONTROLS_PAGES.default,
-          ...(current("default") ? { current: true } : {}),
-        },
-        {
-          label: "Disabled",
-          to: current("disabled")
-            ? CONTROLS_PAGES[state]
-            : published
-              ? CONTROLS_PAGES["readonly-variant"]
-              : CONTROLS_PAGES.variant,
-          ...(current("disabled") ? { current: true } : {}),
-        },
+        option("parent", "Action", CONTROLS_PAGES.parent),
+        option(
+          "default",
+          "Default",
+          CONTROLS_PAGES.default,
+          CONTROLS_PAGES.readonly,
+        ),
+        option(
+          "disabled",
+          "Disabled",
+          CONTROLS_PAGES.variant,
+          CONTROLS_PAGES["readonly-variant"],
+        ),
         { label: "Secondary" },
       ]}
     />
   );
 }
+
+/** The entry a controls story shows, and its navigation row. */
+const SHOWN = {
+  parent: [COMPONENT_ENTRIES.action, COMPONENT_NAVIGATION.action.id],
+  default: [
+    COMPONENT_ENTRIES.actionDefault,
+    COMPONENT_NAVIGATION.action.variants[0].id,
+  ],
+  disabled: [
+    COMPONENT_ENTRIES.actionDisabled,
+    COMPONENT_NAVIGATION.action.variants[1].id,
+  ],
+} as const;
 
 export function ControlsPage({
   state,
@@ -69,19 +85,12 @@ export function ControlsPage({
   viewport: ArtboardViewport;
 }) {
   const fixture = controlsFixtures[state];
-  const entry =
-    fixture.variant === "disabled"
-      ? COMPONENT_ENTRIES.actionDisabled
-      : COMPONENT_ENTRIES.actionDefault;
+  const [entry, navigationKey] = SHOWN[fixture.variant];
   return (
     <ComponentLayout
       design={CONTROLS_PAGES[state]}
       entry={entry}
-      navigationKey={
-        fixture.variant === "disabled"
-          ? COMPONENT_NAVIGATION.action.variants[1].id
-          : COMPONENT_NAVIGATION.action.variants[0].id
-      }
+      navigationKey={navigationKey}
       mode={state === "comparison" ? "side-by-side" : "current"}
       status={state === "comparison" ? actionComparison.status : "unmodified"}
       scenario={state === "comparison" ? "component" : "all"}

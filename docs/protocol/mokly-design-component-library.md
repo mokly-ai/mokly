@@ -7,9 +7,12 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 Each row defines parent `design/library/{group}/{slug}` and its variant entries under the
 [variant contract](./mokly-variants.md). Each variant's slug is the table's
 kebab-case name, so its path is the parent's path plus that name, and every
-file name follows the [artifact contract](./mokly-artifact-paths.md). The
-parent's own `props` equal its first listed variant's props, so the parent page
-shows that example first, then each variant.
+file name follows the [artifact contract](./mokly-artifact-paths.md). A
+variant's props replace the parent's own props key by key, so the parent's own
+`props` hold the keys that every variant sets, with the first listed variant's
+values. The parent page shows its own example first, then each variant. A slot
+holds caller content: the parent's own example renders without slot content,
+and only its variants and the screens that compose it fill slots.
 
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
@@ -36,7 +39,7 @@ to depict a different setting, as the `auto-appearance` sample does.
 | inspector / prop-field        | `components/controls/parts/fields.tsx: field chrome`                | `text`, `boolean`, `invalid-number`, `select`, `optional-unset`                                                                               |
 | preview / device-frame        | `parts/stage.tsx: PhoneFrame/BrowserFrame`                          | `phone`, `browser`, `dark`, `light-only`                                                                                                      |
 | preview / comparison-pane     | `parts/compare.tsx: Pane/MissingPane`                               | `before`, `current`, `missing-before`, `missing-current`                                                                                      |
-| preview / empty-state         | `parts/stage_content.tsx: EmptyState`                               | `home`, `missing-route`, `no-changes`                                                                                                         |
+| preview / empty-state         | `parts/stage_content.tsx: EmptyState, LoadingState`                 | `home`, `missing-route`, `no-changes`                                                                                                         |
 | preview / flow-step           | `parts/stage_content.tsx: FlowStep`                                 | `first`, `second`                                                                                                                             |
 
 Fixtures for each variant come from the corresponding existing screen state,
@@ -157,8 +160,10 @@ Controls below use text, boolean, number and primitive enum selections only.
     optional missing message and `children` slot. Controls: label, state and
     optional message. Missing state hides the content slot and uses the existing
     explicit missing pane; comparison-grid layout remains caller-owned.
-14. **Empty state:** title, body, optional code, action label and destination.
-    Controls: title, body and action label. Keep the existing canonical recovery
+14. **Empty state:** optional title, body, and code, an action label and
+    destination, and a busy flag for a loading state, which sets `aria-busy`
+    and makes the body a status.
+    Controls: title, body, loading and action label. Keep the canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
 15. **Flow step:** positive step number, title, description, owning screen path
     and `children` slot containing the reused screen preview. Controls: number,

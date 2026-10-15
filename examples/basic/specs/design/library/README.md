@@ -80,8 +80,10 @@ literal JSON prop schema, its own props, its slots, its saved variants and its
 supported controls; `schemas.ts` holds the shared schema fragments. A variant
 sets props and fills slots with React content. Its props replace the own
 props key by key, so the own props hold only the keys that every variant
-sets. `{slug}.view.tsx` implements its markup. Each `{slug}.mockup.ts`
-re-exports the definition from its group directory, deriving
+sets, with the first variant's values. The parent's own example renders
+without slot content; only its variants and the composing screens fill slots.
+`{slug}.view.tsx` implements its markup. Each `{slug}.mockup.ts` re-exports the
+definition from its group directory, deriving
 `design/library/{group}/{slug}`. Variant slugs append one segment. Folder
 records title the shared library and any named groups.
 

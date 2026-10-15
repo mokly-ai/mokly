@@ -5,7 +5,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-all forty-one component designs, their owning folders, and stylesheet scopes.
+all fifty component design entries (forty-eight screens and two variants), their
+owning folders, and stylesheet scopes.
 
 ## Component Pages
 
@@ -20,10 +21,13 @@ Desktop keeps the resizable navigation;
 mobile keeps the compact header and adds short Screen/Components/Changes links
 above the heading so the relevant destinations and change count stay visible.
 
-The saved-variant strip follows the title and, for an eligible shown view, the comparison band. Known unchanged shown views show Unmodified beside the title, with no comparison row. The selected variant uses
-a pale sage surface, border, and explicit current-link state. Default and
-Disabled are Action's variant entries, each its own catalogue entry and Changes
-row under the [variant contract](./mokly-variants.md); the strip links to them.
+The saved-variant strip follows the title and, for an eligible shown view, the comparison band. Known unchanged shown views show Unmodified beside the title, with no comparison row. The strip lists
+the parent's own entry first, then each saved variant in authored order: Action,
+Default, Disabled, and Secondary. The shown entry uses a pale sage surface,
+border, and explicit current-link state. Default and Disabled are Action's
+variant entries, each its own catalogue entry and Changes row under the
+[variant contract](./mokly-variants.md). An option links to the artboard that
+shows its entry in the same scenario; an option without one is a depiction.
 The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Canvases have a 10px radius, a light
 border, a small context caption, and a centered component, without device chrome.
 The same `ActionExample` and `ToolbarExample` are reused in consuming screens.
@@ -39,7 +43,7 @@ rows keep the drawn position independent of text wrapping. Its own one-entry
 Changes scenario lists only Checklist, which no screen uses yet, so its
 inspector opens on Details, where the comparison facts live.
 
-The inspector separates Details (description/source/references), Nested components (present only when the component has children), Props/Controls (supplied values or declared editable fields), and
+The inspector separates Details (description/source/references), Nested components (present only when the component has children), Props (supplied values or editable fields), and
 Usage (Used by plus Affected screens). Only one panel is open at a time. Click
 its icon again or its close affordance to collapse it; no icon is then selected.
 Its content scrolls below a fixed icon strip. Desktop uses the navigation
@@ -135,17 +139,17 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Mokly renders every artboard from its spec; never hand-write artboard HTML. Six
 shared component stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
-Route-scoped rules link the required mixed/global sheets from the forty-one
+Route-scoped rules link the required mixed/global sheets from the fifty
 component design routes. Registered components declare exclusive CSS through
 `stylesheets`; the `$componentStylesheets` marker keeps those links between base
 and layout sheets. Shared metadata supplies related docs, while folder records
 supply navigation. Source paths supply no comparison evidence. The controls
-stylesheet stays scoped to its eleven owning entries. Watched Serve reloads
+stylesheet stays scoped to its twenty owning entries. Watched Serve reloads
 configured and declared CSS. Shared fixtures and screen parts live beside their
 owning screen modules.
 
 The Rust behaviour tests over the design catalogue classify all nine shared
-sheets once per scenario. Rendered stylesheet links pin 41, 11, 0, or all
+sheets once per scenario. Rendered stylesheet links pin 50, 20, 0, or all
 `design/` screens and 69 component saved-variant entries. A parent component
 renders its own views from its own props. The tests keep exact per-entry
 rendered-resource records and rule records, the exact changed-entry union, and

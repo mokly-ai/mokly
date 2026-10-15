@@ -1,9 +1,8 @@
 /**
- * The settled copy of the Props tab's controls. The mockups render these
- * strings, and the viewer follows them. The last four have no artboard of
- * their own: a removed entry, a component without editable props, an entry
- * without props, and merged props that fail validation without one field to
- * highlight.
+ * The settled copy of the Props tab's controls. The mockups render every
+ * string, and the viewer follows them. The Read-only and recovery gallery
+ * draws the removed entry, read-only props, an entry without props, merged
+ * props that fail without one field to highlight, and an expired preview.
  */
 export const CONTROLS_COPY = {
   tab: "Props",
@@ -27,5 +26,8 @@ export const CONTROLS_COPY = {
   removed: "Removed entries show their saved props.",
   readonlyProps: "These props are read-only.",
   noProps: "This entry renders without props.",
-  invalidTogether: "These values are not valid together. Change one of them.",
+  invalidTogether: "These values are not valid together.",
+  expiredTitle: "The preview of your edits expired",
+  expiredBody: "Your edits are kept. The preview shows the saved props.",
+  expiredAction: "Update preview",
 } as const;

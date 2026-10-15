@@ -4,8 +4,7 @@
 
 Component pages and consuming-screen designs share one inspector: beneath the
 preview on desktop and in a floating bottom sheet on mobile. Its icon strip
-contains Details, Props (Controls on editable component
-designs), and Usage. Screens also have Components; composed components have
+contains Details, Props, and Usage. Screens also have Components; composed components have
 Nested components, while leaves omit it. Each icon has an accessible name, visible focus
 style, and a tooltip. Only the active icon has the sage selected treatment.
 
@@ -20,8 +19,8 @@ current-only and initially closed; an artboard must explicitly choose whether
 Details starts open.
 Components contains the nested instance tree and explicit empty/unavailable
 states. Props contains the selected variant or instance's supplied values,
-slot ownership, and Open component/Highlight actions. Controls replaces the
-read-only props presentation where editable controls are being designed.
+slot ownership, and Open component/Highlight actions. On an editable entry,
+the Props panel holds the [controls](./mokly-component-controls-design.md).
 Usage contains Used by and, when relevant, Affected screens, with independent
 screen Changes membership preserved. Never combine the entire tree, all props,
 and all usage lists into one panel.

@@ -17,17 +17,17 @@ are not transported implicitly. Only the explicitly paired states below
 promise to retain their named subject or comparison mode. The actual Appearance
 setting stays with the outer viewer.
 
-Every design screen has mobile and desktop views. They are light-only
-rendered documents, including artboards depicting a dark product screen, except
-the appearance screens (the `design/browse/appearance/**` entries), the canonical
-`design/browse/views/screen` and `design/browse/views/details-screen`, their two retained
-Welcome appearance variants, and the Welcome comparison family. These render
-in both schemes so the outer Appearance control switches the depicted
-catalogue. Link targets name design entry paths, not the example paths printed in
-the depicted shell's metadata. Existing entries, screens, and text links stay
-available. `example/screens/farewell` is an intentionally absent product entry.
-This depicted dark set is representative; the runtime's single Appearance
-preference, rather than per-screen dark renders, keeps a whole session dark.
+Every design screen has mobile and desktop views. They are light-only rendered documents,
+including artboards depicting a dark product screen, except the appearance screens (the
+`design/browse/appearance/**` entries), the loading and recovery screens
+(`design/browse/loading/**`), the canonical `design/browse/views/screen` and
+`design/browse/views/details-screen`, their two retained Welcome appearance variants, and
+the Welcome comparison family. These render in both schemes so the outer Appearance control
+switches the depicted catalogue. Link targets name design entry paths, not the example
+paths printed in the depicted shell's metadata. Existing entries, screens, and text links
+stay available. `example/screens/farewell` is an intentionally absent product entry. This
+depicted dark set is representative; the runtime's single Appearance preference, rather
+than per-screen dark renders, keeps a whole session dark.
 
 ## Authoring And Shared Components
 
@@ -76,17 +76,17 @@ inventory.
 | `design/browse/views/screen/tag-onboarding`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
 | `design/browse/views/screen/tag-onboarding-picker` | The same onboarding filter with the picker open                   |
 
-`design/browse/states/details` means Welcome's expanded inspector and is
-reachable from its catalogue entry. Opening/closing the Details icon stays on
-the current screen and retains its query. It does not substitute for the
-normal Details view.
-`design/browse/states/tag-filter` keeps its name and depicts the forms
-filter with the picker open. The four listed tag states plus
-`design/browse/views/screen/dark-scheme` and `design/browse/views/screen/light-only` keep their names
-and are variants of `design/browse/views/screen`, each at its own path below the
-parent's like any variant. Those six entries are not folder members; the
-`design-browse-tags` (Tag states) folder has no descendants and is absent from
-navigation, while the variants stay under Welcome.
+`design/browse/states/details` means Welcome's expanded inspector and is reachable from its
+catalogue entry. Opening/closing the Details icon stays on the current screen and retains
+its query. It does not substitute for the normal Details view. The viewer reaches the
+loading and recovery screens, the editing preparation states, the Screen props state, and
+the Read-only and recovery gallery by runtime transitions, so catalogue navigation reaches them.
+`design/browse/states/tag-filter` keeps its name and depicts the forms filter with the
+picker open. The four listed tag states plus `design/browse/views/screen/dark-scheme` and
+`design/browse/views/screen/light-only` keep their names and are variants of
+`design/browse/views/screen`, each at its own path below the parent's like any variant.
+Those six entries are not folder members; the `design-browse-tags` (Tag states) folder has
+no descendants and is absent from navigation, while the variants stay under Welcome.
 
 ## Navigation Controls
 
@@ -190,10 +190,10 @@ its rendered scheme. The depicted Appearance selector has no authored transition
 
 No screen header depicts a scheme control; standalone Browse owns one
 Appearance selector in the top bar. `design/browse/views/screen`,
-`design/browse/views/details-screen`, the Welcome comparison
-family (`design/changes/diff-controls/**`, `design/changes/outcomes/changed`, and
-`design/changes/outcomes/difference`) and the appearance entries
-render in Light and in Dark instead, and the outer Appearance control moves
+`design/browse/views/details-screen`, the Welcome comparison family
+(`design/changes/diff-controls/**`, `design/changes/outcomes/changed`, and
+`design/changes/outcomes/difference`), the appearance entries, and the loading
+and recovery entries render in Light and in Dark instead, and the outer Appearance control moves
 between those two rendered views of the same entry. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every
 member of a comparison family publishes the same schemes, so no comparison

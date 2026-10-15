@@ -125,13 +125,16 @@ export const catalogueFailedScreen = defineScreen({
   }),
 });
 export const viewerVersionScreen = defineScreen({
-  ...loadingDesignMetadata,
+  relatedDocs: [
+    ...loadingDesignMetadata.relatedDocs,
+    "docs/protocol/mokly-viewer-namespace.md",
+  ],
   slug: "viewer-version",
   title: "Incompatible viewer",
   description:
-    "The catalogue and the viewer come from different Mokly versions; a reload loads the matching viewer.",
+    "The catalogue and the viewer come from different Mokly versions; in the standalone shell a reload loads the matching viewer.",
   rationale:
-    "A reader can act only on the page they have, so the one action reloads it. The version numbers stay in the console for the catalogue's owner.",
+    "Every host shows the same headline. Serve and the static build ship their matching viewer, so the standalone shell offers Reload. An embedded viewer shows no action and reports the failure to its host through onError, with the version details, because only the host can update the viewer.",
   ...artboards({
     desktop: <ViewerVersion viewport="desktop" />,
     mobile: <ViewerVersion viewport="mobile" />,

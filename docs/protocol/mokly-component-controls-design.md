@@ -3,7 +3,7 @@
 ## Controls Panel
 
 Reuse the component page, saved-variant strip, canvas, comparison band, and
-shared icon inspector. Controls occupies the Props/Controls tab; Details and Usage
+shared icon inspector. Controls occupy the Props tab; Details and Usage
 stay independently available. The leaf Action component has no Nested
 components tab. The [workspace design](./mokly-component-workspace-design.md)
 groups view controls, shows both selected preview contexts, and gives the
@@ -14,8 +14,10 @@ grabber follow the workspace design.
 The Action fixture demonstrates text (label), boolean (disabled), numeric
 (corner radius), select (emphasis), and optional text (hint). Its typed saved
 variants and state fixtures supply both control values and preview props. Default
-and Disabled each declare their complete values. These extended design props
-are illustrative consumer metadata, not a new package API.
+and Disabled each declare their complete values. Action's own entry holds the
+keys that every saved variant sets, with Default's values; Secondary sets no
+hint, so the parent's hint is unset. These extended design props are
+illustrative consumer metadata, not a new package API.
 
 Each field has a visible label, associated input, and concise help where needed.
 Optional props have a supplied/unset choice; unset differs from an empty string.
@@ -24,8 +26,10 @@ value and show a nearby error; the preview retains the last valid values.
 Controls fit one column on mobile and a compact grid on desktop. Focus indicators
 and error text remain legible, and controls do not rely on color alone.
 
-The Edit props link from a saved component example stays on its variant entry
-when opening Controls.
+The Edit props link opens the controls of the entry it is on: the parent's own
+entry from the component page, or a saved variant from that variant's page.
+The canonical Controls page depicts the parent's own entry, and its variant bar
+opens Default and Disabled.
 
 An edited-state indicator and Reset action accompany temporary overrides. Reset
 restores the full saved variant. Navigating to a different variant entry
@@ -41,36 +45,55 @@ variant and read-only values, with a short secondary explanation. Published
 saved-variant designs keep values readable and variant links usable; their
 secondary guidance is Open this catalogue locally to edit props. Switching
 between the published Default and Disabled examples keeps both views read-only.
+While Serve prepares editing, the fields are read-only under `Preparing to edit
+props…`; when editing cannot start, `Editing could not start.` offers Try
+again, which fetches the live descriptor again. A removed entry, a component
+without declared controls, and an entry without props show read-only text, not
+fields. Merged props that fail as a whole highlight no field and offer Reset to
+the variant. An expired temporary preview keeps the edits, shows the saved
+props, and offers Update preview. The settled strings are in
+`examples/basic/specs/design/components/controls/parts/copy.ts`.
 Do not add environment badges or implementation details to the rendered UI.
 
 Mockup inputs keep native semantics. Authored links connect edited, reset,
-variant, pending, failure, comparison, and read-only examples. Those links and
+variant, pending, failure, preparation, comparison, read-only, and recovery
+examples. Those links and
 native input editing demonstrate the design; they do not render edited props
 through Serve or make a static preview reactive.
 
 ## Owning Catalogue
 
-The Controls page is the canonical parent representation. Editing, States, and Published
-are bounded child galleries with four, four, and two owning screens respectively.
+The Controls page is the canonical parent representation, and Default's saved
+state is its variant. Editing, States, Published, and Read-only and recovery are
+bounded child galleries with five, five, two, and five owning screens.
 Every screen has distinct mobile and desktop components. The catalogue provides
 state navigation without adding a footer to the rendered product artboard.
 Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md); its folder owns gallery
 membership.
 
-| Entry                                                   | State                                           |
-| ------------------------------------------------------- | ----------------------------------------------- |
-| `design/components/controls/controls`                   | Default saved variant with all control types    |
-| `design/components/controls/editing/edited`             | Edited values and matching preview              |
-| `design/components/controls/editing/unset`              | Optional hint unset                             |
-| `design/components/controls/editing/variant`            | Disabled saved variant selected                 |
-| `design/components/controls/editing/reset`              | Reset to saved values                           |
-| `design/components/controls/states/pending`             | Last valid preview while an update is pending   |
-| `design/components/controls/states/invalid`             | Field validation with last valid preview        |
-| `design/components/controls/states/error`               | Render failure, retry, and reset                |
-| `design/components/controls/states/comparison`          | Saved variant comparison and read-only controls |
-| `design/components/controls/published/readonly`         | Read-only values and available saved variants   |
-| `design/components/controls/published/readonly-variant` | Disabled saved variant with read-only values    |
+| Entry                                                   | State                                                 |
+| ------------------------------------------------------- | ----------------------------------------------------- |
+| `design/components/controls/controls`                   | Action's own entry with all control types             |
+| `design/components/controls/controls/default`           | Default saved variant, a variant of the Controls page |
+| `design/components/controls/editing/edited`             | Edited values and matching preview                    |
+| `design/components/controls/editing/unset`              | Optional hint unset                                   |
+| `design/components/controls/editing/variant`            | Disabled saved variant selected                       |
+| `design/components/controls/editing/reset`              | Reset to saved values                                 |
+| `design/components/controls/editing/screen`             | A screen's own props with no instance selected        |
+| `design/components/controls/states/pending`             | Last valid preview while an update is pending         |
+| `design/components/controls/states/preparing`           | Read-only fields while Serve prepares editing         |
+| `design/components/controls/states/preparing/failed`    | Editing could not start, with Try again               |
+| `design/components/controls/states/invalid`             | Field validation with last valid preview              |
+| `design/components/controls/states/error`               | Render failure, retry, and reset                      |
+| `design/components/controls/states/comparison`          | Saved variant comparison and read-only controls       |
+| `design/components/controls/published/readonly`         | Read-only values and available saved variants         |
+| `design/components/controls/published/readonly-variant` | Disabled saved variant with read-only values          |
+| `design/components/controls/limits/removed`             | Removed saved variant with its saved props            |
+| `design/components/controls/limits/read-only`           | Component without declared controls                   |
+| `design/components/controls/limits/no-props`            | Screen without props or registered components         |
+| `design/components/controls/limits/invalid-together`    | Values not valid together, with Reset                 |
+| `design/components/controls/limits/expired`             | Expired temporary preview, with Update preview        |
 
 ## Verification
 
