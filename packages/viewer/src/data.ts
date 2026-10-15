@@ -80,11 +80,6 @@ export type {
 } from "./components/prop_types.js";
 export { validateProps } from "./components/props.js";
 export { validatePropSchema } from "./components/profile_schema.js";
-export {
-  isMultipleOf,
-  profileAccepts,
-  validateProfileValue,
-} from "./components/profile_value.js";
 export { validateComponentSource } from "./components/source.js";
 export {
   sortedStrings,

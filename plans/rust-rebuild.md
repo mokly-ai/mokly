@@ -807,6 +807,10 @@ Tags: ui
       against Milestone 9 output.
 - [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
       the serialization contract: `sourceKind` is the literal `base`.
+- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+      package README describe (the path functions, the directory names, the
+      path grammar, and the prop schema validators) when review v8 replaces
+      the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 
