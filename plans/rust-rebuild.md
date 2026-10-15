@@ -845,6 +845,7 @@ Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
 `.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
 Core review fixes: `.context/rust-rebuild/delegation/m8-core/report-2.md`.
+Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
 
 - [ ] Commit.
 

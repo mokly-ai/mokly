@@ -6,6 +6,7 @@ use std::thread;
 use mokly_cli::cancellation::{BuildCancellation, Cancellation};
 use mokly_graph::error::{InternalError, Result};
 use mokly_sidecar::pool::SidecarPool;
+use mokly_sidecar::process_clock::SystemClock;
 
 pub(super) struct Interrupts {
     pub(super) cancellation: Arc<dyn Cancellation>,
@@ -15,7 +16,8 @@ pub(super) struct Interrupts {
 
 impl Interrupts {
     pub(super) fn new() -> Result<Self> {
-        let cancellation: Arc<dyn Cancellation> = Arc::new(BuildCancellation::default());
+        let cancellation: Arc<dyn Cancellation> =
+            Arc::new(BuildCancellation::new(Arc::new(SystemClock::new())));
         let pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>> = Arc::new(Mutex::new(None));
         let stopped = Arc::new(Mutex::new(false));
         let signal_state = cancellation.clone();

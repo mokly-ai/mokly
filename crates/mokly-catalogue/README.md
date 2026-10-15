@@ -22,6 +22,8 @@ render graph crates.
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
+PostCSS path, suffix, and regular-file checks use the catalogued
+`config-invalid` diagnostics before a sidecar starts.
 Git root validation belongs to the Git boundary. Config-relative parent
 segments are accepted when their lexical and physical targets stay inside
 `repoRoot`. Alias keys and targets must be bare specifiers. Ordered module

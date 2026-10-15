@@ -1,4 +1,4 @@
-//! Selected external dependency roots keep logical CSS names and physical PostCSS inputs.
+//! Selected external dependency roots keep logical requests and physical PostCSS inputs.
 
 use std::fs;
 use std::path::PathBuf;
@@ -35,6 +35,12 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         ".external { color: MOKLY_COLOR; }\n",
     )
     .unwrap();
+    let expected_source = serde_json::to_string(&package.join("skin.module.css")).unwrap();
+    consumer.replace(
+        "postcss.mjs",
+        "Once(root, { result }) {",
+        &format!("Once(root, {{ result }}) {{ if (root.nodes.some(node => node.selector === '.external') && result.opts.from !== {expected_source}) throw new Error('wrong physical PostCSS source');"),
+    );
     consumer.replace(
         "library/chip.tsx",
         "import styles from",
@@ -131,5 +137,9 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         })
         .unwrap();
     assert!(html.contains(&maps.class_maps[logical]["external"]));
-    assert!(calls.iter().any(|call| matches!(call, Call::ProcessCss(css) if css.source_path == package.join("skin.module.css").to_string_lossy())));
+    assert!(
+        calls
+            .iter()
+            .any(|call| matches!(call, Call::ProcessCss(css) if css.source_path == logical))
+    );
 }

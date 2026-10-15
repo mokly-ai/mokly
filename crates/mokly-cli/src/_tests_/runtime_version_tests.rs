@@ -12,7 +12,7 @@ fn graph_runtime_version_equals_the_embedded_npm_version() {
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
         Arc::new(Unimock::new(())),
-        Arc::new(BuildCancellation::default()),
+        Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
     );
     assert_eq!(runtime.version, VERSION);
 }

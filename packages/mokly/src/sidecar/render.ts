@@ -12,7 +12,7 @@ import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.j
 import type { Generation } from "./bundle.js";
 import { componentOutput } from "./component-output.js";
 import { describe } from "./describe.js";
-import { SidecarError, detail } from "./errors.js";
+import { SidecarError, detail, handleLocation } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
 import type { PortableStory } from "./stories.js";
@@ -41,11 +41,7 @@ export async function render(
       viewport: params.viewport as "mobile" | "desktop",
       colorScheme: params.colorScheme,
     };
-    const session = renderSession(
-      generation,
-      context,
-      name.replace("#", " export "),
-    );
+    const session = renderSession(generation, context, handleLocation(name));
     return generation.runtime.withSession(session, () => {
       const props = copyData(params.props) as Record<string, unknown>;
       let node: ReactNode;
@@ -103,7 +99,7 @@ export async function render(
         if (kind === "component")
           node = componentOutput(generation.runtime, session, node);
         const renderer = generation.exports?.renderer?.default;
-        if (renderer !== undefined) {
+        if (generation.params.renderer) {
           if (typeof renderer !== "function")
             throw new Error("renderer default export must be a function");
           const entry = "entry" in params ? params.entry : undefined;
@@ -199,7 +195,7 @@ export async function render(
     if (error instanceof SidecarError) throw error;
     throw new SidecarError(
       "render-failed",
-      `${name.replace("#", " export ")} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
+      `${handleLocation(name)} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
     );
   }
 }

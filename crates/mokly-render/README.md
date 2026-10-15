@@ -26,7 +26,10 @@ Catalogue preparation resolves paths, variants, controls, schemas, props,
 slots, and component elements in Rust. The adapter retains handles separately
 from defining-module attribution. A stories file supplies one component with
 an inferred schema and story variants. Its `argTypes` supply control hints.
-Non-data inference warnings use the final entry path.
+Non-data inference warnings use the final entry path. Props diagnostics carry
+their detail separately from the module-and-export location, so Rust prints
+one location before the diagnostic code. PostCSS requests carry logical
+stylesheet paths; the worker resolves their physical input on the chosen side.
 
 The graph installs every definition binding and uses `MemoFragments` for
 screens, components, stories, and pages. Its fingerprint includes the bundle,

@@ -19,7 +19,9 @@ stylesheet delivery. It writes no files.
 `Graph` implements `dyn RenderGraph`. `DeliveryInputs` supplies module CSS
 roots, the bundle generation, component stylesheet lists, and exporting
 modules from the sidecar adapter. Its `prepare` method reads stylesheet
-inputs and computes document plans. It renders no document. Each plan carries
+inputs and computes document plans. It checks worker cancellation before each
+entry and stylesheet root. Config-relative stylesheet paths normalize dot
+segments inside `repoRoot`. It renders no document. Each plan carries
 a route and the document node's input hash, which is the public
 `documentKey`. `dyn RenderGeneration` supports on-demand rendering, a full
 build pass, resource reads, and closure queries. `render_props` validates a

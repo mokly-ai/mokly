@@ -164,7 +164,7 @@ pub struct ProcessCss {
     pub module_resolution: ModuleResolution,
     /// Consumer PostCSS module path.
     pub postcss: String,
-    /// Stylesheet source path.
+    /// Logical stylesheet source path, relative to sourceRoot or a selected dependency root.
     pub source_path: String,
     /// Stylesheet source text.
     pub text: String,

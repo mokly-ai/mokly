@@ -191,7 +191,9 @@ excluded with the `props-not-data` warning of the
 
 `processCss` runs the consumer's PostCSS module in a worker inside the sidecar
 with the explicit core-chosen `context`, `sourceRoot`, `repositoryRoots`, and `moduleResolution`.
-Workers are keyed by context and module. Each context has fresh local and
+`sourcePath` is a logical repository or dependency path. The worker resolves
+it against `sourceRoot` or the selected dependency root before setting PostCSS
+`from`. Request labels keep the logical path. Workers are keyed by context and module. Each context has fresh local and
 package module state and fixed source and resolution inputs. `disposeContext`
 releases only that context; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
@@ -214,7 +216,9 @@ seconds for a render, 60 seconds for `processCss`, each overridable by
 with the accepted range. When a deadline passes, the binary kills that
 sidecar, retries the request once on a fresh sidecar, and then fails with
 `render-timeout`. A cancelled command sends `shutdown` to every sidecar and
-kills any that survives the grace period.
+kills any that survives the grace period. Build follows the
+[terminal cancellation rule](./mokly-terminal-errors.md#plain-compatibility).
+Render labels split the last `#` as `{module} export {name}`.
 
 ## Fail-Closed Rules
 
@@ -229,7 +233,7 @@ kills any that survives the grace period.
 | `render-timeout`      | a deadline passed twice                                              | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need no
-JavaScript never start a sidecar and never fail for these reasons.
+JavaScript rendering or PostCSS never start a sidecar or fail for these reasons.
 
 ## Security
 

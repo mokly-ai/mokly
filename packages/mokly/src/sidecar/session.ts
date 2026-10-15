@@ -6,7 +6,7 @@ import type { Request } from "../generated/sidecar/Request.js";
 import { bundle } from "./bundle.js";
 import type { Generation } from "./bundle.js";
 import { describe } from "./describe.js";
-import { SidecarError, detail, protocol } from "./errors.js";
+import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { PostcssWorkers } from "./postcss.js";
 import { renderSession } from "./render-session.js";
@@ -169,7 +169,7 @@ export class Session {
               viewport: "desktop",
               colorScheme: "light",
             },
-            request.params.handle.replace("#", " export "),
+            handleLocation(request.params.handle),
           );
           const html = generation.runtime.withSession(session, () =>
             (data.input.render as () => unknown)(),
@@ -187,7 +187,7 @@ export class Session {
         } catch (error) {
           throw new SidecarError(
             "render-failed",
-            `${request.params.handle}: ${detail(error)}`,
+            `${handleLocation(request.params.handle)}: ${detail(error)}`,
           );
         }
       }

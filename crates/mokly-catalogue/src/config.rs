@@ -218,7 +218,8 @@ pub(crate) fn traversal(path: &str) -> bool {
         || path.chars().any(char::is_control)
 }
 
-pub(crate) fn normalize(path: &Path) -> PathBuf {
+/// Normalize lexical dot segments before checking repository confinement.
+pub fn normalize(path: &Path) -> PathBuf {
     let mut result = PathBuf::new();
     for component in path.components() {
         match component {

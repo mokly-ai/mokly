@@ -181,10 +181,7 @@ export function dataProps(
         throw new Error("props must be an object");
       return copied as Record<string, unknown>;
     } catch (error) {
-      throw new SidecarError(
-        "component-props",
-        `${location}: ${detail(error)}`,
-      );
+      throw new SidecarError("component-props", detail(error));
     }
   }
   const output: Record<string, unknown> = Object.create(null);

@@ -9,7 +9,7 @@ class PluginFailure extends Error {
     readonly plugin: string,
     cause: unknown,
   ) {
-    super(detail(cause));
+    super(detail(cause), { cause });
   }
 }
 

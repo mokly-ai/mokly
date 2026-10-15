@@ -91,6 +91,14 @@ fn postcss_failures_use_exact_catalogued_codes_and_logical_paths() {
             "[mokly/build-invalid] PostCSS plugin prepared-plugin failed for styles/input.css: prepared exploded; fix the plugin configuration or stylesheet\n",
         ),
         (
+            "export default {plugins:[{postcssPlugin:'syntax-plugin',Once(root){throw root.error('invalid colour')}}]};",
+            "[mokly/build-invalid] PostCSS plugin syntax-plugin failed for styles/input.css:1:1: invalid colour; fix the plugin configuration or stylesheet\n",
+        ),
+        (
+            "export default {plugins:[{postcssPlugin:'async-syntax',async Once(root){throw root.error('invalid colour')}}]};",
+            "[mokly/build-invalid] PostCSS plugin async-syntax failed for styles/input.css:1:1: invalid colour; fix the plugin configuration or stylesheet\n",
+        ),
+        (
             "export default {plugins:[3]};",
             "[mokly/config-invalid] postcss plugins[0] is not a PostCSS 8 plugin: 3 is not a PostCSS plugin; use a plugin instance, creator, function or object with a postcss factory\n",
         ),

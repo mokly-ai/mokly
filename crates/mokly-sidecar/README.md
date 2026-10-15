@@ -44,7 +44,9 @@ wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
 
 Expected PostCSS errors carry typed configuration, plugin, or dependency data.
-The core presents their catalogued code and text. `abort` kills process trees
+The core presents their catalogued code and text. Request diagnostics use
+logical stylesheet paths and module-and-export render labels. PostCSS syntax
+errors keep the logical source coordinate and reason. `abort` kills process trees
 without the graceful deadline when the command receives a second signal.
 
 ## Quick Start

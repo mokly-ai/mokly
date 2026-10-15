@@ -4,7 +4,8 @@
 
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::os::unix::process::CommandExt;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc;
 use std::thread;
@@ -17,7 +18,10 @@ struct Cleanup {
 
 impl Drop for Cleanup {
     fn drop(&mut self) {
-        let _ = self.child.kill();
+        let _ = Command::new("kill")
+            .args(["-KILL", "--", &format!("-{}", self.child.id())])
+            .stderr(Stdio::null())
+            .status();
         let _ = self.child.wait();
         if let Some(pid) = &self.sidecar {
             let _ = Command::new("kill")
@@ -32,11 +36,18 @@ impl Drop for Cleanup {
 #[test]
 fn interrupt_drains_and_stops_a_hung_sidecar() {
     for signal in ["-INT", "-TERM", "-HUP"] {
-        interrupt(signal);
+        interrupt(signal, false);
     }
 }
 
-fn interrupt(signal: &str) {
+#[test]
+fn one_process_group_signal_through_the_shim_drains_the_sidecar() {
+    for signal in ["-INT", "-TERM", "-HUP"] {
+        interrupt(signal, true);
+    }
+}
+
+fn interrupt(signal: &str, shim: bool) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -54,7 +65,15 @@ fn interrupt(signal: &str) {
     )
     .unwrap();
     fs::write(directory.path().join("specs/hang.mockup.ts"), "import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Hang',description:'',relatedDocs:[],props:{},render(){process.stderr.write('fixture-render-ready:'+process.pid+'\\n'); while(true){} }});\n").unwrap();
-    let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
+    let mut command = if shim {
+        let mut command = Command::new("node");
+        command.arg(install_shim(directory.path(), &workspace));
+        command
+    } else {
+        Command::new(env!("CARGO_BIN_EXE_mokly"))
+    };
+    let mut child = command
+        .process_group(0)
         .args(["build", "--no-changes", "--sidecars", "1"])
         .current_dir(directory.path())
         .env("MOKLY_PACKAGE_ROOT", workspace.join("packages/mokly"))
@@ -86,7 +105,7 @@ fn interrupt(signal: &str) {
     cleanup.sidecar = Some(pid.clone());
     assert!(
         Command::new("kill")
-            .args([signal, &cleanup.child.id().to_string()])
+            .args([signal, "--", &format!("-{}", cleanup.child.id())])
             .status()
             .unwrap()
             .success()
@@ -114,4 +133,46 @@ fn interrupt(signal: &str) {
         thread::yield_now();
     }
     cleanup.sidecar = None;
+}
+
+fn install_shim(root: &Path, workspace: &Path) -> PathBuf {
+    let scope = root.join("installation/node_modules/@mokly");
+    let package = scope.join("mokly");
+    fs::create_dir_all(package.join("bin")).unwrap();
+    fs::create_dir(package.join("dist")).unwrap();
+    for file in [
+        "package.json",
+        "bin/mokly.mjs",
+        "dist/runtime.mjs",
+        "dist/shim.mjs",
+        "dist/platform.mjs",
+        "dist/version.mjs",
+        "dist/execution.mjs",
+    ] {
+        fs::copy(
+            workspace.join("packages/mokly").join(file),
+            package.join(file),
+        )
+        .unwrap();
+    }
+    std::os::unix::fs::symlink(
+        workspace.join("packages/mokly/dist/sidecar.js"),
+        package.join("dist/sidecar.js"),
+    )
+    .unwrap();
+    for entry in fs::read_dir(workspace.join("packages")).unwrap() {
+        let entry = entry.unwrap();
+        if !entry.file_name().to_string_lossy().starts_with("native-") {
+            continue;
+        }
+        let native = scope.join(entry.file_name());
+        fs::create_dir_all(native.join("bin")).unwrap();
+        fs::copy(
+            entry.path().join("package.json"),
+            native.join("package.json"),
+        )
+        .unwrap();
+        std::os::unix::fs::symlink(env!("CARGO_BIN_EXE_mokly"), native.join("bin/mokly")).unwrap();
+    }
+    package.join("bin/mokly.mjs")
 }

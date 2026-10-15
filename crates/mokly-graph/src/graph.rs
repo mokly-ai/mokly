@@ -24,7 +24,7 @@ use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
 use crate::session::{Session, StyleInputs};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
-use crate::workers::RenderWorkers;
+use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{config_key, error, markdown_assets, markdown_sources, planning, styles};
 
 /// Render graph composition root, reused for working-tree and base-side generations.
@@ -82,6 +82,7 @@ impl Graph {
         let matchers = styles::Matchers::new(&config)?;
         let markdown_assets = markdown_assets::collect(&config, &catalogue, self.tree.as_ref())?;
         for entry in &mut catalogue.model.entries {
+            check_cancelled(self.workers.as_ref())?;
             if let EntryContent::Document { resources, .. } = &mut entry.content {
                 *resources = markdown_assets
                     .documents
@@ -118,6 +119,7 @@ impl Graph {
             .map(|root| root.path.clone())
             .collect();
         for root in roots.into_values() {
+            check_cancelled(self.workers.as_ref())?;
             let bundle = match self.stylesheets.bundle(&root) {
                 Ok(bundle) => bundle,
                 Err(source) => return Err(GraphError::Css { source }),
@@ -223,12 +225,11 @@ impl Graph {
             .sort_by(|left, right| compare_utf16(left, right));
         catalogue.model.sources.dedup();
         let plans = planning::documents(
+            self,
             &config,
             &catalogue,
-            self.tree.as_ref(),
             &config_key,
             &resources,
-            &self.inputs,
             &matchers,
         )?;
         for plan in plans.values() {

@@ -7,7 +7,7 @@ import type { Variant } from "../generated/sidecar/Variant.js";
 
 import type { Generation } from "./bundle.js";
 import { dataProps, metadataFields } from "./definition-fields.js";
-import { SidecarError } from "./errors.js";
+import { SidecarError, handleLocation } from "./errors.js";
 
 function reference(
   generation: Generation,
@@ -61,19 +61,19 @@ export function serialize(
     : (dataProps(
         input.props,
         Object.hasOwn(input, "propSchema"),
-        record.handle.replace("#", " export "),
+        handleLocation(record.handle),
         generation.warnings,
         record.excludedProps,
       ) as Definition["props"]);
   record.useCasePaths = ((input.useCasePaths ?? []) as unknown[]).map((item) =>
-    reference(generation, item, record.handle.replace("#", " export ")),
+    reference(generation, item, handleLocation(record.handle)),
   );
   record.steps = ((input.steps ?? []) as Record<string, unknown>[]).map(
     (step) => ({
       screenPath: reference(
         generation,
         step.screenPath,
-        record.handle.replace("#", " export "),
+        handleLocation(record.handle),
       ),
       ...(step.title !== undefined ? { title: step.title as string } : {}),
       ...(step.description !== undefined
@@ -106,7 +106,7 @@ export function serialize(
           : dataProps(
               variant.props,
               Object.hasOwn(input, "propSchema"),
-              `${record.handle.replace("#", " export ")}/${variant.slug}`,
+              `${handleLocation(record.handle)}/${variant.slug}`,
               generation.warnings,
               excludedProps,
             ),
@@ -115,7 +115,7 @@ export function serialize(
       } as Variant;
       if (useCasePaths)
         output.useCasePaths = useCasePaths.map((item: unknown) =>
-          reference(generation, item, record.handle.replace("#", " export ")),
+          reference(generation, item, handleLocation(record.handle)),
         );
       for (const [name, node] of Object.entries(slots ?? {})) {
         const handle = `${record.handle}:slot:${index}:${name}`;

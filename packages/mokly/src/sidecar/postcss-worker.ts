@@ -4,7 +4,7 @@ import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { detail } from "./errors.js";
-import { PostcssError } from "./postcss-errors.js";
+import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
@@ -26,19 +26,7 @@ parentPort?.on(
           map: false,
         })
         .catch((error: unknown) => {
-          const plugin =
-            error &&
-            typeof error === "object" &&
-            "plugin" in error &&
-            typeof error.plugin === "string"
-              ? error.plugin
-              : "unknown";
-          throw new PostcssError({
-            kind: "plugin",
-            plugin,
-            stylesheet: paths.name(params.sourcePath),
-            detail: detail(error),
-          });
+          throw pluginFailure(error, paths.name(params.sourcePath));
         });
       const dependencies: CssResult["dependencies"] = [
         ...new Set([

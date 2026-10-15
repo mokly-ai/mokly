@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::config::{invalid_path_text, normalize};
+use crate::config_postcss;
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::Result;
@@ -13,14 +14,9 @@ pub(crate) fn validate_inputs(
     tree: &dyn SourceTree,
     config: &ResolvedConfig,
 ) -> Result<Vec<PathBuf>> {
-    let mut sources = Vec::new();
-    for (setting, path) in [
-        ("renderer", &config.input.renderer),
-        ("postcss", &config.input.postcss),
-    ] {
-        if let Some(path) = path {
-            sources.extend(confined(tree, config, setting, path, false)?);
-        }
+    let mut sources = config_postcss::validate(tree, config)?;
+    if let Some(path) = &config.input.renderer {
+        sources.extend(confined(tree, config, "renderer", path, false)?);
     }
     for (index, rule) in config.input.stylesheets.iter().flatten().enumerate() {
         for list in [

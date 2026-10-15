@@ -23,12 +23,16 @@ The composition root constructs a
 lazy sidecar pool with the normalized `--sidecars` or environment count.
 The npm shim supplies its package root and Node executable. Direct binary
 execution checks the adjacent installed package and development ancestors.
-An HTML-only catalogue starts no sidecar and needs no package lookup result.
+An HTML-only catalogue without PostCSS starts no sidecar and needs no package
+lookup result. Direct execution uses `node` from `PATH` when the shim has not
+supplied `MOKLY_NODE_EXECUTABLE`.
 Catalogue and graph factories share the same runtime, cache, and pool.
 Build installs interrupt and termination handling before command work. Both
 the signal path and normal exit drain the pool through one shutdown guard.
-Cancellation stops source reads and queued native documents even with no sidecar.
-A second signal kills owned sidecars and exits immediately. The pool starts in
+Cancellation stops source reads, graph planning, and queued native documents
+even with no sidecar. Signal copies within one second of the first signal
+count as one interruption. A later signal kills owned sidecars and exits
+immediately. The interval uses an injected monotonic clock. The pool starts in
 the resolved repository root and uses the embedded npm version for hello and
 graph keys.
 The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option

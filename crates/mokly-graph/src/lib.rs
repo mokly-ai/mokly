@@ -48,3 +48,7 @@ mod snapshot_tests;
 
 mod document_composition;
 mod temporary;
+
+#[cfg(test)]
+#[path = "_tests_/cancellation_tests.rs"]
+mod cancellation_tests;

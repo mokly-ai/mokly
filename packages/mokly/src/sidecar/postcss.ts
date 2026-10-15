@@ -106,7 +106,7 @@ export class PostcssWorkers {
         id,
         params: {
           ...params,
-          sourcePath: path.resolve(root, params.sourcePath),
+          sourcePath: stylesheetSource(paths, params.sourcePath),
         },
       });
     });
@@ -121,4 +121,15 @@ export class PostcssWorkers {
     else this.contexts.delete(context);
     await Promise.all(selected.map(([, worker]) => worker.terminate()));
   }
+}
+
+function stylesheetSource(paths: ModulePaths, source: string): string {
+  const dependency = /^node_modules\/(?:\.mokly-roots\/(\d+)\/)?(.*)$/.exec(
+    source,
+  );
+  if (dependency) {
+    const root = paths.dependencyRoots[Number(dependency[1] ?? 0)];
+    if (root) return path.resolve(root, dependency[2]!);
+  }
+  return path.resolve(paths.sourceRoot, source);
 }

@@ -3,6 +3,7 @@
 #![warn(unreachable_pub)]
 pub mod config;
 mod config_paths;
+mod config_postcss;
 pub mod config_types;
 pub mod config_validation;
 mod declared_controls;

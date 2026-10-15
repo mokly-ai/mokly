@@ -104,7 +104,9 @@ export default function render(input: RenderInput): ReactNode | RenderResult;
 - The renderer reads `colorScheme` and `viewport` to select its theme and
   layout. It cannot write the `html` element, the head, or the stylesheet
   links. Mokly owns no product theme state.
-- A renderer that throws or returns a value that is not a React node fails
+- A configured renderer must default-export a function. A missing or invalid
+  default export fails with `renderer default export must be a function`.
+  A renderer that throws or returns a value that is not a React node fails
   the render with `render-failed` under the sidecar contract.
 
 ## Renderer Stylesheets

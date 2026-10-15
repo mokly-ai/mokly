@@ -112,11 +112,7 @@ impl PostCss {
             source_root: self.side.source_root.to_string_lossy().into_owned(),
             module_resolution: self.side.module_resolution.clone(),
             postcss: relative(&self.module, &self.root),
-            source_path: self
-                .side
-                .physical_source(path)
-                .to_string_lossy()
-                .into_owned(),
+            source_path: path.into(),
             text: source.into(),
         });
         let result = match self.pool.request(call) {
@@ -131,3 +127,7 @@ impl PostCss {
         Ok(result)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/postcss_request_tests.rs"]
+mod postcss_request_tests;

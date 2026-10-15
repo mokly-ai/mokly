@@ -8,25 +8,27 @@ use mokly_html::{parse, tree};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::routes;
-use mokly_source_interface::tree::SourceTree;
 
-use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{Result, invalid};
+use crate::graph::Graph;
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
+use crate::workers::check_cancelled;
 use crate::{error, resource_keys, routing_inputs, styles};
 
 pub(crate) fn documents(
+    graph: &Graph,
     config: &ResolvedConfig,
     catalogue: &PreparedCatalogue,
-    tree: &dyn SourceTree,
     config_key: &NodeKey,
     resources: &BTreeMap<String, ResourcePlan>,
-    delivery: &DeliveryInputs,
     matchers: &styles::Matchers,
 ) -> Result<BTreeMap<String, DocumentPlan>> {
+    let tree = graph.tree.as_ref();
+    let delivery = &graph.inputs;
     let mut sources = BTreeMap::new();
     for entry in &catalogue.model.entries {
+        check_cancelled(graph.workers.as_ref())?;
         let path = &entry.metadata.source.path;
         if sources.contains_key(path) {
             continue;
@@ -39,6 +41,7 @@ pub(crate) fn documents(
     }
     let mut component_keys = BTreeMap::new();
     for component in catalogue.elements.values() {
+        check_cancelled(graph.workers.as_ref())?;
         component_key(
             &component.path,
             catalogue,
@@ -49,6 +52,7 @@ pub(crate) fn documents(
     }
     let mut output = BTreeMap::new();
     for (index, entry) in catalogue.model.entries.iter().enumerate() {
+        check_cancelled(graph.workers.as_ref())?;
         if !matches!(entry.content, EntryContent::UseCase { .. })
             && entry.metadata.path.split('/').next().is_some_and(|first| {
                 first.eq_ignore_ascii_case("styles") || first.eq_ignore_ascii_case("assets")

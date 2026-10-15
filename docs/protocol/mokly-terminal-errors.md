@@ -46,11 +46,27 @@ a source location starts it with `<file>:<line>:<column>: `,
 repository-relative. If a source diagnostic has a code different from the
 outer command code, insert `[mokly/<source-code>] ` after the location and
 before its message. Omit that inner tag when both codes are equal. Print the
-location once, outside the source message. A diagnostic whose exact text lists locations prints
+location once, outside the source message. JavaScript locations use
+`{module} export {name}` when no coordinate is available. The entry-module
+codes `array-export`, `duplicate-export`, `empty-module`, `invalid-definition`,
+and `unknown-link-definition` are an exception: their exact messages contain
+the module-and-export locations, after the inner code tag. Do not add another
+location prefix. A diagnostic whose exact text lists locations prints
 those locations as following lines, as `git-uncommitted` does. Each line
 escapes its control characters and has its own width bound in rich mode.
 Timing mode keeps the same stdout and adds its JSON
 lines to stderr beside warnings and failures.
+
+A cancelled build has this exact plain output and exits `1`:
+
+```text
+[mokly/build-invalid] build cancelled
+```
+
+The first interrupt cancels source reads, graph preparation, and queued
+renders, then drains the sidecar pool. Copies received within one second of
+that first signal count as the same interruption. A signal at or after that
+boundary kills owned sidecars and exits immediately.
 
 The
 [exchange cancellation rule](./mokly-upload-exchange.md#accounting-and-output)

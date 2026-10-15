@@ -37,7 +37,6 @@ pub(crate) fn issue(diagnostic: &DefinitionDiagnostic) -> Issue {
             | DefinitionCode::EmptyModule
             | DefinitionCode::InvalidDefinition
             | DefinitionCode::UnknownLinkDefinition
-            | DefinitionCode::ComponentProps
     );
     issue
 }

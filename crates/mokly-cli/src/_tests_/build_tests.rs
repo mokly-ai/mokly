@@ -20,6 +20,7 @@ use mokly_model::catalogue::{
 };
 use mokly_model::data::Props;
 use mokly_model::inference::infer;
+use mokly_sidecar::workers::ClockMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildError, BuildService, CatalogueBuild};
@@ -137,7 +138,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
         .returns(Ok(prepared(Vec::new())))));
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
-        cancellation: Arc::new(BuildCancellation::default()),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
         graphs,
@@ -168,7 +169,7 @@ fn strict_build_keeps_warnings_and_resolves_explicit_output_from_cwd() {
     ));
     let (graphs, _guards) = graphs(vec![warning.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
-        cancellation: Arc::new(BuildCancellation::default()),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
         graphs,
@@ -196,7 +197,7 @@ fn a_loader_failure_preserves_the_typed_error_without_preparing_a_catalogue() {
             )))),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
-        cancellation: Arc::new(BuildCancellation::default()),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: Arc::new(Unimock::new(())),
         graphs: Arc::new(Unimock::new(())),
@@ -226,7 +227,7 @@ fn deferred_definitions_fail_before_graph_creation() {
             .returns(Ok(prepared)),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
-        cancellation: Arc::new(BuildCancellation::default()),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
         graphs: Arc::new(Unimock::new(())),
@@ -242,7 +243,9 @@ fn deferred_definitions_fail_before_graph_creation() {
 
 #[test]
 fn an_interrupt_after_html_preparation_cancels_before_graph_creation() {
-    let cancellation: Arc<dyn Cancellation> = Arc::new(BuildCancellation::default());
+    let cancellation: Arc<dyn Cancellation> = Arc::new(BuildCancellation::new(Arc::new(
+        Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0_u64)),
+    )));
     let interrupt = cancellation.clone();
     let loader = Arc::new(Unimock::new(
         ConfigLoaderMock::load

@@ -77,6 +77,9 @@ fn check(cancellation: &dyn Cancellation) -> Result<()> {
 }
 
 impl RenderWorkers for CancellableWorkers {
+    fn cancelled(&self) -> bool {
+        self.cancellation.requested()
+    }
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
         check(self.cancellation.as_ref())?;
         self.inner.closure(route, worker)
