@@ -1,4 +1,4 @@
-//! Base repository packages with three third-party dependency tiers.
+//! Three dependency tiers with repository roots for side-local module resolution.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -11,16 +11,15 @@ use crate::commands::{Command, Commands};
 use crate::dependency_types::{Fallback, Request, Resolved, Tier, Warning};
 use crate::error::{Error, Result};
 use crate::install::{self, Install};
-use crate::overlay::Overlays;
 
 /// Base dependency selection boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DependenciesMock))]
 pub trait Dependencies: Send + Sync {
-    /// Resolve repository packages from base sources, then select third-party dependencies.
+    /// Select dependencies and the repository roots that must map to side sources.
     fn resolve(&self, request: &Request) -> Result<Resolved>;
 }
 
-/// Third-party installation and repository-package overlay coordinator.
+/// Third-party installation coordinator. The sidecar maps repository sources.
 pub struct DependencyTiers {
     /// Bounded dependency namespace.
     pub cache: Arc<dyn Cache>,
@@ -28,8 +27,6 @@ pub struct DependencyTiers {
     pub commands: Arc<dyn Commands>,
     /// Source copying and size measurement.
     pub storage: Arc<dyn Storage>,
-    /// Base-owned package overlays, used by every tier.
-    pub overlays: Arc<dyn Overlays>,
     /// Monotonic clock for the single install deadline.
     pub clock: Arc<dyn Clock>,
     /// Version discovery and all installs share this allowance.
@@ -40,25 +37,18 @@ pub struct DependencyTiers {
 
 impl Dependencies for DependencyTiers {
     fn resolve(&self, request: &Request) -> Result<Resolved> {
-        let overlay = self.overlays.acquire(
-            &request.base,
-            &request.source_root,
-            &request.source_identity,
-        )?;
-        let validation = request.base.validate_install();
-        if request.base == request.head && validation.is_ok() {
+        if request.base == request.head {
             return Ok(resolved(
                 request,
                 Tier::Working,
                 &request.head_root,
                 None,
-                overlay,
                 None,
             ));
         }
         let attempt = (|| {
             let deadline = self.clock.now().saturating_add(self.timeout);
-            validation?;
+            request.base.validate_install()?;
             let roots = install::roots(&request.base, &request.resolution.package_roots)?;
             let version = self.commands.run(&Command {
                 program: "npm".into(),
@@ -92,7 +82,6 @@ impl Dependencies for DependencyTiers {
                     Tier::Installed,
                     &directory,
                     Some(lease),
-                    overlay,
                     None,
                 ))
             }
@@ -113,7 +102,9 @@ impl Dependencies for DependencyTiers {
                 );
                 let warning = Warning {
                     configuration: request.configuration.clone(),
-                    lockfile: request.base.differing_lockfile(&request.head),
+                    lockfile: request
+                        .base
+                        .differing_lockfile(&request.head, &request.resolution.package_roots),
                     reason,
                 };
                 Ok(resolved(
@@ -121,7 +112,6 @@ impl Dependencies for DependencyTiers {
                     Tier::Fallback,
                     &request.head_root,
                     None,
-                    overlay,
                     Some(warning),
                 ))
             }
@@ -134,14 +124,10 @@ fn resolved(
     tier: Tier,
     root: &Path,
     lease: Option<Lease>,
-    overlay: Option<Lease>,
     warning: Option<Warning>,
 ) -> Resolved {
     let mut resolution = request.resolution.clone();
-    resolution.package_roots = overlay
-        .iter()
-        .map(|lease| lease.directory.to_string_lossy().into_owned())
-        .chain(std::iter::once(root.to_string_lossy().into_owned()))
+    resolution.package_roots = std::iter::once(root.to_string_lossy().into_owned())
         .chain(
             request
                 .resolution
@@ -150,13 +136,17 @@ fn resolved(
                 .map(|path| root.join(path).to_string_lossy().into_owned()),
         )
         .collect();
+    let mut repository_roots = vec![request.head_root.clone()];
+    if tier == Tier::Installed && root != request.head_root {
+        repository_roots.push(root.to_owned());
+    }
     Resolved {
         tier,
         node_modules: root.join("node_modules"),
         module_resolution: resolution,
         warning,
         lease,
-        overlay,
+        repository_roots,
     }
 }
 

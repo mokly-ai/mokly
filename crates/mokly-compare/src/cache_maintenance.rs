@@ -38,8 +38,10 @@ impl DiskCache {
             let path = namespace.join("locks").join(format!("{}.lock", record.key));
             match self.locks.try_lock(&path) {
                 Ok(_guard) => {
-                    self.storage
-                        .remove(&namespace.join("entries").join(&record.key))?;
+                    self.storage.retire(
+                        &namespace.join("entries").join(&record.key),
+                        &namespace.join("trash"),
+                    )?;
                     total = total.saturating_sub(record.receipt.bytes);
                 }
                 Err(error::Error::Locked { .. }) => {}
@@ -48,6 +50,15 @@ impl DiskCache {
         }
         if total > limit {
             return Err(Error::CacheLimit { limit });
+        }
+        Ok(())
+    }
+
+    pub(crate) fn clean_trash(&self, namespace: &Path) -> Result<()> {
+        let trash = namespace.join("trash");
+        for key in self.storage.stages(&trash)? {
+            self.check()?;
+            self.storage.remove(&trash.join(key))?;
         }
         Ok(())
     }
@@ -63,9 +74,10 @@ impl DiskCache {
                 .locks
                 .try_lock(&namespace.join("locks").join(format!("{}.lock", record.key)))
             {
-                Ok(_guard) => self
-                    .storage
-                    .remove(&namespace.join("entries").join(&record.key))?,
+                Ok(_guard) => self.storage.retire(
+                    &namespace.join("entries").join(&record.key),
+                    &namespace.join("trash"),
+                )?,
                 Err(error::Error::Locked { .. }) => {}
                 Err(source) => return Err(InternalError::Platform { source }.into()),
             }
@@ -79,7 +91,10 @@ impl DiskCache {
                 .locks
                 .try_lock(&namespace.join("locks").join(format!("{key}.lock")))
             {
-                Ok(_guard) => self.storage.remove(&namespace.join("staging").join(key))?,
+                Ok(_guard) => self.storage.retire(
+                    &namespace.join("staging").join(key),
+                    &namespace.join("trash"),
+                )?,
                 Err(error::Error::Locked { .. }) => {}
                 Err(source) => return Err(InternalError::Platform { source }.into()),
             }

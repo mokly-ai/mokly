@@ -1,6 +1,5 @@
 //! Cache boundaries and lease data shared by base preparation.
 
-use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
@@ -84,19 +83,16 @@ pub trait Storage: Send + Sync {
     fn records(&self, entries: &Path) -> Result<Vec<Record>>;
     /// Update a receipt with atomic replacement.
     fn receipt(&self, entry: &Path, receipt: &Receipt) -> Result<()>;
+    /// Update only the access sequence without durability flushes.
+    fn touch(&self, entry: &Path, receipt: &Receipt) -> Result<()>;
+    /// Rename an unleased entry into trash without traversing it.
+    fn retire(&self, path: &Path, trash: &Path) -> Result<()>;
     /// Count bytes without following symbolic links; stop at the limit.
     fn size(&self, path: &Path, limit: u64) -> Result<u64>;
-    /// Remove a cache-owned directory without following links.
+    /// Remove cache-owned data without following links, checking cancellation.
     fn remove(&self, path: &Path) -> Result<()>;
     /// Move a completed staging directory into its final name.
     fn publish(&self, stage: &Path, target: &Path) -> Result<()>;
-    /// Create package-name links into the leased extraction root.
-    fn packages(
-        &self,
-        destination: &Path,
-        source: &Path,
-        packages: &BTreeMap<String, String>,
-    ) -> Result<()>;
     /// Copy regular source files to a fresh install directory under a byte limit.
     fn copy(&self, source: &Path, destination: &Path, limit: u64) -> Result<()>;
 }

@@ -84,6 +84,35 @@ impl GitRepository {
         }))
     }
 
+    pub(crate) fn clean_hashes(&self, paths: &[RepoPath], limit: usize) -> Result<Vec<ObjectId>> {
+        if paths.is_empty() {
+            return Ok(vec![]);
+        }
+        let mut input = Vec::new();
+        for path in paths {
+            if self.disk.read(&self.directory, path, limit)?.is_none() {
+                return Err(Error::MissingBlob {
+                    path: path.to_string(),
+                });
+            }
+            input.extend_from_slice(quoted_path(path).as_bytes());
+            input.push(b'\n');
+        }
+        let output = self.command(
+            &["hash-object", "--stdin-paths"],
+            input,
+            paths.len().saturating_mul(65),
+        )?;
+        let objects = text(&output)?
+            .lines()
+            .map(ObjectId::parse)
+            .collect::<Result<Vec<_>>>()?;
+        if objects.len() != paths.len() {
+            return Err(Error::MalformedOutput);
+        }
+        Ok(objects)
+    }
+
     pub(crate) fn read_entries(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>> {
         if entries.len() > limits.files {
             return Err(Error::FileCount {
@@ -103,3 +132,23 @@ impl GitRepository {
         self.load(entries, limits.bytes)
     }
 }
+
+fn quoted_path(path: &RepoPath) -> String {
+    let mut output = String::from("\"./");
+    for byte in path.as_str().bytes() {
+        match byte {
+            b'\\' | b'"' => {
+                output.push('\\');
+                output.push(char::from(byte));
+            }
+            32..=126 => output.push(char::from(byte)),
+            _ => output.push_str(&format!("\\{byte:03o}")),
+        }
+    }
+    output.push('"');
+    output
+}
+
+#[cfg(test)]
+#[path = "_tests_/access_tests.rs"]
+mod access_tests;

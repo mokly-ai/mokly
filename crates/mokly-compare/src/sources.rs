@@ -35,16 +35,18 @@ pub trait Sources: Send + Sync {
 pub struct GitSources {
     repository: Arc<dyn Repository>,
     commit: ObjectId,
+    limits: Limits,
     index: OnceLock<Arc<TreeIndex>>,
     loading: Mutex<()>,
 }
 
 impl GitSources {
     /// Compose a reader without starting IO or extracting source files.
-    pub fn new(repository: Arc<dyn Repository>, commit: ObjectId) -> Self {
+    pub fn new(repository: Arc<dyn Repository>, commit: ObjectId, limits: Limits) -> Self {
         Self {
             repository,
             commit,
+            limits,
             index: OnceLock::new(),
             loading: Mutex::new(()),
         }
@@ -124,7 +126,7 @@ impl Sources for GitSources {
         }
         let entries = self
             .repository
-            .list(&self.commit, None, Limits::default())
+            .list(&self.commit, None, self.limits)
             .base()?;
         let index = Arc::new(TreeIndex {
             entries: entries

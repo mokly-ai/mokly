@@ -224,3 +224,61 @@ fn finder_files_are_ignored_and_interrupted_dependency_entries_rebuild() {
     assert_eq!(builder.calls.load(Ordering::SeqCst), 1);
     assert!(entry.join("receipt.json").is_file());
 }
+
+#[test]
+fn an_entry_that_grows_past_capacity_is_rebuilt() {
+    let temporary = tempfile::tempdir().unwrap();
+    let cache = cache(temporary.path().canonicalize().unwrap().join("cache"), 2000);
+    let builder = Files::new();
+    let key = "e".repeat(40);
+    {
+        let lease = cache.get(Kind::Sources, &key, &builder).unwrap();
+        fs::write(lease.directory.join("file"), vec![0; 3000]).unwrap();
+    }
+    for _ in 0..2 {
+        let lease = cache.get(Kind::Sources, &key, &builder).unwrap();
+        assert_eq!(fs::read(lease.directory.join("file")).unwrap(), b"content");
+    }
+    assert_eq!(builder.calls.load(Ordering::SeqCst), 2);
+}
+
+#[test]
+fn cancelled_trash_cleanup_is_swept_on_the_next_cache_open() {
+    let temporary = tempfile::tempdir().unwrap();
+    let root = temporary.path().canonicalize().unwrap().join("cache");
+    let initial = cache(root.clone(), 10000);
+    let trash = root.join("sources/trash");
+    initial.storage.prepare(&trash).unwrap();
+    let old = root.join("sources/old");
+    fs::create_dir_all(old.join("data")).unwrap();
+    fs::write(old.join("data/file"), b"old").unwrap();
+    let outside = temporary.path().join("repository-file");
+    fs::write(&outside, b"authored").unwrap();
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(&outside, old.join("data/link")).unwrap();
+    initial.storage.retire(&old, &trash).unwrap();
+    assert!(!old.exists());
+    let retired = fs::read_dir(&trash)
+        .unwrap()
+        .next()
+        .unwrap()
+        .unwrap()
+        .path();
+    let token = Arc::new(mokly_git::control::Token::default());
+    token.cancel();
+    let cancelled: &dyn mokly_compare::cache_types::Storage =
+        &mokly_compare::storage::SystemStorage {
+            root: root.clone(),
+            cancellation: token,
+            flush: Arc::new(mokly_platform::flush::SystemFlush),
+        };
+    assert!(matches!(cancelled.remove(&retired), Err(Error::Cancelled)));
+    assert!(retired.join("data/file").exists());
+    let fresh = cache(root, 10000);
+    let lease = fresh
+        .get(Kind::Sources, &"a".repeat(40), &Files::new())
+        .unwrap();
+    assert_eq!(fs::read(lease.directory.join("file")).unwrap(), b"content");
+    assert_eq!(fs::read_dir(&trash).unwrap().count(), 0);
+    assert_eq!(fs::read(outside).unwrap(), b"authored");
+}

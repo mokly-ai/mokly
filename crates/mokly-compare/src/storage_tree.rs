@@ -1,7 +1,10 @@
 //! Cache tree traversal without following symbolic links.
 
 use std::fs;
+#[cfg(windows)]
+use std::os::windows::fs::FileTypeExt;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use mokly_git::control::Cancellation;
 
@@ -120,4 +123,77 @@ pub(crate) fn vanished(error: &std::io::Error) -> bool {
         error.kind(),
         std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
     )
+}
+
+/// Detach an unleased tree in constant filesystem work under the namespace lock.
+pub(crate) fn retire(path: &Path, trash: &Path) -> Result<()> {
+    static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+    loop {
+        let name = format!(
+            "{:032x}{:08x}",
+            SEQUENCE.fetch_add(1, Ordering::Relaxed),
+            std::process::id()
+        );
+        let target = trash.join(name);
+        if fs::symlink_metadata(&target).is_ok() {
+            continue;
+        }
+        return match fs::rename(path, target) {
+            Ok(()) => Ok(()),
+            Err(error) if vanished(&error) => Ok(()),
+            Err(source) => Err(InternalError::Io { source }.into()),
+        };
+    }
+}
+
+pub(crate) fn remove(path: &Path, cancellation: &dyn Cancellation) -> Result<()> {
+    let mut pending = vec![(path.to_owned(), false)];
+    while let Some((path, visited)) = pending.pop() {
+        check(cancellation)?;
+        let metadata = match fs::symlink_metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) if vanished(&error) => continue,
+            Err(source) => return Err(InternalError::Io { source }.into()),
+        };
+        if metadata.is_dir() && !metadata.is_symlink() && !visited {
+            pending.push((path.clone(), true));
+            let items = match fs::read_dir(&path) {
+                Ok(items) => items,
+                Err(error) if vanished(&error) => continue,
+                Err(source) => return Err(InternalError::Io { source }.into()),
+            };
+            for item in items {
+                check(cancellation)?;
+                match item {
+                    Ok(item) => pending.push((item.path(), false)),
+                    Err(error) if vanished(&error) => {}
+                    Err(source) => return Err(InternalError::Io { source }.into()),
+                }
+            }
+        } else {
+            let result = if metadata.is_dir() || directory_link(&metadata) {
+                fs::remove_dir(&path)
+            } else {
+                fs::remove_file(&path)
+            };
+            match result {
+                Ok(()) => {}
+                Err(error) if vanished(&error) => {}
+                Err(source) => return Err(InternalError::Io { source }.into()),
+            }
+        }
+    }
+    Ok(())
+}
+
+fn directory_link(metadata: &fs::Metadata) -> bool {
+    #[cfg(windows)]
+    {
+        metadata.file_type().is_symlink_dir()
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = metadata;
+        false
+    }
 }

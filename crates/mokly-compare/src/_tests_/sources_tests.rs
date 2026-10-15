@@ -29,10 +29,18 @@ fn source_index_preserves_all_modes_and_reuses_the_tree_for_batched_reads() {
         ..entry.clone()
     };
     let repository = Unimock::new((
-        RepositoryMock::list.next_call(matching!(_, None, _)).returns(Ok(vec![link, directory, entry.clone()])),
+        RepositoryMock::list.next_call(matching!((_, None, limits) if limits.files == 2 && limits.nodes == 8)).returns(Ok(vec![link, directory, entry.clone()])),
         RepositoryMock::read_many.next_call(matching!((entries, limits) if entries.len() == 1 && entries[0].path.as_str() == "specs/A.html" && limits.blob == 1)).returns(Ok(vec![vec![255]])),
     ));
-    let reader = GitSources::new(Arc::new(repository), commit);
+    let reader = GitSources::new(
+        Arc::new(repository),
+        commit,
+        Limits {
+            files: 2,
+            nodes: 8,
+            ..Limits::default()
+        },
+    );
     let sources: &dyn Sources = &reader;
     assert!(sources.list(&[], Limits::default()).unwrap().is_empty());
     assert_eq!(

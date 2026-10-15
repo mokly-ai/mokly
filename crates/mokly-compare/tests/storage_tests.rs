@@ -1,4 +1,6 @@
-//! Cache receipt publication must not follow a stale temporary symlink.
+//! Cache receipt publication, confined paths and cancellable traversals.
+
+use std::sync::Arc;
 
 #[cfg(unix)]
 #[test]
@@ -11,6 +13,7 @@ fn temporary_receipt_links_cannot_overwrite_files_outside_the_cache() {
     std::os::unix::fs::symlink(&outside, entry.join("receipt.tmp")).unwrap();
     let storage: &dyn mokly_compare::cache_types::Storage =
         &mokly_compare::storage::SystemStorage {
+            flush: Arc::new(mokly_platform::flush::SystemFlush),
             root: temporary.path().canonicalize().unwrap(),
             cancellation: std::sync::Arc::new(mokly_git::control::Token::default()),
         };
@@ -39,6 +42,7 @@ fn cache_walks_observe_cancellation() {
     token.cancel();
     let storage: &dyn mokly_compare::cache_types::Storage =
         &mokly_compare::storage::SystemStorage {
+            flush: Arc::new(mokly_platform::flush::SystemFlush),
             root: temporary.path().canonicalize().unwrap(),
             cancellation: token,
         };
@@ -46,6 +50,11 @@ fn cache_walks_observe_cancellation() {
         storage.size(&temporary.path().canonicalize().unwrap(), 10000),
         Err(mokly_compare::error::Error::Cancelled)
     ));
+    assert!(matches!(
+        storage.remove(&temporary.path().canonicalize().unwrap().join("file")),
+        Err(mokly_compare::error::Error::Cancelled)
+    ));
+    assert!(temporary.path().join("file").is_file());
     assert!(matches!(
         storage.synchronize(&temporary.path().canonicalize().unwrap()),
         Err(mokly_compare::error::Error::Cancelled)
@@ -93,6 +102,7 @@ fn location_probe() {
     assert!(root.starts_with(expected));
     let storage: &dyn mokly_compare::cache_types::Storage =
         &mokly_compare::storage::SystemStorage {
+            flush: Arc::new(mokly_platform::flush::SystemFlush),
             root: root.clone(),
             cancellation: std::sync::Arc::new(mokly_git::control::Token::default()),
         };

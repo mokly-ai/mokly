@@ -11,7 +11,6 @@ use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_compare::inputs::{InputReader, SourceInputs};
-use mokly_compare::overlay::CachedOverlays;
 use mokly_compare::process::SystemSpawner;
 use mokly_compare::sources::{GitSources, Sources};
 use mokly_compare::working_inputs::{SystemWorkingInputs, WorkingInputs};
@@ -112,7 +111,8 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         disk: Arc::new(SystemDisk),
     };
     let repository = repositories.open(&root).unwrap();
-    let sources: &dyn Sources = &GitSources::new(Arc::clone(&repository), commit.clone());
+    let sources: &dyn Sources =
+        &GitSources::new(Arc::clone(&repository), commit.clone(), Limits::default());
     let reader: &dyn InputReader = &SourceInputs;
     let base = reader.read(sources, Limits::default()).unwrap();
     let working: &dyn WorkingInputs = &SystemWorkingInputs;
@@ -136,10 +136,6 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         b"<p>Base</p>"
     );
     let tiers: &dyn Dependencies = &DependencyTiers {
-        overlays: Arc::new(CachedOverlays {
-            cache: cache.clone(),
-            storage: storage(temporary.path()),
-        }),
         clock: clock.clone(),
         cache,
         commands,
@@ -163,27 +159,10 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     .unwrap();
     let working_result = tiers.resolve(&request).unwrap();
     assert_eq!(working_result.tier, Tier::Working);
-    let overlay = working_result.overlay.as_ref().unwrap();
+    assert_eq!(working_result.repository_roots, std::slice::from_ref(&root));
     assert_eq!(
-        working_result.module_resolution.package_roots[0],
-        overlay.directory.to_string_lossy()
-    );
-    assert_eq!(
-        fs::read(
-            overlay
-                .directory
-                .join("node_modules/local-fixture/index.js")
-        )
-        .unwrap(),
-        b"module.exports = 'base';\n"
-    );
-    assert!(
-        overlay
-            .directory
-            .join("node_modules/local-fixture")
-            .canonicalize()
-            .unwrap()
-            .starts_with(&request.source_root)
+        working_result.module_resolution.package_roots,
+        [root.to_string_lossy()]
     );
     request
         .head
@@ -192,6 +171,22 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     let first_directory = {
         let result = tiers.resolve(&request).unwrap();
         assert_eq!(result.tier, Tier::Installed, "{:?}", result.warning);
+        assert_eq!(
+            result.repository_roots,
+            [
+                root.clone(),
+                result.lease.as_ref().unwrap().directory.clone()
+            ]
+        );
+        assert!(
+            !result
+                .lease
+                .as_ref()
+                .unwrap()
+                .directory
+                .join(".npm-cache")
+                .exists()
+        );
         assert!(
             !outside_logs.exists(),
             "npm logs escaped the bounded install directory"
@@ -236,17 +231,6 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     );
     let fallback = tiers.resolve(&request).unwrap();
     assert_eq!(fallback.tier, Tier::Fallback);
-    assert_eq!(
-        fs::read(
-            fallback
-                .overlay
-                .as_ref()
-                .unwrap()
-                .directory
-                .join("node_modules/local-fixture/index.js")
-        )
-        .unwrap(),
-        b"module.exports = 'base';\n"
-    );
+    assert_eq!(fallback.repository_roots, std::slice::from_ref(&root));
     assert!(!root.join("node_modules").exists());
 }

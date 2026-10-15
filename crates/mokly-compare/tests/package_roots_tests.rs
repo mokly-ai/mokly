@@ -10,7 +10,6 @@ use mokly_compare::commands::{Command, Commands, TimedCommands};
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
 use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::inputs::{InputReader, SourceInputs};
-use mokly_compare::overlay::CachedOverlays;
 use mokly_compare::process::SystemSpawner;
 use mokly_compare::sources::GitSources;
 use mokly_git::control::{SystemClock, Token};
@@ -120,7 +119,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
         let repository = factory.open(&root).unwrap();
         let base = SourceInputs
             .read(
-                &GitSources::new(repository.clone(), commit.clone()),
+                &GitSources::new(repository.clone(), commit.clone(), Limits::default()),
                 Limits::default(),
             )
             .unwrap();
@@ -137,10 +136,6 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
         let sources = mokly_compare::extraction::Extraction::acquire(&extraction, &commit).unwrap();
         let tiers: &dyn Dependencies = &DependencyTiers {
             cache: cache.clone(),
-            overlays: Arc::new(CachedOverlays {
-                cache,
-                storage: storage(temporary.path()),
-            }),
             storage: storage(temporary.path()),
             clock,
             commands,

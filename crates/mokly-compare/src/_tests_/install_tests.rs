@@ -71,12 +71,14 @@ fn every_install_uses_the_remaining_shared_allowance_and_whole_tree_size_bound()
     ));
     let owner = DependencyTiers {
         cache: Arc::new(Unimock::new(())),
-        overlays: Arc::new(Unimock::new(())),
-        storage: Arc::new(Unimock::new(
+        storage: Arc::new(Unimock::new((
             StorageMock::copy
                 .next_call(matching!(_, _, 1000))
                 .returns(Ok(())),
-        )),
+            StorageMock::remove
+                .next_call(matching!((path) if *path == Path::new("/install/.npm-cache")))
+                .returns(Ok(())),
+        ))),
         commands: Arc::new(commands),
         clock: Arc::new(clock),
         timeout: Duration::from_secs(100),
@@ -104,7 +106,6 @@ fn an_expired_shared_deadline_starts_no_next_package_manager() {
     };
     let owner = DependencyTiers {
         cache: Arc::new(Unimock::new(())),
-        overlays: Arc::new(Unimock::new(())),
         storage: Arc::new(Unimock::new(
             StorageMock::copy
                 .next_call(matching!(_, _, _))

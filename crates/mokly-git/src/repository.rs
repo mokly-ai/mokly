@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::access::WorkingFile;
 use crate::blob_batches;
 use crate::changes::{self, Change, ChangedPath, Kind};
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
 use crate::disk::{ArchiveFile, Disk};
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
@@ -37,6 +37,10 @@ pub trait Repository: Send + Sync {
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>>;
+    /// Read confined regular working bytes without starting Git.
+    fn working_bytes(&self, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
+    /// Hash confined working paths in one Git-clean stdin-paths batch.
+    fn working_hashes(&self, paths: &[RepoPath], limit: usize) -> Result<Vec<ObjectId>>;
     /// Extract a bounded source archive into a fresh directory.
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()>;
 }
@@ -99,7 +103,7 @@ impl GitRepository {
                 args: arguments,
                 stdin,
                 output_limit: limit,
-                stderr_limit: 1024 * 1024,
+                stderr_limit: DEFAULT_STDERR_LIMIT,
             })?
             .stdout)
     }
@@ -222,6 +226,14 @@ impl Repository for GitRepository {
 
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>> {
         self.working_file(path, limit)
+    }
+
+    fn working_bytes(&self, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
+        self.disk.read(&self.directory, path, limit)
+    }
+
+    fn working_hashes(&self, paths: &[RepoPath], limit: usize) -> Result<Vec<ObjectId>> {
+        self.clean_hashes(paths, limit)
     }
 
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()> {

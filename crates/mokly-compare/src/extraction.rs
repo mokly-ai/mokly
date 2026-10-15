@@ -48,6 +48,7 @@ impl Extraction for CachedExtraction {
         let limits = Limits {
             bytes: self.cache.capacity(Kind::Sources).saturating_sub(1024) as usize,
             files: self.files,
+            nodes: Limits::default().nodes,
             blob: self.blob_bytes,
         };
         self.cache.get(

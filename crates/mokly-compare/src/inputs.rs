@@ -22,7 +22,7 @@ pub struct Inputs {
 
 impl Inputs {
     /// First differing lockfile, or the base's selected lockfile for a manifest edit.
-    pub fn differing_lockfile(&self, head: &Self) -> Option<RepoPath> {
+    pub fn differing_lockfile(&self, head: &Self, configured: &[String]) -> Option<RepoPath> {
         self.files
             .keys()
             .chain(head.files.keys())
@@ -31,7 +31,7 @@ impl Inputs {
             .filter(|path| is_lock(path.as_str()))
             .find(|path| self.files.get(*path) != head.files.get(*path))
             .cloned()
-            .or_else(|| self.lockfile())
+            .or_else(|| self.selected_lockfile(configured))
     }
 
     /// Npm lockfile precedence. Other managers follow the fallback tier.
@@ -50,6 +50,31 @@ impl Inputs {
                 .keys()
                 .find(|path| path.as_str().rsplit('/').next() == Some(*name))
                 .cloned()
+        })
+    }
+
+    fn selected_lockfile(&self, configured: &[String]) -> Option<RepoPath> {
+        [
+            &["npm-shrinkwrap.json", "package-lock.json"][..],
+            &["pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"][..],
+        ]
+        .into_iter()
+        .find_map(|names| {
+            std::iter::once("")
+                .chain(configured.iter().map(String::as_str))
+                .find_map(|root| {
+                    names.iter().find_map(|name| {
+                        let path = if root.is_empty() {
+                            (*name).to_owned()
+                        } else {
+                            format!("{root}/{name}")
+                        };
+                        self.files
+                            .keys()
+                            .find(|candidate| candidate.as_str() == path)
+                            .cloned()
+                    })
+                })
         })
     }
 

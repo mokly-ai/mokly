@@ -21,14 +21,15 @@ impl WorkingInputs for SystemWorkingInputs {
     fn read(&self, repository: &dyn Repository, base: &Inputs, limits: Limits) -> Result<Inputs> {
         let mut inputs = Inputs::default();
         let mut total = 0usize;
+        let mut changed = Vec::new();
         for path in repository.working_paths().base()? {
             if !selected(path.as_str())
                 || path.as_str().split('/').any(|part| part == "node_modules")
             {
                 continue;
             }
-            let file = match repository.working(&path, limits.blob) {
-                Ok(Some(file)) => file,
+            let bytes = match repository.working_bytes(&path, limits.blob) {
+                Ok(Some(bytes)) => bytes,
                 Ok(None) => continue,
                 Err(error::Error::NotRegular { .. }) => {
                     tracing::trace!(path = %path, "skipping nonregular dependency candidate");
@@ -37,20 +38,48 @@ impl WorkingInputs for SystemWorkingInputs {
                 Err(error::Error::Cancelled) => return Err(Error::Cancelled),
                 Err(source) => return Err(Error::Git { source }),
             };
-            total = total.saturating_add(file.bytes.len());
-            if total > limits.bytes || inputs.files.len() >= limits.files {
-                return Err(Error::CacheLimit {
-                    limit: limits.bytes as u64,
+            total = total.saturating_add(bytes.len());
+            if inputs.files.len() >= limits.files {
+                return Err(Error::Git {
+                    source: error::Error::FileCount {
+                        limit: limits.files,
+                    },
                 });
             }
-            let bytes = if base.objects.get(&path) == Some(&file.object) {
-                base.files.get(&path).cloned().unwrap_or(file.bytes)
+            if total > limits.bytes {
+                return Err(Error::Git {
+                    source: error::Error::ByteLimit {
+                        limit: limits.bytes,
+                    },
+                });
+            }
+            if base.files.get(&path) == Some(&bytes) {
+                if let Some(object) = base.objects.get(&path) {
+                    inputs.objects.insert(path.clone(), object.clone());
+                }
             } else {
-                file.bytes
-            };
-            inputs.objects.insert(path.clone(), file.object);
+                changed.push(path.clone());
+            }
             inputs.files.insert(path, bytes);
+        }
+        let hashes = repository.working_hashes(&changed, limits.blob).base()?;
+        if hashes.len() != changed.len() {
+            return Err(Error::Git {
+                source: error::Error::MalformedOutput,
+            });
+        }
+        for (path, object) in changed.into_iter().zip(hashes) {
+            if base.objects.get(&path) == Some(&object)
+                && let Some(bytes) = base.files.get(&path)
+            {
+                inputs.files.insert(path.clone(), bytes.clone());
+            }
+            inputs.objects.insert(path, object);
         }
         Ok(inputs)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/working_inputs_tests.rs"]
+mod working_inputs_tests;

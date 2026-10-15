@@ -145,9 +145,14 @@ repository that the [architecture page](../architecture/rust-core.md#render-grap
 names, keyed by the commit, and the sidecar bundles from that directory.
 
 Repository-owned packages, including workspaces and local directory packages,
-always come from the side's own sources. The base bundle resolves them through
-a per-commit package overlay that links into its extraction and precedes every
-third-party package root. Third-party dependencies follow three tiers:
+always come from the side's own sources. During module resolution, a real
+path inside a repository root and outside every `node_modules` directory maps
+to the same relative path under the side's source root. A missing mapped file
+fails closed with `bundle-failed`. Repository roots name the working tree and,
+for an install that copies base sources, that copied base repository root.
+This covers npm, pnpm, Yarn and Bun workspaces and local `file:` packages,
+while nested `node_modules` keep the selected third-party dependencies.
+Third-party dependencies follow three tiers:
 
 1. The base's lockfile and package manifest identities equal the working tree's
    under Git's clean conversion: the

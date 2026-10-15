@@ -3,6 +3,7 @@
 use std::fs;
 
 use mokly_platform::error::Error;
+use mokly_platform::flush::{Flush, SystemFlush};
 use mokly_platform::locks::{Locks, SystemLocks};
 use mokly_platform::rename::{Rename, SystemRename};
 use tempfile::tempdir;
@@ -67,4 +68,19 @@ fn shared_leases_coexist_and_block_an_exclusive_writer() {
     ));
     std::mem::drop(second);
     assert!(locks.try_lock(&path).is_ok());
+}
+
+#[test]
+fn filesystem_and_plain_flushes_preserve_files() {
+    let temporary = tempdir().unwrap();
+    let file = temporary.path().join("file");
+    fs::write(&file, b"content").unwrap();
+    let flush: &dyn Flush = &SystemFlush;
+    flush.file(&file).unwrap();
+    flush.directory(temporary.path()).unwrap();
+    assert_eq!(
+        flush.filesystem(temporary.path()).unwrap(),
+        cfg!(target_os = "linux")
+    );
+    assert_eq!(fs::read(file).unwrap(), b"content");
 }

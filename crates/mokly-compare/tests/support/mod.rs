@@ -29,6 +29,7 @@ pub fn cache(root: PathBuf, limit: u64) -> DiskCache {
         source_bytes: limit,
         dependency_bytes: limit,
         storage: Arc::new(SystemStorage {
+            flush: Arc::new(mokly_platform::flush::SystemFlush),
             root: root.clone(),
             cancellation: Arc::new(Token::default()),
         }),
@@ -85,6 +86,7 @@ pub fn git(root: &Path, args: &[&str]) -> Vec<u8> {
 
 pub fn storage(root: &Path) -> Arc<dyn Storage> {
     Arc::new(SystemStorage {
+        flush: Arc::new(mokly_platform::flush::SystemFlush),
         root: root.canonicalize().unwrap(),
         cancellation: Arc::new(Token::default()),
     })

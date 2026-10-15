@@ -57,6 +57,9 @@ fn cache(storage: Unimock, locks: Unimock) -> DiskCache {
 #[test]
 fn hit_uses_shared_lease_and_recounted_receipt_without_hashing_or_building() {
     let storage = Unimock::new((
+        StorageMock::stages
+            .each_call(matching!((path) if path.ends_with("trash")))
+            .answers(&|_, _| Ok(vec![])),
         StorageMock::prepare
             .each_call(matching!(_))
             .answers(&|_, _| Ok(())),
@@ -69,7 +72,7 @@ fn hit_uses_shared_lease_and_recounted_receipt_without_hashing_or_building() {
                 key: key(),
                 receipt: receipt(),
             }])),
-        StorageMock::receipt
+        StorageMock::touch
             .next_call(matching!((_, receipt) if receipt.used == 8 && receipt.bytes == 1025))
             .returns(Ok(())),
     ));
@@ -90,6 +93,7 @@ fn miss_syncs_data_then_evicts_oldest_unleased_entry_before_publication() {
         },
     }];
     let storage = Unimock::new((
+        StorageMock::stages.each_call(matching!((path) if path.ends_with("trash"))).answers(&|_, _| Ok(vec![])),
         StorageMock::prepare
             .each_call(matching!(_))
             .answers(&|_, _| Ok(())),
@@ -103,10 +107,10 @@ fn miss_syncs_data_then_evicts_oldest_unleased_entry_before_publication() {
             .next_call(matching!(_))
             .returns(Ok(vec![])),
         StorageMock::stages
-            .next_call(matching!(_))
-            .returns(Ok(vec![])),
-        StorageMock::remove.next_call(matching!(_)).returns(Ok(())),
-        StorageMock::remove.next_call(matching!(_)).returns(Ok(())),
+            .some_call(matching!((path) if path.ends_with("staging")))
+            .answers(&|_, _| Ok(vec![])).once(),
+        (StorageMock::remove.next_call(matching!(_)).returns(Ok(())),
+        StorageMock::remove.next_call(matching!(_)).returns(Ok(()))),
         StorageMock::size
             .next_call(matching!(_, 5000))
             .returns(Ok(1000)),
@@ -116,8 +120,8 @@ fn miss_syncs_data_then_evicts_oldest_unleased_entry_before_publication() {
         StorageMock::records
             .next_call(matching!(_))
             .returns(Ok(records)),
-        StorageMock::remove
-            .next_call(matching!((path) if path.ends_with("b".repeat(40))))
+        StorageMock::retire
+            .next_call(matching!((path, trash) if path.ends_with("b".repeat(40)) && trash.ends_with("trash")))
             .returns(Ok(())),
         StorageMock::receipt
             .next_call(matching!((_, receipt) if receipt.used == 2 && receipt.bytes == 2024))
@@ -134,7 +138,7 @@ fn miss_syncs_data_then_evicts_oldest_unleased_entry_before_publication() {
         StorageMock::records
             .next_call(matching!(_))
             .returns(Ok(vec![])),
-        StorageMock::receipt
+        StorageMock::touch
             .next_call(matching!(_, _))
             .returns(Ok(())),
     ));
@@ -152,11 +156,14 @@ fn miss_syncs_data_then_evicts_oldest_unleased_entry_before_publication() {
 
 #[test]
 fn contended_entry_can_be_cancelled_before_any_namespace_lock() {
-    let storage = Unimock::new(
+    let storage = Unimock::new((
+        StorageMock::stages
+            .each_call(matching!((path) if path.ends_with("trash")))
+            .answers(&|_, _| Ok(vec![])),
         StorageMock::prepare
             .each_call(matching!(_))
             .answers(&|_, _| Ok(())),
-    );
+    ));
     let locks = Unimock::new(
         LocksMock::try_lock_shared
             .next_call(matching!(_))
@@ -206,5 +213,37 @@ fn announcement_is_once_for_both_namespaces_and_plain_bytes_are_exact() {
     assert_ne!(
         repository_key(Path::new("/repo")),
         repository_key(Path::new("/other"))
+    );
+}
+
+#[test]
+fn exclusive_recheck_reuses_an_entry_completed_after_the_initial_miss() {
+    let storage = Unimock::new((
+        StorageMock::prepare
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(())),
+        StorageMock::stages
+            .each_call(matching!((path) if path.ends_with("trash")))
+            .answers(&|_, _| Ok(vec![])),
+        StorageMock::inspect
+            .next_call(matching!(_, _))
+            .returns(Ok(None)),
+        StorageMock::inspect
+            .next_call(matching!(_, _))
+            .returns(Ok(Some(receipt()))),
+        StorageMock::inspect
+            .next_call(matching!(_, _))
+            .returns(Ok(Some(receipt()))),
+        StorageMock::records
+            .next_call(matching!(_))
+            .returns(Ok(vec![])),
+        StorageMock::touch
+            .next_call(matching!(_, _))
+            .returns(Ok(())),
+    ));
+    assert!(
+        cache(storage, locks())
+            .get(Kind::Sources, &key(), &Unimock::new(()))
+            .is_ok()
     );
 }

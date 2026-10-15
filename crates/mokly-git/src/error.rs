@@ -56,6 +56,12 @@ pub enum Error {
         /// Maximum leaf count.
         limit: usize,
     },
+    /// A tree metadata listing exceeded its independent node count.
+    #[error("[mokly-git/tree] tree exceeds its {limit}-node bound")]
+    NodeCount {
+        /// Maximum metadata entries.
+        limit: usize,
+    },
     /// A blob or archive exceeds its byte budget.
     #[error("[mokly-git/read] source bytes exceed {limit} bytes")]
     ByteLimit {

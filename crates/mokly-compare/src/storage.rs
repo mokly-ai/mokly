@@ -1,17 +1,16 @@
 //! Host cache storage with durable receipts and metadata-only namespace scans.
 
-use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_git::control::Cancellation;
+use mokly_platform::flush::Flush;
 
 use crate::cache_types::{Receipt, Record, Storage};
 use crate::durability::{publish_receipt, read_receipt, rename, sync_directory, sync_tree};
 use crate::error::{Error, InternalError, IoResult, Result};
-use crate::package_links;
-use crate::storage_tree::{check, copy_tree, size, validate_directory, vanished};
+use crate::storage_tree::{check, copy_tree, remove, retire, size, validate_directory, vanished};
 
 /// Host storage composed with a canonical namespace root and cancellation.
 pub struct SystemStorage {
@@ -19,6 +18,8 @@ pub struct SystemStorage {
     pub root: PathBuf,
     /// Generation cancellation, checked during walks.
     pub cancellation: Arc<dyn Cancellation>,
+    /// Host flush strategy, composed through its platform boundary.
+    pub flush: Arc<dyn Flush>,
 }
 
 impl Storage for SystemStorage {
@@ -44,7 +45,12 @@ impl Storage for SystemStorage {
     fn stages(&self, directory: &Path) -> Result<Vec<String>> {
         validate_directory(&self.root, directory)?;
         let mut names = Vec::new();
-        for item in fs::read_dir(directory).base()? {
+        let items = match fs::read_dir(directory) {
+            Ok(items) => items,
+            Err(error) if vanished(&error) => return Ok(names),
+            Err(source) => return Err(InternalError::Io { source }.into()),
+        };
+        for item in items {
             check(self.cancellation.as_ref())?;
             let item = match item {
                 Ok(item) => item,
@@ -78,7 +84,11 @@ impl Storage for SystemStorage {
         if !fs::symlink_metadata(entry.join("data")).is_ok_and(|metadata| metadata.is_dir()) {
             return Ok(None);
         }
-        let bytes = self.size(&entry.join("data"), limit)?.saturating_add(1024);
+        let bytes = match self.size(&entry.join("data"), limit) {
+            Ok(bytes) => bytes.saturating_add(1024),
+            Err(Error::CacheLimit { .. }) => return Ok(None),
+            Err(error) => return Err(error),
+        };
         if bytes > limit {
             return Ok(None);
         }
@@ -119,26 +129,34 @@ impl Storage for SystemStorage {
 
     fn synchronize(&self, directory: &Path) -> Result<()> {
         validate_directory(&self.root, directory)?;
-        sync_tree(directory, self.cancellation.as_ref())
+        sync_tree(directory, self.cancellation.as_ref(), self.flush.as_ref())
     }
 
     fn receipt(&self, entry: &Path, receipt: &Receipt) -> Result<()> {
         validate_directory(&self.root, entry)?;
-        publish_receipt(entry, receipt)
+        publish_receipt(entry, receipt, true)
     }
 
     fn size(&self, path: &Path, limit: u64) -> Result<u64> {
         size(&self.root, path, limit, self.cancellation.as_ref())
     }
 
+    fn touch(&self, entry: &Path, receipt: &Receipt) -> Result<()> {
+        validate_directory(&self.root, entry)?;
+        publish_receipt(entry, receipt, false)
+    }
+
+    fn retire(&self, path: &Path, trash: &Path) -> Result<()> {
+        validate_directory(&self.root, path)?;
+        validate_directory(&self.root, trash)?;
+        fs::create_dir_all(trash).base()?;
+        validate_directory(&self.root, trash)?;
+        retire(path, trash)
+    }
+
     fn remove(&self, path: &Path) -> Result<()> {
         validate_directory(&self.root, path.parent().unwrap_or(path))?;
-        match fs::symlink_metadata(path) {
-            Ok(metadata) if metadata.is_dir() => fs::remove_dir_all(path).base(),
-            Ok(_) => fs::remove_file(path).base(),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(source) => Err(InternalError::Io { source }.into()),
-        }
+        remove(path, self.cancellation.as_ref())
     }
 
     fn publish(&self, stage: &Path, target: &Path) -> Result<()> {
@@ -157,16 +175,6 @@ impl Storage for SystemStorage {
             sync_directory(parent)?;
         }
         Ok(())
-    }
-
-    fn packages(
-        &self,
-        destination: &Path,
-        source: &Path,
-        packages: &BTreeMap<String, String>,
-    ) -> Result<()> {
-        self.prepare(destination)?;
-        package_links::write(&self.root, destination, source, packages)
     }
 
     fn copy(&self, source: &Path, destination: &Path, limit: u64) -> Result<()> {

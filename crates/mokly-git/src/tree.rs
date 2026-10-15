@@ -10,8 +10,10 @@ use crate::identity::{ObjectId, RepoPath};
 /// Independent tree and blob read budgets.
 #[derive(Clone, Copy, Debug)]
 pub struct Limits {
-    /// Maximum entries returned or extracted.
+    /// Maximum regular files returned or extracted.
     pub files: usize,
+    /// Maximum total metadata nodes, including directories, links and submodules.
+    pub nodes: usize,
     /// Maximum total regular-file bytes for extraction.
     pub bytes: usize,
     /// Maximum bytes in one regular file.
@@ -22,6 +24,7 @@ impl Default for Limits {
     fn default() -> Self {
         Self {
             files: 100_000,
+            nodes: 1_000_000,
             bytes: DEFAULT_OUTPUT_LIMIT,
             blob: DEFAULT_OUTPUT_LIMIT,
         }
@@ -66,10 +69,11 @@ pub struct Entry {
 pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
     let mut entries = Vec::new();
     let mut seen = BTreeSet::new();
+    let mut files = 0usize;
     for record in fields(bytes)? {
-        if entries.len() >= limits.files {
-            return Err(Error::FileCount {
-                limit: limits.files,
+        if entries.len() >= limits.nodes {
+            return Err(Error::NodeCount {
+                limit: limits.nodes,
             });
         }
         let Some(tab) = record.iter().position(|byte| *byte == b'\t') else {
@@ -89,6 +93,14 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
             ("160000", "commit") => Mode::Submodule,
             _ => return Err(Error::MalformedOutput),
         };
+        if mode.regular() {
+            files += 1;
+            if files > limits.files {
+                return Err(Error::FileCount {
+                    limit: limits.files,
+                });
+            }
+        }
         let size = if matches!(mode, Mode::Submodule | Mode::Directory) {
             0
         } else {

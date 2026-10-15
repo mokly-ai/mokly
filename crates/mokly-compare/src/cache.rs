@@ -74,8 +74,9 @@ impl DiskCache {
                 .unwrap_or(0)
                 .saturating_add(1);
             self.check()?;
-            self.storage.receipt(&target, &receipt)?;
+            self.storage.touch(&target, &receipt)?;
         }
+        self.clean_trash(namespace)?;
         Ok(Some(Lease {
             directory: target.join("data"),
             guard,
@@ -84,7 +85,18 @@ impl DiskCache {
 
     fn build(&self, namespace: &Path, kind: Kind, key: &str, builder: &dyn Builder) -> Result<()> {
         let limit = self.capacity(kind);
-        let _entry = self.lock(&namespace.join("locks").join(format!("{key}.lock")), false)?;
+        self.check()?;
+        let _entry = match self
+            .locks
+            .try_lock(&namespace.join("locks").join(format!("{key}.lock")))
+        {
+            Ok(guard) => guard,
+            Err(error::Error::Locked { .. }) => {
+                self.clock.pause(Duration::from_millis(5));
+                return Ok(());
+            }
+            Err(source) => return Err(InternalError::Platform { source }.into()),
+        };
         let target = namespace.join("entries").join(key);
         if self.storage.inspect(&target, limit)?.is_some() {
             return Ok(());
@@ -159,6 +171,7 @@ impl Cache for DiskCache {
         }
         self.reporter.opened(&self.root);
         loop {
+            self.clean_trash(&namespace)?;
             if let Some(lease) = self.hit(&namespace, key, self.capacity(kind))? {
                 return Ok(lease);
             }

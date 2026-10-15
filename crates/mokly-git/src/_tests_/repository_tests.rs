@@ -234,3 +234,40 @@ fn tree_count_and_archive_total_are_bounded_before_io() {
         Err(Error::ByteLimit { limit: 5 })
     ));
 }
+
+#[test]
+fn renames_keep_the_utf8_side_when_the_other_side_is_not_utf8() {
+    let added = changes::parse(b"R100\0old-\xff\0new.screen.html\0").unwrap();
+    assert_eq!(added.len(), 1);
+    assert_eq!(added[0].path.as_str(), "new.screen.html");
+    assert_eq!(added[0].kind, Kind::Added);
+    let deleted = changes::parse(b"R100\0old.screen.html\0new-\xff\0").unwrap();
+    assert_eq!(deleted.len(), 1);
+    assert_eq!(deleted[0].path.as_str(), "old.screen.html");
+    assert_eq!(deleted[0].kind, Kind::Deleted);
+}
+
+#[test]
+fn tree_files_and_metadata_nodes_have_independent_bounds() {
+    let listing = format!(
+        "040000 tree {} -\ta\0100644 blob {} 1\ta/b\0040000 tree {} -\tc\0100644 blob {} 1\tc/d\0",
+        id(),
+        id(),
+        id(),
+        id()
+    );
+    let limits = Limits {
+        files: 2,
+        nodes: 4,
+        ..Limits::default()
+    };
+    assert_eq!(tree::parse(listing.as_bytes(), limits).unwrap().len(), 4);
+    assert!(matches!(
+        tree::parse(listing.as_bytes(), Limits { files: 1, ..limits }),
+        Err(Error::FileCount { limit: 1 })
+    ));
+    assert!(matches!(
+        tree::parse(listing.as_bytes(), Limits { nodes: 3, ..limits }),
+        Err(Error::NodeCount { limit: 3 })
+    ));
+}

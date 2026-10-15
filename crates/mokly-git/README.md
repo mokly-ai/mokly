@@ -39,8 +39,10 @@ untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
 
 Tree queries use literal pathspecs and NUL records. Blob batches use stdin,
-at most 4,096 objects, and at most 48 MiB including framing. Tree listings retain directory and link modes and have a node count bound.
-The commit source reader indexes that metadata once. `read_many` accepts
+at most 4,096 objects, and at most 48 MiB including framing. Tree listings retain directory and link modes. Regular files and all metadata
+nodes have independent count bounds.
+The commit source reader indexes that metadata once. Working inputs compare
+bytes first and hash changed confined paths in one stdin-paths command. `read_many` accepts
 proved entries and reads their blobs through bounded batches. Extraction also has total and per-file byte bounds.
 It writes one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
 and submodules. Unsupported host names and non-UTF-8 candidates are traced

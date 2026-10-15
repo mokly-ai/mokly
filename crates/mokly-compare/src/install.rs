@@ -111,7 +111,7 @@ impl Builder for Install<'_> {
                 size_root: Some(destination.to_owned()),
             })?;
         }
-        Ok(())
+        self.owner.storage.remove(&destination.join(".npm-cache"))
     }
 }
 

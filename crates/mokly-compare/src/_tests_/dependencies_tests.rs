@@ -17,7 +17,6 @@ use crate::dependencies::{Dependencies, DependencyTiers};
 use crate::dependency_types::{Fallback, Request, Tier};
 use crate::error::Error;
 use crate::inputs::Inputs;
-use crate::overlay::OverlaysMock;
 use mokly_git::control::ClockMock;
 
 fn request() -> Request {
@@ -51,11 +50,6 @@ fn working_tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
         cache: Arc::new(cache),
         commands: Arc::new(commands),
         storage: Arc::new(Unimock::new(())),
-        overlays: Arc::new(Unimock::new(
-            OverlaysMock::acquire
-                .each_call(matching!(_, _, _))
-                .answers(&|_, _, _, _| Ok(None)),
-        )),
         clock: Arc::new(Unimock::new(())),
         timeout: Duration::from_secs(120),
         install_bytes: 10000,
@@ -113,6 +107,10 @@ fn differing_inputs_acquire_the_content_addressed_install() {
         PathBuf::from("/cache/deps/node_modules")
     );
     assert!(result.lease.is_some());
+    assert_eq!(
+        result.repository_roots,
+        [PathBuf::from("/repo"), PathBuf::from("/cache/deps")]
+    );
 }
 
 #[test]
@@ -168,16 +166,12 @@ fn installer_copies_private_sources_and_captures_script_deadline_and_size_option
         }),
         StorageMock::copy.next_call(matching!((source, target, 10000) if source.ends_with("base") && target.ends_with("install"))).returns(Ok(())),
         CommandsMock::run.next_call(matching!((command) if command.directory == Path::new("/install") && command.timeout == Duration::from_secs(120) && command.byte_limit == Some(10000) && command.args.iter().any(|arg| arg == "--ignore-scripts") && command.args.first().unwrap() == "ci" && command.args.iter().any(|arg| arg == "--logs-dir") && Path::new(command.args.last().unwrap()) == Path::new("/install"))).returns(Ok(vec![])),
+        StorageMock::remove.next_call(matching!((path) if *path == Path::new("/install/.npm-cache"))).returns(Ok(())),
     ));
     let tiers = DependencyTiers {
         cache: Arc::new(boundaries.clone()),
         commands: Arc::new(boundaries.clone()),
         storage: Arc::new(boundaries),
-        overlays: Arc::new(Unimock::new(
-            OverlaysMock::acquire
-                .each_call(matching!(_, _, _))
-                .answers(&|_, _, _, _| Ok(None)),
-        )),
         clock: Arc::new(Unimock::new(
             ClockMock::now
                 .some_call(matching!())
@@ -235,4 +229,20 @@ fn warnings_without_a_lockfile_name_the_actual_reason_without_a_fake_path() {
         warning.message(),
         "base dependencies could not be installed (package manager or lockfile unavailable); using working-tree dependencies"
     );
+}
+
+#[test]
+fn equal_inputs_with_an_outside_local_package_need_no_install_or_warning() {
+    let mut request = request();
+    request.base.files.insert(
+        RepoPath::parse("package.json").unwrap(),
+        br#"{"dependencies":{"shared":"file:../shared"}}"#.to_vec(),
+    );
+    request.head = request.base.clone();
+    let result = working_tiers(Unimock::new(()), Unimock::new(()))
+        .resolve(&request)
+        .unwrap();
+    assert_eq!(result.tier, Tier::Working);
+    assert!(result.warning.is_none());
+    assert_eq!(result.repository_roots, [request.head_root]);
 }

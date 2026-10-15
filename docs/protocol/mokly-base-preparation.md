@@ -10,7 +10,8 @@ This page defines the `mokly-compare` preparation APIs. The
 
 A source reader pins one commit and one cancellation generation. It loads
 one tree index, with directories, regular files, symbolic links and submodule
-modes. Repeated root queries use that index. Regular-file listings retain
+modes. Composition selects separate regular-file and total-node bounds.
+Repeated root queries use that index. Regular-file listings retain
 actual POSIX spelling, return each file once and apply the selected count
 bound. An empty root list starts no query; an explicit whole-tree root lists
 all regular files. The catalogue applies its root ownership, globs and
@@ -31,19 +32,23 @@ Both cache kinds live in a SHA-256 namespace under the operating system's
 cache directory. The key hashes the canonical repository path's OS encoding.
 Resolve the complete namespace path once at composition, including links at
 or above it. A cache location inside the repository is invalid. Below that
-canonical root, directory links are rejected before writes. Package overlay
-links are data entries and may point into the leased extraction.
+canonical root, directory links are rejected before writes. Dependency links
+remain data entries; traversal does not follow them.
 
 Source and dependency namespaces have separate byte bounds. Each complete
 entry reserves 1,024 bytes for its receipt. Retained size counts regular-file
 bytes and link targets without following links. Hits check the bounded
 completion receipt and recount data bytes. Only receipt schema 1 is valid;
 another schema or unknown field is incomplete. Hits do not hash file contents.
-Data and directory metadata are flushed before receipt publication. Unix
-flushes directories before and after rename; Windows flushes file contents
-and uses a write-through rename. This completion boundary replaces repeated
+Data and directory metadata are flushed before receipt publication. Linux
+uses one `syncfs` barrier for the entry's filesystem. macOS uses plain `fsync`
+for each data file and directory, then the completion receipt's drive-cache
+barrier. Windows flushes each file and uses a write-through rename. Unix
+flushes the receipt directory before and after rename. Cache hits update
+access order by atomic replacement with no file or directory flushes. This
+completion boundary replaces repeated
 content verification. A valid entry may retain consumer cache files as long
-as its recounted size fits the bound.
+as its recounted size fits the bound. An entry that exceeds the bound rebuilds.
 
 Readers hold shared `mokly-platform` locks. Any number of callers may lease
 one completed entry. Build and repair take the exclusive entry lock, then
@@ -57,8 +62,12 @@ Shared leases and active builds are never evicted. Least-recently-used order
 uses a sequence, independent of wall-clock timestamps. Active entries that
 leave insufficient room cause the typed cache-limit result. Each concurrent
 build has its own staged disk bound; completed entries obey the namespace
-bound at adoption. Staging cleanup removes only names whose entry lock is
-free. Unrecognized names such as `.DS_Store` are ignored. A symlinked entry
+bound at adoption. Staging cleanup selects only names whose entry lock is
+free. Under the
+namespace lock, eviction and cleanup rename victims into unique trash names.
+They delete trash outside that lock, with cancellation checks at each node.
+Later cache opens sweep any trash left by cancellation or an interrupted
+process. Unrecognized names such as `.DS_Store` are ignored. A symlinked entry
 is rejected. Every traversal checks cancellation and tolerates vanished
 nodes when it measures a changing install.
 
@@ -68,7 +77,7 @@ publishes completion. Missing, damaged or incomplete receipts and missing
 data roots rebuild under the entry lock. Failed builds remove partial data.
 OS locks release on close; lock files remain. Deleting the cache is safe.
 
-One reporter guard covers both caches and the package overlays. The first
+One reporter guard covers both caches. The first
 open reports the directory once per process. Plain stdout is exactly
 `Mokly cache: <directory>` followed by LF. Rich output follows the
 [terminal rule](./mokly-terminal-output.md#cache-directory).
@@ -82,27 +91,31 @@ not walk ignored trees, nested clones or submodules. Dependency trees under
 `node_modules` are excluded on both sides. There is no application-specific
 list of excluded build directories.
 
-Each working input must be a confined regular file. Compare its Git clean
-object identity, computed with `hash-object --path --stdin` without writing
-objects, with the corresponding base blob id. This applies line ending and
+Each working input must be a confined regular file. Equal working and base
+bytes reuse the base identity without a Git process. Hash the remaining
+confined paths in one `hash-object --stdin-paths` call, without writing objects,
+and compare their Git clean identities with the corresponding base blob ids.
+This applies line ending and
 clean-filter conversion. Equal identities use the base blob bytes in the
 input set. A changed file or path set differs. This normalization is for
 dependency identity only; it does not change base render or resource bytes.
 
 Repository-owned workspace and local directory packages always resolve from
-the side's own sources, in every tier. A small per-commit overlay links each
-package name to its directory inside the leased extraction. Put that overlay
-first in the bundle's package roots. Tier one and tier three never resolve
-these packages through the working tree's links. Third-party dependencies
-keep the three tiers of the comparison contract.
+the side's own sources, in every tier. During bundling, a resolved real path
+inside a repository root and outside every `node_modules` directory maps to
+the same relative path under the side's source root. A missing mapped file
+fails closed with `bundle-failed`. This covers repository packages for npm,
+pnpm, Yarn and Bun without a package manifest inventory. Nested
+`node_modules` directories retain the selected third-party dependencies.
 
-Equal dependency identities reuse working third-party dependencies. Different
+Equal dependency identities reuse working third-party dependencies. No
+install validation or warning applies, including for outside `file:` packages.
+Different
 inputs install each npm lockfile root selected by the repository root and
 `moduleResolution.packageRoots`. A nested app with no root lockfile is valid.
 An independent configured package lock gets its own install. Prefer
 `npm-shrinkwrap.json` over `package-lock.json` at each root. Unsupported
-managers and absent supported lockfiles use the fallback tier. Support for
-other managers remains an open review decision in the rebuild plan.
+managers and absent supported lockfiles use the fallback tier.
 
 The install key length-frames all manifest and lockfile paths and bytes, the
 npm version, and the selected install roots. Local package paths, archives,
@@ -110,7 +123,8 @@ overrides and workspaces also add the immutable source identity. Recognize
 `file:`, `link:`, bare relative and absolute paths, home paths and local
 `.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from
 the declaring manifest. A local path outside the repository, including a home
-or absolute path, uses a typed fallback reason. No install reads it.
+or absolute path, uses a typed fallback reason when an install is needed.
+No install reads it.
 
 ## Installation And Bundle Settings
 
@@ -121,7 +135,8 @@ the parent through absolute PATH entries only. The child also receives only
 absolute PATH entries, so a script interpreter cannot select historical code. On Windows a native launcher
 runs directly; a standard `.cmd` installation uses its Node CLI. A source
 directory or relative PATH entry never supplies npm. Unsupported launchers
-fall back. Lifecycle scripts do not run.
+fall back. Lifecycle scripts do not run. After successful installs, remove
+the private `.npm-cache` before byte counting and durability synchronization.
 
 Version discovery and every selected install share one monotonic deadline.
 Size supervision walks the whole private entry at most once per second.
@@ -129,16 +144,20 @@ Vanished files or directories do not stop the install. Only a failed spawn
 or unavailable executable has the typed command-unavailable result. Tests
 use fake time and local offline fixtures without registry access.
 
-The result carries third-party `node_modules`, the overlay lease, the install
-lease when needed, and the complete sidecar `ModuleResolution`. Package roots
-name the overlay first, then the selected third-party root and configured
-package roots there, in order. Other settings keep their values. Retain these
-leases and the extraction lease while the bundle uses their files.
+The result carries third-party `node_modules`, the install lease when needed,
+the complete sidecar `ModuleResolution`, and typed repository root paths.
+Package roots name the selected third-party root, then configured package
+roots there, in order. Repository roots include the working repository root
+in every tier and the copied base repository root inside a tier-two install.
+The sidecar maps these roots to the side's source root. Other settings keep
+their values. Retain the install and extraction leases while bundling.
 Cancellation stops preparation and never becomes a fallback warning.
 
 A fallback returns a configuration-subject `base-dependencies` warning. Use
 the first differing lockfile in lexical order, or the selected base lockfile
-for a manifest-only change. With no lockfile omit the location clause:
+at the first selected install root for a manifest-only change. Prefer
+`npm-shrinkwrap.json` there. Ignore unrelated lockfiles. With no selected
+lockfile omit the location clause:
 
 ```text
 base dependencies at "<lockfile>" could not be installed (time limit); using working-tree dependencies

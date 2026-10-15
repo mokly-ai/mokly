@@ -9,7 +9,6 @@ use crate::error::{Error, Result};
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct Manifest {
-    pub(crate) name: Option<String>,
     pub(crate) package_manager: Option<String>,
     #[serde(default)]
     dependencies: BTreeMap<String, String>,
@@ -57,26 +56,6 @@ impl Manifest {
             Some(Workspaces::List(values) | Workspaces::Object { packages: values }) => values,
             None => &[],
         }
-    }
-
-    pub(crate) fn overrides(&self) -> Vec<(&str, &str)> {
-        let mut packages = Vec::new();
-        let mut pending = self
-            .overrides
-            .iter()
-            .map(|(name, value)| (name.as_str(), value))
-            .collect::<Vec<_>>();
-        while let Some((name, value)) = pending.pop() {
-            match value {
-                Override::Version(value) => packages.push((name, value.as_str())),
-                Override::Nested(values) => pending.extend(
-                    values
-                        .iter()
-                        .map(|(key, value)| (if key == "." { name } else { key.as_str() }, value)),
-                ),
-            }
-        }
-        packages
     }
 
     pub(crate) fn specifications(&self) -> Vec<&str> {

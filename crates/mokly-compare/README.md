@@ -19,7 +19,8 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 
 ## What This Crate Does
 
-`GitSources::new` pins a commit and indexes every tree mode once. It lists
+`GitSources::new` pins a commit and explicit file and metadata-node bounds.
+It indexes every tree mode once. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
@@ -28,7 +29,11 @@ these files. HTML reads require no extraction or package manager.
 system's cache directory. `DiskCache` has separate source and dependency
 byte bounds. It uses OS locks for namespace mutation and entry leases. A
 durable receipt records completion, an access sequence, and bytes. A hit
-validates the receipt and recounts data size without hashing content.
+validates the receipt and recounts data size without hashing content or
+flushing. Linux synchronizes new entries with one `syncfs`; macOS uses plain
+`fsync` per data file, then a completion barrier. Windows flushes each file.
+Eviction renames victims to trash under the namespace lock and deletes them
+outside it. Walks check cancellation; later opens sweep interrupted trash.
 Leases are shared. Builds hold only their entry lock, so another key can
 complete while an install is pending. Deleting the cache permits a rebuild.
 The CLI shares one `OnceReporter` across both namespaces and uses
@@ -38,10 +43,11 @@ The CLI shares one `OnceReporter` across both namespaces and uses
 `SystemWorkingInputs` gets tracked and nonignored candidates through Git and
 compares clean object identities. It reuses base bytes for equal inputs. `DependencyTiers`
 uses working third-party dependencies when both sets are equal. In every tier,
-`CachedOverlays` first resolves repository-owned packages from the leased base
-extraction, so workspace links never point at head sources. Different inputs use
+the sidecar maps resolved repository-owned paths into that side's sources.
+Different inputs use
 npm's locked install at the root and each configured independent package
-root in the dependency cache. They share one deadline. The key includes the exact
+root in the dependency cache. They share one deadline. Successful installs
+remove their private npm download cache before publication. The key includes the exact
 lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
@@ -49,7 +55,9 @@ expired, or oversized installs use the working installation with a typed
 
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
-`node_modules` path and the complete `ModuleResolution` value. Supply
+`node_modules` path, the complete `ModuleResolution` value, and typed
+`repository_roots` for sidecar mapping. These roots include the working tree
+and the base source copy for tier two. Supply
 repository-relative package roots in the request; the result names absolute
 roots from the selected installation and keeps the other settings.
 

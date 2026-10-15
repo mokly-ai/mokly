@@ -8,7 +8,6 @@ publish = false
 
 [dependencies]
 directories = "6.0.0"
-globset = "0.4.20"
 mokly-git = { workspace = true }
 mokly-platform = { workspace = true }
 mokly-sidecar = { workspace = true }
@@ -35,5 +34,4 @@ workspace = true
 features = ["mock"]
 
 [target."cfg(windows)".dependencies]
-junction = "2.1.0"
 windows-sys = { version = "0.61.2", features = ["Win32_Storage_FileSystem"] }

@@ -761,6 +761,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       `base-dependencies` warning, and the terminal line that names the cache
       directory.
       Part 1 gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-git.md`.
+- [x] Apply final part 1 review fixes: sidecar repository roots, cache flush
+      and trash handling, batched working hashes, independent tree bounds,
+      rename encoding, warning locations, and concurrent cache misses.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/logs/m9-git/round3-targeted-tests.log`.
+      Integration choices: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-git/merge-decisions.md`.
 - [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
       the commit-pinned Git index and batched blob reader after Milestone 4
       merges. Cover projection, direct children, every mode, and typed IO errors.

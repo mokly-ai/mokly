@@ -3,6 +3,7 @@
 #![warn(unreachable_pub)]
 
 pub mod error;
+pub mod flush;
 pub mod locks;
 pub mod processes;
 pub mod rename;

@@ -125,3 +125,17 @@ impl<T> GitResult<T> for error::Result<T> {
         }
     }
 }
+
+pub(crate) trait PlatformResult<T> {
+    fn base(self) -> Result<T>;
+}
+
+impl<T> PlatformResult<T> for mokly_platform::error::Result<T> {
+    #[track_caller]
+    fn base(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(source) => Err(InternalError::Platform { source }.into()),
+        }
+    }
+}

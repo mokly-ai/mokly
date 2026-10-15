@@ -5,10 +5,11 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 use mokly_git::control::Cancellation;
+use mokly_platform::flush::Flush;
 use serde::{Deserialize, Serialize};
 
 use crate::cache_types::Receipt;
-use crate::error::{InternalError, IoResult, Result};
+use crate::error::{InternalError, IoResult, PlatformResult, Result};
 use crate::storage_tree::check;
 
 #[derive(Deserialize, Serialize)]
@@ -53,7 +54,7 @@ pub(crate) fn read_receipt(entry: &Path) -> Result<Option<Receipt>> {
     }))
 }
 
-pub(crate) fn publish_receipt(entry: &Path, receipt: &Receipt) -> Result<()> {
+pub(crate) fn publish_receipt(entry: &Path, receipt: &Receipt, durable: bool) -> Result<()> {
     let stored = StoredReceipt {
         schema_version: 1,
         bytes: receipt.bytes,
@@ -76,14 +77,28 @@ pub(crate) fn publish_receipt(entry: &Path, receipt: &Receipt) -> Result<()> {
             .open(&temporary)
             .base()?;
         file.write_all(&bytes).base()?;
-        file.sync_all().base()?;
+        if durable {
+            file.sync_all().base()?;
+        }
     }
-    sync_directory(entry)?;
-    rename(&temporary, &entry.join("receipt.json"))?;
-    sync_directory(entry)
+    if durable {
+        sync_directory(entry)?;
+        rename(&temporary, &entry.join("receipt.json"))?;
+        sync_directory(entry)
+    } else {
+        fs::rename(&temporary, entry.join("receipt.json")).base()
+    }
 }
 
-pub(crate) fn sync_tree(root: &Path, cancellation: &dyn Cancellation) -> Result<()> {
+pub(crate) fn sync_tree(
+    root: &Path,
+    cancellation: &dyn Cancellation,
+    flush: &dyn Flush,
+) -> Result<()> {
+    check(cancellation)?;
+    if flush.filesystem(root).base()? {
+        return check(cancellation);
+    }
     let mut pending = vec![root.to_owned()];
     let mut directories = Vec::new();
     while let Some(directory) = pending.pop() {
@@ -98,21 +113,17 @@ pub(crate) fn sync_tree(root: &Path, cancellation: &dyn Cancellation) -> Result<
             if metadata.is_dir() {
                 pending.push(item.path());
             } else if metadata.is_file() {
-                let mut options = fs::OpenOptions::new();
-                options.read(true);
-                #[cfg(windows)]
-                options.write(true);
-                options.open(item.path()).base()?.sync_all().base()?;
+                flush.file(&item.path()).base()?;
             }
         }
         directories.push(directory);
     }
     for directory in directories.into_iter().rev() {
         check(cancellation)?;
-        sync_directory(&directory)?;
+        flush.directory(&directory).base()?;
     }
     if let Some(parent) = root.parent() {
-        sync_directory(parent)?;
+        flush.directory(parent).base()?;
     }
     Ok(())
 }

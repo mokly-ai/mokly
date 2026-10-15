@@ -101,14 +101,15 @@ pub struct Resolved {
     pub tier: Tier,
     /// Primary third-party dependency directory.
     pub node_modules: PathBuf,
-    /// Overlay first, then the chosen third-party package roots.
+    /// Selected third-party package roots and the other bundle settings.
     pub module_resolution: ModuleResolution,
     /// Configuration warning in tier three.
     pub warning: Option<Warning>,
     /// Base installation lease, if used.
     pub lease: Option<Lease>,
-    /// Repository package overlay lease. Retain it with the extraction lease.
-    pub overlay: Option<Lease>,
+    /// Real repository roots whose non-node_modules files map into this side's sources.
+    /// Includes the working root and the tier-two source copy when present.
+    pub repository_roots: Vec<PathBuf>,
 }
 
 fn quoted(value: &str) -> String {

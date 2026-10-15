@@ -70,20 +70,29 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Change>> {
             let Some(next) = fields.next() else {
                 return Err(Error::MalformedOutput);
             };
-            let (Some(path), Some(next)) = (path, candidate(next)) else {
-                continue;
-            };
+            let next = candidate(next);
             let similarity = match text(&status[1..])?.parse::<u8>() {
                 Ok(value) if value <= 100 => value,
                 _ => return Err(Error::MalformedOutput),
             };
-            result.push(Change {
-                path: ChangedPath::parse(next)?,
-                kind: Kind::Renamed {
-                    from: ChangedPath::parse(path)?,
-                    similarity,
-                },
-            });
+            match (path, next) {
+                (Some(path), Some(next)) => result.push(Change {
+                    path: ChangedPath::parse(next)?,
+                    kind: Kind::Renamed {
+                        from: ChangedPath::parse(path)?,
+                        similarity,
+                    },
+                }),
+                (None, Some(next)) => result.push(Change {
+                    path: ChangedPath::parse(next)?,
+                    kind: Kind::Added,
+                }),
+                (Some(path), None) => result.push(Change {
+                    path: ChangedPath::parse(path)?,
+                    kind: Kind::Deleted,
+                }),
+                (None, None) => {}
+            }
             continue;
         }
         let Some(path) = path else {

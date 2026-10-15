@@ -64,7 +64,7 @@ fn ignored_packages_nested_clones_and_clean_crlf_do_not_change_dependency_identi
     let repository = factory.open(&root).unwrap();
     let base = SourceInputs
         .read(
-            &GitSources::new(repository.clone(), commit),
+            &GitSources::new(repository.clone(), commit, Limits::default()),
             Limits::default(),
         )
         .unwrap();

@@ -36,7 +36,7 @@ fn keys_cover_lock_manifest_manager_version_and_local_sources() {
     );
     assert_ne!(local.key("1", "a"), local.key("1", "b"));
     assert_eq!(
-        a.differing_lockfile(&inputs(b"lock", b"changed"))
+        a.differing_lockfile(&inputs(b"lock", b"changed"), &[])
             .unwrap()
             .as_str(),
         "package-lock.json"
@@ -88,7 +88,56 @@ fn warning_selects_the_first_differing_lockfile_across_both_path_sets() {
         b"new".to_vec(),
     );
     assert_eq!(
-        base.differing_lockfile(&head).unwrap().as_str(),
+        base.differing_lockfile(&head, &[]).unwrap().as_str(),
         "npm-shrinkwrap.json"
     );
+}
+
+#[test]
+fn manifest_only_warning_names_the_first_selected_install_roots_lockfile() {
+    let mut base = inputs(b"root", b"{}");
+    base.files.insert(
+        RepoPath::parse("examples/app/package-lock.json").unwrap(),
+        b"example".to_vec(),
+    );
+    base.files.insert(
+        RepoPath::parse("frontend/package-lock.json").unwrap(),
+        b"front".to_vec(),
+    );
+    let mut head = base.clone();
+    head.files.insert(
+        RepoPath::parse("package.json").unwrap(),
+        b"changed".to_vec(),
+    );
+    assert_eq!(
+        base.differing_lockfile(&head, &["frontend".into()])
+            .unwrap()
+            .as_str(),
+        "package-lock.json"
+    );
+    base.files
+        .remove(&RepoPath::parse("package-lock.json").unwrap());
+    head.files
+        .remove(&RepoPath::parse("package-lock.json").unwrap());
+    assert_eq!(
+        base.differing_lockfile(&head, &["frontend".into()])
+            .unwrap()
+            .as_str(),
+        "frontend/package-lock.json"
+    );
+    base.files
+        .insert(RepoPath::parse("pnpm-lock.yaml").unwrap(), b"pnpm".to_vec());
+    head.files
+        .insert(RepoPath::parse("pnpm-lock.yaml").unwrap(), b"pnpm".to_vec());
+    assert_eq!(
+        base.differing_lockfile(&head, &["frontend".into()])
+            .unwrap()
+            .as_str(),
+        "frontend/package-lock.json"
+    );
+    base.files
+        .remove(&RepoPath::parse("pnpm-lock.yaml").unwrap());
+    head.files
+        .remove(&RepoPath::parse("pnpm-lock.yaml").unwrap());
+    assert!(base.differing_lockfile(&head, &[]).is_none());
 }

@@ -22,10 +22,7 @@ mod durability;
 mod install;
 mod local_packages;
 mod manifest;
-pub mod overlay;
-mod package_links;
 mod programs;
 
 #[cfg(windows)]
 mod windows_durability;
-mod workspaces;

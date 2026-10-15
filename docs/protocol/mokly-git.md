@@ -54,7 +54,8 @@ Diff the pinned base against the working tree with NUL-delimited name/status
 records and Git rename detection. This includes committed, indexed and
 unindexed tracked edits. Add untracked paths from `ls-files --others
 --exclude-standard`. Keep old and new paths and Git's similarity for a
-rename. Do not infer a rename from an untracked addition. Return unique
+rename. If only one rename path is UTF-8, retain it as `Added` for the
+destination or `Deleted` for the source, and trace the other. Do not infer a rename from an untracked addition. Return unique
 current paths in lexical POSIX order. Candidate paths retain nonportable
 filename characters; they grant no source-read permission. Disable external diff and textconv.
 An indexed deletion that is also an untracked working file is `Modified`,
@@ -69,7 +70,8 @@ backslashes remain ordinary Git name characters; the catalogue validates
 matched source names. Untracked directory records and non-UTF-8 candidates
 are skipped with a trace diagnostic.
 All tree pathspecs are literal. Tree output is NUL-delimited and bounded by
-the command limit and the selected node count, 100,000 by default. The commit index retains
+the command limit and independent regular-file and total-node bounds. Defaults
+are 100,000 regular files and 1,000,000 metadata nodes. Composition selects both. The commit index retains
 directories, links and submodule modes as well as regular leaves. An empty
 root request starts no source query. A whole-tree query is explicit.
 
