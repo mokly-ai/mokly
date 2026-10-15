@@ -31,9 +31,10 @@ export inventory, and the terminal output of build, check, serve startup, and
 export; the previous manifest and generated tree are not kept, because the
 Rust core writes neither. Then run
 the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
-rebuild branch, over the saved outputs; it reduces a scenario to one JSON table: entries by kind and path, listed
-changes with states and reasons, affected consumers, kept and excluded rules
-per view, and resource closures per view.
+rebuild branch, over the saved outputs. The JSON table contains `availability`
+fields for captured inputs, entries by kind and path, listed changes with
+states and reasons, affected consumers, kept rules and excluded stylesheets
+per view, `exportedResources` paths and sides, and resource closures per view.
 
 ## Gap Sweep
 

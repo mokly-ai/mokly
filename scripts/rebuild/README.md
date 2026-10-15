@@ -46,7 +46,8 @@ Capture scripts live beside the reference `README.md` under the ignored
   `mokly-viewer/diffs/generations/{generation}/snapshots/before/mokly-generated/`
   (before). Match the entry against current, previous, or removed paths.
 - Screens and components take viewport and colour scheme from their document
-  name. Other entries have no viewport; a filename suffix gives their colour
+  name. A screen or component document without a colour-scheme suffix uses
+  `light`. Other entries have no viewport; a filename suffix gives their colour
   scheme, or the colour scheme is null when no suffix exists.
 - Read HTML resource references and CSS imports and URL references. Resolve
   relative references against the containing file. Resolve `/static/` against

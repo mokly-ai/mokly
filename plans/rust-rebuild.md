@@ -559,6 +559,7 @@ merges; the freeze applies to it from 2026-10-12.
 
 Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/reference/README.md`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m2.md`.
 Review-fix evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m2/report-2.md`.
+Second review-fix evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m2/report-3.md`.
 
 ## Milestone 3: Workspace skeleton and native packaging
 
@@ -812,6 +813,8 @@ Tags: ui
 - [ ] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
+- [ ] Reconnect the Node agreement and profile-selector tests to the shim's
+      gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
 - [ ] Commit.
 
