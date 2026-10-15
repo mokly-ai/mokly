@@ -89,6 +89,21 @@ test("one render keeps one previewed view, so frames see no new usage", () => {
   assert.match(replaced[0]!.path, /renders\/r-2\//);
 });
 
+test("the projection keeps one array per render result, so sessions stay put", () => {
+  const views = [view(undefined, "mobile"), view(undefined, "desktop")];
+  // Without previews, every render gets the saved array itself.
+  assert.equal(withPreviews(views, new Map(), target("home", "screen")), views);
+  // With previews, a later render with a new target object gets the same array.
+  const previews = new Map([[controlViewKey(views[0]!), preview]]);
+  const first = withPreviews(views, previews, target("home", "screen"));
+  assert.notEqual(first, views);
+  assert.equal(withPreviews(views, previews, target("home", "screen")), first);
+  assert.notEqual(
+    withPreviews(views, previews, target("other", "screen")),
+    first,
+  );
+});
+
 test("a screen swaps its own views and keeps saved views without a preview", () => {
   const views = [view(undefined, "mobile"), view(undefined, "desktop")];
   const previews = new Map([[controlViewKey(views[1]!), preview]]);

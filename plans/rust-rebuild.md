@@ -861,7 +861,7 @@ renders again.
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
       scrolls to the row's end, and a stage row that fits stays centred.
-- [ ] Port the viewer's frame inspector to the markers of the comparison
+- [x] Port the viewer's frame inspector to the markers of the comparison
       contract (Milestone 7 Serve run): `inspector/ranges.ts` reads
       `mokly-component:start:r-N`, while Serve writes `mokly-instance` and
       `mokly-slot` markers with an `id` and leaves a component page's root
@@ -890,6 +890,7 @@ decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 `.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
+Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
 
 - [ ] Commit.
 
