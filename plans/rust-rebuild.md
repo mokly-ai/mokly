@@ -579,17 +579,24 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 - [x] Resolve native installation with optional file links from the private root.
       The native packages stay outside npm's workspace list. The public CLI
       keeps exact registry versions. Approved in Milestone 3 change request 1.
-- [ ] Extend `xtask check`: Rust formatting, Clippy, tests, file length, the
-      generated-type byte-identity check and the Rust advisory audit once
-      approved, and the viewer suite. CI builds the native artifacts in every
-      job and on the Testbox through `rust-toolchain.toml`.
+- [x] Extend `xtask check`: Rust formatting, Clippy, tests, file length, and
+      the viewer suite. CI builds the native artifacts in every job and on
+      the Testbox through `rust-toolchain.toml`. The Native suite runs on
+      hosted macOS and Windows runners.
+- [x] Add `cargo xtask check-generated-types` as a standalone byte-identity
+      check. Keep it outside every gate and CI job.
 - [ ] Record the gate approvals from the Status section before adding the gates.
-- [ ] Commit.
+      The generated-TypeScript byte-identity and Rust advisory audit gates
+      wait for the user.
+- [x] Commit.
 
 Evidence: `.context/rust-rebuild/delegation/m3/report-1.md` and
 `.context/rust-rebuild/sweeps/m3-phase-a.md`. Round 1 fixes and evidence:
 `.context/rust-rebuild/delegation/m3/report-2.md` and
 `.context/rust-rebuild/sweeps/m3-r2-git.md`.
+Phase B evidence: `.context/rust-rebuild/delegation/m3/report-3.md`,
+`.context/rust-rebuild/delegation/m3/merge-decisions.md`, and
+`.context/rust-rebuild/m3-phase-b-complete-gate.log`.
 
 ## Milestone 4: Catalogue model and discovery
 

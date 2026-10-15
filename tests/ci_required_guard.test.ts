@@ -10,7 +10,11 @@ import { parse } from "yaml";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
-const resultVariables = ["REPOSITORY_RESULT", "VIEWER_RESULT"] as const;
+const resultVariables = [
+  "REPOSITORY_RESULT",
+  "VIEWER_RESULT",
+  "NATIVE_RESULT",
+] as const;
 
 interface WorkflowStep {
   name?: string;

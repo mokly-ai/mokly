@@ -15,8 +15,8 @@ use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
-fn complete_gate_is_the_ordered_union_of_every_suite() {
-    let complete = VerificationSuite::ALL
+fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
+    let complete = VerificationSuite::LOCAL
         .into_iter()
         .flat_map(|suite| commands_for(suite, None, DependencyAudit::Baseline))
         .collect::<Vec<_>>();
@@ -194,6 +194,7 @@ fn shard_requires_a_supported_selected_suite() {
     for suite in [
         Some(VerificationSuite::Repository),
         Some(VerificationSuite::Viewer),
+        Some(VerificationSuite::Native),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard), None),

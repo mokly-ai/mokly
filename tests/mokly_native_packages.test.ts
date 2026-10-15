@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { platformPackage } from "../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../packages/mokly/src/runtime.mjs";
-import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
+import { discoverNodeFiles } from "../scripts/verification/evidence.mjs";
 
 interface Manifest {
   name: string;
@@ -54,7 +54,7 @@ test("native package manifests match the root links and the CLI version pins", a
 });
 
 test("the discovered Node inventory includes all shim regression tests", async () => {
-  const files = await discoverUnitFiles(root);
+  const files = await discoverNodeFiles(root);
   for (const file of [
     "tests/mokly_shim.test.ts",
     "tests/mokly_shim_signals.test.ts",

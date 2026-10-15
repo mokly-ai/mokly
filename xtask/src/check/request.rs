@@ -43,17 +43,20 @@ pub(crate) enum VerificationSuite {
     Repository,
     /// Viewer typecheck and Node tooling and viewer tests.
     Viewer,
+    /// Host native artifact and Rust tests for hosted macOS and Windows jobs.
+    Native,
 }
 
 impl VerificationSuite {
-    /// Suites in authoritative complete-gate order.
-    pub(crate) const ALL: [Self; 2] = [Self::Repository, Self::Viewer];
+    /// Local coverage without repeating the native build and workspace tests.
+    pub(crate) const LOCAL: [Self; 2] = [Self::Repository, Self::Viewer];
 
     /// Stable CLI name for the suite.
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::Repository => "repository",
             Self::Viewer => "viewer",
+            Self::Native => "native",
         }
     }
 

@@ -18,7 +18,7 @@ use super::{Application, Cli, Command, Xtask};
 
 #[test]
 fn parses_every_reduced_suite() {
-    for suite in ["repository", "viewer"] {
+    for suite in ["repository", "viewer", "native"] {
         let cli =
             Cli::try_parse_from(["xtask", "check", "--suite", suite]).expect("known suite parses");
         let Command::Check {
@@ -34,6 +34,12 @@ fn parses_every_reduced_suite() {
         assert!(shard.is_none());
         assert!(dependency_audit.is_none());
     }
+}
+
+#[test]
+fn parses_standalone_generated_type_check() {
+    let parsed = Cli::try_parse_from(["xtask", "check-generated-types"]).unwrap();
+    assert!(matches!(parsed.command, Command::CheckGeneratedTypes));
 }
 
 #[test]
@@ -192,7 +198,7 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
         interrupt: unused(),
         workspace: PathBuf::from("/workspace"),
     };
-    for suite in [VerificationSuite::Viewer] {
+    for suite in [VerificationSuite::Viewer, VerificationSuite::Native] {
         for mode in ["baseline", "strict"] {
             let cli = Cli::try_parse_from([
                 "xtask",

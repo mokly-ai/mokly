@@ -17,6 +17,12 @@ pub(super) fn commands_for(
             npm(&["run", "typecheck"]),
             npm(&["run", "test:viewer:prepared"]),
         ],
+        VerificationSuite::Native => vec![
+            cargo(&["xtask", "build-native"]),
+            cargo(&["fmt", "--all", "--", "--check"]),
+            rust_clippy(),
+            cargo(&["test", "--workspace"]),
+        ],
     }
 }
 
@@ -32,16 +38,20 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
         node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
-        cargo(&[
-            "clippy",
-            "--workspace",
-            "--all-targets",
-            "--",
-            "-D",
-            "warnings",
-        ]),
+        rust_clippy(),
         cargo(&["test", "--workspace"]),
     ]
+}
+
+fn rust_clippy() -> CommandSpec {
+    cargo(&[
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings",
+    ])
 }
 
 fn npm(args: &[&str]) -> CommandSpec {

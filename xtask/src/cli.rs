@@ -50,6 +50,8 @@ pub(crate) enum Command {
     BuildNative,
     /// Write TypeScript declarations from mokly-model.
     GenerateTypes,
+    /// Compare generated TypeScript bytes without writing files.
+    CheckGeneratedTypes,
     /// Run the full gate or one selected verification suite.
     Check {
         /// Run one partial verification suite.
