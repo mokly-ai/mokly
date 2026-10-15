@@ -145,14 +145,6 @@ test("an answer for another revision or preview is refused", async () => {
       props: {},
       usage: { status: "pending" },
     }),
-    () => ({
-      renderId: "r-1",
-      revision: 4,
-      previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
-      props: {},
-      usage: { status: "ready", instances: [], slots: [], ranges: [] },
-      token: TOKEN,
-    }),
   ];
   for (const answer of answers)
     await assert.rejects(
@@ -161,6 +153,32 @@ test("an answer for another revision or preview is refused", async () => {
         error instanceof ComponentRenderError &&
         error.code === "invalid-response",
     );
+});
+
+test("an answer's additive fields are ignored", async () => {
+  const serve = fakeServe({
+    answer: (body) => ({
+      renderId: "r-1",
+      revision: body.revision,
+      previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
+      props: {},
+      usage: {
+        status: "ready",
+        instances: [],
+        slots: [],
+        ranges: [],
+        later: true,
+      },
+      later: { added: true },
+    }),
+  });
+  assert.deepEqual(await serve.live.render(descriptor, request, signal), {
+    renderId: "r-1",
+    revision: 4,
+    previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
+    props: {},
+    usage: { status: "ready", instances: [], slots: [], ranges: [] },
+  });
 });
 
 test("expiry checks only the preview URLs Serve issued", async () => {

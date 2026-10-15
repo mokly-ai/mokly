@@ -1,6 +1,6 @@
 /** The entry detail v1 reader: the version gate first, then every field. */
 
-import { exactKeys, invalidData, record } from "../components/data.js";
+import { invalidData, record } from "../components/data.js";
 
 import {
   readInstance,
@@ -40,7 +40,10 @@ const KINDS = ["component", "document", "page", "screen", "use-case"] as const;
 const VIEWPORTS = ["mobile", "desktop"] as const;
 const SCHEMES = ["light", "dark"] as const;
 
-/** Gate the version and read one current or removed entry's detail. */
+/**
+ * Gate the version and read one current or removed entry's detail: the
+ * fields v1 defines, ignoring any other field a newer writer adds.
+ */
 export function readEntryDetail(value: unknown): EntryDetailV1 {
   const version = record(value) ? value.schemaVersion : undefined;
   if (version !== ENTRY_DETAIL_VERSION)
@@ -119,7 +122,10 @@ function readUsage(value: unknown): CatalogueUsage {
     "unavailable",
   ] as const);
   if (status !== "ready") {
-    exactKeys(input, ["status"], "$detail.usage");
+    if (
+      ["instances", "slots", "ranges"].some((key) => Object.hasOwn(input, key))
+    )
+      invalidData("$detail.usage", "only ready usage carries records");
     return { status };
   }
   return {
@@ -132,9 +138,9 @@ function readUsage(value: unknown): CatalogueUsage {
 
 /** Read the review v8 rule and resource records of one view or page. */
 function readViewEvidence(value: unknown): ViewEvidence {
-  exactKeys(value, ["rules", "resources"], "$detail.resourceEvidence");
+  const input = object(value);
   return {
-    rules: array(value.rules).map((raw) => {
+    rules: array(input.rules).map((raw) => {
       const rule = object(raw);
       return {
         stylesheet: repositoryPath(rule.stylesheet),
@@ -147,7 +153,7 @@ function readViewEvidence(value: unknown): ViewEvidence {
         owner: readOwner(rule.owner),
       };
     }),
-    resources: array(value.resources).map((raw) => {
+    resources: array(input.resources).map((raw) => {
       const resource = object(raw);
       return {
         path: repositoryPath(resource.path),
@@ -161,7 +167,8 @@ function readOwner(value: unknown): EvidenceOwner {
   const input = object(value);
   const kind = choice(input.kind, ["entry", "component"] as const);
   if (kind === "entry") {
-    exactKeys(input, ["kind"], "$detail.owner");
+    if (Object.hasOwn(input, "path"))
+      invalidData("$detail.owner", "an entry owner names no component");
     return { kind };
   }
   return { kind, path: entryPath(input.path) };

@@ -8,7 +8,6 @@ import {
 } from "../catalogue/component_values.js";
 import { RENDERS_PATH } from "../catalogue/delivery_paths.js";
 import { array, counter, object, string } from "../catalogue/values.js";
-import { exactKeys } from "../components/data.js";
 import {
   ComponentRenderError,
   type ComponentRenderRequest,
@@ -42,22 +41,19 @@ export function renderFailure(status: number): ComponentRenderError {
   return new ComponentRenderError(code, message);
 }
 
-/** Accept a render answer only for the revision and view it was asked for. */
+/**
+ * Accept a render answer only for the revision and view it was asked for,
+ * reading the fields the route defines and ignoring any other.
+ */
 export function readRenderResponse(
   value: unknown,
   request: ComponentRenderRequest,
 ): ComponentRenderSuccess {
   try {
     const input = object(value);
-    exactKeys(
-      input,
-      ["renderId", "revision", "previewUrl", "props", "usage"],
-      "$render",
-    );
     const renderId = string(input.renderId);
     const previewUrl = string(input.previewUrl);
     const usage = object(input.usage);
-    exactKeys(usage, ["status", "instances", "slots", "ranges"], "$render");
     if (
       !RENDER_ID.test(renderId) ||
       counter(input.revision) !== request.revision ||

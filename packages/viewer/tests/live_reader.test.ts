@@ -62,12 +62,6 @@ test("the render capability is exact", () => {
     (value.render as Record<string, unknown>).token = "";
   }, /invalid render capability/);
   rejects((value) => {
-    (value.render as Record<string, unknown>).method = "POST";
-  }, /render\.method: unknown field/);
-  rejects((value) => {
-    value.revision = 1;
-  }, /live\.revision: unknown field/);
-  rejects((value) => {
     value.generation = "short";
   }, /invalid identity/);
 });

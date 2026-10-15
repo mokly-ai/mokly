@@ -4,7 +4,7 @@ import {
   validateControlledValues,
   validateControls,
 } from "../components/controls.js";
-import { invalidData } from "../components/data.js";
+import { invalidData, plainKeys, record } from "../components/data.js";
 import type {
   ComponentInputOwner,
   ComponentInstanceRecord,
@@ -34,15 +34,54 @@ export function readSchema(value: unknown, context = "$catalogue"): PropSchema {
   return structuredClone(value);
 }
 
-/** Read the controls of one entry, which name only its declared props. */
+/** The fields each control kind defines beside `kind`, `label`, `description`. */
+const CONTROL_FIELDS: Readonly<Record<string, readonly string[]>> = {
+  text: ["maxLength"],
+  boolean: [],
+  number: ["minimum", "maximum", "step"],
+  select: ["options"],
+};
+
+/** Keep only the listed own fields of a record; other values pass unchanged. */
+function known(value: unknown, fields: readonly string[]): unknown {
+  if (!record(value)) return value;
+  return Object.fromEntries(
+    fields.flatMap((field) =>
+      Object.hasOwn(value, field) ? [[field, value[field]]] : [],
+    ),
+  );
+}
+
+/**
+ * Read the controls of one entry, which name only its declared props. Each
+ * control keeps the fields its kind defines; any other field is ignored, and
+ * an unknown kind fails validation.
+ */
 export function readControls(
   value: unknown,
   schema: PropSchema,
   context = "$catalogue",
 ): Readonly<Record<string, ComponentControl>> {
-  object(value);
-  validateControls(schema, value, context);
-  return structuredClone(value);
+  const input = object(value);
+  const controls = Object.fromEntries(
+    plainKeys(input, context).map((key) => {
+      const control = input[key];
+      const kind = record(control) ? control.kind : undefined;
+      const fields =
+        typeof kind === "string" && Object.hasOwn(CONTROL_FIELDS, kind)
+          ? CONTROL_FIELDS[kind]!
+          : undefined;
+      if (!fields) return [key, control];
+      const read = known(control, ["kind", "label", "description", ...fields]);
+      if (record(read) && Array.isArray(read.options))
+        read.options = read.options.map((option) =>
+          known(option, ["label", "value"]),
+        );
+      return [key, read];
+    }),
+  );
+  validateControls(schema, controls, context);
+  return structuredClone(controls);
 }
 
 /** Read an entry's own or merged props and check them against its schema. */

@@ -97,9 +97,6 @@ test("no index record carries usage or resource evidence", () => {
     const removed = (raw.removedEntries as Record<string, unknown>[])[0]!;
     (removed.entry as Record<string, unknown>).usage = { status: "omitted" };
   }, /usage is not public catalogue data/);
-  rejects((raw) => {
-    screens(raw)[0]!.preview = { kind: "screen" };
-  }, /preview is not an index entry field/);
 });
 
 test("private evidence keys are rejected anywhere in the index", () => {
@@ -128,9 +125,6 @@ test("identity, deployment, revision and live are exact", () => {
   rejects((raw) => {
     raw.live = { generation: "x" };
   }, /invalid identity/);
-  rejects((raw) => {
-    raw.live = { generation: HASH, extra: true };
-  }, /live\.extra: unknown field/);
   const live = readCatalogueIndex({
     ...rawIndexFixture(),
     live: { generation: HASH },
@@ -164,10 +158,6 @@ test("removed records pin their snapshot and preview while a comparison is publi
     const removed = (raw.removedEntries as Record<string, unknown>[])[0]!;
     removed.preview = { kind: "document" };
   }, /preview kind must match entry/);
-  rejects((raw) => {
-    const removed = (raw.removedEntries as Record<string, unknown>[])[0]!;
-    removed.preview = { kind: "page", path: "elsewhere" };
-  }, /preview\.path: unknown field/);
   rejects((raw) => {
     raw.changesStatus = "unavailable";
     raw.removedEntries = [];

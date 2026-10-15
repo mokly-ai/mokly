@@ -41,12 +41,12 @@ export const CHANGE_STATUSES = [
 const KINDS = ["added", "changed", "removed", "unmodified"] as const;
 const SCHEMES = ["light", "dark"] as const;
 
-/** Read one current or historical entry record of any kind. */
+/**
+ * Read one current or historical entry record of any kind: the fields v7
+ * defines, ignoring any other field a newer writer adds.
+ */
 export function readEntry(value: unknown): CatalogueRecord {
   const input = object(value);
-  for (const key of ["preview", "usage", "resourceEvidence"])
-    if (Object.hasOwn(input, key))
-      invalidData("$catalogue", `${key} is not an index entry field`);
   const base = common(input);
   const kind = choice(input.kind, [
     "screen",

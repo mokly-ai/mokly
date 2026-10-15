@@ -1,6 +1,6 @@
 /** The catalogue index v7 reader: the version gate first, then every field. */
 
-import { exactKeys, invalidData, record } from "../components/data.js";
+import { invalidData, record } from "../components/data.js";
 
 import { CHANGE_STATUSES, readEntry } from "./entry_reader.js";
 import { assertPublicIndex } from "./privacy.js";
@@ -73,8 +73,7 @@ export function readCatalogueIndex(value: unknown): CatalogueReadModel {
 }
 
 function readLive(value: unknown): { generation: string } {
-  exactKeys(value, ["generation"], "$catalogue.live");
-  return { generation: hash(value.generation) };
+  return { generation: hash(object(value).generation) };
 }
 
 function readRemovedEntry(
@@ -121,9 +120,11 @@ function readParentTitle(
 }
 
 function readPreview(value: unknown): RemovedEntryPreview {
-  const input = object(value),
-    kind = choice(input.kind, ["screen", "page", "document"] as const);
-  exactKeys(input, ["kind"], "$catalogue.preview");
+  const kind = choice(object(value).kind, [
+    "screen",
+    "page",
+    "document",
+  ] as const);
   return { kind };
 }
 

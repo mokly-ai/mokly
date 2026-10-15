@@ -105,13 +105,13 @@ test("usage is ready with its records, or pending or unavailable alone", () => {
   rejects(omitted, /unsupported discriminant/);
   const leaked = current("product/browse/home");
   views(leaked)[0]!.usage = { status: "pending", instances: [] };
-  rejects(leaked, /instances: unknown field/);
+  rejects(leaked, /only ready usage carries records/);
   const missing = current("product/browse/home");
   delete views(missing)[0]!.usage;
   rejects(missing, /expected an object/);
 });
 
-test("evidence records carry exactly rules and resources with owners", () => {
+test("evidence records carry rules and resources with owners", () => {
   const detail = current("components/action");
   views(detail)[0]!.resourceEvidence = {
     rules: [
@@ -140,7 +140,7 @@ test("evidence records carry exactly rules and resources with owners", () => {
     kind: "entry",
     path: "components/action",
   };
-  rejects(owner, /owner\.path: unknown field/);
+  rejects(owner, /an entry owner names no component/);
   const escape = structuredClone(detail);
   ((views(escape)[0]!.resourceEvidence as Raw).resources as Raw[])[0]!.path =
     "../outside.css";
