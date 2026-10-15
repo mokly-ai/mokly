@@ -80,7 +80,7 @@ export function TargetStage(props: {
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
   if (delivery && delivery.status !== "ready")
-    return <StageDelivery delivery={delivery} />;
+    return <StageDelivery delivery={delivery} kind={entry.kind} />;
   if (model) {
     const current = routedEntries(model).find(
       (item) => item.path === entry.path,
