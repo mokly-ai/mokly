@@ -18,6 +18,7 @@ function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
           name="arrival"
           number={1}
           title="Welcome"
+          screenTitle="Welcome"
           description="The tour starts on the landing screen."
           screenPath={DESTINATIONS.welcome}
         >
@@ -35,6 +36,7 @@ function UseCaseSteps({ viewport }: { viewport: "desktop" | "mobile" }) {
           name="detail"
           number={2}
           title="Details"
+          screenTitle="Details"
           description="The tour ends on the details screen."
           screenPath={DESTINATIONS.details}
         >

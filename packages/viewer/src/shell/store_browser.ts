@@ -23,7 +23,7 @@ import {
   restoreScrolls,
 } from "./store_scroll.js";
 import type { ShellState } from "./store_state.js";
-import { viewTitle } from "./views.js";
+import { viewTitle } from "./view_title.js";
 
 interface BrowserStoreInput {
   catalogue: Catalogue;

@@ -140,7 +140,8 @@
     },
     {
       "match": "**/*.html",
-      "stylesheets": ["styles.css"]
+      "stylesheets": ["styles.css"],
+      "darkStylesheets": ["styles-dark.css"]
     }
   ]
 }

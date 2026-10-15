@@ -108,7 +108,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       let next = withFilterSelection(current, selection);
       if (displayChanged) {
         const route = hostRoute(input.catalogue, selection, fragment);
-        next = withHostRoute(next, route, input.sections);
+        next = withHostRoute(next, route, input.sections, input.catalogue);
       }
       if (rawQuery !== undefined) next = { ...next, query: rawQuery };
       stateRef.current = next;
@@ -255,6 +255,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
           route,
           input.sections,
           environment.controlled,
+          input.catalogue,
         );
         environment.events().onError?.({
           code: "frame",

@@ -10,6 +10,7 @@ import type { NavSectionNode } from "./nav_tree.js";
 import type { ShellRoute } from "./routes.js";
 import { routeScreenId } from "./routes.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
+import { viewTitle } from "./view_title.js";
 
 /** Reveal matching groups only when the selection's filters actually change. */
 export function withFilterSelection(
@@ -52,7 +53,7 @@ export function withRoute(
   }
   return {
     ...next,
-    announcement: `Loaded ${routeTitle(catalogue, route)}`,
+    announcement: `Loaded ${viewTitle(catalogue, route.view)}`,
     drawerOpen: false,
     expandedFrame: undefined,
     route,
@@ -97,10 +98,4 @@ function sameQuery(left: ViewerSelection, right: ViewerSelection): boolean {
     left.tags.length === right.tags.length &&
     left.tags.every((tag, index) => tag === right.tags[index])
   );
-}
-
-function routeTitle(catalogue: Catalogue, route: ShellRoute): string {
-  if (route.view.kind === "home") return "Mokly";
-  if (route.view.kind === "missing") return "Not found · Mokly";
-  return `${route.view.target.entry.title} · Mokly`;
 }

@@ -1,5 +1,6 @@
 import { defineScreen } from "@mokly/mokly";
 
+import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import { PreviewWorkspace } from "../../../components/parts/workspace.js";
 import { useDesignInstance } from "../../../library/composition.js";
 import { inspector } from "../../../library/inspector/inspector.js";
@@ -35,7 +36,7 @@ function PropsBody() {
         inputId="appearance-radius"
         optional={false}
         supplied
-        error="Enter a number from 0 to 24."
+        error={CONTROLS_COPY.numberError(0, 24, 1)}
         control={
           <input
             id="appearance-radius"
