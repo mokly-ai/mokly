@@ -4,6 +4,7 @@ import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import { screenComparison } from "./comparison_fixtures.js";
 import { INSPECTION_PAGES } from "./destinations.js";
+import type { PropsLimit } from "./limit.js";
 import { SCREENS, screenIdentity } from "./metadata.js";
 import { ExplorerShell } from "./navigation.js";
 import { ScreenDetails } from "./screen_details.js";
@@ -17,9 +18,11 @@ import { PreviewWorkspace } from "./workspace.js";
  * the way back to the component that lists it.
  */
 export function ScreenPage({
+  limit,
   state,
   viewport,
 }: {
+  limit?: PropsLimit;
   state: ScreenPageState;
   viewport: ArtboardViewport;
 }) {
@@ -37,7 +40,7 @@ export function ScreenPage({
   const highlighting = state === "highlight" || state === "nested";
   return (
     <ExplorerShell
-      design={INSPECTION_PAGES[state]}
+      design={limit?.design ?? INSPECTION_PAGES[state]}
       active={identity}
       scenario={scenario}
       viewport={viewport}
@@ -68,7 +71,7 @@ export function ScreenPage({
       />
       {removed ? <PreviousVersionLabel /> : null}
       <PreviewWorkspace
-        inspector={<ScreenDetails state={state} />}
+        inspector={<ScreenDetails state={state} props={limit?.panel} />}
         viewport={viewport}
         render={(previewViewport) => (
           <ConsumerFrame state={state} viewport={previewViewport} />

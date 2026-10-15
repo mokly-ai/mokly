@@ -20,7 +20,7 @@ so an entry replaced by a symlink is dropped while an explicit root alias
 remains valid. `children` returns lexical child kinds. `read` returns
 owned bytes. `read_shared` returns immutable `Arc<[u8]>` storage, with a default
 adapter over `read`. A caching implementation shares that storage on hits.
-Both methods read bytes from an inventoried regular file and rejects a replacement symlink.
+Both methods read bytes from an inventoried regular file and reject a replacement symlink.
 Callers project an explicit alias and read its target identity. Paths are private source-tree paths; public catalogue JSON uses
 repository-relative metadata instead.
 

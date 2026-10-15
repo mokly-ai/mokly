@@ -3,6 +3,7 @@ import { defineScreen } from "@mokly/mokly";
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { designMetadata } from "../../metadata.js";
 import { PROFILE_CHANGES_ROWS } from "../../parts/account_nav_data.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { DetailsPanel } from "../../parts/details.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
@@ -206,53 +207,59 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /** Browse and Changes states for a screen that is its folder's own page. */
-export const indexEntryScreens = [
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A screen that is its folder's own page, selected, with its variant and the folder's other members listed under its row.",
+export const indexScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A screen that is its folder's own page, selected, with its variant and the folder's other members listed under its row.",
+  ...artboards({
     desktop: <FolderScreen viewport="desktop" />,
-    slug: "screen",
     mobile: <FolderScreen viewport="mobile" />,
-    rationale:
-      "A screen named index takes its folder's path, so the folder has no row of its own: the screen's row stands in its place. The row keeps its link beside a separate disclosure, and the disclosure is named for the contents, because its list holds the screen's variants and then the folder's other members in folder order.",
-    title: "Folder screen",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A member of a screen's folder, selected, with breadcrumbs that end in the screen the folder belongs to.",
+  slug: "screen",
+  rationale:
+    "A screen named index takes its folder's path, so the folder has no row of its own: the screen's row stands in its place. The row keeps its link beside a separate disclosure, and the disclosure is named for the contents, because its list holds the screen's variants and then the folder's other members in folder order.",
+  title: "Folder screen",
+});
+export const memberScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A member of a screen's folder, selected, with breadcrumbs that end in the screen the folder belongs to.",
+  ...artboards({
     desktop: <FolderMember viewport="desktop" />,
-    slug: "member",
     mobile: <FolderMember viewport="mobile" />,
-    rationale:
-      "The folder's own screen supplies the folder's title, so a member's last crumb reads Profile and opens that screen, the same page its row opens.",
-    title: "Folder member",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Changes holding a changed member under its folder's own screen, whose own render is unmodified.",
+  slug: "member",
+  rationale:
+    "The folder's own screen supplies the folder's title, so a member's last crumb reads Profile and opens that screen, the same page its row opens.",
+  title: "Folder member",
+});
+export const screenChangesScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Changes holding a changed member under its folder's own screen, whose own render is unmodified.",
+  ...artboards({
     desktop: <FolderScreenChanges viewport="desktop" />,
-    slug: "screen-changes",
     mobile: <FolderScreenChanges viewport="mobile" />,
-    rationale:
-      "A changed member is not a variant, so it does not mark the screen above it, just as it would not mark a folder row. The unmodified screen stays visible as an undotted container for its changed member, adds no Changes row or count, and keeps its own preview while it stays selected.",
-    title: "Folder screen in Changes",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "The first changed member, opened on its first changed view by activating its folder screen's row in Changes.",
+  slug: "screen-changes",
+  rationale:
+    "A changed member is not a variant, so it does not mark the screen above it, just as it would not mark a folder row. The unmodified screen stays visible as an undotted container for its changed member, adds no Changes row or count, and keeps its own preview while it stays selected.",
+  title: "Folder screen in Changes",
+});
+export const memberChangesScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "The first changed member, opened on its first changed view by activating its folder screen's row in Changes.",
+  ...artboards({
     desktop: <MemberChanges viewport="desktop" />,
-    slug: "member-changes",
     mobile: <MemberChanges viewport="mobile" />,
-    rationale:
-      "Activating an unmodified container row in Changes opens the first changed row it holds, as an unmodified variant parent opens its first changed variant, so a reviewer always lands on something that changed. The selection was not a changed entry, so the member opens on its first changed view, Mobile · Light, rather than the sticky Both, and the viewport control marks the desktop view that also changed. The comparison band opens in Current; the other modes are depictions until a matching comparison state is authored.",
-    title: "First changed member",
   }),
-];
+  slug: "member-changes",
+  rationale:
+    "Activating an unmodified container row in Changes opens the first changed row it holds, as an unmodified variant parent opens its first changed variant, so a reviewer always lands on something that changed. The selection was not a changed entry, so the member opens on its first changed view, Mobile · Light, rather than the sticky Both, and the viewport control marks the desktop view that also changed. The comparison band opens in Current; the other modes are depictions until a matching comparison state is authored.",
+  title: "First changed member",
+});

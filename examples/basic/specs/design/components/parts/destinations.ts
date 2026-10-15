@@ -40,23 +40,37 @@ export const INSPECTION_PAGES = {
   unavailable: "design/components/states/unavailable",
   "inspection-loading": "design/components/states/loading/inspection-loading",
   "removed-consumer": "design/components/states/removed-consumer",
+  "screen-props": "design/components/controls/editing/screen",
 } as const satisfies Record<ScreenPageState, string>;
 
 export const CONTROLS_PAGES = {
-  default: "design/components/controls/controls",
+  parent: "design/components/controls/controls",
+  default: "design/components/controls/controls/default",
   edited: "design/components/controls/editing/edited",
   unset: "design/components/controls/editing/unset",
   variant: "design/components/controls/editing/variant",
   reset: "design/components/controls/editing/reset",
   pending: "design/components/controls/states/pending",
+  preparing: "design/components/controls/states/preparing",
+  "preparing-failed": "design/components/controls/states/preparing/failed",
   invalid: "design/components/controls/states/invalid",
   error: "design/components/controls/states/error",
   comparison: "design/components/controls/states/comparison",
   readonly: "design/components/controls/published/readonly",
   "readonly-variant": "design/components/controls/published/readonly-variant",
+  "invalid-together": "design/components/controls/limits/invalid-together",
+  expired: "design/components/controls/limits/expired",
 } as const satisfies Record<ControlsState, string>;
+
+/** Props-tab limits drawn on existing component and screen pages. */
+export const LIMIT_PAGES = {
+  removed: "design/components/controls/limits/removed",
+  "read-only": "design/components/controls/limits/read-only",
+  "no-props": "design/components/controls/limits/no-props",
+} as const;
 
 export type ComponentDesignDestination =
   | (typeof CONTROLS_PAGES)[keyof typeof CONTROLS_PAGES]
+  | (typeof LIMIT_PAGES)[keyof typeof LIMIT_PAGES]
   | (typeof COMPONENT_PAGES)[keyof typeof COMPONENT_PAGES]
   | (typeof INSPECTION_PAGES)[keyof typeof INSPECTION_PAGES];

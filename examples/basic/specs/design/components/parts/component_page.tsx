@@ -4,15 +4,17 @@ import type { ComparisonMode } from "../../parts/destinations.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 
-import { actionVariants } from "./action_props.js";
+import { actionEntries } from "./action_props.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import {
+  actionEntryOf,
   ComponentDetails,
   type ComponentPageState,
 } from "./component_details.js";
 import { ComponentLayout } from "./component_layout.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
+import type { PropsLimit } from "./limit.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 import type { ChangeScenario } from "./navigation_tree.js";
 import {
@@ -53,9 +55,11 @@ function changeScenario(state: ComponentPageState): ChangeScenario {
 
 /** Shared component-page composition; each owning screen exports both artboards. */
 export function ComponentPage({
+  limit,
   state,
   viewport,
 }: {
+  limit?: PropsLimit;
   state: ComponentPageState;
   viewport: ArtboardViewport;
 }) {
@@ -78,7 +82,7 @@ export function ComponentPage({
               : undefined;
   return (
     <ComponentLayout
-      design={COMPONENT_PAGES[state]}
+      design={limit?.design ?? COMPONENT_PAGES[state]}
       entry={entry}
       navigationKey={navigationKey}
       mode={mode}
@@ -89,8 +93,8 @@ export function ComponentPage({
       }
       scenario={changeScenario(state)}
       viewport={viewport}
-      variants={<VariantPicker state={state} />}
-      inspector={<ComponentDetails state={state} />}
+      variants={<VariantPicker state={state} limit={limit?.design} />}
+      inspector={<ComponentDetails state={state} props={limit?.panel} />}
     >
       {(previewViewport) =>
         state === "added" ? (
@@ -116,11 +120,7 @@ export function ComponentPage({
             ) : state === "unused" ? (
               <span className="ce-badge">New</span>
             ) : (
-              <ActionExample
-                {...actionVariants[
-                  state === "disabled" ? "disabled" : "default"
-                ].props}
-              />
+              <ActionExample {...actionEntries[actionEntryOf(entry)].props} />
             )}
           </ComponentCanvas>
         )

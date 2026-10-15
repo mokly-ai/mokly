@@ -1,20 +1,22 @@
-import { defineComponent, MockLink, type ComponentProps } from "@mokly/mokly";
+import { defineComponent, MockLink } from "@mokly/mokly";
 
 import { tagChip } from "../controls/tag-chip.js";
 import { libraryMetadata } from "../metadata.js";
-import { text } from "../schemas.js";
+import { text, type LibraryProps } from "../schemas.js";
 
 import { MetadataRowView } from "./metadata-row.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["label", "presentation"],
   properties: {
     label: text,
-    presentation: { schema: { kind: "enum", values: ["metadata", "props"] } },
+    presentation: { enum: ["metadata", "props"] },
   },
 } as const;
 const slots = ["children"] as const;
-export type MetadataRowProps = ComponentProps<typeof propSchema, typeof slots>;
+export type MetadataRowProps = LibraryProps<typeof propSchema, typeof slots>;
 export const metadataRow = defineComponent({
   ...libraryMetadata(
     "inspector",
@@ -23,6 +25,7 @@ export const metadataRow = defineComponent({
     "A labelled value in the details or props panel.",
   ),
   propSchema,
+  props: { label: "Schemes", presentation: "metadata" },
   slots,
   controls: { label: { kind: "text", label: "Label" } },
   render: MetadataRowView,
@@ -30,27 +33,20 @@ export const metadataRow = defineComponent({
     {
       slug: "text",
       title: "Text",
-      props: {
-        label: "Schemes",
-        presentation: "metadata",
-        children: "Light, Dark",
-      },
+      props: { label: "Schemes", presentation: "metadata" },
+      slots: { children: "Light, Dark" },
     },
     {
       slug: "code",
       title: "Code",
-      props: {
-        label: "label",
-        presentation: "props",
-        children: <code>Continue</code>,
-      },
+      props: { label: "label", presentation: "props" },
+      slots: { children: <code>Continue</code> },
     },
     {
       slug: "linked",
       title: "Linked",
-      props: {
-        label: "Used by",
-        presentation: "metadata",
+      props: { label: "Used by", presentation: "metadata" },
+      slots: {
         children: (
           <MockLink to="design/browse/views/use-case">Example tour</MockLink>
         ),
@@ -59,9 +55,8 @@ export const metadataRow = defineComponent({
     {
       slug: "tags",
       title: "Tags",
-      props: {
-        label: "Tags",
-        presentation: "metadata",
+      props: { label: "Tags", presentation: "metadata" },
+      slots: {
         children: (
           <span className="mbk-chips">
             <tagChip.Component id="forms" label="forms" selected={false} />

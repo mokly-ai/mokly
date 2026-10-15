@@ -14,6 +14,7 @@ struct Keys<'a> {
     instances: &'a BTreeMap<String, ComponentInstanceRecord>,
     slots: &'a BTreeMap<String, ComponentSlotRecord>,
     surviving: BTreeSet<String>,
+    claimed: BTreeSet<String>,
     mapped: BTreeMap<String, String>,
     mapped_slots: BTreeMap<String, String>,
     visiting: BTreeSet<String>,
@@ -44,6 +45,7 @@ pub(crate) fn rebuild(
         instances: &original,
         slots: &original_slots,
         surviving,
+        claimed: BTreeSet::new(),
         mapped: BTreeMap::new(),
         mapped_slots: BTreeMap::new(),
         visiting: BTreeSet::new(),
@@ -157,6 +159,11 @@ impl Keys<'_> {
             Err(source) => return Err(HtmlError::Props { source }),
         };
         self.visiting.remove(old);
+        if key != old && (self.surviving.contains(&key) || self.claimed.contains(&key)) {
+            self.surviving.remove(old);
+            return Ok(None);
+        }
+        self.claimed.insert(key.clone());
         self.mapped.insert(old.into(), key.clone());
         Ok(Some(key))
     }
@@ -191,9 +198,11 @@ fn repair(nodes: Vec<Node>, keys: &mut Keys<'_>) -> Result<Vec<Node>> {
                 *children = repair(mem::take(children), keys)?;
                 match &mut region.kind {
                     RegionKind::Instance { key, .. } => {
-                        if let Some(new) = keys.instance(key)? {
-                            *key = new;
-                        }
+                        let Some(new) = keys.instance(key)? else {
+                            output.append(children);
+                            continue;
+                        };
+                        *key = new;
                     }
                     RegionKind::Slot {
                         key,

@@ -29,6 +29,11 @@ reached by completed renders. Serve rechecks their live eligibility at read time
 retains no transient output. Its closure stays separate from catalogue usage
 and public closure membership.
 
+Document keys include component paths and element names. Logical links depend
+on their destination routes, including use-case first steps. An unresolved link
+substitution inside a component depends on the routing inventory, including
+when a prop reaches it through another component.
+
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete

@@ -3,7 +3,7 @@
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_model::catalogue::SourceLocation;
 
-use crate::control_tiers::{ancestor, descendant};
+use crate::control_tiers::{Tier, ancestor, descendant};
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node, element};
@@ -12,7 +12,7 @@ use crate::{control_tiers, error};
 /// Adapt every marked control after composition; return route-scoped warnings.
 pub fn adapt(nodes: &mut [Node], route: &str) -> Result<Vec<Warning>> {
     let mut warnings = Vec::new();
-    let active = match walk(nodes, &[], false, route, &mut warnings) {
+    let active = match walk(nodes, &mut Vec::new(), false, route, &mut warnings) {
         Ok(active) => active,
         Err(source) => {
             return Err(error::HtmlError::Attempt {
@@ -32,7 +32,7 @@ pub fn adapt(nodes: &mut [Node], route: &str) -> Result<Vec<Warning>> {
 
 fn walk(
     nodes: &mut [Node],
-    ancestors: &[Element],
+    ancestors: &mut Vec<Tier>,
     inherited: bool,
     route: &str,
     warnings: &mut Vec<Warning>,
@@ -115,11 +115,14 @@ fn walk(
                         active = true;
                     }
                 }
-                let mut parents = ancestors.to_vec();
-                let mut parent = root.clone();
-                parent.children.clear();
-                parents.push(parent);
-                active |= walk(&mut root.children, &parents, inactive, route, warnings)?;
+                let tier = ancestor(root);
+                let pushed = tier.is_some();
+                ancestors.extend(tier);
+                let nested = walk(&mut root.children, ancestors, inactive, route, warnings);
+                if pushed {
+                    ancestors.pop();
+                }
+                active |= nested?;
             }
             _ => {}
         }
@@ -156,13 +159,8 @@ fn check_root(root: &Element, logical: &str) -> Result<()> {
     Ok(())
 }
 
-fn check_ancestors(ancestors: &[Element], route: &str, warnings: &mut Vec<Warning>) -> Result<()> {
-    let tiers: Vec<_> = ancestors
-        .iter()
-        .rev()
-        .filter_map(|element| ancestor(element).map(|tier| (element, tier)))
-        .collect();
-    if let Some((_, tier)) = tiers.iter().find(|(_, tier)| tier.error) {
+fn check_ancestors(ancestors: &[Tier], route: &str, warnings: &mut Vec<Warning>) -> Result<()> {
+    if let Some(tier) = ancestors.iter().rev().find(|tier| tier.error) {
         return Err(invalid(
             Code::HtmlAttribute,
             format!(
@@ -171,7 +169,7 @@ fn check_ancestors(ancestors: &[Element], route: &str, warnings: &mut Vec<Warnin
             ),
         ));
     }
-    if let Some((_, tier)) = tiers.first() {
+    if let Some(tier) = ancestors.last() {
         warnings.push(Warning {
             code: "link-control-ancestor",
             subject: WarningSubject::Route(route.into()),

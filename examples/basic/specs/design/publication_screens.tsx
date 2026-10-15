@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { designMetadata } from "./metadata.js";
+import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS, SCREEN_CRUMBS } from "./parts/entry_paths.js";
@@ -69,24 +70,20 @@ function ChangesMobile() {
 }
 
 /** Owning designs for a catalogue with review omitted or included. */
-export const publicationScreens = [
-  defineScreen({
-    ...designMetadata,
-    slug: "catalogue",
-    title: "Current catalogue",
-    description: "Navigation, search and variants with review omitted.",
-    colorSchemes: ["light"],
-    desktop: <CatalogueDesktop />,
-    mobile: <CatalogueMobile />,
-  }),
-  defineScreen({
-    ...designMetadata,
-    slug: "changes",
-    title: "Catalogue with Changes",
-    description:
-      "The same catalogue with Changes and optional screen comparisons.",
-    colorSchemes: ["light"],
-    desktop: <ChangesDesktop />,
-    mobile: <ChangesMobile />,
-  }),
-];
+export const catalogueScreen = defineScreen({
+  ...designMetadata,
+  slug: "catalogue",
+  title: "Current catalogue",
+  description: "Navigation, search and variants with review omitted.",
+  colorSchemes: ["light"],
+  ...artboards({ desktop: <CatalogueDesktop />, mobile: <CatalogueMobile /> }),
+});
+export const changesScreen = defineScreen({
+  ...designMetadata,
+  slug: "changes",
+  title: "Catalogue with Changes",
+  description:
+    "The same catalogue with Changes and optional screen comparisons.",
+  colorSchemes: ["light"],
+  ...artboards({ desktop: <ChangesDesktop />, mobile: <ChangesMobile /> }),
+});

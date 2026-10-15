@@ -1,6 +1,6 @@
 ---
 source: crates/mokly-server/tests/http/routes_tests.rs
-assertion_line: 22
+assertion_line: 77
 expression: bytes
 ---
 {
@@ -106,7 +106,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "74e52ea27cc13fbc608fab6421e82f71de02835acc6e72aa699a27d7f7910fae",
+          "documentKey": "96576219a3c40632bac7187215436a19e4ba1ae67d557e1afa10b133bcc898d1",
           "viewport": "mobile"
         },
         {
@@ -114,7 +114,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "409d00d6c8bade62ffb63c31861978e070796f2586e9a2f8b33cad113c891cf2",
+          "documentKey": "64f7a76577d303ec84c0858231647d7d2ee65a0be5d15587c9ce2e225b955f20",
           "viewport": "mobile"
         },
         {
@@ -122,7 +122,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "f3c6ae7e9bec429490409701b09848b9d39c08828f3d9aedba08bff6a2ae960a",
+          "documentKey": "b59156cfca9fd3dfac37cfb1cf8d2ee51484b6df69d7527ac32b10146ad605cf",
           "viewport": "desktop"
         },
         {
@@ -130,7 +130,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "fe10e6291ba2bf627ce60b3399e6cb63654d2ca21aded11a3097fb3f3fcdeb2a",
+          "documentKey": "f45b2e3134fc0c3263035d472cacf7ed5ea7b54cd07f68f2c1acc21fa34319e8",
           "viewport": "desktop"
         }
       ]
@@ -237,7 +237,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "b625a59a8b6db666e9a6a4c81498abbb18dd9f3b7cf345d94eb056a3c18d6247",
+          "documentKey": "4ddd38eb5d77f10b29dccdd308557e63e19dd35fe405ff1d28486807eb7693a9",
           "viewport": "mobile"
         },
         {
@@ -245,7 +245,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "a69837fcb79fcc00ddf020b0fffbf460163cb602f1a0320187724b3ebbae5d80",
+          "documentKey": "a8bc7711a0356d2c2807581371cb46b812fec82d18e1ef22c62206b83d65fba3",
           "viewport": "mobile"
         },
         {
@@ -253,7 +253,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "df1e7a0734fc8fb6297d08bf6f1e0d0b7cd0f987a93525b9f09cb18ecef7fe04",
+          "documentKey": "721d6882abe82dac9ef96fa6097359dcee1146ecab9386f69516769496020da7",
           "viewport": "desktop"
         },
         {
@@ -261,7 +261,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "53d54fe5e2013d7e05253424101e8199f0f9168bb747fd74a4d5dcb507f791ad",
+          "documentKey": "33070c4f2007be94121240c524aaa818bfb66fada0357fb05a41ab6946d61162",
           "viewport": "desktop"
         }
       ]
@@ -330,7 +330,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "1cf6f60532a1ed8318fe09b63f3f587248bc464159a9acf43d09cf59c729648a",
+          "documentKey": "2c6c5a18d6cd22c6d7100efce9bd41efebbaccef32b5c7bab413d8bcabb6fbc4",
           "viewport": "mobile"
         },
         {
@@ -338,7 +338,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "4a527b6ef875a5a509ed3d26d25dc3d8391b3836a45f59c25cd5c0c51cfa230a",
+          "documentKey": "c803213b7fa24eb667a74caed2b37c977d0fc0893aa0acbac7792c1574a11ac7",
           "viewport": "mobile"
         },
         {
@@ -346,7 +346,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "82c545941bfde78ff7cbd59c983741f4a8866b08ff6773b72341d20e085cfe52",
+          "documentKey": "5f2c3bf0f24122c07b2d81135e2b3f79671ccf8086ae18d806a76648b0afae80",
           "viewport": "desktop"
         },
         {
@@ -354,7 +354,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "fae40d3d6f84aac390d997fe05228b1d8d54f7f065d0eef5b7b64b97931b2228",
+          "documentKey": "ffdb385a254b975f092abc678411af1e363cf845b814fb190f6f07c5042bd0c2",
           "viewport": "desktop"
         }
       ]
@@ -396,7 +396,7 @@ expression: bytes
     "title": "Mokly"
   },
   "live": {
-    "generation": "e17343cf8377c96c88758dc0c1375527b930235f553d4cb359a3ad39c5fe2115"
+    "generation": "d23199434ff7e652670f65dc47fae721ab43ac1d8370250aa00a98b4c5f1c695"
   },
   "pages": [
     {
@@ -408,7 +408,7 @@ expression: bytes
         "relatedDocs": [],
         "sourcePath": "specs/page.page.html"
       },
-      "documentKey": "8fc9c16657deb0b2b08db4ea4c152e97836aa208486efaea84b572c9029cfacb",
+      "documentKey": "03aa4d458b96f532c78553100bc06f92a8c0063a02151f09d9a6fede468650a6",
       "kind": "page",
       "path": "page",
       "tags": [],
@@ -513,7 +513,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "7d19315618a554d822d3babd7b00dd9b246a5116755b0bf03f933208cf389a72",
+          "documentKey": "fee8caa8be59631ff59d5a3a31e324dab1f0334947502ca6bb458f3777a38c3e",
           "viewport": "mobile"
         },
         {
@@ -521,7 +521,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "2271e5a1ac9a38975f1ef62b5da239ef05792178d6f25b4627339475e883d336",
+          "documentKey": "ac6b001f083ebc34922cb5636ddf4463cebe8f1c634f1ec62d54689a9509275b",
           "viewport": "mobile"
         },
         {
@@ -529,7 +529,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "0e306faa204750b36b8d6fe6d66476059005920e0e8184afda12c63be77cced3",
+          "documentKey": "b34638b375ea8b8a814dcb6f705fc1762a8f9d24e7cf92fc49e26dde8020892c",
           "viewport": "desktop"
         },
         {
@@ -537,7 +537,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "8802928c447058d221325ffbfe6c128ac17d24357f47c5b090c1a88410284532",
+          "documentKey": "af8ebd043916f6afaa9e0947b1cd83d735a40e6d24a25aef461c99bf27e8d561",
           "viewport": "desktop"
         }
       ]
@@ -637,7 +637,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "3606d925d7d09786106e108244f9576dd59147b042dcb7584a098d57e2e51283",
+          "documentKey": "883f42af8883fb7cd2eb6e86df71e650ccac1ab6a60a4a104d41ea47dc038a8d",
           "viewport": "mobile"
         },
         {
@@ -645,7 +645,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "796c3ab4ef8d3baf96c5594c8e56c203db44bfda9610f9d5feb5e517b33d4042",
+          "documentKey": "6dbd13fe94bb446479ff030cff0c588f775b314040e8314e28cc903565bcaecb",
           "viewport": "mobile"
         },
         {
@@ -653,7 +653,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "b59f3e805cdd1dd945e4c4b5fe8f93427d336588b62828ef9d09e85b3999bc8b",
+          "documentKey": "a7fe870a6e031591cb4a4dd3c9455ae79747cb8d7a57f79d76c91322fbd8e69e",
           "viewport": "desktop"
         },
         {
@@ -661,7 +661,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "1acde24cde11453b46b08a0d6bf57e1e1efd84fe113e22bcff8a2de665387f80",
+          "documentKey": "16ae9463b4742d3e4a39f5f188fca754f39967cb4c95578f17dc5d986d467ce3",
           "viewport": "desktop"
         }
       ]

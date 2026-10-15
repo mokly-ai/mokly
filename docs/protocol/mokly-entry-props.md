@@ -131,8 +131,9 @@ Read model v7 gives every screen and component the same prop fields in the
 [public catalogue read model](./mokly-catalogue.md): `propSchema`, `props`,
 which holds the entry's own props or a variant's merged props, and
 `controls`. A component parent has its own `views`, rendered from its own
-props, and an empty `suppliedSlots`; `variantOf` is present exactly on the
-variants of either kind. `propSchema` is the declared or inferred schema,
+props without caller slot content, and an empty `suppliedSlots`; only a
+variant's `slots` and a composing caller fill slots. `variantOf` is present
+exactly on the variants of either kind. `propSchema` is the declared or inferred schema,
 unchanged, as a JSON Schema object under the profile; the viewer exports its
 type as `PropSchema`. The catalogue page's block is the one shape until the
 generated TypeScript types of the model crate replace it.

@@ -69,3 +69,6 @@ mod substitution_tests;
 #[cfg(test)]
 #[path = "_tests_/support.rs"]
 mod support;
+#[cfg(test)]
+#[path = "_tests_/url_safety_tests.rs"]
+mod url_safety_tests;

@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { changesDesignMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { REMOVED_SCREENS } from "../../../parts/nav_data.js";
 import {
@@ -79,53 +80,59 @@ function NoCapturedView({ viewport }: { viewport: Viewport }) {
 }
 
 /** Previous-version states a removed screen reaches before it can be read. */
-export const removedOutcomeScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A tall previous screen scrolls inside its own device frame rather than being cropped to it.",
+export const longScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A tall previous screen scrolls inside its own device frame rather than being cropped to it.",
+  ...artboards({
     desktop: <LongPreview viewport="desktop" />,
-    slug: "long",
     mobile: <LongPreview viewport="mobile" />,
-    rationale:
-      "Reading a removed screen means moving through it, so the previous views keep the screen's own scrolling and in-screen positions instead of collapsing to a single visible region.",
-    title: "Long previous screen",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Selecting a removed screen shows a loading stage until its previous views arrive.",
+  slug: "long",
+  rationale:
+    "Reading a removed screen means moving through it, so the previous views keep the screen's own scrolling and in-screen positions instead of collapsing to a single visible region.",
+  title: "Long previous screen",
+});
+export const loadingScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Selecting a removed screen shows a loading stage until its previous views arrive.",
+  ...artboards({
     desktop: <Loading viewport="desktop" />,
-    slug: "loading",
     mobile: <Loading viewport="mobile" />,
-    rationale:
-      "Previous views are retrieved only when the screen is opened, so the wait belongs on the stage while the navigation, badge, and details stay in place.",
-    title: "Loading previous screen",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Previous views that could not be loaded offer Retry and keep the catalogue usable.",
+  slug: "loading",
+  rationale:
+    "Previous views are retrieved only when the screen is opened, so the wait belongs on the stage while the navigation, badge, and details stay in place.",
+  title: "Loading previous screen",
+});
+export const unavailableScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Previous views that could not be loaded offer Retry and keep the catalogue usable.",
+  ...artboards({
     desktop: <Unavailable viewport="desktop" />,
-    slug: "unavailable",
     mobile: <Unavailable viewport="mobile" />,
-    rationale:
-      "Current output may never stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
-    title: "Previous screen unavailable",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A viewport the previous version was never captured in names the viewport that still opens.",
+  slug: "unavailable",
+  rationale:
+    "Current output may never stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
+  title: "Previous screen unavailable",
+});
+export const noViewScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A viewport the previous version was never captured in names the viewport that still opens.",
+  ...artboards({
     desktop: <NoCapturedView viewport="desktop" />,
-    slug: "no-view",
     mobile: <NoCapturedView viewport="mobile" />,
-    rationale:
-      "A removed screen is only ever shown in the viewports it was captured in, so a viewport with no previous view says so on the stage instead of leaving it blank. Selecting both viewports already shows the captured one, so the stage drops the sentence naming it.",
-    title: "Previous view not captured",
   }),
-];
+  slug: "no-view",
+  rationale:
+    "A removed screen is only ever shown in the viewports it was captured in, so a viewport with no previous view says so on the stage instead of leaving it blank. Selecting both viewports already shows the captured one, so the stage drops the sentence naming it.",
+  title: "Previous view not captured",
+});

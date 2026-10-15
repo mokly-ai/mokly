@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { changesDesignMetadata } from "./metadata.js";
+import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { NavDrawer, NavTree } from "./parts/nav.js";
@@ -65,24 +66,26 @@ function EmptyChanges({ viewport }: { viewport: ReviewViewport }) {
 }
 
 /** Design screens for ignored comparison evidence and an empty Changes filter. */
-export const reviewImpactScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description: "A screen whose only differences fall inside ignored regions.",
+export const ignoredOnlyScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description: "A screen whose only differences fall inside ignored regions.",
+  ...artboards({
     desktop: <IgnoredOnlyCompare viewport="desktop" />,
-    slug: "ignored-only",
     mobile: <IgnoredOnlyCompare viewport="mobile" />,
-    title: "Ignored only",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Changes has no matching screens; the selected Current view remains available.",
+  slug: "ignored-only",
+  title: "Ignored only",
+});
+export const emptyScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Changes has no matching screens; the selected Current view remains available.",
+  ...artboards({
     desktop: <EmptyChanges viewport="desktop" />,
-    slug: "empty",
     mobile: <EmptyChanges viewport="mobile" />,
-    title: "No changes",
   }),
-];
+  slug: "empty",
+  title: "No changes",
+});

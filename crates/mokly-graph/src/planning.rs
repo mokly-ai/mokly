@@ -219,7 +219,14 @@ fn component_key(
         .find(|entry| entry.metadata.path == path)
         .and_then(|entry| sources.get(&entry.metadata.source.path))
         .ok_or_else(|| invalid(path, "component source key is missing"))?;
-    let mut inputs = vec![source.0.clone()];
+    let mut inputs = vec![source.0.clone(), path.into()];
+    inputs.extend(
+        catalogue
+            .elements
+            .iter()
+            .filter(|(_, element)| element.path == path)
+            .map(|(name, _)| name.clone()),
+    );
     for child in catalogue
         .templates
         .get(path)

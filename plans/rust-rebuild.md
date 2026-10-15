@@ -678,6 +678,17 @@ from Milestone 12.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
+  - [x] Replace `examples/basic/mokly.config.ts` with `mokly.config.json`
+        under Decision 37.
+  - [x] Add the example's HTML Team area: two screens with a variant, three
+        HTML components with variants and slots, a page, a use case, a
+        folder record, and a Markdown document.
+  - [x] Rewrite `examples/basic/README.md` to the end state.
+  - [ ] Add HTML fixtures and run the gap sweep against the rendering
+        contracts.
+  - [ ] Render the example's HTML part and check it at both viewports and in
+        both schemes. Its stylesheets pass through the example's PostCSS
+        module, which runs in the Milestone 8 sidecar.
 - [x] Write the HTML authoring guides under `docs/guides`.
 - [x] Commit.
 
@@ -685,9 +696,13 @@ Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m5.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m5/report-2.md` and
 `.context/rust-rebuild/delegation/m5/merge-decisions.md`.
 Review fix evidence: `.context/rust-rebuild/delegation/m5/report-3.md`.
+Final fix and merge evidence: `.context/rust-rebuild/delegation/m5/report-4.md`
+and `.context/rust-rebuild/delegation/m5/round-3-merge-decisions.md`.
 
 The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
+
+Example port evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m5-example/README.md`.
 
 ## Milestone 6: Serve
 
@@ -813,10 +828,20 @@ renders again.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
-- [ ] Update commands and test names in `examples/basic/README.md` and
+  - [x] Port the React example, the React components, and the design
+        catalogue to the authoring API.
+  - [ ] Render both catalogues through the integrated sidecar and check every
+        page at both viewports and in both schemes.
+  - [ ] Add the packed consumer smoke.
+  - [ ] Run the gap sweep against the old rendering and component contracts.
+- [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
 - [ ] Restore the example typecheck; validate or replace the viewer browser
       fixtures, including their component paths and cross-origin setup.
+  - [x] Restore the example typecheck: the root typecheck includes the
+        example.
+  - [ ] Validate or replace the viewer browser fixtures, including their
+        component paths and cross-origin setup.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -827,7 +852,15 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
-- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+- [ ] Add the design catalogue checks that the verification and adoption
+      sections of `mokly-design-components.md`,
+      `mokly-design-component-library.md`, `mokly-component-design.md`, and
+      `mokly-design-links.md` define.
+- [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
+      finding 7): at a narrow width, for example 1000 x 800, the component
+      stage with both viewports starts its row at the stage's left edge and
+      scrolls to the row's end, and a stage row that fits stays centred.
+- [x] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,
       the stage loading state, the index failure state, the version failure
@@ -838,6 +871,10 @@ renders again.
       the descriptor loads), "No editable props are declared for this
       entry.", and "Check the highlighted values." for a whole-props error
       that highlights no field.
+- [ ] Settle the component stage layout in the design port: with Both, the
+      shell places the 390px mobile and 1024px desktop canvases side by side
+      (below 760px, stacked at the stage's left edge), while the component
+      mockups stack the two views and centre the mobile canvas.
 - [x] Write the JavaScript authoring guides.
 
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
@@ -845,6 +882,7 @@ and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
 decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 `.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 
 - [ ] Commit.
 
@@ -892,6 +930,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+- [ ] Add the stylesheet attribution tests over the design catalogue that
+      `mokly-component-design.md` and `mokly-design-component-attribution.md`
+      define: the nine shared sheets per scenario, the pinned rendered
+      stylesheet links, the exact per-entry rendered-resource and rule
+      records, the exact changed-entry union, no affected consumers for
+      unresolved shared rules, and the attribution acceptance matrix.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -914,6 +958,15 @@ Tags: ui
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Make the viewer follow the settled design copy and states of the design
+      catalogue (version failure, controls copy and states, loading states).
+      Source: the design entries `design/browse/loading/**` and
+      `design/components/controls/**`,
+      `examples/basic/specs/design/components/controls/parts/copy.ts`, and
+      `mokly-viewer-namespace.md`, `mokly-viewer.md`,
+      `mokly-shell-delivery.md`, and `mokly-component-controls-design.md`. The
+      copy tables in `.context/rust-rebuild/delegation/m5-example/report-2.md`
+      and `report-3.md` there list the differences from the viewer.
 - [ ] Commit.
 
 ## Milestone 11: Watch and incremental rendering
@@ -1007,6 +1060,10 @@ Publish client final review and merge decisions:
       under `.context/rust-rebuild/`.
 - [ ] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
+      The M5 memory follow-up removes quadratic ancestor-list retention and
+      subtree copies in link controls; recursion remains. Evidence:
+      `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
+- [ ] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -1040,12 +1097,28 @@ Publish client final review and merge decisions:
     after success; keep the existing retention until the user decides.
   - Milestone 5 review 1, finding 5: decide the declared component stylesheet
     delivery model; keep the current bundled code and pages pending the user.
+  - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
     `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
     user.
+  - Milestone 5: `{{ name }}` with inner spaces settled by Decision 39 on
+    2026-10-15. `.prettierrc.json` stays: Prettier's Angular parser rewrites
+    `{{open-seats}}` to `{{ open - seats }}` and stops on a literal `{`.
+  - Milestone 5: settled on 2026-10-15; the example drops its `watch.rules`
+    reload rule, which had no effect.
+  - Milestone 8 example port review 1: the Milestone 10 TODO that makes the
+    viewer follow the settled design copy changes the viewer's presentation,
+    a non-goal of this plan; it needs the user's approval.
+  - Milestone 8 example port review 1, finding 6: option B (a component parent
+    renders without caller slot content) is documented; decide option C,
+    which lets a component parent supply its own slot content (a contract
+    change).
+  - Milestone 8 example port review 2, finding 9: `mokly-design-links.md` sits
+    at its 321-line cap with prose lines over 80 columns; split the page at
+    its next edit.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
@@ -1054,7 +1127,9 @@ Publish client final review and merge decisions:
   - B: settled by Decision 32 on 2026-10-14.
   - C: settled by Decision 31 on 2026-10-14.
   - D: settled by Decision 38 on 2026-10-14.
-  - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38.
+  - E: settled by the orchestrator's M5 brief and final change request on
+    2026-10-15: rewrite guides at their milestones. The viewer README, the
+    xtask README, and `AGENTS.md` follow Decision 38.
     The teardown deleted `guides_cli`, `guides_ci`,
     `guides_upload_validation`, and `guides_authoring`, which compared the
     guides with the old CLI and authoring API. `guides_copy`,

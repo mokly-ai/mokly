@@ -1,4 +1,4 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
 import {
@@ -6,28 +6,39 @@ import {
   comparisonDestinations,
   comparisonMode,
   destination,
+  enumOptions,
   flag,
-  optionalText,
   text,
+  type LibraryProps,
 } from "../schemas.js";
 
 import { ScreenHeaderView } from "./screen-header.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "title",
+    "crumbs",
+    "comparisons",
+    "mode",
+    "scrollTogether",
+    "accessible",
+    "destinations",
+  ],
   properties: {
     title: text,
     crumbs: {
-      schema: {
-        kind: "array",
-        items: {
-          kind: "object",
-          properties: { key: text, label: text, destination },
-        },
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["key", "label"],
+        properties: { key: text, label: text, destination },
       },
     },
-    path: optionalText,
-    status: { ...changeStatus, optional: true },
+    path: text,
+    status: changeStatus,
     comparisons: flag,
     mode: comparisonMode,
     scrollTogether: flag,
@@ -36,7 +47,7 @@ const propSchema = {
   },
 } as const;
 const slots = ["actions"] as const;
-export type ScreenHeaderProps = ComponentProps<typeof propSchema, typeof slots>;
+export type ScreenHeaderProps = LibraryProps<typeof propSchema, typeof slots>;
 const home = {
   key: "home",
   label: "Catalogue home",
@@ -72,16 +83,14 @@ export const screenHeader = defineComponent({
     "Catalogue location, title, path and change status.",
   ),
   propSchema,
+  props: sample,
   slots,
   controls: {
     title: { kind: "text", label: "Title" },
     status: {
       kind: "select",
       label: "Status",
-      options: changeStatus.schema.values.map((value) => ({
-        label: value,
-        value,
-      })),
+      options: enumOptions(changeStatus),
     },
   },
   render: ScreenHeaderView,

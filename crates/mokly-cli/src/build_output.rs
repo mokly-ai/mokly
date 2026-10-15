@@ -153,7 +153,7 @@ pub fn render_diagnostics(style: &Style, error: &GraphError, redactor: &Redactor
 
 fn issue_text(issue: &Issue, outer: Code) -> String {
     let prefix = issue.location.as_ref().map_or(String::new(), |location| {
-        format!("{}:{}:{} ", location.path, location.line, location.column)
+        format!("{}:{}:{}: ", location.path, location.line, location.column)
     });
     if issue.code.as_str() == outer.presentation().0 {
         format!("{prefix}{}", issue.message)

@@ -163,6 +163,10 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.styleExcluded]: { all: D.styleExcluded, changes: D.styleMatched },
   [D.styleExcludedOnly]: {},
   [D.stylePage]: { all: D.page },
+  [D.catalogueLoading]: {},
+  [D.catalogueFailed]: {},
+  [D.viewerVersion]: {},
+  [D.previewLoading]: {},
   [D.preparing]: { all: D.welcome },
   [D.unavailable]: { all: D.welcome },
 };

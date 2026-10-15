@@ -12,11 +12,10 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 | use case  | `.use-case.yaml`  | ordered steps that reference existing screens     |
 | document  | `.md`             | see [Markdown documents](./mokly-documents.md)    |
 
-The default root globs add these suffixes beside `**/*.mockup.{ts,tsx}`,
-`**/*.stories.{ts,tsx,js,jsx}`, and `**/*.md`. A file's place in a root gives
-its path under the [path contract](./mokly-paths.md); the suffix is removed
-before the slug is derived. HTML and YAML files are inventoried authored
-sources: protected from public delivery, watched, and never bundled.
+Default root globs include these suffixes, `**/*.mockup.{ts,tsx}`,
+`**/*.stories.{ts,tsx,js,jsx}`, and `**/*.md`. The [path contract](./mokly-paths.md)
+derives paths from each file's root and removes the suffix before deriving its
+slug. HTML and YAML sources are protected from public delivery, watched, and never bundled.
 
 ## Front Matter
 
@@ -74,9 +73,8 @@ this same template language with the component's own props and adds slot
 placeholders under the [HTML components contract](./mokly-html-components.md#body);
 one parser and one renderer serve both.
 
-Substitutions accept optional ASCII whitespace around the prop path inside
-the braces: `{{ name }}` equals `{{name}}`, including in attribute values.
-Whitespace inside a dotted path is not allowed.
+Substitutions accept ASCII whitespace around the prop path: `{{ name }}`
+equals `{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
 A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
@@ -107,21 +105,24 @@ and any other `mokly-` name fails with `html-element`.
   `element` whose schema declares `to`, `fragment`, `slot`, `moklyViewport`, or
   `moklyIf` fails.
 - Element children fill the `children` slot; a child with `slot="name"` fills
-  that named slot. Content for a slot the component does not declare fails
-  with `html-slot`.
+  that named slot. Several children can fill one slot, in document order.
+  Content for a slot the component does not declare fails with `html-slot`.
 - `mokly-instance` names the instance for comparison and inspection, under
   the [instance contract](./mokly-instances.md); it defaults to the slug rule.
 - HTML5 parsing can move a component or its output, including direct table
   use, blocks in `p`, and nested anchors. Mokly uses the re-parsed browser tree.
-  `html-foster-parented` names the component and parent. If an instance's
-  markers no longer share a parent, its nodes belong to the enclosing region.
-  Use a parent that permits its output, such as `td`, `th`, or `caption` in tables.
+  `html-foster-parented` names the component and parent. Split instance, slot,
+  and ignore regions lose their regions; their nodes belong to the enclosing
+  region, and ignored content then compares normally. Use a parent that permits
+  the output, such as `td`, `th`, or `caption` in tables.
 
 ## Links And Markers
 
 Authored comments starting with `mokly-` after leading whitespace are removed
 without an error. Served documents reserve this prefix for package markers.
-Ordinary comments remain content.
+Ordinary comments remain content. Composed `href` and `src` follow the
+[URL policy](./mokly-document-safety.md#url-policy), which rejects `data:`
+and protocol-relative `//` URLs.
 
 - `href="mock:<path>[#fragment]"` on an anchor is rewritten after render under
   the [navigation contract](./mokly-navigation.md).
@@ -179,8 +180,8 @@ including a variant.
    in-memory view cache, keyed by inputs. Derive the entry's catalogue usage
    from the tree's ownership regions.
 
-Serve, `build`, Changes, and publish treat an HTML screen like every other
-screen. A catalogue of HTML files alone never starts a sidecar.
+Rendering writes nothing to the repository. Serve, `build`, Changes, and publish
+use this pipeline. An HTML-only catalogue never starts a sidecar.
 
 ## Diagnostics
 
@@ -194,15 +195,15 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 | `html-unused-props`    | warning: a prop no reference in the body reads                                                                                                                                          |
 | `html-foster-parented` | warning: HTML5 parsing moved component content                                                                                                                                          |
 
-The discovery warning messages are exactly
+The warning messages are exactly
 `prop "<name>" is not read by the body` for `html-unused-props` and
 `component element <element> is moved out of <parent> by HTML parsing` for `html-foster-parented`.
-Each shared body is checked once. The warning subject is the parent's
-complete entry path; both warnings use a component subject in a component
-body and an entry subject in a screen body. Source coordinates are one-based.
+Discovery checks each shared body once. Discovery and render warnings name the
+parent entry, including for variants, and equal warnings are reported once.
+Component bodies use a component subject; screen bodies use an entry subject.
 
-Errors are `build-invalid` failures with the repository-relative file, line,
-and column. Warnings use the [build warning record](./mokly-build-warnings.md).
+Errors are `build-invalid` failures with the repository-relative file and
+one-based line and column. Warnings use the [build warning record](./mokly-build-warnings.md).
 
 ## Example
 
@@ -235,10 +236,10 @@ variants:
 </main>
 ```
 
-`account/home` renders both viewports with registered `ui-header`, `ui-button`,
-and `ui-card`. Its `account/home/free` variant replaces props and removes the
-card because `renews` is false. Inference gives `user` an object schema and
-`renews` a boolean schema. The paragraph fills the card's `children` slot.
+`account/home` renders both viewports with the three registered components.
+The `account/home/free` variant replaces props and removes the card when
+`renews` is false. Inference gives `user` an object schema and `renews` a
+boolean schema. The paragraph fills the card's `children` slot.
 
 ## Related Docs
 

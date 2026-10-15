@@ -1,40 +1,40 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import { optionalFlag, previewViewport } from "../schemas.js";
+import {
+  enumOptions,
+  flag,
+  previewViewport,
+  type LibraryProps,
+} from "../schemas.js";
 
 import { ViewControlsView } from "./view-controls.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["selection"],
   properties: {
     selection: previewViewport,
-    highlight: optionalFlag,
+    highlight: flag,
     unavailable: {
-      schema: {
-        kind: "enum",
-        values: ["empty", "unavailable", "loading", "comparison", "removed"],
-      },
-      optional: true,
+      enum: ["empty", "unavailable", "loading", "comparison", "removed"],
     },
     changedViews: {
-      schema: {
-        kind: "array",
-        items: {
-          kind: "object",
-          properties: {
-            viewport: {
-              schema: { kind: "enum", values: ["mobile", "desktop"] },
-            },
-            scheme: { schema: { kind: "enum", values: ["light", "dark"] } },
-          },
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["viewport", "scheme"],
+        properties: {
+          viewport: { enum: ["mobile", "desktop"] },
+          scheme: { enum: ["light", "dark"] },
         },
       },
-      optional: true,
     },
   },
 } as const;
-export type ViewControlsProps = ComponentProps<typeof propSchema, []>;
+export type ViewControlsProps = LibraryProps<typeof propSchema>;
 const sample = { selection: "desktop" } as const;
 export const viewControls = defineComponent({
   ...libraryMetadata(
@@ -44,23 +44,18 @@ export const viewControls = defineComponent({
     "Viewport and component highlighting controls.",
   ),
   propSchema,
+  props: sample,
   controls: {
     selection: {
       kind: "select",
       label: "Viewport",
-      options: previewViewport.schema.values.map((value) => ({
-        label: value,
-        value,
-      })),
+      options: enumOptions(previewViewport),
     },
     highlight: { kind: "boolean", label: "Highlight components" },
     unavailable: {
       kind: "select",
       label: "Unavailable reason",
-      options: propSchema.properties.unavailable.schema.values.map((value) => ({
-        label: value,
-        value,
-      })),
+      options: enumOptions(propSchema.properties.unavailable),
     },
   },
   render: ViewControlsView,

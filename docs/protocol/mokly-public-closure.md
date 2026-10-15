@@ -48,8 +48,11 @@ referencing element under the
 [comparison contract](./mokly-comparison.md#resources): `<a href>`,
 `data-nav-href`, resource hints such as `preload`, `<iframe>`, `src`,
 `srcset`, `poster`, inline style `url()`, and CSS `@import` and `url()`
-chains, including inside embedded documents. External and data URLs are
-ignored under the current URL rules. A relative reference resolves against
+chains, including inside embedded documents. Composed `href` and `src` first
+pass the [document URL policy](./mokly-document-safety.md#url-policy): `data:`
+and protocol-relative `//` URLs fail there. The closure skips permitted
+external references. For other resource inputs, including `srcset`, `poster`,
+and CSS URLs, it skips external and data references. A relative reference resolves against
 the referencing document's route: a result under `static/mokly-generated/`
 names a rendered document or resource of the generation, and any other
 result under `static/` names the authored file at that repository-relative

@@ -1,48 +1,40 @@
-import {
-  defineComponent,
-  type ComponentProps,
-  type ComponentRenderContext,
-} from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { libraryTags } from "../controls/tag-picker.js";
 import { libraryMetadata } from "../metadata.js";
 import {
   destination,
+  enumOptions,
   flag,
-  optionalText,
-  optionalFlag,
   tagRecords,
   text,
+  type LibraryProps,
 } from "../schemas.js";
 
 import { TopBarView } from "./top-bar.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["placeholder", "menu", "menuPresentation", "tags", "pickerOpen"],
   properties: {
-    query: optionalText,
+    query: text,
     placeholder: text,
-    viewport: {
-      schema: { kind: "enum", values: ["mobile", "desktop"] },
-      optional: true,
-    },
-    menu: { schema: { kind: "enum", values: ["none", "open", "close"] } },
-    menuPresentation: { schema: { kind: "enum", values: ["text", "icon"] } },
+    viewport: { enum: ["mobile", "desktop"] },
+    menu: { enum: ["none", "open", "close"] },
+    menuPresentation: { enum: ["text", "icon"] },
     tags: tagRecords,
-    activeTag: optionalText,
-    appearance: {
-      schema: { kind: "enum", values: ["auto", "light", "dark"] },
-      optional: true,
-    },
+    activeTag: text,
+    appearance: { enum: ["auto", "light", "dark"] },
     pickerOpen: flag,
-    appearanceChanged: optionalFlag,
+    appearanceChanged: flag,
     brandDestination: destination,
     menuDestination: destination,
     pickerDestination: destination,
   },
 } as const;
-export type TopBarProps = ComponentProps<typeof propSchema, []>;
+export type TopBarProps = LibraryProps<typeof propSchema>;
 const sample = {
   placeholder: "Search screens…",
   menu: "open",
@@ -61,6 +53,7 @@ export const topBar = defineComponent({
     "Branding, search, catalogue navigation, tag filtering and appearance.",
   ),
   propSchema,
+  props: sample,
   controls: {
     query: { kind: "text", label: "Query" },
     pickerOpen: { kind: "boolean", label: "Tag picker open" },
@@ -76,13 +69,10 @@ export const topBar = defineComponent({
     menu: {
       kind: "select",
       label: "Menu",
-      options: propSchema.properties.menu.schema.values.map((value) => ({
-        label: value,
-        value,
-      })),
+      options: enumOptions(propSchema.properties.menu),
     },
   },
-  render: (props: TopBarProps, context: ComponentRenderContext) => (
+  render: (props, context) => (
     <TopBarView
       {...props}
       appearance={props.appearance ?? context.colorScheme}

@@ -42,8 +42,11 @@ successful plain command writes nothing to stderr except requested timing
 JSON; errors use stderr. Expected plain errors are exactly
 `[mokly/<code>] <message>\n`, where `<message>` is one line unless its exact
 text lists locations; a diagnostic with
-a source location starts it with `<file>:<line>:<column>`,
-repository-relative. A diagnostic whose exact text lists locations prints
+a source location starts it with `<file>:<line>:<column>: `,
+repository-relative. If a source diagnostic has a code different from the
+outer command code, insert `[mokly/<source-code>] ` after the location and
+before its message. Omit that inner tag when both codes are equal. Print the
+location once, outside the source message. A diagnostic whose exact text lists locations prints
 those locations as following lines, as `git-uncommitted` does. Each line
 escapes its control characters and has its own width bound in rich mode.
 Timing mode keeps the same stdout and adds its JSON

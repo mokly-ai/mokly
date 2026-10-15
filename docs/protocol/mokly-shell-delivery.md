@@ -159,14 +159,14 @@ interface LiveDescriptorV3 {
 }
 ```
 
-Serve answers `/mokly-viewer/live.json` with the render generation and the
-temporary-render capability of the component controls contract. The shell
-fetches it whenever the index carries `live`, at start and when
-`live.generation` changes; a catalogue without JavaScript has one too, because
-the Rust core renders an HTML entry with edited props itself. When the fetch
-fails, browsing works, live prop editing is unavailable with a browser
-warning, and the shell retries on the next publication message. A static
-build has none.
+Serve supplies the component controls contract's render generation and capability
+at `/mokly-viewer/live.json`. The shell fetches it when the index carries
+`live`, at start and when `live.generation` changes. The Rust core supports
+edited props for HTML entries too. With no descriptor, Props shows
+`Preparing to edit props…` and read-only fields. Refetch keeps the installed
+capability until its replacement installs. On failure, browsing works; Props
+shows `Editing could not start.` and `Try again` to fetch again. The shell also
+retries on the next publication message. Static builds have no descriptor.
 
 ## Fetch And Fences
 
@@ -242,9 +242,9 @@ shell into the stub's mount element. The
 
 ## Fail-Closed Rules
 
-| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract |
-| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` in an embedded host             |
-| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing is unavailable with a browser warning                 |
-| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                |
+| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
+| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` in an embedded host                                             |
+| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
+| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                                                |

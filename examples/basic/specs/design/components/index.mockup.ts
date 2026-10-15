@@ -1,1 +1,1 @@
-export { componentDesign } from "./index.js";
+export { overviewScreen } from "./index.js";

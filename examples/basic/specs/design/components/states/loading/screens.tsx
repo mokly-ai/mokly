@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { componentDesignMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
 import { ComponentPage } from "../../parts/component_page.js";
 import { ScreenPage } from "../../parts/screen_page.js";
 
@@ -28,34 +29,38 @@ export function UsageFailedMobile() {
   return <ComponentPage state="usage-failed" viewport="mobile" />;
 }
 
-export const loadingStateDesigns = [
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "usage-loading",
-    title: "Usage loading",
-    colorSchemes: ["light"],
-    description: "A component page while its usage is being found.",
+export const usageLoadingScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "usage-loading",
+  title: "Usage loading",
+  colorSchemes: ["light"],
+  description: "A component page while its usage is being found.",
+  ...artboards({
     desktop: <UsageLoadingDesktop />,
     mobile: <UsageLoadingMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "inspection-loading",
-    title: "Inspection loading",
-    colorSchemes: ["light"],
-    description:
-      "A screen preview waiting before component inspection is available.",
+});
+export const inspectionLoadingScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "inspection-loading",
+  title: "Inspection loading",
+  colorSchemes: ["light"],
+  description:
+    "A screen preview waiting before component inspection is available.",
+  ...artboards({
     desktop: <InspectionLoadingDesktop />,
     mobile: <InspectionLoadingMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "usage-failed",
-    title: "Usage failed to load",
-    colorSchemes: ["light"],
-    description:
-      "A component page that could not load usage and offers another attempt.",
+});
+export const usageFailedScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "usage-failed",
+  title: "Usage failed to load",
+  colorSchemes: ["light"],
+  description:
+    "A component page that could not load usage and offers another attempt.",
+  ...artboards({
     desktop: <UsageFailedDesktop />,
     mobile: <UsageFailedMobile />,
   }),
-];
+});

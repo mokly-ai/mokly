@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { changesDesignMetadata } from "./metadata.js";
+import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import {
   HandbookStage,
@@ -49,17 +50,17 @@ function PageStyles({ viewport }: { viewport: ArtboardViewport }) {
  * document shows every per-file outcome; the child pages hold the screen
  * states, at most five each.
  */
-export const reviewStyleScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A changed document opened from Changes, with no comparison controls. Details name each changed stylesheet once, with the styles that apply to the page, the styles that also apply outside the changed components, and a change that can apply anywhere on the page.",
+export const pageScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A changed document opened from Changes, with no comparison controls. Details name each changed stylesheet once, with the styles that apply to the page, the styles that also apply outside the changed components, and a change that can apply anywhere on the page.",
+  ...artboards({
     desktop: <PageStyles viewport="desktop" />,
-    slug: "page",
     mobile: <PageStyles viewport="mobile" />,
-    rationale:
-      "A document is read whole and never compared, so Details are the only place to show why it is in Changes. Each file keeps its own outcomes, and the sentences say page, so the evidence reads the same way as a screen's without suggesting a comparison.",
-    title: "Document page styles",
   }),
-];
+  slug: "page",
+  rationale:
+    "A document is read whole and never compared, so Details are the only place to show why it is in Changes. Each file keeps its own outcomes, and the sentences say page, so the evidence reads the same way as a screen's without suggesting a comparison.",
+  title: "Document page styles",
+});

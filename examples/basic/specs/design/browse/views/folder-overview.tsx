@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { designMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { DetailsPanel } from "../../parts/details.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
@@ -61,9 +62,11 @@ export const folderOverviewScreen = defineScreen({
   colorSchemes: ["light"],
   description:
     "A folder's README open as the folder's own page, with its Overview row current.",
-  desktop: <FolderOverview viewport="desktop" />,
+  ...artboards({
+    desktop: <FolderOverview viewport="desktop" />,
+    mobile: <FolderOverview viewport="mobile" />,
+  }),
   slug: "folder-overview",
-  mobile: <FolderOverview viewport="mobile" />,
   rationale:
     "A folder row only opens and closes the folder, so a folder's own page needs a row of its own. The README is that row, first among the folder's children, and it reads Overview because its title is already the folder's name.",
   title: "Folder overview",
