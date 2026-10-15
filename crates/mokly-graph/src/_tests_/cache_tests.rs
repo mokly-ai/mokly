@@ -2,6 +2,10 @@
 
 use std::sync::Arc;
 
+use mokly_html::composition::Composed;
+use mokly_html::links::Reference;
+use mokly_model::usage::CatalogueUsage;
+
 use crate::cache::{Artifact, MemoryCache, RenderCache, entry_cost};
 use crate::key::{NodeKey, NodeKind, key};
 
@@ -87,4 +91,34 @@ fn equal_keys_with_different_allocations_keep_exact_charges_on_access_and_replac
     cache.insert(ordinary.clone(), value.clone());
     assert_eq!(cache.stats().bytes, entry_cost(&ordinary, &value));
     assert_eq!(cache.stats().entries, 1);
+}
+
+#[test]
+fn retained_logical_links_cannot_exceed_the_artifact_budget() {
+    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024);
+    let value = Arc::new(Artifact {
+        bytes: Vec::new(),
+        fragment: None,
+        content_type: "text/html".into(),
+        document: Some(Composed {
+            tree: Vec::new(),
+            usage: CatalogueUsage::Ready {
+                instances: Vec::new(),
+                slots: Vec::new(),
+                ranges: Vec::new(),
+            },
+            warnings: Vec::new(),
+            resources: Vec::new(),
+            components: Vec::new(),
+            links: vec![Reference {
+                source_route: "home/index.mobile.html".into(),
+                target: "x".repeat(1024 * 1024),
+                fragment: None,
+            }],
+        }),
+    });
+    cache.insert(node("links"), value.clone());
+    assert!(cache.get(&node("links")).is_none());
+    assert_eq!(cache.stats().entries, 0);
+    assert!(value.document.is_some());
 }

@@ -9,6 +9,7 @@ use mokly_model::material::{instance_key, props_key, slot_key};
 use mokly_model::usage::ComponentInputOwner;
 use mokly_model::wire_decode;
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::Fragment;
 use crate::props;
@@ -23,7 +24,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                     && matches!(entry.content, EntryContent::Component { .. })
             }) {
                 return Err(invalid(
-                    "build-invalid",
+                    Code::BuildInvalid,
                     "collected style has an unknown component owner",
                 ));
             }
@@ -36,7 +37,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
         .any(|marker| marker.id.is_empty() || !marker_ids.insert(&marker.id))
     {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "duplicate authenticated fragment marker id",
         ));
     }
@@ -67,7 +68,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 != Some(&instance.props_key)
         {
             return Err(invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 "forged fragment instance metadata",
             ));
         }
@@ -81,7 +82,10 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
         }
         let scope = format!("{:?}/{:?}", instance.owner, instance.slot_key);
         if !scopes.entry(scope).or_default().insert(instance.order) {
-            return Err(invalid("build-invalid", "duplicate fragment input order"));
+            return Err(invalid(
+                Code::BuildInvalid,
+                "duplicate fragment input order",
+            ));
         }
     }
     if scopes
@@ -89,7 +93,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
         .any(|orders| orders.iter().copied().ne(0..orders.len() as u64))
     {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "fragment input order is not contiguous",
         ));
     }
@@ -99,7 +103,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
             || !keys.contains(&slot.instance_key)
             || slot_key(&slot.instance_key, &slot.name).ok().as_ref() != Some(&slot.key)
         {
-            return Err(invalid("build-invalid", "forged fragment slot metadata"));
+            return Err(invalid(Code::BuildInvalid, "forged fragment slot metadata"));
         }
     }
     for instance in &fragment.instances {
@@ -110,7 +114,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 .is_some_and(|key| !slots.contains(key))
         {
             return Err(invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 "fragment input scope is incomplete",
             ));
         }
@@ -123,7 +127,7 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 .is_some_and(|key| !slots.contains(key))
         {
             return Err(invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 "fragment slot scope is incomplete",
             ));
         }
@@ -164,7 +168,7 @@ pub(crate) fn placements(nodes: &[Node], fragment: &Fragment) -> Result<()> {
         .any(|instance| !seen.contains(&instance.key))
     {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "fragment instance has no ownership region",
         ));
     }
@@ -181,7 +185,7 @@ fn collect(nodes: &[Node], seen: &mut BTreeSet<String>, ignored: bool) -> Result
                 ) && ignored
                 {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         "an ignore region cannot enclose an instance or slot boundary",
                     ));
                 }
@@ -226,7 +230,7 @@ fn acyclic(edges: BTreeMap<&str, Option<&str>>) -> Result<()> {
         while let Some(key) = current.filter(|key| !complete.contains(key)) {
             if !path.insert(key) {
                 return Err(invalid(
-                    "build-invalid",
+                    Code::BuildInvalid,
                     "fragment input scope contains a cycle",
                 ));
             }

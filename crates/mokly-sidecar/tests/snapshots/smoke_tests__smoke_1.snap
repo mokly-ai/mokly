@@ -1,0 +1,5 @@
+---
+source: crates/mokly-sidecar/tests/smoke_tests.rs
+expression: result.html
+---
+<div data-renderer="screens/home" data-axis="mobile"><main data-scheme="dark"><!--mokly-instance:start id="r-1" path="components/control" instance="9044717ea526e19b0b3e5da83922479062ae2b472f527709917678cc6822e238" props="3e02829f79554e0652a3db460502d6cce9313956ae375f1fc7c1c8606d4d658a"--><section class="smoke-control" data-viewport="mobile"><button>Smoke</button><!--mokly-ignore:start id="chrome"--><span>Chrome</span><!--mokly-ignore:end id="chrome"--><!--mokly-slot:start id="r-2" instance="r-1" name="children"--><!--mokly-ignore:start id="inside"--><i>Child</i><!--mokly-ignore:end id="inside"--><!--mokly-slot:end id="r-2"--></section><!--mokly-instance:end id="r-1"--><!--mokly-link:start id="r-3" to="mock:./destination"--><button>Go</button><!--mokly-link:end id="r-3"--></main></div>

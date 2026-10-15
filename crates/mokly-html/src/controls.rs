@@ -4,6 +4,7 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_model::catalogue::SourceLocation;
 
 use crate::control_tiers::{ancestor, descendant};
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node, element};
 use crate::{control_tiers, error};
@@ -49,7 +50,7 @@ fn walk(
                     .any(|a| a.name.starts_with("data-mokly-link-control"))
                 {
                     return Err(invalid(
-                        "html-attribute",
+                        Code::HtmlAttribute,
                         "data-mokly-link-control attributes are reserved",
                     ));
                 }
@@ -64,7 +65,7 @@ fn walk(
                         || fragment.as_ref().is_some_and(|v| v.contains(['#', '%']))
                     {
                         return Err(invalid(
-                            "html-attribute",
+                            Code::HtmlAttribute,
                             "MockLink destination and fragment must be separate unencoded values",
                         ));
                     }
@@ -136,7 +137,7 @@ fn check_root(root: &Element, logical: &str) -> Result<()> {
         || root.attributes.iter().any(|a| a.name.starts_with("on"))
     {
         return Err(invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             format!(
                 "MockLink child control has an unsupported root <{}>",
                 root.name
@@ -148,7 +149,7 @@ fn check_root(root: &Element, logical: &str) -> Result<()> {
             .is_some_and(|value| !same_logical(value, logical))
     }) {
         return Err(invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             "MockLink child control has conflicting destinations",
         ));
     }
@@ -163,7 +164,7 @@ fn check_ancestors(ancestors: &[Element], route: &str, warnings: &mut Vec<Warnin
         .collect();
     if let Some((_, tier)) = tiers.iter().find(|(_, tier)| tier.error) {
         return Err(invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             format!(
                 "MockLink child control is inside {}; move the control outside it",
                 tier.feature
@@ -188,7 +189,7 @@ fn check_descendants(nodes: &[Node], route: &str, warnings: &mut Vec<Warning>) -
     collect(nodes, &mut tiers);
     if let Some(tier) = tiers.iter().find(|tier| tier.error) {
         return Err(invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             format!(
                 "MockLink child control contains {}; {}",
                 tier.feature, tier.reason

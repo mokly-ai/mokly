@@ -48,7 +48,7 @@ Failure is `build-invalid` with
 
 - `element <tag> is not allowed`;
 - `attribute <name> on <tag> is not allowed`;
-- `<attribute> on <tag> is not an allowed URL`;
+- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`;
 - `<input> must be disabled` or `<input> must have checkbox type`;
 - `the template must contain one owned stylesheet`.
 

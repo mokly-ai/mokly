@@ -7,7 +7,7 @@ use mokly_css::compiler::Compiler;
 use mokly_css::error::CssError;
 use mokly_css::resolution::Resolution;
 use mokly_css::resolver::SourceResolver;
-use mokly_css::types::{CssProcessor, IdentityProcessor, ProcessedCss};
+use mokly_css::types::IdentityProcessor;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::graph::Graph;
@@ -15,6 +15,7 @@ use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::ThreadWorkers;
 use mokly_html::composition::HtmlComposer;
+use mokly_html::diagnostic_code::Code;
 use mokly_html::fragment::DeferredFragments;
 use mokly_source_interface::tree::SourceTree;
 
@@ -28,18 +29,12 @@ impl GraphFactory for NativeGraphs {
     fn create(&self, config: &ResolvedConfig) -> Result<Arc<dyn RenderGraph>> {
         if let Some(renderer) = &config.input.renderer {
             return Err(GraphError::Invalid {
+                code: Code::BuildInvalid,
                 route: renderer.clone(),
                 message: format!("JavaScript renderer is unavailable for {renderer}"),
             });
         }
         let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(self.tree.clone()));
-        let processor: Arc<dyn CssProcessor> = if let Some(module) = &config.input.postcss {
-            Arc::new(DeferredPostcss {
-                module: module.clone(),
-            })
-        } else {
-            Arc::new(IdentityProcessor)
-        };
         let workers =
             ThreadWorkers::new(std::thread::available_parallelism().map_or(1, usize::from))?;
         if let Some(module) = &config.input.postcss {
@@ -63,23 +58,12 @@ impl GraphFactory for NativeGraphs {
                     tree: tree.clone(),
                     repo_root: config.repo_root.clone(),
                 }),
-                processor,
+                processor: Arc::new(IdentityProcessor),
             }),
             cache: self.cache.clone(),
             workers: Arc::new(workers),
             version: env!("CARGO_PKG_VERSION").into(),
         }))
-    }
-}
-
-struct DeferredPostcss {
-    module: String,
-}
-impl CssProcessor for DeferredPostcss {
-    fn process(&self, _path: &str, _source: &str) -> mokly_css::error::Result<ProcessedCss> {
-        Err(CssError::PostcssUnavailable {
-            module: self.module.clone(),
-        })
     }
 }
 

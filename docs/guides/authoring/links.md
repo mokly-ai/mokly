@@ -23,6 +23,10 @@ A complete path has no leading slash. A relative path starts with `./` or
 own folder path. A variant uses its parent's base. A declared path follows
 the same rules.
 
+A relative link in a component body uses the component's own base, even when
+a screen uses that component. Supplied slot content keeps its supplier's
+base. Formatting or moving the receiving placeholder does not change it.
+
 ## Link to a heading
 
 A `#fragment` names a bare HTML id. It can contain Unicode letters, numbers,
@@ -87,3 +91,46 @@ paths. Links to private source files show their label as plain text.
 
 Read the [navigation contract](/docs/reference/navigation/) and
 [link control contract](/docs/reference/link-controls/) for the full rules.
+
+## Link from React
+
+Use `MockLink` for a destination inside the catalogue. `to` names the entry,
+and the separate `fragment` prop carries a bare HTML id.
+
+```tsx
+import { MockLink } from "@mokly/mokly";
+
+<MockLink fragment="summary" to="account/billing/invoice">
+  Invoice
+</MockLink>;
+```
+
+`to` accepts three forms:
+
+- the complete path, such as `account/billing/invoice`;
+- a path relative to the linking entry's folder, starting with `./` or
+  `../`, such as `./invoice` from any entry under `account/billing`;
+- the imported definition of another entry module's export, which Mokly
+  resolves to that entry's path when it builds.
+
+```tsx
+import { MockLink, mockLink } from "@mokly/mokly";
+import invoice from "./invoice.mockup.js";
+
+<MockLink to={invoice}>Invoice</MockLink>;
+
+const detailsHref = mockLink("../billing/invoice", "summary");
+// "mock:../billing/invoice#summary"
+```
+
+The string helper is `mockLink(to, fragment?)`, and both produce
+`mock:<path>[#fragment]`, which you may also write by hand in an `href` or
+`data-nav-href`. Neither helper accepts `path#fragment`, percent-encoded
+syntax or a `mock:` value in `to`. A link may name any entry, including a
+screen or component variant, a page or a Markdown document; a link to a component
+opens its own props. In Markdown, a relative link to another discovered
+`.md` file becomes a catalogue link. `mock:<path>` works there too.
+
+Relative links share the same base as flow references: an ordinary entry uses
+its parent path, an index uses its own folder path, and a variant uses its
+parent entry's base. Declared paths follow those same rules.

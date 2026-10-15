@@ -10,6 +10,7 @@ use mokly_model::routes;
 
 use crate::composition::Engine;
 use crate::context::Context;
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::{FragmentRequest, RenderKind};
 use crate::tree::Node;
@@ -34,7 +35,7 @@ impl Engine<'_> {
             .find(|entry| entry.metadata.path == path)
             .ok_or_else(|| {
                 invalid(
-                    "html-element",
+                    Code::HtmlElement,
                     format!("unknown JavaScript definition {path}"),
                 )
             })?;
@@ -104,7 +105,7 @@ impl Engine<'_> {
                     || existing.order != instance.order
                 {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         "duplicate fragment instance input",
                     ));
                 }
@@ -119,7 +120,7 @@ impl Engine<'_> {
         let nodes = self.placeholders(nodes, context, &tokens, &mut seen)?;
         if tokens.keys().any(|name| !seen.contains(name)) {
             return Err(invalid(
-                "html-slot",
+                Code::HtmlSlot,
                 "a supplied JavaScript slot placeholder was not rendered",
             ));
         }
@@ -144,12 +145,15 @@ impl Engine<'_> {
                 Node::Element(element) if element.name == "mokly-slot" => {
                     let name = element
                         .get("name")
-                        .ok_or_else(|| invalid("html-slot", "slot placeholder has no name"))?
+                        .ok_or_else(|| invalid(Code::HtmlSlot, "slot placeholder has no name"))?
                         .to_owned();
                     if element.get("token") != tokens.get(&name).map(String::as_str)
                         || !element.children.is_empty()
                     {
-                        return Err(invalid("html-slot", "unknown or forged slot placeholder"));
+                        return Err(invalid(
+                            Code::HtmlSlot,
+                            "unknown or forged slot placeholder",
+                        ));
                     }
                     let mut nested = context.clone();
                     nested.ignore = match element.get("ignore-scope") {
@@ -157,7 +161,7 @@ impl Engine<'_> {
                         Some("disabled") => false,
                         _ => {
                             return Err(invalid(
-                                "html-slot",
+                                Code::HtmlSlot,
                                 "slot placeholder has an invalid ignore scope",
                             ));
                         }

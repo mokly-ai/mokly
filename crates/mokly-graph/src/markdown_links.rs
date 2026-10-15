@@ -5,6 +5,7 @@ use std::sync::Arc;
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_html::diagnostic_code::Code;
 use mokly_html::error::{HtmlError, Result};
 use mokly_html::markdown::{Destination, LinkResolver};
 use mokly_model::axes::EntryKind;
@@ -26,6 +27,33 @@ pub(crate) struct Resolver<'a> {
 }
 
 impl LinkResolver for Resolver<'_> {
+    fn resolve_at(&self, destination: &str, offset: usize) -> Result<Destination> {
+        match self.resolve(destination) {
+            Ok(value) => Ok(value),
+            Err(source) => {
+                let mut location = self.entry.metadata.source.clone();
+                if let Ok(bytes) = self
+                    .tree
+                    .read_shared(&self.config.repo_root.join(&location.path))
+                {
+                    let text = String::from_utf8_lossy(&bytes);
+                    let body = self
+                        .catalogue
+                        .documents
+                        .get(&self.entry.metadata.path)
+                        .map_or("", String::as_str);
+                    let index = (text.len().saturating_sub(body.len()) + offset).min(text.len());
+                    let prefix = text.get(..index).unwrap_or("");
+                    location.line = prefix.bytes().filter(|byte| *byte == b'\n').count() + 1;
+                    location.column = prefix
+                        .rsplit('\n')
+                        .next()
+                        .map_or(1, |line| line.chars().count() + 1);
+                }
+                Err(source.at(location))
+            }
+        }
+    }
     fn resolve(&self, destination: &str) -> Result<Destination> {
         if destination.starts_with("mock:") || destination.starts_with('#') {
             return Ok(Destination::Logical(destination.into()));
@@ -134,22 +162,16 @@ impl LinkResolver for Resolver<'_> {
 impl Resolver<'_> {
     fn error(&self, destination: &str, reason: &str) -> HtmlError {
         HtmlError::Invalid {
-            code: "build-invalid",
-            message: format!(
-                "{}: link target {destination} {reason}",
-                self.entry.metadata.source.path
-            ),
-            location: Some(self.entry.metadata.source.clone()),
+            code: Code::BuildInvalid,
+            message: format!("link target {destination} {reason}"),
+            location: None,
         }
     }
     fn resource_error(&self, destination: &str, reason: &str) -> HtmlError {
         HtmlError::Invalid {
-            code: "build-invalid",
-            message: format!(
-                "{}: resource {destination} {reason}",
-                self.entry.metadata.source.path
-            ),
-            location: Some(self.entry.metadata.source.clone()),
+            code: Code::BuildInvalid,
+            message: format!("resource {destination} {reason}"),
+            location: None,
         }
     }
 }

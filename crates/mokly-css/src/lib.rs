@@ -13,6 +13,7 @@ pub mod types;
 
 mod delivery;
 mod module_checks;
+mod module_integrity;
 mod package;
 mod rename;
 mod rename_animations;

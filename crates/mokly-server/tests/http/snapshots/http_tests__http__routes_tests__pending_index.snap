@@ -1,5 +1,6 @@
 ---
 source: crates/mokly-server/tests/http/routes_tests.rs
+assertion_line: 22
 expression: bytes
 ---
 {
@@ -105,7 +106,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "9bf434ad3882c96bd6ef8cfcbd7121140e4ba0b5287178cb87d6cf67f12bdf22",
+          "documentKey": "74e52ea27cc13fbc608fab6421e82f71de02835acc6e72aa699a27d7f7910fae",
           "viewport": "mobile"
         },
         {
@@ -113,7 +114,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "6a3074a722bfc74ede5fb935d0a2d5959eb12f98c386aeb91b6fc4546bd5f3ba",
+          "documentKey": "409d00d6c8bade62ffb63c31861978e070796f2586e9a2f8b33cad113c891cf2",
           "viewport": "mobile"
         },
         {
@@ -121,7 +122,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "2b53a5ddea7545ae02de5dc0cfc213fbf7653614a55cb123e130517566fb98a4",
+          "documentKey": "f3c6ae7e9bec429490409701b09848b9d39c08828f3d9aedba08bff6a2ae960a",
           "viewport": "desktop"
         },
         {
@@ -129,7 +130,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "1e4e3834af4d95c28a8c6b82fe2980a7589a50f3a0c981e55b8ed1c7917e15d1",
+          "documentKey": "fe10e6291ba2bf627ce60b3399e6cb63654d2ca21aded11a3097fb3f3fcdeb2a",
           "viewport": "desktop"
         }
       ]
@@ -236,7 +237,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "684d1d6c9ec460c88e35b1f9d948b5dc3cd3de767c6e55381933858398474cf4",
+          "documentKey": "b625a59a8b6db666e9a6a4c81498abbb18dd9f3b7cf345d94eb056a3c18d6247",
           "viewport": "mobile"
         },
         {
@@ -244,7 +245,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "80c2facf6c2d7ca3cd5c8b1d9ef81c8ffdaef7c041b560da76ed75e37bc38cd6",
+          "documentKey": "a69837fcb79fcc00ddf020b0fffbf460163cb602f1a0320187724b3ebbae5d80",
           "viewport": "mobile"
         },
         {
@@ -252,7 +253,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "2e5cabc716b2e8d39717ba241ea45f168f571267e821598e11a80f62b23ea50b",
+          "documentKey": "df1e7a0734fc8fb6297d08bf6f1e0d0b7cd0f987a93525b9f09cb18ecef7fe04",
           "viewport": "desktop"
         },
         {
@@ -260,7 +261,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "345cecc30afcd246de51fb5e616127e956da68d30e4319a04e2cb037ed3b1ec4",
+          "documentKey": "53d54fe5e2013d7e05253424101e8199f0f9168bb747fd74a4d5dcb507f791ad",
           "viewport": "desktop"
         }
       ]
@@ -329,7 +330,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "8c8996cad9b0de350e704f5b1b483de130ff93b67128b056262145fc81f0a717",
+          "documentKey": "1cf6f60532a1ed8318fe09b63f3f587248bc464159a9acf43d09cf59c729648a",
           "viewport": "mobile"
         },
         {
@@ -337,7 +338,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "00fe960e24a931c0d4c766a7719b5c78ed66be615b0f48004929ec359c2547cb",
+          "documentKey": "4a527b6ef875a5a509ed3d26d25dc3d8391b3836a45f59c25cd5c0c51cfa230a",
           "viewport": "mobile"
         },
         {
@@ -345,7 +346,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "c364408f78ad9a1e423ff7f7a40be4748c6b2154cfa3b8ad1c1eab523c924d58",
+          "documentKey": "82c545941bfde78ff7cbd59c983741f4a8866b08ff6773b72341d20e085cfe52",
           "viewport": "desktop"
         },
         {
@@ -353,7 +354,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "dd5b012378a5bd739eb06868326f4074840dcdccbe71221c87eddc4c603cd11f",
+          "documentKey": "fae40d3d6f84aac390d997fe05228b1d8d54f7f065d0eef5b7b64b97931b2228",
           "viewport": "desktop"
         }
       ]
@@ -377,11 +378,11 @@ expression: bytes
       "documentKeys": [
         {
           "colorScheme": "light",
-          "documentKey": "d69bca6b921007120a12853fac3b814c3c8c5f7990648a9abe198e0f179dadcd"
+          "documentKey": "9c2e2c6541f2a1c0dde3f80cb75e08a5584cbaab0a71932710c54fa64f5ecd54"
         },
         {
           "colorScheme": "dark",
-          "documentKey": "8d496108a8e5c2aca1d3ea515078c2f4aba403583b3721b6f9a7379fb2792026"
+          "documentKey": "488e763b635bf0ed5d9cf74c40bbad385b33c73743f5e409dba6c7c23532c005"
         }
       ],
       "kind": "document",
@@ -395,7 +396,7 @@ expression: bytes
     "title": "Mokly"
   },
   "live": {
-    "generation": "3b875310fbd10e17027e3467a325dd4e8d555881fdf74ffd8f697286e850a57f"
+    "generation": "e17343cf8377c96c88758dc0c1375527b930235f553d4cb359a3ad39c5fe2115"
   },
   "pages": [
     {
@@ -407,7 +408,7 @@ expression: bytes
         "relatedDocs": [],
         "sourcePath": "specs/page.page.html"
       },
-      "documentKey": "453aa1da3d9c3b3ddd375768e1ddd7718fd4e3326955041178fc0ff4e4945e73",
+      "documentKey": "8fc9c16657deb0b2b08db4ea4c152e97836aa208486efaea84b572c9029cfacb",
       "kind": "page",
       "path": "page",
       "tags": [],
@@ -512,7 +513,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "a48207bbb4a71989b068422592db448e37c5855f64623308ee49ca000a6749f6",
+          "documentKey": "7d19315618a554d822d3babd7b00dd9b246a5116755b0bf03f933208cf389a72",
           "viewport": "mobile"
         },
         {
@@ -520,7 +521,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "7d18af8511030804602556bf3d5cbb45c4621ce0ae8506e423f7cfe285056d0a",
+          "documentKey": "2271e5a1ac9a38975f1ef62b5da239ef05792178d6f25b4627339475e883d336",
           "viewport": "mobile"
         },
         {
@@ -528,7 +529,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "3456ffdac819408c31272d55ad3b3a31265a2f7c21196f6d363654e11d8e9a41",
+          "documentKey": "0e306faa204750b36b8d6fe6d66476059005920e0e8184afda12c63be77cced3",
           "viewport": "desktop"
         },
         {
@@ -536,7 +537,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "f77338954c856dd3c3807f28c59fde583da5b65c27b373b4324cf032160ef8ea",
+          "documentKey": "8802928c447058d221325ffbfe6c128ac17d24357f47c5b090c1a88410284532",
           "viewport": "desktop"
         }
       ]
@@ -636,7 +637,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "27215a4318985ad9410e7ce11d7b905c638d235b34f192768f4bd3fece3624aa",
+          "documentKey": "3606d925d7d09786106e108244f9576dd59147b042dcb7584a098d57e2e51283",
           "viewport": "mobile"
         },
         {
@@ -644,7 +645,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "dfa5534ec42af2a18ea9dac594294c5521b0091510244522b1f7a27e68c102b5",
+          "documentKey": "796c3ab4ef8d3baf96c5594c8e56c203db44bfda9610f9d5feb5e517b33d4042",
           "viewport": "mobile"
         },
         {
@@ -652,7 +653,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "bc2410ef53775006599b0f9ddc544819eb2999707b8bf9fe62436ac0501a4aad",
+          "documentKey": "b59f3e805cdd1dd945e4c4b5fe8f93427d336588b62828ef9d09e85b3999bc8b",
           "viewport": "desktop"
         },
         {
@@ -660,7 +661,7 @@ expression: bytes
           "comparison": {
             "status": "unavailable"
           },
-          "documentKey": "cb2c41c951a5b1ba7a608e9e7ef35ccb14642dd0b29117b10f05fd53ae7a364a",
+          "documentKey": "1acde24cde11453b46b08a0d6bf57e1e1efd84fe113e22bcff8a2de665387f80",
           "viewport": "desktop"
         }
       ]

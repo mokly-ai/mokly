@@ -109,7 +109,7 @@ impl Renamer<'_> {
                 let mut result = Ok(());
                 let _: result::Result<_, ParseError<'_, ()>> =
                     parser.parse_nested_block(|nested| {
-                        result = if at.is_some() {
+                        result = if at.as_deref().is_some_and(grouping) {
                             self.rules(nested)
                         } else {
                             self.body(nested, own.as_deref(), &earlier)
@@ -278,4 +278,12 @@ impl Renamer<'_> {
             message: format!("{reason} in {}:{line}:{column}; {action}", self.path),
         }
     }
+}
+
+pub(crate) fn grouping(name: &str) -> bool {
+    name.ends_with("keyframes")
+        || matches!(
+            name,
+            "media" | "supports" | "container" | "layer" | "document" | "scope" | "starting-style"
+        )
 }

@@ -111,13 +111,17 @@ and any other `mokly-` name fails with `html-element`.
   with `html-slot`.
 - `mokly-instance` names the instance for comparison and inspection, under
   the [instance contract](./mokly-instances.md); it defaults to the slug rule.
-- The HTML fragment algorithm moves a component element that sits directly in
-  a raw `table`, `thead`, `tbody`, `tfoot`, or `tr` out of the table. When a
-  component element's source lies inside a table whose subtree no longer
-  contains it, Mokly reports `html-foster-parented`. Put component elements in
-  `td`, `th`, or `caption`, or make the table a component.
+- HTML5 parsing can move a component or its output, including direct table
+  use, blocks in `p`, and nested anchors. Mokly uses the re-parsed browser tree.
+  `html-foster-parented` names the component and parent. If an instance's
+  markers no longer share a parent, its nodes belong to the enclosing region.
+  Use a parent that permits its output, such as `td`, `th`, or `caption` in tables.
 
 ## Links And Markers
+
+Authored comments starting with `mokly-` after leading whitespace are removed
+without an error. Served documents reserve this prefix for package markers.
+Ordinary comments remain content.
 
 - `href="mock:<path>[#fragment]"` on an anchor is rewritten after render under
   the [navigation contract](./mokly-navigation.md).
@@ -135,6 +139,10 @@ and any other `mokly-` name fails with `html-element`.
   component element inside a scope renders with that scope state, the
   component's own scopes nest inside it, and slot content takes the state at
   its placeholder.
+
+Ignore ids use lowercase kebab-case. `mokly-ignore` accepts `id` and
+`material-key`; `mokly-ignore-scope` accepts `enabled`. Both accept `mokly-if`
+and `mokly-viewport`. Other attributes or invalid ids fail with `html-element`.
 
 ## Variants
 
@@ -164,14 +172,12 @@ including a variant.
    Render JavaScript components through the [sidecar](./mokly-sidecar.md),
    memoized by props, viewport, colour scheme, and the enclosing ignore
    scope, with slot placeholders that report their scope state.
-3. Compose the fragment once per viewport and colour scheme, attach the
-   instance ownership and the ignore regions to the tree, collect the styles
-   the sidecar returned, and assemble the document with the configured
-   stylesheets.
-4. Rewrite links and validate them. Keep the views in the render cache keyed
-   by their inputs; Serve, Changes, and `build` read them there, and nothing is
-   written to the repository. Record the entry's usage in the catalogue model
-   from the attached ownership.
+3. Compose each viewport and colour-scheme view. Attach ownership and ignore
+   regions to the tree. Collect sidecar styles and assemble the document with
+   the configured stylesheets.
+4. Rewrite and validate links. Serve, Changes, and `build` share the
+   in-memory view cache, keyed by inputs. Derive the entry's catalogue usage
+   from the tree's ownership regions.
 
 Serve, `build`, Changes, and publish treat an HTML screen like every other
 screen. A catalogue of HTML files alone never starts a sidecar.
@@ -186,11 +192,11 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 | `html-props`           | a `$name`, `{{name}}`, or `mokly-if` reference to an undeclared prop, `{{name}}` on an array or an object without a path, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
 | `html-slot`            | content for an undeclared slot, or an unrendered placeholder                                                                                                                            |
 | `html-unused-props`    | warning: a prop no reference in the body reads                                                                                                                                          |
-| `html-foster-parented` | warning: a component element moved out of a table                                                                                                                                       |
+| `html-foster-parented` | warning: HTML5 parsing moved component content                                                                                                                                          |
 
 The discovery warning messages are exactly
 `prop "<name>" is not read by the body` for `html-unused-props` and
-`component element <element> is moved out of a table` for `html-foster-parented`.
+`component element <element> is moved out of <parent> by HTML parsing` for `html-foster-parented`.
 Each shared body is checked once. The warning subject is the parent's
 complete entry path; both warnings use a component subject in a component
 body and an entry subject in a screen body. Source coordinates are one-based.
@@ -229,11 +235,10 @@ variants:
 </main>
 ```
 
-The entry `account/home` renders at both viewports with `ui-header`,
-`ui-button`, and `ui-card` resolved from the registry; `account/home/free` is
-its variant with the replaced props, and its card is removed because `renews`
-is false. The inferred schema has `user` as an object and `renews` as a
-`boolean`. The card's paragraph fills its `children` slot.
+`account/home` renders both viewports with registered `ui-header`, `ui-button`,
+and `ui-card`. Its `account/home/free` variant replaces props and removes the
+card because `renews` is false. Inference gives `user` an object schema and
+`renews` a boolean schema. The paragraph fills the card's `children` slot.
 
 ## Related Docs
 

@@ -28,6 +28,10 @@ the next available port through 65535. Repeated SIGINT requests coalesce.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
+The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option
+validation accepts a positive 64-bit integer and retains it for PoolOptions.
+Invalid values fail `cli-invalid` with the accepted range.
+
 Serve accepts `--port`, `--watch`, `--no-watch`, and `--open`. Build accepts
 `--out`, `--strict`, and `--no-changes`. Publish accepts `--endpoint`, `--token`,
 `--repository`, `--upload-concurrency`, `--strict`, and `--no-changes`.

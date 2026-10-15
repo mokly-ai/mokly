@@ -57,3 +57,29 @@ Read [Styles](/docs/authoring/styles/) for shared and scheme-specific CSS.
 A page renders one complete light document and supplies its own responsive
 layout. A Markdown document has no viewport axis and has one document per
 enabled color scheme. A light-only document keeps its light view under Dark.
+
+## Wrap React content
+
+Use a consumer renderer to choose the product's theme. Return React content,
+or `{ node, resources }`. Mokly renders that content and assembles the document.
+
+```tsx
+// specs/renderer.tsx
+import type { RenderInput, RenderResult } from "@mokly/mokly";
+
+export default function render(input: RenderInput): RenderResult {
+  return {
+    node: <div data-theme={input.colorScheme}>{input.node}</div>,
+    resources: ["assets/product.woff2"],
+  };
+}
+```
+
+The renderer receives `entry`, `props`, `viewport`, `colorScheme`, and `node`.
+It wraps React screens and component renders. Storybook uses its own decorators.
+Pages own their complete documents. The core owns the document head and
+stylesheet links.
+
+React and React DOM resolve from your repository. Mokly supplies no private
+React runtime and no product theme. Use your application's providers around
+`input.node` when it needs them.

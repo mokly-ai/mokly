@@ -6,7 +6,7 @@ use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
-use crate::{module_checks, rename};
+use crate::{module_checks, module_integrity, rename};
 
 /// Stable local identity shared by scoped text and the JavaScript class table.
 pub fn scoped_name(path: &str, local: &str) -> String {
@@ -19,6 +19,7 @@ pub fn scoped_name(path: &str, local: &str) -> String {
 pub fn scope(path: &str, source: &str) -> Result<(String, BTreeMap<String, String>)> {
     module_checks::check(path, source)?;
     let scoped = rename::scope(path, source)?;
+    module_integrity::check(path, source, &scoped.css)?;
     if let Err(error) = StyleSheet::parse(
         &scoped.css,
         ParserOptions {

@@ -1,5 +1,8 @@
 //! Independent final allowlist for composed Markdown documents.
 
+use serde_json::Value;
+
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node};
 use crate::{error, markdown};
@@ -35,7 +38,7 @@ pub fn validate(nodes: &[Node]) -> Result<()> {
             Node::Element(element) => return Err(element_error(element)),
             _ => {
                 return Err(invalid(
-                    "build-invalid",
+                    Code::BuildInvalid,
                     "unsafe rendered document: invalid outer structure",
                 ));
             }
@@ -43,7 +46,7 @@ pub fn validate(nodes: &[Node]) -> Result<()> {
     }
     if styles != 1 {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "unsafe rendered document: the template must contain one owned stylesheet",
         ));
     }
@@ -60,7 +63,7 @@ fn head(nodes: &[Node], styles: &mut usize) -> Result<()> {
                         if !matches!(element.children.as_slice(), [Node::Text(css)] if css == markdown::STYLES)
                         {
                             return Err(invalid(
-                                "build-invalid",
+                                Code::BuildInvalid,
                                 "unsafe rendered document: the template must contain one owned stylesheet",
                             ));
                         }
@@ -112,7 +115,7 @@ fn body(nodes: &[Node], direct: bool) -> Result<()> {
                 })?;
                 if element.get("data-mokly-link").is_some() && element.navigation.is_none() {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         "unsafe rendered document: attribute data-mokly-link on <a> is not allowed",
                     ));
                 }
@@ -132,13 +135,13 @@ fn body(nodes: &[Node], direct: bool) -> Result<()> {
                 })?;
                 if element.get("disabled").is_none() {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         "unsafe rendered document: <input> must be disabled",
                     ));
                 }
                 if element.get("type") != Some("checkbox") {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         "unsafe rendered document: <input> must have checkbox type",
                     ));
                 }
@@ -154,7 +157,7 @@ fn attributes(element: &Element, permit: impl Fn(&str, &str) -> bool) -> Result<
     for attribute in &element.attributes {
         if !permit(&attribute.name, &attribute.value) {
             return Err(invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 format!(
                     "unsafe rendered document: attribute {} on <{}> is not allowed",
                     attribute.name, element.name
@@ -178,10 +181,11 @@ fn url_attribute(element: &Element, name: &str) -> Result<()> {
                     .any(|scheme| lower.starts_with(scheme)))
         {
             return Err(invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 format!(
-                    "unsafe rendered document: {name} on <{}> is not an allowed URL",
-                    element.name
+                    "unsafe rendered document: {name} on <{}> is not an allowed URL: {}",
+                    element.name,
+                    Value::String(url.into())
                 ),
             ));
         }
@@ -191,7 +195,7 @@ fn url_attribute(element: &Element, name: &str) -> Result<()> {
 
 fn element_error(element: &Element) -> error::HtmlError {
     invalid(
-        "build-invalid",
+        Code::BuildInvalid,
         format!(
             "unsafe rendered document: element <{}> is not allowed",
             element.name

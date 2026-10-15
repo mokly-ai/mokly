@@ -87,7 +87,7 @@ fn hello_encoding_and_method_deadlines_match_the_contract() {
             .unwrap();
     assert_eq!(call.timeout_ms(), 120_000);
     let call = serde_json::from_value::<Call>(
-        json!({"method":"processCss","params":{"postcss":"p.cjs","sourcePath":"a.css","text":""}}),
+        json!({"method":"processCss","params":{"context":"css","sourceRoot":"/repo","moduleResolution":{},"repositoryRoots":[],"postcss":"p.cjs","sourcePath":"a.css","text":""}}),
     )
     .unwrap();
     assert_eq!(call.timeout_ms(), 60_000);

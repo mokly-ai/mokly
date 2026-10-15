@@ -23,4 +23,12 @@ moduleResolution: ModuleResolution,
 /**
  * Source checkout or extracted base root.
  */
-sourceRoot: string, };
+sourceRoot: string,
+/**
+ * Configuration directory relative to the side source root.
+ */
+configurationDirectory: string,
+/**
+ * Physical repository roots whose local packages map into this side.
+ */
+repositoryRoots: Array<string>, };

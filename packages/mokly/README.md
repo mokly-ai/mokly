@@ -2,13 +2,12 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-`@mokly/mokly` supplies the `mokly` Node shim. It selects the host's native
-binary, checks that its version equals this package version, and starts it
-with inherited standard streams. It has no JavaScript CLI fallback.
+`@mokly/mokly` supplies the `mokly` Node shim, the Node render sidecar, and the
+JavaScript authoring API. The Rust binary owns catalogue decisions, document
+assembly, serving, and file writes. The sidecar bundles and renders consumer
+code in memory.
 
-The supported Node range is `>=22.14.0 <24.14.0 || >=24.19.0`. The shim checks
-it before package lookup. Supported hosts are Linux x64 and arm64 with glibc,
-macOS x64 and arm64, and Windows x64 with MSVC.
+## Install And Run
 
 ```bash
 npm install --save-dev @mokly/mokly
@@ -30,20 +29,84 @@ The native binary owns commands and file writes. The render sidecar and the
 authoring API share this package under the
 [package contract](../../docs/protocol/mokly-package.md).
 
+The supported Node range is `>=22.14.0 <24.14.0 || >=24.19.0`. The shim checks
+it before package lookup. Supported hosts are Linux x64 and arm64 with glibc,
+macOS x64 and arm64, and Windows x64 with MSVC. Exact optional platform
+packages supply the binary. The shim requires the binary's exact package
+version and has no JavaScript CLI fallback.
+
+## Authoring
+
+Export one definition from each export of a matched entry module.
+
+```tsx
+import { defineScreen } from "@mokly/mokly";
+
+export default defineScreen({
+  title: "Invoice",
+  description: "A paid invoice.",
+  relatedDocs: [],
+  props: { state: "paid" },
+  render: (props) => <main>{props.state}</main>,
+  variants: [
+    { slug: "overdue", title: "Overdue", props: { state: "overdue" } },
+  ],
+});
+```
+
+`defineScreen` and `defineComponent` render from props and a
+`{ viewport, colorScheme }` context. Components require a literal JSON Schema
+and expose a typed `Component` wrapper. `json-schema-to-ts` derives data prop
+types. Declared slots hold React nodes separately from data props. Components
+can declare `element` to enable HTML invocations.
+
+The root also exports `definePage`, `defineUseCase`, `defineFolder`, `MockLink`,
+`mockLink`, `ReviewIgnore`, `ReviewIgnoreScope`, `reviewMaterialKey`, and the
+input, definition, configuration, and renderer types. A page callback returns
+one complete synchronous HTML string. React and React DOM are optional peers;
+React authoring resolves both from the consumer. HTML-only catalogues need
+neither package and start no sidecar.
+
+The package ships the authoring guides and protocol sources as Markdown.
+Read the [source guide](../../docs/guides/authoring/screens.md) and
+[sidecar contract](../../docs/protocol/mokly-sidecar.md).
+
+## Sidecar Boundary
+
+The Rust pool starts `dist/sidecar.js` with inherited environment and piped
+NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
+byte limit. Requests run in order. Consumer logs go to standard error.
+
+`bundle` compiles an unevaluated esbuild generation and reports its module
+graph with stable names for selected installation files. Repository-owned
+workspace packages and PostCSS presets use the side's own source copy.
+`cssModules` installs the core's class maps before evaluation.
+`describe` inventories every definition and Storybook story and reports
+generation warnings. `bindings` installs resolved paths and titles before a
+render. Render methods return HTML text, collected styles, resources, typed
+instance and slot drafts, and render warnings. A consumer
+renderer wraps React screens and components. Portable stories use the
+consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
+worker with consumer plugin packages kept unbundled. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
+and `shutdown` releases all state.
+
+## Development
+
 From the workspace root:
 
 ```bash
 npm run build
-node --import tsx --test tests/mokly_shim.test.ts
-node packages/mokly/bin/mokly.mjs --help
+node --import tsx --test tests/sidecar_methods.test.ts
+cargo test -p mokly-sidecar
 ```
 
-The build copies the shim's ESM sources into `dist`. Native binaries are
-ignored build output under the host platform package. The exact optional
-platform dependencies must stay enabled in consumer installs. React and
-React DOM are optional peers for React authoring.
+The package build emits ESM JavaScript and declarations, the sidecar entry and
+worker, the shim, and packaged Markdown. Each build clears stale package
+output and copied docs first. Build output stays ignored.
+Key code: [authoring](./src/authoring/definitions.ts),
+[sidecar](./src/sidecar/session.ts), and the
+[Rust pool](../../crates/mokly-sidecar/README.md).
 
-On Windows, the shim keeps its console signal listeners alive for SIGINT and
-SIGBREAK. It does not forward those signals: the binary shares the console
-and receives them directly. On POSIX, the shim forwards SIGINT, SIGTERM, and
-SIGHUP. Serve treats repeated SIGINT delivery as one shutdown request.
+On POSIX, the shim forwards SIGINT, SIGTERM, and SIGHUP. On Windows, it keeps
+its SIGINT and SIGBREAK listeners alive while the binary receives the shared
+console signals directly.

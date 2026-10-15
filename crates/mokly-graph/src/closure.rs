@@ -78,7 +78,16 @@ impl ClosureBuilder for Walker {
         while let Some((source, reference)) = queue.pop_front() {
             let target = match local_target(&source, &reference.url) {
                 Ok(target) => target,
-                Err(source) => return Err(invalid(route, format!("{route}: {source}"))),
+                Err(source) => {
+                    return Err(invalid(
+                        route,
+                        format!(
+                            "{route}: invalid resource URL {:?}: {}",
+                            reference.url,
+                            source.reason()
+                        ),
+                    ));
+                }
             };
             let Some(target) = target else {
                 continue;
@@ -101,7 +110,8 @@ impl ClosureBuilder for Walker {
             let urls = if let Some(cached) = edges.get(&target) {
                 cached.clone()
             } else {
-                let bytes = if let Some(generated) = target.strip_prefix(&namespace::generated(""))
+                let bytes: Arc<[u8]> = if let Some(generated) =
+                    target.strip_prefix(&namespace::generated(""))
                 {
                     if let Some(urls) = self.index.get(&target) {
                         edges.insert(target.clone(), urls.clone());
@@ -120,6 +130,7 @@ impl ClosureBuilder for Walker {
                     self.generated
                         .resource(generated)?
                         .ok_or_else(|| missing(route, &reference.url))?
+                        .into()
                 } else {
                     let path = target
                         .strip_prefix("static/")
@@ -155,7 +166,7 @@ impl ClosureBuilder for Walker {
                         }
                         continue;
                     }
-                    match self.tree.read(&file.absolute) {
+                    match self.tree.read_shared(&file.absolute) {
                         Ok(bytes) => bytes,
                         Err(_) => return Err(missing(route, &reference.url)),
                     }

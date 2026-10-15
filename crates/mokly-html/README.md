@@ -7,7 +7,7 @@ and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
 
 ## Responsibilities
 
-- Parse HTML with the HTML5 tree builder and keep owned, thread-safe trees.
+- Parse HTML through a package-owned HTML5 arena and keep owned, thread-safe trees.
 - Coerce component attributes with the shared prop schemas.
 - Apply substitutions, conditions, viewports, slots, and ignore scopes.
 - Attach instance, slot, root, and ignore regions as tree nodes.
@@ -22,6 +22,11 @@ path and the [shared template grammar](../../docs/protocol/mokly-html-screens.md
 Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.
+
+The parser uses a package-owned arena and disables scripting. Composition
+re-parses its output with the same HTML5 algorithm. Usage and comparison use
+that browser tree. Displaced instance regions lose their ownership and report
+`html-foster-parented` with the component element and parent.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 `serialize::html` writes instance and slot comments for the inspector.

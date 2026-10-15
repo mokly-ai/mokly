@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use ts_rs::TS;
 
+use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
@@ -60,6 +62,10 @@ pub struct Bundle {
     pub module_resolution: ModuleResolution,
     /// Source checkout or extracted base root.
     pub source_root: String,
+    /// Configuration directory relative to the side source root.
+    pub configuration_directory: String,
+    /// Physical repository roots whose local packages map into this side.
+    pub repository_roots: Vec<String>,
 }
 
 /// Preview colour scheme.
@@ -91,6 +97,8 @@ pub struct Render {
     pub generation: String,
     /// Repository-relative module and export name.
     pub handle: String,
+    /// Effective rendered parent or variant.
+    pub entry: EntryBinding,
     /// Validated JSON data props.
     pub props: BTreeMap<String, Value>,
     /// Viewport identifier.
@@ -107,8 +115,8 @@ pub struct RenderComponent {
     /// Shared render inputs.
     #[serde(flatten)]
     pub render: Render,
-    /// Slot name to opaque placeholder token.
-    pub slots: BTreeMap<String, String>,
+    /// Slot name to a placeholder or saved React value.
+    pub slots: BTreeMap<String, SlotInput>,
     /// Enclosing ignore state.
     pub ignore_scope: IgnoreScope,
 }
@@ -146,6 +154,14 @@ pub struct RenderPage {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(rename = "ProcessCssParams")]
 pub struct ProcessCss {
+    /// Physical repositories whose local packages map into this side.
+    pub repository_roots: Vec<String>,
+    /// Core-chosen stylesheet generation context.
+    pub context: String,
+    /// Side source checkout.
+    pub source_root: String,
+    /// Consumer module resolution policy for this side.
+    pub module_resolution: ModuleResolution,
     /// Consumer PostCSS module path.
     pub postcss: String,
     /// Stylesheet source path.
@@ -180,6 +196,8 @@ pub enum Call {
     Bundle(Bundle),
     /// Evaluate and inventory definitions.
     Describe(Generation),
+    /// Install the resolved handle table after describe.
+    Bindings(Bindings),
     /// Render a React screen.
     RenderScreen(Render),
     /// Render a registered component.
@@ -194,6 +212,8 @@ pub enum Call {
     CssModules(CssModules),
     /// Release one bundle generation.
     Dispose(Generation),
+    /// Release one stylesheet context.
+    DisposeContext(DisposeContext),
     /// Drain in-flight work and exit.
     Shutdown(Empty),
 }

@@ -7,7 +7,7 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::composition::Composed;
 use mokly_html::markdown::LinkResolver;
 use mokly_html::tree::Node;
-use mokly_html::{controls, links, markdown, safety, serialize};
+use mokly_html::{controls, links, markdown, normalization, safety, serialize, url_safety};
 use mokly_model::axes::Viewport;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::usage::CatalogueUsage;
@@ -49,9 +49,9 @@ pub(crate) fn finish(
     mut document: Composed,
     plan: &DocumentPlan,
     entry: &ModelEntry,
-    entries: &[ModelEntry],
+    catalogue: &PreparedCatalogue,
 ) -> Result<Arc<Artifact>> {
-    if let Err(source) = validate(&mut document, plan, entry, entries) {
+    if let Err(source) = validate(&mut document, plan, entry, catalogue) {
         return Err(GraphError::Attempt {
             failures: vec![source],
             warnings: document.warnings,
@@ -79,7 +79,13 @@ fn check_anchors(nodes: &[Node], anchors: &BTreeSet<String>, route: &str) -> Res
                         let fragment = match urls::decode_fragment(fragment) {
                             Ok(fragment) => fragment,
                             Err(source) => {
-                                return Err(error::invalid(route, format!("{route}: {source}")));
+                                return Err(error::invalid(
+                                    route,
+                                    format!(
+                                        "{route}: invalid fragment URL #{fragment}: {}",
+                                        source.reason()
+                                    ),
+                                ));
                             }
                         };
                         if !anchors.contains(&fragment) {
@@ -103,7 +109,7 @@ fn validate(
     document: &mut Composed,
     plan: &DocumentPlan,
     entry: &ModelEntry,
-    entries: &[ModelEntry],
+    catalogue: &PreparedCatalogue,
 ) -> Result<()> {
     match controls::adapt(&mut document.tree, &plan.route) {
         Ok(warnings) => document.warnings.extend(warnings),
@@ -111,7 +117,7 @@ fn validate(
     }
     document.links = match links::rewrite(
         &mut document.tree,
-        entries,
+        &catalogue.model.entries,
         entry,
         &plan.route,
         plan.viewport.unwrap_or(Viewport::Desktop),
@@ -120,10 +126,18 @@ fn validate(
         Ok(links) => links,
         Err(source) => return Err(GraphError::Html { source }),
     };
+    if let Err(source) = normalization::composed(document, entry, catalogue) {
+        return Err(GraphError::Html { source });
+    }
+    if let Err(source) = url_safety::validate(&document.tree, &entry.metadata.source) {
+        return Err(GraphError::Html { source });
+    }
     if matches!(entry.content, EntryContent::Document { .. })
         && let Err(source) = safety::validate(&document.tree)
     {
-        return Err(GraphError::Html { source });
+        return Err(GraphError::Html {
+            source: source.at(entry.metadata.source.clone()),
+        });
     }
     check_anchors(
         &document.tree,

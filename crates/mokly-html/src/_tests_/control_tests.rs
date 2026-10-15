@@ -68,9 +68,9 @@ fn duplicate_and_reserved_navigation_attributes_survive_token_validation() {
         "<a data-nav-href=\"mock:a\" data-nav-href=\"mock:b\"></a>",
         "<a data-mokly-link=\"a\"></a>",
         "<div data-mokly-link-control-extra=\"x\"></div>",
-        "<!--mokly-instance:start id=\"r-0\"-->",
     ] {
         assert!(source_checks::validate(source, false).is_err(), "{source}");
     }
     assert!(source_checks::validate("<p title=\"a\" title=\"b\">Text</p>", false).is_ok());
+    assert!(source_checks::validate("<!--mokly-instance:start id=\"r-0\"-->", false).is_ok());
 }

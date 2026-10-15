@@ -1,6 +1,7 @@
 //! Object-safe filesystem and Git-tree boundary.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::error::Result;
 
@@ -47,4 +48,8 @@ pub trait SourceTree: Send + Sync {
     fn children(&self, path: &Path) -> Result<Vec<Child>>;
     /// Read the bytes of one confined, inventoried source.
     fn read(&self, path: &Path) -> Result<Vec<u8>>;
+    /// Read immutable bytes without copying a retained source on cache hits.
+    fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
+        Ok(self.read(path)?.into())
+    }
 }

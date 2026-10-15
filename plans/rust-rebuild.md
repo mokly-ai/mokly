@@ -684,6 +684,7 @@ from Milestone 12.
 Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m5.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m5/report-2.md` and
 `.context/rust-rebuild/delegation/m5/merge-decisions.md`.
+Review fix evidence: `.context/rust-rebuild/delegation/m5/report-3.md`.
 
 The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
@@ -720,6 +721,7 @@ Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6
 Gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m6.md`.
 Smoke and screenshots: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m6-smoke/`.
 Verification and report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-1.md`.
+Integration report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-2.md`.
 
 ## Milestone 7: Viewer reads read model v7
 
@@ -754,22 +756,45 @@ renders again.
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
+  - [x] Add the standalone Node entry, bounded NDJSON, method dispatch,
+        exact-version hello, and the Rust pool's lazy process lifecycle.
+  - [x] Test request deadlines, retry, recycling, shutdown, and queue
+        cancellation with mocked Rust boundaries and real Node processes.
+  - [x] Separate head and base generations, replay disposed generations on
+        every worker, share canonical model wire values, and validate the
+        CLI timeout override.
+  - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
+        and fragment-scoped registry style collection.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
+  - [x] Add unevaluated esbuild generations, attributed facades, the JSX
+        development shim, CSS Modules tables, and consumer style collectors.
+  - [x] Map workspace PostCSS presets into each side and keep installed
+        JavaScript and CSS under stable dependency graph names.
+  - [x] Add the PostCSS worker and preserve local module locations, plugin
+        creation lifetime, and dependency plugin names and globs.
 - [ ] Implement component, screen, page, and story renders, with
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
       inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
-      Rust keyed by bundle generation, handle, props, viewport, scheme, and
+      Rust keyed by bundle generation, binding table, effective entry, class-map
+      digest, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
+  - [x] Add the authoring API with schema and literal prop inference, and
+        standalone component, screen, story, and page renders.
+  - [ ] Connect resolved catalogue paths, complete usage records, schema
+        validation, and fragment caching through the approved binding.
 - [ ] Implement `describe`: every definition the entry modules and stories
-      files export, one per export with `array-export` otherwise, with the
+      files export, one per export, rejecting arrays containing definitions, with the
       story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Reconcile the rendering page's authenticated fragment placements and
+      logical inputs with the sidecar's typed instance and slot render-result
+      records before connecting the Milestone 5 composition boundary.
 - [ ] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
       input and marker-placement metadata in the sidecar, resolve definition
       handles to catalogue identities, and supply the bundle generation,
@@ -807,7 +832,14 @@ renders again.
       the descriptor loads), "No editable props are declared for this
       entry.", and "Check the highlighted values." for a whole-props error
       that highlights no field.
-- [ ] Write the JavaScript authoring guides.
+- [x] Write the JavaScript authoring guides.
+
+Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
+and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
+decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
+`.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
+fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -932,6 +964,8 @@ Publish client final review and merge decisions:
 
 ## Milestone 13: Release packaging
 
+- [ ] Build and pack the viewer before the CLI authoring declarations and
+      CLI `prepack`; verify this order in clean package consumers.
 - [ ] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
@@ -960,6 +994,8 @@ Publish client final review and merge decisions:
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+- [ ] Make tree conversion, composition, serialization, destruction, and all
+      tree walks iterative; remove dependence on the temporary 64 MiB stacks.
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -978,6 +1014,8 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M8 sidecar review D2: the user must settle schema validation of dynamic
+    wrapper props before the adapter runs; add no validator or callback yet.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
@@ -986,6 +1024,8 @@ Publish client final review and merge decisions:
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention
     after success; keep the existing retention until the user decides.
+  - Milestone 5 review 1, finding 5: decide the declared component stylesheet
+    delivery model; keep the current bundled code and pages pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
@@ -1005,8 +1045,8 @@ Publish client final review and merge decisions:
     `guides_upload_validation`, and `guides_authoring`, which compared the
     guides with the old CLI and authoring API. `guides_copy`,
     `guides_structure`, and `guides_versions` remain. The guides contract
-    requires shipped behaviour. Decide whether to rewrite the guides before
-    the replacement CLI is complete, or at Milestone 12 (recommended).
+    requires shipped behaviour. The Milestone 5 task explicitly directs the
+    HTML authoring guide rewrite. Continue each later guide at its milestone.
   - F: settled by Decision 36 on 2026-10-14.
   - G: settled on 2026-10-14; the release management page follows the
     seven packages of the release contract.
