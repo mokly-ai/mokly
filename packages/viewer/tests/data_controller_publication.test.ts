@@ -11,7 +11,7 @@ import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { indexFixture } from "./catalogue_v7_fixture.js";
+import { detailFixture, indexFixture } from "./catalogue_v7_fixture.js";
 import { controllerFixture } from "./data_controller_fixture.js";
 import { flush } from "./data_fakes.js";
 
@@ -112,4 +112,33 @@ test("a kept entry still loads its detail with the publication", async () => {
     [{ path: "guide" }],
   );
   assert.equal(fixture.commits.length, 0);
+});
+
+test("a publication that adds a step loads the new step's detail in the same commit", async () => {
+  const published = live((raw) => {
+    raw.useCases[0]!.steps.push({ screenPath: "product/browse/home/empty" });
+    raw.screens.find(
+      (screen) => screen.path === "product/browse/home/empty",
+    )!.useCasePaths = ["tour"];
+  }, 2);
+  const { fixture } = await publish("/view/tour/", published);
+  assert.deepEqual(
+    fixture.source.details.map((item) => item.input),
+    [
+      { path: "tour" },
+      { path: "product/browse/home" },
+      { path: "product/browse/details" },
+      { path: "product/browse/home/empty" },
+    ],
+  );
+  for (const item of [...fixture.source.details])
+    item.resolve({ ...detailFixture({ path: item.input.path }), revision: 2 });
+  await flush();
+  assert.equal(fixture.commits.length, 1);
+  assert.equal(fixture.controller.snapshot.index, published);
+  assert.ok(
+    fixture.controller.snapshot.details.has(
+      "current:product/browse/home/empty",
+    ),
+  );
 });

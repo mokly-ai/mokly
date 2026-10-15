@@ -4,119 +4,88 @@ import { test } from "node:test";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
 import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { readLiveDescriptor } from "../src/catalogue/live_reader.js";
-import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import type { ComponentRenderRequest } from "../src/components/render_types.js";
+import { readRenderResponse } from "../src/standalone/live_render.js";
 
 import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v7_fixture.js";
+import {
+  extendEverywhere,
+  richDetails,
+  richIndex,
+  richUsage,
+} from "./reader_unknown_fixtures.js";
 
 type Raw = Record<string, unknown>;
 
-/** Add one field a newer writer might add to a record. */
-function extend(record: unknown): void {
-  (record as Raw).later = { added: true };
+/** A copy of `value` with one unknown field added to every record in it. */
+function extended<T>(value: T): T {
+  const copy = structuredClone(value);
+  extendEverywhere(copy);
+  return copy;
 }
 
+test("the walk reaches every record kind the readers read", () => {
+  const index = extended(richIndex()) as unknown as Raw;
+  const action = (index.components as Raw[])[0]!;
+  const controls = action.controls as Record<string, Raw>;
+  assert.equal(controls.later, undefined);
+  for (const control of Object.values(controls)) assert.equal(control.later, 1);
+  assert.equal((controls.tone!.options as Raw[])[0]!.later, 1);
+  assert.equal((action.propSchema as Raw).later, undefined);
+  const nested = ((index.tree as Raw[])[1]!.children as Raw[])[1]!;
+  assert.equal(((nested.children as Raw[])[1]!.children as Raw[])[0]!.later, 1);
+  const home = richDetails().find(
+    (detail) => detail.entry.path === "product/browse/home",
+  )!;
+  const usage = (extended(home).views[0] as unknown as Raw).usage as Raw;
+  const instance = (usage.instances as Raw[])[0]!;
+  assert.equal(instance.later, 1);
+  assert.equal((instance.owner as Raw).later, 1);
+  assert.equal((instance.source as Raw).later, 1);
+  assert.equal((instance.props as Raw).later, undefined);
+  assert.equal(((usage.slots as Raw[])[0]!.owner as Raw).later, 1);
+  assert.equal(((usage.ranges as Raw[])[1]!.target as Raw).later, 1);
+});
+
 test("the index reader ignores additive fields at every depth", () => {
-  const raw = rawIndexFixture();
-  const plain = readCatalogueIndex(structuredClone(raw));
-  const edited = structuredClone(raw) as CatalogueReadModel & Raw;
-  edited.live = { generation: "c3".repeat(32) };
-  const live = readCatalogueIndex(structuredClone(edited));
-  extend(edited);
-  extend(edited.identity);
-  extend(edited.live);
-  extend(edited.tree[0]);
-  for (const entry of [
-    ...edited.screens,
-    ...edited.pages,
-    ...edited.documents,
-    ...edited.useCases,
-    ...edited.components,
-  ]) {
-    extend(entry);
-    extend(entry.details);
-    extend(entry.changes);
-    if ("views" in entry)
-      for (const view of entry.views) {
-        extend(view);
-        extend(view.comparison);
-      }
-    if ("documentKeys" in entry)
-      for (const key of entry.documentKeys) extend(key);
-    if ("steps" in entry) for (const step of entry.steps) extend(step);
-    if ("controls" in entry)
-      for (const control of Object.values(entry.controls)) extend(control);
-  }
-  for (const removed of edited.removedEntries) {
-    extend(removed);
-    extend(removed.entry);
-    if (removed.preview) extend(removed.preview);
-  }
-  (edited.screens[0] as Raw).preview = { kind: "screen" };
-  assert.deepEqual(readCatalogueIndex(edited), live);
-  assert.equal(plain.live, undefined);
+  const index = richIndex();
+  assert.deepEqual(
+    readCatalogueIndex(extended(index)),
+    readCatalogueIndex(index),
+  );
 });
 
 test("the detail reader ignores additive fields at every depth", () => {
-  for (const raw of [
-    ...Object.values(rawDetailFixtures().current),
-    ...Object.values(rawDetailFixtures().removed),
-  ]) {
-    const plain = readEntryDetail(structuredClone(raw));
-    const edited = structuredClone(raw) as typeof raw & Raw;
-    extend(edited);
-    extend(edited.identity);
-    extend(edited.entry);
-    for (const view of edited.views) {
-      extend(view);
-      extend(view.usage);
-      if (view.usage.status === "ready") {
-        for (const range of view.usage.ranges) {
-          extend(range);
-          extend(range.target);
-        }
-      }
-      if (view.resourceEvidence) extend(view.resourceEvidence);
-    }
-    if (edited.resourceEvidence) {
-      extend(edited.resourceEvidence);
-      for (const rule of edited.resourceEvidence.rules) {
-        extend(rule);
-        extend(rule.owner);
-      }
-    }
-    if (edited.workspace) extend(edited.workspace);
-    assert.deepEqual(readEntryDetail(edited), plain);
-  }
+  const details = richDetails();
+  assert.ok(details.some((detail) => detail.views.length));
+  for (const detail of details)
+    assert.deepEqual(
+      readEntryDetail(extended(detail)),
+      readEntryDetail(detail),
+      detail.entry.path,
+    );
 });
 
-test("workspace links and input changes ignore additive fields", () => {
-  const raw = rawDetailFixtures().current["components/action"]!;
-  const link = {
+test("the render answer reader ignores additive fields at every depth", () => {
+  const request: ComponentRenderRequest = {
     entryPath: "product/browse/home",
-    entryKind: "screen" as const,
-    title: "Home",
-    viewport: "mobile" as const,
-    colorScheme: "light" as const,
-    instanceKey: "e5".repeat(32),
-    direct: true,
-    removed: false,
-    comparisonEligible: true,
+    viewport: "mobile",
+    colorScheme: "light",
+    revision: 3,
+    pageId: "0123456789abcdef0123456789abcdef",
+    overrides: {},
   };
-  const change = {
-    instanceId: "action",
-    title: "Action",
-    viewport: "mobile" as const,
-    colorScheme: "light" as const,
-    before: {},
-    after: {},
+  const answer = {
+    renderId: "r-1",
+    revision: 3,
+    previewUrl: "/mokly-viewer/components/renders/r-1/index.html",
+    props: { label: ["string", "Go"] },
+    usage: richUsage(),
   };
-  const plain = structuredClone(raw);
-  plain.workspace!.usedBy = [link];
-  plain.workspace!.inputChanges = [change];
-  const edited = structuredClone(raw);
-  edited.workspace!.usedBy = [{ ...link, later: 1 } as typeof link];
-  edited.workspace!.inputChanges = [{ ...change, later: 1 } as typeof change];
-  assert.deepEqual(readEntryDetail(edited), readEntryDetail(plain));
+  assert.deepEqual(
+    readRenderResponse(extended(answer), request),
+    readRenderResponse(answer, request),
+  );
 });
 
 test("the live descriptor reader ignores additive fields", () => {
@@ -125,14 +94,7 @@ test("the live descriptor reader ignores additive fields", () => {
     generation: "d4".repeat(32),
     render: { url: "/mokly-viewer/components/render", token: "opaque" },
   };
-  assert.deepEqual(
-    readLiveDescriptor({
-      ...descriptor,
-      later: 1,
-      render: { ...descriptor.render, method: "POST" },
-    }),
-    descriptor,
-  );
+  assert.deepEqual(readLiveDescriptor(extended(descriptor)), descriptor);
 });
 
 test("a field that contradicts its record's own kind stays invalid", () => {
@@ -152,4 +114,13 @@ test("a field that contradicts its record's own kind stays invalid", () => {
   const index = rawIndexFixture();
   (index.screens[0]!.changes as Raw) = { status: "pending", kind: "changed" };
   assert.throws(() => readCatalogueIndex(index), /cannot carry ready evidence/);
+});
+
+test("an unknown control kind is a new discriminant and fails", () => {
+  const index = richIndex();
+  const action = index.components.find(
+    (entry) => entry.path === "components/action",
+  )!;
+  (action.controls as Raw).label = { kind: "color", label: "Label" };
+  assert.throws(() => readCatalogueIndex(index), /unknown control kind/);
 });
