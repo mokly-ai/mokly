@@ -23,7 +23,7 @@ Any CI system can install the package and run the command directly:
 
 ```shell
 npm ci
-npx --no-install mokly publish --config mokly.config.ts --base origin/main
+npx --no-install mokly publish --config mokly.config.json --base origin/main
 ```
 
 Set `MOKLY_ENDPOINT` and `MOKLY_TOKEN` as secrets of the job rather than

@@ -1081,7 +1081,9 @@ Publish client final review and merge decisions:
 - [ ] Settle Release Please selection for core-only commits under the
       Milestone 15 review decision.
 - [ ] Run the installed static output and Serve smoke after their integration.
-- [ ] Integrate the Milestone 8 part 2 npm-version fix before release checks
+  - [x] Run installed Serve with the tiny HTML catalogue.
+  - [ ] Run installed static output after Milestone 12 supplies the writer.
+- [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
       can pass; the bumped-copy sidecar tests and version-path regression stay
       required.
 - [x] Commit.
@@ -1130,6 +1132,8 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 13 integration follow-up: resolve the full example's CSS-module
+    startup failure so strict build and `npm run dev` smoke checks pass.
   - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
     workflow path in `evidence_contract.mjs`; review numeric workflow identity
     matching so a GitHub `path` ending in `@main` can select valid evidence.
