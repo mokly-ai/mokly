@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::protection::{ProtectedBy, SourcePolicy};
+use mokly_model::namespace;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{Result, invalid};
@@ -26,6 +27,8 @@ pub struct PublicFile {
 pub trait PublicPolicy: Send + Sync {
     /// Decide once per normalized path per generation; return a portable denial.
     fn check(&self, path: &str) -> result::Result<PublicFile, PublicDenial>;
+    /// Recheck live eligibility without using the generation decision cache.
+    fn recheck(&self, path: &str) -> result::Result<PublicFile, PublicDenial>;
 }
 
 /// Public policy with cached accepted and rejected decisions.
@@ -151,7 +154,7 @@ impl FilePolicy {
         if path
             .split('/')
             .next()
-            .is_some_and(|first| first.eq_ignore_ascii_case("mokly-generated"))
+            .is_some_and(|first| first.eq_ignore_ascii_case(namespace::GENERATED_DIRECTORY))
         {
             return Err(PublicDenial::Generated);
         }
@@ -209,6 +212,9 @@ impl FilePolicy {
 }
 
 impl PublicPolicy for FilePolicy {
+    fn recheck(&self, path: &str) -> result::Result<PublicFile, PublicDenial> {
+        self.decide(path, false)
+    }
     fn check(&self, path: &str) -> result::Result<PublicFile, PublicDenial> {
         let mut decisions = self
             .decisions

@@ -14,6 +14,7 @@ pub mod reference_index;
 pub mod references;
 pub mod route_inventory;
 pub mod source_snapshot;
+mod transient;
 pub mod types;
 pub mod urls;
 pub mod workers;

@@ -1,0 +1,711 @@
+---
+source: crates/mokly-server/tests/http/routes_tests.rs
+expression: bytes
+---
+{
+  "changesStatus": "unavailable",
+  "comparisonUrl": null,
+  "components": [
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "status": "unavailable"
+      },
+      "controls": {
+        "count": {
+          "kind": "number",
+          "step": 1
+        },
+        "disabled": {
+          "kind": "boolean"
+        },
+        "label": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/components/button.component.html"
+      },
+      "kind": "component",
+      "path": "components/button",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "New"
+              ]
+            ]
+          ]
+        ],
+        "count": [
+          "number",
+          "2"
+        ],
+        "disabled": [
+          "boolean",
+          false
+        ],
+        "label": [
+          "string",
+          "Save"
+        ]
+      },
+      "slots": [
+        "children",
+        "trailing"
+      ],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Button",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "9bf434ad3882c96bd6ef8cfcbd7121140e4ba0b5287178cb87d6cf67f12bdf22",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "6a3074a722bfc74ede5fb935d0a2d5959eb12f98c386aeb91b6fc4546bd5f3ba",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "2b53a5ddea7545ae02de5dc0cfc213fbf7653614a55cb123e130517566fb98a4",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "1e4e3834af4d95c28a8c6b82fe2980a7589a50f3a0c981e55b8ed1c7917e15d1",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "status": "unavailable"
+      },
+      "controls": {
+        "count": {
+          "kind": "number",
+          "step": 1
+        },
+        "disabled": {
+          "kind": "boolean"
+        },
+        "label": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/components/button.component.html"
+      },
+      "kind": "component",
+      "path": "components/button/disabled",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "New"
+              ]
+            ]
+          ]
+        ],
+        "count": [
+          "number",
+          "2"
+        ],
+        "disabled": [
+          "boolean",
+          true
+        ],
+        "label": [
+          "string",
+          "Save"
+        ]
+      },
+      "slots": [
+        "children",
+        "trailing"
+      ],
+      "suppliedSlots": [
+        "children"
+      ],
+      "tags": [],
+      "title": "Disabled",
+      "variantOf": "components/button",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "684d1d6c9ec460c88e35b1f9d948b5dc3cd3de767c6e55381933858398474cf4",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "80c2facf6c2d7ca3cd5c8b1d9ef81c8ffdaef7c041b560da76ed75e37bc38cd6",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "2e5cabc716b2e8d39717ba241ea45f168f571267e821598e11a80f62b23ea50b",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "345cecc30afcd246de51fb5e616127e956da68d30e4319a04e2cb037ed3b1ec4",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "comparison": {
+        "status": "unavailable"
+      },
+      "controls": {
+        "ignored": {
+          "kind": "boolean"
+        },
+        "title": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/components/card.component.html"
+      },
+      "kind": "component",
+      "path": "components/card",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "ignored": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "ignored": [
+          "boolean",
+          false
+        ],
+        "title": [
+          "string",
+          "Card"
+        ]
+      },
+      "slots": [
+        "children",
+        "header"
+      ],
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Card",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "8c8996cad9b0de350e704f5b1b483de130ff93b67128b056262145fc81f0a717",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "00fe960e24a931c0d4c766a7719b5c78ed66be615b0f48004929ec359c2547cb",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "c364408f78ad9a1e423ff7f7a40be4748c6b2154cfa3b8ad1c1eab523c924d58",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "dd5b012378a5bd739eb06868326f4074840dcdccbe71221c87eddc4c603cd11f",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "documents": [
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/guide.md"
+      },
+      "documentKeys": [
+        {
+          "colorScheme": "light",
+          "documentKey": "d69bca6b921007120a12853fac3b814c3c8c5f7990648a9abe198e0f179dadcd"
+        },
+        {
+          "colorScheme": "dark",
+          "documentKey": "8d496108a8e5c2aca1d3ea515078c2f4aba403583b3721b6f9a7379fb2792026"
+        }
+      ],
+      "kind": "document",
+      "path": "guide",
+      "tags": [],
+      "title": "Guide"
+    }
+  ],
+  "identity": {
+    "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+    "title": "Mokly"
+  },
+  "live": {
+    "generation": "3b875310fbd10e17027e3467a325dd4e8d555881fdf74ffd8f697286e850a57f"
+  },
+  "pages": [
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/page.page.html"
+      },
+      "documentKey": "453aa1da3d9c3b3ddd375768e1ddd7718fd4e3326955041178fc0ff4e4945e73",
+      "kind": "page",
+      "path": "page",
+      "tags": [],
+      "title": "Statement"
+    }
+  ],
+  "removedEntries": [],
+  "revision": 1,
+  "schemaVersion": 7,
+  "screens": [
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {
+        "label": {
+          "kind": "text"
+        },
+        "resource": {
+          "kind": "text"
+        },
+        "visible": {
+          "kind": "boolean"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/home.screen.html"
+      },
+      "kind": "screen",
+      "path": "home",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "label": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "badge",
+          "label",
+          "resource",
+          "visible"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "Ready"
+              ]
+            ]
+          ]
+        ],
+        "label": [
+          "string",
+          "<Save & \"go\">"
+        ],
+        "resource": [
+          "string",
+          "../../specs/assets/public.svg"
+        ],
+        "visible": [
+          "boolean",
+          true
+        ]
+      },
+      "tags": [],
+      "title": "Home & account",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "a48207bbb4a71989b068422592db448e37c5855f64623308ee49ca000a6749f6",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "7d18af8511030804602556bf3d5cbb45c4621ce0ae8506e423f7cfe285056d0a",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "3456ffdac819408c31272d55ad3b3a31265a2f7c21196f6d363654e11d8e9a41",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "f77338954c856dd3c3807f28c59fde583da5b65c27b373b4324cf032160ef8ea",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "unavailable"
+      },
+      "colorSchemes": [
+        "light",
+        "dark"
+      ],
+      "controls": {
+        "label": {
+          "kind": "text"
+        },
+        "resource": {
+          "kind": "text"
+        },
+        "visible": {
+          "kind": "boolean"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/home.screen.html"
+      },
+      "kind": "screen",
+      "path": "home/hidden",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "badge": {
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "label": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "badge",
+          "label",
+          "resource",
+          "visible"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "badge": [
+          "object",
+          [
+            [
+              "text",
+              [
+                "string",
+                "Ready"
+              ]
+            ]
+          ]
+        ],
+        "label": [
+          "string",
+          "<Save & \"go\">"
+        ],
+        "resource": [
+          "string",
+          "../../../specs/assets/public.svg"
+        ],
+        "visible": [
+          "boolean",
+          false
+        ]
+      },
+      "tags": [],
+      "title": "Hidden",
+      "useCasePaths": [],
+      "variantOf": "home",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "27215a4318985ad9410e7ce11d7b905c638d235b34f192768f4bd3fece3624aa",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "dfa5534ec42af2a18ea9dac594294c5521b0091510244522b1f7a27e68c102b5",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "bc2410ef53775006599b0f9ddc544819eb2999707b8bf9fe62436ac0501a4aad",
+          "viewport": "desktop"
+        },
+        {
+          "colorScheme": "dark",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "documentKey": "cb2c41c951a5b1ba7a608e9e7ef35ccb14642dd0b29117b10f05fd53ae7a364a",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "kind": "entry",
+              "path": "components/button/disabled"
+            }
+          ],
+          "kind": "entry",
+          "path": "components/button"
+        },
+        {
+          "kind": "entry",
+          "path": "components/card"
+        }
+      ],
+      "kind": "folder",
+      "path": "components",
+      "title": "Components"
+    },
+    {
+      "kind": "entry",
+      "path": "guide"
+    },
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "home/hidden"
+        }
+      ],
+      "kind": "entry",
+      "path": "home"
+    },
+    {
+      "kind": "entry",
+      "path": "page"
+    }
+  ],
+  "useCases": []
+}

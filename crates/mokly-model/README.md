@@ -52,11 +52,18 @@ by kind, and canonical tagged props in usage and input-change records.
 `ReadError::Contract` carries a typed `ContractViolation`. Version failures
 print the supplied integer or explain its absence.
 
-Instance, slot, and props digest recomputation needs the shared material
-key implementation. Schema checks for recorded usage props and validation of
-usage references, ownership graphs, source locations, and view ordering
-need the index and composition context. These reader checks are in progress;
-the structural detail reader does not substitute guessed context.
+`detail_context::read` validates a current detail against its installed index.
+It checks the identity, deployment, revision, kind, and exact view set.
+`usage_context::validate` checks recorded props against component schemas,
+recomputes the shared props, instance, and slot keys, and checks references,
+cycles, input order, locations, and physical ranges. Historical callers supply
+the component schemas of the base catalogue. A structural detail read alone
+cannot validate relationships that need this context.
+
+`projection` selects current public fields explicitly. It builds the tree,
+index, and pending details from a validated model and the graph's input keys.
+`namespace` owns the fixed deployed directory names and their generated
+TypeScript constants.
 
 `material` owns the shared props, instance, and slot digest preimages.
 `routes` owns Rust artifact routes and portable relative URL operations.

@@ -22,7 +22,12 @@ modules from the sidecar adapter. Its `prepare` method reads stylesheet
 inputs and computes document plans. It renders no document. Each plan carries
 a route and the document node's input hash, which is the public
 `documentKey`. `dyn RenderGeneration` supports on-demand rendering, a full
-build pass, resource reads, and closure queries.
+build pass, resource reads, and closure queries. `generation_key` hashes the complete
+render input set for the live descriptor. `public_files` lists authored files
+reached by completed renders. Serve rechecks their live eligibility at read time.
+`render_props` uses the same composition and validation with a cache that
+retains no transient output. Its closure stays separate from catalogue usage
+and public closure membership.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return

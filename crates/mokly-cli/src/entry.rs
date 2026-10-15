@@ -13,17 +13,17 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_cli::build::{BuildService, CatalogueBuild};
 use mokly_cli::build_output;
 use mokly_cli::codes::Code;
-use mokly_cli::errors::Failure;
 use mokly_cli::grammar::Verb;
 use mokly_cli::options::{Environment, validate};
 use mokly_cli::output::{Style, select};
 use mokly_cli::parsing::{ParseError, parse};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
+use mokly_graph::cache::MemoryCache;
 use mokly_source_interface::tree::SourceTree;
 use terminal_size::{Width, terminal_size};
 
-use crate::entry_publish;
+use crate::{entry_publish, entry_serve};
 
 use super::render_runtime::NativeGraphs;
 
@@ -114,7 +114,10 @@ pub(super) fn main() -> ExitCode {
         };
         let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
         let service: &dyn BuildService = &CatalogueBuild {
-            graphs: Arc::new(NativeGraphs { tree: tree.clone() }),
+            graphs: Arc::new(NativeGraphs {
+                tree: tree.clone(),
+                cache: Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+            }),
             config: Arc::new(Loader { tree: tree.clone() }),
             catalogue: Arc::new(Builder {
                 tree: tree.clone(),
@@ -138,8 +141,9 @@ pub(super) fn main() -> ExitCode {
             }
         };
     }
-    let command = cli.command.as_ref().map_or("serve", Verb::name);
-    let failure = Failure::Unavailable { command };
-    terminal.stderr(&style.failure(&failure, &redactor));
-    ExitCode::FAILURE
+    let (common, options) = match &cli.command {
+        Some(Verb::Serve(command)) => (&command.common, &command.options),
+        _ => (&cli.common, &cli.serve),
+    };
+    entry_serve::run(common, options, &style, redactor, terminal)
 }

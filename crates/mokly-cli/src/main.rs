@@ -2,7 +2,15 @@
 
 mod entry;
 mod entry_publish;
+mod entry_serve;
 mod render_runtime;
+mod serve_candidates;
+mod serve_controls;
+mod serve_rebuild;
+mod serve_reporter;
+mod serve_signals;
+mod serve_state;
+mod serve_timing;
 
 fn main() -> std::process::ExitCode {
     entry::main()

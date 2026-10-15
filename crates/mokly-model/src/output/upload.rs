@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::namespace;
 use crate::output::error::{FormatError, Result};
 use crate::output::json::unique;
 use crate::output::numbers;
@@ -160,7 +161,7 @@ impl UploadMetadata {
                 if text(reference, 255) && hexadecimal(sha, &[40, 64]) =>
             {
                 let generation = path
-                    .strip_prefix("mokly-viewer/diffs/generations/")
+                    .strip_prefix(&namespace::viewer("diffs/generations/"))
                     .and_then(|path| path.strip_suffix("/review.json"));
                 if generation.is_some_and(|generation| hexadecimal(generation, &[64])) {
                     Ok(())

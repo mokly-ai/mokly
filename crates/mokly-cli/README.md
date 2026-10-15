@@ -18,6 +18,15 @@ presentation. The npm shim starts this binary with inherited streams.
 Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
 
+Serve validates an HTML catalogue before it reserves a loopback port. It
+serves its initial state through `mokly-server`, with lazy document rendering,
+canonical public JSON, authenticated live prop previews, and clean signal
+shutdown. In rich watched mode, `r` enqueues a complete manual rebuild. A
+valid candidate replaces the public state and backend with the next revision;
+a failed candidate keeps the last good state. Port 0 requests a free port. An occupied concrete port advances to
+the next available port through 65535. Repeated SIGINT requests coalesce.
+The browser bundle comes from the matching installed `@mokly/viewer` package.
+
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
 Serve accepts `--port`, `--watch`, `--no-watch`, and `--open`. Build accepts
 `--out`, `--strict`, and `--no-changes`. Publish accepts `--endpoint`, `--token`,
@@ -73,6 +82,7 @@ cargo clippy -p mokly-cli --all-targets -- -D warnings
   [redaction](./src/redaction.rs).
 - [Composition root](./src/entry.rs), [native rendering services](./src/render_runtime.rs),
   and [static output adapter](./src/publication/mod.rs).
+- [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

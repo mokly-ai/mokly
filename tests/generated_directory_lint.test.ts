@@ -100,9 +100,10 @@ test("each offending template segment is reported only once", async () => {
   );
 });
 
-test("only the defining module is exempt inside production roots", async () => {
+test("path builders and generated directory definitions are exempt", async () => {
   for (const [filePath, expected] of [
     ["packages/viewer/src/catalogue/delivery_paths.ts", []],
+    ["packages/viewer/src/generated/catalogue/Namespace.ts", []],
     ["packages/viewer/src/catalogue/other_paths.ts", [ruleId]],
     ["packages/viewer/src/client/delivery_paths.ts", [ruleId]],
     ["tests/generated-directory-lint-probe.ts", []],

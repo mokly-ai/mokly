@@ -47,14 +47,22 @@ fn help_and_version_work_in_every_mode_and_subcommand() {
 }
 
 #[test]
-fn absent_subsystems_fail_with_exactly_one_line_and_no_stack() {
+fn serve_checks_configuration_before_it_reports_a_listening_url() {
+    let directory = tempfile::TempDir::new().unwrap();
     for args in [vec![], vec!["serve"]] {
-        let output = run(&args, "rich");
+        let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
+            .args(args)
+            .current_dir(directory.path())
+            .env("MOKLY_OUTPUT", "plain")
+            .env_remove("MOKLY_SIDECARS")
+            .output()
+            .unwrap();
         assert_eq!(output.status.code(), Some(1));
         assert!(output.stdout.is_empty());
         let error = String::from_utf8(output.stderr).unwrap();
         assert_eq!(error.lines().count(), 1);
-        assert!(error.contains("is not available in this build."));
+        assert!(error.starts_with("[mokly/config-missing] "));
+        assert!(!error.contains("stack"));
         assert!(!error.contains("SECRET"));
     }
 }

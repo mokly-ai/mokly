@@ -8,7 +8,7 @@ use mokly_css::error::CssError;
 use mokly_css::resolution::Resolution;
 use mokly_css::resolver::SourceResolver;
 use mokly_css::types::{CssProcessor, IdentityProcessor, ProcessedCss};
-use mokly_graph::cache::MemoryCache;
+use mokly_graph::cache::RenderCache;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::graph::Graph;
 use mokly_graph::source_snapshot::SourceSnapshot;
@@ -21,10 +21,17 @@ use mokly_source_interface::tree::SourceTree;
 /// Resolved-config native graph factory, injected into the build service.
 pub(super) struct NativeGraphs {
     pub(super) tree: Arc<dyn SourceTree>,
+    pub(super) cache: Arc<dyn RenderCache>,
 }
 
 impl GraphFactory for NativeGraphs {
     fn create(&self, config: &ResolvedConfig) -> Result<Arc<dyn RenderGraph>> {
+        if let Some(renderer) = &config.input.renderer {
+            return Err(GraphError::Invalid {
+                route: renderer.clone(),
+                message: format!("JavaScript renderer is unavailable for {renderer}"),
+            });
+        }
         let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(self.tree.clone()));
         let processor: Arc<dyn CssProcessor> = if let Some(module) = &config.input.postcss {
             Arc::new(DeferredPostcss {
@@ -58,7 +65,7 @@ impl GraphFactory for NativeGraphs {
                 }),
                 processor,
             }),
-            cache: Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+            cache: self.cache.clone(),
             workers: Arc::new(workers),
             version: env!("CARGO_PKG_VERSION").into(),
         }))

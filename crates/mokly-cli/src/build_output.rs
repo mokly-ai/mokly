@@ -2,6 +2,7 @@
 
 use mokly_catalogue::diagnostic::{self, Issue, Warning};
 use mokly_catalogue::error::CatalogueError;
+use mokly_graph::error::GraphError;
 use mokly_model::axes::EntryKind;
 
 use crate::build::{BuildError, BuildSummary};
@@ -79,9 +80,7 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
             records.extend(source.warnings());
             mokly_catalogue::diagnostic::normalize_warnings(&mut records);
             let mut output = warnings(style, &records, redactor);
-            for diagnostic in crate::render_errors::diagnostics(source) {
-                output.push_str(&style.error(Code::BuildInvalid, &diagnostic, redactor));
-            }
+            output.push_str(&render_diagnostics(style, source, redactor));
             output
         }
         BuildError::Strict { warnings: records } => {
@@ -142,6 +141,14 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
             style.error(Code::BuildInvalid, &source.to_string(), redactor)
         }
     }
+}
+
+/// Report borrowed graph failures without repeating per-request build warnings.
+pub fn render_diagnostics(style: &Style, error: &GraphError, redactor: &Redactor) -> String {
+    crate::render_errors::diagnostics(error)
+        .iter()
+        .map(|diagnostic| style.error(Code::BuildInvalid, diagnostic, redactor))
+        .collect()
 }
 
 fn issue_text(issue: &Issue, outer: Code) -> String {

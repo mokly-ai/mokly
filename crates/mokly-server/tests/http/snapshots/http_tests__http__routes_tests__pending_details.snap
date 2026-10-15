@@ -1,0 +1,284 @@
+---
+source: crates/mokly-server/tests/http/routes_tests.rs
+expression: "canonical::to_string(&details).unwrap()"
+---
+{
+  "components/button": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "component",
+      "path": "components/button"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": [
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      }
+    ],
+    "workspace": {
+      "affected": [],
+      "comparisonEligible": false,
+      "inputChanges": [],
+      "relatedComponents": [],
+      "usedBy": []
+    }
+  },
+  "components/button/disabled": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "component",
+      "path": "components/button/disabled"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": [
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      }
+    ],
+    "workspace": {
+      "affected": [],
+      "comparisonEligible": false,
+      "inputChanges": [],
+      "relatedComponents": [],
+      "usedBy": []
+    }
+  },
+  "components/card": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "component",
+      "path": "components/card"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": [
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      }
+    ],
+    "workspace": {
+      "affected": [],
+      "comparisonEligible": false,
+      "inputChanges": [],
+      "relatedComponents": [],
+      "usedBy": []
+    }
+  },
+  "guide": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "document",
+      "path": "guide"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": []
+  },
+  "home": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "screen",
+      "path": "home"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": [
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      }
+    ],
+    "workspace": {
+      "affected": [],
+      "comparisonEligible": false,
+      "inputChanges": [],
+      "relatedComponents": [],
+      "usedBy": []
+    }
+  },
+  "home/hidden": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "screen",
+      "path": "home/hidden"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": [
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "mobile"
+      },
+      {
+        "colorScheme": "light",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      },
+      {
+        "colorScheme": "dark",
+        "usage": {
+          "status": "pending"
+        },
+        "viewport": "desktop"
+      }
+    ],
+    "workspace": {
+      "affected": [],
+      "comparisonEligible": false,
+      "inputChanges": [],
+      "relatedComponents": [],
+      "usedBy": []
+    }
+  },
+  "page": {
+    "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "entry": {
+      "kind": "page",
+      "path": "page"
+    },
+    "identity": {
+      "id": "ff97b72b2e48d5b9be97091f2e742747fe24f12a5db0a43fa3a36817b1916fc2",
+      "title": "Mokly"
+    },
+    "revision": 1,
+    "schemaVersion": 1,
+    "views": []
+  }
+}

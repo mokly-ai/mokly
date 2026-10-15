@@ -5,9 +5,9 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Paths And Single Ownership
 
 `mokly-viewer/` is the root of every package-owned public and Serve route.
-The model crate defines the directory names once, beside the
+The model crate defines the directory names once in `namespace`, beside the
 `mokly-generated` document prefix, and the generated TypeScript of
-`@mokly/viewer/data` carries them; every path builder of the binary and of
+`@mokly/viewer/data` carries them in its generated `Namespace` module; every path builder of the binary and of
 the viewer uses that one definition. Identifiers, DOM attributes, and
 protocol names that contain `mokly` are fixed.
 

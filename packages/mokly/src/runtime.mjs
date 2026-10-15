@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { executeNative } from "./execution.mjs";
 
@@ -34,7 +35,16 @@ export function systemRuntime() {
     execute: (binary, arguments_) =>
       executeNative(binary, arguments_, {
         platform: process.platform,
-        spawn,
+        spawn: (binary, arguments_, options) =>
+          spawn(binary, arguments_, {
+            ...options,
+            env: {
+              ...process.env,
+              MOKLY_VIEWER_DIST: path.dirname(
+                fileURLToPath(import.meta.resolve("@mokly/viewer/browser")),
+              ),
+            },
+          }),
         subscribe: (signal, handler) => process.on(signal, handler),
         unsubscribe: (signal, handler) =>
           process.removeListener(signal, handler),

@@ -9,6 +9,7 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::types::StylesheetRoot;
 use mokly_model::axes::{ColorScheme, Viewport};
+use mokly_model::data::Props;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
@@ -54,6 +55,8 @@ pub struct RenderSummary {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Hash of every config, source, stylesheet, and bundle render input.
+    fn generation_key(&self) -> &str;
     /// All document keys, available without any document render.
     fn plans(&self) -> &BTreeMap<String, DocumentPlan>;
     /// Validated private catalogue, including its complete source inventory.
@@ -66,6 +69,18 @@ pub trait RenderGeneration: GeneratedResources {
     fn render_all(&self) -> Result<RenderSummary>;
     /// All generated stylesheet and asset routes of this generation.
     fn resource_routes(&self) -> Vec<String>;
+    /// Render edited props through the same graph without retaining transient bytes.
+    fn render_props(&self, route: &str, props: &Props) -> Result<TransientDocument>;
+    /// All authored files reached by completed documents of this generation.
+    fn public_files(&self) -> BTreeSet<String>;
+}
+
+/// A complete isolated preview with its validated public closure.
+pub struct TransientDocument {
+    /// Rendered document and usage.
+    pub artifact: Arc<Artifact>,
+    /// Referenced authored files to copy into the bounded preview store.
+    pub closure: Closure,
 }
 
 /// Prepare graph nodes against one source-tree generation.

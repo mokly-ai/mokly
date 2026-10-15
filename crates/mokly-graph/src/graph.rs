@@ -208,8 +208,25 @@ impl RenderGraph for Graph {
             }
         }
         let policy: Arc<dyn PublicPolicy> = Arc::new(policy);
+        let mut generation_inputs = vec![config_key.0.as_bytes()];
+        for plan in plans.values() {
+            generation_inputs.push(plan.key.0.as_bytes());
+        }
+        for resource in resources.values() {
+            generation_inputs.push(resource.key.0.as_bytes());
+        }
+        if let Some(bundle) = self.inputs.fragment_generation.as_deref() {
+            generation_inputs.push(bundle.as_bytes());
+        }
+        let generation_key = key(NodeKind::Document, &generation_inputs).0;
         Ok(Arc::new(Session::new(
-            config, catalogue, plans, resources, self, policy,
+            config,
+            catalogue,
+            plans,
+            resources,
+            self,
+            policy,
+            generation_key,
         )))
     }
 }

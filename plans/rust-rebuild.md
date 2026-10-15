@@ -696,23 +696,30 @@ documents, the live descriptor, the update event stream, and shutdown; the
 viewer renders it after Milestone 7. No sidecar starts for a catalogue
 without JavaScript.
 
-- [ ] Restore `npm run dev` to serve `examples/basic/mokly.config.json` with
+- [x] Restore `npm run dev` to serve `examples/basic/mokly.config.json` with
       argument forwarding.
 
-- [ ] Implement the server in `mokly-server`: the stub, the index and entry
+- [x] Implement the server in `mokly-server`: the stub, the index and entry
       detail routes with `Cache-Control: no-store`, the document and asset
       routes, the live descriptor, the event stream with the revision as the
       message id and the deployment id as its data, shutdown ordering, and
       the terminal output contract in the CLI.
-- [ ] Complete context-aware usage readers: validate recorded props against
+- [x] Complete context-aware usage readers: validate recorded props against
       component schemas; recompute instance and slot keys and `propsKey` with
       the shared material key; validate usage references, ownership cycles,
       source locations, duplicate records, root ranges, and view ordering.
-- [ ] Behaviour tests: every route of the shell delivery contract that
+- [x] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
-- [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
+- [x] Treat repeated SIGINT delivery as one Serve shutdown request. The
       POSIX shim may forward a console signal already delivered to the binary.
-- [ ] Commit.
+- [x] Queue manual rebuilds from rich Serve, atomically replace their public
+      state and document backend, and keep last-good state on a failed candidate.
+- [x] Commit.
+
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/merge-decisions.md`.
+Gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m6.md`.
+Smoke and screenshots: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m6-smoke/`.
+Verification and report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-1.md`.
 
 ## Milestone 7: Viewer reads read model v7
 

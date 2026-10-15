@@ -134,6 +134,24 @@ pub enum ContractViolation {
     /// Root resource evidence belongs only to pages.
     #[error("root resource evidence belongs only to pages")]
     DetailEvidence,
+    /// Instance or slot key does not match its material preimage.
+    #[error("invalid usage digest or local id")]
+    UsageKey,
+    /// Usage arrays or input-scope encounter order are invalid.
+    #[error("invalid usage order or duplicate record")]
+    UsageOrder,
+    /// A usage record names an absent or incompatible record.
+    #[error("invalid usage reference")]
+    UsageReference,
+    /// A usage input graph contains a cycle.
+    #[error("usage ownership or slot graph contains a cycle")]
+    UsageCycle,
+    /// A source location is unsafe or has invalid coordinates.
+    #[error("invalid usage source location")]
+    UsageSource,
+    /// Physical region order, parent, root, or coverage is invalid.
+    #[error("invalid usage range")]
+    UsageRange,
     /// Invalid recorded usage props.
     #[error("invalid recorded usage props")]
     UsageProps,

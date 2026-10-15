@@ -1,7 +1,8 @@
 //! On-demand document evaluation and eviction-safe resource reconstruction.
 
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::normalize_warnings;
@@ -11,6 +12,7 @@ use mokly_html::composition::{ComposeRequest, Composer};
 use mokly_html::error::HtmlError;
 use mokly_model::axes::Viewport;
 use mokly_model::catalogue::EntryContent;
+use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
@@ -20,7 +22,9 @@ use crate::error::{GraphError, Result, invalid};
 use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
-use crate::types::{DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan};
+use crate::types::{
+    DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TransientDocument,
+};
 use crate::workers::RenderWorkers;
 use crate::{markdown_links, rendering, route_inventory, styles, validation};
 
@@ -29,13 +33,17 @@ pub(crate) struct Session {
     pub(crate) state: Arc<State>,
 }
 
+#[derive(Clone)]
 pub(crate) struct State {
+    pub(crate) generation_key: String,
+    pub(crate) public_files: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) reference_index: Arc<dyn ReferenceIndex>,
     pub(crate) inputs: DeliveryInputs,
-    pub(crate) config: ResolvedConfig,
-    pub(crate) catalogue: PreparedCatalogue,
-    pub(crate) plans: BTreeMap<String, DocumentPlan>,
-    pub(crate) resources: BTreeMap<String, ResourcePlan>,
+    pub(crate) config: Arc<ResolvedConfig>,
+    pub(crate) catalogue: Arc<PreparedCatalogue>,
+    pub(crate) plans: Arc<BTreeMap<String, DocumentPlan>>,
+    pub(crate) resources: Arc<BTreeMap<String, ResourcePlan>>,
+    pub(crate) temporary_props: Option<(usize, Props)>,
     pub(crate) tree: Arc<dyn SourceTree>,
     pub(crate) composer: Arc<dyn Composer>,
     pub(crate) stylesheets: Arc<dyn StylesheetBundler>,
@@ -52,15 +60,19 @@ impl Session {
         resources: BTreeMap<String, ResourcePlan>,
         graph: &Graph,
         policy: Arc<dyn PublicPolicy>,
+        generation_key: String,
     ) -> Self {
         Self {
             state: Arc::new(State {
+                generation_key,
+                public_files: Arc::new(Mutex::new(BTreeSet::new())),
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
                 inputs: graph.inputs.clone(),
-                config,
-                catalogue,
-                plans,
-                resources,
+                config: Arc::new(config),
+                catalogue: Arc::new(catalogue),
+                plans: Arc::new(plans),
+                resources: Arc::new(resources),
+                temporary_props: None,
                 tree: graph.tree.clone(),
                 composer: graph.composer.clone(),
                 stylesheets: graph.stylesheets.clone(),
@@ -80,7 +92,20 @@ impl Session {
         if let Some(artifact) = self.state.cache.get(&plan.key) {
             return Ok(artifact);
         }
-        let entry = &self.state.catalogue.model.entries[plan.entry];
+        let saved = &self.state.catalogue.model.entries[plan.entry];
+        let entry = match &self.state.temporary_props {
+            Some((index, props)) if *index == plan.entry => {
+                let mut edited = saved.clone();
+                if let EntryContent::Screen { visual, .. }
+                | EntryContent::Component { visual, .. } = &mut edited.content
+                {
+                    visual.props = props.clone();
+                }
+                Cow::Owned(edited)
+            }
+            _ => Cow::Borrowed(saved),
+        };
+        let entry = entry.as_ref();
         let mut composed = if matches!(entry.content, EntryContent::Document { .. }) {
             let resolver = markdown_links::Resolver {
                 tree: self.state.tree.clone(),
@@ -147,6 +172,9 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn generation_key(&self) -> &str {
+        &self.state.generation_key
+    }
     fn plans(&self) -> &BTreeMap<String, DocumentPlan> {
         &self.state.plans
     }
@@ -159,15 +187,18 @@ impl RenderGeneration for Session {
             .document
             .as_ref()
             .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        if let Err(source) = self
+        let closure = match self
             .walker()
             .collect(route, &document.tree, &document.resources)
         {
-            return Err(GraphError::Attempt {
-                failures: vec![source],
-                warnings: document.warnings.clone(),
-            });
-        }
+            Ok(closure) => closure,
+            Err(source) => {
+                return Err(GraphError::Attempt {
+                    failures: vec![source],
+                    warnings: document.warnings.clone(),
+                });
+            }
+        };
         if let Err(source) = validation::links(self, &document.links) {
             return Err(GraphError::Attempt {
                 failures: vec![source],
@@ -177,6 +208,11 @@ impl RenderGeneration for Session {
         self.state
             .cache
             .insert(self.state.plans[route].key.clone(), artifact.clone());
+        self.state
+            .public_files
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .extend(closure.files);
         Ok(artifact)
     }
     fn closure(&self, route: &str) -> Result<Closure> {
@@ -234,5 +270,15 @@ impl RenderGeneration for Session {
     }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()
+    }
+    fn render_props(&self, route: &str, props: &Props) -> Result<TransientDocument> {
+        crate::transient::render(self, route, props)
+    }
+    fn public_files(&self) -> BTreeSet<String> {
+        self.state
+            .public_files
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
     }
 }

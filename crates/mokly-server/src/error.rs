@@ -1,0 +1,74 @@
+//! Typed startup and internal delivery failures.
+
+use std::io;
+
+use mokly_graph::error::GraphError;
+use mokly_model::error::ModelError;
+use mokly_model::readers::ReadError;
+use thiserror::Error;
+
+/// Server operation result.
+pub type Result<T> = std::result::Result<T, ServerError>;
+
+/// Errors callers classify without inspecting text.
+#[derive(Debug, Error)]
+pub enum ServerError {
+    /// No local port could be reserved.
+    #[error("[mokly-server/bind] cannot bind 127.0.0.1 starting at port {port}: {source}")]
+    Bind {
+        /// Requested starting port.
+        port: u16,
+        /// Original socket error.
+        source: io::Error,
+    },
+    /// A document render failed.
+    #[error("[mokly-server/render] {source}")]
+    Render {
+        /// Original typed graph error.
+        source: GraphError,
+    },
+    /// A temporary render passed its admission-to-completion deadline.
+    #[error("[mokly-server/render] temporary render exceeded the ten-second deadline")]
+    Deadline,
+    /// A built viewer inventory or public state is invalid.
+    #[error("[mokly-server/assets] viewer assets or catalogue state are invalid")]
+    InvalidAssets,
+    /// Internal IO, task, and serialization failures.
+    #[error("[mokly-server/internal] {0}")]
+    Internal(#[from] InternalError),
+}
+
+/// Original source types retained across the internal boundary.
+#[derive(Debug, Error)]
+pub enum InternalError {
+    /// Filesystem or socket operation failed.
+    #[error("IO failed: {source}")]
+    Io {
+        /// Original failure.
+        source: io::Error,
+    },
+    /// Model encoding failed.
+    #[error("model encoding failed: {source}")]
+    Model {
+        /// Original failure.
+        source: ModelError,
+    },
+    /// JSON decoding failed.
+    #[error("JSON failed: {source}")]
+    Json {
+        /// Original failure.
+        source: serde_json::Error,
+    },
+    /// A projected record is invalid.
+    #[error("public state failed validation: {source}")]
+    Read {
+        /// Original failure.
+        source: ReadError,
+    },
+    /// A worker did not finish normally.
+    #[error("worker failed: {source}")]
+    Task {
+        /// Original failure.
+        source: tokio::task::JoinError,
+    },
+}

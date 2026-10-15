@@ -1,10 +1,10 @@
 import { encodeUrlPath, isSafeCatalogueRoute } from "../data/paths.js";
+import {
+  GENERATED_DIRECTORY,
+  VIEWER_DIRECTORY,
+} from "../generated/catalogue/Namespace.js";
 
-/** Public output directory shared by the viewer and CLI. */
-export const GENERATED_DIRECTORY = "mokly-generated" as const;
-
-/** Public resource directory shared by the viewer and CLI. */
-export const VIEWER_DIRECTORY = "mokly-viewer" as const;
+export { GENERATED_DIRECTORY, VIEWER_DIRECTORY };
 
 /** Map a logical document route to the fixed current static path. */
 export function currentDocumentPath(route: string): string {
