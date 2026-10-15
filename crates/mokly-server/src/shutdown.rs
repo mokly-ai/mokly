@@ -20,7 +20,7 @@ pub trait Lifecycle: Send + Sync {
     async fn release(&self) -> Result<()>;
 }
 
-/// Fixed HTML catalogue has no watcher, Git, or sidecar process.
+/// Empty hooks for callers that manage subsystem cleanup separately.
 pub struct FixedLifecycle;
 #[async_trait]
 impl Lifecycle for FixedLifecycle {

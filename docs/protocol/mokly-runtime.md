@@ -99,16 +99,18 @@ is `build`.
 
 ## Sidecar Pool
 
-A sidecar starts only when the catalogue needs JavaScript: a `.mockup.tsx`
-entry, a registered JavaScript component, a Storybook stories file, or a
-configured renderer, or consumer PostCSS module. A catalogue of HTML, YAML,
-and Markdown files with neither module starts none. The pool, its size, the request deadlines, the recycling thresholds,
-and the fail-closed codes belong to the
-[sidecar contract](./mokly-sidecar.md). The core owns every decision the
-sidecar does not make: which renders run, the cache keys, invalidation, and
-the composed document. A sidecar failure fails the request that needed it
-with its typed code and never makes an unrelated route or shutdown
-unavailable.
+A sidecar starts when the catalogue uses any of these inputs:
+
+- A JavaScript entry or registered JavaScript component.
+- A Storybook stories file.
+- A configured renderer module.
+- A stylesheet processed by a consumer PostCSS module.
+
+HTML, YAML, and Markdown alone start no sidecar. The
+[sidecar contract](./mokly-sidecar.md) defines pool size, deadlines, recycling,
+and failure codes. The core selects renders, cache keys, invalidation, and
+document composition. A sidecar failure affects the request that needs it.
+Other routes and shutdown stay available.
 
 ## Routes
 
@@ -197,9 +199,9 @@ command.
 
 ## Shutdown
 
-Serve installs its `SIGINT` and `SIGTERM` handling before it reports the
-listening URL, so an interrupt at any later moment closes it cleanly. Shutdown
-runs in this order:
+Serve installs its `SIGINT`, `SIGTERM`, and `SIGHUP` handling before it
+reports the listening URL. An interrupt at any later moment closes it cleanly.
+Shutdown runs in this order:
 
 1. Stop accepting connections, end every event stream, and close every
    remaining client connection, including incomplete requests.

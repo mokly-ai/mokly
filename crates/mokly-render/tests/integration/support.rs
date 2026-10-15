@@ -24,6 +24,8 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 use tempfile::TempDir;
 
+use super::process_counts::{CountedFactory, ProcessCounts};
+
 #[path = "../../../../tests/rust/package_version.rs"]
 pub(super) mod package_version;
 
@@ -58,6 +60,7 @@ pub(super) struct Consumer {
     pub(super) directory: TempDir,
     pub(super) runtime: Arc<Runtime>,
     pub(super) pool: Arc<CapturedPool>,
+    pub(super) processes: Arc<ProcessCounts>,
 }
 
 impl Consumer {
@@ -84,15 +87,19 @@ impl Consumer {
         )
         .unwrap();
         let clock = Arc::new(SystemClock::new());
+        let processes = Arc::new(ProcessCounts::default());
         let pool = Arc::new(CapturedPool {
             calls: Mutex::new(Vec::new()),
             inner: Arc::new(Pool::new(
-                Arc::new(NodeFactory::new(
-                    Arc::new(SystemProcessGroups),
-                    clock.clone(),
-                    Arc::new(Reporter::default()),
-                    Arc::new(SystemMemory),
-                )),
+                Arc::new(CountedFactory {
+                    inner: Arc::new(NodeFactory::new(
+                        Arc::new(SystemProcessGroups),
+                        clock.clone(),
+                        Arc::new(Reporter::default()),
+                        Arc::new(SystemMemory),
+                    )),
+                    counts: processes.clone(),
+                }),
                 clock,
                 Launch {
                     node: "node".into(),
@@ -119,6 +126,7 @@ impl Consumer {
             directory,
             runtime,
             pool,
+            processes,
         }
     }
 
