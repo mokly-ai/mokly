@@ -966,7 +966,7 @@ Tags: ui
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
-- [ ] Make the viewer follow the settled design copy and states of the design
+- [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
       `design/components/controls/**`,
@@ -975,6 +975,9 @@ Tags: ui
       `mokly-shell-delivery.md`, and `mokly-component-controls-design.md`. The
       copy tables in `.context/rust-rebuild/delegation/m5-example/report-2.md`
       and `report-3.md` there list the differences from the viewer.
+
+Settled copy and states with their Serve run: `.context/rust-rebuild/m10-copy-run/log.md`.
+
 - [ ] Commit.
 
 ## Milestone 11: Watch and incremental rendering

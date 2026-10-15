@@ -68,6 +68,7 @@ export function ComponentWorkspace({
     comparing,
     contexts: savedViews,
     data,
+    onCurrent: () => comparison.selectMode("current"),
     target: editTarget,
     workspaceRef,
   });
@@ -179,7 +180,10 @@ export function ComponentWorkspace({
   ) : editTarget && (entry.kind === "component" || hasControls(editTarget)) ? (
     controls.panel
   ) : (
-    <WorkspaceProps data={data} selection={{}} />
+    <WorkspaceProps
+      data={data}
+      selection={activeView?.usage ? { usage: activeView.usage } : {}}
+    />
   );
   const highlight = {
     available: inspection.available,
@@ -215,7 +219,11 @@ export function ComponentWorkspace({
       />
       <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
       <div className="mbk-workspace-panes">
-        <div className="mbk-preview-pane" data-workspace-preview="">
+        <div
+          aria-busy={controls.pending || undefined}
+          className="mbk-preview-pane"
+          data-workspace-preview=""
+        >
           {preview ? (
             <RemovedPreviewStage data={preview} />
           ) : data.comparisons ? (
@@ -230,6 +238,7 @@ export function ComponentWorkspace({
           ) : (
             stage
           )}
+          {controls.previewStatus}
         </div>
         <Inspector
           catalogue={catalogue}

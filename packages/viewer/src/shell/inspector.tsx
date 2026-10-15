@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import type { Catalogue } from "./catalogue.js";
+import { CONTROLS_COPY } from "./component_controls_copy.js";
 import { EntryDetailsBody } from "./details.js";
 import {
   useShellIdentifier,
@@ -57,7 +58,7 @@ export function Inspector({
           },
         ]
       : []),
-    { id: "props", title: "Props" },
+    { id: "props", title: CONTROLS_COPY.tab },
     { id: "usage", title: "Usage" },
   ];
   const active = store?.state.inspectorTab;

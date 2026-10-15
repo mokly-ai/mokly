@@ -20,6 +20,8 @@ import type { ManifestEntry } from "../registry/types.js";
 /** The shown entry whose props the controls edit: an entry's own or merged props. */
 export interface ControlTarget {
   path: string;
+  /** The shown entry's own title, which the panel and its Reset name. */
+  title: string;
   kind: "screen" | "component";
   propSchema: PropSchema;
   props: ComponentWireProps;
@@ -36,6 +38,9 @@ export interface ControlDraftField {
 
 /** Draft values keyed by declared controlled prop. */
 export type ControlDraft = Readonly<Record<string, ControlDraftField>>;
+
+/** The error key of props whose values are not valid together. */
+export const WHOLE_PROPS_ERROR = "";
 
 /** Validated overrides and field-specific product errors. */
 export interface ValidatedControlDraft {
@@ -127,7 +132,9 @@ export function validateControlDraft(
     try {
       validateProps(target.propSchema, merged, target.path);
     } catch {
-      return { errors: { "": "Check the highlighted values." } };
+      return {
+        errors: { [WHOLE_PROPS_ERROR]: "These values are not valid together." },
+      };
     }
   return {
     errors,
@@ -211,6 +218,7 @@ export function controlTarget(
     return row
       ? {
           path: row.value.path,
+          title: row.value.title,
           kind: "component",
           propSchema: row.value.propSchema,
           props: row.value.props,
@@ -222,6 +230,7 @@ export function controlTarget(
   if (entry.kind !== "screen" || !entry.propSchema) return undefined;
   return {
     path: entry.path,
+    title: entry.title,
     kind: "screen",
     propSchema: entry.propSchema,
     props: entry.props ?? {},

@@ -77,7 +77,7 @@ test("bare removed routes announce only published snapshot identity", () => {
   ]);
 });
 
-test("component variant heads keep the parent heading and shown entry path", () => {
+test("component variant heads show the parent heading, its crumbs, and the shown path", () => {
   const parent = catalogue.byPath.get("components/action");
   assert.ok(parent?.kind === "component" && !("variantOf" in parent));
   assert.deepEqual(targetHead(catalogue, { kind: "entry", entry: parent }), {
@@ -95,10 +95,10 @@ test("component variant heads keep the parent heading and shown entry path", () 
   const head = targetHead(catalogue, { kind: "entry", entry: variant });
   assert.equal(head.title, "Action");
   assert.equal(head.path, "components/action/default");
-  assert.deepEqual(head.crumbs.at(-1), {
-    href: "/view/components/action/",
-    label: "Action",
-  });
+  assert.deepEqual(
+    head.crumbs,
+    targetHead(catalogue, { kind: "entry", entry: parent }).crumbs,
+  );
 });
 
 test("unknown frame routes mutate only uncontrolled host display state", () => {

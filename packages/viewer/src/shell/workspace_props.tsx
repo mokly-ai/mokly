@@ -11,6 +11,7 @@ import type {
 } from "../components/prop_types.js";
 import { viewHref } from "../navigation/routes.js";
 
+import { CONTROLS_COPY } from "./component_controls_copy.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
@@ -34,6 +35,21 @@ export function propText(value: PropValue): string {
     .join(", ")}}`;
 }
 
+/**
+ * The Props tab of an entry without own props and no selected instance:
+ * waiting for its usage, without props, unavailable, or a selection prompt.
+ */
+function emptyProps(
+  data: WorkspaceData,
+  usage: ComponentViewRecord | undefined,
+): string {
+  if (data.viewUsagePending) return WAITING_REASON;
+  if (usage && !usage.instances.length) return CONTROLS_COPY.noProps;
+  if (!usage && data.entry.kind === "screen")
+    return "Props are unavailable for this screen.";
+  return "Select a component instance to see its supplied props.";
+}
+
 /** Read-only prop details used for inspected instances and undeclared fields. */
 export function WorkspaceProps({
   data,
@@ -45,10 +61,11 @@ export function WorkspaceProps({
   const props = selection.instance?.props ?? selection.props;
   if (!props)
     return (
-      <p role={data.viewUsagePending ? "status" : undefined}>
-        {data.viewUsagePending
-          ? WAITING_REASON
-          : "Select a component instance to see its supplied props."}
+      <p
+        className={data.viewUsagePending ? undefined : "mbk-empty-copy"}
+        role={data.viewUsagePending ? "status" : undefined}
+      >
+        {emptyProps(data, selection.usage)}
       </p>
     );
   const component = selection.instance

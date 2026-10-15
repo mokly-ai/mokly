@@ -48,8 +48,13 @@ for (const screenPath of [
   test(`the embedded viewer renders ${screenPath ?? "the catalogue home"} from catalogue data`, () => {
     const html = embeddedMarkup({ defaultSelection: { screenPath } });
     assert.match(html, /data-mokly-shell/);
-    if (screenPath === "unknown-item") assert.match(html, /Item not found/);
-    else if (screenPath) {
+    if (screenPath === "unknown-item") {
+      assert.match(
+        html,
+        /<h2>Item not found<\/h2><p>Nothing in the catalogue matches <code>unknown-item<\/code><\/p><a class="mbk-empty-link" href="\/">Go to the catalogue home<\/a>/,
+      );
+      assert.doesNotMatch(html, /mokly build|renamed or removed/);
+    } else if (screenPath) {
       // The first render waits for the entry's detail; its frames follow it.
       assert.match(html, /aria-busy="true"[^>]*><p role="status">Loading/);
       assert.doesNotMatch(html, /<iframe/);
@@ -141,7 +146,7 @@ test("independent embedded viewers keep IDs and references root-local", () => {
   assert.ok(htmlReferences(second).every((id) => secondIds.has(id)));
 });
 
-test("distinct identifier prefixes cannot absorb dynamic control IDs", () => {
+test("distinct identifier prefixes keep roots apart; published props have no fields", () => {
   const index = rawIndexFixture();
   const component = index.components[0]!;
   if (component.variantOf !== undefined)
@@ -160,24 +165,47 @@ test("distinct identifier prefixes cannot absorb dynamic control IDs", () => {
     };
     entry.props = { ...entry.props, "mb-main": entry.props.label! };
   }
-  const render = (identifierPrefix: string) =>
-    htmlIds(
-      embeddedMarkup({
-        index,
-        defaultSelection: { screenPath: component.path },
-        identifierPrefix,
-      }),
-    );
-  const firstIds = render("x");
-  const secondIds = render("x-mb-prop-action");
+  const markup = (identifierPrefix: string) =>
+    embeddedMarkup({
+      index,
+      defaultSelection: { screenPath: component.path },
+      identifierPrefix,
+    });
+  const first = markup("x");
+  const firstIds = htmlIds(first);
+  const secondIds = htmlIds(markup("x-mb-prop-action"));
 
-  assert.ok(
-    [...firstIds].some((id) =>
-      id.endsWith(`mb-prop-${component.path}-mb-main`),
-    ),
+  const props = first.slice(
+    first.indexOf('data-inspector-panel="props"'),
+    first.indexOf('data-inspector-panel="usage"'),
   );
+  assert.match(
+    props,
+    /<h3>Saved props<\/h3><p>Action<\/p><\/div><\/div><p class="mbk-controls-notice">Open this catalogue locally to edit props\.<\/p>/,
+  );
+  assert.match(props, /<th scope="row">mb-main<\/th>/);
+  assert.doesNotMatch(props, /<input|<select|mb-prop-/);
   assert.deepEqual(
     [...firstIds].filter((id) => secondIds.has(id)),
     [],
+  );
+});
+
+test("an index of another version shows the version headline without an action", () => {
+  const index = { ...fixture, schemaVersion: 8 } as unknown as typeof fixture;
+  const html = embeddedMarkup({ index });
+  assert.match(
+    html,
+    /role="alert"[^>]*><h2>This catalogue needs a compatible viewer<\/h2><\/div>/,
+  );
+  assert.doesNotMatch(html, /<button|Try again|Reload/);
+});
+
+test("an index that cannot be read offers Try again under its headline", () => {
+  const index = { ...fixture, tree: "not a tree" } as unknown as typeof fixture;
+  const html = embeddedMarkup({ index });
+  assert.match(
+    html,
+    /<h2>The catalogue could not be loaded<\/h2><button class="mbk-empty-link" type="button">Try again<\/button>/,
   );
 });

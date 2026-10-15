@@ -13,6 +13,7 @@ import type { ControlTarget } from "../src/shell/control_values.js";
 
 const target: ControlTarget = {
   path: "components/action",
+  title: "Action",
   kind: "component",
   propSchema: {
     type: "object",

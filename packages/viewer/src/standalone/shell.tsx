@@ -60,12 +60,19 @@ export function StandaloneShell({
     );
     return () => controller.abort();
   }, [attempt, win]);
-  if (state.kind === "version") return <VersionFailure error={state.error} />;
+  if (state.kind === "version")
+    return (
+      <VersionFailure
+        error={state.error}
+        reload={() => win.location.reload()}
+      />
+    );
   if (state.kind === "failed")
     return (
       <div className="mbk mbk-empty" role="alert">
         <h2>The catalogue could not be loaded</h2>
         <button
+          className="mbk-empty-link"
           onClick={() => {
             setState({ kind: "loading" });
             setAttempt((value) => value + 1);
@@ -78,8 +85,8 @@ export function StandaloneShell({
     );
   if (state.kind === "loading")
     return (
-      <div className="mbk mbk-empty" role="status">
-        Loading catalogue…
+      <div aria-busy="true" className="mbk mbk-empty">
+        <p role="status">Loading catalogue…</p>
       </div>
     );
   return (

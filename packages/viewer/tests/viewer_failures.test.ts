@@ -46,6 +46,10 @@ test("another deployment reports once, and a newer format as a version error", (
     code: "catalogue",
     message: "The catalogue changed. Reload it to see the new version.",
   });
-  assert.equal(errors[1]!.code, "version");
-  assert.match(errors[1]!.details ?? "", /detail version 2/);
+  assert.deepEqual(errors[1], {
+    code: "version",
+    message: "This catalogue needs a compatible viewer",
+    details:
+      "Unsupported Mokly detail version 2; this viewer supports version 1.",
+  });
 });

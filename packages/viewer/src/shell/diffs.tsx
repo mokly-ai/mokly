@@ -120,14 +120,16 @@ function ComparisonFailure({
 }) {
   return (
     <>
-      <p role={versionError ? "alert" : undefined}>
-        {versionError
-          ? VERSION_ERROR_MESSAGE
-          : "The comparison could not be loaded."}{" "}
-        <button data-diff-refresh="" onClick={retry} type="button">
-          Try again
-        </button>
-      </p>
+      {versionError ? (
+        <p role="alert">{VERSION_ERROR_MESSAGE}</p>
+      ) : (
+        <p>
+          The comparison could not be loaded.{" "}
+          <button data-diff-refresh="" onClick={retry} type="button">
+            Try again
+          </button>
+        </p>
+      )}
       <details data-comparison-failure="">
         <summary>Comparison details</summary>
         <p>{details}</p>

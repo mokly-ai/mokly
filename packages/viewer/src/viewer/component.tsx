@@ -127,24 +127,30 @@ export function MoklyViewer(props: MoklyViewerProps) {
         role="alert"
         {...themeAttributes(props.theme)}
       >
-        <h2>
-          {!invalidMode && versionError
-            ? VERSION_ERROR_MESSAGE
-            : "The catalogue could not be loaded"}
-        </h2>
-        <button type="button" onClick={source.retry}>
-          Try again
-        </button>
+        {!invalidMode && versionError ? (
+          <h2>{VERSION_ERROR_MESSAGE}</h2>
+        ) : (
+          <>
+            <h2>The catalogue could not be loaded</h2>
+            <button
+              className="mbk-empty-link"
+              onClick={source.retry}
+              type="button"
+            >
+              Try again
+            </button>
+          </>
+        )}
       </div>
     );
   if (!source.loaded)
     return (
       <div
+        aria-busy="true"
         className={`${VIEWER_DIRECTORY} mbk-empty`}
-        role="status"
         {...themeAttributes(props.theme)}
       >
-        Loading catalogue…
+        <p role="status">Loading catalogue…</p>
       </div>
     );
   return (

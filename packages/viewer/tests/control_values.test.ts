@@ -8,6 +8,7 @@ import {
   controlDraft,
   numberInputBounds,
   validateControlDraft,
+  WHOLE_PROPS_ERROR,
   type ControlTarget,
 } from "../src/shell/control_values.js";
 
@@ -17,6 +18,7 @@ const NUMBER_ERROR = "Enter a number within the allowed range.";
 
 const target: ControlTarget = {
   path: "components/action",
+  title: "Action",
   kind: "component",
   propSchema: {
     type: "object",
@@ -157,8 +159,8 @@ test("text length counts code points, like the schema", () => {
   );
 });
 
-test("the complete props must satisfy the schema", () => {
+test("props that fail together name no field", () => {
   assert.deepEqual(validateControlDraft(target, draft({ label: undefined })), {
-    errors: { "": "Check the highlighted values." },
+    errors: { [WHOLE_PROPS_ERROR]: "These values are not valid together." },
   });
 });
