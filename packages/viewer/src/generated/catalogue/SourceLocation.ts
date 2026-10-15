@@ -7,11 +7,11 @@ export type SourceLocation = {
  */
 path: string,
 /**
- * One-based line.
+ * One-based line, or zero when no source coordinate is available.
  */
 line: number,
 /**
- * One-based column.
+ * One-based column, or zero when no source coordinate is available.
  */
 column: number,
 /**

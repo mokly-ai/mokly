@@ -1,22 +1,30 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
-import { destination, optionalText, text } from "../schemas.js";
+import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
 import { EmptyStateView } from "./empty-state.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
   properties: {
     title: text,
     body: text,
-    code: optionalText,
-    actionLabel: optionalText,
+    code: text,
+    actionLabel: text,
     destination,
+    busy: flag,
   },
 } as const;
-export type EmptyStateProps = ComponentProps<typeof propSchema, []>;
+export type EmptyStateProps = LibraryProps<typeof propSchema>;
+const home = {
+  title: "Mokly",
+  body: "Browse the mockup catalogue generated from this repository.",
+  actionLabel: "Open the first screen",
+  destination: DESTINATIONS.welcome,
+} as const;
 export const emptyState = defineComponent({
   ...libraryMetadata(
     "preview",
@@ -25,9 +33,11 @@ export const emptyState = defineComponent({
     "Guidance when there is no screen or comparison to display.",
   ),
   propSchema,
+  props: home,
   controls: {
     title: { kind: "text", label: "Title" },
     body: { kind: "text", label: "Description" },
+    busy: { kind: "boolean", label: "Loading" },
     actionLabel: { kind: "text", label: "Action label" },
   },
   render: EmptyStateView,
@@ -35,12 +45,7 @@ export const emptyState = defineComponent({
     {
       slug: "home",
       title: "Catalogue home",
-      props: {
-        title: "Mokly",
-        body: "Browse the mockup catalogue generated from this repository.",
-        actionLabel: "Open the first screen",
-        destination: DESTINATIONS.welcome,
-      },
+      props: home,
     },
     {
       slug: "missing-route",

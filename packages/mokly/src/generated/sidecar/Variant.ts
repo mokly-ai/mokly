@@ -7,6 +7,10 @@ import type { JsonValue } from "./JsonValue.js";
 // prettier-ignore
 export type Variant = {
 /**
+ * Non-data inference exclusions, before catalogue path derivation.
+ */
+excludedProps?: Array<string>,
+/**
  * Authored final path segment.
  */
 slug: string,

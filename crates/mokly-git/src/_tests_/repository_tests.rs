@@ -236,6 +236,19 @@ fn tree_count_and_archive_total_are_bounded_before_io() {
 }
 
 #[test]
+fn source_archive_file_limits_name_the_file_before_extraction() {
+    let listing = format!("100644 blob {} 3\tasset.bin\0", id());
+    let repo = repository(Unimock::new(
+        RunnerMock::run
+            .next_call(matching!(_))
+            .returns(output(listing.as_bytes())),
+    ));
+    assert!(
+        matches!(repo.extract(&id(), Path::new("/dest"), Limits { blob: 2, ..Limits::default() }), Err(Error::BlobLimit { path, limit: 2 }) if path == "asset.bin")
+    );
+}
+
+#[test]
 fn renames_keep_the_utf8_side_when_the_other_side_is_not_utf8() {
     let added = changes::parse(b"R100\0old-\xff\0new.screen.html\0").unwrap();
     assert_eq!(added.len(), 1);

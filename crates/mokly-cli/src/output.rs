@@ -30,6 +30,7 @@ pub fn select(debug_timings: bool, output: Option<&str>, ci: Option<&str>, tty: 
 }
 
 /// Presentation settings read by the binary, independently of mode selection.
+#[derive(Clone)]
 pub struct Style {
     /// Selected reporter.
     pub mode: Mode,

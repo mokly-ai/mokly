@@ -2,6 +2,7 @@
 #![warn(unreachable_pub)]
 
 pub mod compiler;
+pub mod dependencies;
 pub mod error;
 pub mod modules;
 pub mod names;
@@ -55,5 +56,6 @@ pub mod observation;
 #[path = "_tests_/attribution_tests.rs"]
 mod attribution_tests;
 
+mod compiler_assets;
 mod css_boundaries;
 mod selector_nesting;

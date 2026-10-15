@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use mokly_model::axes::ColorScheme;
 use mokly_model::catalogue::UseCaseStep;
+use mokly_model::controls::ComponentControl;
 use mokly_model::data::Props;
 use serde::Deserialize;
 use serde_json::Value;
@@ -57,6 +58,11 @@ pub struct EntryInput {
     /// Ordered use-case steps.
     #[serde(default)]
     pub steps: Vec<UseCaseStep>,
+    /// Explicit controls replace the schema-derived controls.
+    pub controls: Option<BTreeMap<String, ComponentControl>>,
+    /// Stories infer a component schema from their args.
+    #[serde(skip)]
+    pub infer_component_schema: bool,
 }
 
 /// One saved props and metadata override.

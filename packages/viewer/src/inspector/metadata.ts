@@ -2,7 +2,10 @@ import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { ComponentRangeRecord } from "../components/manifest_types.js";
 
 import { array, boundedJson, identity, key, object, shape } from "./values.js";
-/** Range index n is r-n; null keys identify slots and null parents identify roots. */
+/**
+ * Range index n is r-n; null keys identify slots and null parents identify
+ * top-level ranges. `[null, null]` at index 0 is a component page's root region.
+ */
 export type InspectorRange = readonly [
   key: string | null,
   parent: number | null,

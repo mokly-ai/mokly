@@ -1,5 +1,6 @@
 //! Platform-independent path identity grammar.
 
+use crate::namespace;
 /// Whether a segment names a Windows device, without regard to case.
 pub fn is_windows_device_name(value: &str) -> bool {
     let value = value.to_ascii_lowercase();
@@ -26,7 +27,7 @@ pub fn is_entry_path(value: &str) -> bool {
         && !value
             .split('/')
             .next()
-            .is_some_and(|first| first.eq_ignore_ascii_case("mokly-generated"))
+            .is_some_and(|first| first.eq_ignore_ascii_case(namespace::GENERATED_DIRECTORY))
 }
 
 /// Consistent title fallback for valid slugs.

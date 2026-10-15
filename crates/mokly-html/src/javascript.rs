@@ -3,10 +3,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 
+use mokly_catalogue::render_sources::RenderMethod;
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::EntryContent;
 use mokly_model::material::digest;
-use mokly_model::routes;
 
 use crate::composition::Engine;
 use crate::context::Context;
@@ -14,10 +14,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::{FragmentRequest, RenderKind};
 use crate::tree::Node;
-use crate::{
-    fragment_rebase, fragment_validation, markers, parse, raw_markers, relative_links,
-    source_checks,
-};
+use crate::{fragment_rebase, fragment_validation, markers, parse, relative_links, source_checks};
 
 impl Engine<'_> {
     pub(crate) fn javascript(
@@ -39,10 +36,39 @@ impl Engine<'_> {
                     format!("unknown JavaScript definition {path}"),
                 )
             })?;
-        let handle = format!(
-            "{}#{}",
-            entry.metadata.source.path,
-            entry.metadata.source.export.as_deref().unwrap_or("default")
+        let effective = if self
+            .request
+            .entry
+            .metadata
+            .variant_of
+            .as_deref()
+            .unwrap_or(&self.request.entry.metadata.path)
+            == path
+        {
+            self.request.entry
+        } else {
+            entry
+        };
+        let recipe = self
+            .request
+            .catalogue
+            .javascript
+            .entries
+            .get(&effective.metadata.path);
+        let kind = if recipe.is_some_and(|source| source.method == RenderMethod::Story) {
+            RenderKind::Story
+        } else {
+            kind
+        };
+        let handle = recipe.map_or_else(
+            || {
+                format!(
+                    "{}#{}",
+                    entry.metadata.source.path,
+                    entry.metadata.source.export.as_deref().unwrap_or("default")
+                )
+            },
+            |source| source.handle.clone(),
         );
         let tokens: BTreeMap<_, _> = context
             .slots
@@ -56,12 +82,15 @@ impl Engine<'_> {
             .collect();
         let mut result = self.fragments.render(&FragmentRequest {
             handle,
+            entry_path: effective.metadata.path.clone(),
+            entry_title: effective.metadata.title.clone(),
             kind,
             props: context.props.clone(),
             viewport: self.request.viewport,
             color_scheme: self.request.color_scheme,
             ignore_enabled: context.ignore,
             slots: tokens.clone(),
+            saved_slots: recipe.map_or_else(BTreeMap::new, |source| source.slots.clone()),
         })?;
         self.styles.extend(result.styles.clone());
         self.resources.extend(result.resources.clone());
@@ -76,8 +105,15 @@ impl Engine<'_> {
         } else {
             parse::fragment(&result.html)
         };
-        let mut nodes =
-            markers::attach(nodes, &result, self.request.catalogue, &mut self.ignore_ids)?;
+        let own_component = matches!(self.request.entry.content, EntryContent::Component { .. })
+            && effective.metadata.path == self.request.entry.metadata.path;
+        let mut nodes = markers::attach(
+            nodes,
+            &result,
+            self.request.catalogue,
+            &mut self.ignore_ids,
+            own_component.then_some(path),
+        )?;
         relative_links::fragment(
             &mut nodes,
             &context.link_base,
@@ -91,12 +127,6 @@ impl Engine<'_> {
             &mut result.slots,
             context,
         )?;
-        let route = routes::view(
-            &self.request.entry.metadata.path,
-            self.request.viewport,
-            self.request.color_scheme,
-        );
-        raw_markers::warnings(&nodes, &route, &mut self.warnings);
         for instance in result.instances {
             if let Some(existing) = self.instances.get(&instance.key) {
                 if !context.replay
@@ -129,7 +159,11 @@ impl Engine<'_> {
         {
             self.components.push(path.into());
         }
-        Ok(nodes)
+        if page {
+            self.nodes(nodes, context)
+        } else {
+            Ok(nodes)
+        }
     }
 
     fn placeholders(

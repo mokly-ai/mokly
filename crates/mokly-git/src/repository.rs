@@ -257,7 +257,10 @@ impl Repository for GitRepository {
         let mut bytes = 0usize;
         for entry in &entries {
             if entry.size > limits.blob {
-                return Err(Error::ByteLimit { limit: limits.blob });
+                return Err(Error::BlobLimit {
+                    path: entry.path.to_string(),
+                    limit: limits.blob,
+                });
             }
             bytes = bytes.saturating_add(entry.size);
             if bytes > limits.bytes {

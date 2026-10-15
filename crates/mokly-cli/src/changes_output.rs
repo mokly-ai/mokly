@@ -3,8 +3,18 @@
 use mokly_compare::comparison_types::ComparisonCounts;
 
 use crate::build::BuildChanges;
+use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::redaction::Redactor;
+
+/// A historical source diagnostic keeps its terminal category.
+#[derive(Clone, Debug)]
+pub struct ChangeDiagnostic {
+    /// Original configuration or build category.
+    pub code: Code,
+    /// Authored diagnostic text, without crate display wrappers.
+    pub message: String,
+}
 
 /// Rich completion line. Plain commands emit no phase lines.
 pub fn ready(style: &Style, counts: ComparisonCounts) -> String {
@@ -68,7 +78,11 @@ pub fn diagnostics(style: &Style, changes: &BuildChanges, redactor: &Redactor) -
         } => diagnostics
             .iter()
             .map(|diagnostic| {
-                let text = redactor.safe(&format!("base {base_commit}: {diagnostic}"));
+                let text = redactor.safe(&format!(
+                    "base {base_commit}: [mokly/{}] {}",
+                    diagnostic.code.presentation().0,
+                    diagnostic.message
+                ));
                 format!(
                     "{}\n",
                     if style.mode == Mode::Plain {

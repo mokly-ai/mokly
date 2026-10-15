@@ -1,3 +1,1 @@
-import { toolbar } from "./toolbar.mokly.js";
-
-export const mockups = toolbar.entries;
+export { toolbar } from "./toolbar.mokly.js";

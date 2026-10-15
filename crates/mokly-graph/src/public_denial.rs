@@ -5,6 +5,18 @@ use thiserror::Error;
 /// Typed public-file denials keep source-protection precedence observable.
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum PublicDenial {
+    /// A consumer plugin reported this exact private source.
+    #[error(
+        "[mokly-graph/public-policy] PostCSS plugin {plugin} reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not \"{relative_file}\" or source(none) with explicit @source)"
+    )]
+    Postcss {
+        /// Reporting plugin.
+        plugin: String,
+        /// Logical stylesheet input.
+        stylesheet: String,
+        /// Stylesheet-relative file for the recovery action.
+        relative_file: String,
+    },
     /// Authored files cannot occupy the generated resource namespace.
     #[error("[mokly-graph/public-policy] reserved generated namespace")]
     Generated,
@@ -55,6 +67,13 @@ impl PublicDenial {
     /// Normative policy cause, without a diagnostic category prefix.
     pub fn reason(&self) -> String {
         match self {
+            Self::Postcss {
+                plugin,
+                stylesheet,
+                relative_file,
+            } => format!(
+                "PostCSS plugin {plugin} reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not \"{relative_file}\" or source(none) with explicit @source)"
+            ),
             Self::Generated => "reserved generated namespace".into(),
             Self::Unsafe => "unsafe or escaping path".into(),
             Self::Hidden => "hidden path segment".into(),

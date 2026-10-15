@@ -130,3 +130,11 @@ otherwise public matching file because Tailwind did not list it
 individually. A component or CSS Module that needs Tailwind context but not
 emitted CSS uses `@reference`; when the renderer already delivers Tailwind,
 the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.
+
+## Dependency Retention
+
+The core hashes each reported dependency once per cached generation context.
+It retains digests, classification metadata, plugin provenance, and directory
+watch recipes, including empty matching directories. It retains no dependency
+file contents. Processed CSS and this metadata count toward the PostCSS cache's
+64 MiB byte bound; an oversized result is returned without cache retention.

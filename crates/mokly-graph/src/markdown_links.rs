@@ -10,6 +10,7 @@ use mokly_html::error::{HtmlError, Result};
 use mokly_html::markdown::{Destination, LinkResolver};
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::ModelEntry;
+use mokly_model::namespace;
 use mokly_model::routes;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
@@ -146,7 +147,7 @@ impl LinkResolver for Resolver<'_> {
                 return Err(self.resource_error(destination, &reason.reason()));
             }
             let href = routes::relative(
-                &format!("static/mokly-generated/{}", self.route),
+                &namespace::generated(self.route),
                 &format!("static/{public_path}"),
             );
             return Ok(Destination::Url(

@@ -29,6 +29,7 @@ mod resource_edges;
 mod resource_keys;
 mod routing_inputs;
 mod session;
+mod session_render;
 mod styles;
 mod validation;
 mod weight;
@@ -51,4 +52,10 @@ pub mod resource_reach;
 #[path = "_tests_/snapshot_tests.rs"]
 mod snapshot_tests;
 
+mod document_composition;
 mod planning_resources;
+mod temporary;
+
+#[cfg(test)]
+#[path = "_tests_/cancellation_tests.rs"]
+mod cancellation_tests;

@@ -1,1 +1,1 @@
-export { controlsDesign } from "./index.js";
+export { controlsScreen } from "./index.js";

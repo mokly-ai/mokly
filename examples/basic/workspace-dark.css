@@ -1,0 +1,13 @@
+/* Dark tokens for the HTML workspace screens; linked only into dark views. */
+:root {
+  --canvas: #121514;
+  --surface: #1b201d;
+  --ink: #eef1ef;
+  --muted: #9aa39d;
+  --line: #2a312d;
+  --accent: #7fae95;
+  --accent-ink: #0f1311;
+  --tint: #213029;
+  --pending: #e7c27d;
+  --pending-tint: #33291a;
+}

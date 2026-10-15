@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -11,6 +12,7 @@ import {
   sidecarFixture,
   startSidecar,
 } from "./helpers/sidecar.js";
+import { sidecarSources } from "./helpers/sidecar_sources.js";
 
 test("PostCSS factories run once per explicit context and keep helper locations", async (context) => {
   const sidecar = startSidecar(context);
@@ -107,4 +109,44 @@ test("throwing PostCSS plugins keep the module and bundle failure code", async (
       message: /failures\/postcss.mjs.*fixture plugin failed/,
     },
   );
+});
+
+test("logical dependency stylesheets resolve against their selected physical roots", async (context) => {
+  const { root, base } = await sidecarSources(context);
+  const dependencies = [
+    path.join(root, "one/node_modules"),
+    path.join(root, "two/node_modules"),
+  ];
+  for (const directory of dependencies)
+    await fs.mkdir(directory, { recursive: true });
+  await fs.writeFile(
+    path.join(base, "postcss.mjs"),
+    `export default {plugins:[{postcssPlugin:'source',Once(root,{result}){root.append({selector:'.source',nodes:[{prop:'from',value:JSON.stringify(result.opts.from)}]})}}]};`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  for (const [index, sourcePath] of [
+    "node_modules/theme/input.css",
+    "node_modules/.mokly-roots/1/theme/input.css",
+  ].entries()) {
+    const result = await sidecar.call<CssResult>(
+      "processCss",
+      cssParams({
+        sourceRoot: base,
+        repositoryRoots: [],
+        postcss: "postcss.mjs",
+        sourcePath,
+        moduleResolution: {
+          ...bundleParams().moduleResolution,
+          packageRoots: dependencies,
+        },
+      }),
+    );
+    assert.ok(
+      result.text.includes(
+        JSON.stringify(path.join(dependencies[index]!, "theme/input.css")),
+      ),
+      result.text,
+    );
+  }
 });

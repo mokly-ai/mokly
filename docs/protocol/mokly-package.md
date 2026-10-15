@@ -214,3 +214,21 @@ release-managed version literals, and package boundary.
 - [Static build](./mokly-export.md) and [upload](./mokly-upload.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)
+
+## Native Runtime Inputs
+
+The shim passes `MOKLY_PACKAGE_ROOT` as the executing `@mokly/mokly` package
+root and `MOKLY_NODE_EXECUTABLE` as its `process.execPath`. The binary starts
+`dist/sidecar.js` from that package with the resolved repository as its working
+directory. An HTML-only catalogue without a renderer or configured PostCSS needs neither
+Node nor a sidecar entry. Configured PostCSS starts a sidecar when the CSS
+pipeline processes a stylesheet. Direct binary execution uses `node` from
+`PATH` when `MOKLY_NODE_EXECUTABLE` is absent. It first checks the adjacent installed package, then
+walks invocation-directory and executable ancestors for
+`node_modules/@mokly/mokly/dist/sidecar.js` or `packages/mokly/dist/sidecar.js`.
+These inputs do not select a consumer React runtime; consumer resolution
+follows the configuration and base dependency contracts.
+
+The native CLI embeds the npm package version from `packages/mokly/package.json`.
+It supplies that same version to sidecar hello and graph configuration keys.
+Cargo crate versions do not determine the published Mokly package version.

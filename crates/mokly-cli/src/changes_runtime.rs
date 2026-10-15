@@ -1,37 +1,53 @@
-//! Native comparison composition shares the head cache and the base render graph.
+//! Comparison uses the command's shared sidecar pool, cache, and cancellation graph.
 
+use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config::{ConfigLoader, Loader};
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
-use mokly_catalogue::discovery::Discoverer;
-use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
-use mokly_compare::base_render::{
-    BaseProvider, BaseRequest, Changes, ChangesService, GitSourceFactory,
-};
+use mokly_cli::cancellation::Cancellation;
+use mokly_cli::output::{Mode, Style, bounded};
+use mokly_cli::redaction::Redactor;
+use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory};
+use mokly_compare::cache_types::Reporter;
 use mokly_compare::comparison::Engine;
-use mokly_compare::error::{Error, Result};
+use mokly_compare::locations::{OnceReporter, plain_line};
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
-use mokly_git::control::{SystemClock, Token};
+use mokly_git::control::{self, SystemClock, Token};
 use mokly_git::disk::SystemDisk;
 use mokly_git::repository::GitRepositories;
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
-use mokly_graph::cache::RenderCache;
-use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_render::runtime::Runtime;
 
-use crate::render_runtime::NativeGraphs;
+use crate::base_dependencies::NativeDependencies;
+use crate::changes_base::NativeBase;
+use crate::terminal::Terminal;
 
-/// Construct the native host boundaries at the binary composition root.
-pub(super) fn service(cache: Arc<dyn RenderCache>) -> Arc<dyn ChangesService> {
+pub(super) fn service(
+    runtime: Arc<Runtime>,
+    cancellation: Arc<dyn Cancellation>,
+    terminal: Arc<dyn Terminal>,
+    style: Style,
+    redactor: Arc<Redactor>,
+) -> Arc<dyn ChangesService> {
+    let token: Arc<dyn control::Cancellation> = Arc::new(GitCancellation {
+        command: cancellation.clone(),
+        token: Token::default(),
+    });
+    let reporter: Arc<dyn Reporter> = Arc::new(OnceReporter {
+        announced: false.into(),
+        reporter: Arc::new(CacheReporter {
+            terminal,
+            style,
+            redactor,
+        }),
+    });
     Arc::new(Changes {
         repositories: Arc::new(GitRepositories {
             runner: Arc::new(SystemRunner {
                 clock: Arc::new(SystemClock::default()),
-                cancellation: Arc::new(Token::default()),
+                cancellation: token.clone(),
                 groups: Arc::new(SystemProcessGroups),
             }),
             disk: Arc::new(SystemDisk),
@@ -40,7 +56,14 @@ pub(super) fn service(cache: Arc<dyn RenderCache>) -> Arc<dyn ChangesService> {
             limits: Limits::default(),
             batch_bytes: 48 * 1024 * 1024,
         }),
-        provider: Arc::new(NativeBase { cache }),
+        provider: Arc::new(NativeBase {
+            runtime,
+            cancellation,
+            dependencies: Arc::new(NativeDependencies {
+                cancellation: token,
+                reporter,
+            }),
+        }),
         comparison: Arc::new(Engine {
             moves: Arc::new(Detector),
             css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
@@ -48,53 +71,50 @@ pub(super) fn service(cache: Arc<dyn RenderCache>) -> Arc<dyn ChangesService> {
     })
 }
 
-struct NativeBase {
-    cache: Arc<dyn RenderCache>,
+struct GitCancellation {
+    command: Arc<dyn Cancellation>,
+    token: Token,
 }
-
-impl BaseProvider for NativeBase {
-    fn prepare(&self, request: &BaseRequest<'_>) -> Result<Arc<dyn RenderGeneration>> {
-        let tree = request.sources.tree.clone();
-        let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
-        let file = request.working_config.file.to_string_lossy();
-        let config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
-            ResolvedConfig {
-                input: Config::default(),
-                roots: Vec::new(),
-                authored_inputs: Vec::new(),
-                ..request.working_config.clone()
-            }
-        } else {
-            match loader.load(&request.working_config.repo_root, Some(&file)) {
-                Ok(config) => config,
-                Err(source) => return Err(Error::Catalogue { source }),
-            }
-        };
-        let builder: &dyn CatalogueBuilder = &Builder {
-            tree: tree.clone(),
-            discovery: Arc::new(Discoverer { tree: tree.clone() }),
-            definitions: Arc::new(DeferredDefinitions),
-        };
-        let catalogue = match builder.prepare(&config, None) {
-            Ok(catalogue) => catalogue,
-            Err(source) => return Err(Error::Catalogue { source }),
-        };
-        if !catalogue.deferred_modules.is_empty() {
-            return Err(Error::Deferred {
-                modules: catalogue.deferred_modules,
-            });
+impl control::Cancellation for GitCancellation {
+    fn cancelled(&self) -> bool {
+        if self.command.requested() {
+            self.token.cancel();
         }
-        let factory: &dyn GraphFactory = &NativeGraphs {
-            tree,
-            cache: self.cache.clone(),
-        };
-        let graph = match factory.create(&config) {
-            Ok(graph) => graph,
-            Err(source) => return Err(Error::Graph { source }),
-        };
-        match graph.prepare(config, catalogue, None) {
-            Ok(generation) => Ok(generation),
-            Err(source) => Err(Error::Graph { source }),
-        }
+        self.token.cancelled()
     }
 }
+
+struct CacheReporter {
+    terminal: Arc<dyn Terminal>,
+    style: Style,
+    redactor: Arc<Redactor>,
+}
+impl Reporter for CacheReporter {
+    fn opened(&self, directory: &Path) {
+        let line = if self.style.mode == Mode::Plain {
+            plain_line(directory)
+        } else {
+            format!("  cache {}\n", directory.display())
+        };
+        let safe = self.redactor.safe(line.trim_end_matches('\n'));
+        let safe = if self.style.mode == Mode::Rich {
+            bounded(&safe, self.style.columns)
+        } else {
+            safe
+        };
+        let line = if self.style.mode == Mode::Rich && self.style.color {
+            format!("\x1b[2m{safe}\x1b[0m\n")
+        } else {
+            format!("{safe}\n")
+        };
+        self.terminal.stdout(&line);
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/changes_cancellation_tests.rs"]
+mod changes_cancellation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cache_reporter_tests.rs"]
+mod cache_reporter_tests;

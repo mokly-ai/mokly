@@ -13,7 +13,7 @@ use crate::discovery::SourceFile;
 use crate::identity::{derive, segment};
 use crate::input::ParsedEntry;
 use crate::parsing::issue;
-use crate::{prepare_parent, props, variants};
+use crate::{declared_controls, prepare_parent, props, variants};
 
 pub(crate) struct PreparedEntries {
     pub(crate) entries: Vec<ModelEntry>,
@@ -110,6 +110,13 @@ pub(crate) fn prepare(
                 parsed,
                 &source,
             )
+        {
+            issues.push(issue);
+            continue;
+        }
+        if !failed
+            && let Some(controls) = &input.controls
+            && let Err(issue) = declared_controls::validate(&schema, controls, &complete, &source)
         {
             issues.push(issue);
             continue;

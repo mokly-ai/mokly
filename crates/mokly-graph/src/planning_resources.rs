@@ -6,10 +6,12 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::axes::ColorScheme;
 use mokly_model::catalogue::ModelEntry;
-use mokly_model::{material::digest, routes};
+use mokly_model::{material::digest, namespace, routes};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
+use crate::error::Result;
 use crate::urls::local_target;
+use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{planning, resource_edges, resource_keys};
 
 #[derive(Default)]
@@ -22,9 +24,11 @@ impl Resources {
         config: &ResolvedConfig,
         catalogue: &PreparedCatalogue,
         tree: &dyn SourceTree,
-    ) -> Self {
+        workers: &dyn RenderWorkers,
+    ) -> Result<Self> {
         let mut queue = VecDeque::new();
         for entry in &catalogue.model.entries {
+            check_cancelled(workers)?;
             let components = planning::components(&entry.metadata.path, catalogue);
             queue.extend(resource_keys::seeds(
                 catalogue,
@@ -36,6 +40,7 @@ impl Resources {
         let mut result = Self::default();
         let mut seen = BTreeSet::new();
         while !queue.is_empty() {
+            check_cancelled(workers)?;
             let paths: BTreeSet<_> = queue
                 .drain(..)
                 .filter_map(|(source, url)| target(&source, &url))
@@ -50,6 +55,7 @@ impl Resources {
                 .collect();
             let _ = tree.prefetch(&absolute);
             for (path, absolute) in paths.into_iter().zip(absolute) {
+                check_cancelled(workers)?;
                 if !matches!(tree.project(&absolute), Ok(Some(node)) if node.kind == FileKind::File && node.identity.starts_with(&config.repo_root))
                 {
                     continue;
@@ -79,7 +85,7 @@ impl Resources {
                 result.facts.insert(path, (hash, edges));
             }
         }
-        result
+        Ok(result)
     }
 
     pub(crate) fn inputs(
@@ -114,7 +120,7 @@ impl Resources {
 
 fn target(source: &str, url: &str) -> Option<String> {
     let target = local_target(source, url).ok()??;
-    if target.starts_with("static/mokly-generated/") {
+    if target.starts_with(&namespace::generated("")) {
         return None;
     }
     target.strip_prefix("static/").map(String::from)

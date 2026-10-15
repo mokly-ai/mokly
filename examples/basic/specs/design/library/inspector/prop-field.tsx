@@ -1,23 +1,31 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import { flag, optionalText, text } from "../schemas.js";
+import { flag, text, type LibraryProps } from "../schemas.js";
 
 import { PropFieldView } from "./prop-field.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["label", "inputId", "optional", "supplied"],
   properties: {
     label: text,
     inputId: text,
-    description: optionalText,
-    error: optionalText,
+    description: text,
+    error: text,
     optional: flag,
     supplied: flag,
   },
 } as const;
 const slots = ["control"] as const;
-export type PropFieldProps = ComponentProps<typeof propSchema, typeof slots>;
+export type PropFieldProps = LibraryProps<typeof propSchema, typeof slots>;
+const sample = {
+  label: "label",
+  inputId: "sample-label",
+  optional: false,
+  supplied: true,
+} as const;
 export const propField = defineComponent({
   ...libraryMetadata(
     "inspector",
@@ -26,6 +34,7 @@ export const propField = defineComponent({
     "Input framing, descriptions and validation for a component prop.",
   ),
   propSchema,
+  props: sample,
   slots,
   controls: {
     label: { kind: "text", label: "Label" },
@@ -37,11 +46,8 @@ export const propField = defineComponent({
     {
       slug: "text",
       title: "Text",
-      props: {
-        label: "label",
-        inputId: "sample-label",
-        optional: false,
-        supplied: true,
+      props: sample,
+      slots: {
         control: (
           <input id="sample-label" type="text" defaultValue="Continue" />
         ),
@@ -50,11 +56,8 @@ export const propField = defineComponent({
     {
       slug: "boolean",
       title: "Boolean",
-      props: {
-        label: "disabled",
-        inputId: "sample-disabled",
-        optional: false,
-        supplied: true,
+      props: { ...sample, label: "disabled", inputId: "sample-disabled" },
+      slots: {
         control: (
           <div className="ce-check-value">
             <input id="sample-disabled" type="checkbox" />
@@ -66,11 +69,12 @@ export const propField = defineComponent({
       slug: "invalid-number",
       title: "Invalid number",
       props: {
+        ...sample,
         label: "cornerRadius",
         inputId: "sample-radius",
-        optional: false,
-        supplied: true,
         error: "Enter a number from 0 to 24.",
+      },
+      slots: {
         control: (
           <input
             id="sample-radius"
@@ -87,11 +91,8 @@ export const propField = defineComponent({
     {
       slug: "select",
       title: "Selection",
-      props: {
-        label: "emphasis",
-        inputId: "sample-emphasis",
-        optional: false,
-        supplied: true,
+      props: { ...sample, label: "emphasis", inputId: "sample-emphasis" },
+      slots: {
         control: (
           <select id="sample-emphasis" defaultValue="strong">
             <option value="strong">Strong</option>
@@ -104,10 +105,13 @@ export const propField = defineComponent({
       slug: "optional-unset",
       title: "Optional unset",
       props: {
+        ...sample,
         label: "hint",
         inputId: "sample-hint",
         optional: true,
         supplied: false,
+      },
+      slots: {
         control: (
           <div>
             <label className="ce-check-value">

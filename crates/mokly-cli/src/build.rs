@@ -8,7 +8,7 @@ use mokly_catalogue::config::ConfigLoader;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
-use mokly_compare::base_render::{ChangesService, selected_base};
+use mokly_compare::base_render::ChangesService;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::error::Error;
 use mokly_graph::error::{GraphError, InternalError};
@@ -16,7 +16,8 @@ use mokly_graph::types::GraphFactory;
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
-use crate::changes_diagnostics;
+use crate::cancellation::Cancellation;
+use crate::changes_output::ChangeDiagnostic;
 use crate::grammar::Build;
 
 /// Validated catalogue counts and warnings for terminal presentation.
@@ -47,6 +48,9 @@ pub enum BuildError {
         /// Current build and base preparation warnings.
         warnings: Vec<Warning>,
     },
+    /// The command was interrupted before successful completion.
+    #[error("[mokly-cli/build] build cancelled")]
+    Cancelled,
     /// The injected definition provider cannot evaluate discovered JavaScript.
     #[error("[mokly-cli/build] JavaScript rendering is unavailable for {}", .modules.join(", "))]
     Deferred {
@@ -88,6 +92,8 @@ pub trait BuildService: Send + Sync {
 pub struct CatalogueBuild {
     /// Shared base preparation and comparison service.
     pub changes: Arc<dyn ChangesService>,
+    /// Cancellation state checked at every build phase.
+    pub cancellation: Arc<dyn Cancellation>,
     /// Data-only configuration loader.
     pub config: Arc<dyn ConfigLoader>,
     /// Source discovery and validation.
@@ -98,7 +104,7 @@ pub struct CatalogueBuild {
 
 impl BuildService for CatalogueBuild {
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
-        std::thread::scope(|scope| {
+        let result = std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-build".into())
                 .stack_size(64 * 1024 * 1024)
@@ -111,7 +117,12 @@ impl BuildService for CatalogueBuild {
                 Ok(result) => result,
                 Err(_) => Err(runtime(InternalError::PreparationPanicked)),
             }
-        })
+        });
+        if self.cancellation.requested() {
+            Err(BuildError::Cancelled)
+        } else {
+            result
+        }
     }
 }
 
@@ -123,11 +134,21 @@ fn runtime(source: InternalError) -> BuildError {
 }
 
 impl CatalogueBuild {
+    pub(crate) fn checkpoint(&self) -> Result<(), BuildError> {
+        if self.cancellation.requested() {
+            Err(BuildError::Cancelled)
+        } else {
+            Ok(())
+        }
+    }
+
     fn attempt(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+        self.checkpoint()?;
         let config = match self.config.load(cwd, options.common.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
+        self.checkpoint()?;
         let output: PathBuf = options.out.as_ref().map_or_else(
             || config.repo_root.join("mokly-static"),
             |path| cwd.join(path),
@@ -136,6 +157,7 @@ impl CatalogueBuild {
             Ok(prepared) => prepared,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
+        self.checkpoint()?;
         if !prepared.deferred_modules.is_empty() {
             return Err(BuildError::Deferred {
                 modules: prepared.deferred_modules,
@@ -151,6 +173,7 @@ impl CatalogueBuild {
                 });
             }
         };
+        self.checkpoint()?;
         let generation = match graph.prepare(config.clone(), prepared.clone(), Some(&output)) {
             Ok(generation) => generation,
             Err(source) => {
@@ -160,6 +183,7 @@ impl CatalogueBuild {
                 });
             }
         };
+        self.checkpoint()?;
         let rendered = match generation.render_all() {
             Ok(summary) => summary,
             Err(source) => {
@@ -169,32 +193,10 @@ impl CatalogueBuild {
                 });
             }
         };
+        self.checkpoint()?;
         let mut warnings = rendered.warnings;
-        let changes = if options.no_changes {
-            BuildChanges::Disabled
-        } else {
-            match self
-                .changes
-                .classify(&config, options.common.base.as_deref(), generation)
-            {
-                Ok(result) => {
-                    warnings.extend(result.warnings.iter().cloned());
-                    BuildChanges::Ready(Arc::new(result))
-                }
-                Err(source) => {
-                    warnings.extend(changes_diagnostics::warnings(&source));
-                    if let Some(unavailable) = changes_diagnostics::unavailable(&source) {
-                        unavailable
-                    } else {
-                        return Err(BuildError::Comparison {
-                            base_ref: selected_base(&config, options.common.base.as_deref()).into(),
-                            source: Box::new(source),
-                            warnings,
-                        });
-                    }
-                }
-            }
-        };
+        let changes = self.classify_changes(&config, options, generation, &mut warnings)?;
+        self.checkpoint()?;
         mokly_catalogue::diagnostic::normalize_warnings(&mut warnings);
         if options.strict && !warnings.is_empty() {
             return Err(BuildError::Strict { warnings });
@@ -231,10 +233,14 @@ pub enum BuildChanges {
         /// Short reason for the unavailable completion line.
         reason: String,
         /// Preserved base validation diagnostic.
-        diagnostics: Vec<String>,
+        diagnostics: Vec<ChangeDiagnostic>,
     },
 }
 
 #[cfg(test)]
 #[path = "_tests_/changes_failure_tests.rs"]
 mod changes_failure_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_checkpoint_tests.rs"]
+mod changes_checkpoint_tests;

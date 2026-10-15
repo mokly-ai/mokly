@@ -1,5 +1,7 @@
 # Component Design Inventory
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [mokly-component-design](./mokly-component-design.md).
 
 ## Owning Catalogue
@@ -14,8 +16,9 @@ owning child pages outside the artboard. The Pages, Inspection, and States child
 indexes, each with at most five direct owning screens; inspection also links a nested
 selection gallery with two owning screens, and Pages links a nested Stacked
 comparisons gallery with three. The Inspector gallery adds two closed
-states. Controls has one canonical parent screen and Editing, States, and
-Published galleries with four, four, and two screens. The linked inspector and
+states. Controls has one canonical parent screen with one variant, and
+Editing, States, Published, and Read-only and recovery galleries with five,
+five, two, and five screens. The linked inspector and
 controls contracts own their additional entry inventories. Every screen has a separate
 mobile component and desktop component; none is a user-flow page.
 
@@ -56,8 +59,8 @@ The Loading and recovery folder sits below Empty and change states and contains
 exactly these three states. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
 `<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
-membership is the entry's folder. All forty-one component
-screens opt into light documents, matching the existing shell mockups. Their
+membership is the entry's folder. All forty-eight component
+screens and their two variants opt into light documents, as the shell mockups do. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
 bar like every other artboard's, sets it. Links use

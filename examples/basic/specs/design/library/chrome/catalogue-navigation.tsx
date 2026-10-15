@@ -1,4 +1,4 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { PROFILE_CHANGES_ROWS } from "../../parts/account_nav_data.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -9,86 +9,73 @@ import {
 } from "../../parts/nav_data.js";
 import { CHANGED_VARIANT_ROWS } from "../../parts/variant_nav_data.js";
 import { libraryMetadata } from "../metadata.js";
-import { destination, flag, optionalText, text } from "../schemas.js";
+import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
 import { CatalogueNavigationView } from "./catalogue-navigation.view.js";
 
+const count = { type: "integer", minimum: 0 } as const;
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["rows", "changedCount", "changedOnly", "presentation"],
   properties: {
     rows: {
-      schema: {
-        kind: "array",
-        items: {
-          kind: "object",
-          properties: {
-            key: text,
-            label: text,
-            kind: {
-              schema: {
-                kind: "enum",
-                values: [
-                  "folder",
-                  "screen",
-                  "component",
-                  "flow",
-                  "page",
-                  "document",
-                  "variant",
-                ],
-              },
-            },
-            depth: { schema: { kind: "number", minimum: 0, integer: true } },
-            count: {
-              schema: { kind: "number", minimum: 0, integer: true },
-              optional: true,
-            },
-            changed: { ...flag, optional: true },
-            moved: { ...flag, optional: true },
-            open: { ...flag, optional: true },
-            variants: {
-              schema: { kind: "enum", values: ["open", "closed"] },
-              optional: true,
-            },
-            contents: { ...flag, optional: true },
-            variantParentKind: {
-              schema: { kind: "enum", values: ["screen", "component"] },
-              optional: true,
-            },
-            to: destination,
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["key", "label", "kind", "depth"],
+        properties: {
+          key: text,
+          label: text,
+          kind: {
+            enum: [
+              "folder",
+              "screen",
+              "component",
+              "flow",
+              "page",
+              "document",
+              "variant",
+            ],
           },
+          depth: count,
+          count,
+          changed: flag,
+          moved: flag,
+          open: flag,
+          variants: { enum: ["open", "closed"] },
+          contents: flag,
+          variantParentKind: { enum: ["screen", "component"] },
+          to: destination,
         },
       },
     },
     activeDestination: destination,
-    activeKey: optionalText,
-    activeLabel: optionalText,
-    changedCount: { schema: { kind: "number", minimum: 0, integer: true } },
+    activeKey: text,
+    activeLabel: text,
+    changedCount: count,
     changedOnly: flag,
-    changesStatus: {
-      schema: {
-        kind: "enum",
-        values: ["ready", "pending", "preparing", "unavailable"],
-      },
-      optional: true,
-    },
-    showChanges: { ...flag, optional: true },
-    presentation: {
-      schema: { kind: "enum", values: ["responsive", "drawer"] },
-    },
+    changesStatus: { enum: ["ready", "pending", "preparing", "unavailable"] },
+    showChanges: flag,
+    presentation: { enum: ["responsive", "drawer"] },
     allDestination: destination,
     changesDestination: destination,
   },
 } as const;
-export type CatalogueNavigationProps = ComponentProps<typeof propSchema, []>;
-const sample = {
+export type CatalogueNavigationProps = LibraryProps<typeof propSchema>;
+/** Own props hold only keys that every variant sets, so no variant inherits a selection. */
+const base = {
   rows: NAV_TREE,
-  activeDestination: "design/browse/views/screen",
   changedCount: 1,
   changedOnly: false,
   presentation: "responsive",
   allDestination: "design/browse/views/screen",
   changesDestination: "design/changes/diff-controls/current",
+} as const;
+const sample = {
+  ...base,
+  activeDestination: "design/browse/views/screen",
 } as const;
 export const catalogueNavigation = defineComponent({
   ...libraryMetadata(
@@ -98,6 +85,7 @@ export const catalogueNavigation = defineComponent({
     "The catalogue tree and its All or Changes filter.",
   ),
   propSchema,
+  props: base,
   controls: {
     changedOnly: { kind: "boolean", label: "Changes only" },
     changesStatus: {

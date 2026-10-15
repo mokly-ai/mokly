@@ -15,7 +15,15 @@ fn every_method_and_result_round_trips() {
     story.as_object_mut().unwrap().remove("handle");
     story.as_object_mut().unwrap().remove("entry");
     story["storyId"] = json!("specs/button.stories.tsx#Primary");
-    let fragment = json!({"html":"<button>Save</button>","styles":[],"resources":[],"warnings":[],"instances":[],"slots":[]});
+    let fragment = json!({
+        "html":"<button>Save</button>",
+        "styles":[{"css":"button{color:red}","owners":[]}],
+        "markers":[],
+        "resources":[],
+        "warnings":[],
+        "instances":[],
+        "slots":[]
+    });
     for (method, params, result) in [
         ("hello", json!({}), json!({"version":"fixture-version"})),
         (

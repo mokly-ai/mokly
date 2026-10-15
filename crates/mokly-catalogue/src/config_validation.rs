@@ -10,8 +10,8 @@ use serde_json::Value;
 use crate::config_types::Config;
 use crate::diagnostic::{Code, Issue};
 use crate::error::{CatalogueError, InternalError, Result};
-use crate::globs;
 use crate::locations::{at, json_positions};
+use crate::{config_postcss, globs};
 
 /// Exact schema shipped by the public package; no schema is fetched at runtime.
 pub const CONFIG_SCHEMA: &str = include_str!("../../../packages/mokly/config.schema.json");
@@ -33,6 +33,7 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
             ));
         }
     };
+    config_postcss::shape(&value)?;
     let schema: Value = match serde_json::from_str(CONFIG_SCHEMA) {
         Ok(schema) => schema,
         Err(source) => {

@@ -20,9 +20,11 @@ use mokly_model::catalogue::{
 };
 use mokly_model::data::Props;
 use mokly_model::inference::infer;
+use mokly_sidecar::workers::ClockMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildError, BuildService, CatalogueBuild};
+use crate::cancellation::{BuildCancellation, Cancellation};
 use crate::grammar::{Build, Common};
 
 pub(super) fn config() -> ResolvedConfig {
@@ -80,6 +82,7 @@ pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
         })
         .collect();
     PreparedCatalogue {
+        javascript: Default::default(),
         model: CatalogueModel {
             entries,
             folders: Vec::new(),
@@ -136,6 +139,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
         graphs,
@@ -167,6 +171,7 @@ fn strict_build_keeps_warnings_and_resolves_explicit_output_from_cwd() {
     let (graphs, _guards) = graphs(vec![warning.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
         graphs,
@@ -195,6 +200,7 @@ fn a_loader_failure_preserves_the_typed_error_without_preparing_a_catalogue() {
     ));
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: Arc::new(Unimock::new(())),
         graphs: Arc::new(Unimock::new(())),
@@ -225,6 +231,7 @@ fn deferred_definitions_fail_before_graph_creation() {
     ));
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
         graphs: Arc::new(Unimock::new(())),
@@ -236,4 +243,36 @@ fn deferred_definitions_fail_before_graph_creation() {
     };
     assert_eq!(modules, ["specs/later.mockup.tsx"]);
     assert!(warnings.is_empty());
+}
+
+#[test]
+fn an_interrupt_after_html_preparation_cancels_before_graph_creation() {
+    let cancellation: Arc<dyn Cancellation> = Arc::new(BuildCancellation::new(Arc::new(
+        Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0_u64)),
+    )));
+    let interrupt = cancellation.clone();
+    let loader = Arc::new(Unimock::new(
+        ConfigLoaderMock::load
+            .next_call(matching!(_, _))
+            .returns(Ok(config())),
+    ));
+    let builder = Arc::new(Unimock::new(
+        CatalogueBuilderMock::prepare
+            .next_call(matching!(_, _))
+            .answers_arc(Arc::new(move |_, _, _| {
+                assert!(!interrupt.interrupt());
+                Ok(prepared(Vec::new()))
+            })),
+    ));
+    let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
+        config: loader,
+        catalogue: builder,
+        graphs: Arc::new(Unimock::new(())),
+        cancellation,
+    };
+    assert!(matches!(
+        service.run(Path::new("/repo"), &options()),
+        Err(BuildError::Cancelled)
+    ));
 }

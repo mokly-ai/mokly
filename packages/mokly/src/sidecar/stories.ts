@@ -51,7 +51,9 @@ export async function describeStories(
         );
       },
     });
+    const excludedProps: string[] = [];
     const parent = {
+      excludedProps,
       handle: `${file}#default`,
       title:
         meta.title?.split("/").at(-1) ??
@@ -61,7 +63,13 @@ export async function describeStories(
       description: "",
       relatedDocs: [],
       tags: [],
-      props: storyProps(generation, meta.args ?? {}, meta.argTypes ?? {}, file),
+      props: storyProps(
+        generation,
+        meta.args ?? {},
+        meta.argTypes ?? {},
+        `${file}#default`,
+        excludedProps,
+      ),
       argTypes: {} as Record<string, StoryHints>,
       variants: [] as Definitions["components"][number]["variants"],
       slots: [],
@@ -78,7 +86,14 @@ export async function describeStories(
       const annotation = module[exportName] as StoryAnnotations;
       const id = `${file}#${exportName}`;
       const hints = { ...meta.argTypes, ...annotation.argTypes };
-      const props = storyProps(generation, story.args, hints, id);
+      const excludedProps: string[] = [];
+      const props = storyProps(
+        generation,
+        story.args,
+        hints,
+        id,
+        excludedProps,
+      );
       const title = annotation.name ?? exportName;
       const argTypes: Record<string, StoryHints> = {};
       for (const [key, value] of Object.entries(hints)) {
@@ -92,6 +107,7 @@ export async function describeStories(
         argTypes,
       });
       parent.variants.push({
+        excludedProps,
         slug: exportName,
         title,
         props: props as Definitions["stories"][number]["props"],
@@ -121,6 +137,7 @@ function storyProps(
   args: Record<string, unknown>,
   hints: Record<string, Record<string, unknown>>,
   location: string,
+  excluded: string[],
 ) {
   const kept = Object.fromEntries(
     Object.entries(args).filter(([key]) => {
@@ -140,5 +157,5 @@ function storyProps(
       );
     }),
   );
-  return dataProps(kept, false, location, generation.warnings);
+  return dataProps(kept, false, location, generation.warnings, excluded);
 }

@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { appearanceDesignMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
@@ -32,9 +33,11 @@ function AppearanceOverview({ viewport }: { viewport: ArtboardViewport }) {
 export const appearanceOverviewScreen = defineScreen({
   ...appearanceDesignMetadata,
   description: "The catalogue and the screen it shows, all light or all dark.",
-  desktop: <AppearanceOverview viewport="desktop" />,
+  ...artboards({
+    desktop: <AppearanceOverview viewport="desktop" />,
+    mobile: <AppearanceOverview viewport="mobile" />,
+  }),
   slug: "overview",
-  mobile: <AppearanceOverview viewport="mobile" />,
   rationale:
     "Standalone Browse holds one Appearance setting, so the chrome and the screens it shows change together rather than needing two controls. The artboard draws that one selector in its top bar; use the preview control above to move between the two renderings.",
   title: "Catalogue appearance",

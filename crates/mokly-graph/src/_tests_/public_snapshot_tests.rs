@@ -64,6 +64,7 @@ fn planning_reuses_public_digests_without_pinning_resource_bytes() {
         "content":{"kind":"document","colorSchemes":["light"],"resources":[]}
     })).unwrap()).collect();
     let catalogue = PreparedCatalogue {
+        javascript: Default::default(),
         model: CatalogueModel {
             entries,
             folders: Vec::new(),
@@ -93,7 +94,7 @@ fn planning_reuses_public_digests_without_pinning_resource_bytes() {
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
-    let resources = Resources::prepare(&config, &catalogue, &tree);
+    let resources = Resources::prepare(&config, &catalogue, &tree, &Unimock::new(())).unwrap();
     for entry in &catalogue.model.entries {
         let inputs = resources.inputs(
             &catalogue,

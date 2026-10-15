@@ -114,22 +114,24 @@ interactive stdin. Serve then reports its lifecycle boundaries:
 
 Catalogue counts come from the catalogue model; zero-valued kinds are omitted.
 Catalogue counts include saved variants as entries of their parent's kind.
-Unavailable Changes says `! Changes unavailable` with its reason. Base source
-diagnostics are detail lines that name the full base commit, without an error
-block for a successful build. Git and internal comparison failures use error
-blocks and fail the command. Unavailable Changes keeps
-All browsable. Serve reports each state's
+Unavailable Changes says `! Changes unavailable` with its reason and keeps All browsable.
+Base diagnostics follow [base preparation](./mokly-base-preparation.md#shared-render-runtime).
+Serve reports each state's
 [build warnings](./mokly-build-warnings.md) immediately before
 `Catalogue ready`; on-demand renders never repeat them, and the
 `base-dependencies` warning of the
 [comparison contract](./mokly-comparison.md#sides) prints before
 `Changes ready`. `Changes ready` reports the
 [Changes count](./mokly-catalogue-changes.md#changes-count) as `<n> changes`,
-then `<n> moved` and `<n> ignored-only` when those counts are not zero. The
-ignored-only count uses entries whose aggregate state is `ignored-only`, not
-individual views; a zero
-count omits its segment, and `0 changes` stays. Counted nouns use singular
-only for one, including `1 change` and `2 changes`.
+then nonzero `<n> moved` and `<n> ignored-only` counts. Ignored-only counts
+entries by aggregate state. Zero counts omit their segment, except `0 changes`.
+Counted nouns use singular for one, including `1 change` and `2 changes`.
+
+Accept resource failures keep Serve running. At the first failure of each
+backoff period, the reporter writes `! Serve cannot accept connections: {reason}. Retrying.`
+to stderr. Repeated failures in that period are silent. The first accepted
+connection writes `! Serve can accept connections again.` to stderr.
+Both modes use these lines. Rich mode applies its width and colour rules.
 
 Watched actions use one durable line after the action settles:
 

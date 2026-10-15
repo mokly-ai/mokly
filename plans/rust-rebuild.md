@@ -678,6 +678,17 @@ from Milestone 12.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
+  - [x] Replace `examples/basic/mokly.config.ts` with `mokly.config.json`
+        under Decision 37.
+  - [x] Add the example's HTML Team area: two screens with a variant, three
+        HTML components with variants and slots, a page, a use case, a
+        folder record, and a Markdown document.
+  - [x] Rewrite `examples/basic/README.md` to the end state.
+  - [ ] Add HTML fixtures and run the gap sweep against the rendering
+        contracts.
+  - [ ] Render the example's HTML part and check it at both viewports and in
+        both schemes. Its stylesheets pass through the example's PostCSS
+        module, which runs in the Milestone 8 sidecar.
 - [x] Write the HTML authoring guides under `docs/guides`.
 - [x] Commit.
 
@@ -691,6 +702,8 @@ and `.context/rust-rebuild/delegation/m5/round-3-merge-decisions.md`.
 The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
 
+Example port evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m5-example/README.md`.
+
 ## Milestone 6: Serve
 
 At completion `mokly serve` serves an HTML catalogue: the shell stub on every
@@ -699,23 +712,35 @@ documents, the live descriptor, the update event stream, and shutdown; the
 viewer renders it after Milestone 7. No sidecar starts for a catalogue
 without JavaScript.
 
-- [ ] Restore `npm run dev` to serve `examples/basic/mokly.config.json` with
+- [x] Restore `npm run dev` to serve `examples/basic/mokly.config.json` with
       argument forwarding.
 
-- [ ] Implement the server in `mokly-server`: the stub, the index and entry
+- [x] Implement the server in `mokly-server`: the stub, the index and entry
       detail routes with `Cache-Control: no-store`, the document and asset
       routes, the live descriptor, the event stream with the revision as the
       message id and the deployment id as its data, shutdown ordering, and
       the terminal output contract in the CLI.
-- [ ] Complete context-aware usage readers: validate recorded props against
+- [x] Complete context-aware usage readers: validate recorded props against
       component schemas; recompute instance and slot keys and `propsKey` with
       the shared material key; validate usage references, ownership cycles,
       source locations, duplicate records, root ranges, and view ordering.
-- [ ] Behaviour tests: every route of the shell delivery contract that
+- [x] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
-- [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
+- [x] Treat repeated SIGINT delivery as one Serve shutdown request. The
       POSIX shim may forward a console signal already delivered to the binary.
-- [ ] Commit.
+- [x] Queue manual rebuilds from rich Serve, atomically replace their public
+      state and document backend, and keep last-good state on a failed candidate.
+- [x] Commit.
+
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/merge-decisions.md`.
+Gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m6.md`.
+Smoke and screenshots: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m6-smoke/`.
+Verification and report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-1.md`.
+Integration report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-2.md`.
+Review fixes and smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-3.md`.
+Viewer key domains and complete smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-4.md`.
+
+Final review fixes and integration: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-5.md`.
 
 ## Milestone 7: Viewer reads read model v7
 
@@ -735,11 +760,12 @@ Tags: ui
       index and detail sources, the `server` entry and `renderViewer` go,
       and the package README, rewritten under Decision 38, is checked
       against the package.
-- [ ] Run the viewer suite against the Milestone 6 routes.
+- [x] Run the viewer suite against the Milestone 6 routes.
 - [x] Commit.
 
 Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
 Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
+Serve run (log, results, screenshots): `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-serve-run/log.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -747,7 +773,9 @@ At completion React components, React screens, JavaScript pages, and
 Storybook stories render through the sidecar, and the example catalogue
 renders again.
 
-- [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
+- [x] Replace the configured-renderer refusal in both Serve and `build` with
+      the sidecar bundle's complete source inventory (Milestone 6 review, finding 13).
+- [x] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
   - [x] Add the standalone Node entry, bounded NDJSON, method dispatch,
@@ -759,7 +787,7 @@ renders again.
         CLI timeout override.
   - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
         and fragment-scoped registry style collection.
-- [ ] Implement consumer bundling in the sidecar with the bundler of Decision
+- [x] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
   - [x] Add unevaluated esbuild generations, attributed facades, the JSX
@@ -768,7 +796,7 @@ renders again.
         JavaScript and CSS under stable dependency graph names.
   - [x] Add the PostCSS worker and preserve local module locations, plugin
         creation lifetime, and dependency plugin names and globs.
-- [ ] Implement component, screen, page, and story renders, with
+- [x] Implement component, screen, page, and story renders, with
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
       inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
@@ -778,33 +806,49 @@ renders again.
       a stories file is a component entry whose stories are its variants.
   - [x] Add the authoring API with schema and literal prop inference, and
         standalone component, screen, story, and page renders.
-  - [ ] Connect resolved catalogue paths, complete usage records, schema
+  - [x] Connect resolved catalogue paths, complete usage records, schema
         validation, and fragment caching through the approved binding.
-- [ ] Implement `describe`: every definition the entry modules and stories
+- [x] Implement `describe`: every definition the entry modules and stories
       files export, one per export, rejecting arrays containing definitions, with the
       story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
-- [ ] Reconcile the rendering page's authenticated fragment placements and
+- [x] Reconcile the rendering page's authenticated fragment placements and
       logical inputs with the sidecar's typed instance and slot render-result
       records before connecting the Milestone 5 composition boundary.
-- [ ] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
+- [x] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
       input and marker-placement metadata in the sidecar, resolve definition
       handles to catalogue identities, and supply the bundle generation,
       delivery roots, and component stylesheet lists to the native graph.
-- [ ] Extend the definition-provider boundary for `describe` handles,
+- [x] Extend the definition-provider boundary for `describe` handles,
       declared controls, story control hints, slot handles, excluded non-data
       prop keys, and authoring diagnostics; emit `props-not-data` after path
       derivation names the entry and key.
-- [ ] Implement live prop editing in Serve through the same render path.
+- [x] Implement live prop editing in Serve through the same render path.
+  - [x] Add the shared `RenderGeneration::render_props` path with Rust prop
+        validation, fragment caching, document composition, and closure checks.
+  - [x] Wire the Serve live render route to the shared JavaScript runtime.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
-- [ ] Update commands and test names in `examples/basic/README.md` and
+  - [x] Read and classify the previous rendering and component rules and tests
+        for the core integration gap sweep.
+  - [ ] Compare captured example and large scenarios after the example port
+        and comparison integration land.
+  - [x] Port the React example, the React components, and the design
+        catalogue to the authoring API.
+  - [ ] Render both catalogues through the integrated sidecar and check every
+        page at both viewports and in both schemes.
+  - [ ] Add the packed consumer smoke.
+- [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
 - [ ] Restore the example typecheck; validate or replace the viewer browser
       fixtures, including their component paths and cross-origin setup.
+  - [x] Restore the example typecheck: the root typecheck includes the
+        example.
+  - [ ] Validate or replace the viewer browser fixtures, including their
+        component paths and cross-origin setup.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -815,11 +859,21 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Add the design catalogue checks that the verification and adoption
+      sections of `mokly-design-components.md`,
+      `mokly-design-component-library.md`, `mokly-component-design.md`, and
+      `mokly-design-links.md` define.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
       scrolls to the row's end, and a stage row that fits stays centred.
-- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+- [x] Port the viewer's frame inspector to the markers of the comparison
+      contract (Milestone 7 Serve run): `inspector/ranges.ts` reads
+      `mokly-component:start:r-N`, while Serve writes `mokly-instance` and
+      `mokly-slot` markers with an `id` and leaves a component page's root
+      region `r-0` without a marker. In Serve, hovering a screen frame turns
+      it to the error state and disables Highlight components.
+- [x] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,
       the stage loading state, the index failure state, the version failure
@@ -841,6 +895,16 @@ and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
 decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 `.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
+Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
+
+Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
+sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
+`.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
+Core review fixes: `.context/rust-rebuild/delegation/m8-core/report-2.md`.
+Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
+Serve integration: `.context/rust-rebuild/delegation/m8-core/report-4.md`;
+smoke artifacts: `.context/rust-rebuild/m8-serve-smoke/`.
 
 - [ ] Commit.
 
@@ -905,6 +969,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       slots, scoped Git metadata, streamed large-resource digests, planning
       batches, empty-base catalogues, and named limit diagnostics.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-3.md`.
+- [x] Integrate the shared sidecar runtime into comparison: leased base sources,
+      dependency tiers, one pool and cache, cancellation, typed diagnostics,
+      and PostCSS source-directory isolation.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-4.md`.
+      Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
 - [ ] Add the Comparing phase spinner and measured durations to build Changes.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
@@ -916,6 +985,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
   - [ ] Replay the eleven full references after the sidecar and source
         migration are ready. Every captured catalogue has JavaScript entries.
+- [ ] Add the stylesheet attribution tests over the design catalogue that
+      `mokly-component-design.md` and `mokly-design-component-attribution.md`
+      define: the nine shared sheets per scenario, the pinned rendered
+      stylesheet links, the exact per-entry rendered-resource and rule
+      records, the exact changed-entry union, no affected consumers for
+      unresolved shared rules, and the attribution acceptance matrix.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -943,10 +1018,24 @@ Tags: ui
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Make the viewer follow the settled design copy and states of the design
+      catalogue (version failure, controls copy and states, loading states).
+      Source: the design entries `design/browse/loading/**` and
+      `design/components/controls/**`,
+      `examples/basic/specs/design/components/controls/parts/copy.ts`, and
+      `mokly-viewer-namespace.md`, `mokly-viewer.md`,
+      `mokly-shell-delivery.md`, and `mokly-component-controls-design.md`. The
+      copy tables in `.context/rust-rebuild/delegation/m5-example/report-2.md`
+      and `report-3.md` there list the differences from the viewer.
 - [ ] Commit.
 
 ## Milestone 11: Watch and incremental rendering
 
+- [ ] Reuse unchanged encoded details across watched generation rebuilds
+      (Milestone 6 review 2, finding 1C).
+
+- [ ] Tie Serve's watching copy to the active watcher and cover its terminal
+      output (Milestone 6 review, finding 10).
 - [ ] Implement the content-addressed render graph: inputs hashed per entry,
       invalidation from the sidecar's module graph, HTML component
       dependencies, stylesheet dependencies, and PostCSS reports.
@@ -954,6 +1043,11 @@ Tags: ui
       replay for HTML-only edits, and live updates to the viewer through the
       index and entry detail routes under one revision, with frames reloaded
       by document key and no page reload.
+- [ ] Release PostCSS contexts and replaced sidecar generations when the last
+      graph that uses them drops. Design ownership with Serve revision fences,
+      cancelled requests, and watch replacement; prevent an old graph from
+      using new bindings or class maps under an old fragment key (M8 review 1,
+      finding 8).
 - [ ] Behaviour tests that count rebuilds and renders per change.
 - [ ] Commit.
 
@@ -1053,6 +1147,9 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 6 review 2, finding 6: decide failed-render detail status and
+    Usage copy; keep all Used by lists unavailable after one unavailable view
+    until the next generation while the user decision is pending.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
@@ -1072,6 +1169,21 @@ Publish client final review and merge decisions:
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
     `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
     user.
+  - Milestone 5: `{{ name }}` with inner spaces settled by Decision 39 on
+    2026-10-15. `.prettierrc.json` stays: Prettier's Angular parser rewrites
+    `{{open-seats}}` to `{{ open - seats }}` and stops on a literal `{`.
+  - Milestone 5: settled on 2026-10-15; the example drops its `watch.rules`
+    reload rule, which had no effect.
+  - Milestone 8 example port review 1: the Milestone 10 TODO that makes the
+    viewer follow the settled design copy changes the viewer's presentation,
+    a non-goal of this plan; it needs the user's approval.
+  - Milestone 8 example port review 1, finding 6: option B (a component parent
+    renders without caller slot content) is documented; decide option C,
+    which lets a component parent supply its own slot content (a contract
+    change).
+  - Milestone 8 example port review 2, finding 9: `mokly-design-links.md` sits
+    at its 321-line cap with prose lines over 80 columns; split the page at
+    its next edit.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

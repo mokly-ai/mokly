@@ -20,8 +20,10 @@ grafts the fragment. Served and built documents keep the `mokly-instance` and
 `mokly-slot` markers of every region the core composed, whatever rendered the
 instance, so the [published inspector](./mokly-published-inspector.md)
 resolves each `r-n` region in the live page. Ignore regions resolve at
-composition, and `mokly-link` pairs are consumed by
-[link adaptation](./mokly-link-controls.md); neither is written. The canonical
+composition. Private `mokly-output` pairs mark adapter output inside renderer
+wrappers; the core consumes them when it attaches a component root.
+`mokly-link` pairs are consumed by
+[link adaptation](./mokly-link-controls.md); these private pairs are not written. The canonical
 form below removes every marker before comparison. Every comment name with
 the `mokly-` prefix is reserved for markers.
 
@@ -31,6 +33,7 @@ the `mokly-` prefix is reserved for markers.
 | `<!--mokly-slot:start id="r-4" instance="r-3" name="children"-->`      | slot region `r-4` supplied to instance `r-3` by its input owner                 |
 | `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                           |
 | `<!--mokly-link:start id="…" to="…"-->`                                | a `MockLink asChild` control in a sidecar fragment; consumed by link adaptation |
+| `<!--mokly-output:start id="r-1"-->`                                   | private adapter-output placement; consumed before served bytes                  |
 | `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                                  |
 
 A region is the sequence of sibling nodes between its start and end markers,

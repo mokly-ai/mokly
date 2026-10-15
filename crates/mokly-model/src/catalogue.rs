@@ -10,15 +10,15 @@ use crate::controls::ComponentControl;
 use crate::data::Props;
 use crate::prop_schema::PropSchema;
 
-/// One-based authored source location.
+/// Authored source location. Coordinates are one-based; zero means unavailable.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SourceLocation {
     /// Repository-relative POSIX source path.
     pub path: String,
-    /// One-based line.
+    /// One-based line, or zero when no source coordinate is available.
     pub line: usize,
-    /// One-based column.
+    /// One-based column, or zero when no source coordinate is available.
     pub column: usize,
     /// Export name for a JavaScript definition.
     #[serde(skip_serializing_if = "Option::is_none")]

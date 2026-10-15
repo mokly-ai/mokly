@@ -6,7 +6,7 @@ import type { Request } from "../generated/sidecar/Request.js";
 import { bundle } from "./bundle.js";
 import type { Generation } from "./bundle.js";
 import { describe } from "./describe.js";
-import { SidecarError, detail, protocol } from "./errors.js";
+import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { PostcssWorkers } from "./postcss.js";
 import { renderSession } from "./render-session.js";
@@ -109,8 +109,14 @@ export class Session {
           )
         )
           protocol("bindings must contain every described handle exactly once");
-        for (const entry of Object.values(request.params.entries))
-          if (!isEntryPath(entry.path))
+        const folders = new Set(
+          definitions.folders.map((folder) => folder.handle),
+        );
+        for (const [handle, entry] of Object.entries(request.params.entries))
+          if (
+            !isEntryPath(entry.path) &&
+            !(entry.path === "" && folders.has(handle))
+          )
             protocol("bindings require complete catalogue paths");
         generation.bindings = request.params.entries;
         for (const registration of generation.registrations.values())
@@ -163,7 +169,7 @@ export class Session {
               viewport: "desktop",
               colorScheme: "light",
             },
-            request.params.handle.replace("#", " export "),
+            handleLocation(request.params.handle),
           );
           const html = generation.runtime.withSession(session, () =>
             (data.input.render as () => unknown)(),
@@ -181,7 +187,7 @@ export class Session {
         } catch (error) {
           throw new SidecarError(
             "render-failed",
-            `${request.params.handle}: ${detail(error)}`,
+            `${handleLocation(request.params.handle)}: ${detail(error)}`,
           );
         }
       }

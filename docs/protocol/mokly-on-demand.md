@@ -38,8 +38,9 @@ it; the next request for an evicted document renders it again.
 Concurrent requests for one document share one render. Foreground requests
 take priority over background work: a background render yields between
 documents, and a foreground render that needs a sidecar does not wait behind
-queued background renders. A failed render answers 500 with its typed
-diagnostic, enters no cache, and makes no other route unavailable. A render
+queued background renders. A failed render answers 500, enters no cache,
+and makes no other route unavailable. Its typed diagnostic goes to the
+selected CLI reporter on stderr; the HTTP response carries the safe error envelope. A render
 that passes its deadline fails the same way after the sidecar contract's one
 retry.
 

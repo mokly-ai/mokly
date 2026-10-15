@@ -26,7 +26,8 @@ pub(crate) fn parse(comment: &str) -> Result<Option<Marker>> {
         .strip_prefix("mokly-")
         .and_then(|name| name.split_once(':'))
         .ok_or_else(|| invalid(Code::BuildInvalid, "unknown fragment marker"))?;
-    if !matches!(kind, "instance" | "slot" | "ignore" | "link") || !matches!(phase, "start" | "end")
+    if !matches!(kind, "instance" | "slot" | "ignore" | "link" | "output")
+        || !matches!(phase, "start" | "end")
     {
         return Err(invalid(Code::BuildInvalid, "unknown fragment marker"));
     }
@@ -34,9 +35,10 @@ pub(crate) fn parse(comment: &str) -> Result<Option<Marker>> {
     let allowed: &[&str] = match (phase, kind) {
         ("end", _) => &["id"],
         (_, "instance") => &["id", "path", "instance", "props"],
-        (_, "slot") => &["id", "name"],
+        (_, "slot") => &["id", "instance", "name"],
         (_, "ignore") => &["id", "key"],
         (_, "link") => &["id", "to"],
+        (_, "output") => &["id"],
         _ => &[],
     };
     if attributes

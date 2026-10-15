@@ -1,4 +1,4 @@
-//! The built CLI validates HTML catalogues and skips Changes when requested.
+//! The CLI builds mixed catalogues, supports disabled Changes, and fails closed without Node.
 
 use std::fs;
 use std::path::Path;
@@ -18,6 +18,11 @@ fn run(directory: &Path, args: &[&str], mode: &str) -> Output {
         .current_dir(directory)
         .env("MOKLY_OUTPUT", mode)
         .env("PATH", "")
+        .env(
+            "MOKLY_PACKAGE_ROOT",
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
+        )
+        .env_remove("MOKLY_NODE_EXECUTABLE")
         .env_remove("MOKLY_SIDECARS")
         .env_remove("CI")
         .output()
@@ -151,7 +156,7 @@ fn html_errors_report_the_exact_one_based_source_location() {
 }
 
 #[test]
-fn a_deferred_javascript_file_cannot_report_a_complete_catalogue() {
+fn javascript_without_node_cannot_report_a_complete_catalogue() {
     let directory = TempDir::new().unwrap();
     write(directory.path(), "mokly.config.json", "{}");
     write(
@@ -169,7 +174,7 @@ fn a_deferred_javascript_file_cannot_report_a_complete_catalogue() {
     assert!(
         String::from_utf8(output.stderr)
             .unwrap()
-            .contains("JavaScript rendering is unavailable for specs/entry.mockup.ts")
+            .contains("node is unavailable")
     );
     assert!(output.stdout.is_empty());
 }
@@ -192,4 +197,33 @@ fn render_warnings_survive_a_later_failure_and_hide_internal_error_prefixes() {
     assert!(!error.contains("[mokly-graph/"));
     assert!(!error.contains("[mokly-html"));
     assert!(error.find("[mokly/warning]").unwrap() < error.find("[mokly/build-invalid]").unwrap());
+}
+
+#[test]
+fn a_renderer_only_catalogue_requires_node_for_its_source_inventory() {
+    let directory = TempDir::new().unwrap();
+    write(
+        directory.path(),
+        "mokly.config.json",
+        r#"{"renderer":"./renderer.source.tsx"}"#,
+    );
+    write(
+        directory.path(),
+        "renderer.source.tsx",
+        "import './helper.js'; export default {};",
+    );
+    write(
+        directory.path(),
+        "helper.js",
+        "export const secret = 'private source';",
+    );
+    write(
+        directory.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<a href=\"../../helper.js\">Helper</a>",
+    );
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("node is unavailable"));
+    assert!(output.stdout.is_empty());
 }

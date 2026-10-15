@@ -86,8 +86,10 @@ accepted moves, removed records, counterparts, and variant parents.
 
 `Changes` implements `dyn ChangesService`. `BaseProvider` supplies the base
 render generation through the common graph. HTML needs no extraction. A
-JavaScript provider can use the same request's source and repository handles
-for extraction and dependency leases.
+JavaScript provider uses the same request's source and repository handles
+for extraction and dependency leases. The CLI supplies `mokly-render::Runtime`
+for both sides, sharing its render cache, sidecar pool, and cancellation.
+Historical runtime failures follow the typed policy in base preparation.
 
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 `dyn Extraction`, `dyn Dependencies`, and `dyn Cache` in the render graph

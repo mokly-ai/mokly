@@ -1,5 +1,4 @@
-import type { ScreenVariantInput } from "@mokly/mokly";
-
+import type { ArtboardVariant } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
 
@@ -22,4 +21,4 @@ export const formsFilterVariant = {
   slug: "tag-forms",
   mobile: <FormsFilterMobile />,
   title: "Forms filter",
-} satisfies ScreenVariantInput;
+} satisfies ArtboardVariant;

@@ -149,16 +149,12 @@ fn strict_mode_ignores_fixed_historical_authoring_warnings() {
 }
 
 #[test]
-fn a_javascript_renderer_is_unavailable_until_its_provider_is_connected() {
+fn a_configured_renderer_is_bundled_even_for_an_html_catalogue() {
     let directory = base(&[(
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<p>Home</p>",
     )]);
-    write(
-        directory.path(),
-        "renderer.tsx",
-        "export default function render() {}\n",
-    );
+    write(directory.path(), "renderer.tsx", "export default ???;\n");
     write(
         directory.path(),
         "mokly.config.json",

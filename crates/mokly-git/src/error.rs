@@ -62,6 +62,14 @@ pub enum Error {
         /// Maximum metadata entries.
         limit: usize,
     },
+    /// One source object cannot fit its byte or framed batch budget.
+    #[error("[mokly-git/read] {path}: source bytes exceed {limit} bytes")]
+    BlobLimit {
+        /// Exact repository-relative file.
+        path: String,
+        /// Maximum byte budget.
+        limit: usize,
+    },
     /// A blob or archive exceeds its byte budget.
     #[error("[mokly-git/read] source bytes exceed {limit} bytes")]
     ByteLimit {
@@ -157,6 +165,7 @@ impl Error {
             Self::FileCount { .. }
                 | Self::NodeCount { .. }
                 | Self::ByteLimit { .. }
+                | Self::BlobLimit { .. }
                 | Self::InputLimit { .. }
                 | Self::OutputLimit { .. }
                 | Self::ArgumentLimit { .. }

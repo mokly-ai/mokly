@@ -7,6 +7,8 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::protection::{ProtectedBy, SourcePolicy};
+use mokly_css::dependencies::PluginInput;
+use mokly_model::namespace;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{Result, invalid};
@@ -26,6 +28,8 @@ pub struct PublicFile {
 pub trait PublicPolicy: Send + Sync {
     /// Decide once per normalized path per generation; return a portable denial.
     fn check(&self, path: &str) -> result::Result<PublicFile, PublicDenial>;
+    /// Recheck live eligibility without using the generation decision cache.
+    fn recheck(&self, path: &str) -> result::Result<PublicFile, PublicDenial>;
 }
 
 /// Public policy with cached accepted and rejected decisions.
@@ -38,6 +42,8 @@ pub struct FilePolicy {
     pub sources: SourcePolicy,
     /// Specific imported-by diagnostics, after ordinary source precedence.
     pub imported_by: BTreeMap<String, String>,
+    /// Consumer plugin sources keep their own recovery message.
+    pub plugin_inputs: BTreeMap<String, PluginInput>,
     /// Private dependency, package, and actual output trees.
     pub private: Vec<PathBuf>,
     decisions: Mutex<BTreeMap<String, result::Result<PublicFile, PublicDenial>>>,
@@ -78,6 +84,7 @@ impl FilePolicy {
             repo_root: config.repo_root.clone(),
             sources: policy,
             imported_by,
+            plugin_inputs: BTreeMap::new(),
             private,
             decisions: Mutex::new(BTreeMap::new()),
         })
@@ -113,6 +120,19 @@ impl FilePolicy {
             ProtectedBy::RootMatch { .. } => PublicDenial::RootMatch,
             ProtectedBy::ReservedBasename => PublicDenial::Reserved,
             ProtectedBy::ListedInput => {
+                if let Some(origin) = self.plugin_inputs.get(path) {
+                    let relative = mokly_model::routes::relative(&origin.stylesheet, path);
+                    let relative_file = if relative.starts_with('.') {
+                        relative
+                    } else {
+                        format!("./{relative}")
+                    };
+                    return PublicDenial::Postcss {
+                        plugin: origin.plugin.clone(),
+                        stylesheet: origin.stylesheet.clone(),
+                        relative_file,
+                    };
+                }
                 let direct = self.imported_by.get(path).cloned();
                 let imported = direct.or_else(|| {
                     if self.imported_by.is_empty() {
@@ -151,7 +171,7 @@ impl FilePolicy {
         if path
             .split('/')
             .next()
-            .is_some_and(|first| first.eq_ignore_ascii_case("mokly-generated"))
+            .is_some_and(|first| first.eq_ignore_ascii_case(namespace::GENERATED_DIRECTORY))
         {
             return Err(PublicDenial::Generated);
         }
@@ -223,6 +243,9 @@ impl FilePolicy {
 }
 
 impl PublicPolicy for FilePolicy {
+    fn recheck(&self, path: &str) -> result::Result<PublicFile, PublicDenial> {
+        self.decide(path, false)
+    }
     fn check(&self, path: &str) -> result::Result<PublicFile, PublicDenial> {
         let mut decisions = self
             .decisions

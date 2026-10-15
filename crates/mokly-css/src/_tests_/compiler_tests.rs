@@ -125,11 +125,13 @@ fn renderer_owned_imports_are_removed_before_postcss_is_called() {
             .next_call(matching!("css/base.css", "./renderer.css"))
             .returns(Ok("css/renderer.css".into())),
         CssProcessorMock::process
-            .next_call(matching!(("css/base.css", text) if !text.contains("@import")))
-            .answers(&|_, _, source| {
+            .next_call(matching!(("css/base.css", text, _) if !text.contains("@import")))
+            .answers(&|_, _, source, _| {
                 Ok(ProcessedCss {
                     text: source.into(),
                     inputs: BTreeMap::new(),
+                    plugin_inputs: BTreeMap::new(),
+                    directories: Vec::new(),
                 })
             }),
     )));

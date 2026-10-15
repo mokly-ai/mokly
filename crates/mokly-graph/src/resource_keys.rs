@@ -7,6 +7,7 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::{parse, props};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::data::{DataValue, Props};
+use mokly_model::namespace;
 use pulldown_cmark::{Event, Parser, Tag};
 
 use crate::references;
@@ -18,7 +19,7 @@ pub(crate) fn seeds(
     components: &BTreeSet<String>,
 ) -> VecDeque<(String, String)> {
     let mut queue = VecDeque::new();
-    let source = format!("static/mokly-generated/{route}");
+    let source = namespace::generated(route);
     let parent = entry
         .metadata
         .variant_of

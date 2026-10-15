@@ -7,6 +7,7 @@ use mokly_git::repository::RepositoryMock;
 use mokly_git::tree::{Entry, Limits, Mode};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::error::{Error, GitResult};
 use crate::sources::{GitSources, Sources};
 
 #[test]
@@ -63,4 +64,15 @@ fn source_index_expands_only_requested_roots_and_reuses_metadata() {
         std::slice::from_ref(&entry)
     );
     assert_eq!(sources.read(&entry.path, 1).unwrap(), [255]);
+}
+
+#[test]
+fn an_extraction_blob_limit_retains_its_exact_path_at_the_comparison_boundary() {
+    let result: mokly_git::error::Result<()> = Err(mokly_git::error::Error::BlobLimit {
+        path: "movie.mp4".into(),
+        limit: 64,
+    });
+    assert!(
+        matches!(result.at_path("."), Err(Error::Limit { path, source: mokly_git::error::Error::ByteLimit { limit: 64 } }) if path == "movie.mp4")
+    );
 }

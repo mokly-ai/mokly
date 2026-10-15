@@ -20,3 +20,6 @@ mokly-catalogue = { path = "crates/mokly-catalogue" }
 mokly-html = { path = "crates/mokly-html" }
 mokly-css = { path = "crates/mokly-css" }
 mokly-graph = { path = "crates/mokly-graph" }
+
+mokly-render = { path = "crates/mokly-render" }
+mokly-server = { path = "crates/mokly-server" }

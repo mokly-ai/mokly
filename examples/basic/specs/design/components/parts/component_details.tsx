@@ -1,8 +1,15 @@
+import type { ReactNode } from "react";
+
 import { MockLink } from "@mokly/mokly";
 
 import { MetaRow } from "../../parts/metadata_row.js";
 
-import { ActionPropValues, actionVariants } from "./action_props.js";
+import {
+  actionCompact,
+  actionEntries,
+  ActionPropValues,
+  type ActionEntry,
+} from "./action_props.js";
 import { checklistCompleted, checklistTitle } from "./checklist.js";
 import { ComparisonDetails } from "./comparison_details.js";
 import { componentComparison } from "./comparison_fixtures.js";
@@ -15,7 +22,11 @@ import {
 import { CONTROLS_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
-import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
+import {
+  COMPONENT_ENTRIES,
+  COMPONENT_ENTRY_BY_STATE,
+  type ComponentEntryMetadata,
+} from "./metadata.js";
 
 export type ComponentPageState =
   | "default"
@@ -67,6 +78,22 @@ const SUPPLIED_PROPS: Partial<
   ],
 };
 
+/** The Action entry a page shows: a saved variant or the parent's own entry. */
+export function actionEntryOf(entry: ComponentEntryMetadata): ActionEntry {
+  return entry.path === COMPONENT_ENTRIES.actionDisabled.path
+    ? "disabled"
+    : entry.path === COMPONENT_ENTRIES.actionDefault.path
+      ? "default"
+      : "parent";
+}
+
+/** Edit props opens the controls of the entry it is on. */
+const CONTROLS_BY_ENTRY = {
+  parent: CONTROLS_PAGES.parent,
+  default: CONTROLS_PAGES.default,
+  disabled: CONTROLS_PAGES.variant,
+} as const satisfies Record<ActionEntry, string>;
+
 function ComponentProps({ state }: { state: ComponentPageState }) {
   const entry = COMPONENT_ENTRY_BY_STATE[state];
   const supplied = SUPPLIED_PROPS[state];
@@ -89,18 +116,14 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
       ) : (
         <ActionPropValues
           props={
-            actionVariants[state === "disabled" ? "disabled" : "default"].props
+            state === "removed"
+              ? actionCompact.props
+              : actionEntries[actionEntryOf(entry)].props
           }
         />
       )}
       {entry.component === "action" && state !== "removed" ? (
-        <MockLink
-          to={
-            state === "disabled"
-              ? CONTROLS_PAGES.variant
-              : CONTROLS_PAGES.default
-          }
-        >
+        <MockLink to={CONTROLS_BY_ENTRY[actionEntryOf(entry)]}>
           Edit props ↗
         </MockLink>
       ) : null}
@@ -108,7 +131,14 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
   );
 }
 
-export function ComponentDetails({ state }: { state: ComponentPageState }) {
+/** A Props-tab limit opens its own Props panel instead of the state's. */
+export function ComponentDetails({
+  props,
+  state,
+}: {
+  props?: ReactNode;
+  state: ComponentPageState;
+}) {
   const entry = COMPONENT_ENTRY_BY_STATE[state];
   const changed =
     state === "affected" ||
@@ -126,11 +156,13 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
   const initial =
     state === "closed"
       ? "closed"
-      : changed || state === "unused" || usageDelivery
-        ? "usage"
-        : state === "disabled" || state === "hidden"
-          ? "props"
-          : "info";
+      : props !== undefined
+        ? "props"
+        : changed || state === "unused" || usageDelivery
+          ? "usage"
+          : state === "disabled" || state === "hidden"
+            ? "props"
+            : "info";
   return (
     <Inspector
       initial={initial}
@@ -160,7 +192,7 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
         {
           id: "props",
           label: "Props",
-          content: <ComponentProps state={state} />,
+          content: props ?? <ComponentProps state={state} />,
         },
         {
           id: "usage",

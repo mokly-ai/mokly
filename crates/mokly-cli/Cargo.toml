@@ -8,6 +8,9 @@ publish = false
 
 [dependencies]
 mokly-compare = { workspace = true }
+mokly-render = { workspace = true }
+mokly-sidecar = { workspace = true }
+mokly-server = { workspace = true }
 mokly-html = { workspace = true }
 mokly-css = { workspace = true }
 mokly-graph = { workspace = true }
@@ -20,20 +23,29 @@ dunce = "1.0.5"
 tempfile = "3.27.0"
 terminal_size = "0.4.4"
 thiserror = "2.0.21"
-tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "time", "signal"] }
+tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "time", "signal", "process", "io-util"] }
 unicode-width = "0.2.2"
 unimock = { version = "0.6.8", optional = true }
 url = "2.5.8"
 serde_json = "1.0.154"
+ctrlc = { version = "3.5.2", features = ["termination"] }
+
+crossterm = "0.29.0"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
 
 [dev-dependencies]
 mokly-compare = { workspace = true, features = ["mock"] }
+mokly-sidecar = { workspace = true, features = ["mock"] }
+
+mokly-server = { workspace = true, features = ["mock"] }
 mokly-catalogue = { workspace = true, features = ["mock"] }
 mokly-graph = { workspace = true, features = ["mock"] }
 insta = "1.49.0"
 serde_json = "1.0.154"
 tempfile = "3.27.0"
 unimock = "0.6.8"
+libc = "0.2.190"
 
 [[bin]]
 name = "mokly"

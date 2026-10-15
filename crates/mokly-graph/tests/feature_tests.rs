@@ -1,6 +1,7 @@
 //! Native composition keeps body link bases, forwarded slots, and shared Markdown assets.
 
 use std::fs;
+use std::path::Path;
 
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 use tempfile::TempDir;
@@ -238,4 +239,41 @@ fn shared_css_keeps_each_delivery_roots_relative_asset_urls() {
         let urls = mokly_css::syntax::references(&css);
         assert_eq!(urls[0].value, expected);
     }
+}
+
+#[test]
+fn live_saved_props_reuse_a_warm_document_and_edits_keep_the_catalogue_cache() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/catalogue");
+    let (generation, cache) = support::prepare(&root, 16 * 1024 * 1024, 2);
+    let generation = generation.unwrap();
+    let route = "home/index.mobile.html";
+    let saved = generation.render(route).unwrap();
+    let entry = generation
+        .catalogue()
+        .model
+        .entries
+        .iter()
+        .find(|entry| entry.metadata.path == "home")
+        .unwrap();
+    let mokly_model::catalogue::EntryContent::Screen { visual, .. } = &entry.content else {
+        panic!("screen fixture")
+    };
+    let before = cache.stats();
+    let preview = generation.render_props(route, &visual.props).unwrap();
+    assert_eq!(preview.artifact.bytes, saved.bytes);
+    assert!(cache.stats().hits > before.hits);
+    let mut edited = visual.props.clone();
+    edited.insert(
+        "label".into(),
+        mokly_model::data::DataValue::String("Edited".into()),
+    );
+    let entries = cache.stats().entries;
+    let preview = generation.render_props(route, &edited).unwrap();
+    assert!(
+        String::from_utf8(preview.artifact.bytes.clone())
+            .unwrap()
+            .contains("Edited")
+    );
+    assert_eq!(cache.stats().entries, entries);
+    assert_eq!(generation.render(route).unwrap().bytes, saved.bytes);
 }

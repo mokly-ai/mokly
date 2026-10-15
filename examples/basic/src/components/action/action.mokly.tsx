@@ -2,6 +2,15 @@ import { defineComponent, MockLink } from "@mokly/mokly";
 
 import { Action } from "./action.js";
 
+/** Own props hold the keys that every saved state sets; Default adds a hint. */
+const base = {
+  label: "Continue",
+  tone: "primary",
+  radius: 8,
+  disabled: false,
+} as const;
+const defaults = { ...base, hint: "Continue when you’re ready." } as const;
+
 export const action = defineComponent({
   slug: "index",
   title: "Action",
@@ -10,22 +19,19 @@ export const action = defineComponent({
   relatedDocs: ["examples/basic/README.md"],
   tags: ["forms"],
   propSchema: {
-    kind: "object",
+    type: "object",
+    additionalProperties: false,
+    required: ["label", "tone"],
     properties: {
-      label: { schema: { kind: "string", minLength: 1 } },
-      disabled: { schema: { kind: "boolean" }, optional: true },
-      tone: { schema: { kind: "enum", values: ["primary", "secondary"] } },
-      radius: {
-        schema: { kind: "number", minimum: 0, maximum: 32 },
-        optional: true,
-      },
-      destination: {
-        schema: { kind: "enum", values: ["details", "welcome"] },
-        optional: true,
-      },
-      hint: { schema: { kind: "string" }, optional: true },
+      label: { type: "string", minLength: 1 },
+      disabled: { type: "boolean" },
+      tone: { enum: ["primary", "secondary"] },
+      radius: { type: "number", minimum: 0, maximum: 32 },
+      destination: { enum: ["details", "welcome"] },
+      hint: { type: "string" },
     },
-  },
+  } as const,
+  props: base,
   controls: {
     label: { kind: "text", label: "Label", maxLength: 80 },
     disabled: { kind: "boolean", label: "Disabled" },
@@ -78,17 +84,7 @@ export const action = defineComponent({
     );
   },
   variants: [
-    {
-      slug: "default",
-      title: "Default",
-      props: {
-        label: "Continue",
-        tone: "primary",
-        radius: 8,
-        disabled: false,
-        hint: "Continue when you’re ready.",
-      },
-    },
+    { slug: "default", title: "Default", props: defaults },
     {
       slug: "disabled",
       title: "Disabled",

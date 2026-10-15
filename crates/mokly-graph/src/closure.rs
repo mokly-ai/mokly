@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_html::tree::Node;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
+use mokly_model::namespace;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::closure_prefetch;
@@ -60,7 +61,7 @@ pub struct Walker {
 impl ClosureBuilder for Walker {
     fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure> {
         let mut result = Closure::default();
-        let source = format!("static/mokly-generated/{route}");
+        let source = namespace::generated(route);
         let mut queue: VecDeque<_> = collect(tree)
             .into_iter()
             .map(|reference| (source.clone(), reference))
@@ -97,7 +98,7 @@ impl ClosureBuilder for Walker {
             let Some(target) = target else {
                 continue;
             };
-            if let Some(generated) = target.strip_prefix("static/mokly-generated/")
+            if let Some(generated) = target.strip_prefix(&namespace::generated(""))
                 && self.generated.is_document(generated)
             {
                 continue;
@@ -128,7 +129,7 @@ impl ClosureBuilder for Walker {
                 cached.clone()
             } else {
                 let bytes: Arc<[u8]> = if let Some(generated) =
-                    target.strip_prefix("static/mokly-generated/")
+                    target.strip_prefix(&namespace::generated(""))
                 {
                     if let Some(urls) = self.index.get(&target) {
                         edges.insert(target.clone(), urls.clone());

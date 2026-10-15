@@ -15,17 +15,17 @@ Serve answers these routes over HTTP. `build` writes them as files under the
 output directory with the same relative paths, so a static host needs no
 rewrite rules.
 
-| Route                                                                                        | Serve | `build`                                 | Content                                                    |
-| -------------------------------------------------------------------------------------------- | ----- | --------------------------------------- | ---------------------------------------------------------- |
-| `/`, `/view/<route>`                                                                         | stub  | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
-| `/404.html`                                                                                  | stub  | `404.html`                              | the same stub                                              |
-| `/mokly-viewer/index.json`                                                                   | live  | file                                    | the catalogue index v7                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live  | one file per current entry              | the entry detail v1                                        |
-| `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live  | file                                    | review result v8, under the comparison contract            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live  | one file per removed entry              | the entry detail v1 of a removed entry's historical record |
-| `/mokly-viewer/live.json`                                                                    | live  | absent                                  | the live descriptor v3: the render capability              |
-| `/mokly-viewer/events`                                                                       | live  | absent                                  | the event stream: one message per publication              |
-| `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live  | files                                   | documents, the shell bundle, styles, and fonts             |
+| Route                                                                                        | Serve     | `build`                                 | Content                                                    |
+| -------------------------------------------------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------------- |
+| `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
+| `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
+| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v7                                     |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v1                                        |
+| `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live      | file                                    | review result v8, under the comparison contract            |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v1 of a removed entry's historical record |
+| `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
+| `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
+| `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
 
 `<route>` is the entry route of the [path contract](./mokly-paths.md).
 `<entry path>` is the entry's path with `.json` appended; a path segment never
@@ -88,7 +88,7 @@ interface EntryDetailV1 {
   entry: { path: string; kind: CatalogueRecord["kind"]; snapshotId?: string };
   views: readonly DetailView[]; // empty for pages, documents, and use cases
   resourceEvidence?: ViewEvidence; // pages only; present when ready
-  workspace?: Workspace; // screens and components only
+  workspace?: Workspace; // screens and components, when all list inputs are proven
 }
 interface DetailView {
   viewport: Viewport;
@@ -146,6 +146,9 @@ Serve a view's usage is `pending` until its first render completes and the
 next publication replaces the detail; `build` renders every view before it
 writes, so a built detail carries no `pending` view.
 
+A screen or component detail omits `workspace` until every input of its lists
+is proven. Pending or unavailable consumer usage cannot prove a complete list.
+
 ## Live Descriptor
 
 ```ts
@@ -156,14 +159,14 @@ interface LiveDescriptorV3 {
 }
 ```
 
-Serve answers `/mokly-viewer/live.json` with the render generation and the
-temporary-render capability of the component controls contract. The shell
-fetches it whenever the index carries `live`, at start and when
-`live.generation` changes; a catalogue without JavaScript has one too, because
-the Rust core renders an HTML entry with edited props itself. When the fetch
-fails, browsing works, live prop editing is unavailable with a browser
-warning, and the shell retries on the next publication message. A static
-build has none.
+Serve supplies the component controls contract's render generation and capability
+at `/mokly-viewer/live.json`. The shell fetches it when the index carries
+`live`, at start and when `live.generation` changes. The Rust core supports
+edited props for HTML entries too. With no descriptor, Props shows
+`Preparing to edit props…` and read-only fields. Refetch keeps the installed
+capability until its replacement installs. On failure, browsing works; Props
+shows `Editing could not start.` and `Try again` to fetch again. The shell also
+retries on the next publication message. Static builds have no descriptor.
 
 ## Fetch And Fences
 
@@ -211,11 +214,11 @@ Usage, and the details panel update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame
 shows a screen or component view, a page, a document, or a use-case step.
 When `live.generation` changed, the shell refetches the live descriptor and
-replaces the render capability; when the current entry is no longer in the
-index, it shows the missing state and keeps the URL; no other update reloads
-the page. When a fetch fails or the pair disagrees after one more index fetch,
-the shell keeps its state, shows the entry as unavailable with retry, and
-waits for the next message.
+replaces the render capability; a current entry the index no longer lists
+shows the missing state under the kept URL until an index lists it again; no
+other update reloads the page. When a fetch fails or the pair disagrees after
+one more index fetch, the shell keeps its state, shows the entry as
+unavailable with retry, and waits for the next message.
 
 ## Identity
 
@@ -239,9 +242,9 @@ shell into the stub's mount element. The
 
 ## Fail-Closed Rules
 
-| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract |
-| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` in an embedded host             |
-| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing is unavailable with a browser warning                 |
-| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                |
+| Condition                                                                                                                                                                                                                                                               | Shell behaviour                                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| an index, detail, or live descriptor with another `schemaVersion` of the [format inventory](./mokly-format-versions.md)                                                                                                                                                 | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract                                 |
+| a detail, an index, or an event message with another `deploymentId`                                                                                                                                                                                                     | a full page load in the standalone shell; one `onError` in an embedded host                                             |
+| a live descriptor that fails while the index carries `live`                                                                                                                                                                                                             | browsing works; live prop editing shows `Editing could not start.` with `Try again`, which fetches the descriptor again |
+| a current entry's detail whose identity or revision differs from the index after one refetch, a removed entry's detail whose identity, generation, or snapshot id differs from the index, or a JSON route that redirects outside the origin, has another type, or fails | the entry's unavailable state with retry                                                                                |

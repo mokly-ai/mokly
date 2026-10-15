@@ -11,6 +11,10 @@ import type { Variant } from "./Variant.js";
 // prettier-ignore
 export type Definition = {
 /**
+ * Non-data inference exclusions, before catalogue path derivation.
+ */
+excludedProps?: Array<string>,
+/**
  * Repository-relative module and export name.
  */
 handle: string,

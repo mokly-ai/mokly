@@ -4,27 +4,50 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_compare::error::Error;
 use mokly_git::error;
-use mokly_graph::error::GraphError;
-use mokly_html::error::HtmlError;
 
 use crate::build::BuildChanges;
 use crate::build_output::issue_text;
+use crate::changes_output::ChangeDiagnostic;
 use crate::codes::Code;
-use crate::render_errors;
+use crate::{changes_policy, render_errors};
 
-pub(crate) fn details(error: &Error) -> Vec<String> {
+pub(crate) fn details(error: &Error) -> Vec<ChangeDiagnostic> {
     match error {
         Error::Catalogue {
             source: CatalogueError::Invalid { issues, .. },
         } => issues
             .iter()
-            .map(|issue| issue_text(issue, Code::BuildInvalid))
+            .map(|issue| ChangeDiagnostic {
+                code: Code::BuildInvalid,
+                message: issue_text(issue, Code::BuildInvalid),
+            })
             .collect(),
         Error::Catalogue {
             source: CatalogueError::Config(issue),
-        } => vec![issue_text(issue, Code::ConfigInvalid)],
-        Error::Graph { source } => render_errors::diagnostics(source),
-        _ => vec![error.to_string()],
+        } => vec![ChangeDiagnostic {
+            code: Code::ConfigInvalid,
+            message: issue_text(issue, Code::ConfigInvalid),
+        }],
+        Error::Catalogue {
+            source: CatalogueError::Runtime { source },
+        } => {
+            let diagnostic = render_errors::runtime(source);
+            vec![ChangeDiagnostic {
+                code: diagnostic.code,
+                message: diagnostic.message,
+            }]
+        }
+        Error::Graph { source } => render_errors::diagnostics(source)
+            .into_iter()
+            .map(|diagnostic| ChangeDiagnostic {
+                code: diagnostic.code,
+                message: diagnostic.message,
+            })
+            .collect(),
+        _ => vec![ChangeDiagnostic {
+            code: Code::BuildInvalid,
+            message: error.to_string(),
+        }],
     }
 }
 
@@ -51,26 +74,16 @@ pub(crate) fn unavailable(error: &Error) -> Option<BuildChanges> {
         return Some(BuildChanges::Unavailable {
             base_commit: commit.clone(),
             reason: "comparison limit reached".into(),
-            diagnostics: vec![detail],
+            diagnostics: vec![ChangeDiagnostic {
+                code: Code::BuildInvalid,
+                message: detail,
+            }],
         });
     }
-    let validation = match source.as_ref() {
-        Error::Catalogue { source } => !matches!(source, CatalogueError::Internal(_)),
-        Error::Graph { source } => validation_graph(source),
-        Error::Deferred { .. } => true,
-        _ => false,
-    };
-    if !validation {
-        return None;
-    }
+    let reason = changes_policy::unavailable(source)?;
     Some(BuildChanges::Unavailable {
         base_commit: commit.clone(),
-        reason: if matches!(source.as_ref(), Error::Deferred { .. }) {
-            "base renderer unavailable"
-        } else {
-            "base validation failed"
-        }
-        .into(),
+        reason: reason.into(),
         diagnostics: details(source),
     })
 }
@@ -78,30 +91,14 @@ pub(crate) fn unavailable(error: &Error) -> Option<BuildChanges> {
 pub(crate) fn failure_code(error: &Error) -> Code {
     match error {
         Error::Git { .. } => Code::GitFailed,
+        Error::Catalogue {
+            source: CatalogueError::Runtime { source },
+        } => render_errors::runtime(source).code,
+        Error::Graph { source } => changes_policy::failure_code(source),
+        Error::Cancelled => Code::BuildInvalid,
         Error::Base { source, .. } => failure_code(source),
         Error::SourceFailure { source } => failure_code(source),
         _ => Code::ReviewInvalid,
-    }
-}
-
-fn validation_graph(error: &GraphError) -> bool {
-    match error {
-        GraphError::Internal(_) => false,
-        GraphError::Attempt { failures, .. } => {
-            !failures.is_empty() && failures.iter().all(validation_graph)
-        }
-        GraphError::Html { source } => validation_html(source),
-        _ => true,
-    }
-}
-
-fn validation_html(error: &HtmlError) -> bool {
-    match error {
-        HtmlError::Internal(_) => false,
-        HtmlError::Route { source, .. }
-        | HtmlError::Located { source, .. }
-        | HtmlError::Attempt { source, .. } => validation_html(source),
-        _ => true,
     }
 }
 
@@ -139,6 +136,15 @@ pub(crate) fn failure_detail(error: &Error) -> String {
         Error::Git { source } => plain(&source.to_string()).into(),
         Error::Base { commit, source } => format!("base {commit}: {}", failure_detail(source)),
         Error::SourceFailure { source } => failure_detail(source),
+        Error::Catalogue {
+            source: CatalogueError::Runtime { source },
+        } => source.message.clone(),
+        Error::Graph { source } => render_errors::diagnostics(source)
+            .into_iter()
+            .map(|diagnostic| diagnostic.message)
+            .collect::<Vec<_>>()
+            .join("\n"),
+        Error::Cancelled => "build cancelled".into(),
         _ => error.to_string(),
     }
 }

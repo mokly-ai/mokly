@@ -14,6 +14,7 @@ use mokly_model::readers::ReadError;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildChanges, BuildError, BuildService, CatalogueBuild};
+use crate::cancellation::BuildCancellation;
 use crate::changes_diagnostics;
 use crate::codes::Code;
 
@@ -33,6 +34,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
     };
     let (graphs, _guards) = graphs(vec![head.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: Arc::new(Unimock::new(
             ConfigLoaderMock::load
                 .next_call(matching!(_, _))
@@ -74,6 +76,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
 fn an_invalid_internal_review_is_a_fatal_build_error() {
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: Arc::new(Unimock::new(
             ConfigLoaderMock::load
                 .next_call(matching!(_, _))
@@ -137,12 +140,12 @@ fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
             panic!("limit must be unavailable")
         };
         assert_eq!(reason, "comparison limit reached");
-        assert!(diagnostics[0].starts_with("specs/large.html: "));
+        assert!(diagnostics[0].message.starts_with("specs/large.html: "));
         assert!(
-            diagnostics[0].contains("3")
-                || diagnostics[0].contains("64")
-                || diagnostics[0].contains("7")
-                || diagnostics[0].contains("128")
+            diagnostics[0].message.contains("3")
+                || diagnostics[0].message.contains("64")
+                || diagnostics[0].message.contains("7")
+                || diagnostics[0].message.contains("128")
         );
     }
 }

@@ -25,7 +25,10 @@ owns cache keys and resource routes. The sidecar supplies consumer PostCSS.
 `Compiler` implements `dyn StylesheetBundler`. It receives `dyn SourceTree`,
 `dyn ImportResolver`, and `dyn CssProcessor`. `IdentityProcessor` handles a
 catalogue without consumer plugins. A sidecar adapter implements the same
-processor boundary for PostCSS.
+processor boundary for PostCSS. It receives the renderer exclusion set and
+returns plugin provenance and directory watch recipes beside the transformed
+text. The graph protects those inputs and reports plugin-specific recovery
+actions. Selected dependency roots keep their logical `node_modules` names.
 
 A configured root delivers `styles/{repository-path}`. A JavaScript root
 delivers `styles/{module-path}.css`. Assets use `assets/{repository-path}`.
@@ -55,6 +58,9 @@ matches. Slot matches follow their supplier. Body styles and owned head styles
 are excluded from this collector. Evidence uses the containing public document
 route. Linked selectors emit one
 record per innermost changed component owner, plus outside entry evidence.
+
+Plugin dependency inputs use digests, separate from CSS and asset bytes.
+They keep source protection and graph invalidation without retaining file bodies.
 
 ## Quick Start
 

@@ -5,7 +5,7 @@ use crate::tree::{Node, RegionKind};
 /// Serialize an owned tree, writing markers only for instance and slot regions.
 pub fn html(nodes: &[Node]) -> String {
     let mut output = String::new();
-    write(nodes, false, &mut output);
+    write(nodes, false, &mut output, &mut Vec::new());
     output
 }
 
@@ -18,7 +18,7 @@ pub fn escape(value: &str) -> String {
         .replace('"', "&quot;")
 }
 
-fn write(nodes: &[Node], raw: bool, output: &mut String) {
+fn write(nodes: &[Node], raw: bool, output: &mut String, instances: &mut Vec<(String, String)>) {
     for node in nodes {
         match node {
             Node::Text(text) if raw => output.push_str(text),
@@ -47,7 +47,7 @@ fn write(nodes: &[Node], raw: bool, output: &mut String) {
                             | "noframes"
                             | "plaintext"
                     );
-                write(&element.children, raw, output);
+                write(&element.children, raw, output, instances);
                 if !(element.is_html() && void(&element.name)) {
                     output.push_str(&format!("</{}>", element.name));
                 }
@@ -66,8 +66,18 @@ fn write(nodes: &[Node], raw: bool, output: &mut String) {
                             escape(path)
                         ),
                     )),
-                    RegionKind::Slot { name, .. } => {
-                        Some(("slot", format!("name=\"{}\"", escape(name))))
+                    RegionKind::Slot {
+                        name, instance_key, ..
+                    } => {
+                        let receiver = instances
+                            .iter()
+                            .rev()
+                            .find(|(key, _)| key == instance_key)
+                            .map_or("", |(_, id)| id);
+                        Some((
+                            "slot",
+                            format!("instance=\"{}\" name=\"{}\"", receiver, escape(name)),
+                        ))
                     }
                     _ => None,
                 };
@@ -77,7 +87,13 @@ fn write(nodes: &[Node], raw: bool, output: &mut String) {
                         region.id
                     ));
                 }
-                write(children, raw, output);
+                if let RegionKind::Instance { key, .. } = &region.kind {
+                    instances.push((key.clone(), region.id.clone()));
+                }
+                write(children, raw, output, instances);
+                if matches!(region.kind, RegionKind::Instance { .. }) {
+                    instances.pop();
+                }
                 if let Some((kind, _)) = marker {
                     output.push_str(&format!("<!--mokly-{kind}:end id=\"{}\"-->", region.id));
                 }

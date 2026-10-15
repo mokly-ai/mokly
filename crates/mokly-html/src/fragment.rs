@@ -27,6 +27,10 @@ pub enum RenderKind {
 pub struct FragmentRequest {
     /// Definition source and export name, or story id.
     pub handle: String,
+    /// Effective catalogue path, including the rendered variant.
+    pub entry_path: String,
+    /// Effective display title supplied to the consumer renderer.
+    pub entry_title: String,
     /// Render method.
     pub kind: RenderKind,
     /// Validated data props.
@@ -39,6 +43,8 @@ pub struct FragmentRequest {
     pub ignore_enabled: bool,
     /// Declared supplied slots and opaque placeholder tokens.
     pub slots: BTreeMap<String, String>,
+    /// Generation-owned React slot values saved during describe.
+    pub saved_slots: BTreeMap<String, String>,
 }
 
 /// Render output with authenticated ownership metadata.
@@ -74,6 +80,8 @@ pub struct FragmentMarker {
 /// Marker payloads are kept separate from consumer-authored HTML strings.
 #[derive(Clone, Debug)]
 pub enum FragmentMarkerKind {
+    /// Adapter output, promoted to a root region only on its own component view.
+    Output,
     /// Placement of a recorded logical instance.
     Instance {
         /// Instance input key.

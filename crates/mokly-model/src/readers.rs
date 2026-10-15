@@ -6,6 +6,7 @@ use serde_json::Value;
 use thiserror::Error;
 
 use crate::detail_validation;
+use crate::namespace;
 use crate::public_detail::{EntryDetailV1, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::read_contract::ContractViolation;
@@ -64,7 +65,9 @@ pub fn detail(text: &str) -> Result<EntryDetailV1, ReadError> {
 /// Decode a live descriptor after its v3 gate.
 pub fn live(text: &str) -> Result<LiveDescriptorV3, ReadError> {
     let live: LiveDescriptorV3 = decode(text, "live descriptor", versions::LIVE_DESCRIPTOR)?;
-    if live.render.url != "/mokly-viewer/components/render" || live.render.token.is_empty() {
+    if live.render.url != format!("/{}", namespace::viewer("components/render"))
+        || live.render.token.is_empty()
+    {
         return Err(ReadError::Contract {
             boundary: "live descriptor",
             message: ContractViolation::RenderCapability,

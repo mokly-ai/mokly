@@ -183,6 +183,10 @@ pub(crate) trait GitResult<T> {
 impl<T> GitResult<T> for error::Result<T> {
     fn at_path(self, path: &str) -> Result<T> {
         match self {
+            Err(error::Error::BlobLimit { path, limit }) => Err(Error::Limit {
+                path,
+                source: error::Error::ByteLimit { limit },
+            }),
             Err(source) if source.is_limit() => Err(Error::Limit {
                 path: path.into(),
                 source,

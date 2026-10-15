@@ -1,1 +1,4 @@
-export { inspectorScreens } from "./screens.js";
+export {
+  inspectorClosedScreen,
+  screenInspectorClosedScreen,
+} from "./screens.js";

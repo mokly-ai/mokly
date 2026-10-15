@@ -39,7 +39,7 @@ impl Builder for Extract<'_> {
     fn build(&self, destination: &Path) -> Result<()> {
         self.repository
             .extract(self.commit, destination, self.limits)
-            .base()
+            .at_path(".")
     }
 }
 

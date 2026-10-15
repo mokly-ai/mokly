@@ -35,6 +35,10 @@ pub fn run(root: &Path, arguments: &[&str]) -> Output {
         .current_dir(root)
         .args(arguments)
         .env("MOKLY_OUTPUT", "rich")
+        .env(
+            "MOKLY_PACKAGE_ROOT",
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
+        )
         .env_remove("CI")
         .output()
         .unwrap()

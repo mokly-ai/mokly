@@ -40,6 +40,47 @@ unavailable. The diagnostic names the requested path or root and the limit.
 The current build remains valid. Genuine Git command and object failures
 remain fatal `git-failed` errors.
 
+## Shared Render Runtime
+
+The CLI constructs head and base definition and graph factories through
+`mokly-render::Runtime`, with the current npm package `VERSION`. They share
+one sidecar pool, one render cache, and one cancellation state. A base that
+needs JavaScript, a renderer, or PostCSS acquires a `BaseSide`: its source
+lease, dependency `Resolved` value, repository mappings, and commit identity.
+The graph holds these leases while it can request a render. HTML without a
+renderer or PostCSS uses Git sources without extraction or a Node process.
+
+The CLI uses 2 GiB for each disk cache namespace and a 120-second shared
+allowance for dependency preparation. Extraction and installation use the
+same cancellation token as Git. Cancellation checkpoints also surround
+comparison and public resource planning. All source wrappers forward exact
+prefetch sets, public reads, and streamed digests.
+
+Each PostCSS context runs in a child process whose working directory is its
+side's source root. This confines relative file reads and automatic Tailwind
+source discovery to that side. The head and base can use the same installed
+third-party dependencies while reading separate repository sources.
+
+Historical runtime failures keep typed diagnostic codes through catalogue,
+HTML, CSS, and graph wrappers. The following policy applies only to Changes;
+current-side failures retain the sidecar's fail-closed command policy.
+
+| Runtime category                     | Historical outcome                                 |
+| ------------------------------------ | -------------------------------------------------- |
+| Configuration, build, bundle, render | Changes unavailable: base validation failed        |
+| Unavailable                          | Changes unavailable: base runtime unavailable      |
+| Version                              | Changes unavailable: base runtime version mismatch |
+| Cancelled                            | Fail the interrupted build                         |
+| Protocol                             | Fail the build with the protocol diagnostic        |
+| Timeout                              | Fail the build after the sidecar's one retry       |
+
+A fatal failure inside a grouped attempt takes precedence over recoverable
+historical validation. Internal failures remain comparison failures. A
+missing base configuration still denotes an empty catalogue. Base diagnostics
+are detail lines that name the full base commit and original terminal code.
+A successful build has no error block. Genuine Git and internal comparison
+failures use error blocks and fail the command.
+
 ## Cache Location And Ownership
 
 Both cache kinds live in a SHA-256 namespace under the operating system's

@@ -24,11 +24,15 @@ origin. Only `{detail}` may carry raw tool text.
 | Invalid plugin options                                     | `postcss plugins[{plugin}] must be a plain option object`                                                                                 |
 | Plugin name resolution or factory failure                  | `could not load PostCSS plugin {plugin} from {config-path}: {detail}; install and configure it in the consumer repository`                |
 
-`{index}` is zero-based. Module suffix and path checks run before the module
-loads. Other configuration errors keep their messages under the
+`{index}` is zero-based. Rust configuration validation checks the module
+suffix, path, and file before any sidecar starts. Other configuration errors keep their messages under the
 [configuration contract](./mokly-configuration.md).
 
 ## Build (`build-invalid`)
+
+For a PostCSS `CssSyntaxError`, `{stylesheet}` includes its one-based line
+and column, and `{detail}` is its reason. The diagnostic uses the logical
+stylesheet path, without PostCSS's physical-path or plugin framing.
 
 | Failure                                                 | Exact message                                                                                                                                                                                                             |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
