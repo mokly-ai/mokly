@@ -70,6 +70,7 @@ fn shutdown_cancels_queued_and_inflight_work_with_one_shared_deadline() {
         );
         let call = || {
             Call::ProcessCss(ProcessCss {
+                repository_roots: Vec::new(),
                 context: "css".into(),
                 source_root: "/repo".into(),
                 module_resolution: ModuleResolution::default(),

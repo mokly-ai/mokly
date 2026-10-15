@@ -7,11 +7,8 @@ import { detail } from "./errors.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
-configureResolution(workerData.sourceRoot, workerData.moduleResolution);
-const configuration = loadPostcss(
-  workerData.postcss,
-  workerData.sourceRoot,
-  workerData.moduleResolution,
+const configuration = configureResolution(workerData).then((paths) =>
+  loadPostcss(workerData.postcss, paths),
 );
 configuration.catch(() => {});
 parentPort?.on(

@@ -5,6 +5,10 @@ import type { ModuleResolution } from "./ModuleResolution.js";
 // prettier-ignore
 export type ProcessCssParams = {
 /**
+ * Physical repositories whose local packages map into this side.
+ */
+repositoryRoots: Array<string>,
+/**
  * Core-chosen stylesheet generation context.
  */
 context: string,

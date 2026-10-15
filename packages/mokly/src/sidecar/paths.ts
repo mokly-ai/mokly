@@ -6,20 +6,10 @@ import { build } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { resolutionOptions, sideModule } from "./resolution.js";
-
-export function logical(root: string, file: string): string {
-  return path.relative(root, file).split(path.sep).join("/");
-}
-
-export function inside(root: string, file: string): boolean {
-  const relative = path.relative(root, file);
-  return (
-    relative !== ".." &&
-    !relative.startsWith(`..${path.sep}`) &&
-    !path.isAbsolute(relative)
-  );
-}
+import { detail } from "./errors.js";
+import { ModulePaths } from "./module-paths.js";
+import { inside } from "./path-scope.js";
+import { resolutionOptions } from "./resolution.js";
 
 export interface ConsumerRequire extends NodeJS.Require {
   resolvePeer(name: string): Promise<string>;
@@ -28,6 +18,7 @@ export interface ConsumerRequire extends NodeJS.Require {
 /** Resolve peers from the configuration directory under this side's policy. */
 export async function consumerRequire(
   params: BundleParams,
+  sources?: ModulePaths,
 ): Promise<ConsumerRequire> {
   const directory = path.resolve(
     params.sourceRoot,
@@ -35,6 +26,7 @@ export async function consumerRequire(
   );
   if (!inside(params.sourceRoot, await fs.realpath(directory)))
     throw new Error("configuration directory is outside sourceRoot");
+  const paths = sources ?? (await ModulePaths.create(params));
   const native = createRequire(path.join(directory, "package.json"));
   const peers = new Map<string, string | Error>();
   const names = [
@@ -72,18 +64,20 @@ export async function consumerRequire(
                 kind: "require-call",
                 pluginData: "resolved",
               });
-              peers.set(
-                args.path,
-                resolved.errors.length
-                  ? new Error(
-                      `could not resolve ${args.path} from ${directory}: ${resolved.errors.map((error) => error.text).join("; ")}`,
-                    )
-                  : await sideModule(
-                      resolved.path,
-                      params.sourceRoot,
-                      params.repositoryRoots,
-                    ),
-              );
+              if (resolved.errors.length)
+                peers.set(
+                  args.path,
+                  new Error(
+                    `could not resolve ${args.path} from configuration directory: ${resolved.errors.map((error) => error.text).join("; ")}`,
+                  ),
+                );
+              else {
+                try {
+                  peers.set(args.path, await paths.resolve(resolved.path));
+                } catch (error) {
+                  peers.set(args.path, new Error(detail(error)));
+                }
+              }
               return { path: args.path, external: true };
             });
           },

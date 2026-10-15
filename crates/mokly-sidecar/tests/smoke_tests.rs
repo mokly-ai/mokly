@@ -75,7 +75,15 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
             ],
             renderer: Some("renderer.tsx".into()),
             stories_files: vec!["button.stories.tsx".into()],
-            module_resolution: ModuleResolution::default(),
+            module_resolution: ModuleResolution {
+                package_roots: vec![
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                        .join("../..")
+                        .display()
+                        .to_string(),
+                ],
+                ..ModuleResolution::default()
+            },
             source_root: root.display().to_string(),
             configuration_directory: ".".into(),
             repository_roots: Vec::new(),

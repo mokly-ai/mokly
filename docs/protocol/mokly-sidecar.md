@@ -57,7 +57,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 | `renderComponent` | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
 | `renderStory`     | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
 | `renderPage`      | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
-| `processCss`      | context, source root, resolution settings, PostCSS module, source path, text                                      | `{ text, dependencies }`                                                            |
+| `processCss`      | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies }`                                                            |
 | `bindings`        | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
 | `disposeContext`  | PostCSS context                                                                                                   | nothing                                                                             |
 | `cssModules`      | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
@@ -79,50 +79,41 @@ registers definitions or starts a render.
 
 ## Bundling
 
-`bundle` compiles the consumer's JavaScript into one in-memory bundle with
-esbuild and keeps it in the sidecar under a generation id. The generation id is
-the hash of every module in the metafile, the entry and stories lists, the
-preview file, the renderer module, configuration directory, repository roots,
-resolution settings, and the installed React version; the binary uses it as one part of the cache key
-for every fragment. The sidecar reports `modules`, the module graph: each
-repository-relative source file of the graph with its imports in source order,
-including re-exports and dynamic imports, and each stylesheet import by its
-resolved logical path. The binary watches the files, invalidates the
-generation, and reads each root's stylesheet order from the edges under the
-[imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
-The bundle compiles JSX in development mode and resolves
-`react/jsx-dev-runtime` to a Mokly-owned shim inside the consumer graph; the
-shim forwards to the consumer's `react/jsx-runtime` and attaches the invocation
-source only to `defineComponent` wrappers, as the
-[instances contract](./mokly-instances.md) reads it. A `*.module.css` import
-compiles to a stub that reads the file's class map from the generation's map
-table; the core scopes the file under the
-[CSS Modules contract](./mokly-imported-styles-modules.md) and supplies every map of the generation through `cssModules` after `bundle`
-reports the graph and before `describe` evaluates the modules; `bundle`
-evaluates nothing, and `describe` or a render of a generation without its
-table fails closed. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
-attributed authoring facade directly, and its metafile is the module inventory. Rolldown is reviewed again after the first release.
+`bundle` compiles an unevaluated in-memory esbuild generation. Its id hashes
+module paths, imports, and bytes; entry and stories lists; preview and renderer;
+the configuration directory; repository roots; module resolution settings;
+the installed React version; the real source root; and the selected real
+dependency roots. Equal head and base sources have separate generations,
+class maps, and bindings. The binary uses the id in each fragment key.
 
-The source root is the repository root for the head side of a comparison. For
-the base side it is the directory into which the
-[comparison contract](./mokly-comparison.md) extracted the base commit, and the
-module resolution settings name the `node_modules` directory its dependency
-tiers chose: the working tree's or the installed base set.
+The module graph reports sources and dependencies with imports in source
+order, including re-exports, dynamic imports, and stylesheets. A file inside
+a selected dependency root, a `node_modules` directory, is a dependency on
+both sides. JavaScript and CSS imports from it are allowed and use stable
+logical names relative to that root, such as `node_modules/pkg/style.css`.
+The binary reads them from that dependency root and excludes them from the
+catalogue source inventory. Files outside the source root and all selected
+dependency roots fail closed unless repository mapping supplies a source copy.
 
-`bundle.repositoryRoots` lists the physical repository roots for the side.
-For every resolved real module path inside one of those roots and outside
-all `node_modules` directories, the sidecar maps its relative path into
-`sourceRoot`. A missing mapped file fails `bundle-failed`, naming the module.
-This includes workspace links and local `file:` packages for every package
-manager. Installed modules physically under `node_modules` stay dependencies.
+For a real module inside `repositoryRoots` and outside `node_modules`, the
+sidecar maps its repository-relative path into `sourceRoot`. This rule
+applies to `bundle` and `processCss`, including PostCSS configuration,
+plugins, and presets. Missing or escaping mapped sources fail `bundle-failed`
+with a logical module path and the importing file's location. The
+[module sources contract](./mokly-sidecar-modules.md) defines logical names,
+confinement, attribution, and the CSS Modules evaluation order.
 
-The bundle evaluates under `describe` and the renders, in the sidecar's own
-module context with the consumer's `require`. React and React DOM resolve from
-the side's configuration directory through its module resolution settings.
-For the head, this directory is in the working tree; for the base, it is
-inside the base source root. A bundle
-or evaluation failure returns `bundle-failed` with the module and the
-diagnostic text.
+The head source root is the working repository. The base source root is the
+extracted base commit. Resolution settings select each side's dependency
+installation under the [comparison tiers](./mokly-comparison.md#sides).
+React and React DOM resolve from that side's configuration directory through
+its settings, with one React runtime. The JSX development shim forwards to
+the consumer runtime and attaches invocation source only to Mokly wrappers.
+
+`bundle` evaluates nothing. `cssModules` must install all maps before
+`describe` evaluates the generation. A bundle or evaluation failure returns
+`bundle-failed` with its source and diagnostic. A render without installed
+bindings fails closed under the [render records](./mokly-sidecar-render-records.md).
 
 ## Style Collection
 
@@ -197,7 +188,7 @@ excluded with the `props-not-data` warning of the
 ## Consumer PostCSS
 
 `processCss` runs the consumer's PostCSS module in a worker inside the sidecar
-with the explicit core-chosen `context`, `sourceRoot`, and `moduleResolution`.
+with the explicit core-chosen `context`, `sourceRoot`, `repositoryRoots`, and `moduleResolution`.
 Workers are keyed by context and module. Each context has fresh local and
 package module state and fixed source and resolution inputs. `disposeContext`
 releases only that context; bundle creation and disposal do not reset it.
@@ -206,13 +197,17 @@ releases disposed contexts before that process takes more work. The result
 contains transformed text and plugin-reported dependencies for watching.
 The fragment key includes the class-map table digest. When maps change, the
 core disposes and re-bundles the generation before installing the new maps.
+The pool assigns each loaded lifetime an epoch. Every process reloads a stale
+epoch, then replays maps, describe, and bindings before a render.
 Mokly's own CSS work stays in Rust.
 
 ## Cancellation And Timeouts
 
 Every request carries a deadline: 120 seconds for `bundle` and `describe`, 30
 seconds for a render, 60 seconds for `processCss`, each overridable by
-`MOKLY_SIDECAR_TIMEOUT_MS`. When a deadline passes, the binary kills that
+`MOKLY_SIDECAR_TIMEOUT_MS`. The CLI reads it once and validates a positive
+64-bit integer before command work. An invalid value fails `cli-invalid`
+with the accepted range. When a deadline passes, the binary kills that
 sidecar, retries the request once on a fresh sidecar, and then fails with
 `render-timeout`. A cancelled command sends `shutdown` to every sidecar and
 kills any that survives the grace period.

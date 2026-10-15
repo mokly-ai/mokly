@@ -741,6 +741,9 @@ renders again.
         exact-version hello, and the Rust pool's lazy process lifecycle.
   - [x] Test request deadlines, retry, recycling, shutdown, and queue
         cancellation with mocked Rust boundaries and real Node processes.
+  - [x] Separate head and base generations, replay disposed generations on
+        every worker, share canonical model wire values, and validate the
+        CLI timeout override.
   - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
         and fragment-scoped registry style collection.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
@@ -748,6 +751,8 @@ renders again.
       resolution from the consumer, and the optional consumer PostCSS worker.
   - [x] Add unevaluated esbuild generations, attributed facades, the JSX
         development shim, CSS Modules tables, and consumer style collectors.
+  - [x] Map workspace PostCSS presets into each side and keep installed
+        JavaScript and CSS under stable dependency graph names.
   - [x] Add the PostCSS worker and preserve local module locations, plugin
         creation lifetime, and dependency plugin names and globs.
 - [ ] Implement component, screen, page, and story renders, with
@@ -789,7 +794,8 @@ renders again.
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
 and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
 decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
-`.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`.
+`.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
+fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 
 - [ ] Commit.
 

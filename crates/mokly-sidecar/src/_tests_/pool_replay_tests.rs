@@ -52,9 +52,9 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
             worker: Box::new(worker.clone()),
             control: Arc::new(worker),
             generations: if loaded {
-                BTreeSet::from(["g".into()])
+                BTreeMap::from([("g".into(), 0)])
             } else {
-                BTreeSet::new()
+                BTreeMap::new()
             },
             maps: BTreeSet::new(),
             described: BTreeSet::new(),
@@ -180,6 +180,7 @@ fn retired_postcss_contexts_are_disposed_without_resetting_live_contexts() {
             .extend(["old".into(), "live".into()]);
     }
     pool.request(Call::ProcessCss(ProcessCss {
+        repository_roots: Vec::new(),
         context: "live".into(),
         source_root: "/repo".into(),
         module_resolution: ModuleResolution::default(),

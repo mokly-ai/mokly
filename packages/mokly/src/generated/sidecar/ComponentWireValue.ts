@@ -8,4 +8,4 @@ import type { ObjectTag } from "./ObjectTag.js";
 import type { StringTag } from "./StringTag.js";
 
 // prettier-ignore
-export type WireValue = [NullTag] | [StringTag, string] | [BooleanTag, boolean] | [NumberTag, string] | [ArrayTag, Array<WireValue>] | [ObjectTag, Array<[string, WireValue]>];
+export type ComponentWireValue = [NullTag] | [BooleanTag, boolean] | [NumberTag, string] | [StringTag, string] | [ArrayTag, Array<ComponentWireValue>] | [ObjectTag, Array<[string, ComponentWireValue]>];

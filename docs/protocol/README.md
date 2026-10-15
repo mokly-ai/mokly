@@ -67,6 +67,7 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Render Sidecar](./mokly-sidecar.md)
 - [Sidecar Definition Transport](./mokly-sidecar-definitions.md)
+- [Sidecar Module Sources](./mokly-sidecar-modules.md)
 - [Sidecar Render Records](./mokly-sidecar-render-records.md)
 - [Rendering And Document Assembly](./mokly-rendering.md)
 

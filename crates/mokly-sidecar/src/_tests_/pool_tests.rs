@@ -23,6 +23,7 @@ fn launch() -> Launch {
 
 fn call() -> Call {
     Call::ProcessCss(ProcessCss {
+        repository_roots: Vec::new(),
         context: "css".into(),
         source_root: "/repo".into(),
         module_resolution: ModuleResolution::default(),

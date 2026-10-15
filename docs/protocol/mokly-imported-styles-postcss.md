@@ -24,7 +24,7 @@ The sidecar loads the module under its
 context, in a fresh isolated module context, with the plugins instantiated
 once and reused for every stylesheet of that context, so a stateful plugin
 cannot keep candidates across contexts or watched rebuilds. The core supplies
-the context id, source root, and resolution settings with each request.
+the context id, source root, repository roots, and resolution settings with each request.
 `disposeContext` releases that context independently of bundle generations. The sidecar
 bundles the module's local imports with esbuild, resolves every bare package
 import from its importer with Node's `import` conditions, and externalizes
@@ -36,8 +36,13 @@ source's real location. CommonJS modules and local `.cts` helpers use
 `require` conditions, keep Node built-ins, and receive `require`,
 `__dirname`, and `__filename` rooted at the real module path. The module's
 local imports are private, watched stylesheet inputs in the source
-inventory; a change rebuilds the stylesheet bundles. On the base side of a
-comparison the module runs with the base commit's sources and dependencies
+inventory; a change rebuilds the stylesheet bundles. Repository-owned configuration, plugins, presets, and local helpers resolve
+through the side's repository-root mapping, including record-form packages,
+static imports, dynamic imports, and module-bound CommonJS requires. Linked
+workspace packages are bundled from the mapped source copy; installed
+packages stay unbundled. The [module rules](./mokly-sidecar-modules.md) own
+confinement and dependency names. On the base side of a comparison the module
+runs with the base commit's sources and selected dependencies
 under the [dependency tiers](./mokly-comparison.md#sides).
 
 ## Transform

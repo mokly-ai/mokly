@@ -38,7 +38,7 @@ fn every_method_and_result_round_trips() {
         ),
         (
             "processCss",
-            json!({"context":"css","sourceRoot":"/repo","moduleResolution":{},"postcss":"postcss.cjs","sourcePath":"ui/a.css","text":""}),
+            json!({"context":"css","sourceRoot":"/repo","moduleResolution":{},"repositoryRoots":[],"postcss":"postcss.cjs","sourcePath":"ui/a.css","text":""}),
             json!({"text":"","dependencies":[{"kind":"directory","path":"ui"}]}),
         ),
         (

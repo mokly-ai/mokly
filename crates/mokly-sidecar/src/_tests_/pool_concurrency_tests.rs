@@ -14,6 +14,7 @@ use crate::workers::{FactoryMock, Spawned, WorkerMock};
 
 fn call(index: usize) -> Call {
     Call::ProcessCss(ProcessCss {
+        repository_roots: Vec::new(),
         context: "css".into(),
         source_root: "/repo".into(),
         module_resolution: ModuleResolution::default(),

@@ -109,7 +109,7 @@ impl Pool {
         Ok(Slot {
             worker: spawned.worker,
             control: spawned.control,
-            generations: BTreeSet::new(),
+            generations: BTreeMap::new(),
             maps: BTreeSet::new(),
             described: BTreeSet::new(),
             bindings: BTreeMap::new(),
@@ -271,3 +271,7 @@ mod pool_concurrency_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_edge_tests.rs"]
 mod pool_edge_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_reload_tests.rs"]
+mod pool_reload_tests;

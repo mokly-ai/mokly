@@ -73,7 +73,9 @@ NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
 byte limit. Requests run in order. Consumer logs go to standard error.
 
 `bundle` compiles an unevaluated esbuild generation and reports its module
-graph. `cssModules` installs the core's class maps before evaluation.
+graph with stable names for selected installation files. Repository-owned
+workspace packages and PostCSS presets use the side's own source copy.
+`cssModules` installs the core's class maps before evaluation.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed

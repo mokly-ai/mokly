@@ -15,28 +15,40 @@ impl Pool {
         description_needed: bool,
         bindings_needed: bool,
     ) -> Result<()> {
-        let (bundle, maps, bindings) = {
+        let (bundle, maps, bindings, epoch) = {
             let state = self.lock()?;
             (
                 state.bundles.get(generation).cloned(),
                 state.maps.get(generation).cloned(),
                 state.bindings.get(generation).cloned(),
+                state.epochs.get(generation).copied().unwrap_or(0),
             )
         };
-        if !slot.generations.contains(generation) {
+        if !slot.generations.contains_key(generation) {
             let Some(bundle) = bundle else {
                 return Err(Error::UnknownGeneration {
                     generation: generation.to_owned(),
                 });
             };
             let response = self.prerequisite(slot, Call::Bundle(bundle))?;
-            if !matches!(response, MethodResult::Bundle(ref value) if value.generation == generation)
-            {
+            if let MethodResult::Bundle(value) = response {
+                if value.generation != generation {
+                    self.prerequisite(
+                        slot,
+                        Call::Dispose(Generation {
+                            generation: value.generation,
+                        }),
+                    )?;
+                    return Err(Error::GenerationChanged {
+                        generation: generation.to_owned(),
+                    });
+                }
+                slot.generations.insert(generation.to_owned(), epoch);
+            } else {
                 return Err(Error::GenerationChanged {
                     generation: generation.to_owned(),
                 });
             }
-            slot.generations.insert(generation.to_owned());
         }
         if maps_needed
             && !slot.maps.contains(generation)

@@ -3,18 +3,20 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { build } from "esbuild";
-import type { Loader, Metafile } from "esbuild";
+import type { Loader } from "esbuild";
 
 import { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
-import type { Module } from "../generated/sidecar/Module.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
+import { moduleGraph } from "./bundle-graph.js";
 import { SidecarError, detail } from "./errors.js";
-import { confinedFile, consumerRequire, logical } from "./paths.js";
+import { ModulePaths } from "./module-paths.js";
+import { logical } from "./path-scope.js";
+import { confinedFile, consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
 import { resolutionOptions } from "./resolution.js";
 
@@ -53,7 +55,8 @@ export async function bundle(
   try {
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;
     params = { ...params, sourceRoot: await fs.realpath(params.sourceRoot) };
-    const require = await consumerRequire(params);
+    const paths = await ModulePaths.create(params);
+    const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
       cssModules: new Set<string>(),
@@ -138,7 +141,14 @@ export async function bundle(
       jsxDev: true,
       metafile: true,
       logLevel: "silent",
-      plugins: consumerPlugins(params, inputs, require, maps, runtimeKey),
+      plugins: consumerPlugins(
+        params,
+        inputs,
+        require,
+        paths,
+        maps,
+        runtimeKey,
+      ),
       ...resolutionOptions(params.sourceRoot, resolution),
       loader: loaders as Record<string, Loader>,
     } satisfies Parameters<typeof build>[0];
@@ -165,10 +175,10 @@ export async function bundle(
         stdin: { ...options.stdin, contents: imports.join("\n") },
       });
     }
-    const graph = moduleGraph(compiled.metafile!, params.sourceRoot);
+    const { modules: graph, physical } = moduleGraph(compiled.metafile!, paths);
     const hash = createHash("sha256");
     for (const module of graph) {
-      const absolute = path.resolve(params.sourceRoot, module.path);
+      const absolute = physical.get(module.path)!;
       const text = inputs.files.get(absolute) ?? (await fs.readFile(absolute));
       hash.update(JSON.stringify([module.path, module.imports])).update(text);
     }
@@ -186,6 +196,8 @@ export async function bundle(
     }
     hash.update(
       JSON.stringify([
+        params.sourceRoot,
+        paths.dependencyRoots,
         params.entryFiles,
         params.storiesFiles,
         preview,
@@ -225,28 +237,4 @@ export async function bundle(
   } catch (error) {
     throw new SidecarError("bundle-failed", detail(error));
   }
-}
-
-function moduleGraph(metafile: Metafile, root: string): Module[] {
-  const clean = (file: string) =>
-    file.startsWith("mokly-css:") ? file.slice("mokly-css:".length) : file;
-  return Object.entries(metafile.inputs)
-    .filter(
-      ([file]) =>
-        !file.startsWith("mokly-authoring:") &&
-        !file.startsWith("mokly-jsx:") &&
-        file !== "mokly-entry",
-    )
-    .map(([file, value]) => ({
-      path: logical(root, path.resolve(root, clean(file))),
-      imports: value.imports
-        .filter(
-          (edge) =>
-            !edge.external &&
-            !edge.path.startsWith("mokly-authoring:") &&
-            !edge.path.startsWith("mokly-jsx:"),
-        )
-        .map((edge) => logical(root, path.resolve(root, clean(edge.path)))),
-    }))
-    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }

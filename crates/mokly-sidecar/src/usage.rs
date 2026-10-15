@@ -2,45 +2,9 @@
 
 use std::collections::BTreeMap;
 
+use mokly_model::wire_props::ComponentWireValue;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
-
-/// Tagged plain data; numeric spellings preserve negative zero.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
-#[serde(untagged)]
-#[ts(untagged)]
-pub enum WireValue {
-    /// Null value.
-    Null((NullTag,)),
-    /// String value.
-    String((StringTag, String)),
-    /// Boolean value.
-    Boolean((BooleanTag, bool)),
-    /// Finite decimal spelling.
-    Number((NumberTag, String)),
-    /// Dense array.
-    Array((ArrayTag, Vec<WireValue>)),
-    /// UTF-16-sorted key and value pairs.
-    Object((ObjectTag, Vec<(String, WireValue)>)),
-}
-
-macro_rules! tag {
-    ($name:ident, $value:literal) => {
-        #[doc = concat!("Canonical ", $value, " wire tag.")]
-        #[derive(Clone, Debug, Deserialize, Serialize, TS)]
-        pub enum $name {
-            #[doc = concat!("The literal ", $value, ".")]
-            #[serde(rename = $value)]
-            Tag,
-        }
-    };
-}
-tag!(NullTag, "null");
-tag!(StringTag, "string");
-tag!(BooleanTag, "boolean");
-tag!(NumberTag, "number");
-tag!(ArrayTag, "array");
-tag!(ObjectTag, "object");
 
 /// Original input owner, independent of physical placement.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -89,7 +53,7 @@ pub struct InstanceDraft {
     /// Zero-based encounter order in the input scope.
     pub order: u64,
     /// Canonical tagged data props.
-    pub props: BTreeMap<String, WireValue>,
+    pub props: BTreeMap<String, ComponentWireValue>,
     /// Canonical props digest.
     pub props_key: String,
     /// Invocation source when the JSX development shim supplies it.

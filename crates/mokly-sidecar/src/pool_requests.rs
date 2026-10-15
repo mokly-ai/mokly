@@ -18,8 +18,11 @@ impl Pool {
             let state = self.lock()?;
             slot.generations
                 .iter()
-                .filter(|id| !state.bundles.contains_key(*id))
-                .cloned()
+                .filter(|(id, epoch)| {
+                    !state.bundles.contains_key(*id)
+                        || state.epochs.get(*id).copied().unwrap_or(0) != **epoch
+                })
+                .map(|(id, _)| id.clone())
                 .collect::<Vec<_>>()
         };
         for generation in stale {
@@ -102,10 +105,19 @@ impl Pool {
             }
             match (call, &result) {
                 (Call::Bundle(bundle), MethodResult::Bundle(result)) => {
+                    let epoch = match state.epochs.get(&result.generation) {
+                        Some(epoch) => *epoch,
+                        None => {
+                            state.next_epoch += 1;
+                            let epoch = state.next_epoch;
+                            state.epochs.insert(result.generation.clone(), epoch);
+                            epoch
+                        }
+                    };
                     state
                         .bundles
                         .insert(result.generation.clone(), bundle.clone());
-                    slot.generations.insert(result.generation.clone());
+                    slot.generations.insert(result.generation.clone(), epoch);
                 }
                 (Call::CssModules(maps), _) => {
                     state.maps.insert(maps.generation.clone(), maps.clone());
@@ -128,6 +140,7 @@ impl Pool {
                 }
                 (Call::Dispose(generation), _) => {
                     state.bundles.remove(&generation.generation);
+                    state.epochs.remove(&generation.generation);
                     state.maps.remove(&generation.generation);
                     state.bindings.remove(&generation.generation);
                     slot.generations.remove(&generation.generation);

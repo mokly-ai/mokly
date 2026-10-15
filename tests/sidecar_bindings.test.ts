@@ -143,3 +143,30 @@ test("saved React slots, placeholder tokens, and disabled ignore scopes remain d
     /unknown saved slot/,
   );
 });
+
+test("bindings reject relative link paths as catalogue paths", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["page.mockup.ts"],
+      renderer: null,
+      storiesFiles: [],
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await sidecar.call("describe", { generation });
+  await assert.rejects(
+    sidecar.call("bindings", {
+      generation,
+      entries: {
+        "page.mockup.ts#default": { path: "./relative", title: "Page" },
+      },
+    }),
+    {
+      code: "sidecar-protocol",
+      message: "bindings require complete catalogue paths",
+    },
+  );
+});

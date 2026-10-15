@@ -1,4 +1,5 @@
-import { validateDestination } from "../authoring/links.js";
+import { isEntryPath } from "@mokly/viewer/data";
+
 import { definitionData } from "../authoring/runtime.js";
 import type { Request } from "../generated/sidecar/Request.js";
 
@@ -109,7 +110,8 @@ export class Session {
         )
           protocol("bindings must contain every described handle exactly once");
         for (const entry of Object.values(request.params.entries))
-          validateDestination(entry.path);
+          if (!isEntryPath(entry.path))
+            protocol("bindings require complete catalogue paths");
         generation.bindings = request.params.entries;
         for (const registration of generation.registrations.values())
           Object.assign(

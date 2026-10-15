@@ -5,7 +5,8 @@ import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { SidecarError, detail } from "./errors.js";
-import { confinedFile } from "./paths.js";
+import { jsonText } from "./json.js";
+import { ModulePaths } from "./module-paths.js";
 
 /** Workers retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
@@ -27,15 +28,21 @@ export class PostcssWorkers {
   }
 
   private async transform(params: ProcessCssParams): Promise<CssResult> {
-    const root = params.sourceRoot;
-    const identity = JSON.stringify([root, params.moduleResolution]);
+    const paths = await ModulePaths.create(params);
+    const root = paths.sourceRoot;
+    const identity = jsonText([
+      root,
+      paths.repositoryRoots,
+      paths.dependencyRoots,
+      params.moduleResolution,
+    ]);
     const previous = this.contexts.get(params.context);
     if (previous !== undefined && previous !== identity)
       throw new Error(
         `PostCSS context ${params.context} changed its sources or resolution settings`,
       );
     this.contexts.set(params.context, identity);
-    const file = await confinedFile(root, params.postcss);
+    const file = await paths.resolve(path.resolve(root, params.postcss));
     if (!/\.(ts|mts|js|mjs|cjs)$/.test(file))
       throw new SidecarError(
         "bundle-failed",
@@ -49,6 +56,7 @@ export class PostcssWorkers {
           postcss: file,
           sourceRoot: root,
           moduleResolution: params.moduleResolution,
+          repositoryRoots: paths.repositoryRoots,
         },
         stdout: true,
         stderr: true,

@@ -11,6 +11,7 @@ fn wrong_package_version_fails_before_command_traffic() {
     let pool = pool("wrong-version");
     assert!(matches!(
         pool.request(Call::ProcessCss(ProcessCss {
+            repository_roots: Vec::new(),
             context: "css".into(),
             source_root: "/repo".into(),
             module_resolution: ModuleResolution::default(),
@@ -26,6 +27,7 @@ fn wrong_package_version_fails_before_command_traffic() {
 fn process_crash_retries_once_and_bad_hello_fails_closed() {
     let call = || {
         Call::ProcessCss(ProcessCss {
+            repository_roots: Vec::new(),
             context: "css".into(),
             source_root: "/repo".into(),
             module_resolution: ModuleResolution::default(),

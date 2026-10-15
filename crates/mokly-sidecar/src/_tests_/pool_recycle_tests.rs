@@ -37,7 +37,7 @@ fn seed(pool: &Pool, worker: Unimock) {
     state.slots.push(Some(Slot {
         worker: Box::new(request_worker),
         control: control.clone(),
-        generations: BTreeSet::from(["g".into()]),
+        generations: BTreeMap::from([("g".into(), 0)]),
         maps: BTreeSet::from(["g".into()]),
         described: BTreeSet::from(["g".into()]),
         bindings: BTreeMap::new(),
@@ -129,6 +129,7 @@ fn resident_set_recycles_only_after_one_gib_is_exceeded() {
     seed(&pool, worker);
     let call = || {
         Call::ProcessCss(ProcessCss {
+            repository_roots: Vec::new(),
             context: "css".into(),
             source_root: "/repo".into(),
             module_resolution: ModuleResolution::default(),

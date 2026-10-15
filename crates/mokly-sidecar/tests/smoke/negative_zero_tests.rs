@@ -25,7 +25,15 @@ fn negative_zero_survives_definitions_and_render_requests() {
             entry_files: vec!["negative-zero.mockup.tsx".into()],
             renderer: None,
             stories_files: Vec::new(),
-            module_resolution: ModuleResolution::default(),
+            module_resolution: ModuleResolution {
+                package_roots: vec![
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                        .join("../..")
+                        .display()
+                        .to_string(),
+                ],
+                ..ModuleResolution::default()
+            },
             source_root: root.display().to_string(),
             configuration_directory: ".".into(),
             repository_roots: Vec::new(),

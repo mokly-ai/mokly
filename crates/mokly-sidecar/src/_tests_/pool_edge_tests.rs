@@ -16,6 +16,7 @@ use crate::workers::{ControlMock, WorkerMock};
 
 fn css() -> Call {
     Call::ProcessCss(ProcessCss {
+        repository_roots: Vec::new(),
         context: "css".into(),
         source_root: "/repo".into(),
         module_resolution: ModuleResolution::default(),
@@ -45,7 +46,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
         state.slots.push(Some(Slot {
             worker: Box::new(worker.clone()),
             control: Arc::new(worker),
-            generations: BTreeSet::new(),
+            generations: BTreeMap::new(),
             maps: BTreeSet::new(),
             described: BTreeSet::new(),
             bindings: BTreeMap::new(),
@@ -95,6 +96,7 @@ fn a_changed_generation_does_not_kill_a_healthy_process() {
                 modules: Vec::new(),
                 warnings: Vec::new(),
             }))),
+        WorkerMock::request.next_call(matching!((request,_) if matches!(&request.call,Call::Dispose(value) if value.generation == "changed"))).returns(Ok(MethodResult::Empty)),
         WorkerMock::request
             .next_call(matching!((request,_) if matches!(request.call,Call::ProcessCss(_))))
             .returns(Ok(result())),

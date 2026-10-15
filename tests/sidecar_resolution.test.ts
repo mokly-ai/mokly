@@ -88,6 +88,10 @@ test("missing Storybook reports bundle-failed with the missing package", async (
         sourceRoot: root,
         entryFiles: [],
         storiesFiles: ["entry.stories.mjs"],
+        moduleResolution: {
+          ...bundleParams().moduleResolution,
+          packageRoots: [],
+        },
         renderer: null,
       }),
     ),

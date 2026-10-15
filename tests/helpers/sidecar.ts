@@ -75,7 +75,7 @@ export function bundleParams(
       conditions: [],
       loaders: {},
       mainFields: [],
-      packageRoots: [],
+      packageRoots: [path.resolve(".")],
       resolveExtensions: [],
     },
     ...overrides,
@@ -118,6 +118,7 @@ export function cssParams(
 ): ProcessCssParams {
   return {
     context: "css",
+    repositoryRoots: [],
     sourceRoot: sidecarFixture,
     moduleResolution: bundleParams().moduleResolution,
     postcss: "postcss.mjs",

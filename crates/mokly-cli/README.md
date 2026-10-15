@@ -19,6 +19,10 @@ Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
+The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option
+validation accepts a positive 64-bit integer and retains it for PoolOptions.
+Invalid values fail `cli-invalid` with the accepted range.
+
 Serve accepts `--port`, `--watch`, `--no-watch`, and `--open`. Build accepts
 `--out`, `--strict`, and `--no-changes`. Publish accepts `--endpoint`, `--token`,
 `--repository`, `--upload-concurrency`, `--strict`, and `--no-changes`.

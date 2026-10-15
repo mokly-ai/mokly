@@ -5,9 +5,10 @@ import type { Loader, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { inside, logical } from "./paths.js";
+import { detail } from "./errors.js";
+import type { ModulePaths } from "./module-paths.js";
+import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
-import { sideModule } from "./resolution.js";
 
 export interface BundleInputs {
   files: Map<string, Uint8Array>;
@@ -19,6 +20,7 @@ export function consumerPlugins(
   params: BundleParams,
   inputs: BundleInputs,
   require: ConsumerRequire,
+  paths: ModulePaths,
   maps?: Record<string, Record<string, string>>,
   runtimeKey = "mokly:runtime",
 ): Plugin[] {
@@ -51,8 +53,7 @@ export function consumerPlugins(
             (await fs.realpath(args.importer).catch(() => args.importer));
           const attributed =
             importer &&
-            inside(root, importer) &&
-            !logical(root, importer).split("/").includes("node_modules") &&
+            paths.repositoryOwned(importer) &&
             !inside(ownPackage, importer);
           return {
             path: JSON.stringify(attributed ? logical(root, importer) : null),
@@ -92,10 +93,16 @@ export function consumerPlugins(
         }));
         build.onResolve(
           { filter: /^(react|react-dom)(\/.*)?$/ },
-          async (args) => ({
-            path: await require.resolvePeer(args.path),
-            external: true,
-          }),
+          async (args) => {
+            try {
+              return {
+                path: await require.resolvePeer(args.path),
+                external: true,
+              };
+            } catch (error) {
+              return { errors: [{ text: detail(error) }] };
+            }
+          },
         );
         build.onResolve(
           {
@@ -115,16 +122,14 @@ export function consumerPlugins(
             pluginData: "css-resolved",
           });
           if (resolved.errors.length) return { errors: resolved.errors };
-          const real = await sideModule(
-            resolved.path,
-            root,
-            params.repositoryRoots,
-          );
-          if (!inside(root, real))
-            throw new Error(
-              `CSS import is outside repoRoot in ${logical(root, args.importer)}: ${args.path}; move the stylesheet inside repoRoot or remove the import`,
-            );
-          return { path: real, namespace: "mokly-css" };
+          try {
+            return {
+              path: await paths.resolve(resolved.path),
+              namespace: "mokly-css",
+            };
+          } catch (error) {
+            return { errors: [{ text: detail(error) }] };
+          }
         });
         build.onResolve({ filter: /.*/ }, async (args) => {
           if (
@@ -144,13 +149,14 @@ export function consumerPlugins(
             resolved.namespace !== "file"
           )
             return resolved;
-          return {
-            ...resolved,
-            path: await sideModule(resolved.path, root, params.repositoryRoots),
-          };
+          try {
+            return { ...resolved, path: await paths.resolve(resolved.path) };
+          } catch (error) {
+            return { errors: [{ text: detail(error) }] };
+          }
         });
         build.onLoad({ filter: /.*/, namespace: "mokly-css" }, async (args) => {
-          const file = logical(root, args.path);
+          const file = paths.name(args.path);
           inputs.files.set(
             args.path,
             inputs.files.get(args.path) ?? (await fs.readFile(args.path)),

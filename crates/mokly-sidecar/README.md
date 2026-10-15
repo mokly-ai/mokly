@@ -27,8 +27,9 @@ Authoring diagnostics retain their codes and leave a healthy session usable.
 processes to `PoolOptions::size`. The CLI resolves `--sidecars`, `MOKLY_SIDECARS`, and the core count.
 `PoolOptions` takes the parsed `NonZeroUsize` and timeout override.
 
-The pool retains bundle recipes, CSS Modules maps, and resolved handle tables. A fresh process reloads
-a requested generation on demand and replays its bindings after describe.
+The pool retains bundle recipes, CSS Modules maps, and resolved handle tables. A process reloads a requested generation on demand and replays its bindings
+after describe. An epoch identifies each loaded lifetime. Disposing and
+re-bundling the same id invalidates every process's old maps and evaluation.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback
@@ -80,6 +81,8 @@ The `mock` feature exposes the public trait mocks to other crates.
 
 - [Sidecar contract](../../docs/protocol/mokly-sidecar.md).
 - [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).
+- [Render records](../../docs/protocol/mokly-sidecar-render-records.md) and
+  [module sources](../../docs/protocol/mokly-sidecar-modules.md).
 - [Rust architecture](../../docs/architecture/rust-core.md).
 
 `cargo xtask generate-types` writes one Node declaration module per wire type

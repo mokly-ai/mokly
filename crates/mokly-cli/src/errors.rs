@@ -50,6 +50,11 @@ pub enum Failure {
     /// Invalid environment sidecar override.
     #[error("[mokly/cli-invalid] MOKLY_SIDECARS must be a positive integer")]
     SidecarEnvironment,
+    /// Invalid environment request deadline.
+    #[error(
+        "[mokly/cli-invalid] Set MOKLY_SIDECAR_TIMEOUT_MS to an integer from 1 to 18446744073709551615"
+    )]
+    SidecarTimeoutEnvironment,
     /// No publication endpoint was supplied.
     #[error("[mokly/cli-invalid] publish requires --endpoint or MOKLY_ENDPOINT")]
     EndpointRequired,
@@ -94,6 +99,9 @@ impl Failure {
             }
             Self::StrictOutsideBuild => "--strict belongs to build or publish".into(),
             Self::SidecarEnvironment => "MOKLY_SIDECARS must be a positive integer".into(),
+            Self::SidecarTimeoutEnvironment => {
+                "Set MOKLY_SIDECAR_TIMEOUT_MS to an integer from 1 to 18446744073709551615".into()
+            }
             Self::EndpointRequired => "publish requires --endpoint or MOKLY_ENDPOINT".into(),
             Self::EndpointInvalid => {
                 "publish endpoint must be an HTTP(S) URL without credentials or a fragment".into()

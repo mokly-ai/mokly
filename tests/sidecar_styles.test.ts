@@ -24,7 +24,7 @@ test("sidecar extracts consumer runtime registries on repeated renders", async (
         conditions: [],
         loaders: {},
         mainFields: ["module", "main"],
-        packageRoots: [],
+        packageRoots: bundleParams().moduleResolution.packageRoots,
         resolveExtensions: [],
       },
     }),

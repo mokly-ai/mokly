@@ -42,6 +42,7 @@ const shapes: Record<string, string[]> = {
   renderStory: ["generation", "storyId", "props", "viewport", "colorScheme"],
   renderPage: ["generation", "handle"],
   processCss: [
+    "repositoryRoots",
     "context",
     "sourceRoot",
     "moduleResolution",

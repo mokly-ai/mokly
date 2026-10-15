@@ -154,6 +154,8 @@ pub struct RenderPage {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(rename = "ProcessCssParams")]
 pub struct ProcessCss {
+    /// Physical repositories whose local packages map into this side.
+    pub repository_roots: Vec<String>,
     /// Core-chosen stylesheet generation context.
     pub context: String,
     /// Side source checkout.
