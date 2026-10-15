@@ -11,4 +11,12 @@ kind: DependencyKind,
 /**
  * Source path.
  */
-path: string, };
+path: string,
+/**
+ * Plugin name used in dependency diagnostics.
+ */
+plugin?: string,
+/**
+ * Directory-relative matching pattern, absent for an explicit file.
+ */
+glob?: string, };

@@ -64,6 +64,10 @@ pub struct Variant {
 pub struct Definition {
     /// Repository-relative module and export name.
     pub handle: String,
+    /// Defining helper module, distinct from the exporting entry module.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub source_path: Option<String>,
     /// Shared entry metadata.
     #[serde(flatten)]
     pub metadata: EntryMetadata,
@@ -92,6 +96,10 @@ pub struct Definition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub controls: Option<BTreeMap<String, Control>>,
+    /// Storybook meta hints for the component parent's own controls.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub arg_types: Option<BTreeMap<String, StoryHints>>,
     /// Effective colour schemes.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

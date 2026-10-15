@@ -41,7 +41,7 @@ The string helper is `mockLink(to, fragment?)`, and both produce
 `data-nav-href`. Neither helper accepts `path#fragment`, percent-encoded
 syntax or a `mock:` value in `to`. A link may name any entry, including a
 screen or component variant, a page or a Markdown document; a link to a component
-opens its first variant. In Markdown, a relative link to another discovered
+opens its own props. In Markdown, a relative link to another discovered
 `.md` file becomes a catalogue link. `mock:<path>` works there too.
 
 Relative links share the same base as flow references: an ordinary entry uses
@@ -85,7 +85,7 @@ warning that one click has two targets. A focus target such as
 such as `menubar` or `tablist` need no change and produce no warning.
 
 A warning names the route and the element on standard error and leaves the
-exit status at `0`. Pass `--strict` to `build`, `check`, `export` or `publish`
+exit status at `0`. Pass `--strict` to `build` or `publish`
 when a warning should fail the command instead.
 
 ## Metadata without an interaction

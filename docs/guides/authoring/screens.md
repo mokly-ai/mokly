@@ -1,172 +1,124 @@
 ---
 title: "Screens"
-description: "A screen is one idea in your product, rendered for mobile and desktop."
+description: "Render a product screen from props for each viewport and color scheme."
 section: "authoring"
 order: 2
 ---
 
 ## Define a screen
 
-`defineScreen` takes the screen's title and the two React nodes the catalogue
-renders. The file's place inside a root gives the screen its path.
+Export one `defineScreen` result from an entry module. Use `render(props,
+context)` to return the React content of a view.
 
 ```tsx
-// specs/account/billing/invoice.mockup.tsx
+// specs/account/invoice.mockup.tsx
 import { defineScreen } from "@mokly/mokly";
 
 export default defineScreen({
   title: "Invoice",
   description: "One paid invoice.",
-  mobile: <main id="summary">Invoice</main>,
-  desktop: <main id="summary">Invoice</main>,
-  relatedDocs: ["docs/billing.md"],
-});
-```
-
-| Field                  | Meaning                                                    |
-| ---------------------- | ---------------------------------------------------------- |
-| `title`, `description` | What the catalogue shows                                   |
-| `mobile`, `desktop`    | The React node each viewport renders                       |
-| `relatedDocs`          | Documents a reader should open beside it                   |
-| `slug`                 | The last segment of the path; defaults to the file name    |
-| `path`                 | A complete path that replaces the derived one              |
-| `movedFrom`            | The complete path this screen had before it moved          |
-| `useCasePaths`         | Flows this screen appears in                               |
-| `tags`                 | Lowercase kebab-case classification, searched as `tag:`    |
-| `colorSchemes`         | Opt one screen out of a scheme the catalogue renders       |
-| `address`              | The address shown in the browser chrome around the screen  |
-| `rationale`            | Why the screen is the way it is                            |
-| `variants`             | States of this screen, each a full screen grouped under it |
-
-Each view is generated as its own standalone page, so wrap the content in a
-landmark such as `main`.
-
-## The path
-
-The screen above is `account/billing/invoice`: the directories between the
-root and the file, then the file name up to its first dot. That path is the
-screen's identity everywhere. Links name it, flows name it, its address in the
-catalogue is `/view/account/billing/invoice/`, and its views are written as
-`account/billing/invoice/index.mobile.html` and `index.desktop.html` under
-`mockupsDir/mokly-generated/`, with `.dark` before `.html` for dark views. Serve exposes these
-files below `/static/mokly-generated/`, and export writes them below `static/mokly-generated/`.
-
-Set `slug` when the last segment should differ from the file name, and set
-`path` when a file cannot sit where its path should be; a declared path is
-always complete. Every segment uses letters, digits, hyphens and underscores,
-case is kept as written, and two paths that differ only by case count as one.
-A file name outside that grammar is a build error that names the file.
-
-One module may export several screens as long as each derives its own path.
-A module named `index.mockup.tsx` is the page of its folder, so its slug-less
-screen takes the folder's path while the others declare slugs:
-
-```tsx
-// specs/account/billing/index.mockup.tsx
-import { defineScreen } from "@mokly/mokly";
-
-export const billing = defineScreen({
-  title: "Billing",
-  description: "Billing overview.",
-  mobile: <main>Billing</main>,
-  desktop: <main>Billing</main>,
-
   relatedDocs: [],
-});
-
-export const history = defineScreen({
-  slug: "history",
-  title: "Payment history",
-  description: "Payments made on this account.",
-  mobile: <main>Payment history</main>,
-  desktop: <main>Payment history</main>,
-
-  relatedDocs: [],
-});
-```
-
-Two slug-less screens in one module derive one path and fail the build with
-both locations. So do `invoice.mockup.tsx` and `invoice/index.mockup.tsx`
-when neither declares another path. An ordinary entry cannot also name a folder
-that contains other entries. Use `invoice/index.mockup.tsx` for the folder page
-and put its members beside it.
-
-## Keep scrolling panels paired
-
-Mokly normally pairs scrolling panels across Before and Current from their
-position, words, element type, and accessible role. If an edit moves a panel
-or rewrites most of it, give the panel the same stable `id` in both versions.
-If adding a product `id` would be inappropriate, name the comparison pair
-directly with `data-mokly-scroll` instead:
-
-```tsx
-import { Activity } from "./activity.js";
-
-<main data-mokly-scroll="account-activity" className="activity-panel">
-  <Activity />
-</main>;
-```
-
-The name is lowercase kebab-case and must be unique among scrolling regions in
-each generated document. Use `data-mokly-scroll="off"` when a panel should
-scroll independently in comparisons. The hint changes only comparison
-scrolling; it does not make an element scrollable, change its layout, or affect
-the generated file outside the viewer.
-
-## Variants of a screen
-
-A variant is the same screen with one deliberate shift, such as an empty
-state or an error. Declare it inside the screen it varies, and it becomes a
-full screen of its own, grouped under the parent in the catalogue.
-
-```tsx
-import { defineScreen } from "@mokly/mokly";
-
-export default defineScreen({
-  title: "Invoice",
-  description: "One paid invoice.",
-  mobile: <main id="summary">Invoice</main>,
-  desktop: <main id="summary">Invoice</main>,
-  relatedDocs: ["docs/billing.md"],
+  props: { state: "paid", lines: 3 },
+  render: (props, context) => (
+    <main data-viewport={context.viewport}>
+      <h1>Invoice</h1>
+      <p>
+        {props.state}: {props.lines} lines
+      </p>
+    </main>
+  ),
   variants: [
-    {
-      slug: "overdue",
-      title: "Invoice, overdue",
-      description: "An invoice past its due date.",
-      mobile: <main>Overdue</main>,
-      desktop: <main>Overdue</main>,
-    },
+    { slug: "overdue", title: "Overdue", props: { state: "overdue" } },
   ],
 });
 ```
 
-A variant's path is the parent's path plus its `slug`, so this one is
-`account/billing/invoice/overdue` and a link to that path opens it like any
-screen. It inherits the parent's address, tags, color schemes
-and related docs unless it sets its own, and a list it sets replaces the
-inherited one. Its `useCasePaths` defaults to an empty list and never
-inherits; list a flow only when one of that flow's steps names the variant. A
-variant cannot declare variants of its own, and two variants of one parent
-cannot share a slug. The call returns a readonly array containing the parent
-first and then the variants in authored order; a call without `variants`
-returns one screen definition. Either result can be exported directly.
+Mokly calls this render for `mobile` and `desktop`, in each enabled color
+scheme. The context contains `viewport` and `colorScheme`. A render can ignore
+it. Providers and themes belong in your
+[renderer](/docs/authoring/viewports-and-color-schemes/).
 
-A directory named after a screen is a folder whose page is that screen, so
-`invoice/index.mockup.tsx` with variants renders the same row as
-`invoice.mockup.tsx` with the same variants; files beside it in that directory
-are ordinary members of the folder, not variants.
+## Screen paths
 
-## Exported types
+With the default `specs` root, this screen has path `account/invoice`.
+Its catalogue URL is `/view/account/invoice/`. The root, directories, and file
+name determine the path. The file name ends at its first dot.
+Set `slug` to replace the last segment. Set `path` to declare a complete path.
+Set `movedFrom` to declare the complete path the entry had before a move.
 
-| Type                              | Use                                       |
-| --------------------------------- | ----------------------------------------- |
-| `ScreenInput`, `ScreenDefinition` | What `defineScreen` takes and returns     |
-| `ScreenVariantInput`              | One screen state nested under its parent  |
-| `EntryInput`                      | The metadata every entry shares           |
-| `RegistryDefinition`              | Any definition an entry module may export |
+A file named `index.mockup.tsx`, or a definition with `slug: "index"`, supplies
+its folder's own page. Several definitions can share one module when their
+slugs or declared paths differ. Each export contains one definition.
+An array export is an error. Helper functions and ordinary React components
+can share the module.
 
-Every input extends `EntryInput`; the path derives from the file. Unknown
-fields fail registry validation. Use `satisfies ScreenInput` to check extra
-top-level keys statically: generic inference can accept extra keys while
-preserving the precise return type through wrappers. Fresh variant literals
-in direct `defineScreen` calls still receive excess-key checks.
+Mokly keeps rendered documents in memory. `build --out` writes the static
+catalogue. Authored modules stay in your source tree.
+
+## Props and schemas
+
+Without `propSchema`, TypeScript derives the render's prop type from `props`.
+A variant takes a `Partial` of that type. Mokly infers the runtime schema from
+the own props and each variant's merged props. It excludes non-data values
+with a `props-not-data` warning.
+
+Declare `propSchema` when a prop needs a fixed type or a restricted set of
+values. Write it `as const` so TypeScript derives the render type from it.
+
+```tsx
+import { defineScreen } from "@mokly/mokly";
+
+export const invoice = defineScreen({
+  title: "Invoice",
+  description: "An invoice state.",
+  relatedDocs: [],
+  propSchema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["state"],
+    properties: { state: { enum: ["paid", "overdue"] } },
+  } as const,
+  props: { state: "paid" },
+  render: (props) => <main>{props.state}</main>,
+});
+```
+
+Props are plain data. A declared schema rejects unknown keys and invalid
+values. Every object schema includes `additionalProperties: false`.
+See [components](/docs/authoring/components/) for schemas, slots, and controls.
+
+## Saved states
+
+A variant declares `slug`, `title`, and `props`. Its props replace top-level
+keys of the parent's props. Nested objects do not merge.
+The example's overdue state has path `account/invoice/overdue` and keeps
+`lines: 3`. It is a full screen entry with its own views and links.
+
+A screen variant can override `description`, `tags`, `colorSchemes`,
+`address`, `rationale`, `relatedDocs`, `useCasePaths`, and `movedFrom`.
+An omitted list inherits from the parent, except `useCasePaths`, which defaults
+to an empty list. A variant has no `path`, no render, and no nested variants.
+The helper returns one definition that carries the saved states.
+
+## Metadata
+
+| Field                                 | Purpose                                             |
+| ------------------------------------- | --------------------------------------------------- |
+| `title`, `description`, `relatedDocs` | Explain the screen.                                 |
+| `tags`                                | Classify it with unique lowercase kebab-case names. |
+| `address`                             | Set the address-bar label in the preview.           |
+| `rationale`                           | Explain a design choice.                            |
+| `useCasePaths`                        | Name flows that include this screen.                |
+| `colorSchemes`                        | Restrict the enabled schemes; include `light`.      |
+| `controls`                            | Replace the controls derived from the schema.       |
+
+Use `ScreenInput` or `satisfies ScreenInput` to check extra top-level fields
+in your own wrappers. Fresh variant literals receive excess-key checks.
+Runtime validation applies to JavaScript callers too.
+
+## Stable scrolling regions
+
+Give an inner scrolling region a stable `id` when an edit moves it or changes
+its text. Use `data-mokly-scroll="account-activity"` when a product id does
+not fit. Use the same unique lowercase kebab-case value in both versions.
+Use `data-mokly-scroll="off"` to keep a region independent.

@@ -91,6 +91,14 @@ pub struct Dependency {
     pub kind: DependencyKind,
     /// Source path.
     pub path: String,
+    /// Plugin name used in dependency diagnostics.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub plugin: Option<String>,
+    /// Directory-relative matching pattern, absent for an explicit file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub glob: Option<String>,
 }
 
 /// Consumer PostCSS result.

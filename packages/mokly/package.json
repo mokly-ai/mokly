@@ -24,16 +24,24 @@
     "bin",
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "docs/guides",
+    "docs/protocol"
   ],
   "dependencies": {
-    "@mokly/viewer": "0.5.0"
+    "@babel/parser": "^7.29.9",
+    "@babel/traverse": "^7.29.10",
+    "@mokly/viewer": "0.5.0",
+    "esbuild": "^0.28.2",
+    "json-schema-to-ts": "^3.1.1",
+    "parse5": "^8.0.1",
+    "postcss": "^8.5.30"
   },
   "optionalDependencies": {
-    "@mokly/native-linux-x64-gnu": "0.14.0",
-    "@mokly/native-linux-arm64-gnu": "0.14.0",
-    "@mokly/native-darwin-x64": "0.14.0",
     "@mokly/native-darwin-arm64": "0.14.0",
+    "@mokly/native-darwin-x64": "0.14.0",
+    "@mokly/native-linux-arm64-gnu": "0.14.0",
+    "@mokly/native-linux-x64-gnu": "0.14.0",
     "@mokly/native-win32-x64-msvc": "0.14.0"
   },
   "peerDependencies": {
@@ -55,5 +63,13 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "npm run build"
-  }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts"
 }

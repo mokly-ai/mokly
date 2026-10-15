@@ -6,7 +6,9 @@ The [render sidecar](./mokly-sidecar.md) evaluates the entry modules and
 stories of one bundle generation. Its `describe` result has `screens`,
 `pages`, `useCases`, `folders`, `components`, `stories`, and `diagnostics`.
 Each definition has a `handle`: the repository-relative file path, `#`, and
-export name. The generated TypeScript modules under
+export name. Its optional `sourcePath` is the defining helper module, distinct
+from the exporting module in the handle. Installed packages have no attributed
+source path. The generated TypeScript modules under
 `packages/mokly/src/generated/sidecar/` define the wire fields.
 
 ## Schema Boundary
@@ -60,3 +62,6 @@ slots, control overrides, and saved variants. Screen variants carry their
 metadata overrides in authored order. Story control hints affect derived
 controls, never schema validation, under the
 [Storybook rules](./mokly-sidecar.md#storybook).
+The component parent's `argTypes` carries the meta's hints. Each story carries
+its merged hints separately, so a story override does not replace the parent's
+own labels and choices.

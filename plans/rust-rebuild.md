@@ -698,9 +698,19 @@ renders again.
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
+  - [x] Add the standalone Node entry, bounded NDJSON, method dispatch,
+        exact-version hello, and the Rust pool's lazy process lifecycle.
+  - [x] Test request deadlines, retry, recycling, shutdown, and queue
+        cancellation with mocked Rust boundaries and real Node processes.
+  - [ ] Settle the binding, validation, PostCSS context, and static-registry
+        ownership decisions before the sidecar integration closes.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
+  - [x] Add unevaluated esbuild generations, attributed facades, the JSX
+        development shim, CSS Modules tables, and consumer style collectors.
+  - [x] Add the PostCSS worker and preserve local module locations, plugin
+        creation lifetime, and dependency plugin names and globs.
 - [ ] Implement component, screen, page, and story renders, with
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
@@ -708,6 +718,10 @@ renders again.
       Rust keyed by bundle generation, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
+  - [x] Add the authoring API with schema and literal prop inference, and
+        standalone component, screen, story, and page renders.
+  - [ ] Connect resolved catalogue paths, complete usage records, schema
+        validation, and fragment caching through the approved binding.
 - [ ] Implement `describe`: every definition the entry modules and stories
       files export, one per export with `array-export` otherwise, with the
       story inventory; feed every definition into the
@@ -726,7 +740,11 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
-- [ ] Write the JavaScript authoring guides.
+- [x] Write the JavaScript authoring guides.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
+and `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m8-sidecar.md`.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes

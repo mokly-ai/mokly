@@ -2,70 +2,87 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-`mokly-sidecar` is the Rust client of Mokly's optional Node render sidecar.
-It owns the wire protocol. The core owns catalogue decisions and rendering
-schedules. `mokly-model` supplies shared schemas; The pool receives process ownership from `mokly-platform`. The protocol client has no platform dependency.
+`mokly-sidecar` is the Rust client and process pool for Mokly's optional Node
+render sidecar. Catalogue and render services depend on its `SidecarPool`
+trait. `mokly-model` owns shared schemas. `mokly-platform` owns process trees.
+The Node implementation lives in `@mokly/mokly`.
 
 ## Responsibilities
 
-- Type every method, response, and diagnostic event.
-- Frame UTF-8 JSON with LF delimiters and a 64 MiB JSON-byte limit.
-- Require an exact-version hello before command traffic.
-- Match each response id to the outstanding request.
-- Return typed protocol, version, process, and render failures.
+- Type each request, result, event, and source diagnostic.
+- Bound UTF-8 NDJSON frames to 64 MiB of JSON bytes.
+- Start Node lazily and require an exact-version hello.
+- Queue requests fairly and spread independent calls across the pool.
+- Enforce deadlines, retry, recycling, and bounded shutdown.
 
 ## What This Crate Does
 
-`Decoder` handles arbitrary chunks, including split UTF-8 sequences. It
-rejects malformed or oversized frames and partial frames at EOF. Responses
-contain exactly one result or error. The client decodes each result against
-the pending method before a caller uses it.
+`Client` consumes `dyn Transport` and `dyn Events`. It requires hello before
+commands, checks response ids, forwards diagnostic events, and decodes each
+result against the pending method. Protocol failures close the session.
+Authoring diagnostics retain their codes and leave a healthy session usable.
 
-`Client` consumes `dyn Transport` and `dyn Events`. Hello uses request id 0.
-Its response must report the binary's exact package version. The first
-response cannot be a diagnostic event. After hello, requests run in order;
-events go to the injected reporter while a response is pending.
+`Pool` consumes `dyn WorkerFactory` and `dyn Clock`, and implements
+`SidecarPool`. Constructing it starts no process. FIFO leases bound active
+processes to `PoolOptions::size`. `PoolOptions::resolve` applies `--sidecars`
+before `MOKLY_SIDECARS`, then the supplied core count. Positive integers have
+no arbitrary upper cap. It also reads the captured timeout override.
 
-`Call::timeout_ms` supplies the protocol defaults. The process pool owns
-spawning, deadline overrides, retry, recycling, and shutdown. The Node
-sidecar implementation lives in `@mokly/mokly`.
+The pool retains bundle recipes and CSS Modules maps. A fresh process reloads
+a requested generation on demand. A timeout or crash kills the process and
+retries once. Other transport failures replace the process without a fallback
+render. A process recycles after 500 render calls or above 1 GiB resident
+memory. Recycling starts after the in-flight result returns.
+
+`NodeFactory` inherits the environment and repository working directory. It
+uses `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for
+transport, `dyn Wait` for monotonic deadlines, `dyn ResidentMemory` for the
+resident set, and `dyn Diagnostics` for events and standard error. Shutdown
+wakes queued callers and sends shutdown to each process. All processes share
+one two-second grace deadline. Survivors are killed and reaped.
 
 ## Quick Start
 
 ```bash
+npm run build
 cargo test -p mokly-sidecar
 ```
 
-Implement `Transport` with the pool's bounded pipe reader and writer. Construct
-`Client::new(transport, events, version)`, consume it through
-`dyn SidecarClient`, and call `handshake` before `request`.
+The executable composition root constructs `SystemClock`, `SystemMemory`,
+`SystemProcessGroups`, its diagnostic reporter, and `NodeFactory`. It injects
+that factory into `Pool`, then consumes the pool through `dyn SidecarPool`.
+Pass the installed `dist/sidecar.js` path, repository root, Node executable,
+and binary package version in `Launch`.
 
 ## Development
 
 ```bash
 cargo clippy -p mokly-sidecar --all-targets -- -D warnings
+cargo xtask generate-types
 ```
 
-Tests use `unimock` for the framed transport and event sink. They check hello,
-version mismatch, correlation, diagnostic forwarding, chunk boundaries, and
-both sides of the frame-size limit.
+Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
+They verify frame limits, hello, correlation, deadlines, retry, recycling,
+queue cancellation, and diagnostic forwarding. Real integration tests spawn
+the built sidecar and render a component, screen, story, and page.
+The `mock` feature exposes the public trait mocks to other crates.
 
 ### Key Code
 
-- [Methods](./src/methods.rs), [results](./src/results.rs), and
-  [wire envelopes](./src/wire.rs).
-- [Framing](./src/codec.rs), [client](./src/client.rs), and
-  [error categories](./src/error.rs).
+- [Wire methods](./src/methods.rs), [results](./src/results.rs), and
+  [definition metadata](./src/definitions.rs).
+- [Framing](./src/codec.rs) and [ordered client](./src/client.rs).
+- [Pool](./src/pool.rs), [options](./src/pool_options.rs), and
+  [process factory](./src/process_factory.rs).
 
 ### Related Docs
 
 - [Sidecar contract](../../docs/protocol/mokly-sidecar.md).
+- [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).
 - [Rust architecture](../../docs/architecture/rust-core.md).
-- [Entry props](../../docs/protocol/mokly-entry-props.md).
 
-`cargo xtask generate-types` writes the Node declarations under
-`packages/mokly/src/generated/sidecar/`. Each wire type has its own module,
-with dependency imports. Integer fields use TypeScript `number`. Authored
-schemas remain JSON until the core validates them. Describe diagnostics keep
-their authoring codes. Definition metadata and warning codes have typed fields.
-Consumers enable the `mock` feature to use the public unimock boundaries.
+`cargo xtask generate-types` writes one Node declaration module per wire type
+under `packages/mokly/src/generated/sidecar/`. Authored schemas remain raw JSON
+until the core validates them. A definition's source path identifies its
+helper module separately from the exporting module in its handle. PostCSS
+dependencies keep their plugin names and optional directory globs.
