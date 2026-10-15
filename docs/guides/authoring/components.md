@@ -10,7 +10,6 @@ order: 3
 Save a `.component.html` file inside a configured root. Declare its custom
 element name and a closed prop schema in the front matter.
 
-<!-- prettier-ignore -->
 ```html
 ---
 element: ui-button

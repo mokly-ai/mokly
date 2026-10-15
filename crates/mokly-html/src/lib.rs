@@ -52,5 +52,8 @@ mod props_tests;
 #[path = "_tests_/safety_tests.rs"]
 mod safety_tests;
 #[cfg(test)]
+#[path = "_tests_/substitution_tests.rs"]
+mod substitution_tests;
+#[cfg(test)]
 #[path = "_tests_/support.rs"]
 mod support;

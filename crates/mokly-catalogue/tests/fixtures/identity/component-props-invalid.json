@@ -5,7 +5,11 @@
   },
   "errors": [
     {
-      "code": "html-attribute"
+      "code": "html-attribute",
+      "message": "at \"/label\": 3 is not of type \"string\"",
+      "path": "specs/components/button.component.html",
+      "line": 9,
+      "column": 9
     }
   ]
 }

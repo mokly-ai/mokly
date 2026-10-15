@@ -8,6 +8,7 @@ use mokly_model::data::Props;
 use serde::Deserialize;
 use serde_json::Value;
 
+use crate::diagnostic::Issue;
 use crate::yaml::Document;
 
 /// Common declarative definition before path derivation.
@@ -45,7 +46,7 @@ pub struct EntryInput {
     /// Own complete prop values.
     #[serde(default)]
     pub props: Props,
-    /// Raw variant records, prepared only after the parent is valid.
+    /// Raw variant records; shape checks precede parent-dependent validation.
     #[serde(default)]
     pub variants: Vec<Value>,
     /// Custom component element.
@@ -83,6 +84,7 @@ pub(crate) struct VariantInput {
 #[derive(Clone, Debug)]
 pub(crate) struct ParsedEntry {
     pub(crate) input: EntryInput,
+    pub(crate) issues: Vec<Issue>,
     pub(crate) document: Document,
     pub(crate) body: String,
     pub(crate) body_offset: usize,

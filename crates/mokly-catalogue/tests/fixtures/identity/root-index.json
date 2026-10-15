@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "root-index",
-      "message": "specs/index.screen.html has no folder to be the index of; give it a path"
+      "message": "specs/index.screen.html has no folder to be the index of; give it a path",
+      "path": "specs/index.screen.html",
+      "line": 1,
+      "column": 1
     }
   ]
 }

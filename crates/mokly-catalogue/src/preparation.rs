@@ -1,6 +1,6 @@
 //! Catalogue preparation orchestration over injected discovery and description boundaries.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -9,18 +9,17 @@ use mokly_model::canonical::compare_utf16;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_source_interface::tree::SourceTree;
 
-use crate::config::{relative, traversal};
+use crate::config::relative;
 use crate::config_types::ResolvedConfig;
 use crate::definition_provider::DefinitionProvider;
 use crate::diagnostic::{Code, Issue, Warning, normalize_warnings};
 use crate::discovery::{Discovery, Inventory, SourceKind};
 use crate::error::{CatalogueError, Result};
-use crate::input::ParsedEntry;
+use crate::locations::at;
 use crate::prepare_sources::{append, canonical_order, duplicate_indices};
 use crate::template_types::{ElementRegistry, Template};
 use crate::validate_templates;
-use crate::yaml::Document;
-use crate::{documents, folders, identity, moves, parsing, prepare_entry, registry, relationships};
+use crate::{documents, folders, identity, moves, parsing, registry, relationships};
 
 /// Prepared private catalogue, with render sources kept out of every public shape.
 #[derive(Clone, Debug)]
@@ -87,6 +86,7 @@ impl CatalogueBuilder for Builder {
             deferred_modules: Vec::new(),
             warnings: Vec::new(),
         };
+        let mut failed = BTreeSet::new();
         let mut issues = duplicate_indices(&prepared.inventory.files);
         for file in &prepared.inventory.files.clone() {
             if file.excluded {
@@ -107,11 +107,26 @@ impl CatalogueBuilder for Builder {
             };
             let text = match String::from_utf8(bytes) {
                 Ok(text) => text,
-                Err(_) => {
-                    issues.push(Issue::new(
-                        Code::HtmlFrontMatter,
-                        format!("{} must be UTF-8", file.path),
-                    ));
+                Err(error) => {
+                    issues.push(
+                        Issue::new(
+                            if file.kind == SourceKind::Document {
+                                Code::DocumentFrontMatter
+                            } else {
+                                Code::HtmlFrontMatter
+                            },
+                            if file.kind == SourceKind::Document {
+                                format!("{}: front matter file must be UTF-8", file.path)
+                            } else {
+                                format!("{} must be UTF-8", file.path)
+                            },
+                        )
+                        .at(at(
+                            &file.path,
+                            &String::from_utf8_lossy(error.as_bytes()),
+                            error.utf8_error().valid_up_to(),
+                        )),
+                    );
                     continue;
                 }
             };
@@ -121,96 +136,18 @@ impl CatalogueBuilder for Builder {
                 parsing::parse(text, &file.path, file.kind)
             };
             match parsed {
-                Ok(parsed) => append(&mut prepared, parsed, file, config, &mut issues),
+                Ok(parsed) => append(
+                    &mut prepared,
+                    parsed,
+                    file,
+                    config,
+                    &mut issues,
+                    &mut failed,
+                ),
                 Err(issue) => issues.push(issue),
             }
         }
-        let javascript: Vec<_> = prepared
-            .inventory
-            .files
-            .iter()
-            .filter(|file| {
-                !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
-            })
-            .cloned()
-            .collect();
-        if !javascript.is_empty() {
-            let described = self.definitions.describe(&javascript)?;
-            if !described.deferred {
-                prepared.deferred_modules.clear();
-            }
-            prepared.model.folders.extend(described.folders);
-            for source in described.sources {
-                if traversal(&source) || Path::new(&source).is_absolute() {
-                    issues.push(Issue::new(
-                        Code::ConfigInvalid,
-                        format!("invalid inventoried source {source}"),
-                    ));
-                    continue;
-                }
-                let source_path = config.repo_root.join(&source);
-                match self.tree.project(&source_path) {
-                    Ok(Some(node))
-                        if node.kind == mokly_source_interface::tree::FileKind::File
-                            && node.identity.starts_with(&config.repo_root) =>
-                    {
-                        prepared
-                            .model
-                            .sources
-                            .extend([source, relative(&node.identity, &config.repo_root)]);
-                    }
-                    _ => issues.push(Issue::new(
-                        Code::ConfigInvalid,
-                        format!(
-                            "inventoried source {source} must be a regular file inside repoRoot"
-                        ),
-                    )),
-                }
-            }
-            for definition in described.entries {
-                let Some(file) = javascript
-                    .iter()
-                    .find(|file| file.path == definition.exporting_file)
-                else {
-                    issues.push(Issue::new(
-                        Code::InvalidMetadata,
-                        "definition is not exported by a resolved entry module",
-                    ));
-                    continue;
-                };
-                if !prepared.model.sources.contains(&definition.source.path) {
-                    issues.push(Issue::new(
-                        Code::InvalidMetadata,
-                        "definition source is not inventoried",
-                    ));
-                    continue;
-                }
-                let parsed = ParsedEntry {
-                    input: definition.input,
-                    document: Document {
-                        value: serde_json::Value::Null,
-                        positions: BTreeMap::new(),
-                    },
-                    body: String::new(),
-                    body_offset: 0,
-                    text: String::new(),
-                };
-                match prepare_entry::prepare(
-                    &parsed,
-                    file,
-                    &config.roots[file.root_index],
-                    definition.kind,
-                    definition.source,
-                    &schemes,
-                ) {
-                    Ok((entries, errors)) => {
-                        prepared.model.entries.extend(entries);
-                        issues.extend(errors);
-                    }
-                    Err(issue) => issues.push(issue),
-                }
-            }
-        }
+        self.append_definitions(&mut prepared, config, &mut failed, &mut issues)?;
         if config.file.starts_with(&config.repo_root) {
             prepared
                 .model
@@ -227,7 +164,10 @@ impl CatalogueBuilder for Builder {
         prepared.model.sources.dedup();
         issues.extend(identity::collisions(&prepared.model.entries));
         issues.extend(moves::validate(&prepared.model.entries));
-        issues.extend(relationships::validate(&mut prepared.model.entries));
+        issues.extend(relationships::validate(
+            &mut prepared.model.entries,
+            &failed,
+        ));
         issues.extend(folders::validate(
             &prepared.model.folders,
             &prepared.model.entries,
@@ -235,7 +175,7 @@ impl CatalogueBuilder for Builder {
         let (elements, registration_issues) = registry::register(&prepared.model.entries);
         prepared.elements = elements;
         issues.extend(registration_issues);
-        issues.extend(validate_templates::validate(&mut prepared));
+        issues.extend(validate_templates::validate(&mut prepared, &failed));
         normalize_warnings(&mut prepared.warnings);
         if !issues.is_empty() {
             return Err(CatalogueError::Invalid {

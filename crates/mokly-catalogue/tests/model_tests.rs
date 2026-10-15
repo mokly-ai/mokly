@@ -125,7 +125,9 @@ variants:
     else {
         panic!()
     };
-    assert_eq!(issues.len(), 1);
+    assert_eq!(issues.len(), 2);
     assert_eq!(issues[0].code.as_str(), "html-attribute");
+    assert_eq!(issues[1].code.as_str(), "invalid-field");
+    assert_eq!(issues[1].message, "action/bad: unknown field path");
     assert_eq!(issues[0].location.as_ref().unwrap().line, 8);
 }

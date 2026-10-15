@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-slot",
-      "message": "undeclared slot placeholder missing"
+      "message": "undeclared slot placeholder missing",
+      "path": "specs/components/button.component.html",
+      "line": 12,
+      "column": 17
     }
   ]
 }

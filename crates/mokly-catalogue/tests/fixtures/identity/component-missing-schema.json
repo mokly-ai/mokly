@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-front-matter",
-      "message": "propSchema is required"
+      "message": "propSchema is required",
+      "path": "specs/components/button.component.html",
+      "line": 2,
+      "column": 6
     }
   ]
 }

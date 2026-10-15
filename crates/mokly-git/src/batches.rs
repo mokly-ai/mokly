@@ -4,7 +4,7 @@ use std::ffi::OsString;
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Output, Request, Runner};
 use crate::error::{Error, Result};
 
 /// Default maximum path arguments per Git invocation.
@@ -43,7 +43,9 @@ impl Batches for BoundedRunner {
             outputs.push(self.runner.run(&Request {
                 directory: directory.to_owned(),
                 args,
+                stdin: vec![],
                 output_limit: DEFAULT_OUTPUT_LIMIT,
+                stderr_limit: DEFAULT_STDERR_LIMIT,
             })?);
         }
         Ok(outputs)

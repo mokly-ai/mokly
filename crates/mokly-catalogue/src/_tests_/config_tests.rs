@@ -17,7 +17,7 @@ fn schema_and_core_accept_the_configuration_examples() {
         json!({"roots":[{"dir":"specs"},{"dir":"packages/ui/src","path":"components"}]}),
         json!({"colorSchemes":["dark","light"],"renderer":"specs/renderer.tsx","postcss":"postcss.config.mjs",
             "stylesheets":[{"match":"**","stylesheets":["theme.css","$componentStylesheets","https://example.com/fonts.css"],"darkStylesheets":["dark.css"]}],
-            "moduleResolution":{"aliases":{"ui":"./ui","@scope/ui":"@scope/package"},"conditions":["browser"],"mainFields":["module","main"],"resolveExtensions":[".tsx",".ts"],"packageRoots":["packages/ui"],"loaders":{".css":"empty",".module.css":"empty",".svg":"text"}},
+            "moduleResolution":{"aliases":{"ui":"@app/ui","@scope/ui":"@scope/package"},"conditions":["browser"],"mainFields":["module","main"],"resolveExtensions":[".tsx",".ts"],"packageRoots":["packages/ui"],"loaders":{".css":"empty",".module.css":"empty",".svg":"text"}},
             "review":{"base":"origin/main"},"watch":{"debounceMs":75,"rules":[{"action":"reload","paths":["assets/**"]}]}}),
     ] {
         assert!(validator.is_valid(&value), "schema rejected {value}");
@@ -49,6 +49,8 @@ fn schema_and_core_reject_every_invalid_structural_setting() {
         json!({"moduleResolution":{"loaders":{".png":"css"}}}),
         json!({"moduleResolution":{"loaders":{".css":"text"}}}),
         json!({"moduleResolution":{"aliases":{"./ui":"ui"}}}),
+        json!({"moduleResolution":{"aliases":{"ui":"./ui"}}}),
+        json!({"moduleResolution":{"aliases":{"ui":"/absolute"}}}),
         json!({"watch":{"rules":[{"action":"invalid","paths":["a"]}]}}),
         json!({"watch":{"rules":[{"action":"reload","paths":["/absolute"]}]}}),
     ] {
@@ -62,15 +64,19 @@ fn schema_and_core_reject_every_invalid_structural_setting() {
 
 #[test]
 fn ordered_sets_normalize_and_cross_record_duplicates_fail() {
-    let config = parse(r#"{"colorSchemes":["dark","light"],"moduleResolution":{"conditions":["browser","browser","default"]}}"#,"mokly.config.json").unwrap();
+    let value = json!({"colorSchemes":["dark","light"],"moduleResolution":{
+        "conditions":["browser","browser","default"],
+        "mainFields":["module","module","main"],
+        "resolveExtensions":[".tsx",".tsx",".ts"]}});
+    let config = parse(&value.to_string(), "mokly.config.json").unwrap();
     assert_eq!(
         config.color_schemes.unwrap(),
         [ColorScheme::Light, ColorScheme::Dark]
     );
-    assert_eq!(
-        config.module_resolution.unwrap().conditions.unwrap(),
-        ["browser", "default"]
-    );
+    let module = config.module_resolution.unwrap();
+    assert_eq!(module.conditions.unwrap(), ["browser", "default"]);
+    assert_eq!(module.main_fields.unwrap(), ["module", "main"]);
+    assert_eq!(module.resolve_extensions.unwrap(), [".tsx", ".ts"]);
     for value in [
         json!({"roots":[{"dir":"specs"},{"dir":"specs"}]}),
         json!({"stylesheets":[{"match":"**","stylesheets":[]},{"match":"**","stylesheets":[]}]}),

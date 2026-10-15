@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "document-front-matter",
-      "message": "specs/guide.md: front matter unknown field slug"
+      "message": "specs/guide.md: front matter unknown field slug",
+      "path": "specs/guide.md",
+      "line": 2,
+      "column": 1
     }
   ]
 }

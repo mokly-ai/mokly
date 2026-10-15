@@ -12,9 +12,6 @@ docs/protocol/fixtures/catalogue-v4.json
 docs/protocol/fixtures/catalogue-v5.json
 docs/protocol/fixtures/catalogue-v6.json
 
-# HTML template fixtures keep the exact {{name}} grammar.
-crates/mokly-graph/tests/fixtures/catalogue/specs/**/*.html
-
 # release-please owns the changelog format
 CHANGELOG.md
 packages/viewer/CHANGELOG.md

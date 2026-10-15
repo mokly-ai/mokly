@@ -22,7 +22,10 @@ render graph crates.
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
-Git root validation belongs to the Git boundary.
+Git root validation belongs to the Git boundary. Config-relative parent
+segments are accepted when their lexical and physical targets stay inside
+`repoRoot`. Alias keys and targets must be bare specifiers. Ordered module
+resolution lists retain only the first occurrence of each value.
 
 `Discoverer` implements `Discovery` over `dyn SourceTree`. It skips denied
 subdirectories and symlinks. Excluded files remain protected source inputs.
@@ -37,6 +40,14 @@ adapter supplies definitions through that boundary. `DeferredDefinitions`
 marks its result as deferred and leaves those files in `deferred_modules`
 without evaluating them. A successful provider clears that deferred set, so a
 build cannot report success after skipping JavaScript inputs.
+
+A failed semantic definition stays in the preparation pass for path checks
+and as a relationship target. Its own body, link, and flow-target checks run
+once it is valid. Variant shape checks still run. Props and slots are
+checked against a parent only when that parent is valid. Consumer slot
+checks also wait for valid component declarations. Shared HTML bodies
+are checked once, and their warnings name the parent. `Inventory::default()`
+provides an empty inventory for injected adapters and tests.
 
 HTML checks cover forbidden and unknown elements, reserved names, slots,
 component cycles, template references, and unused props. Composition owns

@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-props",
-      "message": "undeclared prop reference missing"
+      "message": "undeclared prop reference missing",
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 5
     }
   ]
 }

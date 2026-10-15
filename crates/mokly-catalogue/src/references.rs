@@ -38,7 +38,7 @@ pub(crate) fn substitutions(text: &str) -> Vec<(usize, &str)> {
             break;
         };
         let end = start + 2 + end;
-        found.push((start, &text[start + 2..end]));
+        found.push((start, text[start + 2..end].trim_ascii()));
         offset = end + 2;
     }
     found
@@ -59,3 +59,7 @@ pub(crate) fn use_reference(
     used.insert(name.split('.').next().unwrap_or(name).into());
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "_tests_/references_tests.rs"]
+mod references_tests;

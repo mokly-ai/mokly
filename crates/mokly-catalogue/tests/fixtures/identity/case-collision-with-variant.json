@@ -1,0 +1,17 @@
+{
+  "config": {},
+  "files": {
+    "specs/Home.screen.html": "---\ntitle: Home\nvariants: [{slug: a, title: A}]\n---\n<h1>Home</h1>",
+    "specs/home.md": "# Home",
+    "specs/home/lines.md": "# Lines"
+  },
+  "errors": [
+    {
+      "code": "case-collision",
+      "message": "paths Home and home differ only by letter case:\n  specs/Home.screen.html\n  specs/home.md",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

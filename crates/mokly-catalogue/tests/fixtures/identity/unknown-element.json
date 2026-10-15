@@ -7,6 +7,7 @@
     {
       "code": "html-element",
       "message": "unknown element ui-unknown",
+      "path": "specs/home.screen.html",
       "line": 4,
       "column": 1
     }

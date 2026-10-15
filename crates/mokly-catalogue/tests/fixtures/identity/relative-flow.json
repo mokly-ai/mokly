@@ -6,7 +6,11 @@
   },
   "errors": [
     {
-      "code": "invalid-metadata"
+      "code": "invalid-metadata",
+      "message": "specs/account/flow.use-case.yaml: account/flow target ./account does not name a current screen",
+      "path": "specs/account/flow.use-case.yaml",
+      "line": 1,
+      "column": 1
     }
   ]
 }

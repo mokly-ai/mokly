@@ -10,6 +10,8 @@ pub mod grammar;
 pub mod options;
 pub mod output;
 pub mod parsing;
+pub mod publication;
+pub mod publish_errors;
 pub mod redaction;
 mod render_errors;
 pub mod version;

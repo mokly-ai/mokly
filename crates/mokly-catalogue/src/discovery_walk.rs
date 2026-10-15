@@ -5,12 +5,13 @@ use std::path::{Path, PathBuf};
 
 use globset::GlobSet;
 use mokly_model::canonical::compare_utf16;
+use mokly_model::catalogue::SourceLocation;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::config::relative;
 use crate::config_types::{ResolvedConfig, ResolvedRoot};
 use crate::config_validation::invalid;
-use crate::diagnostic::Issue;
+use crate::diagnostic::{Code, Issue};
 use crate::discovery::{Inventory, SourceFile, SourceKind};
 use crate::error::{CatalogueError, Result};
 use crate::folder_input;
@@ -162,7 +163,25 @@ impl Walk<'_> {
         };
         let text = match String::from_utf8(bytes) {
             Ok(text) => text,
-            Err(_) => return Err(invalid(format!("{path}: folder record must be UTF-8 JSON"))),
+            Err(error) => {
+                let (message, line, column) =
+                    match serde_json::from_slice::<serde_json::Value>(error.as_bytes()) {
+                        Err(source) => (source.to_string(), source.line(), source.column()),
+                        Ok(_) => ("folder record must be UTF-8 JSON".into(), 1, 1),
+                    };
+                return Err(folder_error(
+                    Issue::new(
+                        Code::InvalidFolder,
+                        format!("{path}: invalid JSON: {message}"),
+                    )
+                    .at(SourceLocation {
+                        path,
+                        line,
+                        column,
+                        export: None,
+                    }),
+                ));
+            }
         };
         let folder_path = folder_path(self.root, directory);
         let source = at(&path, &text, 0);

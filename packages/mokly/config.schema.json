@@ -96,7 +96,7 @@
           "additionalProperties": {
             "type": "string",
             "minLength": 1,
-            "pattern": "\\S"
+            "pattern": "^(?:@[A-Za-z0-9_.-]+/)?[A-Za-z0-9_][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_.-]+)*$"
           }
         },
         "conditions": {

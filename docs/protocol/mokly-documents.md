@@ -34,7 +34,8 @@ is allowed, or bare text that is trimmed. Keys and their meanings are:
 | `movedFrom`   | string       | Previous complete path for the [move contract](./mokly-moves.md) |
 
 A key outside this table, a repeated key, a malformed line, or an unclosed
-block fails the build with `<location>: front matter <reason>`, where the
+block fails the build with `document-front-matter` and
+`<location>: front matter <reason>`, where the
 reason is `unknown field <name>`, `repeated field <name>`, `line <n> is not
 "key: value"`, `<name> must be a string`, `<name> must be an array of strings`,
 or `block is not closed`. Line numbers count from the first delimiter as line 1.
@@ -42,7 +43,11 @@ Blank and indented field lines are malformed. CRLF and LF are accepted.
 JSON-shaped values starting with `"`, `[` or `{` must parse as JSON and have
 that field's type; other bare values, including `true` and `123`, stay strings.
 Title and tag values then pass the shared nonempty-title and unique kebab-case
-metadata rules. Description may be empty. The block is removed before rendering.
+metadata rules. Their exact reasons are
+`title must be a nonempty string without leading or trailing whitespace` and
+`tags must be an array of unique lowercase kebab-case tags`. A non-UTF-8 file
+uses the same code and the reason `file must be UTF-8`. Description may be
+empty. The block is removed before rendering.
 
 ## Title And Description
 

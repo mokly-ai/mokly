@@ -52,6 +52,7 @@ pub struct RenderSummary {
 }
 
 /// Shared generation interface for Serve, comparison, and static output.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
     /// All document keys, available without any document render.
     fn plans(&self) -> &BTreeMap<String, DocumentPlan>;
@@ -68,6 +69,7 @@ pub trait RenderGeneration: GeneratedResources {
 }
 
 /// Prepare graph nodes against one source-tree generation.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGraphMock))]
 pub trait RenderGraph: Send + Sync {
     /// Resolve stylesheet nodes and document input keys without rendering documents.
     fn prepare(
@@ -79,6 +81,7 @@ pub trait RenderGraph: Send + Sync {
 }
 
 /// Composition-root factory for graph dependencies that need resolved configuration.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = GraphFactoryMock))]
 pub trait GraphFactory: Send + Sync {
     /// Construct a graph over the current source tree and injected services.
     fn create(&self, config: &ResolvedConfig) -> Result<Arc<dyn RenderGraph>>;

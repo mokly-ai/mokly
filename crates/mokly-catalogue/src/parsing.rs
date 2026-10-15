@@ -3,10 +3,10 @@
 use std::collections::BTreeSet;
 
 use mokly_model::catalogue::SourceLocation;
-use serde_json::Value;
 
 use crate::diagnostic::{Code, Issue};
 use crate::discovery::SourceKind;
+use crate::entry_fields;
 use crate::front_matter;
 use crate::input::{EntryInput, ParsedEntry};
 use crate::locations::at;
@@ -24,148 +24,9 @@ pub(crate) fn parse(text: String, path: &str, kind: SourceKind) -> Result<Parsed
         let document = yaml::parse(block.header.unwrap_or(""), path, 2)?;
         (document, block.body.to_owned(), block.body_offset)
     };
-    let Some(object) = document.value.as_object() else {
-        return Err(issue(
-            &document,
-            path,
-            "",
-            Code::HtmlFrontMatter,
-            "front matter must be an object",
-        ));
-    };
-    for key in object.keys() {
-        let common = matches!(
-            key.as_str(),
-            "title" | "description" | "tags" | "path" | "movedFrom" | "rationale" | "relatedDocs"
-        );
-        let specific = match kind {
-            SourceKind::Screen => matches!(
-                key.as_str(),
-                "address" | "useCasePaths" | "colorSchemes" | "propSchema" | "props" | "variants"
-            ),
-            SourceKind::Component => matches!(
-                key.as_str(),
-                "element" | "colorSchemes" | "propSchema" | "props" | "slots" | "variants"
-            ),
-            SourceKind::UseCase => key == "steps",
-            _ => false,
-        };
-        if !common && !specific {
-            return Err(issue(
-                &document,
-                path,
-                key,
-                Code::HtmlFrontMatter,
-                format!("unknown field {key}"),
-            ));
-        }
-    }
-    for key in [
-        "title",
-        "description",
-        "path",
-        "movedFrom",
-        "rationale",
-        "address",
-        "element",
-    ] {
-        if let Some(value) = object.get(key)
-            && !value.is_string()
-        {
-            return Err(issue(
-                &document,
-                path,
-                key,
-                Code::HtmlFrontMatter,
-                format!("{key} must be a string"),
-            ));
-        }
-    }
-    for key in [
-        "tags",
-        "relatedDocs",
-        "useCasePaths",
-        "colorSchemes",
-        "slots",
-    ] {
-        if let Some(value) = object.get(key)
-            && !value
-                .as_array()
-                .is_some_and(|list| list.iter().all(Value::is_string))
-        {
-            return Err(issue(
-                &document,
-                path,
-                key,
-                Code::HtmlFrontMatter,
-                format!("{key} must be an array of strings"),
-            ));
-        }
-    }
-    for key in ["props", "propSchema"] {
-        if let Some(value) = object.get(key)
-            && !value.is_object()
-        {
-            return Err(issue(
-                &document,
-                path,
-                key,
-                Code::HtmlFrontMatter,
-                format!("{key} must be an object"),
-            ));
-        }
-    }
-    for key in ["variants", "steps"] {
-        if let Some(value) = object.get(key)
-            && !value.is_array()
-        {
-            return Err(issue(
-                &document,
-                path,
-                key,
-                Code::HtmlFrontMatter,
-                format!("{key} must be an array"),
-            ));
-        }
-    }
-    if kind == SourceKind::Component {
-        for required in ["element", "propSchema"] {
-            if !object.contains_key(required) {
-                return Err(issue(
-                    &document,
-                    path,
-                    required,
-                    Code::HtmlFrontMatter,
-                    format!("{required} is required"),
-                ));
-            }
-        }
-    }
-    if let Some(steps) = object.get("steps").and_then(Value::as_array) {
-        for (index, step) in steps.iter().enumerate() {
-            let Some(step) = step.as_object() else {
-                return Err(issue(
-                    &document,
-                    path,
-                    "steps",
-                    Code::HtmlFrontMatter,
-                    format!("step #{} must be an object", index + 1),
-                ));
-            };
-            for key in step.keys() {
-                if !matches!(key.as_str(), "screenPath" | "title" | "description") {
-                    return Err(issue(
-                        &document,
-                        path,
-                        &format!("steps/{index}/{key}"),
-                        Code::InvalidField,
-                        format!("step #{}: unknown field {key}", index + 1),
-                    ));
-                }
-            }
-        }
-    }
-    let input: EntryInput = match serde_json::from_value(document.value.clone()) {
+    let mut value = document.value.clone();
+    let issues = entry_fields::validate(&mut value, &document, path, kind)?;
+    let input: EntryInput = match serde_json::from_value(value) {
         Ok(input) => input,
         Err(error) => {
             return Err(Issue::new(Code::HtmlFrontMatter, error.to_string()).at(at(path, &text, 0)));
@@ -174,6 +35,7 @@ pub(crate) fn parse(text: String, path: &str, kind: SourceKind) -> Result<Parsed
     validate_metadata(&input, &document, path)?;
     Ok(ParsedEntry {
         input,
+        issues,
         document,
         body,
         body_offset,

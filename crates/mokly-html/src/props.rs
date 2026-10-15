@@ -102,7 +102,7 @@ pub fn display(value: &DataValue) -> String {
     }
 }
 
-/// Substitute scalar references. An unclosed opening brace is literal text.
+/// Substitute scalar references with optional ASCII whitespace inside the braces.
 pub fn substitute(text: &str, schema: &PropSchema, props: &Props) -> Result<String> {
     substitute_inner(text, schema, props, false)
 }
@@ -124,7 +124,7 @@ fn substitute_inner(
             break;
         };
         let end = start + 2 + end;
-        let name = &rest[start + 2..end];
+        let name = rest[start + 2..end].trim_ascii();
         let Some(prop) = schema_at(schema, name) else {
             return Err(invalid(
                 "html-props",

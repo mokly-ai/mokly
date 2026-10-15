@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "moved-link-target",
-      "message": "specs/home.screen.html: link target old does not exist; it moved to home"
+      "message": "specs/home.screen.html: link target old does not exist; it moved to home",
+      "path": "specs/home.screen.html",
+      "line": 5,
+      "column": 4
     }
   ]
 }

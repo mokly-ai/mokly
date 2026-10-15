@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-slot",
-      "message": "invalid or conflicting slot name label"
+      "message": "invalid or conflicting slot name label",
+      "path": "specs/components/button.component.html",
+      "line": 10,
+      "column": 1
     }
   ]
 }

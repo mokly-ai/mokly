@@ -3,6 +3,16 @@
 use ts_rs::TS;
 
 use crate::type_modules::TypeModules;
+use crate::typescript;
+
+#[test]
+fn render_capability_import_and_viewer_directory_type_stay_paired() {
+    let modules = typescript::catalogue_modules();
+    let capability = &modules["RenderCapability.ts"];
+    let import = "import type { VIEWER_DIRECTORY } from \"../../catalogue/delivery_paths.js\";";
+    assert_eq!(capability.matches(import).count(), 1);
+    assert!(capability.contains("url: `/${typeof VIEWER_DIRECTORY}/components/render`"));
+}
 
 #[derive(TS)]
 #[expect(dead_code, reason = "type-only code generation fixture")]

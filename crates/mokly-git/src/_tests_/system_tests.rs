@@ -7,7 +7,8 @@ use mokly_platform::error;
 use mokly_platform::processes::ProcessGroupsMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use crate::control::CancellationMock;
 use crate::error::Error;
 use crate::system::SystemRunner;
 
@@ -15,6 +16,8 @@ use crate::system::SystemRunner;
 fn oversized_output_limits_fail_before_platform_configuration() {
     for limit in [DEFAULT_OUTPUT_LIMIT + 1, usize::MAX] {
         let runner: &dyn Runner = &SystemRunner {
+            clock: Arc::new(Unimock::new(())),
+            cancellation: Arc::new(Unimock::new(())),
             groups: Arc::new(Unimock::new(())),
         };
         assert!(matches!(
@@ -29,6 +32,12 @@ fn oversized_output_limits_fail_before_platform_configuration() {
 fn limits_at_or_below_the_maximum_reach_the_platform_boundary() {
     for limit in [0, 1, DEFAULT_OUTPUT_LIMIT] {
         let runner: &dyn Runner = &SystemRunner {
+            clock: Arc::new(Unimock::new(())),
+            cancellation: Arc::new(Unimock::new(
+                CancellationMock::cancelled
+                    .some_call(matching!())
+                    .returns(false),
+            )),
             groups: Arc::new(Unimock::new(
                 ProcessGroupsMock::configure
                     .next_call(matching!(_))
@@ -49,6 +58,44 @@ fn request(limit: usize) -> Request {
     Request {
         directory: PathBuf::from("/checkout"),
         args: vec!["--version".into()],
+        stdin: vec![],
         output_limit: limit,
+        stderr_limit: 1024 * 1024,
     }
+}
+
+#[test]
+fn cancelled_commands_do_not_configure_or_spawn_a_process() {
+    let runner: &dyn Runner = &SystemRunner {
+        clock: Arc::new(Unimock::new(())),
+        groups: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(Unimock::new(
+            CancellationMock::cancelled
+                .next_call(matching!())
+                .returns(true),
+        )),
+    };
+    assert!(matches!(runner.run(&request(1024)), Err(Error::Cancelled)));
+}
+
+#[test]
+fn explicit_cancellation_stops_before_platform_setup() {
+    let cancellation = Unimock::new(
+        command::CancellationMock::is_cancelled
+            .next_call(matching!())
+            .returns(true),
+    );
+    let runner: &dyn Runner = &SystemRunner {
+        groups: Arc::new(Unimock::new(())),
+        clock: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(Unimock::new(
+            CancellationMock::cancelled
+                .next_call(matching!())
+                .returns(false),
+        )),
+    };
+    assert!(matches!(
+        runner.run_cancellable(&request(DEFAULT_OUTPUT_LIMIT), &cancellation),
+        Err(Error::Cancelled)
+    ));
 }

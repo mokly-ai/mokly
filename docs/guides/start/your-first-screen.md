@@ -10,17 +10,17 @@ order: 3
 Create `specs/welcome.screen.html`. Its file name gives it the catalogue
 path `welcome`.
 
-<!-- prettier-ignore -->
 ```html
 ---
 title: Welcome
 description: The first screen after sign-in.
-props: {name: Ada, returning: true}
+props: { name: Ada, returning: true }
 variants:
   - slug: first-visit
     title: First visit
-    props: {returning: false}
+    props: { returning: false }
 ---
+
 <main>
   <h1>Welcome, {{name}}</h1>
   <p mokly-if="$returning">Your workspace is ready.</p>

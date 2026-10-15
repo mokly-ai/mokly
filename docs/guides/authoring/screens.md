@@ -10,7 +10,6 @@ order: 2
 Save a `.screen.html` file inside a configured root. Start with YAML front
 matter. Put the screen's HTML after the closing delimiter.
 
-<!-- prettier-ignore -->
 ```html
 ---
 title: Invoice
@@ -63,7 +62,8 @@ catalogue placement must differ from the source directory.
 
 `{{name}}` substitutes a scalar prop in text or an attribute. A dotted name,
 such as `{{user.name}}`, reads an object property. Mokly escapes substituted
-text. There is no raw substitution form.
+text. There is no raw substitution form. Spaces around the name inside the
+braces are allowed, as in `{{ name }}`.
 
 `mokly-if="$name"` keeps an element only when the named boolean prop is
 true. `mokly-viewport="mobile"` or `"desktop"` keeps it in that viewport.

@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/badge.component.html": "---\ntitle: Badge\nelement: ui-badge\npropSchema:\n  type: object\n  additionalProperties: false\n  properties:\n    name: {type: string}\n    badge: {type: object, additionalProperties: false, properties: {count: {type: number}}}\nprops: {name: Ada, badge: {count: 3}}\n---\n<p title=\"{{\tname \r\n}}\">{{ name }} {{\n badge.count\t }}</p>"
+  },
+  "paths": ["badge"]
+}

@@ -4,6 +4,12 @@
     "specs/components/button.component.html": "---\ntitle: Button\nelement: ui-button\npropSchema:\n  type: object\n  additionalProperties: false\n  required: [label]\n  properties: {label: {type: string}}\nprops: {label: Save}\nslots: [children]\n---\n<button>{{label}}<slot></slot></button>\n",
     "specs/home.screen.html": "---\ntitle: Home\n---\n<table><ui-button label=\"Save\"></ui-button></table>\n"
   },
-  "warnings": ["html-foster-parented"],
+  "warnings": [
+    {
+      "code": "html-foster-parented",
+      "subject": "entry \"home\"",
+      "message": "component element ui-button is moved out of a table"
+    }
+  ],
   "paths": ["components/button", "home"]
 }

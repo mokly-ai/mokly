@@ -23,6 +23,17 @@ fn all_three_boundaries_reject_versions_before_payloads() {
 }
 
 #[test]
+fn version_errors_print_the_number_without_rust_debug_wrapping() {
+    let error = index(r#"{"schemaVersion":6}"#).unwrap_err().to_string();
+    assert_eq!(
+        error,
+        "[mokly-model/version] catalogue index requires schemaVersion 7; received 6"
+    );
+    let missing = index("{}").unwrap_err().to_string();
+    assert!(missing.ends_with("received missing or not an integer"));
+}
+
+#[test]
 fn live_descriptor_accepts_only_the_typed_current_capability() {
     let text = r#"{"schemaVersion":3,"generation":"abc","render":{"url":"/mokly-viewer/components/render","token":"private"}}"#;
     assert_eq!(live(text).unwrap().generation, "abc");

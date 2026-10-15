@@ -16,7 +16,11 @@
   },
   "errors": [
     {
-      "code": "duplicate-folder"
+      "code": "duplicate-folder",
+      "message": "folder top is defined twice:\n  specs/a/_folder.json\n  specs/b/_folder.json",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

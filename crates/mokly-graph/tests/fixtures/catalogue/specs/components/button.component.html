@@ -25,10 +25,10 @@ variants:
 
 <button
   class="button"
-  disabled="{{disabled}}"
-  aria-label="{{label}}"
-  title="{{badge.text}}"
+  disabled="{{ disabled }}"
+  aria-label="{{ label }}"
+  title="{{ badge.text }}"
 >
-  {{label}} <b mokly-if="$disabled">Busy</b><i>{{count}}</i> <slot></slot
+  {{ label }} <b mokly-if="$disabled">Busy</b><i>{{ count }}</i> <slot></slot
   ><slot name="trailing"><small>Default</small></slot>
 </button>

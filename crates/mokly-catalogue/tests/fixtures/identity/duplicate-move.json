@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "duplicate-moved-from",
-      "message": "movedFrom old is declared twice:\n  specs/home.screen.html\n  specs/other.md"
+      "message": "movedFrom old is declared twice:\n  specs/home.screen.html\n  specs/other.md",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

@@ -5,7 +5,11 @@
   },
   "errors": [
     {
-      "code": "html-front-matter"
+      "code": "html-front-matter",
+      "message": "at \"/additionalProperties\": object schemas require additionalProperties: false",
+      "path": "specs/components/button.component.html",
+      "line": 4,
+      "column": 1
     }
   ]
 }

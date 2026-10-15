@@ -8,7 +8,10 @@
   "errors": [
     {
       "code": "config-invalid",
-      "message": "unknown configuration field: output"
+      "message": "unknown configuration field: output",
+      "path": "mokly.config.json",
+      "line": 1,
+      "column": 2
     }
   ]
 }

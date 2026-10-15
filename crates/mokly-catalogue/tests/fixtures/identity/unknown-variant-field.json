@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "invalid-field",
-      "message": "final/home/error: unknown field path"
+      "message": "final/home/error: unknown field path",
+      "path": "specs/home.screen.html",
+      "line": 5,
+      "column": 44
     }
   ]
 }

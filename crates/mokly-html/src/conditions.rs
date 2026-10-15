@@ -62,6 +62,7 @@ pub(crate) fn attribute_value(value: &str, context: &Context) -> Result<Option<S
         .and_then(|value| value.strip_suffix("}}"))
         && !name.contains("{{")
     {
+        let name = name.trim_ascii();
         if schema_at(&context.schema, name).is_none() {
             return Err(invalid(
                 "html-props",
