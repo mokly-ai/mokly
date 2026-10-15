@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{\"exclude\":[\"../outside\"]}",
+    "specs/a/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "invalid-folder",
+      "message": "specs/a/_folder.json: exclude must be an array of safe relative globs"
+    }
+  ]
+}

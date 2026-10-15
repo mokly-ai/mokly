@@ -1,0 +1,25 @@
+{
+  "config": {
+    "roots": [
+      {
+        "dir": "specs",
+        "files": ["**/*.screen.html"]
+      },
+      {
+        "dir": "./specs",
+        "files": ["**/*.md"]
+      }
+    ]
+  },
+  "files": {
+    "specs/_folder.json": "{}",
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n",
+    "specs/note.md": "# Note"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "file specs/_folder.json is matched by roots[0] and roots[1]"
+    }
+  ]
+}

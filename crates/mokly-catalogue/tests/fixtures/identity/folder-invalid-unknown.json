@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{\"extra\":true}",
+    "specs/a/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "invalid-folder",
+      "message": "specs/a/_folder.json: unknown field extra"
+    }
+  ]
+}

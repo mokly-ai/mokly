@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/bad\u0007name.screen.html": "---\ntitle: Home\n---\n<p>Home</p>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-segment",
+      "message": "specs/bad\u0007name.screen.html: file name \"bad\\u0007name\" is not a valid path segment; use letters, digits, hyphens and underscores"
+    }
+  ]
+}

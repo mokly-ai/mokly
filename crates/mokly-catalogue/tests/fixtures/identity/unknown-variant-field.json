@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\npath: final/home\nvariants:\n  - {slug: error, title: Error, props: {}, path: ignored}\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-field",
+      "message": "final/home/error: unknown field path"
+    }
+  ]
+}

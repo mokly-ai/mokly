@@ -1,0 +1,99 @@
+# mokly-catalogue
+
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
+`mokly-catalogue` loads data-only configuration and prepares the catalogue from
+an injected source tree. Depend on it to discover entries, validate authoring
+inputs, or classify private sources. `mokly-model` owns the shared data shapes.
+`mokly-source-interface` owns file access. Rendering belongs to the HTML and
+render graph crates.
+
+## Responsibilities
+
+- Resolve `mokly.config.json` and config-relative input paths.
+- Walk roots once per pass and preserve each matched file's root owner.
+- Parse HTML front matter, YAML use cases, Markdown metadata, and folder records.
+- Derive paths, flatten variants, validate schemas and props, and resolve flows.
+- Keep private source membership separate from public resources.
+- Report structured errors and sorted build warnings with source locations.
+
+## What This Crate Does
+
+`Loader` implements `ConfigLoader`. It searches upward or loads an explicit
+JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
+Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
+Git root validation belongs to the Git boundary.
+
+`Discoverer` implements `Discovery` over `dyn SourceTree`. It skips denied
+subdirectories and symlinks. Excluded files remain protected source inputs.
+The inventory stores lexical paths, physical aliases, file kinds, and root
+ownership. Later stages reuse it instead of walking again.
+
+`Builder` implements `CatalogueBuilder`. It produces `PreparedCatalogue`: a
+validated in-memory model, private HTML and Markdown bodies, variant slot
+fragments, the element registry, warnings, and the source inventory. It calls
+`dyn DefinitionProvider` only for discovered JavaScript files. The sidecar
+adapter supplies definitions through that boundary. `DeferredDefinitions`
+leaves those files in `deferred_modules` without evaluating them.
+
+HTML checks cover forbidden and unknown elements, reserved names, slots,
+component cycles, template references, and unused props. Composition owns
+literal attribute coercion, rendered document safety, assets, and anchors.
+`SourcePolicy` classifies root matches, reserved basenames, and inventoried
+inputs in that precedence order, including physical aliases.
+
+## Quick Start
+
+Inject a source tree and the JavaScript definition provider:
+
+```rust
+use std::path::Path;
+use std::sync::Arc;
+use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::definition_provider::DefinitionProvider;
+use mokly_catalogue::discovery::Discoverer;
+use mokly_catalogue::preparation::{Builder, CatalogueBuilder, PreparedCatalogue};
+use mokly_source_interface::tree::SourceTree;
+
+fn prepare(
+    tree: Arc<dyn SourceTree>,
+    definitions: Arc<dyn DefinitionProvider>,
+    cwd: &Path,
+) -> mokly_catalogue::error::Result<PreparedCatalogue> {
+    let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
+    let config = loader.load(cwd, None)?;
+    let builder: &dyn CatalogueBuilder = &Builder {
+        discovery: Arc::new(Discoverer { tree: tree.clone() }),
+        tree,
+        definitions,
+    };
+    builder.prepare(&config, None)
+}
+```
+
+## Development
+
+```bash
+cargo test -p mokly-catalogue
+cargo clippy -p mokly-catalogue --all-targets -- -D warnings
+```
+
+Unit tests use unimock at source and description boundaries. Behavior fixtures use an in-memory source-tree adapter. Integration tests use
+isolated working trees for aliases and races. They assert paths, exact diagnostics,
+source locations, source protection, aliases, and filesystem races.
+Consumers enable the `mock` feature for the public unimock boundaries.
+
+### Key Code
+
+- [Configuration](./src/config.rs) and [schema validation](./src/config_validation.rs).
+- [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
+- [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
+- [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
+
+### Related Docs
+
+- [Root discovery](../../docs/protocol/mokly-root-discovery.md).
+- [Configuration](../../docs/protocol/mokly-configuration.md).
+- [HTML screens](../../docs/protocol/mokly-html-screens.md).
+- [Entry props](../../docs/protocol/mokly-entry-props.md).
+- [Catalogue model and public shapes](../../docs/protocol/mokly-catalogue.md).

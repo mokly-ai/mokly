@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nmovedFrom: bad.name\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-path",
+      "line": 3,
+      "column": 1
+    }
+  ]
+}

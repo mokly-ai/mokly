@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nvariants:\n  - {slug: nested, title: Nested, props: {}, variants: []}\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-variants",
+      "message": "a variant cannot declare variants",
+      "line": 4
+    }
+  ]
+}

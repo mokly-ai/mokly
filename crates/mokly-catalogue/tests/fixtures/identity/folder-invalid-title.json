@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{\"title\":\" bad \"}",
+    "specs/a/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "invalid-folder",
+      "message": "specs/a/_folder.json: title must be a nonempty string without leading or trailing whitespace"
+    }
+  ]
+}

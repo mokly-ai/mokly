@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/statement.page.html": "---\ntitle: Home\nprops: {}\n---\n<!doctype html><html><head></head><body></body></html>\n"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "unknown field props"
+    }
+  ]
+}

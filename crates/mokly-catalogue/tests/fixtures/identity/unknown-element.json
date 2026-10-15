@@ -1,0 +1,14 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<ui-unknown></ui-unknown>\n"
+  },
+  "errors": [
+    {
+      "code": "html-element",
+      "message": "unknown element ui-unknown",
+      "line": 4,
+      "column": 1
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/guide.md": "---\ntitle: Bad\n"
+  },
+  "errors": [
+    {
+      "code": "document-front-matter",
+      "message": "specs/guide.md: front matter block is not closed"
+    }
+  ]
+}

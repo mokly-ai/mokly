@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/guide.md": "---\nslug: ignored\n---\n"
+  },
+  "errors": [
+    {
+      "code": "document-front-matter",
+      "message": "specs/guide.md: front matter unknown field slug"
+    }
+  ]
+}

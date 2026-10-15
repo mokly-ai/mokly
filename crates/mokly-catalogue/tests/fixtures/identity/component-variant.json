@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/components/button.component.html": "---\ntitle: Button\nelement: ui-button\npropSchema:\n  type: object\n  additionalProperties: false\n  required: [label]\n  properties: {label: {type: string}}\nprops: {label: Save}\nslots: [children]\nvariants:\n  - {slug: disabled, title: Disabled, props: {label: Disabled}, slots: {children: \"<b>Child</b>\"}}\n---\n<button>{{label}}<slot></slot></button>\n"
+  },
+  "paths": ["components/button", "components/button/disabled"]
+}

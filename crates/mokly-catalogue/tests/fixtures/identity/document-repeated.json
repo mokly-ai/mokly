@@ -1,0 +1,14 @@
+{
+  "config": {},
+  "files": {
+    "specs/guide.md": "---\ntitle: First\ntitle: Second\n---\n"
+  },
+  "errors": [
+    {
+      "code": "document-front-matter",
+      "message": "specs/guide.md: front matter repeated field title",
+      "line": 3,
+      "column": 1
+    }
+  ]
+}

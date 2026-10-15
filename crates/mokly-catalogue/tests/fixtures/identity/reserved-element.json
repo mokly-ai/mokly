@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<mokly-custom></mokly-custom>\n"
+  },
+  "errors": [
+    {
+      "code": "html-element",
+      "message": "forbidden element mokly-custom"
+    }
+  ]
+}

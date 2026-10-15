@@ -1,0 +1,14 @@
+{
+  "config": {
+    "output": "bad"
+  },
+  "files": {
+    "specs/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "unknown configuration field: output"
+    }
+  ]
+}

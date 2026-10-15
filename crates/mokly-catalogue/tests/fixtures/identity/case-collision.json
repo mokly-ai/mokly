@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/a.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n",
+    "specs/A.md": "# A"
+  },
+  "errors": [
+    {
+      "code": "case-collision",
+      "message": "paths A and a differ only by letter case:\n  specs/A.md\n  specs/a.screen.html"
+    }
+  ]
+}

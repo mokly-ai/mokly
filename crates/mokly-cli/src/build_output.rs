@@ -1,0 +1,109 @@
+//! Build warning, diagnostic, and discovery-summary presentation.
+
+use mokly_catalogue::diagnostic::{Issue, Warning};
+use mokly_catalogue::error::CatalogueError;
+use mokly_model::axes::EntryKind;
+
+use crate::build::{BuildError, BuildSummary};
+use crate::codes::Code;
+use crate::output::{Mode, Style, bounded};
+use crate::redaction::Redactor;
+
+/// Format a warning with one exact subject and no change to its diagnostic payload.
+pub fn warnings(style: &Style, warnings: &[Warning], redactor: &Redactor) -> String {
+    warnings
+        .iter()
+        .map(|warning| {
+            let message = redactor.safe(&format!(
+                "{}: {}",
+                warning.printed_subject(),
+                warning.message
+            ));
+            if style.mode == Mode::Plain {
+                format!("[mokly/warning] {message}\n")
+            } else {
+                format!("{}\n", bounded(&format!("  ! {message}"), style.columns))
+            }
+        })
+        .collect()
+}
+
+/// Discovery-only success. Plain mode adds no phase line and names no output.
+pub fn summary(style: &Style, summary: &BuildSummary) -> String {
+    if style.mode == Mode::Plain {
+        return String::new();
+    }
+    let mut parts = vec![format!(
+        "  {} Catalogue ready",
+        if style.ascii { "+" } else { "✔" }
+    )];
+    for (kind, noun) in [
+        (EntryKind::Screen, "screen"),
+        (EntryKind::Page, "page"),
+        (EntryKind::Document, "document"),
+        (EntryKind::UseCase, "use case"),
+        (EntryKind::Component, "component"),
+    ] {
+        if let Some(count) = summary.counts.get(&kind).filter(|count| **count > 0) {
+            parts.push(format!(
+                "{count} {noun}{}",
+                if *count == 1 { "" } else { "s" }
+            ));
+        }
+    }
+    format!("{}\n", bounded(&parts.join(" · "), style.columns))
+}
+
+/// Report retained warnings first, then the command's typed failure.
+pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
+    match failure {
+        BuildError::Strict { warnings: records } => {
+            let count = records.len();
+            warnings(style, records, redactor)
+                + &style.error(
+                    Code::BuildInvalid,
+                    &format!(
+                        "{count} build warning{} with --strict",
+                        if count == 1 { "" } else { "s" }
+                    ),
+                    redactor,
+                )
+        }
+        BuildError::Catalogue {
+            source:
+                CatalogueError::Invalid {
+                    issues,
+                    warnings: records,
+                },
+        } => {
+            let mut text = warnings(style, records, redactor);
+            for issue in issues {
+                text.push_str(&style.error(Code::BuildInvalid, &diagnostic(issue), redactor));
+            }
+            text
+        }
+        BuildError::Catalogue {
+            source: CatalogueError::Config(issue),
+        } => style.error(Code::ConfigInvalid, &diagnostic(issue), redactor),
+        BuildError::Catalogue {
+            source: CatalogueError::ConfigMissing { searched },
+        } => style.error(
+            Code::ConfigMissing,
+            &format!(
+                "no mokly.config.json found; searched: {}",
+                searched.join(", ")
+            ),
+            redactor,
+        ),
+        BuildError::Catalogue { source } => {
+            style.error(Code::BuildInvalid, &source.to_string(), redactor)
+        }
+    }
+}
+
+fn diagnostic(issue: &Issue) -> String {
+    let prefix = issue.location.as_ref().map_or(String::new(), |location| {
+        format!("{}:{}:{} ", location.path, location.line, location.column)
+    });
+    format!("{prefix}[mokly/{}] {}", issue.code.as_str(), issue.message)
+}

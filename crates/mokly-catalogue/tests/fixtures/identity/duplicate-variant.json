@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nvariants:\n  - {slug: same, title: First, props: {}}\n  - {slug: same, title: Second, props: {}}\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "duplicate-path",
+      "message": "path home/same is defined twice:\n  specs/home.screen.html\n  specs/home.screen.html"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\ntitle: Again\n---\n<p>Home</p>"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "duplicate key title",
+      "line": 3,
+      "column": 1
+    }
+  ]
+}

@@ -142,6 +142,15 @@ impl Artifacts for DefaultArtifacts {
                 .join("packages/viewer/src/generated/model.ts"),
             &typescript::generate(),
         )?;
+        for (name, text) in typescript::catalogue_modules() {
+            self.files.write(
+                &self
+                    .workspace
+                    .join("packages/viewer/src/generated/catalogue")
+                    .join(name),
+                &text,
+            )?;
+        }
         for (name, text) in generate() {
             self.files.write(
                 &self

@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<h1>{{missing}}</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "html-props",
+      "message": "undeclared prop reference missing"
+    }
+  ]
+}

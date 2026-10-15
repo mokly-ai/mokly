@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: !custom Home\n---\n<p>Home</p>"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "custom YAML tags are not allowed",
+      "line": 2
+    }
+  ]
+}

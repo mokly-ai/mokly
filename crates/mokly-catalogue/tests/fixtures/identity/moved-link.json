@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nmovedFrom: old\n---\n<a href=\"mock:old\">Old</a>\n"
+  },
+  "errors": [
+    {
+      "code": "moved-link-target",
+      "message": "specs/home.screen.html: link target old does not exist; it moved to home"
+    }
+  ]
+}

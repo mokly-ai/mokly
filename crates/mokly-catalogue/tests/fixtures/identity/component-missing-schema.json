@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/components/button.component.html": "---\ntitle: Button\nelement: ui-button\n---\n<button>Save</button>"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "propSchema is required"
+    }
+  ]
+}

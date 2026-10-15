@@ -32,8 +32,18 @@ tree order. Authored tags and steps keep their order.
 large integer types to TypeScript `number`, because JSON readers use numbers. It supports recursive
 schemas and Serde field names without a second hand-written type model.
 `typescript::generate` returns deterministic source. `cargo xtask generate-types`
-writes it to `packages/viewer/src/generated/model.ts`. Future catalogue index,
-entry detail, live descriptor, review, and snapshot shapes each use one module.
+writes the schema module to `packages/viewer/src/generated/model.ts` and the
+catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
+per file. `catalogue::CatalogueModel` is private in-memory state. The public
+roots are `CatalogueReadModel` v7, `EntryDetailV1`, and `LiveDescriptorV3`.
+Their readers gate the version before decoding payload fields. Index validation
+checks private fields, paths, variants, trees, schemas, tagged props, and flow
+membership. Detail validation checks the current or historical fence.
+
+`inference::infer` builds closed schemas from own and merged variant props.
+`data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`
+encode and decode tagged public props, including negative zero. Derived controls
+follow schema choices, labels, bounds, and zero-based number steps.
 
 ## Quick Start
 
@@ -58,6 +68,8 @@ cargo xtask generate-types
 - [Schema types](./src/prop_schema.rs) and [validator](./src/validation.rs).
 - [Profile restrictions](./src/profile.rs) and [limits](./src/limits.rs).
 - [Canonical encoding](./src/canonical.rs) and [type generation](./src/typescript.rs).
+- [Catalogue model](./src/catalogue.rs), [public index](./src/public_index.rs),
+  [detail and live types](./src/public_detail.rs), and [readers](./src/readers.rs).
 
 ### Related Docs
 

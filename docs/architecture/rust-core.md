@@ -31,22 +31,23 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 
 ## Crates
 
-| Crate             | Owns                                                                                                                                                              | Depends on                      |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `mokly-model`     | Every shared shape, canonical JSON, format numbers, the prop schema profile and its validator on the `jsonschema` crate, and the generated TypeScript types.      | nothing internal                |
-| `mokly-platform`  | Exclusive rename, process groups, Windows job objects, file locks.                                                                                                | nothing internal                |
-| `mokly-git`       | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                                                               | `platform`                      |
-| `mokly-sidecar`   | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                                                               | `model`, `platform`             |
-| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the catalogue model.                                                      | `model`, `sidecar`              |
-| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly, the component registry.                       | `model`, `catalogue`, `sidecar` |
-| `mokly-css`       | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                                   | `model`                         |
-| `mokly-graph`     | The content-addressed render graph, scheduling, the render cache, the source tree trait over the working tree and Git trees, the asset closure.                   | `catalogue`, `html`, `css`      |
-| `mokly-compare`   | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, review result v8, change snapshot v4.                         | `graph`, `css`, `git`           |
-| `mokly-server`    | HTTP, the shell stub, the catalogue index and entry detail routes, documents and assets, the live descriptor, live updates, on-demand comparison, shutdown.       | `graph`, `compare`, `sidecar`   |
-| `mokly-watch`     | Watch rules, invalidation, rebuilds, replay.                                                                                                                      | `graph`, `server`               |
-| `mokly-static`    | The static output of `build`: the stubs, the catalogue index, the entry details, documents, the comparison generation, ownership markers, the output transaction. | `graph`, `compare`, `platform`  |
-| `mokly-publish`   | The upload exchange v1: plan, blobs, complete, retries, accounting.                                                                                               | `static`                        |
-| `mokly-cli`       | The `mokly` binary: clap grammar, output modes, reporters, shortcuts, the composition root.                                                                       | everything above                |
+| Crate                    | Owns                                                                                                                                                              | Depends on                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `mokly-source-interface` | Read-only source-tree access, projected identities, node kinds, and typed source IO failures.                                                                     | nothing internal                       |
+| `mokly-model`            | Every shared shape, canonical JSON, format numbers, the prop schema profile and its validator on the `jsonschema` crate, and the generated TypeScript types.      | nothing internal                       |
+| `mokly-platform`         | Exclusive rename, process groups, Windows job objects, file locks.                                                                                                | nothing internal                       |
+| `mokly-git`              | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                                                               | `platform`                             |
+| `mokly-sidecar`          | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                                                               | `model`, `platform`                    |
+| `mokly-catalogue`        | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the catalogue model.                                                      | `model`, `source-interface`, `sidecar` |
+| `mokly-html`             | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly, the component registry.                       | `model`, `catalogue`, `sidecar`        |
+| `mokly-css`              | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                                   | `model`                                |
+| `mokly-graph`            | The content-addressed render graph, scheduling, the render cache, the source tree trait over the working tree and Git trees, the asset closure.                   | `catalogue`, `html`, `css`             |
+| `mokly-compare`          | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, review result v8, change snapshot v4.                         | `graph`, `css`, `git`                  |
+| `mokly-server`           | HTTP, the shell stub, the catalogue index and entry detail routes, documents and assets, the live descriptor, live updates, on-demand comparison, shutdown.       | `graph`, `compare`, `sidecar`          |
+| `mokly-watch`            | Watch rules, invalidation, rebuilds, replay.                                                                                                                      | `graph`, `server`                      |
+| `mokly-static`           | The static output of `build`: the stubs, the catalogue index, the entry details, documents, the comparison generation, ownership markers, the output transaction. | `graph`, `compare`, `platform`         |
+| `mokly-publish`          | The upload exchange v1: plan, blobs, complete, retries, accounting.                                                                                               | `static`                               |
+| `mokly-cli`              | The `mokly` binary: clap grammar, output modes, reporters, shortcuts, the composition root.                                                                       | everything above                       |
 
 Dependencies point downward only. Every impure boundary is a trait consumed
 through `dyn`, mocked with `unimock` in unit tests. Each crate has a README with

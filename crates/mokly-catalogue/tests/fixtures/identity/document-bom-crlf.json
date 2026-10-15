@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/guide.md": "﻿---\r\ntitle: \"Guide\"\r\ntags: [\"docs\"]\r\n---\r\n# Heading\r\n"
+  },
+  "paths": ["guide"]
+}

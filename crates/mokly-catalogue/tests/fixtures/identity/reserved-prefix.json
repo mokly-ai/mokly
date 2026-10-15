@@ -1,0 +1,12 @@
+{
+  "config": {},
+  "files": {
+    "specs/mokly-generated.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-path",
+      "message": "specs/mokly-generated.screen.html: path \"mokly-generated\" is not a valid path"
+    }
+  ]
+}

@@ -3,6 +3,17 @@
 use std::env;
 use std::io::{self, IsTerminal, Write};
 use std::process::ExitCode;
+use std::sync::Arc;
+
+use mokly_catalogue::config::Loader;
+use mokly_catalogue::definition_provider::DeferredDefinitions;
+use mokly_catalogue::discovery::Discoverer;
+use mokly_catalogue::preparation::Builder;
+use mokly_catalogue::working_tree::WorkingTree;
+use mokly_cli::build::{BuildService, CatalogueBuild};
+use mokly_cli::build_output;
+use mokly_cli::codes::Code;
+use mokly_source_interface::tree::SourceTree;
 
 use mokly_cli::errors::Failure;
 use mokly_cli::grammar::Verb;
@@ -82,6 +93,43 @@ pub(super) fn main() -> ExitCode {
     if let Err(failure) = validate(&mut cli, &environment) {
         terminal.stderr(&style.failure(&failure, &redactor));
         return ExitCode::FAILURE;
+    }
+    if let Some(Verb::Build(options)) = &cli.command {
+        let cwd = match env::current_dir() {
+            Ok(cwd) => cwd,
+            Err(error) => {
+                terminal.stderr(&style.error(
+                    Code::ConfigInvalid,
+                    &format!("working directory: {error}"),
+                    &redactor,
+                ));
+                return ExitCode::FAILURE;
+            }
+        };
+        let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+        let service: &dyn BuildService = &CatalogueBuild {
+            config: Arc::new(Loader { tree: tree.clone() }),
+            catalogue: Arc::new(Builder {
+                tree: tree.clone(),
+                discovery: Arc::new(Discoverer { tree }),
+                definitions: Arc::new(DeferredDefinitions),
+            }),
+        };
+        return match service.run(&cwd, options) {
+            Ok(summary) => {
+                terminal.stderr(&build_output::warnings(
+                    &style,
+                    &summary.warnings,
+                    &redactor,
+                ));
+                terminal.stdout(&build_output::summary(&style, &summary));
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                terminal.stderr(&build_output::failure(&style, &error, &redactor));
+                ExitCode::FAILURE
+            }
+        };
     }
     let command = cli.command.as_ref().map_or("serve", Verb::name);
     let failure = Failure::Unavailable { command };

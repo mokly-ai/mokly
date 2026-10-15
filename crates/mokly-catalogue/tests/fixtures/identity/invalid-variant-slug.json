@@ -1,0 +1,11 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nvariants:\n  - {slug: bad.slug, title: Error, props: {}}\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-segment"
+    }
+  ]
+}

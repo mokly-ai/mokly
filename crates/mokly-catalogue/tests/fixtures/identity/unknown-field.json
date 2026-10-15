@@ -1,0 +1,14 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nslug: ignored\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "unknown field slug",
+      "line": 3,
+      "column": 1
+    }
+  ]
+}

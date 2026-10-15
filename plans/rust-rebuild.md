@@ -591,17 +591,32 @@ components, Markdown documents, pages, and use cases, validates it, builds the
 catalogue model, and reports diagnostics; rendering and output follow in later
 milestones.
 
-- [ ] Implement roots, default globs, folder records, path identity, variants,
+- [x] Implement roots, default globs, folder records, path identity, variants,
       moves hints, and the diagnostics of the identity contracts in
       `mokly-catalogue`.
-- [ ] Implement the front matter parser and the file kinds decided in
+- [x] Implement the front matter parser and the file kinds decided in
       Milestone 1, with exact diagnostics and line and column reporting.
-- [ ] Implement the catalogue model in `mokly-model` with canonical JSON and
+- [x] Implement the catalogue model in `mokly-model` with canonical JSON and
       the generated TypeScript types; it lives in memory, with no file on
       disk.
-- [ ] Behaviour tests from fixtures: one catalogue per identity rule, every
+- [x] Behaviour tests from fixtures: one catalogue per identity rule, every
       diagnostic, and the reference catalogue's entry set.
-- [ ] Commit.
+- [x] Add the data-only configuration loader and editor JSON Schema, the
+      source-tree interface and working-tree adapter, and the definition-provider
+      boundary for the sidecar.
+- [x] Define public index v7, detail v1, and live descriptor v3 shapes, generate
+      their TypeScript modules, and gate reader versions before payload fields.
+- [x] Wire the discovery-only build command, warning reports, and strict mode.
+- [x] Run the repository gate, Rust checks, type regeneration, package build,
+      and the built shim smoke fixture.
+- [ ] Settle the lossless-number rule for prop values that cannot round-trip
+      through JavaScript number spelling. See the Milestone 4 report.
+- [ ] Complete the full gate after integration with the Milestone 2 teardown.
+      Recheck the example documentation links after its port.
+- [x] Commit the implementation checkpoint. The number-policy decision remains open.
+
+Evidence: `.context/rust-rebuild/sweeps/m4.md` and
+`.context/rust-rebuild/delegation/m4/report-1.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 

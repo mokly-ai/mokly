@@ -1,0 +1,11 @@
+{
+  "config": {},
+  "files": {
+    "specs/statement.page.html": "---\ntitle: Home\n---\n<main>Statement</main>\n"
+  },
+  "errors": [
+    {
+      "code": "html-element"
+    }
+  ]
+}

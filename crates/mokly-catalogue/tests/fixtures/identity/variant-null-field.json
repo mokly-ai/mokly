@@ -1,0 +1,13 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nvariants:\n  - {slug: empty, title: Empty, description: null, props: {}}\n---\n<p>Home</p>\n"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "description must be a string",
+      "line": 4
+    }
+  ]
+}
