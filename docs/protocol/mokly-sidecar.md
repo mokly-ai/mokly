@@ -8,8 +8,8 @@ The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
 when a catalogue needs a JavaScript bundle, a React, page, or Storybook
 render, or a consumer PostCSS module. The sidecar returns text: HTML
 fragments, CSS, module and definition inventories, and diagnostics. It never
-reads the catalogue, never writes files, and keeps no state beyond loaded
-bundle generations. Catalogue decisions, caching, invalidation, comparison, and
+reads the catalogue, never writes files, and keeps only loaded
+bundle generations and explicit consumer PostCSS contexts. Catalogue decisions, caching, invalidation, comparison, and
 output belong to the binary.
 
 ## Lifecycle
@@ -41,39 +41,37 @@ exactly one of `result` or `error`; a method without a return value uses
 sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
-{"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"warnings":[]}}
+{"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
+{"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"instances":[],"slots":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
 ## Methods
 
-| Method            | Params                                                                                        | Result                                                                    |
-| ----------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `hello`           | none                                                                                          | `{ version }`                                                             |
-| `bundle`          | entry files, renderer module, stories files, module resolution settings, source root          | `{ generation, modules, warnings }`                                       |
-| `describe`        | generation                                                                                    | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |
-| `renderScreen`    | generation, handle, props, viewport, colour scheme                                            | render result                                                             |
-| `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                             |
-| `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                             |
-| `renderPage`      | generation, handle                                                                            | `{ html, resources, warnings }`                                           |
-| `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                                  |
-| `cssModules`      | generation, class maps by stylesheet path                                                     | nothing                                                                   |
-| `dispose`         | generation                                                                                    | nothing                                                                   |
-| `shutdown`        | none                                                                                          | nothing                                                                   |
+| Method            | Params                                                                                                            | Result                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `hello`           | none                                                                                                              | `{ version }`                                                                       |
+| `bundle`          | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings }`                                                 |
+| `describe`        | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
+| `renderScreen`    | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
+| `renderComponent` | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
+| `renderStory`     | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
+| `renderPage`      | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
+| `processCss`      | context, source root, resolution settings, PostCSS module, source path, text                                      | `{ text, dependencies }`                                                            |
+| `bindings`        | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
+| `disposeContext`  | PostCSS context                                                                                                   | nothing                                                                             |
+| `cssModules`      | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
+| `dispose`         | generation                                                                                                        | nothing                                                                             |
+| `shutdown`        | none                                                                                                              | nothing                                                                             |
 
-A render result is `{ html, styles, resources, warnings }`: the fragment, the
-CSS rules the render produced in first-appearance order, the non-CSS resource
-records the renderer declared, and build warnings. `renderPage` runs a
-`definePage` callback and returns the complete document it produced, the
-resource records the renderer declared, and warnings, with no styles; the
-binary applies the document rules of the [pages contract](./mokly-pages.md)
-to it.
+The [render records contract](./mokly-sidecar-render-records.md) defines the
+render result, binding table, effective entry context, usage drafts, and slot
+inputs. Page results follow the [pages contract](./mokly-pages.md).
 
 ## Definitions
 
 `describe` returns every exported definition with its handle and a
-`diagnostics` list. The [definition transport](./mokly-sidecar-definitions.md)
+`diagnostics` list and generation warnings. The [definition transport](./mokly-sidecar-definitions.md)
 defines typed metadata, raw authored schemas, and source-attributed authoring
 errors. These errors keep their own codes and do not invalidate the transport.
 The core validates schemas with its single `jsonschema` validator before it
@@ -83,8 +81,9 @@ registers definitions or starts a render.
 
 `bundle` compiles the consumer's JavaScript into one in-memory bundle with
 esbuild and keeps it in the sidecar under a generation id. The generation id is
-the hash of every module in the metafile, the renderer module, the resolution
-settings, and the installed React version; the binary uses it as one part of the cache key
+the hash of every module in the metafile, the entry and stories lists, the
+preview file, the renderer module, configuration directory, repository roots,
+resolution settings, and the installed React version; the binary uses it as one part of the cache key
 for every fragment. The sidecar reports `modules`, the module graph: each
 repository-relative source file of the graph with its imports in source order,
 including re-exports and dynamic imports, and each stylesheet import by its
@@ -110,22 +109,34 @@ the base side it is the directory into which the
 module resolution settings name the `node_modules` directory its dependency
 tiers chose: the working tree's or the installed base set.
 
+`bundle.repositoryRoots` lists the physical repository roots for the side.
+For every resolved real module path inside one of those roots and outside
+all `node_modules` directories, the sidecar maps its relative path into
+`sourceRoot`. A missing mapped file fails `bundle-failed`, naming the module.
+This includes workspace links and local `file:` packages for every package
+manager. Installed modules physically under `node_modules` stay dependencies.
+
 The bundle evaluates under `describe` and the renders, in the sidecar's own
-module context with the consumer's `require`. React and React DOM resolve from the consumer. A bundle
+module context with the consumer's `require`. React and React DOM resolve from
+the side's configuration directory through its module resolution settings.
+For the head, this directory is in the working tree; for the base, it is
+inside the base source root. A bundle
 or evaluation failure returns `bundle-failed` with the module and the
 diagnostic text.
 
 ## Style Collection
 
-A render returns the styles it produced, so their owner is the rendered
-component or screen. The sidecar snapshots every style registry it knows
-before the render and reports what the render added: the React Native Web
-sheet through `AppRegistry.getApplication(...).getStyleElement()`, Emotion and
-styled-components through their server extraction APIs, and `<style>`
-elements the fragment itself contains. Rules keep first-appearance order.
+A render returns styles owned by the rendered component or screen. Emotion
+and styled-components use render-local server extraction. The sidecar also
+collects `<style>` elements in the fragment. For a persistent registry such
+as the React Native Web sheet from `AppRegistry.getApplication`, it returns
+only rules whose class selectors match the fragment's class tokens, their
+required at-rules and keyframes, and the registry's element-level resets.
+Unused rules and rules used only by earlier renders are excluded. Results
+are independent of render order. Rules keep first-appearance order.
 The binary deduplicates rules by identity across fragments and places them in
-the document head before the configured stylesheets. A styling library the
-sidecar does not know contributes only the `<style>` elements in the fragment.
+the document head before configured stylesheets. Unknown styling libraries
+contribute only the `<style>` elements in the fragment.
 
 ## Markers In Fragments
 
@@ -157,7 +168,8 @@ render fails the screen with `html-slot`.
 
 A story file is a `*.stories.{ts,tsx,js,jsx}` file matched by a root. The
 sidecar loads the consumer's `.storybook/preview` annotations with
-`setProjectAnnotations`, composes each story with `composeStories` from
+`setProjectAnnotations` immediately before each composition, composes each
+story without passing the annotations a second time to `composeStories` from
 `@storybook/react`, and renders it with `renderToStaticMarkup`. The story id
 is the file path, `#`, and the export name, and `describe` lists every story
 of the generation. A stories file becomes one component entry at the path derived
@@ -185,8 +197,16 @@ excluded with the `props-not-data` warning of the
 ## Consumer PostCSS
 
 `processCss` runs the consumer's PostCSS module in a worker inside the sidecar
-with a fresh module context per generation. It returns the transformed text and the plugin-reported file and
-directory dependencies for watching. Mokly's own CSS work stays in Rust.
+with the explicit core-chosen `context`, `sourceRoot`, and `moduleResolution`.
+Workers are keyed by context and module. Each context has fresh local and
+package module state and fixed source and resolution inputs. `disposeContext`
+releases only that context; bundle creation and disposal do not reset it.
+CSS-only catalogues need no bundle. The pool tracks contexts per process and
+releases disposed contexts before that process takes more work. The result
+contains transformed text and plugin-reported dependencies for watching.
+The fragment key includes the class-map table digest. When maps change, the
+core disposes and re-bundles the generation before installing the new maps.
+Mokly's own CSS work stays in Rust.
 
 ## Cancellation And Timeouts
 

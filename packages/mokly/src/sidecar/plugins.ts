@@ -5,7 +5,9 @@ import type { Loader, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { consumerRequire, inside, logical } from "./paths.js";
+import { inside, logical } from "./paths.js";
+import type { ConsumerRequire } from "./paths.js";
+import { sideModule } from "./resolution.js";
 
 export interface BundleInputs {
   files: Map<string, Uint8Array>;
@@ -16,11 +18,11 @@ export interface BundleInputs {
 export function consumerPlugins(
   params: BundleParams,
   inputs: BundleInputs,
+  require: ConsumerRequire,
   maps?: Record<string, Record<string, string>>,
   runtimeKey = "mokly:runtime",
 ): Plugin[] {
   const root = params.sourceRoot;
-  const require = consumerRequire(params);
   const ownPackage = path.resolve(import.meta.dirname, "../..");
   return [
     {
@@ -88,10 +90,13 @@ export function consumerPlugins(
           resolveDir: root,
           loader: "js",
         }));
-        build.onResolve({ filter: /^(react|react-dom)(\/.*)?$/ }, (args) => ({
-          path: require.resolve(args.path),
-          external: true,
-        }));
+        build.onResolve(
+          { filter: /^(react|react-dom)(\/.*)?$/ },
+          async (args) => ({
+            path: await require.resolvePeer(args.path),
+            external: true,
+          }),
+        );
         build.onResolve(
           {
             filter:
@@ -110,12 +115,39 @@ export function consumerPlugins(
             pluginData: "css-resolved",
           });
           if (resolved.errors.length) return { errors: resolved.errors };
-          const real = await fs.realpath(resolved.path);
+          const real = await sideModule(
+            resolved.path,
+            root,
+            params.repositoryRoots,
+          );
           if (!inside(root, real))
             throw new Error(
               `CSS import is outside repoRoot in ${logical(root, args.importer)}: ${args.path}; move the stylesheet inside repoRoot or remove the import`,
             );
-          return { path: resolved.path, namespace: "mokly-css" };
+          return { path: real, namespace: "mokly-css" };
+        });
+        build.onResolve({ filter: /.*/ }, async (args) => {
+          if (
+            ["repository-resolved", "css-resolved"].includes(args.pluginData) ||
+            !["file", ""].includes(args.namespace)
+          )
+            return;
+          const resolved = await build.resolve(args.path, {
+            resolveDir: args.resolveDir,
+            importer: args.importer,
+            kind: args.kind,
+            pluginData: "repository-resolved",
+          });
+          if (
+            resolved.errors.length ||
+            resolved.external ||
+            resolved.namespace !== "file"
+          )
+            return resolved;
+          return {
+            ...resolved,
+            path: await sideModule(resolved.path, root, params.repositoryRoots),
+          };
         });
         build.onLoad({ filter: /.*/, namespace: "mokly-css" }, async (args) => {
           const file = logical(root, args.path);

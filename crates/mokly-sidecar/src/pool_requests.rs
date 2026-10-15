@@ -1,5 +1,6 @@
 //! Generation recipes reloaded on demand after a process retry or recycle.
 
+use crate::bindings::DisposeContext;
 use crate::error::{Error, Result};
 use crate::methods::{Call, Generation};
 use crate::pool::Pool;
@@ -34,6 +35,26 @@ impl Pool {
             slot.generations.remove(&generation);
             slot.maps.remove(&generation);
             slot.described.remove(&generation);
+            slot.bindings.remove(&generation);
+        }
+        let stale_contexts = {
+            let state = self.lock()?;
+            slot.contexts
+                .difference(&state.contexts)
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+        for context in stale_contexts {
+            slot.worker.request(
+                &Request {
+                    id: 1,
+                    call: Call::DisposeContext(DisposeContext {
+                        context: context.clone(),
+                    }),
+                },
+                self.options.timeout_ms.unwrap_or(30_000),
+            )?;
+            slot.contexts.remove(&context);
         }
         if let Some(generation) = generation(call) {
             self.prepare(
@@ -42,11 +63,13 @@ impl Pool {
                 !matches!(call, Call::CssModules(_)),
                 matches!(
                     call,
-                    Call::RenderScreen(_)
+                    Call::Bindings(_)
+                        | Call::RenderScreen(_)
                         | Call::RenderComponent(_)
                         | Call::RenderStory(_)
                         | Call::RenderPage(_)
                 ),
+                !matches!(call, Call::Bindings(_)),
             )?;
         }
         if matches!(
@@ -60,6 +83,10 @@ impl Pool {
         }
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
+        }
+        if let Call::ProcessCss(params) = call {
+            self.lock()?.contexts.insert(params.context.clone());
+            slot.contexts.insert(params.context.clone());
         }
         let result = slot.worker.request(
             &Request {
@@ -84,12 +111,29 @@ impl Pool {
                     state.maps.insert(maps.generation.clone(), maps.clone());
                     slot.maps.insert(maps.generation.clone());
                 }
+                (Call::Bindings(bindings), _) => {
+                    state
+                        .bindings
+                        .insert(bindings.generation.clone(), bindings.clone());
+                    slot.bindings
+                        .insert(bindings.generation.clone(), bindings.clone());
+                }
+                (Call::ProcessCss(params), _) => {
+                    state.contexts.insert(params.context.clone());
+                    slot.contexts.insert(params.context.clone());
+                }
+                (Call::DisposeContext(params), _) => {
+                    state.contexts.remove(&params.context);
+                    slot.contexts.remove(&params.context);
+                }
                 (Call::Dispose(generation), _) => {
                     state.bundles.remove(&generation.generation);
                     state.maps.remove(&generation.generation);
+                    state.bindings.remove(&generation.generation);
                     slot.generations.remove(&generation.generation);
                     slot.maps.remove(&generation.generation);
                     slot.described.remove(&generation.generation);
+                    slot.bindings.remove(&generation.generation);
                 }
                 (Call::Describe(generation), _) => {
                     slot.described.insert(generation.generation.clone());
@@ -103,6 +147,7 @@ impl Pool {
 
 fn generation(call: &Call) -> Option<&str> {
     match call {
+        Call::Bindings(value) => Some(&value.generation),
         Call::Describe(value) => Some(&value.generation),
         Call::RenderScreen(value) => Some(&value.generation),
         Call::RenderComponent(value) => Some(&value.render.generation),

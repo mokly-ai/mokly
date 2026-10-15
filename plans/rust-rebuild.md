@@ -702,8 +702,8 @@ renders again.
         exact-version hello, and the Rust pool's lazy process lifecycle.
   - [x] Test request deadlines, retry, recycling, shutdown, and queue
         cancellation with mocked Rust boundaries and real Node processes.
-  - [ ] Settle the binding, validation, PostCSS context, and static-registry
-        ownership decisions before the sidecar integration closes.
+  - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
+        and fragment-scoped registry style collection.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
@@ -715,7 +715,8 @@ renders again.
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
       inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
-      Rust keyed by bundle generation, handle, props, viewport, scheme, and
+      Rust keyed by bundle generation, binding table, effective entry, class-map
+      digest, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
   - [x] Add the authoring API with schema and literal prop inference, and
@@ -723,7 +724,7 @@ renders again.
   - [ ] Connect resolved catalogue paths, complete usage records, schema
         validation, and fragment caching through the approved binding.
 - [ ] Implement `describe`: every definition the entry modules and stories
-      files export, one per export with `array-export` otherwise, with the
+      files export, one per export, rejecting arrays containing definitions, with the
       story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
@@ -742,8 +743,10 @@ renders again.
       define.
 - [x] Write the JavaScript authoring guides.
 
-Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
-and `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m8-sidecar.md`.
+Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
+and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
+decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
+`.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`.
 
 - [ ] Commit.
 
@@ -822,6 +825,8 @@ Tags: ui
 
 ## Milestone 13: Release packaging
 
+- [ ] Build and pack the viewer before the CLI authoring declarations and
+      CLI `prepack`; verify this order in clean package consumers.
 - [ ] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
@@ -857,6 +862,8 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M8 sidecar review D2: the user must settle schema validation of dynamic
+    wrapper props before the adapter runs; add no validator or callback yet.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

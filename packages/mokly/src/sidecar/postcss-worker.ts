@@ -5,9 +5,14 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 
 import { detail } from "./errors.js";
 import { loadPostcss } from "./postcss-loader.js";
-import { loadedFiles } from "./postcss-resolution.js";
+import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
-const configuration = loadPostcss(workerData.postcss as string);
+configureResolution(workerData.sourceRoot, workerData.moduleResolution);
+const configuration = loadPostcss(
+  workerData.postcss,
+  workerData.sourceRoot,
+  workerData.moduleResolution,
+);
 configuration.catch(() => {});
 parentPort?.on(
   "message",

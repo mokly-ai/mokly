@@ -15,7 +15,7 @@ export type Definition = {
  */
 handle: string,
 /**
- * Defining helper module, distinct from the exporting entry module.
+ * Module that created the definition; it can differ from the exporting module.
  */
 sourcePath?: string,
 /**

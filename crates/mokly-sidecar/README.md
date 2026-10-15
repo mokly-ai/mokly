@@ -24,12 +24,13 @@ Authoring diagnostics retain their codes and leave a healthy session usable.
 
 `Pool` consumes `dyn WorkerFactory` and `dyn Clock`, and implements
 `SidecarPool`. Constructing it starts no process. FIFO leases bound active
-processes to `PoolOptions::size`. `PoolOptions::resolve` applies `--sidecars`
-before `MOKLY_SIDECARS`, then the supplied core count. Positive integers have
-no arbitrary upper cap. It also reads the captured timeout override.
+processes to `PoolOptions::size`. The CLI resolves `--sidecars`, `MOKLY_SIDECARS`, and the core count.
+`PoolOptions` takes the parsed `NonZeroUsize` and timeout override.
 
-The pool retains bundle recipes and CSS Modules maps. A fresh process reloads
-a requested generation on demand. A timeout or crash kills the process and
+The pool retains bundle recipes, CSS Modules maps, and resolved handle tables. A fresh process reloads
+a requested generation on demand and replays its bindings after describe.
+PostCSS contexts have explicit source and resolution inputs and independent
+disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback
 render. A process recycles after 500 render calls or above 1 GiB resident
 memory. Recycling starts after the in-flight result returns.
@@ -63,7 +64,7 @@ cargo xtask generate-types
 
 Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, correlation, deadlines, retry, recycling,
-queue cancellation, and diagnostic forwarding. Real integration tests spawn
+FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines. Real integration tests spawn
 the built sidecar and render a component, screen, story, and page.
 The `mock` feature exposes the public trait mocks to other crates.
 

@@ -29,23 +29,27 @@ export async function describeStories(
   if (!Object.keys(exports.stories).length) return;
   const storybook = generation.require("@storybook/react") as typeof Storybook;
   const annotations = exports.preview?.default ?? exports.preview ?? {};
-  storybook.setProjectAnnotations(annotations);
+
   for (const [file, module] of Object.entries(exports.stories)) {
     const meta = (module.default ?? {}) as StoryAnnotations;
-    const compose = () =>
-      storybook.composeStories(
-        { ...module, default: module.default ?? {} },
-        annotations,
-      );
+    const compose = () => {
+      storybook.setProjectAnnotations(annotations);
+      return storybook.composeStories({
+        ...module,
+        default: module.default ?? {},
+      });
+    };
     const composed = compose() as Record<string, PortableStory>;
     generation.stories.set(`${file}#default`, {
-      compose: () =>
-        storybook.composeStory(
+      compose: () => {
+        storybook.setProjectAnnotations(annotations);
+        return storybook.composeStory(
           {},
           module.default as Parameters<typeof storybook.composeStory>[1],
-          exports.preview?.default ?? exports.preview ?? {},
+          undefined,
           "MoklyDefault",
-        ),
+        );
+      },
     });
     const parent = {
       handle: `${file}#default`,
@@ -68,6 +72,7 @@ export async function describeStories(
     for (const [exportName, value] of orderedExports(
       generation.sources.get(file) ?? "",
       composed,
+      file,
     )) {
       const story = value as PortableStory;
       const annotation = module[exportName] as StoryAnnotations;

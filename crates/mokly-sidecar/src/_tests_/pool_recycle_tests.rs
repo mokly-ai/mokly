@@ -1,6 +1,6 @@
 //! Render and resident-set boundaries use operation counts, not wall time.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
@@ -24,7 +24,7 @@ fn pool(mock: Unimock) -> Pool {
             version: "test".into(),
         },
         PoolOptions {
-            size: 1,
+            size: 1.try_into().unwrap(),
             timeout_ms: None,
         },
     )
@@ -40,6 +40,8 @@ fn seed(pool: &Pool, worker: Unimock) {
         generations: BTreeSet::from(["g".into()]),
         maps: BTreeSet::from(["g".into()]),
         described: BTreeSet::from(["g".into()]),
+        bindings: BTreeMap::new(),
+        contexts: BTreeSet::new(),
         renders: 0,
     }));
     state.available.push_back(0);
@@ -52,6 +54,8 @@ fn seed(pool: &Pool, worker: Unimock) {
             stories_files: Vec::new(),
             module_resolution: ModuleResolution::default(),
             source_root: "/repo".into(),
+            configuration_directory: ".".into(),
+            repository_roots: Vec::new(),
         },
     );
 }
@@ -125,6 +129,9 @@ fn resident_set_recycles_only_after_one_gib_is_exceeded() {
     seed(&pool, worker);
     let call = || {
         Call::ProcessCss(ProcessCss {
+            context: "css".into(),
+            source_root: "/repo".into(),
+            module_resolution: ModuleResolution::default(),
             postcss: "config".into(),
             source_path: "source".into(),
             text: String::new(),

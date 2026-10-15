@@ -71,7 +71,15 @@ export function validateFields(
   const output = definitionShapes(data.input, data.kind, module, exportName);
   const input = data.input;
   const add = (code: DefinitionDiagnostic["code"], message: string) =>
-    output.push({ code, module, exportName, message });
+    output.push({
+      code,
+      module,
+      exportName,
+      message:
+        code === "invalid-definition"
+          ? `${module} export ${exportName}: export ${exportName} is not a Mokly definition: ${message}`
+          : message,
+    });
   for (const key of Object.keys(input))
     if (!fields[data.kind]!.includes(key))
       add(

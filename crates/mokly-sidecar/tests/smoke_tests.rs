@@ -5,10 +5,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use mokly_platform::processes::SystemProcessGroups;
-use mokly_sidecar::error::{Error, FailureKind, ProtocolError};
+use mokly_sidecar::bindings::{Bindings, EntryBinding, SlotInput};
 use mokly_sidecar::methods::{
-    Bundle, Call, ColorScheme, CssModules, Generation, IgnoreScope, ModuleResolution, ProcessCss,
-    Render, RenderComponent, RenderPage, RenderStory,
+    Bundle, Call, ColorScheme, CssModules, Generation, IgnoreScope, ModuleResolution, Render,
+    RenderComponent, RenderPage, RenderStory,
 };
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
@@ -49,7 +49,7 @@ fn pool_with_entry(version: &str, entry: &str) -> Pool {
             version: version.to_owned(),
         },
         PoolOptions {
-            size: 2,
+            size: 2.try_into().unwrap(),
             timeout_ms: None,
         },
     )
@@ -77,6 +77,8 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
             stories_files: vec!["button.stories.tsx".into()],
             module_resolution: ModuleResolution::default(),
             source_root: root.display().to_string(),
+            configuration_directory: ".".into(),
+            repository_roots: Vec::new(),
         }))
         .unwrap();
     let MethodResult::Bundle(bundled) = bundled else {
@@ -102,17 +104,46 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
     assert!(described.diagnostics.is_empty());
     assert_eq!(described.screens.len(), 1);
     assert_eq!(described.stories.len(), 1);
+    let bindings =
+        described
+            .screens
+            .iter()
+            .chain(&described.components)
+            .chain(&described.pages)
+            .map(|definition| {
+                (
+                    definition.handle.clone(),
+                    EntryBinding {
+                        path: definition.metadata.path.clone().unwrap_or_else(|| {
+                            definition.handle.split('.').next().unwrap().to_owned()
+                        }),
+                        title: definition.metadata.title.clone().unwrap_or_default(),
+                    },
+                )
+            })
+            .collect::<BTreeMap<_, _>>();
+    pool.request(Call::Bindings(Bindings {
+        generation: generation.clone(),
+        entries: bindings.clone(),
+    }))
+    .unwrap();
     let render = |handle: &str| Render {
         generation: generation.clone(),
         handle: handle.into(),
+        entry: bindings[handle].clone(),
         props: BTreeMap::from([("label".into(), json!("Smoke"))]),
         viewport: "mobile".into(),
         color_scheme: ColorScheme::Dark,
     };
-    for call in [
+    for (index, call) in [
         Call::RenderComponent(RenderComponent {
             render: render("component.mockup.tsx#control"),
-            slots: BTreeMap::from([("children".into(), "token".into())]),
+            slots: BTreeMap::from([(
+                "children".into(),
+                SlotInput::Placeholder {
+                    token: "token".into(),
+                },
+            )]),
             ignore_scope: IgnoreScope::Enabled,
         }),
         Call::RenderScreen(render("screen.mockup.tsx#screen")),
@@ -123,11 +154,14 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
             viewport: "desktop".into(),
             color_scheme: ColorScheme::Light,
         }),
-    ] {
+    ]
+    .into_iter()
+    .enumerate()
+    {
         let MethodResult::Render(result) = pool.request(call).unwrap() else {
             panic!("expected render");
         };
-        assert!(result.html.contains("Smoke"));
+        insta::assert_snapshot!(format!("smoke_{index}"), result.html);
         println!("{}", result.html);
     }
     let MethodResult::Page(page) = pool
@@ -139,110 +173,9 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
     else {
         panic!("expected page");
     };
-    assert!(page.html.starts_with("<!doctype html>"));
+    insta::assert_snapshot!("smoke_page", page.html);
     println!("{}", page.html);
     pool.shutdown().unwrap();
 }
 
-#[test]
-fn wrong_package_version_fails_before_command_traffic() {
-    let pool = pool("wrong-version");
-    assert!(matches!(
-        pool.request(Call::ProcessCss(ProcessCss {
-            postcss: "unused".into(),
-            source_path: "unused".into(),
-            text: String::new()
-        })),
-        Err(Error::Version { .. })
-    ));
-}
-
-#[test]
-fn process_crash_retries_once_and_bad_hello_fails_closed() {
-    let call = || {
-        Call::ProcessCss(ProcessCss {
-            postcss: "unused".into(),
-            source_path: "unused".into(),
-            text: String::new(),
-        })
-    };
-    let crashed = pool_with_entry(
-        env!("CARGO_PKG_VERSION"),
-        "tests/fixtures/sidecar/crash-peer.mjs",
-    );
-    assert!(matches!(
-        crashed.request(call()),
-        Err(Error::RequestCrashed {
-            kind: FailureKind::Bundle,
-            ..
-        })
-    ));
-    let malformed = pool_with_entry(
-        env!("CARGO_PKG_VERSION"),
-        "tests/fixtures/sidecar/bad-peer.mjs",
-    );
-    assert!(matches!(
-        malformed.request(call()),
-        Err(Error::Protocol(ProtocolError::Handshake))
-    ));
-    let unavailable = pool_with_entry(env!("CARGO_PKG_VERSION"), "missing-sidecar.js");
-    assert!(matches!(
-        unavailable.request(call()),
-        Err(Error::Unavailable { .. })
-    ));
-}
-
-#[test]
-fn negative_zero_survives_definitions_and_render_requests() {
-    let pool = pool(env!("CARGO_PKG_VERSION"));
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/fixtures/sidecar")
-        .canonicalize()
-        .unwrap();
-    let MethodResult::Bundle(bundled) = pool
-        .request(Call::Bundle(Bundle {
-            entry_files: vec!["negative-zero.mockup.tsx".into()],
-            renderer: None,
-            stories_files: Vec::new(),
-            module_resolution: ModuleResolution::default(),
-            source_root: root.display().to_string(),
-        }))
-        .unwrap()
-    else {
-        panic!("expected bundle");
-    };
-    let generation = bundled.generation;
-    pool.request(Call::CssModules(CssModules {
-        generation: generation.clone(),
-        class_maps: BTreeMap::new(),
-    }))
-    .unwrap();
-    let MethodResult::Definitions(definitions) = pool
-        .request(Call::Describe(Generation {
-            generation: generation.clone(),
-        }))
-        .unwrap()
-    else {
-        panic!("expected definitions");
-    };
-    assert!(
-        definitions.screens[0].props["value"]
-            .as_f64()
-            .unwrap()
-            .is_sign_negative()
-    );
-    let MethodResult::Render(rendered) = pool
-        .request(Call::RenderScreen(Render {
-            generation,
-            handle: "negative-zero.mockup.tsx#default".into(),
-            props: BTreeMap::from([("value".into(), json!(-0.0))]),
-            viewport: "mobile".into(),
-            color_scheme: ColorScheme::Light,
-        }))
-        .unwrap()
-    else {
-        panic!("expected render");
-    };
-    assert_eq!(rendered.html, "<main>negative</main>");
-    pool.shutdown().unwrap();
-}
+mod smoke;

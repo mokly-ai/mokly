@@ -6,7 +6,7 @@ use std::thread;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::error::Error;
-use crate::methods::{Call, ProcessCss};
+use crate::methods::{Call, ModuleResolution, ProcessCss};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::wire::MethodResult;
@@ -64,12 +64,15 @@ fn shutdown_cancels_queued_and_inflight_work_with_one_shared_deadline() {
                 version: "test".into(),
             },
             PoolOptions {
-                size: 1,
+                size: 1.try_into().unwrap(),
                 timeout_ms: None,
             },
         );
         let call = || {
             Call::ProcessCss(ProcessCss {
+                context: "css".into(),
+                source_root: "/repo".into(),
+                module_resolution: ModuleResolution::default(),
                 postcss: "config".into(),
                 source_path: "source".into(),
                 text: String::new(),

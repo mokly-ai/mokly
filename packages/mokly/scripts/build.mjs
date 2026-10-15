@@ -3,6 +3,9 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const root = new URL("../", import.meta.url);
+for (const directory of ["dist/", "docs/"]) {
+  await fs.rm(new URL(directory, root), { recursive: true, force: true });
+}
 await fs.mkdir(new URL("dist/", root), { recursive: true });
 const typescript = spawnSync(
   process.execPath,

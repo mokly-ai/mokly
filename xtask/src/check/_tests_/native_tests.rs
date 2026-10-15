@@ -24,6 +24,8 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
             "cargo xtask build-native",
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
+            "npm run build --workspace \"@mokly/viewer\"",
+            "npm run build --workspace \"@mokly/mokly\"",
             "cargo test --workspace",
         ]
     );
@@ -38,6 +40,8 @@ fn selected_native_builds_once_then_runs_workspace_tests() {
             CommandRunnerRunMock
                 .next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings"))
                 .returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
             CommandRunnerRunMock
                 .next_call(matching!((command) if command.display() == "cargo test --workspace"))
                 .returns(Ok(())),

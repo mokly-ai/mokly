@@ -4,10 +4,11 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 The [render sidecar](./mokly-sidecar.md) evaluates the entry modules and
 stories of one bundle generation. Its `describe` result has `screens`,
-`pages`, `useCases`, `folders`, `components`, `stories`, and `diagnostics`.
+`pages`, `useCases`, `folders`, `components`, `stories`, `diagnostics`, and
+`warnings`.
 Each definition has a `handle`: the repository-relative file path, `#`, and
-export name. Its optional `sourcePath` is the defining helper module, distinct
-from the exporting module in the handle. Installed packages have no attributed
+export name. Its optional `sourcePath` is the module that created the definition,
+which can differ from the exporting module in the handle. Installed packages have no attributed
 source path. The generated TypeScript modules under
 `packages/mokly/src/generated/sidecar/` define the wire fields.
 
@@ -38,7 +39,8 @@ The list accepts the codes of the
 `duplicate-moved-from`. It also carries `invalid-field`, `invalid-variants`,
 `invalid-folder`, and the component diagnostic codes when applicable.
 
-An array export adds `array-export`, naming the module and export. A module
+An exported array that contains a definition adds `array-export`, naming the
+module and export. Plain-data fixture arrays are ignored. A module
 with no definition adds `empty-module`. The sidecar continues collecting
 other module diagnostics. Any nonempty list fails the catalogue attempt as
 `build-invalid` before a render or write, with each original code intact.
@@ -65,3 +67,9 @@ controls, never schema validation, under the
 The component parent's `argTypes` carries the meta's hints. Each story carries
 its merged hints separately, so a story override does not replace the parent's
 own labels and choices.
+
+`warnings` carries generation-level `props-not-data` diagnostics from
+inference. Describe returns each warning once in its inventory. Render and
+page results contain only warnings raised by that render.
+After registration the core installs the resolved
+[handle table](./mokly-sidecar-render-records.md#resolved-bindings) before rendering.

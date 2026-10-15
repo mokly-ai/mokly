@@ -1,3 +1,4 @@
+import { validateDestination } from "../authoring/links.js";
 import { definitionData } from "../authoring/runtime.js";
 import type { Request } from "../generated/sidecar/Request.js";
 
@@ -15,18 +16,34 @@ export class Session {
   private closed = false;
   private generations = new Map<string, Generation>();
   private workers: PostcssWorkers;
-  private root: string;
 
   constructor(
     private readonly version: string,
     diagnostic: (message: string) => void,
-    root: string,
   ) {
     this.workers = new PostcssWorkers(diagnostic);
-    this.root = root;
   }
 
   async call(request: Request): Promise<unknown> {
+    try {
+      return await this.dispatch(request);
+    } catch (error) {
+      if (error instanceof SidecarError) throw error;
+      const rendering = request.method.startsWith("render");
+      const sources =
+        "generation" in request.params
+          ? this.generations
+              .get(request.params.generation)
+              ?.params.entryFiles.join(", ")
+          : request.method;
+      throw new SidecarError(
+        rendering ? "render-failed" : "bundle-failed",
+        `${sources}: ${detail(error)}`,
+      );
+    }
+  }
+
+  private async dispatch(request: Request): Promise<unknown> {
     if (this.closed) protocol("session is closed");
     if (!this.hello) {
       if (request.method !== "hello")
@@ -39,10 +56,8 @@ export class Session {
       case "bundle": {
         const { generation, result } = await bundle(request.params);
         if (!this.generations.has(generation.id)) {
-          await this.workers.dispose();
           this.generations.set(generation.id, generation);
         }
-        this.root = generation.params.sourceRoot;
         return result;
       }
       case "describe":
@@ -68,6 +83,39 @@ export class Session {
           generation.runtimeKey = compiled.generation.runtimeKey;
         }
         generation.maps = maps;
+        return null;
+      }
+      case "bindings": {
+        const generation = this.generation(request.params.generation);
+        if (!generation.definitions)
+          protocol("describe must complete before bindings");
+        const definitions = generation.definitions;
+        const handles = new Set(
+          [
+            ...definitions.screens,
+            ...definitions.components,
+            ...definitions.pages,
+            ...definitions.useCases,
+            ...definitions.folders,
+          ].map((definition) => definition.handle),
+        );
+        if (
+          [...handles].some(
+            (handle) => !Object.hasOwn(request.params.entries, handle),
+          ) ||
+          Object.keys(request.params.entries).some(
+            (handle) => !handles.has(handle),
+          )
+        )
+          protocol("bindings must contain every described handle exactly once");
+        for (const entry of Object.values(request.params.entries))
+          validateDestination(entry.path);
+        generation.bindings = request.params.entries;
+        for (const registration of generation.registrations.values())
+          Object.assign(
+            registration,
+            request.params.entries[registration.handle],
+          );
         return null;
       }
       case "renderScreen":
@@ -96,16 +144,25 @@ export class Session {
             definitions.diagnostics[0]!.code,
             definitions.diagnostics[0]!.message,
           );
+        if (!generation.bindings)
+          throw new SidecarError(
+            "bundle-failed",
+            "bindings must install the resolved handle table before rendering",
+          );
         const data = definitionData(
           generation.handles.get(request.params.handle),
         );
         try {
           if (!data || data.kind !== "page")
             throw new Error("unknown page handle");
-          const session = renderSession(generation, {
-            viewport: "desktop",
-            colorScheme: "light",
-          });
+          const session = renderSession(
+            generation,
+            {
+              viewport: "desktop",
+              colorScheme: "light",
+            },
+            request.params.handle.replace("#", " export "),
+          );
           const html = generation.runtime.withSession(session, () =>
             (data.input.render as () => unknown)(),
           );
@@ -117,7 +174,7 @@ export class Session {
           return {
             html: finishMarkup(html, session, false).html,
             resources: [],
-            warnings: generation.warnings,
+            warnings: [],
           };
         } catch (error) {
           throw new SidecarError(
@@ -127,10 +184,12 @@ export class Session {
         }
       }
       case "processCss":
-        return this.workers.process(request.params, this.root);
+        return this.workers.process(request.params);
       case "dispose":
         this.generations.delete(request.params.generation);
-        await this.workers.dispose();
+        return null;
+      case "disposeContext":
+        await this.workers.dispose(request.params.context);
         return null;
       case "shutdown":
         this.closed = true;

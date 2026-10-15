@@ -39,14 +39,6 @@ pub enum Error {
     /// The command cancelled its pending and queued sidecar work.
     #[error("[mokly-sidecar/cancelled] sidecar pool is shut down")]
     Cancelled,
-    /// A pool option is not a positive integer.
-    #[error("[mokly-sidecar/settings] {setting} must be a positive integer: {value}")]
-    InvalidSetting {
-        /// Setting or environment variable name.
-        setting: &'static str,
-        /// Authored value.
-        value: String,
-    },
     /// Node or the sidecar entry could not start.
     #[error("[mokly-sidecar/sidecar-unavailable] {part} is unavailable")]
     Unavailable {
@@ -75,7 +67,15 @@ pub enum Error {
         /// Diagnostic detail returned by the sidecar.
         message: String,
     },
-    /// The request exceeded its retry deadline.
+    /// A request exceeded the deadline on both attempts.
+    #[error("[mokly-sidecar/render-timeout] {call} exceeded {deadline_ms}ms")]
+    RequestTimeout {
+        /// Complete source and view attribution.
+        call: Box<Call>,
+        /// Applied deadline.
+        deadline_ms: u64,
+    },
+    /// A single process exchange exceeded its deadline.
     #[error("[mokly-sidecar/render-timeout] request exceeded {deadline_ms}ms")]
     Timeout {
         /// Applied deadline.
@@ -93,6 +93,21 @@ pub enum FailureKind {
     Bundle,
     /// Component, screen, story, or page request.
     Render,
+}
+
+impl FailureKind {
+    pub(crate) fn for_call(call: &Call) -> Self {
+        match call {
+            Call::Bundle(_)
+            | Call::Describe(_)
+            | Call::ProcessCss(_)
+            | Call::CssModules(_)
+            | Call::Bindings(_)
+            | Call::Dispose(_)
+            | Call::DisposeContext(_) => Self::Bundle,
+            _ => Self::Render,
+        }
+    }
 }
 
 impl Display for FailureKind {

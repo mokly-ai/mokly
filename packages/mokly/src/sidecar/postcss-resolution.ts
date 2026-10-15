@@ -4,6 +4,20 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
 
+import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js";
+
+import { resolutionOptions } from "./resolution.js";
+
+let policy: ReturnType<typeof resolutionOptions> = {} as ReturnType<
+  typeof resolutionOptions
+>;
+export function configureResolution(
+  root: string,
+  settings: ModuleResolution,
+): void {
+  policy = resolutionOptions(root, settings);
+}
+
 /** Record-form plugins use the same import conditions as config ESM imports. */
 export async function resolvePlugin(
   name: string,
@@ -11,6 +25,7 @@ export async function resolvePlugin(
 ): Promise<string> {
   let resolvedPath: string | undefined;
   await build({
+    absWorkingDir: path.dirname(file),
     stdin: {
       contents: `import ${JSON.stringify(name)};`,
       resolveDir: path.dirname(file),
@@ -18,8 +33,9 @@ export async function resolvePlugin(
     bundle: true,
     write: false,
     platform: "node",
-    conditions: ["node", "node-addons"],
     mainFields: ["main"],
+    ...policy,
+    conditions: ["node", "node-addons", ...(policy.conditions ?? [])],
     logLevel: "silent",
     plugins: [
       {

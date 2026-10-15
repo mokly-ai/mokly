@@ -13,14 +13,26 @@ const shapes: Record<string, string[]> = {
     "renderer",
     "moduleResolution",
     "sourceRoot",
+    "configurationDirectory",
+    "repositoryRoots",
   ],
   describe: ["generation"],
   dispose: ["generation"],
+  disposeContext: ["context"],
+  bindings: ["generation", "entries"],
   cssModules: ["generation", "classMaps"],
-  renderScreen: ["generation", "handle", "props", "viewport", "colorScheme"],
+  renderScreen: [
+    "generation",
+    "handle",
+    "entry",
+    "props",
+    "viewport",
+    "colorScheme",
+  ],
   renderComponent: [
     "generation",
     "handle",
+    "entry",
     "props",
     "viewport",
     "colorScheme",
@@ -29,7 +41,14 @@ const shapes: Record<string, string[]> = {
   ],
   renderStory: ["generation", "storyId", "props", "viewport", "colorScheme"],
   renderPage: ["generation", "handle"],
-  processCss: ["postcss", "sourcePath", "text"],
+  processCss: [
+    "context",
+    "sourceRoot",
+    "moduleResolution",
+    "postcss",
+    "sourcePath",
+    "text",
+  ],
 };
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -61,6 +80,8 @@ export function request(value: unknown): Request {
   parameterShapes(params);
   for (const key of [
     "generation",
+    "context",
+    "configurationDirectory",
     "handle",
     "storyId",
     "sourceRoot",
@@ -88,7 +109,7 @@ export function request(value: unknown): Request {
     !["enabled", "disabled"].includes(String(params.ignoreScope))
   )
     protocol("invalid ignore scope");
-  for (const key of ["entryFiles", "storiesFiles"])
+  for (const key of ["entryFiles", "storiesFiles", "repositoryRoots"])
     if (
       Object.hasOwn(params, key) &&
       (!Array.isArray(params[key]) ||

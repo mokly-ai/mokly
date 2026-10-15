@@ -30,12 +30,21 @@ export async function render(
         definitions.diagnostics[0]!.code,
         definitions.diagnostics[0]!.message,
       );
+    if (!generation.bindings)
+      throw new SidecarError(
+        "bundle-failed",
+        "bindings must install the resolved handle table before rendering",
+      );
     const React = generation.runtime.react;
     const context = {
       viewport: params.viewport as "mobile" | "desktop",
       colorScheme: params.colorScheme,
     };
-    const session = renderSession(generation, context);
+    const session = renderSession(
+      generation,
+      context,
+      name.replace("#", " export "),
+    );
     return generation.runtime.withSession(session, () => {
       const props = copyData(params.props) as Record<string, unknown>;
       let node: ReactNode;
@@ -64,7 +73,8 @@ export async function render(
           context: object,
         ) => ReactNode;
         if ("slots" in params) {
-          for (const [slot, token] of Object.entries(params.slots)) {
+          for (const [slot, value] of Object.entries(params.slots)) {
+            const token = value.kind === "placeholder" ? value.token : "";
             if (!((data.input.slots ?? []) as string[]).includes(slot))
               throw new Error(`undeclared slot ${slot}`);
             function Placeholder() {
@@ -78,9 +88,11 @@ export async function render(
                 "ignore-scope": enabled ? "enabled" : "disabled",
               });
             }
-            props[slot] =
-              generation.savedSlots.get(token) ??
-              React.createElement(Placeholder);
+            if (value.kind === "saved") {
+              if (!generation.savedSlots.has(value.handle))
+                throw new Error(`unknown saved slot ${value.handle}`);
+              props[slot] = generation.savedSlots.get(value.handle);
+            } else props[slot] = React.createElement(Placeholder);
           }
         }
         function Adapter() {
@@ -91,7 +103,8 @@ export async function render(
         if (renderer !== undefined) {
           if (typeof renderer !== "function")
             throw new Error("renderer default export must be a function");
-          const path = generation.registrations.get(definition!)?.path;
+          const entry = "entry" in params ? params.entry : undefined;
+          const path = entry?.path;
           if (!path)
             throw new Error(
               `renderer for ${name} requires its resolved catalogue path`,
@@ -100,7 +113,7 @@ export async function render(
             ...context,
             node,
             props: params.props,
-            entry: { kind, path, title: String(data.input.title) },
+            entry: { kind, path, title: entry!.title },
           });
           if (
             output &&
@@ -147,7 +160,9 @@ export async function render(
         html: result.html,
         styles: [...new Set([...collected.styles, ...result.styles])],
         resources: [...resources],
-        warnings: generation.warnings,
+        warnings: [],
+        instances: session.instances,
+        slots: session.slots,
       };
     });
   } catch (error) {

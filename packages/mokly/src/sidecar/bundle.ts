@@ -9,18 +9,21 @@ import { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { Definitions } from "../generated/sidecar/Definitions.js";
+import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { SidecarError, detail } from "./errors.js";
 import { confinedFile, consumerRequire, logical } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
+import { resolutionOptions } from "./resolution.js";
 
 export interface Generation {
   id: string;
   params: BundleParams;
   code: string;
   runtimeKey: string;
+  bindings?: Record<string, EntryBinding>;
   maps?: Record<string, Record<string, string>>;
   cssModules: Set<string>;
   stylePackages: Set<string>;
@@ -50,7 +53,7 @@ export async function bundle(
   try {
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;
     params = { ...params, sourceRoot: await fs.realpath(params.sourceRoot) };
-    const require = consumerRequire(params);
+    const require = await consumerRequire(params);
     const inputs = {
       files: new Map<string, Uint8Array>(),
       cssModules: new Set<string>(),
@@ -135,18 +138,8 @@ export async function bundle(
       jsxDev: true,
       metafile: true,
       logLevel: "silent",
-      plugins: consumerPlugins(params, inputs, maps, runtimeKey),
-      alias: resolution.aliases,
-      conditions: resolution.conditions,
-      nodePaths: resolution.packageRoots.map((root) =>
-        path.resolve(params.sourceRoot, root),
-      ),
-      ...(resolution.mainFields.length
-        ? { mainFields: resolution.mainFields }
-        : {}),
-      ...(resolution.resolveExtensions.length
-        ? { resolveExtensions: resolution.resolveExtensions }
-        : {}),
+      plugins: consumerPlugins(params, inputs, require, maps, runtimeKey),
+      ...resolutionOptions(params.sourceRoot, resolution),
       loader: loaders as Record<string, Loader>,
     } satisfies Parameters<typeof build>[0];
     let compiled = await build(options);
@@ -191,7 +184,18 @@ export async function bundle(
       ))
         throw error;
     }
-    hash.update(JSON.stringify([params.renderer, resolution, reactVersion]));
+    hash.update(
+      JSON.stringify([
+        params.entryFiles,
+        params.storiesFiles,
+        preview,
+        params.renderer,
+        params.configurationDirectory,
+        params.repositoryRoots,
+        resolution,
+        reactVersion,
+      ]),
+    );
     const id = hash.digest("hex");
     const generation: Generation = {
       id,

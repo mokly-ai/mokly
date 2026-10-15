@@ -15,7 +15,8 @@ contributes exactly one definition when it is the object returned by
 forged brand or a spread copy fails `invalid-definition`, because copying a
 brand cannot copy a definition's identity. Every other export is ignored, so
 helper functions, fixtures, shared metadata, and React components may live in
-the same file. An array export fails `array-export` naming the export; no
+the same file. An exported array that contains a Mokly definition fails `array-export`,
+naming the export. Plain-data arrays remain allowed as fixtures. No
 helper returns an array, because a variant is a props set under the
 [entry props contract](./mokly-entry-props.md) and not a definition of its
 own. A module that contributes no definition fails `empty-module`.
@@ -155,7 +156,7 @@ link surface.
 | `empty-module`            | `<location> exports no Mokly definition`                                                                               |
 | `array-export`            | `<location>: export <name> is an array; export one definition per export`                                              |
 | `unknown-link-definition` | `<location>: referenced definition <title> from <definedIn> is not exported by an entry module`                        |
-| `invalid-definition`      | `<location>: export <name> is not a Mokly definition`                                                                  |
+| `invalid-definition`      | `<location>: export <name> is not a Mokly definition`, followed by `: <reason>` for a field-shape failure              |
 | `invalid-moved-from`      | `<location>: movedFrom <path> equals the entry's own path`                                                             |
 | `moved-from-current`      | `<location>: movedFrom <path> names a current entry`                                                                   |
 | `duplicate-moved-from`    | `movedFrom <path> is declared twice:` then one `  <location>` line                                                     |

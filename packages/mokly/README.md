@@ -65,12 +65,14 @@ byte limit. Requests run in order. Consumer logs go to standard error.
 
 `bundle` compiles an unevaluated esbuild generation and reports its module
 graph. `cssModules` installs the core's class maps before evaluation.
-`describe` inventories every definition and Storybook story. Render methods
-return HTML text, collected styles, resources, and warnings. A consumer
+`describe` inventories every definition and Storybook story and reports
+generation warnings. `bindings` installs resolved paths and titles before a
+render. Render methods return HTML text, collected styles, resources, typed
+instance and slot drafts, and render warnings. A consumer
 renderer wraps React screens and components. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
-worker with consumer plugin packages kept unbundled. `dispose` and `shutdown`
-release generation state and workers.
+worker with consumer plugin packages kept unbundled. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
+and `shutdown` releases all state.
 
 ## Development
 
@@ -83,7 +85,8 @@ cargo test -p mokly-sidecar
 ```
 
 The package build emits ESM JavaScript and declarations, the sidecar entry and
-worker, the shim, and packaged Markdown. Build output stays ignored.
+worker, the shim, and packaged Markdown. Each build clears stale package
+output and copied docs first. Build output stays ignored.
 Key code: [authoring](./src/authoring/definitions.ts),
 [sidecar](./src/sidecar/session.ts), and the
 [Rust pool](../../crates/mokly-sidecar/README.md).

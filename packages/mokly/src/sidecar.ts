@@ -21,10 +21,8 @@ const send = async (id: string, outcome: object) => {
     write(frame, (error) => (error ? reject(error) : resolve())),
   );
 };
-const session = new Session(
-  version,
-  (message) => process.stderr.write(message),
-  process.cwd(),
+const session = new Session(version, (message) =>
+  process.stderr.write(message),
 );
 try {
   for await (const value of frames(process.stdin)) {

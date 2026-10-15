@@ -23,7 +23,10 @@ export function definitionShapes(
       code: kind === "folder" ? "invalid-folder" : code,
       module,
       exportName,
-      message,
+      message:
+        code === "invalid-definition" && kind !== "folder"
+          ? `${module} export ${exportName}: export ${exportName} is not a Mokly definition: ${message}`
+          : message,
     });
   const required = variant
     ? ["slug", "title"]

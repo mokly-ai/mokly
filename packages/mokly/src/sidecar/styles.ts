@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { Generation } from "./bundle.js";
+import { registryStyles } from "./registry-styles.js";
 
 /** Optional adapters use the consumer's packages and one render-local sheet. */
 export function collectStyles(
@@ -38,7 +39,6 @@ export function collectStyles(
     native?.AppRegistry.getApplication(
       "__mokly_sidecar_styles__",
     ).getStyleElement().props.dangerouslySetInnerHTML.__html ?? "";
-  const before = nativeSheet();
   try {
     if (sheet) node = sheet.collectStyles(node);
     const emotion = generation.exports?.styleAdapters
@@ -63,12 +63,8 @@ export function collectStyles(
         if (text) styles.push(text);
       }
     }
-    const after = nativeSheet();
-    if (before) styles.push(before);
-    if (after !== before)
-      styles.push(
-        after.startsWith(before) ? after.slice(before.length) : after,
-      );
+    const registry = registryStyles(nativeSheet(), html);
+    if (registry) styles.push(registry);
     return { html, styles };
   } finally {
     sheet?.seal();

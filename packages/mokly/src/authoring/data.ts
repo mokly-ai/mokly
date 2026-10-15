@@ -34,7 +34,7 @@ export function copyData(value: unknown, allowReservedKeys = false): unknown {
       throw new DataError(at, "value is not plain data");
     seen.add(input);
     const descriptors = Object.getOwnPropertyDescriptors(input);
-    const output: Record<string, unknown> = Object.create(null);
+    const output: Record<string, unknown> = {};
     for (const key of Object.getOwnPropertyNames(input)) {
       if (array && key === "length") continue;
       const descriptor = descriptors[key]!;
@@ -48,11 +48,16 @@ export function copyData(value: unknown, allowReservedKeys = false): unknown {
           `${at}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`,
           "invalid data property",
         );
-      output[key] = visit(
-        descriptor.value,
-        depth + 1,
-        `${at}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`,
-      );
+      Object.defineProperty(output, key, {
+        value: visit(
+          descriptor.value,
+          depth + 1,
+          `${at}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`,
+        ),
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
     }
     seen.delete(input);
     if (!array) return output;

@@ -4,6 +4,9 @@ import { createRequire } from "node:module";
 
 import type * as React from "react";
 
+import type { InstanceDraft } from "../generated/sidecar/InstanceDraft.js";
+import type { SlotDraft } from "../generated/sidecar/SlotDraft.js";
+
 import type { RenderContext } from "./types.js";
 
 export const brand = Symbol.for("mokly.definition");
@@ -19,6 +22,7 @@ export const definitions = new WeakMap<object, DefinitionData>();
 export interface Registration {
   handle: string;
   path?: string;
+  title?: string;
 }
 export interface Owner {
   kind: "entry" | "instance";
@@ -28,12 +32,16 @@ export interface Owner {
 }
 export interface RenderSession {
   context: RenderContext;
+  sourceRoot: string;
+  location: string;
+  instances: InstanceDraft[];
+  slots: SlotDraft[];
   registrations: Map<object, Registration>;
   markers: Map<string, string>;
   placeholders: Set<string>;
   boundary: (comment: string) => React.ReactNode;
   nextRegion: () => string;
-  link: (target: unknown, fragment?: string) => string;
+  link: (target: unknown, fragment?: string, source?: string) => string;
   logicalLink: (value: string) => string;
 }
 
@@ -83,7 +91,7 @@ export class AuthoringRuntime {
 
   definitionLink(target: unknown, fragment?: string, source?: string): string {
     const active = this.active.getStore();
-    if (active) return active.link(target, fragment);
+    if (active) return active.link(target, fragment, source);
     const token = `mock:mokly-reference-${randomBytes(24).toString("hex")}`;
     this.links.set(token, {
       target,

@@ -2,6 +2,7 @@
 
 #![warn(unreachable_pub)]
 
+pub mod bindings;
 pub mod client;
 pub mod codec;
 pub mod controls;
@@ -25,5 +26,6 @@ mod process_worker;
 mod request_display;
 pub mod results;
 pub mod typescript;
+pub mod usage;
 pub mod wire;
 pub mod workers;

@@ -7,7 +7,12 @@ import type { Definitions } from "../packages/mokly/src/generated/sidecar/Defini
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
 
-import { bundleParams, startSidecar } from "./helpers/sidecar.js";
+import {
+  bundleParams,
+  installBindings,
+  cssParams,
+  startSidecar,
+} from "./helpers/sidecar.js";
 
 test("sidecar bundles, describes and renders every entry kind", async (context) => {
   const sidecar = startSidecar(context);
@@ -40,6 +45,7 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
     )?.argTypes?.label?.name,
     "Button label",
   );
+  await installBindings(sidecar, bundle.generation);
   const axes = {
     generation: bundle.generation,
     viewport: "mobile",
@@ -48,8 +54,9 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
   const component = await sidecar.call<RenderResult>("renderComponent", {
     ...axes,
     handle: "component.mockup.tsx#control",
+    entry: { path: "components/control", title: "Control" },
     props: { label: "Now" },
-    slots: { children: "opaque" },
+    slots: { children: { kind: "placeholder", token: "opaque" } },
     ignoreScope: "enabled",
   });
   assert.match(component.html, /class="scoped-control"/);
@@ -63,13 +70,17 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
   const screen = await sidecar.call<RenderResult>("renderScreen", {
     ...axes,
     handle: "screen.mockup.tsx#screen",
+    entry: { path: "screen", title: "Screen" },
     props: { label: "Edited" },
   });
   assert.match(
     screen.html,
     /<!--mokly-instance:start id="r-1" path="components\/control"/,
   );
-  assert.match(screen.html, /<!--mokly-slot:start id="r-1" name="children"-->/);
+  assert.match(
+    screen.html,
+    /<!--mokly-slot:start id="r-\d+" instance="r-1" name="children"-->/,
+  );
   assert.match(screen.html, /<!--mokly-link:start/);
   assert.match(screen.html, /<!--mokly-ignore:start id="inside"-->/);
   assert.ok(!screen.html.includes("data-mokly-boundary"));
@@ -87,6 +98,7 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
   assert.match(page.html, /^<!doctype html>/);
   assert.ok(!page.html.includes("data-renderer"));
   const css = await sidecar.call<CssResult>("processCss", {
+    ...cssParams(),
     postcss: "postcss.mjs",
     sourcePath: "input.css",
     text: ".a {color: red}",
@@ -124,6 +136,7 @@ test("definition links created during evaluation resolve in page attributes", as
     generation: bundle.generation,
     classMaps: {},
   });
+  await installBindings(sidecar, bundle.generation);
   const page = await sidecar.call<PageResult>("renderPage", {
     generation: bundle.generation,
     handle: "definition-links.mjs#source",

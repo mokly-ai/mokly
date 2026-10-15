@@ -59,6 +59,9 @@ export function evaluate(generation: Generation): BundleExports {
     );
     return (generation.exports = module.exports as BundleExports);
   } catch (error) {
-    throw new SidecarError("bundle-failed", detail(error));
+    throw new SidecarError(
+      "bundle-failed",
+      `${[...generation.params.entryFiles, ...generation.params.storiesFiles, ...(generation.params.renderer ? [generation.params.renderer] : [])].join(", ")}: ${detail(error)}`,
+    );
   }
 }

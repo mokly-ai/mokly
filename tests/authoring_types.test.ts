@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { createElement } from "react";
+
 import { defineComponent, definePage, defineScreen } from "@mokly/mokly";
 import type { ScreenDefinition } from "@mokly/mokly";
 
@@ -53,7 +55,11 @@ const component = defineComponent({
 const screen = defineScreen({
   ...metadata,
   props: { label: "A", count: 2 },
-  render(props) {
+  render(props, context) {
+    const viewport: "mobile" | "desktop" = context.viewport;
+    const scheme: "light" | "dark" = context.colorScheme;
+    void viewport;
+    void scheme;
     const count: number = props.count;
     // @ts-expect-error An inferred string prop is not a number.
     const invalid: number = props.label;
@@ -72,6 +78,34 @@ const declared = defineScreen({
 });
 
 function _invalidInputs() {
+  createElement(component.Component, {
+    label: "ok",
+    tone: "primary",
+    items: [],
+    children: "child",
+    moklyInstance: "example",
+  });
+  // @ts-expect-error The wrapper requires each required schema prop.
+  createElement(component.Component, { tone: "primary", items: [] });
+  createElement(component.Component, {
+    label: "ok",
+    // @ts-expect-error The wrapper shares the schema's literal type.
+    tone: "danger",
+    items: [],
+  });
+  defineScreen({
+    ...metadata,
+    render(props) {
+      // @ts-expect-error The own view has no prop from a variant.
+      return props.extra.toFixed();
+    },
+  });
+  // @ts-expect-error Variant props cannot supply the inferred own-view type.
+  defineScreen({
+    ...metadata,
+    render: () => null,
+    variants: [{ slug: "extra", title: "Extra", props: { extra: 1 } }],
+  });
   defineComponent({
     ...metadata,
     propSchema: schema,

@@ -16,13 +16,19 @@ import type {
   SchemaProps,
   ScreenDefinition,
   ScreenInput,
+  ScreenVariantInput,
   UseCaseDefinition,
   UseCaseInput,
 } from "./types.js";
 
 export function defineScreen<
   P extends Record<string, unknown> = Record<string, never>,
->(input: ScreenInput<P> & { propSchema?: never }): ScreenDefinition<P>;
+>(
+  input: Omit<ScreenInput<P>, "variants"> & {
+    propSchema?: never;
+    variants?: readonly ScreenVariantInput<NoInfer<P>>[];
+  },
+): ScreenDefinition<P>;
 export function defineScreen<const S extends PropSchema, P = SchemaProps<S>>(
   input: ScreenInput<NoInfer<P>> & { propSchema: S },
 ): ScreenDefinition<SchemaProps<S>>;

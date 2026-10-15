@@ -4,10 +4,11 @@ import { parse } from "@babel/parser";
 export function orderedExports(
   source: string,
   values: Record<string, unknown>,
+  module: string,
 ): [string, unknown][] {
   const ast = parse(source, {
     sourceType: "unambiguous",
-    plugins: ["typescript", "jsx"],
+    plugins: /\.[cm]?ts$/.test(module) ? ["typescript"] : ["typescript", "jsx"],
   });
   const names: string[] = [];
   for (const node of ast.program.body) {

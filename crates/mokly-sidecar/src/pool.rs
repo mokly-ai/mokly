@@ -1,6 +1,6 @@
 //! Lazy bounded sidecar pool, queueing, retry, recycling, and cancellation.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
 use crate::error::{Error, FailureKind, InternalError, ProtocolError, Result};
@@ -58,13 +58,14 @@ impl Pool {
         let mut state = self.lock()?;
         let ticket = state.ticket;
         state.ticket += 1;
+        self.ready.notify_all();
         loop {
             if state.stopped {
                 return Err(Error::Cancelled);
             }
             if ticket == state.serving {
                 let index = state.available.pop_front().or_else(|| {
-                    if state.slots.len() < self.options.size.max(1) {
+                    if state.slots.len() < self.options.size.get() {
                         state.slots.push(None);
                         Some(state.slots.len() - 1)
                     } else {
@@ -111,6 +112,8 @@ impl Pool {
             generations: BTreeSet::new(),
             maps: BTreeSet::new(),
             described: BTreeSet::new(),
+            bindings: BTreeMap::new(),
+            contexts: BTreeSet::new(),
             renders: 0,
         })
     }
@@ -161,6 +164,10 @@ impl SidecarPool for Pool {
             outcome = self.execute(&mut current, &call, deadline);
             let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
             let reusable = outcome.is_ok()
+                || matches!(
+                    &outcome,
+                    Err(Error::UnknownGeneration { .. } | Error::GenerationChanged { .. })
+                )
                 || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable());
             if !reusable {
                 let killed = current.control.kill();
@@ -185,7 +192,10 @@ impl SidecarPool for Pool {
                         .finish(self.clock.now_ms().saturating_add(2_000))
                 });
                 if let Err(error) = drained {
-                    outcome = Err(error);
+                    tracing::warn!(%error, "sidecar recycle shutdown failed");
+                    if let Err(error) = current.control.kill() {
+                        tracing::warn!(%error, "sidecar recycle kill failed");
+                    }
                 }
                 slot = None;
             }
@@ -193,17 +203,16 @@ impl SidecarPool for Pool {
         let cancelled = self.lock()?.stopped;
         self.release(index, slot)?;
         if matches!(outcome, Err(Error::Crashed)) {
-            let kind = if matches!(
-                call,
-                Call::Bundle(_) | Call::Describe(_) | Call::ProcessCss(_)
-            ) {
-                FailureKind::Bundle
-            } else {
-                FailureKind::Render
-            };
+            let kind = FailureKind::for_call(&call);
             outcome = Err(Error::RequestCrashed {
                 kind,
+                call: Box::new(call.clone()),
+            });
+        }
+        if let Err(Error::Timeout { deadline_ms }) = outcome {
+            outcome = Err(Error::RequestTimeout {
                 call: Box::new(call),
+                deadline_ms,
             });
         }
         if cancelled {
@@ -254,3 +263,11 @@ mod pool_cancel_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_replay_tests.rs"]
 mod pool_replay_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_concurrency_tests.rs"]
+mod pool_concurrency_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_edge_tests.rs"]
+mod pool_edge_tests;

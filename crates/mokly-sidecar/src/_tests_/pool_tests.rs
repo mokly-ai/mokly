@@ -5,7 +5,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::error::{Error, ProtocolError};
-use crate::methods::{Call, ProcessCss};
+use crate::methods::{Call, ModuleResolution, ProcessCss};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::results::Css;
@@ -23,6 +23,9 @@ fn launch() -> Launch {
 
 fn call() -> Call {
     Call::ProcessCss(ProcessCss {
+        context: "css".into(),
+        source_root: "/repo".into(),
+        module_resolution: ModuleResolution::default(),
         postcss: "postcss.mjs".into(),
         source_path: "x.css".into(),
         text: "a{}".into(),
@@ -44,7 +47,7 @@ fn pool_is_lazy_and_shutdown_prevents_new_work() {
         Arc::new(mock),
         launch(),
         PoolOptions {
-            size: 4,
+            size: 4.try_into().unwrap(),
             timeout_ms: None,
         },
     ));
@@ -104,7 +107,7 @@ fn a_timeout_kills_and_retries_once_on_a_fresh_process() {
         Arc::new(factory),
         launch(),
         PoolOptions {
-            size: 1,
+            size: 1.try_into().unwrap(),
             timeout_ms: Some(71),
         },
     );
@@ -165,7 +168,7 @@ fn second_timeout_fails_and_protocol_failures_are_not_retried() {
             Arc::new(factory),
             launch(),
             PoolOptions {
-                size: 1,
+                size: 1.try_into().unwrap(),
                 timeout_ms: None,
             },
         );
@@ -174,9 +177,7 @@ fn second_timeout_fails_and_protocol_failures_are_not_retried() {
         } else {
             assert!(matches!(
                 pool.request(call()),
-                Err(Error::Timeout {
-                    deadline_ms: 60_000
-                })
+                Err(Error::RequestTimeout { deadline_ms:60_000, call }) if call.to_string() == "postcss.mjs for x.css"
             ));
         }
     }

@@ -20,6 +20,7 @@ export function jsonText(
     result = `[${Array.from(value, (item) => (item === undefined ? "null" : jsonText(item, ancestors))).join(",")}]`;
   } else {
     result = `{${Object.entries(value)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .filter(([, item]) => item !== undefined)
       .map(
         ([key, item]) => `${JSON.stringify(key)}:${jsonText(item, ancestors)}`,

@@ -7,11 +7,12 @@ import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResul
 
 import {
   bundleParams,
+  cssParams,
   sidecarFixture,
   startSidecar,
 } from "./helpers/sidecar.js";
 
-test("PostCSS factories run once, helpers keep locations, and new bundles reset the worker", async (context) => {
+test("PostCSS factories run once per explicit context and keep helper locations", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
   const first = await sidecar.call<BundleResult>(
@@ -24,6 +25,7 @@ test("PostCSS factories run once, helpers keep locations, and new bundles reset 
   );
   const process = () =>
     sidecar.call<CssResult>("processCss", {
+      ...cssParams(),
       postcss: "postcss-types.mts",
       sourcePath: "input.css",
       text: ".a {}",
@@ -47,8 +49,11 @@ test("PostCSS factories run once, helpers keep locations, and new bundles reset 
     }),
   );
   assert.notEqual(first.generation, second.generation);
+  assert.match((await process()).text, /order: 3/);
+  await sidecar.call("disposeContext", { context: "css" });
   assert.match((await process()).text, /order: 1/);
   const native = await sidecar.call<CssResult>("processCss", {
+    ...cssParams(),
     postcss: "postcss-context.mts",
     sourcePath: "input.css",
     text: ".a {}",
@@ -62,4 +67,44 @@ test("PostCSS factories run once, helpers keep locations, and new bundles reset 
     ),
   );
   await sidecar.call("shutdown");
+});
+
+test("CSS-only contexts reuse their own workers and dispose independently", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const process = (context: string) =>
+    sidecar.call<CssResult>(
+      "processCss",
+      cssParams({ context, text: ".a {}" }),
+    );
+  assert.match((await process("head")).text, /order: 1/);
+  assert.match((await process("base")).text, /order: 1/);
+  await sidecar.call("disposeContext", { context: "base" });
+  assert.match((await process("head")).text, /order: 2/);
+  assert.match((await process("base")).text, /order: 1/);
+  await assert.rejects(
+    sidecar.call(
+      "processCss",
+      cssParams({
+        context: "head",
+        moduleResolution: {
+          ...bundleParams().moduleResolution,
+          aliases: { missing: "other" },
+        },
+      }),
+    ),
+    /changed its sources or resolution/,
+  );
+});
+
+test("throwing PostCSS plugins keep the module and bundle failure code", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  await assert.rejects(
+    sidecar.call("processCss", cssParams({ postcss: "failures/postcss.mjs" })),
+    {
+      code: "bundle-failed",
+      message: /failures\/postcss.mjs.*fixture plugin failed/,
+    },
+  );
 });

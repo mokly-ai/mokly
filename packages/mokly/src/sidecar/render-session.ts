@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 import { validateDestination } from "../authoring/links.js";
+import { definitionData } from "../authoring/runtime.js";
 import type { RenderSession } from "../authoring/runtime.js";
 import type { RenderContext } from "../authoring/types.js";
 
@@ -10,10 +11,15 @@ import { SidecarError } from "./errors.js";
 export function renderSession(
   generation: Generation,
   context: RenderContext,
+  location = "unknown module",
 ): RenderSession {
   let region = 0;
   const session: RenderSession = {
     context,
+    sourceRoot: generation.params.sourceRoot,
+    location,
+    instances: [],
+    slots: [],
     registrations: generation.registrations,
     markers: new Map(),
     placeholders: new Set(),
@@ -34,7 +40,7 @@ export function renderSession(
       if (!registered)
         throw new SidecarError(
           "unknown-link-definition",
-          "referenced definition is not exported by an entry module",
+          `${location}: referenced definition ${definitionData(target)?.input.title ?? "unknown"} from ${definitionData(target)?.source ?? "unknown module"} is not exported by an entry module`,
         );
       if (!registered.path)
         throw new Error(
@@ -46,7 +52,7 @@ export function renderSession(
     logicalLink(value) {
       const deferred = generation.runtime.links.get(value);
       return deferred
-        ? session.link(deferred.target, deferred.fragment)
+        ? session.link(deferred.target, deferred.fragment, deferred.source)
         : value;
     },
   };

@@ -20,10 +20,12 @@ or a failed package resolution fails configuration. PostCSS normalizes array
 elements; a normalization failure maps to the indexed diagnostic.
 
 The sidecar loads the module under its
-[consumer PostCSS rules](./mokly-sidecar.md#consumer-postcss): once per bundle
-generation, in a fresh isolated module context, with the plugins instantiated
-once and reused for every stylesheet of that generation, so a stateful plugin
-cannot keep candidates across generations or watched rebuilds. The sidecar
+[consumer PostCSS rules](./mokly-sidecar.md#consumer-postcss): once per explicit stylesheet
+context, in a fresh isolated module context, with the plugins instantiated
+once and reused for every stylesheet of that context, so a stateful plugin
+cannot keep candidates across contexts or watched rebuilds. The core supplies
+the context id, source root, and resolution settings with each request.
+`disposeContext` releases that context independently of bundle generations. The sidecar
 bundles the module's local imports with esbuild, resolves every bare package
 import from its importer with Node's `import` conditions, and externalizes
 it, so plugin packages and native bindings run unbundled from the consumer's

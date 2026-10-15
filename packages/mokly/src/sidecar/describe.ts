@@ -26,6 +26,18 @@ const groups = {
 } as const;
 
 export async function describe(generation: Generation): Promise<Definitions> {
+  try {
+    return await collect(generation);
+  } catch (error) {
+    if (error instanceof SidecarError) throw error;
+    throw new SidecarError(
+      "bundle-failed",
+      `${generation.params.entryFiles.concat(generation.params.storiesFiles).join(", ")}: ${detail(error)}`,
+    );
+  }
+}
+
+async function collect(generation: Generation): Promise<Definitions> {
   if (generation.definitions) return generation.definitions;
   const exports = evaluate(generation);
   const result: Definitions = {
@@ -36,6 +48,7 @@ export async function describe(generation: Generation): Promise<Definitions> {
     folders: [],
     stories: [],
     diagnostics: [],
+    warnings: generation.warnings,
   };
   const collected: {
     value: object;
@@ -51,9 +64,10 @@ export async function describe(generation: Generation): Promise<Definitions> {
     for (const [exportName, value] of orderedExports(
       generation.sources.get(module) ?? "",
       values,
+      module,
     )) {
       const location = `${module} export ${exportName}`;
-      if (Array.isArray(value)) {
+      if (Array.isArray(value) && value.some((item) => definitionData(item))) {
         result.diagnostics.push({
           code: "array-export",
           module,
@@ -100,9 +114,6 @@ export async function describe(generation: Generation): Promise<Definitions> {
       generation.handles.set(handle, value as object);
       generation.registrations.set(value as object, {
         handle,
-        ...(typeof data.input.path === "string"
-          ? { path: data.input.path }
-          : {}),
       });
       collected.push({ value: value as object, data, module, exportName });
     }
@@ -151,7 +162,11 @@ export async function describe(generation: Generation): Promise<Definitions> {
   return (generation.definitions = result);
 }
 
-function reference(generation: Generation, value: unknown): EntryReference {
+function reference(
+  generation: Generation,
+  value: unknown,
+  location: string,
+): EntryReference {
   if (typeof value === "string") return value;
   const registered =
     value && typeof value === "object"
@@ -161,7 +176,7 @@ function reference(generation: Generation, value: unknown): EntryReference {
     const data = definitionData(value);
     throw new SidecarError(
       "unknown-link-definition",
-      `referenced definition ${data?.input.title ?? "unknown"} from ${data?.source ?? "unknown module"} is not exported by an entry module`,
+      `${location}: referenced definition ${data?.input.title ?? "unknown"} from ${data?.source ?? "unknown module"} is not exported by an entry module`,
     );
   }
   return { handle: registered.handle };
@@ -199,11 +214,15 @@ function serialize(
     generation.warnings,
   ) as Definition["props"];
   record.useCasePaths = ((input.useCasePaths ?? []) as unknown[]).map((item) =>
-    reference(generation, item),
+    reference(generation, item, record.handle.replace("#", " export ")),
   );
   record.steps = ((input.steps ?? []) as Record<string, unknown>[]).map(
     (step) => ({
-      screenPath: reference(generation, step.screenPath),
+      screenPath: reference(
+        generation,
+        step.screenPath,
+        record.handle.replace("#", " export "),
+      ),
       ...(step.title !== undefined ? { title: step.title as string } : {}),
       ...(step.description !== undefined
         ? { description: step.description as string }
@@ -225,7 +244,7 @@ function serialize(
       } as Variant;
       if (useCasePaths)
         output.useCasePaths = useCasePaths.map((item: unknown) =>
-          reference(generation, item),
+          reference(generation, item, record.handle.replace("#", " export ")),
         );
       for (const [name, node] of Object.entries(slots ?? {})) {
         const handle = `${record.handle}:slot:${index}:${name}`;

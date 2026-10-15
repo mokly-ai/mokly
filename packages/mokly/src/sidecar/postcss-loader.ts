@@ -7,22 +7,29 @@ import type { Loader } from "esbuild";
 import postcss from "postcss";
 import type { AcceptedPlugin } from "postcss";
 
+import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js";
+
 import { detail } from "./errors.js";
 import { moduleContext } from "./postcss-context.js";
 import { plainObject, resolvePlugin } from "./postcss-resolution.js";
+import { resolutionOptions } from "./resolution.js";
 
 /** Bundle local config helpers while packages keep consumer import conditions. */
 export async function loadPostcss(
   file: string,
+  sourceRoot: string,
+  settings: ModuleResolution,
 ): Promise<{ processor: ReturnType<typeof postcss>; modules: string[] }> {
   const compiled = await build({
+    absWorkingDir: path.dirname(file),
     entryPoints: [file],
     bundle: true,
     write: false,
     platform: "node",
     format: "esm",
-    conditions: ["node", "node-addons"],
     mainFields: ["main"],
+    ...resolutionOptions(sourceRoot, settings),
+    conditions: ["node", "node-addons", ...settings.conditions],
     metafile: true,
     logLevel: "silent",
     plugins: [
@@ -49,6 +56,7 @@ export async function loadPostcss(
                 path.isAbsolute(resolved.path) && args.kind !== "require-call"
                   ? pathToFileURL(resolved.path).href
                   : resolved.path,
+              namespace: "",
               external: true,
             };
           });
@@ -132,8 +140,8 @@ export async function loadPostcss(
     );
   return {
     processor: postcss(accepted),
-    modules: Object.keys(compiled.metafile!.inputs).map((file) =>
-      path.resolve(file),
+    modules: Object.keys(compiled.metafile!.inputs).map((input) =>
+      path.resolve(path.dirname(file), input),
     ),
   };
 }

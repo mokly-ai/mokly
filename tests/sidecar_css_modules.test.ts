@@ -4,7 +4,11 @@ import test from "node:test";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
 
-import { bundleParams, startSidecar } from "./helpers/sidecar.js";
+import {
+  bundleParams,
+  installBindings,
+  startSidecar,
+} from "./helpers/sidecar.js";
 
 test("CSS module maps expose Unicode and namespace-shaped names without CJS interop", async (context) => {
   const sidecar = startSidecar(context);
@@ -27,9 +31,11 @@ test("CSS module maps expose Unicode and namespace-shaped names without CJS inte
       },
     },
   });
+  await installBindings(sidecar, bundle.generation);
   const result = await sidecar.call<RenderResult>("renderScreen", {
     generation: bundle.generation,
     handle: "module-exports.mockup.tsx#default",
+    entry: { path: "modules", title: "Modules" },
     props: {},
     viewport: "mobile",
     colorScheme: "light",

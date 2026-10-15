@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 
+use crate::bindings::Bindings;
 use crate::methods::{Bundle, CssModules};
 use crate::workers::{Worker, WorkerControl};
 
@@ -12,6 +13,8 @@ pub(super) struct Slot {
     pub(super) generations: BTreeSet<String>,
     pub(super) maps: BTreeSet<String>,
     pub(super) described: BTreeSet<String>,
+    pub(super) bindings: BTreeMap<String, Bindings>,
+    pub(super) contexts: BTreeSet<String>,
     pub(super) renders: u64,
 }
 
@@ -22,6 +25,8 @@ pub(super) struct State {
     pub(super) controls: BTreeMap<usize, Arc<dyn WorkerControl>>,
     pub(super) bundles: BTreeMap<String, Bundle>,
     pub(super) maps: BTreeMap<String, CssModules>,
+    pub(super) bindings: BTreeMap<String, Bindings>,
+    pub(super) contexts: BTreeSet<String>,
     pub(super) ticket: u64,
     pub(super) serving: u64,
     pub(super) stopped: bool,

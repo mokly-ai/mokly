@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { jsonText } from "../packages/mokly/src/sidecar/json.js";
 import { requestId } from "../packages/mokly/src/sidecar/request-id.js";
 import {
   encodeFrame,
@@ -67,4 +68,11 @@ test("sidecar framing rejects invalid UTF-8, JSON and incomplete EOF", async () 
   await assert.rejects(decode([Buffer.from("{}")]), /unterminated/);
   await assert.rejects(decode([Buffer.from("\n")]), /JSON/);
   assert.deepEqual(await decode([Buffer.from("{}\n{}\n")]), [{}, {}]);
+});
+
+test("wire object keys use UTF-16 order even for integer-shaped names", () => {
+  assert.equal(
+    jsonText({ "2": ["number", "2"], "10": ["number", "10"] }),
+    '{"10":["number","10"],"2":["number","2"]}',
+  );
 });

@@ -13,12 +13,14 @@ impl Pool {
         generation: &str,
         maps_needed: bool,
         description_needed: bool,
+        bindings_needed: bool,
     ) -> Result<()> {
-        let (bundle, maps) = {
+        let (bundle, maps, bindings) = {
             let state = self.lock()?;
             (
                 state.bundles.get(generation).cloned(),
                 state.maps.get(generation).cloned(),
+                state.bindings.get(generation).cloned(),
             )
         };
         if !slot.generations.contains(generation) {
@@ -51,6 +53,14 @@ impl Pool {
                 }),
             )?;
             slot.described.insert(generation.to_owned());
+        }
+        if description_needed
+            && bindings_needed
+            && let Some(bindings) = bindings
+            && slot.bindings.get(generation) != Some(&bindings)
+        {
+            self.prerequisite(slot, Call::Bindings(bindings.clone()))?;
+            slot.bindings.insert(generation.to_owned(), bindings);
         }
         Ok(())
     }

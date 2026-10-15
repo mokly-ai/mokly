@@ -45,7 +45,7 @@ export function linkHelpers(runtime: AuthoringRuntime, source?: string) {
     const destination =
       typeof to === "string"
         ? mockLink(to, fragment)
-        : runtime.session().link(to, fragment);
+        : runtime.session().link(to, fragment, source);
     if (asChild) {
       const React = runtime.react;
       if (

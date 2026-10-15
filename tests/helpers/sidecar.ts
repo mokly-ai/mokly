@@ -5,6 +5,9 @@ import { createInterface } from "node:readline";
 import type { TestContext } from "node:test";
 
 import type { BundleParams } from "../../packages/mokly/src/generated/sidecar/BundleParams.js";
+import type { Definitions } from "../../packages/mokly/src/generated/sidecar/Definitions.js";
+import type { EntryBinding } from "../../packages/mokly/src/generated/sidecar/EntryBinding.js";
+import type { ProcessCssParams } from "../../packages/mokly/src/generated/sidecar/ProcessCssParams.js";
 
 export const sidecarFixture = path.resolve("tests/fixtures/sidecar");
 
@@ -65,6 +68,8 @@ export function bundleParams(
     renderer: "renderer.tsx",
     storiesFiles: ["button.stories.tsx"],
     sourceRoot: sidecarFixture,
+    configurationDirectory: ".",
+    repositoryRoots: [],
     moduleResolution: {
       aliases: {},
       conditions: [],
@@ -73,6 +78,51 @@ export function bundleParams(
       packageRoots: [],
       resolveExtensions: [],
     },
+    ...overrides,
+  };
+}
+
+export async function installBindings(
+  sidecar: ReturnType<typeof startSidecar>,
+  generation: string,
+  entries: Record<string, EntryBinding> = {},
+) {
+  const definitions = await sidecar.call<Definitions>("describe", {
+    generation,
+  });
+  const records = [
+    ...definitions.screens,
+    ...definitions.components,
+    ...definitions.pages,
+    ...definitions.folders,
+    ...definitions.useCases,
+  ];
+  const table = Object.fromEntries(
+    records.map((definition) => [
+      definition.handle,
+      entries[definition.handle] ?? {
+        path:
+          definition.path ??
+          definition.slug ??
+          definition.handle.split("#")[0]!.split("/").at(-1)!.split(".")[0]!,
+        title: definition.title ?? "Folder",
+      },
+    ]),
+  );
+  await sidecar.call("bindings", { generation, entries: table });
+  return table;
+}
+
+export function cssParams(
+  overrides: Partial<ProcessCssParams> = {},
+): ProcessCssParams {
+  return {
+    context: "css",
+    sourceRoot: sidecarFixture,
+    moduleResolution: bundleParams().moduleResolution,
+    postcss: "postcss.mjs",
+    sourcePath: "input.css",
+    text: "",
     ...overrides,
   };
 }
