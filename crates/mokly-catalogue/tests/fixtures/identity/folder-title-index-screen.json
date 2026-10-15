@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{\"title\":\"Wrong\"}",
+    "specs/a/index.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-folder",
+      "message": "specs/a/_folder.json: title cannot be set for a folder whose own page is a screen or component; set the entry's title",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}

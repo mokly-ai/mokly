@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{\"hidden\":\"yes\"}",
+    "specs/a/home.md": "# Home"
+  },
+  "errors": [
+    {
+      "code": "invalid-folder",
+      "message": "specs/a/_folder.json: hidden must be a boolean",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 2
+    }
+  ]
+}

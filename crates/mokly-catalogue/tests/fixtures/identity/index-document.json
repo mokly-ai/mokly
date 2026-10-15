@@ -1,0 +1,8 @@
+{
+  "config": {},
+  "files": {
+    "specs/billing/README.md": "# Billing",
+    "specs/billing/other.md": "# Other"
+  },
+  "paths": ["billing", "billing/other"]
+}

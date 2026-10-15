@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/Getting Started.md": "# Doc"
+  },
+  "errors": [
+    {
+      "code": "invalid-segment",
+      "message": "specs/Getting Started.md: file name \"Getting Started\" is not a valid path segment; use letters, digits, hyphens and underscores",
+      "path": "specs/Getting Started.md",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}

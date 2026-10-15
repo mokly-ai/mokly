@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/statement.page.html": "---\ntitle: Home\n---\n<!doctype html><html><head><title>Statement</title></head><body><p>Statement</p></body></html>\n"
+  },
+  "paths": ["statement"]
+}

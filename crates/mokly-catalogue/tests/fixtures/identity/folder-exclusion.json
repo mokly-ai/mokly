@@ -1,0 +1,10 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/_folder.json": "{\"title\": \"Area\", \"order\": [\"ok\", \"...\"], \"exclude\": [\"drafts/**\"]}",
+    "specs/a/ok.md": "# OK",
+    "specs/a/drafts/Bad Name.md": "# Draft"
+  },
+  "protected": ["specs/a/drafts/Bad Name.md", "specs/a/_folder.json"],
+  "paths": ["a/ok"]
+}

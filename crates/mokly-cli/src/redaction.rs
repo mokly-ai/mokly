@@ -37,13 +37,22 @@ impl Redactor {
 
     /// Redact literal and encodeURIComponent forms, then escape unsafe controls.
     pub fn safe(&self, text: &str) -> String {
+        self.clean(text, false)
+    }
+
+    /// Keep structural diagnostic line breaks while escaping each line's controls.
+    pub(crate) fn safe_lines(&self, text: &str) -> String {
+        self.clean(text, true)
+    }
+
+    fn clean(&self, text: &str, lines: bool) -> String {
         let mut safe = text.to_owned();
         for secret in &self.secrets {
             safe = safe.replace(secret, "[redacted]");
         }
         safe.chars()
             .map(|character| {
-                if character.is_control() {
+                if character.is_control() && !(lines && character == '\n') {
                     format!("\\u{:04x}", character as u32)
                 } else {
                     character.to_string()

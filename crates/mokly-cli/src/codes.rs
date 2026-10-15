@@ -13,6 +13,8 @@ pub enum Code {
     ConfigMissing,
     /// Static output failure.
     ExportInvalid,
+    /// Failed publish temporary-root allocation.
+    PublishDirectory,
     /// Git command failure.
     GitFailed,
     /// Dirty publication checkout.
@@ -60,6 +62,11 @@ impl Code {
                 "config-missing",
                 "No Mokly configuration was found.",
                 "Run inside a consumer repository or pass `--config`.",
+            ),
+            Self::PublishDirectory => (
+                "export-invalid",
+                "The publish build directory could not be prepared.",
+                "Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout.",
             ),
             Self::ExportInvalid => (
                 "export-invalid",

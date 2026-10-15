@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nmovedFrom: old\n---\n<h1>Home</h1>\n",
+    "specs/other.md": "---\ntitle: Doc\nmovedFrom: old\n---\n# Heading\n"
+  },
+  "errors": [
+    {
+      "code": "duplicate-moved-from",
+      "message": "movedFrom old is declared twice:\n  specs/home.screen.html\n  specs/other.md",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

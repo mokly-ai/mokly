@@ -8,8 +8,9 @@ use std::time::Duration;
 
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
-use crate::control::{Cancellation, Clock, Shutdown, Signal};
+use crate::cancellation::signal;
+use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
+use crate::control::{Cancellation, Clock, Shutdown};
 use crate::error::{Error, InternalError, IoResult, Result};
 use crate::pipes::capture;
 
@@ -25,6 +26,24 @@ pub struct SystemRunner {
 
 impl Runner for SystemRunner {
     fn run(&self, request: &Request) -> Result<Output> {
+        self.execute(request, None)
+    }
+
+    fn run_cancellable(
+        &self,
+        request: &Request,
+        cancellation: &dyn command::Cancellation,
+    ) -> Result<Output> {
+        self.execute(request, Some(cancellation))
+    }
+}
+
+impl SystemRunner {
+    fn execute(
+        &self,
+        request: &Request,
+        cancellation: Option<&dyn command::Cancellation>,
+    ) -> Result<Output> {
         if request.output_limit > DEFAULT_OUTPUT_LIMIT
             || request.stderr_limit > DEFAULT_OUTPUT_LIMIT
         {
@@ -38,7 +57,9 @@ impl Runner for SystemRunner {
                 limit: DEFAULT_OUTPUT_LIMIT,
             });
         }
-        if self.cancellation.cancelled() {
+        if self.cancellation.cancelled()
+            || cancellation.is_some_and(command::Cancellation::is_cancelled)
+        {
             return Err(Error::Cancelled);
         }
         tracing::debug!(
@@ -89,21 +110,21 @@ impl Runner for SystemRunner {
                 || !errors.is_finished()
                 || !input.is_finished()
             {
-                cancelled |= self.cancellation.cancelled();
-                match shutdown.step(self.clock.now(), cancelled) {
-                    Some(Signal::Terminate) => {
-                        let _ = group.terminate();
-                    }
-                    Some(Signal::Kill) => {
-                        let _ = group.kill();
-                    }
-                    None => {}
+                cancelled |= self.cancellation.cancelled()
+                    || cancellation.is_some_and(command::Cancellation::is_cancelled);
+                if let Err(error) =
+                    signal(&mut shutdown, group.as_ref(), self.clock.now(), cancelled)
+                {
+                    failure = Some(error);
+                    let _ = group.kill();
+                    status = child.wait().ok();
+                    break;
                 }
                 if status.is_none() {
                     match child.try_wait() {
                         Ok(value) => status = value,
                         Err(source) => {
-                            failure = Some(source);
+                            failure = Some(Error::Internal(InternalError::Io { source }));
                             let _ = group.kill();
                             status = child.wait().ok();
                             break;
@@ -121,8 +142,8 @@ impl Runner for SystemRunner {
             let stdout = output.join();
             let stderr = errors.join();
             let written = input.join();
-            if let Some(source) = failure {
-                return Err(Error::Internal(InternalError::Io { source }));
+            if let Some(error) = failure {
+                return Err(error);
             }
             let _ = group.kill();
             if cancelled {

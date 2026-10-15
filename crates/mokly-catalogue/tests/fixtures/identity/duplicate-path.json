@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/a.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n",
+    "specs/a.md": "# A"
+  },
+  "errors": [
+    {
+      "code": "duplicate-path",
+      "message": "path a is defined twice:\n  specs/a.md\n  specs/a.screen.html",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

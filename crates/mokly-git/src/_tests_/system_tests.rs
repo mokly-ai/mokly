@@ -7,7 +7,7 @@ use mokly_platform::error;
 use mokly_platform::processes::ProcessGroupsMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Request, Runner};
 use crate::control::CancellationMock;
 use crate::error::Error;
 use crate::system::SystemRunner;
@@ -76,4 +76,26 @@ fn cancelled_commands_do_not_configure_or_spawn_a_process() {
         )),
     };
     assert!(matches!(runner.run(&request(1024)), Err(Error::Cancelled)));
+}
+
+#[test]
+fn explicit_cancellation_stops_before_platform_setup() {
+    let cancellation = Unimock::new(
+        command::CancellationMock::is_cancelled
+            .next_call(matching!())
+            .returns(true),
+    );
+    let runner: &dyn Runner = &SystemRunner {
+        groups: Arc::new(Unimock::new(())),
+        clock: Arc::new(Unimock::new(())),
+        cancellation: Arc::new(Unimock::new(
+            CancellationMock::cancelled
+                .next_call(matching!())
+                .returns(false),
+        )),
+    };
+    assert!(matches!(
+        runner.run_cancellable(&request(DEFAULT_OUTPUT_LIMIT), &cancellation),
+        Err(Error::Cancelled)
+    ));
 }

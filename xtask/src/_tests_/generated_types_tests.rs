@@ -16,11 +16,15 @@ fn exact_generated_bytes_pass_without_writes_or_native_host_lookup() {
         EntriesMock
             .each_call(matching!(_))
             .answers(&|_, directory| {
-                Ok(generated_sources(Path::new("/workspace"))
+                let mut paths: Vec<_> = generated_sources(Path::new("/workspace"))
                     .into_iter()
                     .map(|(path, _)| path)
                     .filter(|path| path.parent() == Some(directory))
-                    .collect())
+                    .collect();
+                if directory == Path::new("/workspace/packages/viewer/src/generated") {
+                    paths.push(directory.join("catalogue"));
+                }
+                Ok(paths)
             }),
     )));
     tasks(files).check_generated_types().unwrap();
@@ -53,8 +57,53 @@ fn stale_generated_sources_fail_after_the_byte_comparison() {
             .next_call(matching!((path) if *path == Path::new("/workspace/packages/viewer/src/generated")))
             .returns(Ok(Vec::new())),
         EntriesMock
+            .next_call(matching!((path) if *path == Path::new("/workspace/packages/viewer/src/generated/catalogue")))
+            .returns(Ok(Vec::new())),
+        EntriesMock
             .next_call(matching!((path) if *path == Path::new("/workspace/packages/mokly/src/generated/sidecar")))
             .returns(Ok(vec![stale.clone()])),
+    )));
+    assert!(matches!(
+        tasks(files).check_generated_types(),
+        Err(Error::UnexpectedGeneratedType { path }) if path == stale
+    ));
+}
+
+#[test]
+fn missing_catalogue_source_fails_the_byte_comparison() {
+    let expected =
+        PathBuf::from("/workspace/packages/viewer/src/generated/catalogue/CatalogueReadModel.ts");
+    let files = Arc::new(Unimock::new(ReadMock.each_call(matching!(_)).answers(
+        &|mock, path| {
+            if path.ends_with("catalogue/CatalogueReadModel.ts") {
+                Ok(None)
+            } else {
+                generated_bytes(mock, path)
+            }
+        },
+    )));
+    assert!(matches!(
+        tasks(files).check_generated_types(),
+        Err(Error::GeneratedTypeMismatch { path }) if path == expected
+    ));
+}
+
+#[test]
+fn catalogue_directory_is_allowed_but_its_stale_sources_fail() {
+    let stale = PathBuf::from("/workspace/packages/viewer/src/generated/catalogue/stale.ts");
+    let files = Arc::new(Unimock::new((
+        ReadMock.each_call(matching!(_)).answers(&generated_bytes),
+        EntriesMock
+            .each_call(matching!(_))
+            .answers(&|_, directory| {
+                Ok(match directory.to_str().unwrap() {
+                    "/workspace/packages/viewer/src/generated" => vec![directory.join("catalogue")],
+                    "/workspace/packages/viewer/src/generated/catalogue" => {
+                        vec![directory.join("stale.ts")]
+                    }
+                    _ => Vec::new(),
+                })
+            }),
     )));
     assert!(matches!(
         tasks(files).check_generated_types(),

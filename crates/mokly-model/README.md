@@ -9,6 +9,7 @@ React viewer. It has no internal crate dependency and performs no file IO.
 ## Responsibilities
 
 - Own the independent format numbers in `versions`.
+- Own shared output shapes and one pure marker writer for build and publish.
 - Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
   explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
@@ -24,6 +25,13 @@ levels and 10,000 visited values. Diagnostics keep the entry, variant, and an
 exact JSON Pointer. HTML uses `html-front-matter` or `html-attribute`.
 JavaScript and stories use `component-schema` or `component-props`.
 
+`output` defines the ownership marker, upload metadata, repository identity,
+and immutable file inventory. `Artifact::finalize` accepts optional upload
+metadata and writes the marker last. Plain builds pass no metadata. Both
+static output and publication use these shapes without a dependency on each
+other. The marker parser checks format shape; the publication client separately
+checks complete artifact bytes and upload-only file-count limits.
+
 Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
 tree order. Authored tags and steps keep their order.
@@ -32,8 +40,28 @@ tree order. Authored tags and steps keep their order.
 large integer types to TypeScript `number`, because JSON readers use numbers. It supports recursive
 schemas and Serde field names without a second hand-written type model.
 `typescript::generate` returns deterministic source. `cargo xtask generate-types`
-writes it to `packages/viewer/src/generated/model.ts`. Future catalogue index,
-entry detail, live descriptor, review, and snapshot shapes each use one module.
+writes the schema module to `packages/viewer/src/generated/model.ts` and the
+catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
+per file. `catalogue::CatalogueModel` is private in-memory state. The public
+roots are `CatalogueReadModel` v7, `EntryDetailV1`, and `LiveDescriptorV3`.
+Their readers gate the version before decoding payload fields. Index validation
+checks private fields, paths, variants, trees, schemas, tagged props, flow
+membership, removed metadata, snapshot identities, and generation URLs.
+Detail validation checks the current or historical fence, field placement
+by kind, and canonical tagged props in usage and input-change records.
+`ReadError::Contract` carries a typed `ContractViolation`. Version failures
+print the supplied integer or explain its absence.
+
+Instance, slot, and props digest recomputation needs the shared material
+key implementation. Schema checks for recorded usage props and validation of
+usage references, ownership graphs, source locations, and view ordering
+need the index and composition context. These reader checks are in progress;
+the structural detail reader does not substitute guessed context.
+
+`inference::infer` builds closed schemas from own and merged variant props.
+`data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`
+encode and decode tagged public props, including negative zero. Derived controls
+follow schema choices, labels, bounds, and zero-based number steps.
 
 ## Quick Start
 
@@ -55,9 +83,12 @@ cargo xtask generate-types
 
 ### Key Code
 
+- [Shared output contracts and marker writer](./src/output/mod.rs).
 - [Schema types](./src/prop_schema.rs) and [validator](./src/validation.rs).
 - [Profile restrictions](./src/profile.rs) and [limits](./src/limits.rs).
 - [Canonical encoding](./src/canonical.rs) and [type generation](./src/typescript.rs).
+- [Catalogue model](./src/catalogue.rs), [public index](./src/public_index.rs),
+  [detail and live types](./src/public_detail.rs), and [readers](./src/readers.rs).
 
 ### Related Docs
 

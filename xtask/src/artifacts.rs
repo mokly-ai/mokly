@@ -192,10 +192,14 @@ impl Artifacts for DefaultArtifacts {
         }
         for directory in [
             "packages/viewer/src/generated",
+            "packages/viewer/src/generated/catalogue",
             "packages/mokly/src/generated/sidecar",
         ] {
             for path in self.files.entries(&self.workspace.join(directory))? {
-                if !sources.iter().any(|(expected, _)| expected == &path) {
+                if !sources
+                    .iter()
+                    .any(|(expected, _)| expected.starts_with(&path))
+                {
                     return Err(Error::UnexpectedGeneratedType { path });
                 }
             }
@@ -210,6 +214,18 @@ fn generated_sources(workspace: &Path) -> Vec<(PathBuf, String)> {
         workspace.join("packages/viewer/src/generated/model.ts"),
         typescript::generate(),
     )];
+    sources.extend(
+        typescript::catalogue_modules()
+            .into_iter()
+            .map(|(name, text)| {
+                (
+                    workspace
+                        .join("packages/viewer/src/generated/catalogue")
+                        .join(name),
+                    text,
+                )
+            }),
+    );
     sources.extend(generate().into_iter().map(|(name, text)| {
         (
             workspace

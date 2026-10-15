@@ -1,13 +1,14 @@
 //! Binary stdin and cancellation of a real Git-owned descendant tree.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 #[cfg(unix)]
 use std::{
     fs, thread,
     time::{Duration, Instant},
 };
 
-use mokly_git::command::{DEFAULT_OUTPUT_LIMIT, Request};
+use mokly_git::command::{self, DEFAULT_OUTPUT_LIMIT, Request};
 use mokly_git::control::Token;
 use mokly_git::error::Error;
 
@@ -108,4 +109,39 @@ fn completion_stops_a_helper_that_outlives_git_with_closed_pipes() {
         );
         thread::yield_now();
     }
+}
+
+struct AfterStart {
+    calls: AtomicUsize,
+}
+
+impl command::Cancellation for AfterStart {
+    fn is_cancelled(&self) -> bool {
+        self.calls.fetch_add(1, Ordering::SeqCst) > 0
+    }
+}
+
+#[test]
+fn an_active_git_process_is_cancelled_through_its_process_group() {
+    let fixture = Fixture::new();
+    let runner = runner(Arc::new(Token::default()));
+    let request = Request {
+        directory: fixture.root().to_owned(),
+        args: vec![
+            "-c".into(),
+            "alias.mokly-wait=!sleep 60".into(),
+            "mokly-wait".into(),
+        ],
+        stdin: vec![],
+        output_limit: DEFAULT_OUTPUT_LIMIT,
+        stderr_limit: command::DEFAULT_STDERR_LIMIT,
+    };
+    let cancellation = AfterStart {
+        calls: AtomicUsize::new(0),
+    };
+    assert!(matches!(
+        runner.run_cancellable(&request, &cancellation),
+        Err(Error::Cancelled)
+    ));
+    assert!(cancellation.calls.load(Ordering::SeqCst) >= 2);
 }

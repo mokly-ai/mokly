@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/ignored.txt": "Ignored"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "root matches no file: specs",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

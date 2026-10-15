@@ -172,9 +172,9 @@ before it reaches the terminal.
 
 ## Publish
 
-`publish` runs this transaction into its own private directory outside the
-repository, which no option names and which the `Mokly publish build` line of
-the [terminal errors contract](./mokly-terminal-errors.md) reports, then
+`publish` runs this transaction into an output directory inside its own
+private directory outside the repository. No option names that output. The
+`Mokly publish build` line of the [terminal errors contract](./mokly-terminal-errors.md) reports the output path. The command then
 uploads the result under the [upload contract](./mokly-upload.md). It needs a
 clean checkout, fails on warnings before it writes or uploads, and
 `publish --no-changes` builds current-only. A failed upload keeps the built

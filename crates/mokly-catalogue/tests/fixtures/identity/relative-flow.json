@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/account/index.screen.html": "---\ntitle: Home\nuseCasePaths: [./flow]\n---\n<h1>Home</h1>\n",
+    "specs/account/flow.use-case.yaml": "title: Flow\nsteps: [{screenPath: ./account}]\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-metadata",
+      "message": "specs/account/flow.use-case.yaml: account/flow target ./account does not name a current screen",
+      "path": "specs/account/flow.use-case.yaml",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}

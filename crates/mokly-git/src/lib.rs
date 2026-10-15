@@ -8,6 +8,7 @@ pub mod control;
 pub mod error;
 pub mod system;
 
+mod cancellation;
 mod pipes;
 
 pub mod changes;

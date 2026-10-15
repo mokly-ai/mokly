@@ -24,7 +24,11 @@ stream is limited to at most 64 MiB. A request can set a smaller bound.
 Stderr has its own bound, 1 MiB by default, so Git warnings cannot exhaust a
 tiny exact stdout budget. An excessive request fails with `InvalidOutputLimit` before process setup.
 Exceeding the selected bound kills the process tree before returning
-`OutputLimit`.
+`OutputLimit`. `run_cancellable` accepts an explicit cancellation boundary.
+The runner sends termination to the process tree, escalates to a forceful kill
+after one second, reaps the child, and drains both pipes. Only an operation
+that acted on cancellation returns `Cancelled`. Other typed failures keep
+their own category.
 
 `BoundedRunner` consumes `dyn Runner`. The default budgets are 128 path
 arguments and 16 KiB of conservative encoded argument cost. A path too large
