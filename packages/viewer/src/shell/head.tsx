@@ -13,6 +13,7 @@ import {
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
+import { variantHeading } from "./view_title.js";
 
 /** One crumb: a link to a folder's page, a folder reveal, or plain text. */
 function Crumb(props: { item: CatalogueCrumb }) {
@@ -184,13 +185,10 @@ export function targetHead(
       .find(({ entry }) => entry.path === target.entry.path)
       ?.folderTitles.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.path);
+  const heading = variantHeading(catalogue, target.entry);
+  if (heading !== undefined)
+    return { crumbs: ancestors, path: target.entry.path, title: heading };
   const parent = branchPoints(catalogue).parentOf(target.entry);
-  if (target.entry.kind === "component" && parent && parent.source !== "title")
-    return {
-      crumbs: ancestors,
-      path: target.entry.path,
-      title: parent.entry.title,
-    };
   return {
     crumbs: parent ? [...ancestors, parentCrumb(parent)] : ancestors,
     path: target.entry.path,

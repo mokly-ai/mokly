@@ -15,6 +15,7 @@ import {
 } from "./comparison_selection.js";
 import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
+import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
@@ -50,6 +51,7 @@ export function ControlledDiffScreen({
     selectedComparisonDocuments(views),
   );
   const together = useScrollTogether();
+  const store = useOptionalShellStore();
   const current = comparison.mode === "current";
   const failure =
     comparison.failure ??
@@ -89,6 +91,9 @@ export function ControlledDiffScreen({
         {failure ? (
           <ComparisonFailure
             details={failure}
+            {...(store?.context.embedded === false
+              ? { reload: () => globalThis.location.reload() }
+              : {})}
             retry={comparison.retry}
             versionError={comparison.versionError}
           />
@@ -109,19 +114,36 @@ export function ControlledDiffScreen({
   );
 }
 
-function ComparisonFailure({
+/**
+ * A comparison that could not load offers Try again. A rejected review
+ * shows the version headline; only the standalone shell offers Reload,
+ * because a reload loads the viewer that ships with its catalogue.
+ */
+export function ComparisonFailure({
   details,
+  reload,
   retry,
   versionError,
 }: {
   details: string;
+  reload?: () => void;
   retry(): void;
   versionError?: MoklyVersionError | undefined;
 }) {
   return (
     <>
       {versionError ? (
-        <p role="alert">{VERSION_ERROR_MESSAGE}</p>
+        <p role="alert">
+          {VERSION_ERROR_MESSAGE}
+          {reload ? (
+            <>
+              {" "}
+              <button data-diff-reload="" onClick={reload} type="button">
+                Reload
+              </button>
+            </>
+          ) : null}
+        </p>
       ) : (
         <p>
           The comparison could not be loaded.{" "}

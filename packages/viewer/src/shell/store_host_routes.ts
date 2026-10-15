@@ -19,6 +19,7 @@ import {
 } from "./store_browser_routes.js";
 import type { EmbeddedShellEnvironment } from "./store_host.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
+import { viewTitle } from "./view_title.js";
 
 export interface PendingNavigation {
   fragment?: string;
@@ -69,14 +70,16 @@ export function frameMissState(
   route: ShellRoute,
   sections: readonly NavSectionNode[],
   controlled: boolean,
+  catalogue: Catalogue,
 ): ShellState {
-  return controlled ? state : withHostRoute(state, route, sections);
+  return controlled ? state : withHostRoute(state, route, sections, catalogue);
 }
 
 export function withHostRoute(
   state: ShellState,
   route: ShellRoute,
   sections: readonly NavSectionNode[],
+  catalogue: Catalogue,
 ): ShellState {
   const path =
     route.view.kind === "target"
@@ -86,7 +89,7 @@ export function withHostRoute(
     ...state,
     announcement:
       route.view.kind === "target"
-        ? `Loaded ${route.view.target.entry.title} · Mokly`
+        ? `Loaded ${viewTitle(catalogue, route.view)}`
         : "Loaded Mokly",
     disclosures: openDisclosures(state.disclosures, path),
     drawerOpen: false,

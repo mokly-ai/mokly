@@ -224,7 +224,7 @@ test("a failed start shows until Try again loads the descriptor again", async ()
   assert.equal(fixture.controller.editing, "ready");
 });
 
-test("editing has no status without a live index or before connecting", () => {
+test("editing prepares before the shell connects, and has no status without a live index", () => {
   const unconnected = controllerFixture(liveIndex(), { live: true });
   assert.equal(unconnected.controller.editing, "preparing");
   unconnected.controller.retryDescriptor();

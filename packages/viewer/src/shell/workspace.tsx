@@ -6,7 +6,7 @@ import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
-import { controlTarget, type ControlTarget } from "./control_values.js";
+import { controlTarget } from "./control_values.js";
 import { ControlledDiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
@@ -21,7 +21,7 @@ import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
-import { WorkspaceProps } from "./workspace_props.js";
+import { WorkspacePropsTab } from "./workspace_props.js";
 import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
@@ -169,20 +169,13 @@ export function ComponentWorkspace({
   const showComponents =
     entry.kind === "screen" ||
     views.some((view) => view.usage?.instances.length);
-  const propsPanel = selectedInstance ? (
-    <WorkspaceProps
+  const propsPanel = (
+    <WorkspacePropsTab
+      controls={controls.panel}
       data={data}
-      selection={{
-        instance: selectedInstance,
-        ...(activeView?.usage ? { usage: activeView.usage } : {}),
-      }}
-    />
-  ) : editTarget && (entry.kind === "component" || hasControls(editTarget)) ? (
-    controls.panel
-  ) : (
-    <WorkspaceProps
-      data={data}
-      selection={activeView?.usage ? { usage: activeView.usage } : {}}
+      instance={selectedInstance}
+      target={editTarget}
+      usage={activeView?.usage}
     />
   );
   const highlight = {
@@ -219,25 +212,26 @@ export function ComponentWorkspace({
       />
       <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
       <div className="mbk-workspace-panes">
-        <div
-          aria-busy={controls.pending || undefined}
-          className="mbk-preview-pane"
-          data-workspace-preview=""
-        >
-          {preview ? (
-            <RemovedPreviewStage data={preview} />
-          ) : data.comparisons ? (
-            <ControlledDiffScreen
-              comparison={comparison}
-              entryId={variantPath ?? entry.path}
-              entryKind={entry.kind}
-              eligible={presentation.comparisonEligible}
-            >
-              {stage}
-            </ControlledDiffScreen>
-          ) : (
-            stage
-          )}
+        <div className="mbk-preview-pane" data-workspace-preview="">
+          <div
+            aria-busy={controls.pending || undefined}
+            className="mbk-preview-busy"
+          >
+            {preview ? (
+              <RemovedPreviewStage data={preview} />
+            ) : data.comparisons ? (
+              <ControlledDiffScreen
+                comparison={comparison}
+                entryId={variantPath ?? entry.path}
+                entryKind={entry.kind}
+                eligible={presentation.comparisonEligible}
+              >
+                {stage}
+              </ControlledDiffScreen>
+            ) : (
+              stage
+            )}
+          </div>
           {controls.previewStatus}
         </div>
         <Inspector
@@ -281,8 +275,4 @@ export function ComponentWorkspace({
       {inspection.overlay}
     </section>
   );
-}
-
-function hasControls(target: ControlTarget): boolean {
-  return Object.keys(target.controls).length > 0;
 }

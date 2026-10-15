@@ -14,8 +14,6 @@ import {
 
 type NumberControl = Extract<ComponentControl, { kind: "number" }>;
 
-const NUMBER_ERROR = "Enter a number within the allowed range.";
-
 const target: ControlTarget = {
   path: "components/action",
   title: "Action",
@@ -126,19 +124,19 @@ test("a valid draft yields only the changed overrides", () => {
   });
 });
 
-test("an off-step or out-of-range number is a field error", () => {
+test("an off-step or out-of-range number names the values it accepts", () => {
   for (const count of ["3", "1", "10", "0", "", "two", "Infinity"])
     assert.deepEqual(validateControlDraft(target, draft({ count })), {
-      errors: { count: NUMBER_ERROR },
+      errors: { count: "Enter a number from 2 to 8 in steps of 2." },
     });
   assert.deepEqual(validateControlDraft(target, draft({ ratio: "0.35" })), {
-    errors: { ratio: NUMBER_ERROR },
+    errors: { ratio: "Enter a number from 0 to 1 in steps of 0.1." },
   });
 });
 
 test("text and select fields keep their own limits", () => {
   assert.deepEqual(validateControlDraft(target, draft({ label: "Saving" })), {
-    errors: { label: "Check this value and its allowed limits." },
+    errors: { label: "Enter up to 5 characters." },
   });
   assert.deepEqual(validateControlDraft(target, draft({ tone: "7" })), {
     errors: { tone: "Choose an available value." },
@@ -155,7 +153,7 @@ test("text length counts code points, like the schema", () => {
   );
   assert.deepEqual(
     validateControlDraft(target, draft({ label: "😀😀😀😀😀😀" })).errors,
-    { label: "Check this value and its allowed limits." },
+    { label: "Enter up to 5 characters." },
   );
 });
 

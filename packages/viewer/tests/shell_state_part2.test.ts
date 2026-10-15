@@ -113,8 +113,17 @@ test("unknown frame routes mutate only uncontrolled host display state", () => {
   );
   const state = createInitialShellState(catalogue, context, home, undefined);
 
-  assert.equal(frameMissState(state, missing, sections, true), state);
-  const uncontrolled = frameMissState(state, missing, sections, false);
+  assert.equal(
+    frameMissState(state, missing, sections, true, catalogue),
+    state,
+  );
+  const uncontrolled = frameMissState(
+    state,
+    missing,
+    sections,
+    false,
+    catalogue,
+  );
   assert.equal(uncontrolled.route.view.kind, "missing");
   assert.equal(
     hostSelectionRouteChanged(catalogue, uncontrolled, state.selection),

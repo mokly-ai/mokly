@@ -25,7 +25,7 @@ test("the standalone shell paints its loading state before the index arrives", (
   );
   assert.equal(
     html,
-    '<div aria-busy="true" class="mbk mbk-empty"><p role="status">Loading catalogue…</p></div>',
+    '<div aria-busy="true" class="mbk mbk-empty" tabindex="-1"><p role="status">Loading catalogue…</p></div>',
   );
 });
 

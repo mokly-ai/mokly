@@ -12,8 +12,9 @@ import {
 } from "../src/shell/search_query.js";
 import { shellStore } from "../src/shell/store_actions.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
+import { withHostRoute } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
-import { viewTitle } from "../src/shell/views.js";
+import { viewTitle } from "../src/shell/view_title.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 import { withoutTreeEntries } from "./catalogue_fixture.js";
@@ -43,7 +44,7 @@ test("component variant heads show the parent heading, its crumbs, and the shown
   );
 });
 
-test("browser titles name the shown entry, then a different heading", () => {
+test("the browser title and the announcement name the shown entry, then a different heading", () => {
   const entry = (path: string) => {
     const found = catalogue.byPath.get(path);
     assert.ok(found);
@@ -56,6 +57,20 @@ test("browser titles name the shown entry, then a different heading", () => {
     });
   assert.equal(title("components/action"), "Action · Mokly");
   assert.equal(title("components/action/default"), "Default · Action · Mokly");
+  const route = routeFromUrl(
+    catalogue,
+    new URL("https://example.test/view/components/action/default/"),
+  );
+  const sections = catalogueNavSections(catalogue);
+  const state = createInitialShellState(catalogue, context, route, undefined);
+  assert.equal(
+    withRoute(state, route, catalogue, sections).announcement,
+    "Loaded Default · Action · Mokly",
+  );
+  assert.equal(
+    withHostRoute(state, route, sections, catalogue).announcement,
+    "Loaded Default · Action · Mokly",
+  );
   assert.equal(title("product/browse/home/empty"), "Empty · Mokly");
   const screen = targetHead(catalogue, {
     kind: "entry",

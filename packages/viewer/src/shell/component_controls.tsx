@@ -16,7 +16,8 @@ import type { GeneratedComponentView } from "../components/views.js";
 
 import {
   ComponentControlsPanel,
-  PreviewStatus,
+  EditStatus,
+  type ControlsFocus,
 } from "./component_controls_panel.js";
 import {
   controlsMode,
@@ -43,6 +44,7 @@ import {
   type ControlTarget,
 } from "./control_values.js";
 import { useLiveEditingStart, useViewerCapabilities } from "./data_context.js";
+import { useFocusAfter } from "./focus_after.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** Control output consumed by both the stage and the Props panel. */
@@ -50,7 +52,7 @@ export interface ComponentControlsResult {
   panel: ReactNode;
   /** A render of the edits is in flight; the preview says so. */
   pending: boolean;
-  /** The preview's status region, which names a render in flight. */
+  /** The status region of an edit's render, outside the busy preview. */
   previewStatus: ReactNode;
   previewViews: readonly GeneratedComponentView[];
   props?: ComponentWireProps;
@@ -91,6 +93,7 @@ export function useComponentControls({
   const [stored, setStored] = useState(initial);
   const state = shownEditorState(stored, initial);
   const [lifecycle] = useState(() => new EditLifecycle());
+  const focus = useFocusAfter<ControlsFocus>("heading");
   const pageIds = useRef(new Map<string, string>());
   const mode = target
     ? controlsMode(target, comparing, previews ? "ready" : start?.status)
@@ -108,7 +111,9 @@ export function useComponentControls({
       if (!target || !live || !editable) return;
       const operation = lifecycle.begin();
       setStored((current) =>
-        current.scope === scope ? { ...current, notice: "pending" } : current,
+        current.scope === scope
+          ? { ...current, detail: undefined, notice: "pending" }
+          : current,
       );
       try {
         const results = await Promise.all(
@@ -143,6 +148,7 @@ export function useComponentControls({
           return {
             ...current,
             draft,
+            detail: undefined,
             dirty: true,
             notice: undefined,
             previews: next,
@@ -167,6 +173,7 @@ export function useComponentControls({
       if (!validated.overrides) {
         setStored((current) => ({
           ...(current.scope === scope ? current : initial),
+          detail: undefined,
           draft,
           dirty: true,
           errors: validated.errors,
@@ -180,6 +187,7 @@ export function useComponentControls({
       }
       setStored((current) => ({
         ...(current.scope === scope ? current : initial),
+        detail: undefined,
         draft,
         dirty: true,
         errors: {},
@@ -220,16 +228,32 @@ export function useComponentControls({
 
   const change = (key: string, field: ControlDraftField, immediate: boolean) =>
     edit({ ...state.draft, [key]: field }, immediate);
+  // Each recovery action removes or disables its own button, so focus moves
+  // to the panel heading, the first field, or the status that replaces it.
   const reset = () => {
     cancel();
     setStored({ ...initial, notice: "restored" });
+    focus.request("heading");
   };
   const retry = () => {
     if (!target) return;
     cancel();
     const validated = validateControlDraft(target, state.draft);
-    if (validated.overrides) void render(state.draft, validated.overrides);
+    if (!validated.overrides) return;
+    focus.request("heading");
+    void render(state.draft, validated.overrides);
   };
+  const current = () => {
+    focus.request("fields");
+    onCurrent();
+  };
+  const restart =
+    start?.status === "failed"
+      ? () => {
+          focus.request("notice");
+          start.retry();
+        }
+      : undefined;
   const pending = state.notice === "pending";
   const previewViews = useMemo(
     () => withPreviews(data.views, state.previews, target),
@@ -240,18 +264,19 @@ export function useComponentControls({
       target && mode ? (
         <ComponentControlsPanel
           data={data}
+          focus={focus.ref}
           mode={mode}
           onChange={change}
-          onCurrent={onCurrent}
+          onCurrent={current}
           onReset={reset}
           onRetry={retry}
-          {...(start?.status === "failed" ? { onStart: start.retry } : {})}
+          onStart={restart}
           state={state}
           target={target}
         />
       ) : null,
     pending,
-    previewStatus: <PreviewStatus pending={pending} />,
+    previewStatus: <EditStatus pending={pending} />,
     previewViews,
     ...(target ? { props: state.props } : {}),
   };

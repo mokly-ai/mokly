@@ -157,22 +157,6 @@ function activeIdForView(view: ShellView): string | undefined {
   return view.target.entry.path;
 }
 
-/**
- * The browser document title for a shell view: the shown entry's own title,
- * then its heading when that differs, as for a component variant.
- */
-export function viewTitle(catalogue: Catalogue, view: ShellView): string {
-  if (view.kind === "home") {
-    return "Mokly";
-  }
-  if (view.kind === "missing") {
-    return "Not found · Mokly";
-  }
-  const own = view.target.entry.title;
-  const heading = targetHead(catalogue, view.target).title;
-  return own === heading ? `${own} · Mokly` : `${own} · ${heading} · Mokly`;
-}
-
 /** Render the only region replaced by client-side Browse navigation. */
 export function ShellMain(props: {
   catalogue: Catalogue;

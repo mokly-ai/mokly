@@ -25,7 +25,10 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
           <p>
             {variant.title}
             {fixture.edited ? (
-              <span className="ce-edited">{CONTROLS_COPY.edited}</span>
+              <>
+                {/* The space keeps the title and the badge two words. */}{" "}
+                <span className="ce-edited">{CONTROLS_COPY.edited}</span>
+              </>
             ) : readonly ? null : (
               ` · ${CONTROLS_COPY.saved}`
             )}

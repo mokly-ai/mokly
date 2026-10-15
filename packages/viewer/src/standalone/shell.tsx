@@ -6,6 +6,7 @@ import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import { storedScrollTogether } from "../shell/comparison_scroll_preference.js";
+import { useFocusAfter } from "../shell/focus_after.js";
 import { CatalogueNav } from "../shell/nav.js";
 import { useNavigationBounds } from "../shell/nav_resize.js";
 import { routeFromUrl } from "../shell/routes.js";
@@ -43,6 +44,7 @@ export function StandaloneShell({
 }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<IndexState>({ kind: "loading" });
+  const focus = useFocusAfter<"loading">();
   useEffect(() => {
     const controller = new AbortController();
     void fetchStandaloneIndex(win, controller.signal).then(
@@ -74,6 +76,7 @@ export function StandaloneShell({
         <button
           className="mbk-empty-link"
           onClick={() => {
+            focus.request("loading");
             setState({ kind: "loading" });
             setAttempt((value) => value + 1);
           }}
@@ -85,7 +88,12 @@ export function StandaloneShell({
     );
   if (state.kind === "loading")
     return (
-      <div aria-busy="true" className="mbk mbk-empty">
+      <div
+        aria-busy="true"
+        className="mbk mbk-empty"
+        ref={focus.ref("loading")}
+        tabIndex={-1}
+      >
         <p role="status">Loading catalogue…</p>
       </div>
     );

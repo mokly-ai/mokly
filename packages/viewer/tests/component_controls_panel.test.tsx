@@ -9,7 +9,8 @@ import type { PropSchema } from "../src/components/prop_types.js";
 import { CONTROLS_COPY } from "../src/shell/component_controls_copy.js";
 import {
   ComponentControlsPanel,
-  PreviewStatus,
+  EditStatus,
+  type ControlsFocus,
 } from "../src/shell/component_controls_panel.js";
 import {
   initialComponentEditorState,
@@ -29,6 +30,7 @@ const target: ControlTarget = {
   propSchema: {
     type: "object",
     additionalProperties: false,
+    required: ["label"],
     properties: { label: { type: "string" }, hint: { type: "string" } },
   } as unknown as PropSchema,
   props: encodeProps({ label: "Continue" }),
@@ -50,10 +52,12 @@ function panel(
   mode: ControlsMode,
   state: Partial<ComponentEditorState> = {},
   shown: ControlTarget = target,
+  focus?: (name: ControlsFocus) => () => undefined,
 ) {
   return ComponentControlsPanel({
     ...actions,
     data,
+    ...(focus ? { focus } : {}),
     mode,
     state: { ...saved, ...state },
     target: shown,
@@ -63,13 +67,13 @@ function panel(
 const html = (...input: Parameters<typeof panel>) =>
   renderToStaticMarkup(panel(...input));
 
-/** The buttons of the panel and its own parts, which use no hooks. */
+/** The buttons of the panel and its own alert, which use no hooks. */
 function buttons(node: ReactNode): { label: string; element: ReactElement }[] {
   if (Array.isArray(node)) return node.flatMap(buttons);
   if (!isValidElement<{ children?: ReactNode }>(node)) return [];
   const { type } = node;
   if (typeof type === "function")
-    return ["ControlsAlert", "SavedPropValues"].includes(type.name)
+    return type.name === "ControlsAlert"
       ? buttons((type as (props: unknown) => ReactNode)(node.props))
       : [];
   if (type === "button")
@@ -88,9 +92,22 @@ function button(node: ReactNode, label: string) {
   return found.element.props as { disabled?: boolean; onClick?: () => void };
 }
 
+/** The names a panel gives the elements that recovery actions focus. */
+function focusNames(mode: ControlsMode): ControlsFocus[] {
+  const names: ControlsFocus[] = [];
+  panel(mode, {}, target, (name) => {
+    names.push(name);
+    return () => undefined;
+  });
+  return names.sort();
+}
+
 test("saved props: Edit props, the entry, and a disabled Reset to it", () => {
   const markup = html("editable");
-  assert.match(markup, /<h3>Edit props<\/h3><p>Default · Saved props<\/p>/);
+  assert.match(
+    markup,
+    /<h3 tabindex="-1">Edit props<\/h3><p>Default · Saved props<\/p>/,
+  );
   assert.match(
     markup,
     /<button class="mbk-controls-reset" disabled=""[^>]*>Reset to Default<\/button>/,
@@ -105,9 +122,8 @@ test("saved props: Edit props, the entry, and a disabled Reset to it", () => {
 
 test("edited props: the Edited props badge, and Reset restores the saved props", () => {
   const node = panel("editable", { dirty: true });
-  const markup = renderToStaticMarkup(node);
   assert.match(
-    markup,
+    renderToStaticMarkup(node),
     /<p>Default <span class="mbk-controls-edited">Edited props<\/span><\/p>/,
   );
   const reset = button(node, "Reset to Default");
@@ -119,16 +135,16 @@ test("edited props: the Edited props badge, and Reset restores the saved props",
   );
 });
 
-test("a render in flight keeps the panel and announces itself on the preview", () => {
+test("a render in flight keeps the panel and names itself in its own region", () => {
   const markup = html("editable", { dirty: true, notice: "pending" });
   assert.doesNotMatch(markup, /role="alert"|Updating preview/);
   assert.equal(
-    renderToStaticMarkup(<PreviewStatus pending />),
-    `<p class="mbk-preview-status" role="status"><span aria-hidden="true" class="mbk-pending-dot"></span>${CONTROLS_COPY.updating}</p>`,
+    renderToStaticMarkup(<EditStatus pending />),
+    `<p class="mbk-edit-status" role="status"><span aria-hidden="true" class="mbk-pending-dot"></span>${CONTROLS_COPY.updating}</p>`,
   );
   assert.equal(
-    renderToStaticMarkup(<PreviewStatus pending={false} />),
-    '<p class="mbk-preview-status" role="status"></p>',
+    renderToStaticMarkup(<EditStatus pending={false} />),
+    '<p class="mbk-edit-status" role="status"></p>',
   );
 });
 
@@ -166,11 +182,28 @@ test("invalid values: highlighted fields, or values not valid together", () => {
   );
 });
 
+test("Serve's message for props it rejected stays in a disclosure", () => {
+  const detail = "Check the prop values and their allowed limits.";
+  const node = panel("editable", {
+    detail,
+    dirty: true,
+    notice: "invalid-together",
+  });
+  assert.match(
+    renderToStaticMarkup(node),
+    /<div class="mbk-control-alert" role="alert"><p>These values are not valid together\.<\/p><details><summary>Details<\/summary><p>Check the prop values and their allowed limits\.<\/p><\/details><\/div>/,
+  );
+  assert.deepEqual(
+    buttons(node).map(({ label }) => label),
+    ["Reset to Default"],
+  );
+});
+
 test("fields wait while editing starts, and a failed start offers Try again", () => {
   const preparing = html("preparing");
   assert.match(
     preparing,
-    /<p class="mbk-controls-notice" role="status">Preparing to edit props…<\/p><fieldset class="mbk-control-fieldset" disabled="">/,
+    /<p class="mbk-controls-notice" role="status" tabindex="-1">Preparing to edit props…<\/p><fieldset class="mbk-control-fieldset" disabled="">/,
   );
   assert.match(preparing, /Reset to Default/);
   const node = panel("preparing-failed");
@@ -181,6 +214,13 @@ test("fields wait while editing starts, and a failed start offers Try again", ()
   );
   assert.doesNotMatch(markup, /Preparing to edit props/);
   assert.equal(button(node, "Try again").onClick, actions.onStart);
+});
+
+test("recovery actions can focus the heading, the fields, and the start status", () => {
+  assert.deepEqual(focusNames("editable"), ["fields", "heading"]);
+  assert.deepEqual(focusNames("preparing"), ["fields", "heading", "notice"]);
+  assert.deepEqual(focusNames("comparison"), ["heading"]);
+  assert.match(html("comparison"), /<h3 tabindex="-1">Saved props<\/h3>/);
 });
 
 test("saved props without fields name the reason and every control's value", () => {
@@ -194,15 +234,14 @@ test("saved props without fields name the reason and every control's value", () 
     assert.match(
       markup,
       new RegExp(
-        `^<section class="mbk-component-controls"><div class="mbk-controls-heading"><div><h3>Saved props</h3><p>Default</p></div></div><p class="mbk-controls-notice">${notice}</p>`,
+        `^<section class="mbk-component-controls"><div class="mbk-controls-heading"><div><h3 tabindex="-1">Saved props</h3><p>Default</p></div></div><p class="mbk-controls-notice">${notice}</p>`,
       ),
     );
-    assert.match(markup, /<th scope="row">hint<\/th><td><pre>Not set<\/pre>/);
     assert.match(
       markup,
-      /<th scope="row">label<\/th><td><pre>&quot;Continue&quot;/,
+      /<dl aria-label="Supplied props" class="mbk-props"><div><dt>hint<\/dt><dd><code>Not set<\/code><\/dd><\/div><div><dt>label<\/dt><dd><code>&quot;Continue&quot;<\/code><\/dd><\/div><\/dl>/,
     );
-    assert.doesNotMatch(markup, /<input|Reset to|Edited props/);
+    assert.doesNotMatch(markup, /<input|<table|Reset to|Edited props/);
     assert.deepEqual(
       buttons(node).map(({ label }) => label),
       mode === "comparison" ? ["Switch to Current"] : [],
@@ -214,16 +253,16 @@ test("saved props without fields name the reason and every control's value", () 
   );
 });
 
-test("an entry without controls shows read-only props; without props, one line", () => {
+test("an entry without controls shows read-only props and slots; without props, one line", () => {
   const readOnly = html(
     "read-only",
     {},
-    { ...target, title: "Badge", controls: {} },
+    { ...target, title: "Badge", controls: {}, suppliedSlots: ["header"] },
   );
-  assert.match(readOnly, /<h3>Saved props<\/h3><p>Badge<\/p>/);
+  assert.match(readOnly, /<h3 tabindex="-1">Saved props<\/h3><p>Badge<\/p>/);
   assert.match(
     readOnly,
-    /<p class="mbk-controls-notice">These props are read-only\.<\/p><table class="mbk-props-table" aria-label="Supplied props">/,
+    /<p class="mbk-controls-notice">These props are read-only\.<\/p><dl aria-label="Supplied props" class="mbk-props"><div><dt>label<\/dt><dd><code>&quot;Continue&quot;<\/code><\/dd><\/div><\/dl><h4>Slots<\/h4><p>header<\/p>/,
   );
   assert.doesNotMatch(readOnly, /Not set|hint/);
   assert.equal(

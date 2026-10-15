@@ -10,7 +10,11 @@ import type { ShellLiveSource } from "../shell/data_source.js";
 import { fetchJson } from "../viewer/sources.js";
 
 import type { StandaloneWindow } from "./data_source.js";
-import { readRenderResponse, renderFailure } from "./live_render.js";
+import {
+  failureMessage,
+  readRenderResponse,
+  renderFailure,
+} from "./live_render.js";
 
 const DEPLOYMENT = /^[a-f0-9]{64}$/;
 const REVISION = /^(?:0|[1-9][0-9]*)$/;
@@ -69,7 +73,8 @@ export function standaloneLiveSource(win: StandaloneWindow): ShellLiveSource {
         },
         body: JSON.stringify(request),
       });
-      if (!response.ok) throw renderFailure(response.status);
+      if (!response.ok)
+        throw renderFailure(response.status, await failureMessage(response));
       return readRenderResponse(await response.json(), request);
     },
     async previewExpired(previewUrl, signal) {

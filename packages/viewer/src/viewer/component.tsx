@@ -7,6 +7,7 @@ import {
 } from "../catalogue/version_error.js";
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
+import { useFocusAfter } from "../shell/focus_after.js";
 
 import {
   awaitHostBridgeFailureBarrier,
@@ -21,6 +22,7 @@ import type { MoklyViewerProps } from "./types.js";
 export function MoklyViewer(props: MoklyViewerProps) {
   const identifierPrefix = `mokly-${useId().replace(/[^A-Za-z0-9_-]/g, "")}-`;
   const source = useIndexSource(props.index, props.baseUrl);
+  const focus = useFocusAfter<"loading">();
   const [detailVersion, setDetailVersion] = useState<{
     key: unknown;
     error: MoklyVersionError;
@@ -134,7 +136,10 @@ export function MoklyViewer(props: MoklyViewerProps) {
             <h2>The catalogue could not be loaded</h2>
             <button
               className="mbk-empty-link"
-              onClick={source.retry}
+              onClick={() => {
+                focus.request("loading");
+                source.retry();
+              }}
               type="button"
             >
               Try again
@@ -148,6 +153,8 @@ export function MoklyViewer(props: MoklyViewerProps) {
       <div
         aria-busy="true"
         className={`${VIEWER_DIRECTORY} mbk-empty`}
+        ref={focus.ref("loading")}
+        tabIndex={-1}
         {...themeAttributes(props.theme)}
       >
         <p role="status">Loading catalogue…</p>

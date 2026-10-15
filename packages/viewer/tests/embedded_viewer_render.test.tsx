@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { renderToStaticMarkup } from "react-dom/server";
+
+import { MoklyVersionError } from "../src/catalogue/version_error.js";
+import { ComparisonFailure } from "../src/shell/diffs.js";
+import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
 import { rawIndexFixture } from "./catalogue_v7_fixture.js";
@@ -181,9 +186,9 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
   );
   assert.match(
     props,
-    /<h3>Saved props<\/h3><p>Action<\/p><\/div><\/div><p class="mbk-controls-notice">Open this catalogue locally to edit props\.<\/p>/,
+    /<h3 tabindex="-1">Saved props<\/h3><p>Action<\/p><\/div><\/div><p class="mbk-controls-notice">Open this catalogue locally to edit props\.<\/p>/,
   );
-  assert.match(props, /<th scope="row">mb-main<\/th>/);
+  assert.match(props, /<dt>mb-main<\/dt>/);
   assert.doesNotMatch(props, /<input|<select|mb-prop-/);
   assert.deepEqual(
     [...firstIds].filter((id) => secondIds.has(id)),
@@ -207,5 +212,42 @@ test("an index that cannot be read offers Try again under its headline", () => {
   assert.match(
     html,
     /<h2>The catalogue could not be loaded<\/h2><button class="mbk-empty-link" type="button">Try again<\/button>/,
+  );
+});
+
+test("the embedded viewer is one busy status line while its index loads", () => {
+  const html = renderToStaticMarkup(
+    <MoklyViewer
+      detail={(path) => `https://catalogue.example/entries/${path}.json`}
+      index="https://catalogue.example/mokly-viewer/index.json"
+    />,
+  );
+  assert.match(
+    html,
+    /^<div aria-busy="true" class="mokly-viewer mbk-empty" tabindex="-1"[^>]*><p role="status">Loading catalogue…<\/p><\/div>$/,
+  );
+});
+
+test("a rejected review shows the headline; only the standalone shell offers Reload", () => {
+  const failure = (reload?: () => void) =>
+    renderToStaticMarkup(
+      <ComparisonFailure
+        details="Unsupported Mokly review version 9; this viewer supports version 8."
+        {...(reload ? { reload } : {})}
+        retry={() => undefined}
+        versionError={new MoklyVersionError("review", 9, 8)}
+      />,
+    );
+  assert.match(
+    failure(),
+    /^<p role="alert">This catalogue needs a compatible viewer<\/p><details data-comparison-failure="">/,
+  );
+  assert.match(
+    failure(() => undefined),
+    /^<p role="alert">This catalogue needs a compatible viewer <button data-diff-reload="" type="button">Reload<\/button><\/p>/,
+  );
+  assert.doesNotMatch(
+    failure(() => undefined),
+    /Try again/,
   );
 });

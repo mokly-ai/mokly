@@ -17,6 +17,8 @@ import { propertySchema, validateProps } from "../components/props.js";
 import type { ComponentOverride } from "../components/render_types.js";
 import type { ManifestEntry } from "../registry/types.js";
 
+import { CONTROLS_COPY } from "./component_controls_copy.js";
+
 /** The shown entry whose props the controls edit: an entry's own or merged props. */
 export interface ControlTarget {
   path: string;
@@ -120,26 +122,42 @@ export function validateControlDraft(
       if (!Object.is(value, saved[key]))
         overrides[key] = { kind: "set", value };
     } catch {
-      errors[key] =
-        control.kind === "number"
-          ? "Enter a number within the allowed range."
-          : control.kind === "select"
-            ? "Choose an available value."
-            : "Check this value and its allowed limits.";
+      errors[key] = fieldError(target, key, control);
     }
   }
   if (!Object.keys(errors).length)
     try {
       validateProps(target.propSchema, merged, target.path);
     } catch {
-      return {
-        errors: { [WHOLE_PROPS_ERROR]: "These values are not valid together." },
-      };
+      return { errors: { [WHOLE_PROPS_ERROR]: CONTROLS_COPY.invalidTogether } };
     }
   return {
     errors,
     ...(Object.keys(errors).length ? {} : { overrides }),
   };
+}
+
+/** A field's error names what a valid value looks like. */
+function fieldError(
+  target: ControlTarget,
+  key: string,
+  control: ComponentControl,
+): string {
+  if (control.kind === "number") {
+    const { min, max } = numberInputBounds(control);
+    return CONTROLS_COPY.numberError(min, max, control.step);
+  }
+  if (control.kind === "select") return "Choose an available value.";
+  const property = propertySchema(target.propSchema, key);
+  const shortest = property?.minLength ?? 0;
+  const longest = control.kind === "text" ? control.maxLength : undefined;
+  const maximum = longest ?? property?.maxLength;
+  if (shortest && maximum !== undefined)
+    return `Enter ${shortest} to ${maximum} characters.`;
+  if (maximum !== undefined) return `Enter up to ${maximum} characters.`;
+  return shortest
+    ? `Enter at least ${shortest} characters.`
+    : "Enter an allowed value.";
 }
 
 /**

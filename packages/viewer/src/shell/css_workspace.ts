@@ -48,7 +48,8 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-variant-status { color: var(--chrome-muted); }
 .mbk-workspace-panes { display: flex; flex: 1; flex-direction: column; position: relative; min-height: 0; min-width: 0; }
 .mbk-preview-pane { position: relative; display: flex; flex: 1; flex-direction: column; min-height: 100px; min-width: 0; overflow: hidden; }
-.mbk-preview-status { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0; color: var(--chrome-muted); font-size: 11px; pointer-events: none; }
+.mbk-preview-busy { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; }
+.mbk-edit-status { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0; color: var(--chrome-muted); font-size: 11px; pointer-events: none; }
 .mbk-pending-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mbk-accent-deep); }
 .mbk-inspector { position: relative; flex: none; display: flex; flex-direction: column; min-height: 45px; background: var(--chrome-surface); border-top: 1px solid var(--chrome-border); z-index: 5; }
 .mbk-inspector[data-open="true"] { height: var(--inspector-height, 260px); max-height: calc(100% - 100px); }
@@ -58,6 +59,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-inspector-content > section { padding: 10px 24px 24px; }
 .mbk-inspector-content .mbk-details-body { padding: 0; }
 .mbk-inspector-content h3 { font-size: 13px; margin: 0 0 12px; }
+.mbk-inspector-content h4 { font-size: 12px; margin: 14px 0 8px; }
 .mbk-inspector-content p { line-height: 1.5; }
 .mbk-inspector-content a { color: var(--mokly-accent); }
 .mbk-sheet-grab { display: none; }
@@ -76,10 +78,11 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-instance-tree summary { cursor: pointer; color: var(--chrome-muted); font-size: 12px; padding: 4px 0; }
 .mbk-instance-select { border: 1px solid transparent; border-radius: 5px; background: transparent; padding: 6px 8px; color: var(--chrome-ink); text-align: left; cursor: pointer; font: inherit; }
 .mbk-instance-select[aria-pressed="true"] { background: var(--mokly-accent-soft); color: var(--mokly-accent); border-color: var(--chrome-border); }
-.mbk-props-table { width: 100%; border-collapse: collapse; text-align: left; }
-.mbk-props-table td, .mbk-props-table th { border-bottom: 1px solid var(--chrome-border); padding: 8px; vertical-align: top; }
-.mbk-props-table th { width: 130px; font-size: 12px; }
-.mbk-props-table pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 12px; }
+.mbk-props { margin: 0 0 14px; font-size: 12px; }
+.mbk-props > div { display: grid; grid-template-columns: minmax(60px, .7fr) minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--chrome-border); }
+.mbk-props dt { color: var(--chrome-muted); }
+.mbk-props dd { margin: 0; overflow-wrap: anywhere; }
+.mbk-props code { font-family: var(--mono); font-size: 11px; white-space: pre-wrap; }
 .mbk-usage-list li { padding: 8px 0; border-bottom: 1px solid var(--chrome-border); }
 .mbk-usage-list small { display: block; margin-top: 4px; color: var(--chrome-muted); }
 .mbk-text-button { background: none; border: 0; color: var(--mbk-accent-deep); cursor: pointer; font: inherit; padding: 0; }
@@ -93,14 +96,16 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--_mokly-private-on-accent-deep); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
 .mbk-control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
 .mbk-control-field { display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
-.mbk-control-field > label:not(.mbk-control-supplied) { font-size: 12px; font-weight: 600; }
+.mbk-control-field > label:not(.mbk-control-set) { font-size: 12px; font-weight: 600; }
+.mbk-control-field > label > span { color: var(--chrome-muted); font-size: 11px; font-weight: 400; }
 .mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; padding: 8px 10px; font: inherit; color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; background: var(--chrome-surface); }
 .mbk-control-field input[type=checkbox] { align-self: start; accent-color: var(--mokly-accent); width: 16px; height: 16px; }
 .mbk-control-field [aria-invalid=true] { border-color: var(--mbk-danger-ink); }
 .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-control-field :disabled { opacity: .6; cursor: default; }
 .mbk-control-field small { color: var(--chrome-muted); }
-.mbk-control-field .mbk-control-supplied { display: flex; align-items: center; gap: 4px; position: absolute; right: 0; top: -3px; color: var(--chrome-muted); font-size: 11px; }
+.mbk-control-set { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.mbk-control-unset { margin: 0; color: var(--chrome-muted); font-size: 11px; }
 .mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); }
 .mbk-component-controls { max-width: 680px; }
 .mbk-controls-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
@@ -112,11 +117,15 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-controls-notice { padding: 10px 12px; border-radius: 6px; background: var(--chrome-hover); color: var(--chrome-ink-2); font-size: 12px; }
 .mbk-control-alert { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--mbk-danger-edge); border-radius: 6px; background: var(--mbk-danger-bg); color: var(--mbk-danger-ink); font-size: 12px; }
 .mbk-control-alert p { margin: 4px 0 6px; }
+.mbk-control-alert .mbk-text-button { text-decoration: underline; }
 .mbk-controls-restored { margin: 0 0 8px; color: var(--mbk-accent-deep); font-size: 11px; }
 .mbk-controls-restored:empty { margin: 0; }
 .mbk-control-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .mbk-empty-copy { max-width: 310px; color: var(--chrome-ink-2); font-size: 12px; }
 @media (max-width: 56.25rem) {
+  /* Above the inspector sheet, which covers the bottom of the preview. */
+  .mbk-edit-status { top: 8px; bottom: auto; width: max-content; margin: 0 auto; }
+  .mbk-edit-status:not(:empty) { padding: 3px 9px; border-radius: 999px; background: var(--chrome-surface); box-shadow: var(--chrome-shadow-sheet); }
   .mbk-workspace .mbk-screen-head { gap: 8px; padding: 12px; }
   .mbk-selection-bar { padding: 8px 12px; }
   .mbk-workspace-panes { padding-bottom: 46px; }

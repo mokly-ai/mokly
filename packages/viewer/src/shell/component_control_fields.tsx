@@ -3,6 +3,7 @@
 import type { ComponentControl } from "../components/control_types.js";
 import { optionalProperty } from "../components/props.js";
 
+import { CONTROLS_COPY } from "./component_controls_copy.js";
 import {
   controlEntries,
   numberInputBounds,
@@ -44,19 +45,29 @@ export function ComponentControlFields({
           control.label ?? target.propSchema.properties?.[key]?.title ?? key;
         const optional = optionalProperty(target.propSchema, key);
         const id = identifier(`mb-prop-${target.path}-${key}`);
+        const bounds =
+          control.kind === "number" ? numberInputBounds(control) : undefined;
         const help =
           control.description ??
           target.propSchema.properties?.[key]?.description ??
-          (control.kind === "number" &&
-          (control.minimum !== undefined || control.maximum !== undefined)
-            ? `Allowed range: ${control.minimum ?? "no minimum"} to ${control.maximum ?? "no maximum"}.`
+          (control.kind === "number"
+            ? CONTROLS_COPY.range(bounds?.min, bounds?.max, control.step)
             : "");
+        const error = errors[key];
         return (
           <div className="mbk-control-field" key={key}>
+            <label htmlFor={id}>
+              {label}
+              {optional ? (
+                <>
+                  {" "}
+                  <span aria-hidden="true">{CONTROLS_COPY.optional}</span>
+                </>
+              ) : null}
+            </label>
             {optional ? (
-              <label className="mbk-control-supplied">
+              <label className="mbk-control-set">
                 <input
-                  aria-label={`Supply ${label}`}
                   checked={field.supplied}
                   disabled={disabled}
                   onChange={(event) =>
@@ -68,28 +79,32 @@ export function ComponentControlFields({
                   }
                   type="checkbox"
                 />
-                <span>Supplied</span>
+                <span>{CONTROLS_COPY.set(label)}</span>
               </label>
             ) : null}
-            <label htmlFor={id}>{label}</label>
             <ControlInput
               control={control}
-              disabled={disabled || !field.supplied}
+              disabled={disabled}
               field={field}
               id={id}
-              invalid={errors[key] !== undefined}
+              invalid={error !== undefined}
               name={key}
               onChange={(value, immediate) =>
                 onChange(key, { ...field, value }, immediate)
               }
             />
-            <small id={`${id}-help`}>{help}</small>
+            {field.supplied ? null : (
+              <p className="mbk-control-unset">{CONTROLS_COPY.notSet}</p>
+            )}
+            <small hidden={!help || error !== undefined} id={`${id}-help`}>
+              {help}
+            </small>
             <small
               className="mbk-control-error"
-              hidden={errors[key] === undefined}
+              hidden={error === undefined}
               id={`${id}-error`}
             >
-              {errors[key]}
+              {error}
             </small>
           </div>
         );
@@ -120,6 +135,7 @@ function ControlInput({
     "aria-invalid": invalid || undefined,
     "data-prop-control": name,
     disabled,
+    hidden: !field.supplied,
     id,
   };
   if (control.kind === "select")

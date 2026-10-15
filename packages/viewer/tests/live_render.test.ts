@@ -8,6 +8,10 @@ import {
   type ComponentRenderRequest,
 } from "../src/components/render_types.js";
 import type { StandaloneWindow } from "../src/standalone/data_source.js";
+import {
+  failureMessage,
+  renderFailure,
+} from "../src/standalone/live_render.js";
 import { standaloneLiveSource } from "../src/standalone/live_source.js";
 
 import { liveDescriptor } from "./data_fakes.js";
@@ -49,7 +53,11 @@ function fakeServe(options: {
     if (init.method !== "POST") return reply(405);
     const body = JSON.parse(String(init.body)) as ComponentRenderRequest;
     if (options.status) return reply(options.status);
-    if (body.revision !== (options.installed ?? 4)) return reply(409);
+    if (body.revision !== (options.installed ?? 4))
+      return reply(409, {
+        code: "stale-revision",
+        message: "The catalogue changed. Try again.",
+      });
     return reply(
       200,
       options.answer?.(body) ?? {
@@ -91,7 +99,7 @@ test("a render request posts the installed revision with the render token", asyn
   assert.deepEqual(JSON.parse(String(sent.init.body)), request);
 });
 
-test("an older revision is refused with the stale-revision code", async () => {
+test("an older revision is refused with the stale-revision code and Serve's message", async () => {
   const serve = fakeServe({ installed: 5 });
   await assert.rejects(
     serve.live.render(descriptor, request, signal),
@@ -100,6 +108,22 @@ test("an older revision is refused with the stale-revision code", async () => {
       error.code === "stale-revision" &&
       error.message === "The catalogue changed. Try again.",
   );
+});
+
+test("a failed answer without Serve's JSON message keeps no message", async () => {
+  const answer = (json: () => Promise<unknown>) =>
+    failureMessage({ json } as Response);
+  assert.equal(await answer(async () => ({ message: "Shown" })), "Shown");
+  assert.equal(await answer(async () => ({ message: 4 })), "");
+  assert.equal(await answer(async () => "text"), "");
+  assert.equal(
+    await answer(async () => {
+      throw new SyntaxError("not JSON");
+    }),
+    "",
+  );
+  assert.equal(renderFailure(400).message, "");
+  assert.equal(renderFailure(418).code, "render-failed");
 });
 
 test("each route status maps to its code", async () => {

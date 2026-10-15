@@ -14,7 +14,10 @@ Reuse the existing top bar, split navigation tree, screen heading, comparison ba
 stage, and comparison controls, adding the shared icon inspector and compact view toolbar. Components use a small cube
 icon in the Components section. Both sections are views of one tree, so the
 `Example` folder appears above `Screens` in Specs and above its `Components`
-library in Components, and component crumbs read `Example › Components`. The
+library in Components, and component crumbs read `Example › Components`. A
+variant's page keeps its parent's title as the heading; the browser title and
+the route announcement name the variant first, then the parent:
+`Default · Action · Mokly` and `Loaded Default · Action · Mokly`. The
 path chip and Details show the shown entry's path, such as
 `example/components/action/default`, with Details listing it above the source.
 Desktop keeps the resizable navigation;

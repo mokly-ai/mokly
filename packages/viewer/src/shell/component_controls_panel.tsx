@@ -1,5 +1,7 @@
 /** Props inspector surface: the shown entry's fields, or its saved props. */
 
+import type { RefCallback } from "react";
+
 import { decodeProps, encodeProps } from "../components/codec.js";
 
 import { ComponentControlFields } from "./component_control_fields.js";
@@ -7,7 +9,6 @@ import { CONTROLS_COPY } from "./component_controls_copy.js";
 import type {
   ComponentEditorState,
   ControlsMode,
-  ControlsNotice,
 } from "./component_controls_state.js";
 import {
   controlEntries,
@@ -15,7 +16,10 @@ import {
   type ControlTarget,
 } from "./control_values.js";
 import type { WorkspaceData } from "./workspace_data.js";
-import { propText, WorkspaceProps } from "./workspace_props.js";
+import { PropSlots, PropValues, WorkspaceProps } from "./workspace_props.js";
+
+/** The elements of the panel that a recovery action focuses. */
+export type ControlsFocus = "heading" | "fields" | "notice";
 
 /** The notice of each mode that shows the saved props without fields. */
 const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
@@ -25,9 +29,12 @@ const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
   "read-only": CONTROLS_COPY.readonlyProps,
 };
 
+const unfocused: RefCallback<HTMLElement> = () => undefined;
+
 /** Render the fields with their state, or the saved props with the reason. */
 export function ComponentControlsPanel({
   data,
+  focus = () => unfocused,
   mode,
   onChange,
   onCurrent,
@@ -38,6 +45,8 @@ export function ComponentControlsPanel({
   target,
 }: {
   data: WorkspaceData;
+  /** Name an element that a recovery action can focus. */
+  focus?: (name: ControlsFocus) => RefCallback<HTMLElement>;
   mode: ControlsMode;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
   onCurrent(): void;
@@ -51,12 +60,19 @@ export function ComponentControlsPanel({
   if (mode === "no-props")
     return <p className="mbk-empty-copy">{CONTROLS_COPY.noProps}</p>;
   const savedNotice = SAVED_NOTICES[mode];
-  if (savedNotice)
+  if (savedNotice) {
+    const values = decodeProps(target.props);
+    const names = new Set([
+      ...controlEntries(target).map(([name]) => name),
+      ...Object.keys(values),
+    ]);
     return (
       <section className="mbk-component-controls">
         <div className="mbk-controls-heading">
           <div>
-            <h3>{CONTROLS_COPY.readonlyHeading}</h3>
+            <h3 ref={focus("heading")} tabIndex={-1}>
+              {CONTROLS_COPY.readonlyHeading}
+            </h3>
             <p>{target.title}</p>
           </div>
         </div>
@@ -66,13 +82,14 @@ export function ComponentControlsPanel({
             {CONTROLS_COPY.switchToCurrent}
           </button>
         ) : null}
-        <SavedPropValues target={target} />
+        {names.size ? <PropValues names={[...names]} values={values} /> : null}
+        <PropSlots slots={target.suppliedSlots} />
       </section>
     );
+  }
   const preparing = mode === "preparing" || mode === "preparing-failed";
-  const values = decodeProps(state.props);
   const uncontrolled = Object.fromEntries(
-    Object.entries(values).filter(
+    Object.entries(decodeProps(state.props)).filter(
       ([name]) => !Object.hasOwn(target.controls, name),
     ),
   );
@@ -80,7 +97,9 @@ export function ComponentControlsPanel({
     <section className="mbk-component-controls">
       <div className="mbk-controls-heading">
         <div>
-          <h3>{CONTROLS_COPY.heading}</h3>
+          <h3 ref={focus("heading")} tabIndex={-1}>
+            {CONTROLS_COPY.heading}
+          </h3>
           <p>
             {target.title}
             {state.dirty ? (
@@ -104,12 +123,17 @@ export function ComponentControlsPanel({
           {CONTROLS_COPY.reset(target.title)}
         </button>
       </div>
-      <ControlsAlert notice={state.notice} onRetry={onRetry} />
+      <ControlsAlert onRetry={onRetry} state={state} />
       <p className="mbk-controls-restored" role="status">
         {state.notice === "restored" ? CONTROLS_COPY.restored : null}
       </p>
       {mode === "preparing" ? (
-        <p className="mbk-controls-notice" role="status">
+        <p
+          className="mbk-controls-notice"
+          ref={focus("notice")}
+          role="status"
+          tabIndex={-1}
+        >
           {CONTROLS_COPY.preparing}
         </p>
       ) : null}
@@ -121,7 +145,11 @@ export function ComponentControlsPanel({
           </button>
         </p>
       ) : null}
-      <fieldset className="mbk-control-fieldset" disabled={preparing}>
+      <fieldset
+        className="mbk-control-fieldset"
+        disabled={preparing}
+        ref={focus("fields")}
+      >
         <ComponentControlFields
           disabled={preparing}
           draft={state.draft}
@@ -144,12 +172,13 @@ export function ComponentControlsPanel({
 }
 
 /**
- * The preview's status region: present while nothing renders, so a render
- * in flight is announced when its text appears.
+ * The status region of an edit's render: present while nothing renders, so
+ * a render in flight is announced when its text appears. It stays outside
+ * the busy preview, whose announcements wait until the preview is ready.
  */
-export function PreviewStatus({ pending }: { pending: boolean }) {
+export function EditStatus({ pending }: { pending: boolean }) {
   return (
-    <p className="mbk-preview-status" role="status">
+    <p className="mbk-edit-status" role="status">
       {pending ? (
         <>
           <span aria-hidden="true" className="mbk-pending-dot" />
@@ -160,22 +189,36 @@ export function PreviewStatus({ pending }: { pending: boolean }) {
   );
 }
 
-/** One alert per failed edit: what failed, and one action when one exists. */
+/**
+ * One alert per failed edit: what failed, and one action when one exists.
+ * Serve's own message for props it rejected stays in a disclosure.
+ */
 function ControlsAlert({
-  notice,
   onRetry,
+  state: { detail, notice },
 }: {
-  notice: ControlsNotice | undefined;
   onRetry(): void;
+  state: ComponentEditorState;
 }) {
-  if (notice === "invalid" || notice === "invalid-together")
-    return (
+  if (notice === "invalid" || notice === "invalid-together") {
+    const text =
+      notice === "invalid"
+        ? CONTROLS_COPY.invalid
+        : CONTROLS_COPY.invalidTogether;
+    return detail ? (
+      <div className="mbk-control-alert" role="alert">
+        <p>{text}</p>
+        <details>
+          <summary>Details</summary>
+          <p>{detail}</p>
+        </details>
+      </div>
+    ) : (
       <p className="mbk-control-alert" role="alert">
-        {notice === "invalid"
-          ? CONTROLS_COPY.invalid
-          : CONTROLS_COPY.invalidTogether}
+        {text}
       </p>
     );
+  }
   if (notice !== "failed" && notice !== "expired") return null;
   const failed = notice === "failed";
   return (
@@ -188,47 +231,5 @@ function ControlsAlert({
         {failed ? CONTROLS_COPY.retry : CONTROLS_COPY.expiredAction}
       </button>
     </div>
-  );
-}
-
-/** Each control's saved value or Not set, the other saved props, and slots. */
-function SavedPropValues({ target }: { target: ControlTarget }) {
-  const values = decodeProps(target.props);
-  const names = [
-    ...new Set([
-      ...controlEntries(target).map(([name]) => name),
-      ...Object.keys(values),
-    ]),
-  ];
-  return (
-    <>
-      {names.length ? (
-        <table className="mbk-props-table" aria-label="Supplied props">
-          <tbody>
-            {names.map((name) => {
-              const value = values[name];
-              return (
-                <tr key={name}>
-                  <th scope="row">{name}</th>
-                  <td>
-                    <pre>
-                      {value === undefined ? "Not set" : propText(value)}
-                    </pre>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : null}
-      {target.suppliedSlots.length ? (
-        <>
-          <h3>Slots</h3>
-          {target.suppliedSlots.map((slot) => (
-            <p key={slot}>{slot}</p>
-          ))}
-        </>
-      ) : null}
-    </>
   );
 }

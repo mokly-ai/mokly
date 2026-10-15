@@ -991,6 +991,8 @@ Tags: ui
       and `report-3.md` there list the differences from the viewer.
 
 Settled copy and states with their Serve run: `.context/rust-rebuild/m10-copy-run/log.md`.
+Review fixes of the copy and states with their Serve run:
+`.context/rust-rebuild/m10-copy-run-2/log.md`.
 
 - [ ] Commit.
 
