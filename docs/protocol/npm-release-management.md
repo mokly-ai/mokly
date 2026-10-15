@@ -104,8 +104,11 @@ Publishing occurs in the workflow invocation that creates both GitHub releases.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
 (`vX.Y.Z`) and `viewer_ref` (`viewer-vX.Y.Z`) pair. Its required
 `artifact_run_id` identifies the original `main` push run with the checked
-archive set. The workflow verifies that run's repository, workflow, branch,
-event, and tag commit before selecting the artifact.
+archive set. The workflow verifies that run's repository, numeric workflow
+identity, branch, and event. Its head can differ from the tag commit when a
+later push creates the release. The archive recheck binds the saved bytes to
+the checked-out tag's commit and tree. An automatic attempt lists only its own
+run's artifacts.
 Its `verification` input defaults to `evidence`; selecting `complete` forces the
 full local gate without making GitHub evidence requests. A single concurrency
 group serializes automatic runs and manual retries without cancelling an
@@ -146,9 +149,14 @@ Please decodes them when it rewrites the body for a second parse.
 When the tags exist but publication fails, rerun the failed job. Before a
 publication, the workflow saves `mokly-release-{cli-version}` with every
 checked archive and report. It retains this set and the native build artifacts
-for 90 days. Uploads use `overwrite: true` so job reruns can replace their own
-artifact records. A saved complete set selects reuse even on an automatic
-rerun; no package lifecycle rebuilds those archives.
+for 90 days. Initial uploads use `overwrite: true`. A failed publish-job rerun
+selects the saved complete set and skips its upload, so it cannot delete the
+only retained copy. No package lifecycle rebuilds reused archives.
+
+Use **Re-run failed jobs**. A full workflow rerun repeats Release Please. The
+releases already exist, so Release Please reports no newly created pair and
+publication is skipped. If the failed-job rerun is unavailable, use a manual
+dispatch with both tags and the original run's `artifact_run_id`.
 
 A manual dispatch requires the original automatic run's `artifact_run_id`.
 It downloads that run's complete set, rechecks the archive hashes, inventories,

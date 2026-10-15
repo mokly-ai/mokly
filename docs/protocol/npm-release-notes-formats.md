@@ -78,8 +78,8 @@ configuration, authoring modules, generated output, or caches.
 ### Platforms And JavaScript
 
 The npm shim selects one version-matched Rust binary. Supported targets are
-Linux x64 and ARM64 with glibc 2.28 or newer, macOS x64 and ARM64, and Windows
-x64 with MSVC. The binary uses the supported Node runtime's OS floor. Windows
+Linux x64 and ARM64 with glibc 2.28 or newer, macOS 11.0 or newer on x64 and
+ARM64, and Windows x64 with MSVC. The binary uses the supported Node runtime's OS floor. Windows
 links its C runtime statically and needs no separate Visual C++ runtime.
 There is no JavaScript CLI fallback. Keep optional dependencies enabled during
 installation. Mokly supports Node `>=22.14.0 <24.14.0 || >=24.19.0`; the shim rejects

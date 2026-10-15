@@ -60,13 +60,18 @@ version. Linux x64 and ARM64 require glibc 2.28 or newer, the Node 22 floor.
 The Linux release builds use `cargo zigbuild` 0.23.4 and checksum-verified Zig
 0.15.2 with an explicit `{triple}.2.28` target. Host glibc does not select the
 binary's minimum. Windows x64 uses `-C target-feature=+crt-static`; it needs no
-separate Visual C++ runtime installation. macOS uses the system frameworks.
+separate Visual C++ runtime installation. Both macOS architectures require
+macOS 11.0 or newer, the Node 22 floor. Their builds set
+`MACOSX_DEPLOYMENT_TARGET=11.0` and use the system frameworks.
 
 `inspect-native.mjs` records imported libraries and the highest required GLIBC
-version or the Windows DLL list. It rejects a GLIBC requirement above 2.28,
-a dynamic MSVC runtime, or an unintended crypto shared library. It uses
-`readelf` on Linux, `otool -L` on macOS, and Visual Studio `dumpbin /dependents`
-on Windows. Missing inspection tools fail the release.
+version, the macOS `minos`, or the Windows DLL list. It rejects a GLIBC
+requirement above 2.28, a macOS minimum above 11.0, a dynamic MSVC runtime, or
+an unintended crypto shared library. It uses `readelf` on Linux, `otool -L`
+and `otool -l` on macOS, and Visual Studio `dumpbin /dependents` on Windows.
+The macOS reader accepts `LC_BUILD_VERSION` and `LC_VERSION_MIN_MACOSX` and
+checks every recorded minimum. Missing inspection data or tools fail the
+release.
 
 ## Release Build Matrix And Publication Order
 

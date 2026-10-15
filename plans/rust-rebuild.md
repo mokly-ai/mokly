@@ -1001,6 +1001,7 @@ Release package evidence: `.context/rust-rebuild/delegation/m13/report-1.md`.
 Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
 Release review and merge decisions: `.context/rust-rebuild/delegation/m13/report-2.md`
 and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
+Final release review fixes: `.context/rust-rebuild/delegation/m13/report-3.md`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1038,6 +1039,9 @@ and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
+    workflow path in `evidence_contract.mjs`; review numeric workflow identity
+    matching so a GitHub `path` ending in `@main` can select valid evidence.
   - Milestone 13 review 1, finding 5: the user must settle the Release Please
     component for core-only commits; keep the `packages/mokly` layout until
     that decision. Native builds and paired-tag publication remain unchanged.

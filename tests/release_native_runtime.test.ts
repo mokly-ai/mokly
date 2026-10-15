@@ -25,6 +25,8 @@ test("native release commands enforce the host, glibc floor, and static MSVC run
         command.options.env?.CARGO_ENCODED_RUSTFLAGS,
         "-C\u001ftarget-feature=+crt-static",
       );
+    if (target.os === "darwin")
+      assert.equal(command.options.env?.MACOSX_DEPLOYMENT_TARGET, "11.0");
     assert.throws(
       () =>
         nativeBuild("/source", target, { platform: "other", arch: target.cpu }),
@@ -73,16 +75,65 @@ test("Linux inspection records the highest numeric GLIBC version and rejects new
   }
 });
 
-test("macOS inspection invokes otool and refuses crypto dependencies", async () => {
+const macosHeaders = (minimum: string) => `Load command 9
+      cmd LC_BUILD_VERSION
+  cmdsize 32
+ platform MACOS
+    minos ${minimum}
+      sdk 26.0
+   ntools 1
+Load command 10
+      cmd LC_SOURCE_VERSION
+  cmdsize 16
+  version 99.0
+`;
+
+test("macOS inspection records minos and invokes both otool inspections", async () => {
   const calls: string[][] = [];
-  await inspectNativeTls("/a b/mokly", "darwin", async (file, args) => {
-    calls.push([file, ...args]);
-    return { stdout: "/usr/lib/libSystem.B.dylib", stderr: "" };
-  });
-  assert.deepEqual(calls, [["otool", "-L", "/a b/mokly"]]);
+  const output = await inspectNativeTls(
+    "/a b/mokly",
+    "darwin",
+    async (file, args) => {
+      calls.push([file, ...args]);
+      return {
+        stdout:
+          args[0] === "-L"
+            ? "/usr/lib/libSystem.B.dylib"
+            : macosHeaders("11.0"),
+        stderr: "",
+      };
+    },
+  );
+  assert.match(output, /macOS minos: 11\.0/);
+  assert.deepEqual(calls, [
+    ["otool", "-L", "/a b/mokly"],
+    ["otool", "-l", "/a b/mokly"],
+  ]);
+  for (const headers of [
+    macosHeaders("11.0.1"),
+    macosHeaders("12.0"),
+    "",
+    macosHeaders("11.0") + macosHeaders("14.0"),
+  ])
+    await assert.rejects(
+      inspectNativeTls("binary", "darwin", async (_file, args) => ({
+        stdout: args[0] === "-L" ? "/usr/lib/libSystem.B.dylib" : headers,
+        stderr: "",
+      })),
+      /macOS|minos/,
+    );
+  const legacy =
+    "Load command 4\n      cmd LC_VERSION_MIN_MACOSX\n  cmdsize 16\n  version 10.15\n      sdk 26.0\n";
+  assert.match(
+    await inspectNativeTls("binary", "darwin", async (_file, args) => ({
+      stdout: args[0] === "-L" ? "/usr/lib/libSystem.B.dylib" : legacy,
+      stderr: "",
+    })),
+    /macOS minos: 10\.15/,
+  );
   await assert.rejects(
-    inspectNativeTls("binary", "darwin", async () => ({
-      stdout: "libcrypto.dylib",
+    inspectNativeTls("binary", "darwin", async (_file, args) => ({
+      stdout: args[0] === "-L" ? "libcrypto.dylib" : macosHeaders("11.0"),
       stderr: "",
     })),
     /crypto shared library/,

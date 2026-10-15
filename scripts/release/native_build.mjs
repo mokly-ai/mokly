@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 export const GLIBC_FLOOR = "2.28";
+export const MACOS_FLOOR = "11.0";
 
 /** Release builds run on their target host, with an explicit runtime floor. */
 export function nativeBuild(root, target, host = process) {
@@ -34,6 +35,9 @@ export function nativeBuild(root, target, host = process) {
     ],
     options: {
       cwd: root,
+      ...(target.os === "darwin"
+        ? { env: { MACOSX_DEPLOYMENT_TARGET: MACOS_FLOOR } }
+        : {}),
       ...(target.os === "win32"
         ? {
             env: {

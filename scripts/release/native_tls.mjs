@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 
 import { runCommand } from "./command.mjs";
-import { GLIBC_FLOOR } from "./native_build.mjs";
+import { GLIBC_FLOOR, MACOS_FLOOR } from "./native_build.mjs";
 
 export function assertNoCryptoLibrary(output) {
   if (/\b(?:lib(?:ssl|crypto|aws[-_]lc|boring)|openssl)[\w.-]*/i.test(output))
@@ -29,7 +29,14 @@ export async function inspectNativeTls(
     );
     output = `Highest GLIBC version: ${highest}\n${dynamic.stdout}\n${versions.stdout}`;
   } else if (os === "darwin") {
-    output = (await execute("otool", ["-L", binary])).stdout;
+    const libraries = (await execute("otool", ["-L", binary])).stdout;
+    const headers = (await execute("otool", ["-l", binary])).stdout;
+    const minimum = highestMacos(headers);
+    assert.ok(
+      compareVersions(minimum, MACOS_FLOOR) <= 0,
+      `native binary requires macOS ${minimum}, above the ${MACOS_FLOOR} floor`,
+    );
+    output = `macOS minos: ${minimum}\n${libraries}\n${headers}`;
   } else if (os === "win32") {
     const { stdout } = await execute("powershell", [
       "-NoProfile",
@@ -77,4 +84,24 @@ function compareVersions(left, right) {
     if (delta) return delta;
   }
   return 0;
+}
+
+function highestMacos(output) {
+  const versions = [];
+  for (const command of output.split(/(?=^Load command\s+\d+)/m)) {
+    const field = /^\s*cmd LC_BUILD_VERSION\s*$/m.test(command)
+      ? "minos"
+      : /^\s*cmd LC_VERSION_MIN_MACOSX\s*$/m.test(command)
+        ? "version"
+        : undefined;
+    if (!field) continue;
+    const version = new RegExp(
+      `^\\s*${field}\\s+(\\d+(?:\\.\\d+)*)\\s*$`,
+      "m",
+    ).exec(command)?.[1];
+    assert.ok(version, "otool returned a macOS load command without minos");
+    versions.push(version);
+  }
+  assert.ok(versions.length > 0, "otool returned no macOS minos requirement");
+  return versions.sort(compareVersions).at(-1);
 }

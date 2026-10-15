@@ -259,6 +259,7 @@ jobs:
       - name: Recheck immutable tags and source
         run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" "$VIEWER_REF" --artifacts .context/release-artifact
       - name: Preserve checked artifacts
+        if: steps.publish_artifacts.outputs.artifact_run_id == ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mokly-release-${{ steps.package.outputs.mokly_version }}

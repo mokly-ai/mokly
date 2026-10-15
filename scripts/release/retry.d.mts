@@ -3,7 +3,6 @@ export function selectArtifactSource(
     eventName: string;
     manualRunId?: string;
     runId: string;
-    commit: string;
     repository: string;
     version: string;
   },
@@ -13,6 +12,7 @@ export function selectArtifactSource(
       head_branch: string;
       head_sha: string;
       path: string;
+      workflow_id: number;
       head_repository?: { full_name: string };
     }>;
     artifacts(id: string): Promise<{ name: string; expired: boolean }[]>;

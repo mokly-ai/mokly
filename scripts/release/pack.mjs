@@ -9,7 +9,7 @@ const destination = path.resolve(
   process.argv[2] ?? ".context/release-artifact",
 );
 const reuse = process.argv[3] === "--reuse";
-if (process.argv.length > 4 && !reuse)
+if (process.argv.length > 4 || (process.argv[3] !== undefined && !reuse))
   throw new Error("usage: pack.mjs {directory} [--reuse]");
 const packages = reuse
   ? await inspectReleaseSet(root, destination)

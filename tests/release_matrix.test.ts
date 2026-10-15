@@ -20,6 +20,7 @@ interface Job {
   };
   steps: {
     name?: string;
+    if?: string;
     run?: string;
     uses?: string;
     with?: Record<string, unknown>;
@@ -76,8 +77,40 @@ test("native release jobs build locked targets and gate publication on the matri
         step.with?.["retention-days"] === 90,
     ),
   );
+  const checkouts = native.steps.filter((step) =>
+    step.uses?.includes("/checkout@"),
+  );
+  assert.equal(checkouts.length, 2);
+  const intel = checkouts.find(
+    (step) => step.if === "matrix.target == 'darwin-x64'",
+  );
+  const other = checkouts.find(
+    (step) => step.if === "matrix.target != 'darwin-x64'",
+  );
+  assert.equal(
+    intel?.uses,
+    "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+  );
+  assert.equal(
+    other?.uses,
+    "useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a",
+  );
+  for (const checkout of checkouts) {
+    assert.equal(checkout.with?.["fetch-depth"], 0);
+    assert.equal(
+      checkout.with?.ref,
+      "${{ needs.select-release.outputs.publish_ref }}",
+    );
+  }
   const publish = workflow.jobs.publish!;
   assert.ok(publish.needs?.includes("build-native"));
+  const preserve = publish.steps.find(
+    (step) => step.name === "Preserve checked artifacts",
+  );
+  assert.equal(
+    preserve?.if,
+    "steps.publish_artifacts.outputs.artifact_run_id == ''",
+  );
   assert.match(publish.if!, /needs\.build-native\.result == 'success'/);
   assert.ok(
     publish.steps.some(

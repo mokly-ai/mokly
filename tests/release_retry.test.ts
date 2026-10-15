@@ -7,18 +7,19 @@ import { releasePackages } from "../scripts/release/targets.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
+const tagCommit = "a".repeat(40);
 const input = {
   eventName: "push",
   runId: "42",
-  commit: "a".repeat(40),
   repository: "mokly-ai/mokly",
   version: "0.15.0",
 };
 const run = {
   event: "push",
   head_branch: "main",
-  head_sha: input.commit,
-  path: ".github/workflows/release.yml",
+  head_sha: "b".repeat(40),
+  workflow_id: 123,
+  path: ".github/workflows/release.yml@main",
   head_repository: { full_name: input.repository },
 };
 const artifact = { name: "mokly-release-0.15.0", expired: false };
@@ -66,20 +67,72 @@ test("first runs build only absent artifacts; reruns and manual retries reuse th
     await assert.rejects(selectArtifactSource(input, client(artifacts)));
 });
 
-test("retry artifacts must identify the original main push for the immutable tag", async () => {
+test("automatic release selection only lists the current run even when its head is newer than the tag", async () => {
+  assert.notEqual(run.head_sha, tagCommit);
+  const calls: string[] = [];
+  assert.deepEqual(
+    await selectArtifactSource(input, {
+      run: async () =>
+        assert.fail("automatic selection must not read run metadata"),
+      artifacts: async (id) => {
+        calls.push(id);
+        return [artifact];
+      },
+    }),
+    { runId: input.runId, name: artifact.name },
+  );
+  assert.deepEqual(calls, [input.runId]);
+});
+
+test("manual retries use workflow identity and accept a suffixed path and a head newer than the tag", async () => {
+  assert.notEqual(run.head_sha, tagCommit);
+  const calls: string[] = [];
+  assert.deepEqual(
+    await selectArtifactSource(
+      {
+        ...input,
+        eventName: "workflow_dispatch",
+        runId: "99",
+        manualRunId: "42",
+      },
+      {
+        run: async (id) => {
+          calls.push(`run ${id}`);
+          return run;
+        },
+        artifacts: async (id) => {
+          calls.push(`artifacts ${id}`);
+          return [artifact];
+        },
+      },
+    ),
+    { runId: "42", name: artifact.name },
+  );
+  assert.deepEqual(calls.sort(), ["artifacts 42", "run 42", "run 99"]);
+});
+
+test("manual retries reject other repositories, branches, events and workflow ids", async () => {
   for (const changed of [
     { event: "pull_request" },
     { event: "workflow_dispatch" },
     { head_branch: "other" },
-    { head_sha: "b".repeat(40) },
-    { path: ".github/workflows/ci.yml" },
+    { workflow_id: 456 },
+    { workflow_id: 0 },
     { head_repository: { full_name: "fork/mokly" } },
   ])
     await assert.rejects(
-      selectArtifactSource(input, {
-        ...client(),
-        run: async () => ({ ...run, ...changed }),
-      }),
+      selectArtifactSource(
+        {
+          ...input,
+          eventName: "workflow_dispatch",
+          runId: "99",
+          manualRunId: "42",
+        },
+        {
+          ...client(),
+          run: async (id) => (id === "99" ? run : { ...run, ...changed }),
+        },
+      ),
       /original main push/,
     );
   await assert.rejects(

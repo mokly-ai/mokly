@@ -6,17 +6,23 @@ export async function selectArtifactSource(input, client) {
     throw new Error(
       "a positive artifact_run_id is required for a manual retry",
     );
-  const run = await client.run(sourceRun);
-  if (
-    run.event !== "push" ||
-    run.head_branch !== "main" ||
-    run.head_sha !== input.commit ||
-    run.path !== ".github/workflows/release.yml" ||
-    run.head_repository?.full_name !== input.repository
-  )
-    throw new Error(
-      "release artifacts must come from the original main push for the tagged commit",
-    );
+  if (manual) {
+    const [current, source] = await Promise.all([
+      client.run(input.runId),
+      client.run(sourceRun),
+    ]);
+    if (
+      source.event !== "push" ||
+      source.head_branch !== "main" ||
+      !Number.isSafeInteger(current.workflow_id) ||
+      current.workflow_id <= 0 ||
+      source.workflow_id !== current.workflow_id ||
+      source.head_repository?.full_name !== input.repository
+    )
+      throw new Error(
+        "release artifacts must come from the original main push for this workflow and repository",
+      );
+  }
   const artifacts = await client.artifacts(sourceRun);
   const name = `mokly-release-${input.version}`;
   const matches = artifacts.filter((artifact) => artifact.name === name);
