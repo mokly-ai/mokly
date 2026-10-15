@@ -37,7 +37,9 @@ validated in-memory model, private HTML and Markdown bodies, variant slot
 fragments, the element registry, warnings, and the source inventory. It calls
 `dyn DefinitionProvider` only for discovered JavaScript files. The sidecar
 adapter supplies definitions through that boundary. `DeferredDefinitions`
-leaves those files in `deferred_modules` without evaluating them.
+marks its result as deferred and leaves those files in `deferred_modules`
+without evaluating them. A successful provider clears that deferred set, so a
+build cannot report success after skipping JavaScript inputs.
 
 A failed semantic definition stays in the preparation pass for path checks
 and as a relationship target. Its own body, link, and flow-target checks run

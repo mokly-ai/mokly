@@ -8,7 +8,7 @@
     {
       "code": "html-foster-parented",
       "subject": "entry \"home\"",
-      "message": "component element ui-button is moved out of a table"
+      "message": "component element ui-button is moved out of <table> by HTML parsing"
     }
   ],
   "paths": ["components/button", "home"]

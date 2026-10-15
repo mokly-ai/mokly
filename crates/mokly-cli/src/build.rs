@@ -1,4 +1,4 @@
-//! Discovery-only build orchestration. Rendering and static writes have later owners.
+//! Catalogue validation and complete in-memory rendering before static output.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -8,6 +8,8 @@ use mokly_catalogue::config::ConfigLoader;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
+use mokly_graph::error::{GraphError, InternalError};
+use mokly_graph::types::GraphFactory;
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
@@ -16,6 +18,8 @@ use crate::grammar::Build;
 /// Validated catalogue counts and warnings for terminal presentation.
 #[derive(Clone, Debug)]
 pub struct BuildSummary {
+    /// Complete rendered view, page, and document count.
+    pub documents: usize,
     /// Counts come only from the validated catalogue model, including variants.
     pub counts: BTreeMap<EntryKind, usize>,
     /// All sorted and deduplicated warnings from this attempt.
@@ -27,6 +31,22 @@ pub struct BuildSummary {
 /// Typed build failure; warning records survive both error paths.
 #[derive(Debug, Error)]
 pub enum BuildError {
+    /// The injected definition provider cannot evaluate discovered JavaScript.
+    #[error("[mokly-cli/build] JavaScript rendering is unavailable for {}", .modules.join(", "))]
+    Deferred {
+        /// Repository-relative JavaScript inputs awaiting an implementation.
+        modules: Vec<String>,
+        /// Warnings produced by preparation.
+        warnings: Vec<Warning>,
+    },
+    /// Graph preparation or complete view rendering failed.
+    #[error("[mokly-cli/build] rendering failed: {source}")]
+    Rendering {
+        /// Original typed render failure.
+        source: Box<GraphError>,
+        /// Warnings already raised by preparation.
+        warnings: Vec<Warning>,
+    },
     /// Config loading or catalogue preparation failed.
     #[error("[mokly-cli/build] catalogue preparation failed: {source}")]
     Catalogue {
@@ -54,10 +74,38 @@ pub struct CatalogueBuild {
     pub config: Arc<dyn ConfigLoader>,
     /// Source discovery and validation.
     pub catalogue: Arc<dyn CatalogueBuilder>,
+    /// Resolved-configuration graph composition root.
+    pub graphs: Arc<dyn GraphFactory>,
 }
 
 impl BuildService for CatalogueBuild {
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+        std::thread::scope(|scope| {
+            let thread = match std::thread::Builder::new()
+                .name("mokly-build".into())
+                .stack_size(64 * 1024 * 1024)
+                .spawn_scoped(scope, || self.attempt(cwd, options))
+            {
+                Ok(thread) => thread,
+                Err(source) => return Err(runtime(InternalError::PreparationThread { source })),
+            };
+            match thread.join() {
+                Ok(result) => result,
+                Err(_) => Err(runtime(InternalError::PreparationPanicked)),
+            }
+        })
+    }
+}
+
+fn runtime(source: InternalError) -> BuildError {
+    BuildError::Rendering {
+        source: Box::new(GraphError::Internal(source)),
+        warnings: Vec::new(),
+    }
+}
+
+impl CatalogueBuild {
+    fn attempt(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
         let config = match self.config.load(cwd, options.common.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
@@ -70,9 +118,42 @@ impl BuildService for CatalogueBuild {
             Ok(prepared) => prepared,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
-        if options.strict && !prepared.warnings.is_empty() {
-            return Err(BuildError::Strict {
+        if !prepared.deferred_modules.is_empty() {
+            return Err(BuildError::Deferred {
+                modules: prepared.deferred_modules,
                 warnings: prepared.warnings,
+            });
+        }
+        let graph = match self.graphs.create(&config) {
+            Ok(graph) => graph,
+            Err(source) => {
+                return Err(BuildError::Rendering {
+                    source: Box::new(source),
+                    warnings: prepared.warnings,
+                });
+            }
+        };
+        let generation = match graph.prepare(config, prepared.clone(), Some(&output)) {
+            Ok(generation) => generation,
+            Err(source) => {
+                return Err(BuildError::Rendering {
+                    source: Box::new(source),
+                    warnings: prepared.warnings,
+                });
+            }
+        };
+        let rendered = match generation.render_all() {
+            Ok(summary) => summary,
+            Err(source) => {
+                return Err(BuildError::Rendering {
+                    source: Box::new(source),
+                    warnings: prepared.warnings,
+                });
+            }
+        };
+        if options.strict && !rendered.warnings.is_empty() {
+            return Err(BuildError::Strict {
+                warnings: rendered.warnings,
             });
         }
         let mut counts = BTreeMap::new();
@@ -80,8 +161,9 @@ impl BuildService for CatalogueBuild {
             *counts.entry(entry.content.kind()).or_default() += 1;
         }
         Ok(BuildSummary {
+            documents: rendered.documents,
             counts,
-            warnings: prepared.warnings,
+            warnings: rendered.warnings,
             deferred_modules: prepared.deferred_modules,
         })
     }

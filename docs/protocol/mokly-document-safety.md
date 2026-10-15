@@ -3,6 +3,8 @@
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 This continues [Markdown Documents](./mokly-documents.md#rendering).
+The structural allowlist applies to Markdown documents. The URL policy also
+applies to composed HTML screens, components, and pages.
 
 ## Structural Validation
 
@@ -31,11 +33,6 @@ Every other body element or attribute is rejected, including `script`, `style`,
 body `style` attribute. Comments are inert; the only comments Mokly writes are the instance and slot
 markers of the [comparison contract](./mokly-comparison.md).
 
-`href` and `src` permit only `http:`, `https:` and `mailto:` schemes, or portable
-relative/fragment URLs. Reject other schemes, controls, backslashes, leading or
-trailing whitespace, root-absolute URLs and protocol-relative URLs. Shared link
-and resource validation still checks targets, fragments and confinement.
-
 The outer `html` permits only `lang="en"` and the template's exact
 `style="color-scheme: light"` or `style="color-scheme: dark"`. `head` and `body`
 have no attributes. The head permits only the template's UTF-8 charset meta,
@@ -48,13 +45,32 @@ Failure is `build-invalid` with
 
 - `element <tag> is not allowed`;
 - `attribute <name> on <tag> is not allowed`;
-- `<attribute> on <tag> is not an allowed URL`;
+- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`;
 - `<input> must be disabled` or `<input> must have checkbox type`;
 - `the template must contain one owned stylesheet`.
 
 Reject unsafe output rather than silently removing markup. A rejected document
 fails `build`; Serve keeps the last good generation, as for every other render
 failure.
+
+## URL Policy
+
+After logical-link rewriting, `href` and `src` permit only `http:`, `https:`
+and `mailto:` schemes, or portable relative, query, and fragment URLs.
+A scheme starts with an ASCII letter and continues with ASCII letters,
+digits, `+`, `-`, or `.` before `:`. It must precede the first `/`, `?`, or
+`#`. A colon in a path, query, or fragment does not establish a scheme;
+`#x:y` and `?t=10:30` pass this check.
+
+Reject other schemes, including `data:`, controls, backslashes, leading or
+trailing whitespace, root-absolute URLs and protocol-relative `//` URLs.
+Shared link and resource validation still checks portable paths, targets,
+fragments and confinement. URL failures use the diagnostic above.
+
+This attribute allowlist covers `href` and `src`. HTML `srcset` and `poster`
+use the resource URL rules of the [public closure](./mokly-public-closure.md):
+local references are checked, and external and data references are not copied.
+They are resource inputs outside the Markdown attribute allowlist.
 
 ## Script Policy
 

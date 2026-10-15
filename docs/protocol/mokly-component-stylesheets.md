@@ -45,13 +45,13 @@ regular, publicly servable file inside `repoRoot` with a case-insensitive
 `.css` suffix. Reject absolute paths, backslashes, empty, dot, or parent segments,
 query or fragment suffixes, other URL schemes, HTTP(S) URLs, non-CSS files,
 missing files, directories, protected source, and paths whose real targets
-escape the public root. A CSS parse failure is unresolved rule-analysis
-evidence, not an input-path validation failure. The
+escape the public root. A CSS parse or bundle failure uses the diagnostics of
+[imported styles](./mokly-imported-styles-errors.md). The
 [public closure policy](./mokly-public-closure.md) decides public eligibility
 before a declaration is accepted; it rejects a symbolic link at every
 component of a public path, even when the target stays confined, for declared
-CSS and configured CSS alike. A CSS source module or an imported source is
-not a public stylesheet.
+CSS and configured CSS alike. A file private through an entry root, a module import, or another authoring
+input cannot be declared, except for the configured CSS overlap below.
 
 Preserve authored order and group paths by resolved real file. If one
 component lists the same validated file twice, keep its first position, link
@@ -60,7 +60,8 @@ components may declare the same file. Validate the input shape when the
 registry accepts the definition, including untyped inputs; check existence,
 real-path identity, and public eligibility after the configuration resolves.
 A missing or invalid file fails `build` and Serve's rebuild.
-Declarations never enter an entry's metadata or its source inventory. This
+Declarations stay in the private registry. Their CSS and asset inputs enter
+the stylesheet source inventory; they do not enter entry metadata. This
 follows the [graceful-handling rule](./README.md#graceful-handling).
 
 ## Configured Placement Marker
@@ -116,10 +117,11 @@ on-demand renders, and both sides of a comparison.
 
 The core assembles the head, so it places the component block itself: at the
 marker's position among the configured links, or after the shared links and
-before the scheme-specific links. Each href is a relative URL from the
-document's route under `static/mokly-generated/` to the public file's route,
-which the [public closure policy](./mokly-public-closure.md) assigns, with the
-same per-segment URL encoding as configured local stylesheet links. The renderer module wraps React
+before the scheme-specific links. Each declared CSS file is a delivery root under the
+[imported stylesheet contract](./mokly-imported-styles.md). Its href is a
+relative URL from the document route to `styles/<repository-relative CSS
+path>` inside `static/mokly-generated/`, with the same per-segment URL
+encoding as configured local stylesheet links. The renderer module wraps React
 renders and emits no
 links, so no authored link is reused or anchored on; the configured
 stylesheet order of the [rendering contract](./mokly-rendering.md) is
@@ -144,8 +146,8 @@ changes a view only through rule evidence.
 ## Delivery
 
 Serve watches each declared file like a configured stylesheet: editing it
-reloads the views that link it and refreshes their evidence without
-re-rendering sources, under the [watch contract](./mokly-watch.md). Every
+invalidates its stylesheet node and refreshes the documents and evidence of
+views that link it, under the [watch contract](./mokly-watch.md). Every
 validated declaration is a watch target before Serve reports readiness, even
 if no view renders its component, and a successful configuration reload
 refreshes that set from the new declarations. Changing the declaration or the
@@ -157,9 +159,9 @@ documents.
 The [source policy](./mokly-source-protection.md) treats declared stylesheets
 as public assets, never as permission to serve authoring sources. The
 resource closure requires each reachable file to be confined and regular;
-`build` copies linked declared CSS and its transitive public imports and
-assets into `--out` through the same closure, and publish uploads them like
-every other public resource. No special list exists for declared CSS. A path
+`build` writes the declared CSS bundles and their delivered assets into
+`--out` through the same generated resource set. Publish uploads those
+bytes. Authored CSS and imported asset sources stay private. No special list exists for declared CSS. A path
 outside the public boundary is an error, not an omission.
 
 ## Related Contracts

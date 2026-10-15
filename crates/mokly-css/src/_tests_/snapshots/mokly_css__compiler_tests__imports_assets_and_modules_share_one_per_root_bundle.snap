@@ -1,0 +1,11 @@
+---
+source: crates/mokly-css/src/_tests_/compiler_tests.rs
+expression: bundle.css
+---
+.mokly_4c060cbfd974_label {
+  color: red;
+}
+
+.card {
+  background: url("../../assets/images/a.svg?q#id");
+}

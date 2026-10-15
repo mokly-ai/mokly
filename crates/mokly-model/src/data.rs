@@ -33,3 +33,12 @@ pub fn merge_props(parent: &Props, overrides: &Props) -> Props {
     merged.extend(overrides.clone());
     merged
 }
+
+/// HTML scalar spelling follows JavaScript's finite-number text, including zero.
+pub fn number_text(value: &Number) -> String {
+    match value.as_f64() {
+        Some(0.0) => "0".into(),
+        Some(value) => ryu_js::Buffer::new().format(value).to_owned(),
+        None => value.to_string(),
+    }
+}

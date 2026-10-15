@@ -13,7 +13,7 @@
     },
     {
       "code": "unknown-link-target",
-      "message": "specs/home.screen.html: link target missing does not exist",
+      "message": "link target missing does not exist",
       "path": "specs/home.screen.html",
       "line": 7,
       "column": 29

@@ -1,0 +1,9 @@
+---
+source: crates/mokly-graph/tests/render_tests.rs
+expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
+---
+<!doctype html><html style="color-scheme: light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Button</title><link rel="stylesheet" href="../../styles/css/base.css"></head><body>
+<button class="button" aria-label="Save" title="New">
+  Save <i>2</i> <small>Default</small>
+</button>
+</body></html>

@@ -11,7 +11,7 @@ presentation. The npm shim starts this binary with inherited streams.
 - Use watched Serve when the command is omitted.
 - Select plain or rich output and protect terminal diagnostics.
 - Keep success and failure exit statuses at 0 and 1.
-- Load JSON configuration and prepare the validated catalogue through injected services.
+- Load JSON configuration, validate the catalogue, and render every HTML view.
 
 ## What This Crate Does
 
@@ -31,8 +31,12 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
-width bounds that preserve ANSI sequences. Command subsystems share the Rust core. The binary owns catalogue work and
-file writes. Catalogue counts include variants. Shared-body warnings name
+width bounds that preserve ANSI sequences. Command subsystems share the Rust
+core. The binary owns catalogue work and file writes. `build` renders HTML
+screens, components, pages, and Markdown
+documents into the bounded process cache. It reports all render warnings
+before strict-mode failure. Static output belongs to `mokly-static`.
+Catalogue counts include variants. Shared-body warnings name
 the parent once. Identity diagnostics keep their location continuation
 lines in both plain and rich output. A diagnostic omits its inner code tag
 only when it equals the command's outer code. Configuration locations are
@@ -71,7 +75,8 @@ cargo clippy -p mokly-cli --all-targets -- -D warnings
 - [Grammar](./src/grammar.rs) and [option validation](./src/options.rs).
 - [Output](./src/output.rs), [error copy](./src/errors.rs), and
   [redaction](./src/redaction.rs).
-- [Composition root](./src/entry.rs) and [static output adapter](./src/publication/mod.rs).
+- [Composition root](./src/entry.rs), [native rendering services](./src/render_runtime.rs),
+  and [static output adapter](./src/publication/mod.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

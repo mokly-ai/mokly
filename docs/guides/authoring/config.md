@@ -95,3 +95,23 @@ watched under the source protection rules.
 Serve keeps rendered documents in memory. `build --out` selects the static
 output directory. Keep that directory ignored by Git.
 The configuration declares no output directory and no build recipe.
+
+## Configuration fields
+
+| Field              | Meaning                                                                      |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `roots`            | Source directories, file globs, path prefixes, and transparent directories   |
+| `repoRoot`         | Repository root; the configuration directory is the default                  |
+| `colorSchemes`     | A unique set that includes `light`; the default is light only                |
+| `stylesheets`      | Ordered route rules with shared and scheme-specific CSS                      |
+| `renderer`         | A local module that wraps React renders with product providers               |
+| `postcss`          | A local module that supplies consumer PostCSS plugins                        |
+| `moduleResolution` | Consumer aliases, package roots, conditions, fields, extensions, and loaders |
+| `review.base`      | The Git ref used to find the comparison base                                 |
+| `watch`            | Additional watch rules and the debounce interval                             |
+
+Paths resolve from the configuration file. Inputs stay inside `repoRoot`.
+Before a Git operation, `repoRoot` must be the Git repository's top level.
+A build with `--no-changes` can run without Git.
+
+Use `--no-changes` on a build when a comparison is not needed.

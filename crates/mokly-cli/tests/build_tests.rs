@@ -138,6 +138,50 @@ fn html_errors_report_the_exact_one_based_source_location() {
     assert!(output.stdout.is_empty());
     assert_eq!(
         String::from_utf8(output.stderr).unwrap(),
-        "[mokly/build-invalid] specs/home.screen.html:4:7 [mokly/html-element] unknown element ui-missing\n"
+        "[mokly/build-invalid] specs/home.screen.html:4:7: [mokly/html-element] unknown element ui-missing\n"
     );
+}
+
+#[test]
+fn a_deferred_javascript_file_cannot_report_a_complete_catalogue() {
+    let directory = TempDir::new().unwrap();
+    write(directory.path(), "mokly.config.json", "{}");
+    write(
+        directory.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<h1>Home</h1>",
+    );
+    write(
+        directory.path(),
+        "specs/entry.mockup.ts",
+        "export default definition;",
+    );
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        String::from_utf8(output.stderr)
+            .unwrap()
+            .contains("JavaScript rendering is unavailable for specs/entry.mockup.ts")
+    );
+    assert!(output.stdout.is_empty());
+}
+
+#[test]
+fn render_warnings_survive_a_later_failure_and_hide_internal_error_prefixes() {
+    let directory = TempDir::new().unwrap();
+    write(directory.path(), "mokly.config.json", "{}");
+    write(
+        directory.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<label><div to=\"home\">Home</div></label><a href=\"#missing\">Missing</a>",
+    );
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
+    assert_eq!(output.status.code(), Some(1));
+    let error = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(error.matches("[mokly/warning]").count(), 2);
+    assert!(error.contains("MockLink child control is inside <label>"));
+    assert!(error.contains("missing anchor"));
+    assert!(!error.contains("[mokly-graph/"));
+    assert!(!error.contains("[mokly-html"));
+    assert!(error.find("[mokly/warning]").unwrap() < error.find("[mokly/build-invalid]").unwrap());
 }

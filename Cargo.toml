@@ -17,3 +17,6 @@ mokly-compare = { path = "crates/mokly-compare" }
 mokly-publish = { path = "crates/mokly-publish" }
 mokly-source-interface = { path = "crates/mokly-source-interface" }
 mokly-catalogue = { path = "crates/mokly-catalogue" }
+mokly-html = { path = "crates/mokly-html" }
+mokly-css = { path = "crates/mokly-css" }
+mokly-graph = { path = "crates/mokly-graph" }

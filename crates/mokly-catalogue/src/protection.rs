@@ -80,7 +80,7 @@ impl SourcePolicy {
                 }
             }
         }
-        if paths.iter().any(|path| reserved(path)) {
+        if paths.iter().any(|path| is_reserved_source(path)) {
             return Some(ProtectedBy::ReservedBasename);
         }
         if paths.iter().any(|path| self.sources.contains(*path)) {
@@ -90,7 +90,8 @@ impl SourcePolicy {
     }
 }
 
-fn reserved(path: &str) -> bool {
+/// Check a reserved source basename independently of discovery or imports.
+pub fn is_reserved_source(path: &str) -> bool {
     let basename = path.rsplit('/').next().unwrap_or(path).to_ascii_lowercase();
     basename == "_folder.json"
         || [

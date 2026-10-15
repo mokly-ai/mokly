@@ -178,18 +178,14 @@ pub(crate) fn link(target: &str, source: &EntryMetadata, entries: &[ModelEntry])
             Issue::new(
                 Code::MovedLinkTarget,
                 format!(
-                    "{}: link target {resolved} does not exist; it moved to {}",
-                    location(&source.source),
+                    "link target {resolved} does not exist; it moved to {}",
                     moved.metadata.path
                 ),
             )
         } else {
             Issue::new(
                 Code::UnknownLinkTarget,
-                format!(
-                    "{}: link target {resolved} does not exist",
-                    location(&source.source)
-                ),
+                format!("link target {resolved} does not exist"),
             )
         }
         .at(source.source.clone()),

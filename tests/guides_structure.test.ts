@@ -25,6 +25,7 @@ const EXPECTED = [
   "authoring/links",
   "authoring/review-ignore",
   "authoring/styles",
+  "authoring/props-and-variants",
   "authoring/storybook",
   "catalogue/browse",
   "catalogue/search-and-filters",
@@ -74,7 +75,7 @@ function allowedLink(destination: string): boolean {
   }
 }
 
-test("the guide tree contains the exact 32-page reading order", () => {
+test("the guide tree contains the exact guide reading order", () => {
   assert.deepEqual(
     GUIDES.map((guide) => guide.id),
     EXPECTED,
@@ -90,7 +91,7 @@ test("the guide tree contains the exact 32-page reading order", () => {
     readdirSync(guidesRoot, { recursive: true, withFileTypes: true }).filter(
       (entry) => entry.isFile(),
     ).length,
-    32,
+    33,
   );
 });
 

@@ -97,6 +97,11 @@ of:
   directory dependencies that PostCSS plugins report under the
   [PostCSS contract](./mokly-imported-styles-postcss.md).
 
+A resource explicitly validated by a Markdown document stays in the public
+closure when CSS also uses it. The CSS node still hashes and watches its
+bytes and delivers its generated copy. This exception does not expose a
+file that another root or authoring input already protects.
+
 Every bundler file input is a source regardless of its extension or loader,
 including `file`, `dataurl`, `base64`, `binary`, `css`, and `empty`, because
 an imported image or data file can change output and must be watched and

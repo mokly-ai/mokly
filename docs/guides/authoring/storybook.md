@@ -2,7 +2,7 @@
 title: "Storybook stories"
 description: "Use portable React stories as component entries with saved states."
 section: "authoring"
-order: 11
+order: 12
 ---
 
 ## Add a stories file

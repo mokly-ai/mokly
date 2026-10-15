@@ -58,6 +58,9 @@ usage references, ownership graphs, source locations, and view ordering
 need the index and composition context. These reader checks are in progress;
 the structural detail reader does not substitute guessed context.
 
+`material` owns the shared props, instance, and slot digest preimages.
+`routes` owns Rust artifact routes and portable relative URL operations.
+
 `inference::infer` builds closed schemas from own and merged variant props.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`
 encode and decode tagged public props, including negative zero. Derived controls

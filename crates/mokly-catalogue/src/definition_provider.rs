@@ -23,6 +23,8 @@ pub struct ProvidedDefinition {
 /// One describe inventory, with private imported sources kept separate from entries.
 #[derive(Clone, Debug, Default)]
 pub struct Definitions {
+    /// True only when the provider cannot evaluate JavaScript definitions.
+    pub deferred: bool,
     /// Exported definitions, in source and export order.
     pub entries: Vec<ProvidedDefinition>,
     /// Code-carried folder records.
@@ -43,6 +45,9 @@ pub struct DeferredDefinitions;
 
 impl DefinitionProvider for DeferredDefinitions {
     fn describe(&self, _files: &[SourceFile]) -> Result<Definitions> {
-        Ok(Definitions::default())
+        Ok(Definitions {
+            deferred: true,
+            ..Default::default()
+        })
     }
 }

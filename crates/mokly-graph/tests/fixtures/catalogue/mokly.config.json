@@ -1,0 +1,11 @@
+{
+  "roots": [{ "dir": "specs" }],
+  "colorSchemes": ["light", "dark"],
+  "stylesheets": [
+    {
+      "match": "**",
+      "stylesheets": ["css/base.css"],
+      "darkStylesheets": ["css/dark.css"]
+    }
+  ]
+}

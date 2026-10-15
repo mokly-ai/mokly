@@ -1,0 +1,30 @@
+---
+source: crates/mokly-graph/tests/render_tests.rs
+expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
+---
+<!doctype html><html style="color-scheme: light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hidden</title><link rel="stylesheet" href="../../styles/css/base.css"><style>:where(a[data-mokly-link-control]){color:inherit;text-decoration:inherit;cursor:pointer}:where(a[data-mokly-link-control=button]){display:inline-block;width:fit-content}:where(a[data-mokly-link-control=div]){display:block}:where(a[data-mokly-link-control=span],a[data-mokly-link-control=a]){display:inline}a[data-mokly-link-control]:focus-visible{outline:2px solid currentColor!important;outline-offset:2px!important}</style></head><body>
+<main>
+  <h1 id="home">&lt;Save &amp; &quot;go&quot;&gt;</h1>
+  <p title="prefix &lt;Save &amp; &quot;go&quot;&gt; suffix">Ready {{unclosed</p>
+  <p>Mobile</p>
+  
+  <!--mokly-instance:start id="r-0" path="components/button" instance="9044717ea526e19b0b3e5da83922479062ae2b472f527709917678cc6822e238" props="1b94138bad2e15340d2a007100f64db788cbb51958acb8f806de9ea7e3998e14"-->
+<button class="button" aria-label="&lt;Save &amp; &quot;go&quot;&gt;" title="Ready">
+  &lt;Save &amp; &quot;go&quot;&gt; <i>3</i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-0"-->
+  <!--mokly-instance:start id="r-1" path="components/button" instance="cf89b04d6de5f189ee02caae7f6f29ae566238380e6af444aa4515ce0f3a13c0" props="29f8f06e3fd4eaab1d7917c6babec5ff86a2c296b2231a2c07de53762d326903"-->
+<button class="button" aria-label="$literal">
+  $literal <i>4</i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-1"-->
+  
+    
+  
+  <time>Today</time>
+  <a href="../../guide/index.html#guide" data-mokly-link="guide#guide">Guide</a>
+  <a class="card" href="../../page/index.html#summary" data-mokly-link-control="div" data-mokly-link="page#summary">Statement</a>
+  <button disabled="" data-nav-href="../../page/index.html" type="button">Inactive</button>
+  <img src="../../../specs/assets/public.svg" alt="Public">
+</main>
+</body></html>
