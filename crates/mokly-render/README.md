@@ -41,6 +41,16 @@ adapter-output placement keeps renderer wrappers outside a component's root.
 The graph's `render_props` method serves temporary previews through this path.
 It validates complete props and control bounds before rendering and leaves saved
 documents intact. Returned instance props pass the Rust schema validator.
+Serve supplies one source snapshot to catalogue parsing and graph preparation.
+Bundle reuse compares the actual module digests that the sidecar reports.
+HTML edits reuse bundle definitions. CSS text changes reuse JavaScript when
+class maps remain equal. A changed map uses a separate evaluated lifetime.
+Graph leases retain old maps, bindings, and PostCSS contexts until the final
+request releases them. Failed candidates release their own contexts.
+Stylesheet reuse checks source digests, plugin dependency digests, and
+directory-glob membership. Empty directory recipes observe later additions.
+Shared and generation-local stylesheet result caches each have a 64 MiB bound.
+Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet resources rebuild from that generation's captured bytes.
 

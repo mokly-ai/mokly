@@ -103,6 +103,7 @@ fn planning_checks_each_entry_even_when_exports_share_a_source() {
         &NodeKey("config".into()),
         &BTreeMap::new(),
         &styles::Matchers::new(&config).unwrap(),
+        "",
     )
     .unwrap_err();
     assert_cancelled(error);

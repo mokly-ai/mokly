@@ -14,21 +14,22 @@ use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
-use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
 use crate::backend::Documents;
-use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
+use crate::detail_encoding::ValidatedDetails;
 use crate::error::{InternalError, Result};
 use crate::evidence::{Completion, RenderRoute};
 use crate::generation::Generation;
 use crate::revision::{RenderLease, RevisionLease};
 use crate::revision_file::RevisionFile;
-use crate::stub;
+use crate::{replacement, stub};
 
 /// One immutable publication; replacement swaps this whole value.
 #[derive(Clone)]
 pub struct Snapshot {
+    /// Document keys used to retain proven usage across render generations.
+    pub document_keys: BTreeMap<String, String>,
     /// Shared routes, assets, and backend for this generation.
     pub generation: Arc<Generation>,
     /// Validated payloads; their wire revision is supplied by this snapshot.
@@ -92,6 +93,15 @@ pub trait SnapshotFactory: Send + Sync {
         generation: Arc<dyn RenderGeneration>,
         input: SnapshotInput,
     ) -> Result<Arc<Snapshot>>;
+    /// Replace a render generation while retaining equal encoded detail payloads.
+    fn replace(
+        &self,
+        generation: Arc<dyn RenderGeneration>,
+        input: SnapshotInput,
+        _previous: &Snapshot,
+    ) -> Result<Arc<Snapshot>> {
+        self.create(generation, input)
+    }
 }
 
 /// Initial Serve publication factory, reused for source replacements.
@@ -107,6 +117,25 @@ impl SnapshotFactory for Projector {
         &self,
         generation: Arc<dyn RenderGeneration>,
         input: SnapshotInput,
+    ) -> Result<Arc<Snapshot>> {
+        self.project(generation, input, None)
+    }
+    fn replace(
+        &self,
+        generation: Arc<dyn RenderGeneration>,
+        input: SnapshotInput,
+        previous: &Snapshot,
+    ) -> Result<Arc<Snapshot>> {
+        self.project(generation, input, Some(previous))
+    }
+}
+
+impl Projector {
+    fn project(
+        &self,
+        generation: Arc<dyn RenderGeneration>,
+        input: SnapshotInput,
+        previous: Option<&Snapshot>,
     ) -> Result<Arc<Snapshot>> {
         let keys: Vec<_> = generation
             .plans()
@@ -133,12 +162,15 @@ impl SnapshotFactory for Projector {
         let (index, encoded) = build_index(&generation.catalogue().model, &keys, &state)?;
         let mut assets = input.assets;
         let mut files = BTreeMap::from([(viewer("index.json"), RevisionFile::new(encoded)?)]);
-        let details = projection::pending_details(&generation.catalogue().model, &index, &keys);
-        let mut schemas = UsageSchemas::new(&index.components);
-        for (path, detail) in &details {
-            let encoded = ValidatedDetails.encode(detail, &index, &mut schemas)?;
-            files.insert(viewer(&format!("entries/{path}.json")), encoded);
-        }
+        let document_keys = generation
+            .plans()
+            .iter()
+            .map(|(route, plan)| (route.clone(), plan.key.0.clone()))
+            .collect();
+        let mut details = projection::pending_details(&generation.catalogue().model, &index, &keys);
+        replacement::reuse_usage(&mut details, &index, &document_keys, previous);
+        let details =
+            replacement::encode_details(details, &index, previous, &mut files, &ValidatedDetails)?;
         let render_token = self.render_token.clone();
         let descriptor = LiveDescriptorV3 {
             schema_version: 3,
@@ -185,10 +217,8 @@ impl SnapshotFactory for Projector {
         });
         Ok(Arc::new(Snapshot {
             generation: shared,
-            details: details
-                .into_iter()
-                .map(|(path, detail)| (path, Arc::new(detail)))
-                .collect(),
+            document_keys,
+            details,
             completed: BTreeMap::new(),
             lease: Arc::new(RevisionLease::default()),
             index,

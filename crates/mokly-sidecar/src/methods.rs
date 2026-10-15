@@ -52,6 +52,10 @@ pub struct ModuleResolution {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(rename = "BundleParams")]
 pub struct Bundle {
+    /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub evaluation: Option<String>,
     /// Entry module files.
     pub entry_files: Vec<String>,
     /// Optional consumer renderer module.

@@ -109,6 +109,7 @@ fn a_changed_generation_does_not_kill_a_healthy_process() {
     pool.lock().unwrap().bundles.insert(
         "g".into(),
         Bundle {
+            evaluation: None,
             entry_files: Vec::new(),
             renderer: None,
             stories_files: Vec::new(),

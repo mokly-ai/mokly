@@ -51,7 +51,7 @@ struct Fields {
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
         match field.name() {
-            "viewport" | "scheme" => {
+            "viewport" | "scheme" | "action" => {
                 self.values.insert(field.name().into(), json!(value));
             }
             "status" => self.error = value == "error",
@@ -64,7 +64,7 @@ impl Visit for Fields {
         }
     }
     fn record_debug(&mut self, field: &Field, value: &dyn std::fmt::Debug) {
-        if matches!(field.name(), "viewport" | "scheme") {
+        if matches!(field.name(), "viewport" | "scheme" | "action") {
             self.record_str(field, &format!("{value:?}"));
         }
     }
@@ -74,6 +74,7 @@ fn stage(name: &str) -> bool {
     matches!(
         name,
         "serve.ready"
+            | "watch.action"
             | "serve.background"
             | "config.load"
             | "catalogue.discover"
@@ -83,6 +84,7 @@ fn stage(name: &str) -> bool {
             | "render.document"
             | "render.fragment"
             | "css.bundle"
+            | "css.postcss"
             | "index.build"
             | "detail.build"
     )

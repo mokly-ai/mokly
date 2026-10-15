@@ -19,6 +19,10 @@ pub struct Hello {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
 pub struct Module {
+    /// Digest of the bytes that the bundler actually consumed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub digest: Option<String>,
     /// Repository-relative source path.
     pub path: String,
     /// Resolved logical paths in source order.

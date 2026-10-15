@@ -41,7 +41,8 @@ fragments, the element registry, warnings, and the source inventory. It calls
 join the private source inventory even without a JavaScript entry. The sidecar
 adapter supplies definitions through that boundary. Private JavaScript
 recipes retain handles separately from source attribution, saved React slots,
-module edges, class-map identity, and the resolved handle table. Declared
+module edges, class-map identity, and the resolved handle table. An opaque
+provider lease keeps the bundle alive while a prepared model or graph uses it. Declared
 controls pass the Rust validator. Story control hints do not change schemas.
 Inference exclusions become warnings only after final path derivation. Runtime
 failures retain typed terminal categories across provider boundaries. JavaScript

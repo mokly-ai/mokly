@@ -1,15 +1,22 @@
 //! Private JavaScript recipes retained after catalogue identity resolution.
 
 use std::collections::BTreeMap;
+use std::fmt::Debug;
+use std::sync::Arc;
 
 use mokly_model::prop_schema::Primitive;
 use serde_json::Number;
 
 use crate::diagnostic::Issue;
 
+/// Keeps a provider generation alive while catalogue or graph users retain it.
+pub trait GenerationLease: Debug + Send + Sync {}
+
 /// One immutable bundle, evaluated only after the core installs CSS Modules.
 #[derive(Clone, Debug, Default)]
 pub struct JavaScriptGeneration {
+    /// Provider-owned lifetime, released after the final graph or request.
+    pub lease: Option<Arc<dyn GenerationLease>>,
     /// Side-specific bundle identity.
     pub id: String,
     /// Digest of the complete CSS Modules table.

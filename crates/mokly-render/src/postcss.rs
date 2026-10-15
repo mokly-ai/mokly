@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config::relative;
@@ -16,11 +17,13 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::error::{RenderError, Result};
+use crate::leases::ContextLease;
 use crate::postcss_cache::{CssCache, CssRecord};
 use crate::side::SideInputs;
 use crate::{postcss_inventory, postcss_nested};
 
 pub(crate) struct PostCss {
+    pub(crate) lease: Arc<ContextLease>,
     pub(crate) pool: Arc<dyn SidecarPool>,
     pub(crate) tree: Arc<dyn SourceTree>,
     pub(crate) inventory_tree: Arc<dyn SourceTree>,
@@ -100,7 +103,9 @@ impl PostCss {
         Ok(processed)
     }
 
+    #[tracing::instrument(name = "css.postcss", skip_all, err)]
     fn process_css(&self, path: &str, source: &str) -> Result<Css> {
+        self.lease.used.store(true, Ordering::Relaxed);
         let call = Call::ProcessCss(ProcessCss {
             repository_roots: self
                 .side

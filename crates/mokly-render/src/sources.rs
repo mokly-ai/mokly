@@ -3,10 +3,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
-use crate::side::BaseSide;
+use crate::runtime::Runtime;
+use crate::side::{BaseSide, SideInputs, dependency_roots};
 
 /// Dependency paths retain logical names while source bytes use their own tree.
 pub(crate) struct SideTree {
@@ -130,4 +132,19 @@ impl SourceTree for SideTree {
             self.sources.read(path)
         }
     }
+}
+
+pub(crate) fn reader(
+    runtime: &Runtime,
+    config: &ResolvedConfig,
+    side: &SideInputs,
+) -> Arc<dyn SourceTree> {
+    Arc::new(SideTree {
+        _base: runtime.base.clone(),
+        sources: runtime.tree.clone(),
+        dependencies: runtime.dependency_tree.clone(),
+        root: config.repo_root.clone(),
+        dependency_roots: dependency_roots(side),
+        repository_roots: side.repository_roots.clone(),
+    })
 }

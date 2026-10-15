@@ -13,7 +13,8 @@ arrive during an active action are coalesced by impact before the next
 action starts, so two rebuilds cannot race to replace the catalogue model.
 The actions are, from least to most impact, `reload`, `rebuild`, and
 `config`; a burst takes the strongest action and keeps every observed
-candidate path for the terminal line. The `r` shortcut of the
+candidate path for the terminal line. The observer keeps one latest descriptor per path while an action runs.
+Access-only notifications schedule no action. The `r` shortcut of the
 [terminal output contract](./mokly-terminal-output.md#interactive-controls)
 enqueues a `rebuild` through the same queue. Shutdown stops the queue first.
 
@@ -76,7 +77,8 @@ check as the result, including a background render failure.
 
 Each completed action publishes one state under the
 [shell delivery contract](./mokly-shell-delivery.md#updates-in-serve):
-`revision` rises by one, the index and every detail are replaced together,
+`revision` rises by one, the index and every detail are replaced together. Equal detail payloads retain
+their encoded bytes. Delivery stamps the new revision without copying them,
 and the event stream carries the revision as the message id. The shell
 refetches the index and the current route's details, updates the navigation,
 the Changes marks, Usage, and the details panel in place, and reloads only

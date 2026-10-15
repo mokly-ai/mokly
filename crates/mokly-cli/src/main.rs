@@ -7,6 +7,7 @@ mod interrupts;
 mod render_runtime;
 mod serve_candidates;
 mod serve_controls;
+mod serve_preparation;
 mod serve_rebuild;
 mod serve_reporter;
 mod serve_services;
@@ -15,6 +16,7 @@ mod serve_signals;
 mod serve_state;
 mod serve_timing;
 mod serve_trace;
+mod serve_watch;
 mod terminal;
 
 fn main() -> std::process::ExitCode {

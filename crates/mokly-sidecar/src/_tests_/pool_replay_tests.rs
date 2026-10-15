@@ -66,6 +66,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
         state.bundles.insert(
             "g".into(),
             Bundle {
+                evaluation: None,
                 entry_files: vec!["entry.ts".into()],
                 renderer: None,
                 stories_files: Vec::new(),

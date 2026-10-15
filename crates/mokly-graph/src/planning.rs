@@ -7,7 +7,7 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::{parse, tree};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
-use mokly_model::routes;
+use mokly_model::{material::digest, routes};
 
 use crate::error::{Result, invalid};
 use crate::graph::Graph;
@@ -23,6 +23,7 @@ pub(crate) fn documents(
     config_key: &NodeKey,
     resources: &BTreeMap<String, ResourcePlan>,
     matchers: &styles::Matchers,
+    reload: &str,
 ) -> Result<BTreeMap<String, DocumentPlan>> {
     let tree = graph.tree.as_ref();
     let delivery = &graph.inputs;
@@ -121,6 +122,9 @@ pub(crate) fn documents(
                 entry.metadata.path.clone(),
                 format!("{viewport:?}/{scheme:?}"),
             ];
+            if !reload.is_empty() {
+                inputs.push(reload.into());
+            }
             if !matches!(entry.content, EntryContent::Document { .. })
                 && (!catalogue.templates.contains_key(parent)
                     || components
@@ -135,6 +139,13 @@ pub(crate) fn documents(
                     .iter()
                     .filter_map(|path| component_keys.get(path).map(|key| key.0.clone())),
             );
+            let encoded = match serde_json::to_vec(entry) {
+                Ok(bytes) => bytes,
+                Err(source) => return Err(error::InternalError::Json { source }.into()),
+            };
+            let mut recipe: Vec<_> = inputs.iter().map(|input| input.as_bytes()).collect();
+            recipe.push(&encoded);
+            let resource_key = key(NodeKind::Document, &recipe).0;
             for (path, digest) in
                 resource_keys::inputs(config, catalogue, entry, &route, &components, tree)
             {
@@ -144,19 +155,31 @@ pub(crate) fn documents(
                 if let Some(path) = routes::resolve(&route, link)
                     && let Some(resource) = resources.get(&path)
                 {
-                    inputs.push(resource.key.0.clone());
+                    inputs.push(resource.document_key.0.clone());
                 }
             }
-            let encoded = match serde_json::to_vec(entry) {
-                Ok(bytes) => bytes,
-                Err(source) => return Err(error::InternalError::Json { source }.into()),
-            };
+
             let mut borrowed: Vec<_> = inputs.iter().map(|input| input.as_bytes()).collect();
             borrowed.push(&encoded);
+            let observed: Vec<_> = delivery
+                .resources
+                .paths(&resource_key)
+                .iter()
+                .filter_map(|(path, baseline)| {
+                    let value = tree
+                        .read_shared(&config.repo_root.join(path))
+                        .ok()
+                        .map(|bytes| digest(&bytes));
+                    (value != *baseline)
+                        .then(|| format!("{path}:{}", value.as_deref().unwrap_or("unavailable")))
+                })
+                .collect();
+            borrowed.extend(observed.iter().map(|value| value.as_bytes()));
             let document_key = key(NodeKind::Document, &borrowed);
             output.insert(
                 route.clone(),
                 DocumentPlan {
+                    resource_key,
                     route,
                     key: document_key,
                     entry: index,

@@ -30,6 +30,10 @@ processes to `PoolOptions::size`. The CLI resolves `--sidecars`, `MOKLY_SIDECARS
 The pool retains bundle recipes, CSS Modules maps, and resolved handle tables. A process reloads a requested generation on demand and replays its bindings
 after describe. An epoch identifies each loaded lifetime. Disposing and
 re-bundling the same id invalidates every process's old maps and evaluation.
+Bundle results include the digests of the bytes consumed by each module.
+An optional evaluation digest isolates CSS Modules and resolved configuration
+lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
+identity includes its module edges, loader inputs, and evaluation digest.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback

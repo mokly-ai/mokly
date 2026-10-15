@@ -993,25 +993,38 @@ Tags: ui
 
 ## Milestone 11: Watch and incremental rendering
 
-- [ ] Reuse unchanged encoded details across watched generation rebuilds
+- [x] Reuse unchanged encoded details across watched generation rebuilds
       (Milestone 6 review 2, finding 1C).
 
-- [ ] Tie Serve's watching copy to the active watcher and cover its terminal
+- [x] Tie Serve's watching copy to the active watcher and cover its terminal
       output (Milestone 6 review, finding 10).
-- [ ] Implement the content-addressed render graph: inputs hashed per entry,
+- [x] Implement the content-addressed render graph: inputs hashed per entry,
       invalidation from the sidecar's module graph, HTML component
       dependencies, stylesheet dependencies, and PostCSS reports.
-- [ ] Implement the watcher with the denial rules, rebuild on change, bundle
+- [x] Implement the watcher with the denial rules, rebuild on change, bundle
       replay for HTML-only edits, and live updates to the viewer through the
       index and entry detail routes under one revision, with frames reloaded
       by document key and no page reload.
-- [ ] Release PostCSS contexts and replaced sidecar generations when the last
+- [x] Release PostCSS contexts and replaced sidecar generations when the last
       graph that uses them drops. Design ownership with Serve revision fences,
       cancelled requests, and watch replacement; prevent an old graph from
       using new bindings or class maps under an old fragment key (M8 review 1,
       finding 8).
-- [ ] Behaviour tests that count rebuilds and renders per change.
-- [ ] Commit.
+- [x] Behaviour tests that count rebuilds and renders per change.
+- [x] Preserve saved component frame document keys when controls supply view
+      records. Only temporary preview URLs bypass the saved document key.
+- [x] Bound retained stylesheet results and keep generation source snapshots
+      valid after cache eviction.
+- [x] Keep explicit watch rules subject to directory denials.
+- [x] Observe confined ancestors and recover required inputs after a parent
+      directory moves or is replaced.
+- [x] Sweep the previous watch and runtime rules and test cases at `0bbd737e`.
+- [x] Smoke-test HTML, CSS, and React edits through the shim in Chrome.
+- [x] Verify generated types and pass the complete gate.
+- [x] Commit.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
+`.context/rust-rebuild/m11-smoke/`, and `.context/rust-rebuild/sweeps/m11.md`.
 
 ## Milestone 12: Static build and publish
 

@@ -34,8 +34,9 @@ use crate::serve_reporter::ServeLines;
 use crate::serve_services::ServeServices;
 use crate::serve_state::{NativeServeState, ServeStateFactory};
 use crate::serve_timing::ServeTiming;
+use crate::serve_watch::{WatchInputs, WatchedInputs};
 use crate::terminal::Terminal;
-use crate::{serve_controls, serve_shutdown, serve_signals, serve_trace};
+use crate::{serve_controls, serve_preparation, serve_shutdown, serve_signals, serve_trace};
 
 pub(super) fn run(
     common: &Common,
@@ -95,13 +96,21 @@ pub(super) fn run(
             services.pool.clone(),
         );
         let result = async {
-            let prepare = preparation.clone();
-            let prepare_cwd = cwd.clone();
-            let prepare_common = common.clone();
-            let parent = tracing::Span::current();
-            let prepared = match tokio::task::spawn_blocking(move || {
-                parent.in_scope(|| prepare.prepare(&prepare_cwd, &prepare_common))
-            })
+            let watching: Option<Arc<dyn WatchInputs>> = if options.no_watch {
+                None
+            } else {
+                match WatchedInputs::new(tree.clone(), &services.config) {
+                    Ok(watching) => Some(Arc::new(watching)),
+                    Err(_) if *receiver.borrow() => return Ok(ExitCode::SUCCESS),
+                    Err(error) => return Err(error),
+                }
+            };
+            let prepared = match serve_preparation::initial(
+                preparation.clone(),
+                watching.clone(),
+                &cwd,
+                common,
+            )
             .await
             {
                 Ok(Ok(prepared)) => prepared,
@@ -112,7 +121,8 @@ pub(super) fn run(
                     terminal.stderr(&build_output::failure(style, &error, &redactor));
                     return Ok(ExitCode::FAILURE);
                 }
-                Err(source) => return Err(ServerError::Internal(InternalError::Task { source })),
+                Err(_) if *receiver.borrow() => return Ok(ExitCode::SUCCESS),
+                Err(source) => return Err(source),
             };
             if *receiver.borrow() {
                 return Ok(ExitCode::SUCCESS);
@@ -186,7 +196,12 @@ pub(super) fn run(
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }
-            let candidates = Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle)));
+            let lifecycle: Arc<dyn mokly_server::shutdown::Lifecycle> =
+                watching.clone().map_or_else(
+                    || Arc::new(FixedLifecycle) as Arc<dyn mokly_server::shutdown::Lifecycle>,
+                    |watching| watching as Arc<dyn mokly_server::shutdown::Lifecycle>,
+                );
+            let candidates = Arc::new(ManualCandidates::new(lifecycle));
             let (rebuild, requests) = mpsc::channel(1);
             let controls = serve_controls::start(
                 interactive,
@@ -201,6 +216,7 @@ pub(super) fn run(
                 },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
+                watching,
                 candidates: candidates.clone(),
                 preparation: preparation.clone(),
                 states,

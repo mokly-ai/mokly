@@ -77,6 +77,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
 
 fn bundle() -> Bundle {
     Bundle {
+        evaluation: None,
         entry_files: vec!["entry".into()],
         renderer: None,
         stories_files: Vec::new(),

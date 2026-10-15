@@ -1,11 +1,13 @@
 //! Render saved or temporary props and publish validated closure membership.
 
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use mokly_model::axes::Viewport;
+use mokly_model::material::digest;
+use mokly_source_interface::tree::FileKind;
 
 use crate::cache::Artifact;
-use crate::closure::{Closure, ClosureBuilder};
+use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
 use crate::workers::ArtifactWorker;
@@ -98,5 +100,48 @@ impl ArtifactWorker for Session {
             .unwrap_or_else(|error| error.into_inner())
             .extend(closure.files);
         Ok(artifact)
+    }
+}
+
+impl ClosureObserver for Session {
+    fn observe(&self, route: &str, path: &str) {
+        if let Some(plan) = self.state.plans.get(route) {
+            let absolute = self.state.config.repo_root.join(path);
+            let digest = match self.state.tree.project(&absolute) {
+                Ok(Some(node))
+                    if node.kind == FileKind::File
+                        && node.identity.starts_with(&self.state.config.repo_root) =>
+                {
+                    self.state
+                        .tree
+                        .read_shared(&absolute)
+                        .ok()
+                        .map(|bytes| digest(&bytes))
+                }
+                _ => None,
+            };
+            self.state
+                .inputs
+                .resources
+                .record(&plan.resource_key, path, digest);
+        }
+        let added = self
+            .state
+            .observed
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(path.into());
+        if added {
+            let observer = self
+                .state
+                .observer
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .as_ref()
+                .and_then(Weak::upgrade);
+            if let Some(observer) = observer {
+                observer.observe(&self.state.generation_key, path);
+            }
+        }
     }
 }

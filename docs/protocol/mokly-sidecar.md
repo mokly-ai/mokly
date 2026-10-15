@@ -4,13 +4,11 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 
-The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
-when a catalogue needs a JavaScript bundle, a React, page, or Storybook
-render, or a consumer PostCSS module. The sidecar returns text: HTML
-fragments, CSS, module and definition inventories, and diagnostics. It never
-reads the catalogue, never writes files, and keeps only loaded
-bundle generations and explicit consumer PostCSS contexts. Catalogue decisions, caching, invalidation, comparison, and
-output belong to the binary.
+The sidecar runs JavaScript bundles, React, page and Storybook renders, and
+consumer PostCSS. It returns HTML, CSS, module and definition inventories,
+and diagnostics. It never reads the catalogue or writes files. It retains
+only loaded bundle generations and explicit PostCSS contexts. The binary owns
+catalogue decisions, caching, invalidation, comparison, and output.
 
 ## Lifecycle
 
@@ -80,14 +78,15 @@ registers definitions or starts a render.
 ## Bundling
 
 `bundle` compiles an unevaluated in-memory esbuild generation. Its id hashes
-module paths, imports, and bytes; entry and stories lists; preview and renderer;
+module paths, imports, non-CSS source and loader bytes, and the core's optional
+evaluation digest for resolved configuration and CSS Modules; entry and stories lists; preview and renderer;
 the configuration directory; repository roots; module resolution settings;
 the installed React version; the real source root; and the selected real
 dependency roots. Equal head and base sources have separate generations,
 class maps, and bindings. The binary uses the id in each fragment key.
 
-The module graph reports sources and dependencies with imports in source
-order, including re-exports, dynamic imports, and stylesheets. A file inside
+The module graph reports the digest of each module's consumed bytes, sources,
+and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside
 a selected dependency root, a `node_modules` directory, is a dependency on
 both sides. JavaScript and CSS imports from it are allowed and use stable
 logical names relative to that root, such as `node_modules/pkg/style.css`.
@@ -199,8 +198,9 @@ releases only that context; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
 releases disposed contexts before that process takes more work. The result
 contains transformed text and plugin-reported dependencies for watching.
-The fragment key includes the class-map table digest. When maps change, the
-core disposes and re-bundles the generation before installing the new maps.
+The fragment key includes the class-map table digest. A changed map uses a
+new evaluation digest. The core retains the old generation until its final
+graph or request releases it. CSS text alone invalidates stylesheet nodes.
 The pool assigns each loaded lifetime an epoch. Every process reloads a stale
 epoch, then replays maps, describe, and bindings before a render.
 Mokly's own CSS work stays in Rust. Expected PostCSS errors carry a typed

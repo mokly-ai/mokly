@@ -8,6 +8,7 @@ const shapes: Record<string, string[]> = {
   hello: [],
   shutdown: [],
   bundle: [
+    "evaluation",
     "entryFiles",
     "storiesFiles",
     "renderer",
@@ -73,7 +74,12 @@ export function request(value: unknown): Request {
   const params = value.params;
   if (
     Object.keys(params).some((key) => !expected.includes(key)) ||
-    expected.some((key) => key !== "renderer" && !Object.hasOwn(params, key))
+    expected.some(
+      (key) =>
+        key !== "renderer" &&
+        key !== "evaluation" &&
+        !Object.hasOwn(params, key),
+    )
   )
     protocol(`invalid params for ${value.method}`);
   if (value.method === "bundle" && !Object.hasOwn(params, "renderer"))
@@ -81,6 +87,7 @@ export function request(value: unknown): Request {
   parameterShapes(params);
   for (const key of [
     "generation",
+    "evaluation",
     "context",
     "configurationDirectory",
     "handle",

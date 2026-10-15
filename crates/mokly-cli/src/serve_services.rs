@@ -12,13 +12,16 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Common;
 use mokly_cli::redaction::Redactor;
-use mokly_cli::serve::{CatalogueServe, ServePreparation};
+use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
+use mokly_graph::source_snapshot::SourceSnapshot;
+use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::render_runtime::Services;
 
 pub(super) struct ServeServices {
+    pub(super) config: mokly_catalogue::config_types::ResolvedConfig,
     pub(super) tree: Arc<dyn SourceTree>,
     pub(super) preparation: Arc<dyn ServePreparation>,
     pub(super) pool: Arc<dyn SidecarPool>,
@@ -56,19 +59,36 @@ impl ServeServices {
                 });
             }
         };
-        let preparation = Arc::new(CatalogueServe {
-            config: loader,
-            catalogue: Arc::new(Builder {
-                tree: tree.clone(),
-                discovery: Arc::new(Discoverer { tree: tree.clone() }),
-                definitions: services.runtime.clone(),
-            }),
-            graphs: services.runtime,
+        let preparation = Arc::new(AttemptPreparation {
+            tree: tree.clone(),
+            runtime: services.runtime,
         });
         Ok(Self {
+            config,
             tree,
             preparation,
             pool: services.pool,
         })
+    }
+}
+
+struct AttemptPreparation {
+    tree: Arc<dyn SourceTree>,
+    runtime: Arc<Runtime>,
+}
+impl ServePreparation for AttemptPreparation {
+    fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError> {
+        let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(self.tree.clone()));
+        let runtime = Arc::new(self.runtime.with_tree(tree.clone()));
+        let preparation: &dyn ServePreparation = &CatalogueServe {
+            config: Arc::new(Loader { tree: tree.clone() }),
+            catalogue: Arc::new(Builder {
+                tree: tree.clone(),
+                discovery: Arc::new(Discoverer { tree }),
+                definitions: runtime.clone(),
+            }),
+            graphs: runtime,
+        };
+        preparation.prepare(cwd, options)
     }
 }

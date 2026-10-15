@@ -22,8 +22,11 @@ Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a loo
 serves its initial state through `mokly-server`, with lazy document rendering,
 canonical public JSON, authenticated live prop previews, and clean signal
 shutdown. A background pass fills usage after readiness and yields to foreground
-renders. A completed pass publishes complete consumer lists. In rich watched
-mode, `r` enqueues a complete manual rebuild and restarts that pass. A
+renders. A completed pass publishes complete consumer lists. Watched Serve attaches a native observer before module evaluation. It buffers
+startup edits and coalesces filesystem events by path. The same serialized
+queue handles these events and the rich-mode `r` shortcut. A new generation
+restarts the usage pass. Configuration changes attach a candidate observer
+before a second validation pass. Failure keeps the active observer and model. A
 valid candidate replaces the public state and backend with the next revision;
 a failed candidate keeps the last good state. Preparation and projection run
 outside the serving task. A revision race stamps the same candidate again

@@ -23,11 +23,18 @@ inputs and computes document plans. It checks worker cancellation before each
 entry and stylesheet root. Config-relative stylesheet paths normalize dot
 segments inside `repoRoot`. It renders no document. Each plan carries
 a route and the document node's input hash, which is the public
-`documentKey`. `dyn RenderGeneration` supports on-demand rendering, a full
+`documentKey`. Stylesheet dependency edits recompute their bundles. Equal
+emitted CSS and asset bytes preserve document keys. `dyn RenderGeneration` supports on-demand rendering, a full
 build pass, resource reads, and closure queries. `render_props` validates a
 complete transient props map and uses the same composition and closure path.
 Its document does not replace the saved plan or catalogue props. The generation
 also exposes validated PostCSS directory watches, including empty glob matches.
+Resources found during composition enter a leased dependency index. Each
+recipe retains its first observed digests. Later preparations add changed
+resource digests to its key. Usage completion alone keeps the published key.
+A resource edit changes its consuming document keys and reuses JavaScript fragments.
+Missing and denied lexical resource paths stay observable for repair. Weak
+subscribers attach those paths before the background pass completes.
 `generation_key` hashes the complete render input set for the live descriptor.
 `public_files` lists authored files reached by completed renders. Serve
 rechecks their live eligibility at read time. Temporary closure membership

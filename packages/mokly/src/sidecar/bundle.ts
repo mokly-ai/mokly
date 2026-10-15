@@ -182,7 +182,9 @@ export async function bundle(
     for (const module of graph) {
       const absolute = physical.get(module.path)!;
       const text = inputs.files.get(absolute) ?? (await fs.readFile(absolute));
-      hash.update(JSON.stringify([module.path, module.imports])).update(text);
+      module.digest = createHash("sha256").update(text).digest("hex");
+      hash.update(JSON.stringify([module.path, module.imports]));
+      if (!module.path.endsWith(".css")) hash.update(text);
     }
     let reactVersion: string | null = null;
     try {
@@ -199,6 +201,7 @@ export async function bundle(
     hash.update(
       JSON.stringify([
         params.sourceRoot,
+        params.evaluation,
         paths.dependencyRoots,
         params.entryFiles,
         params.storiesFiles,

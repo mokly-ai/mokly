@@ -15,3 +15,5 @@ mod slot_order_tests;
 mod source_alias_tests;
 mod support;
 mod validation_tests;
+mod watch_dependencies_tests;
+mod watch_tests;

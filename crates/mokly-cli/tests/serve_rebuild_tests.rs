@@ -132,6 +132,8 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         .unwrap()
         .unwrap()
         .unwrap();
+    assert!(error.contains("✖ specs/home.screen.html"), "{error}");
+    let error = errors.next_line().await.unwrap().unwrap();
     assert!(error.contains("[mokly/build-invalid]"), "{error}");
     let retained: Value =
         serde_json::from_str(&get(&host, "/mokly-viewer/index.json").await).unwrap();

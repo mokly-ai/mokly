@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::definition_provider::{DefinitionProvider, Definitions};
@@ -10,6 +10,7 @@ use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::error::{CatalogueError, InternalError};
 use mokly_graph::cache::RenderCache;
+use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::RenderWorkers;
@@ -19,8 +20,10 @@ use mokly_source_interface::tree::SourceTree;
 use crate::bundle::BundleState;
 use crate::error::Result;
 use crate::graph::JavaScriptGraph;
+use crate::leases::PreparedLease;
 use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
+use crate::stylesheet_cache::StylesheetCache;
 use crate::{definitions, side};
 
 /// Definition and graph factories share one sidecar pool and one fragment cache.
@@ -41,12 +44,21 @@ pub struct Runtime {
     pub version: String,
     /// Base-side leases, absent for a working-tree generation.
     pub base: Option<Arc<BaseSide>>,
+    pub(crate) resources: Arc<dyn ResourceInputs>,
+    pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
+    pub(crate) styles: Arc<Mutex<StylesheetCache>>,
     pub(crate) sequence: Arc<AtomicU64>,
     pub(crate) css: Arc<Mutex<CssCache>>,
-    pub(crate) bundles: Arc<Mutex<BTreeMap<String, BundleState>>>,
+    pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
 }
 
 impl Runtime {
+    /// Clone the factories over one attempt's source snapshot and shared runtime caches.
+    pub fn with_tree(&self, tree: Arc<dyn SourceTree>) -> Self {
+        let mut runtime = self.clone();
+        runtime.tree = tree;
+        runtime
+    }
     pub(crate) fn base_warning(&self) -> Option<Warning> {
         self.base
             .as_ref()?
@@ -78,6 +90,9 @@ impl Runtime {
             workers,
             version,
             base,
+            resources: Arc::new(MemoryResourceInputs::default()),
+            prepared: Arc::new(Mutex::new(BTreeMap::new())),
+            styles: Arc::new(Mutex::new(StylesheetCache::default())),
             sequence: Arc::new(AtomicU64::new(0)),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
@@ -111,7 +126,10 @@ impl DefinitionProvider for Runtime {
         config: &ResolvedConfig,
         files: &[SourceFile],
     ) -> mokly_catalogue::error::Result<Definitions> {
-        match definitions::describe(self, config, files) {
+        let mut attempt = self.clone();
+        attempt.tree = Arc::new(SourceSnapshot::new(self.tree.clone()));
+        attempt.dependency_tree = Arc::new(SourceSnapshot::new(self.dependency_tree.clone()));
+        match definitions::describe(&attempt, config, files) {
             Ok(definitions) => Ok(definitions),
             Err(source) => match source.diagnostic() {
                 Some(source) => Err(CatalogueError::Runtime { source }),

@@ -47,10 +47,12 @@ stylesheet bundle survives:
   component recomputes the component node and the documents that use it.
 - An edit to a JavaScript module rebundles once, through one `bundle`
   request, and re-renders only the fragments whose generation changed; the
-  old generation is disposed after the new one is adopted. An HTML-only edit
+  old generation is disposed after adoption and its final graph or request
+  releases it. An HTML-only edit
   never rebundles.
 - An edit to a configured or imported stylesheet, or to a PostCSS dependency,
-  recomputes the stylesheet bundle and the documents whose rules changed.
+  recomputes the stylesheet bundle. Documents depend on its emitted CSS and
+  generated asset bytes. Equal output keeps their document keys.
 - An edit to a referenced resource recomputes the documents that reference
   it and clears their resource evidence.
 - A configuration change reloads the configuration under the
@@ -91,6 +93,8 @@ repository and never watched.
   discovery and directory scans, not to inventoried files or their
   ancestors. A created path beneath a denied directory is ignored because
   discovery cannot accept it.
+  A required ancestor's move or removal invalidates its required descendants.
+  Each confined ancestor remains observed so directory repairs are visible.
 - Package source under `node_modules` or an npx cache is never consumer
   source.
 

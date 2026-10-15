@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { jsonText } from "../packages/mokly/src/sidecar/json.js";
 import { requestId } from "../packages/mokly/src/sidecar/request-id.js";
+import { request } from "../packages/mokly/src/sidecar/requests.js";
 import {
   encodeFrame,
   encodeResponse,
@@ -75,4 +76,26 @@ test("wire object keys use UTF-16 order even for integer-shaped names", () => {
     jsonText({ "2": ["number", "2"], "10": ["number", "10"] }),
     '{"10":["number","10"],"2":["number","2"]}',
   );
+});
+
+test("evaluation digests belong only to bundle requests", () => {
+  for (const method of ["renderScreen", "renderComponent"]) {
+    const params = {
+      generation: "generation",
+      handle: "entry#screen",
+      entry: { path: "screen", title: "Screen" },
+      props: {},
+      viewport: "desktop",
+      colorScheme: "light",
+      ...(method === "renderComponent"
+        ? { slots: {}, ignoreScope: "enabled" }
+        : {}),
+    };
+    assert.equal(request({ id: 1, method, params }).method, method);
+    assert.throws(
+      () =>
+        request({ id: 2, method, params: { ...params, evaluation: "digest" } }),
+      /invalid params/,
+    );
+  }
 });

@@ -25,6 +25,10 @@ It passes that package's built directory to the binary through
 `MOKLY_VIEWER_DIST`. The binary serves exactly its browser inventory, stylesheet,
 and font. Consumer working-directory layout does not select the viewer.
 
+Serve watches source, style, and referenced resource edits by default.
+It updates the open viewer and reloads only documents whose input key changed.
+Use `serve --no-watch` to browse one snapshot.
+
 The native binary owns commands and file writes. The render sidecar and the
 authoring API share this package under the
 [package contract](../../docs/protocol/mokly-package.md).
