@@ -113,6 +113,7 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
         definitions: mock,
     };
     let prepared = builder.prepare(&config, None).unwrap();
+    assert!(prepared.deferred_modules.is_empty());
     let actual: Vec<_> = prepared.model.entries.iter().filter(|entry|entry.content.kind()==EntryKind::Document)
         .map(|entry|json!({"kind":"document","path":entry.metadata.path,"title":entry.metadata.title,"tags":entry.metadata.tags})).collect();
     assert_eq!(json!(actual), fixture["entries"]);

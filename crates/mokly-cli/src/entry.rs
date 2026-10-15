@@ -25,6 +25,8 @@ use terminal_size::{Width, terminal_size};
 
 use crate::entry_publish;
 
+use super::render_runtime::NativeGraphs;
+
 pub(super) trait Terminal {
     fn stdout(&self, text: &str);
     fn stderr(&self, text: &str);
@@ -113,6 +115,7 @@ pub(super) fn main() -> ExitCode {
         };
         let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
         let service: &dyn BuildService = &CatalogueBuild {
+            graphs: Arc::new(NativeGraphs { tree: tree.clone() }),
             config: Arc::new(Loader { tree: tree.clone() }),
             catalogue: Arc::new(Builder {
                 tree: tree.clone(),

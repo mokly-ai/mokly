@@ -34,6 +34,9 @@ impl Builder {
             .collect();
         if !javascript.is_empty() {
             let described = self.definitions.describe(&javascript)?;
+            if !described.deferred {
+                prepared.deferred_modules.clear();
+            }
             prepared.model.folders.extend(described.folders);
             for source in described.sources {
                 if traversal(&source) || Path::new(&source).is_absolute() {

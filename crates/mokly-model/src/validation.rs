@@ -4,6 +4,7 @@ use jsonschema::error::ValidationErrorKind;
 use jsonschema::{ValidationError, Validator};
 use serde_json::Value;
 
+use crate::data::DataValue;
 use crate::diagnostic::Context;
 use crate::error::{ModelError, Result};
 use crate::limits;
@@ -14,6 +15,26 @@ use crate::prop_schema::PropSchema;
 pub struct PropValidator {
     schema: PropSchema,
     validator: Validator,
+}
+
+/// Test a candidate against an already validated property schema without coercion.
+/// HTML union coercion uses this same JSON Schema engine in member order.
+pub fn accepts(schema: &PropSchema, value: &DataValue) -> bool {
+    let schema = match serde_json::to_value(schema) {
+        Ok(schema) => schema,
+        Err(_) => return false,
+    };
+    let value = match serde_json::to_value(value) {
+        Ok(value) => value,
+        Err(_) => return false,
+    };
+    if limits::check(&value, true).is_err() {
+        return false;
+    }
+    match jsonschema::draft202012::options().build(&schema) {
+        Ok(validator) => validator.is_valid(&value),
+        Err(_) => false,
+    }
 }
 
 impl PropValidator {

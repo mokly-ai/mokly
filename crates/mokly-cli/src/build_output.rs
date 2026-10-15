@@ -57,6 +57,33 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
 /// Report retained warnings first, then the command's typed failure.
 pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
+        BuildError::Deferred {
+            modules,
+            warnings: records,
+        } => {
+            warnings(style, records, redactor)
+                + &style.error(
+                    Code::BuildInvalid,
+                    &format!(
+                        "JavaScript rendering is unavailable for {}",
+                        modules.join(", ")
+                    ),
+                    redactor,
+                )
+        }
+        BuildError::Rendering {
+            source,
+            warnings: records,
+        } => {
+            let mut records = records.clone();
+            records.extend(source.warnings());
+            mokly_catalogue::diagnostic::normalize_warnings(&mut records);
+            let mut output = warnings(style, &records, redactor);
+            for diagnostic in crate::render_errors::diagnostics(source) {
+                output.push_str(&style.error(Code::BuildInvalid, &diagnostic, redactor));
+            }
+            output
+        }
         BuildError::Strict { warnings: records } => {
             let count = records.len();
             warnings(style, records, redactor)

@@ -657,29 +657,37 @@ At completion `mokly build` validates, renders HTML screens and components
 into the bounded render cache, and reports diagnostics; it writes its output
 from Milestone 12.
 
-- [ ] Implement HTML components and the entry props model in `mokly-html`:
+- [x] Implement HTML components and the entry props model in `mokly-html`:
       prop schemas under the JSON Schema profile with closed objects and
       their inference from merged props, props-driven variants, scalar
       coercion, one template language for screen and component bodies
       (`$name` prop references, `{{name}}` substitution, `mokly-if`,
       `mokly-viewport`, named slots), `mokly-instance`, and the component
       registry with the reserved `mokly-` prefix.
-- [ ] Implement screen composition: viewports, colour schemes, stylesheet
+- [x] Implement screen composition: viewports, colour schemes, stylesheet
       rules, document assembly, `mock:` link rewriting, ignore regions with
       their scopes resolved, and the ownership annotations the comparison
       relies on.
-- [ ] Implement the render cache: content keys, the byte bound, eviction, and
+- [x] Implement the render cache: content keys, the byte bound, eviction, and
       reads through the existing `mokly-source-interface` for working and Git
       trees; the `build`
       validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
-- [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
+- [x] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
-- [ ] Write the HTML authoring guides under `docs/guides`.
-- [ ] Commit.
+- [x] Write the HTML authoring guides under `docs/guides`.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m5.md`.
+Integration evidence: `.context/rust-rebuild/delegation/m5/report-2.md` and
+`.context/rust-rebuild/delegation/m5/merge-decisions.md`.
+Review fix evidence: `.context/rust-rebuild/delegation/m5/report-3.md`.
+
+The Git source-tree adapter is part of Milestone 9. The example port remains
+assigned to its separate task.
 
 ## Milestone 6: Serve
 
@@ -776,6 +784,13 @@ renders again.
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Reconcile the rendering page's authenticated fragment placements and
+      logical inputs with the sidecar's typed instance and slot render-result
+      records before connecting the Milestone 5 composition boundary.
+- [ ] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
+      input and marker-placement metadata in the sidecar, resolve definition
+      handles to catalogue identities, and supply the bundle generation,
+      delivery roots, and component stylesheet lists to the native graph.
 - [ ] Extend the definition-provider boundary for `describe` handles,
       declared controls, story control hints, slot handles, excluded non-data
       prop keys, and authoring diagnostics; emit `props-not-data` after path
@@ -971,6 +986,11 @@ Publish client final review and merge decisions:
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+- [ ] Make tree conversion, composition, serialization, destruction, and all
+      tree walks iterative; remove dependence on the temporary 64 MiB stacks.
+- [ ] Measure generation source-snapshot retention and per-root CSS asset
+      preparation with large asset inputs; keep total working memory within
+      the approved acceptance budgets, in addition to the artifact-cache bound.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
@@ -996,6 +1016,8 @@ Publish client final review and merge decisions:
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention
     after success; keep the existing retention until the user decides.
+  - Milestone 5 review 1, finding 5: decide the declared component stylesheet
+    delivery model; keep the current bundled code and pages pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
@@ -1015,8 +1037,8 @@ Publish client final review and merge decisions:
     `guides_upload_validation`, and `guides_authoring`, which compared the
     guides with the old CLI and authoring API. `guides_copy`,
     `guides_structure`, and `guides_versions` remain. The guides contract
-    requires shipped behaviour. Decide whether to rewrite the guides before
-    the replacement CLI is complete, or at Milestone 12 (recommended).
+    requires shipped behaviour. The Milestone 5 task explicitly directs the
+    HTML authoring guide rewrite. Continue each later guide at its milestone.
   - F: settled by Decision 36 on 2026-10-14.
   - G: settled on 2026-10-14; the release management page follows the
     seven packages of the release contract.

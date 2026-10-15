@@ -104,7 +104,9 @@ The core applies these rules to every page, whichever form produced it:
   `html` element with `head` and `body`. An incomplete document fails
   `build-invalid` naming the page and, for an HTML page, the file and line.
 - The page renders once, as one light document, whatever the catalogue's
-  `colorSchemes`. It has no viewport, colour-scheme, or variant views.
+  `colorSchemes`. It has no viewport, colour-scheme, or variant views. Components
+  used by the page receive the canonical desktop light render context;
+  this context adds no page view axis.
 - The configured renderer does not wrap it, and the configured stylesheets are
   not linked into it. The page links its own CSS and owns its styles,
   responsive markup, and render context.

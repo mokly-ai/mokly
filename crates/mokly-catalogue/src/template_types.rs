@@ -22,6 +22,8 @@ pub struct Template {
 /// Registry metadata needed before the first render.
 #[derive(Clone, Debug)]
 pub struct RegisteredElement {
+    /// Base for relative links authored by this component's body.
+    pub link_base: String,
     /// Current component parent path.
     pub path: String,
     /// Defining source path.

@@ -60,6 +60,13 @@ Formatting clones that the adoption agency algorithm creates and elements that
 the parser implies take their position in the tree; nothing refers to the
 token that created them.
 
+The core serializes and re-parses composed content with the HTML5 algorithm
+before it derives usage or comparison ownership. Content moved by that parser
+produces `html-foster-parented`, naming the component element and its parent.
+An instance whose marker pair no longer shares one parent has no region. Its
+nodes belong to the enclosing region. Remaining logical inputs and placements
+use that repaired ownership and their corresponding identity keys.
+
 ## Materiality
 
 A view is compared through its canonical form: the tree after ignored regions

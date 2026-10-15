@@ -1,0 +1,53 @@
+---
+source: crates/mokly-graph/tests/render_tests.rs
+expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
+---
+<!doctype html><html style="color-scheme: light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Home &amp; account</title><link rel="stylesheet" href="../styles/css/base.css"><style>:where(a[data-mokly-link-control]){color:inherit;text-decoration:inherit;cursor:pointer}:where(a[data-mokly-link-control=button]){display:inline-block;width:fit-content}:where(a[data-mokly-link-control=div]){display:block}:where(a[data-mokly-link-control=span],a[data-mokly-link-control=a]){display:inline}a[data-mokly-link-control]:focus-visible{outline:2px solid currentColor!important;outline-offset:2px!important}</style></head><body>
+<main>
+  <h1 id="home">&lt;Save &amp; &quot;go&quot;&gt;</h1>
+  <p title="prefix &lt;Save &amp; &quot;go&quot;&gt; suffix">Ready {{unclosed</p>
+  
+  <p>Desktop</p>
+  <!--mokly-instance:start id="r-0" path="components/button" instance="9044717ea526e19b0b3e5da83922479062ae2b472f527709917678cc6822e238" props="1b94138bad2e15340d2a007100f64db788cbb51958acb8f806de9ea7e3998e14"-->
+<button class="button" aria-label="&lt;Save &amp; &quot;go&quot;&gt;" title="Ready">
+  &lt;Save &amp; &quot;go&quot;&gt; <i>3</i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-0"-->
+  <!--mokly-instance:start id="r-1" path="components/button" instance="cf89b04d6de5f189ee02caae7f6f29ae566238380e6af444aa4515ce0f3a13c0" props="29f8f06e3fd4eaab1d7917c6babec5ff86a2c296b2231a2c07de53762d326903"-->
+<button class="button" aria-label="$literal">
+  $literal <i>4</i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-1"-->
+  
+    <!--mokly-instance:start id="r-2" path="components/card" instance="04d18a64e115b0260147c48d798a705df2b16127a80ffc765bced9f28e09ad0f" props="c7ac45b123ec923b20307b19bcf1e04b95f29614a7606524acce3689ee2f3d0e"-->
+<article>
+  <h2>Details</h2>
+  
+  <!--mokly-slot:start id="r-3" name="header"--><strong>Supplier &lt;Save &amp; &quot;go&quot;&gt;</strong><!--mokly-slot:end id="r-3"-->
+  <time>Now</time><!--mokly-slot:start id="r-4" name="children"-->
+      
+      <span>Supplied text</span>
+      <!--mokly-instance:start id="r-5" path="components/button" instance="feb92f82bf38485d98b5b0912c7fec31c3eda4283d80ea4ade27c33e09577d84" props="7e5585a3f92753a3747c8485d191b5ecfaa40324846f5c9bd1dedcb8afeac23b"-->
+<button class="button" aria-label="Slot action">
+  Slot action <i></i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-5"-->
+    <!--mokly-slot:end id="r-4"--><!--mokly-slot:start id="r-6" name="children"-->
+      
+      <span>Supplied text</span>
+      <!--mokly-instance:start id="r-7" path="components/button" instance="feb92f82bf38485d98b5b0912c7fec31c3eda4283d80ea4ade27c33e09577d84" props="7e5585a3f92753a3747c8485d191b5ecfaa40324846f5c9bd1dedcb8afeac23b"-->
+<button class="button" aria-label="Slot action">
+  Slot action <i></i> <small>Default</small>
+</button>
+<!--mokly-instance:end id="r-7"-->
+    <!--mokly-slot:end id="r-6"-->
+</article>
+<!--mokly-instance:end id="r-2"-->
+  
+  <time>Today</time>
+  <a href="../guide/index.html#guide" data-mokly-link="guide#guide">Guide</a>
+  <a class="card" href="../page/index.html#summary" data-mokly-link-control="div" data-mokly-link="page#summary">Statement</a>
+  <button disabled="" data-nav-href="../page/index.html" type="button">Inactive</button>
+  <img src="../../specs/assets/public.svg" alt="Public">
+</main>
+</body></html>

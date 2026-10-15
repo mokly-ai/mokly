@@ -26,6 +26,7 @@ const EXPECTED = [
   "authoring/review-ignore",
   "authoring/styles",
   "authoring/storybook",
+  "authoring/props-and-variants",
   "catalogue/browse",
   "catalogue/search-and-filters",
   "catalogue/changes",
@@ -74,7 +75,7 @@ function allowedLink(destination: string): boolean {
   }
 }
 
-test("the guide tree contains the exact 32-page reading order", () => {
+test("the guide tree contains the exact guide reading order", () => {
   assert.deepEqual(
     GUIDES.map((guide) => guide.id),
     EXPECTED,

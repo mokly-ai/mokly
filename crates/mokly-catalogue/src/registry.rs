@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 
 use crate::diagnostic::{Code, Issue};
+use crate::relationships;
 use crate::template_types::{ElementRegistry, RegisteredElement};
 
 pub(crate) fn register(entries: &[ModelEntry]) -> (ElementRegistry, Vec<Issue>) {
@@ -50,6 +51,7 @@ pub(crate) fn register(entries: &[ModelEntry]) -> (ElementRegistry, Vec<Issue>) 
         registry.insert(
             element.clone(),
             RegisteredElement {
+                link_base: relationships::base(&entry.metadata, entries),
                 path: entry.metadata.path.clone(),
                 source_path: entry.metadata.source.path.clone(),
                 prop_schema: visual.prop_schema.clone(),

@@ -120,3 +120,36 @@ asset imports. A `file` loader emits an undelivered file and fails.
 Only `empty` can override `.css` or `.module.css` handling.
 The `.css` override opts out of plain CSS and CSS Modules. The `.module.css`
 override opts out of CSS Modules alone.
+
+## Configure stylesheet rules
+
+Add ordered route rules to `mokly.config.json`. Local stylesheet paths are
+relative to that configuration file. A rule matches the entry's
+`path/index.html`, before viewport and color-scheme suffixes are added.
+
+```json
+{
+  "stylesheets": [
+    {
+      "match": "account/**",
+      "stylesheets": ["design/base.css", "$componentStylesheets"],
+      "lightStylesheets": ["design/light.css"],
+      "darkStylesheets": ["design/dark.css"]
+    },
+    { "match": "**", "stylesheets": ["design/base.css"] }
+  ]
+}
+```
+
+The first matching rule applies. Shared links come first. The scheme's links
+follow them. An HTTP or HTTPS URL stays external and is never fetched during
+a build. A page and a Markdown document receive no configured links. A page
+links its own CSS; a Markdown document uses Mokly's document styles.
+
+## Place component styles
+
+A JavaScript component can declare its public stylesheet list. The document
+links the files of components that actually render, in first-render order.
+`$componentStylesheets` places those links among shared links. Without the
+marker, they follow shared links and precede scheme-specific links. A file
+listed by both configuration and a component links once.
