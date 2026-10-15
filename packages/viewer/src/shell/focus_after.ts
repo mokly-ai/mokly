@@ -2,8 +2,10 @@
 
 import { useEffect, useState, type RefCallback } from "react";
 
-const FIELDS =
-  "input:not([hidden]):not(:disabled), select:not(:disabled), textarea:not(:disabled)";
+/** The enabled controls that show: a hidden field of an unset prop is skipped. */
+const FIELDS = ["input", "select", "textarea"]
+  .map((control) => `${control}:not([hidden]):not(:disabled)`)
+  .join(", ");
 
 /**
  * The named elements of one owner and the focus it asked for. After the

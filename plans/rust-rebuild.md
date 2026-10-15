@@ -993,6 +993,8 @@ Tags: ui
 Settled copy and states with their Serve run: `.context/rust-rebuild/m10-copy-run/log.md`.
 Review fixes of the copy and states with their Serve run:
 `.context/rust-rebuild/m10-copy-run-2/log.md`.
+Final review fixes and their check logs:
+`.context/rust-rebuild/delegation/m7/report-9.md`.
 
 - [ ] Commit.
 

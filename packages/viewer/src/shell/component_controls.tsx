@@ -111,9 +111,7 @@ export function useComponentControls({
       if (!target || !live || !editable) return;
       const operation = lifecycle.begin();
       setStored((current) =>
-        current.scope === scope
-          ? { ...current, detail: undefined, notice: "pending" }
-          : current,
+        current.scope === scope ? { ...current, notice: "pending" } : current,
       );
       try {
         const results = await Promise.all(
@@ -148,7 +146,6 @@ export function useComponentControls({
           return {
             ...current,
             draft,
-            detail: undefined,
             dirty: true,
             notice: undefined,
             previews: next,
@@ -173,7 +170,6 @@ export function useComponentControls({
       if (!validated.overrides) {
         setStored((current) => ({
           ...(current.scope === scope ? current : initial),
-          detail: undefined,
           draft,
           dirty: true,
           errors: validated.errors,
@@ -187,7 +183,6 @@ export function useComponentControls({
       }
       setStored((current) => ({
         ...(current.scope === scope ? current : initial),
-        detail: undefined,
         draft,
         dirty: true,
         errors: {},

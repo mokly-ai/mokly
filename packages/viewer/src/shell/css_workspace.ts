@@ -96,15 +96,15 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--_mokly-private-on-accent-deep); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
 .mbk-control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
 .mbk-control-field { display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
-.mbk-control-field > label:not(.mbk-control-set) { font-size: 12px; font-weight: 600; }
-.mbk-control-field > label > span { color: var(--chrome-muted); font-size: 11px; font-weight: 400; }
+.mbk-control-field > label:not(.mbk-control-set):not(.mbk-control-check), .mbk-control-name { font-size: 12px; font-weight: 600; }
+.mbk-control-optional { color: var(--chrome-muted); font-size: 11px; font-weight: 400; }
 .mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; padding: 8px 10px; font: inherit; color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; background: var(--chrome-surface); }
 .mbk-control-field input[type=checkbox] { align-self: start; accent-color: var(--mokly-accent); width: 16px; height: 16px; }
 .mbk-control-field [aria-invalid=true] { border-color: var(--mbk-danger-ink); }
 .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-control-field :disabled { opacity: .6; cursor: default; }
 .mbk-control-field small { color: var(--chrome-muted); }
-.mbk-control-set { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.mbk-control-set, .mbk-control-check { display: flex; align-items: center; gap: 8px; font-size: 11px; }
 .mbk-control-unset { margin: 0; color: var(--chrome-muted); font-size: 11px; }
 .mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); }
 .mbk-component-controls { max-width: 680px; }

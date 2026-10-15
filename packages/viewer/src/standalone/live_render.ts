@@ -25,8 +25,9 @@ const CODES = new Map(
 );
 
 /**
- * The typed error of one failed render answer. Its message is Serve's own,
- * when Serve sent one, for the details of the alert that shows it.
+ * The typed error of one failed render answer. Its message is Serve's own
+ * generic message, when Serve sent one, kept as a diagnostic; the panel
+ * shows its copy by the code.
  */
 export function renderFailure(
   status: number,

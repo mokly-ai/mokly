@@ -86,3 +86,42 @@ test("each name keeps one ref callback", () => {
   assert.equal(focus.ref("fields"), focus.ref("fields"));
   assert.notEqual(focus.ref("fields"), focus.ref("notice"));
 });
+
+test("the first field skips hidden and disabled controls of every kind", () => {
+  const { document, focus, heading } = owner();
+  const control = (
+    tag: string,
+    state: { hidden?: boolean; disabled?: boolean },
+  ) => ({
+    tag,
+    ...state,
+    element: fakeElement(document, { focusable: true }),
+  });
+  const fields = [
+    control("select", { hidden: true }),
+    control("input", { disabled: true }),
+    control("textarea", { hidden: true }),
+    control("select", {}),
+  ];
+  /** Read each part of the selector: a tag, then `:not([hidden])` and `:not(:disabled)`. */
+  const matches = (selector: string, field: (typeof fields)[number]) =>
+    selector.split(",").some((part) => {
+      const [tag = "", ...rules] = part.trim().split(":not(");
+      return (
+        tag === field.tag &&
+        (!rules.includes("[hidden])") || !field.hidden) &&
+        (!rules.includes(":disabled)") || !field.disabled)
+      );
+    });
+  const container = {
+    ...fakeElement(document),
+    querySelector: (selector: string) =>
+      fields.find((field) => matches(selector, field))?.element ?? null,
+  } as unknown as HTMLElement;
+  focus.ref("fields")(container);
+  focus.request("fields");
+  focus.commit();
+  assert.equal(fields[3]!.element.focused, 1);
+  assert.equal(heading.focused, 0);
+  assert.ok(fields.slice(0, 3).every(({ element }) => element.focused === 0));
+});

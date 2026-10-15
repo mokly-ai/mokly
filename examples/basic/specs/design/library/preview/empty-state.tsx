@@ -49,7 +49,7 @@ export const emptyState = defineComponent({
     },
     {
       slug: "missing-route",
-      title: "Missing screen",
+      title: "Missing route",
       props: {
         title: "Item not found",
         body: "Nothing in the catalogue matches",

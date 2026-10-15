@@ -37,48 +37,39 @@ const edited: ComponentEditorState = {
   previews: new Map([["mobile/light", preview]]),
 };
 
-test("saved props start without a notice, a detail, or edits", () => {
+test("saved props start without a notice or edits", () => {
   const state = initialComponentEditorState(undefined, "s", draft);
   assert.equal(state.notice, undefined);
-  assert.equal(state.detail, undefined);
   assert.equal(state.dirty, false);
   assert.equal(state.previews.size, 0);
 });
 
-test("Serve's 400 means values not valid together, with its message as the detail", () => {
-  const message = "Check the prop values and their allowed limits.";
+test("Serve's 400 means the values fail together, whatever its message", () => {
   const rejected = withRenderFailure(
     edited,
-    new ComponentRenderError("invalid-input", message),
+    new ComponentRenderError(
+      "invalid-input",
+      "Check the prop values and their allowed limits.",
+    ),
   );
   assert.equal(rejected.notice, "invalid-together");
-  assert.equal(rejected.detail, message);
   assert.equal(rejected.previews, edited.previews);
-  const silent = withRenderFailure(
-    edited,
-    new ComponentRenderError("invalid-input", " "),
-  );
-  assert.equal(silent.notice, "invalid-together");
-  assert.equal(silent.detail, undefined);
+  assert.deepEqual(Object.keys(rejected).sort(), Object.keys(edited).sort());
 });
 
 test("a 409 stays pending until the render after the new revision", () => {
   const state = withRenderFailure(
-    { ...edited, detail: "old" },
+    edited,
     new ComponentRenderError("stale-revision", "The catalogue changed."),
   );
   assert.equal(state.notice, "pending");
-  assert.equal(state.detail, undefined);
   assert.equal(state.previews, edited.previews);
   assert.equal(state.draft, draft);
 });
 
 test("other failures keep the edits and the preview and offer Try again", () => {
   const failed = (code: RenderErrorCode | "invalid-response") =>
-    withRenderFailure(
-      { ...edited, detail: "old" },
-      new ComponentRenderError(code, "diagnostic"),
-    );
+    withRenderFailure(edited, new ComponentRenderError(code, "diagnostic"));
   for (const code of [
     "forbidden",
     "unknown-entry",
@@ -91,7 +82,6 @@ test("other failures keep the edits and the preview and offer Try again", () => 
   ] as const) {
     const state = failed(code);
     assert.equal(state.notice, "failed", code);
-    assert.equal(state.detail, undefined, code);
     assert.equal(state.previews, edited.previews, code);
     assert.equal(state.draft, draft, code);
   }
@@ -102,9 +92,8 @@ test("other failures keep the edits and the preview and offer Try again", () => 
 });
 
 test("an expired preview shows the saved props and keeps the edits", () => {
-  const state = withExpiredPreview({ ...edited, detail: "old" });
+  const state = withExpiredPreview(edited);
   assert.equal(state.notice, "expired");
-  assert.equal(state.detail, undefined);
   assert.equal(state.previews.size, 0);
   assert.equal(state.dirty, true);
   assert.equal(state.draft, draft);

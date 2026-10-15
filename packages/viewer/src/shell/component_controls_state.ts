@@ -29,8 +29,6 @@ export type ControlsNotice =
 
 /** One edit scope's current draft and last valid previews. */
 export interface ComponentEditorState {
-  /** Serve's message for props that it rejected, shown in a disclosure. */
-  detail: string | undefined;
   draft: ControlDraft;
   errors: Readonly<Record<string, string>>;
   dirty: boolean;
@@ -47,7 +45,6 @@ export function initialComponentEditorState(
   draft: ControlDraft,
 ): ComponentEditorState {
   return {
-    detail: undefined,
     draft: target ? draft : {},
     errors: {},
     dirty: false,
@@ -119,23 +116,18 @@ export function draftNotice(
 /**
  * A failed render keeps the edits and the last valid preview. The shell
  * checks each field and the props as a whole first, so Serve's 400 means
- * the values fail together; its message stays as the alert's detail. A 409
- * stays pending: the shell renders again once it adopts the new revision.
+ * the values fail together. A 409 stays pending: the shell renders again
+ * once it adopts the new revision.
  */
 export function withRenderFailure(
   state: ComponentEditorState,
   error: unknown,
 ): ComponentEditorState {
   const code = error instanceof ComponentRenderError ? error.code : undefined;
-  if (code === "stale-revision")
-    return { ...state, detail: undefined, notice: "pending" };
-  if (code !== "invalid-input")
-    return { ...state, detail: undefined, notice: "failed" };
-  const detail = error instanceof Error ? error.message.trim() : "";
+  if (code === "stale-revision") return { ...state, notice: "pending" };
   return {
     ...state,
-    detail: detail || undefined,
-    notice: "invalid-together",
+    notice: code === "invalid-input" ? "invalid-together" : "failed",
   };
 }
 
@@ -143,12 +135,7 @@ export function withRenderFailure(
 export function withExpiredPreview(
   state: ComponentEditorState,
 ): ComponentEditorState {
-  return {
-    ...state,
-    detail: undefined,
-    notice: "expired",
-    previews: new Map(),
-  };
+  return { ...state, notice: "expired", previews: new Map() };
 }
 
 /** Context identity for saved and temporary preview results. */

@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
-import { ComparisonFailure } from "../src/shell/diffs.js";
+import { ComparisonFailure, reviewReload } from "../src/shell/diffs.js";
 import { MoklyViewer } from "../src/viewer/component.js";
 import { loadIndexSource, sourceUrl } from "../src/viewer/sources.js";
 
@@ -244,10 +244,23 @@ test("a rejected review shows the headline; only the standalone shell offers Rel
   );
   assert.match(
     failure(() => undefined),
-    /^<p role="alert">This catalogue needs a compatible viewer <button data-diff-reload="" type="button">Reload<\/button><\/p>/,
+    /^<p role="alert">This catalogue needs a compatible viewer <button class="mbk-empty-link" data-diff-reload="" type="button">Reload<\/button><\/p>/,
   );
   assert.doesNotMatch(
     failure(() => undefined),
     /Try again/,
   );
+  assert.match(
+    renderToStaticMarkup(
+      <ComparisonFailure details="offline" retry={() => undefined} />,
+    ),
+    /^<p>The comparison could not be loaded\. <button class="mbk-empty-link" data-diff-refresh="" type="button">Try again<\/button><\/p>/,
+  );
+});
+
+test("only the standalone shell's context offers Reload for a rejected review", () => {
+  const reload = () => undefined;
+  assert.equal(reviewReload({ embedded: false }, reload), reload);
+  assert.equal(reviewReload({ embedded: true }, reload), undefined);
+  assert.equal(reviewReload(undefined, reload), undefined);
 });

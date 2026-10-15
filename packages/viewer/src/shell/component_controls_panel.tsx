@@ -9,6 +9,7 @@ import { CONTROLS_COPY } from "./component_controls_copy.js";
 import type {
   ComponentEditorState,
   ControlsMode,
+  ControlsNotice,
 } from "./component_controls_state.js";
 import {
   controlEntries,
@@ -123,7 +124,7 @@ export function ComponentControlsPanel({
           {CONTROLS_COPY.reset(target.title)}
         </button>
       </div>
-      <ControlsAlert onRetry={onRetry} state={state} />
+      <ControlsAlert notice={state.notice} onRetry={onRetry} />
       <p className="mbk-controls-restored" role="status">
         {state.notice === "restored" ? CONTROLS_COPY.restored : null}
       </p>
@@ -189,36 +190,22 @@ export function EditStatus({ pending }: { pending: boolean }) {
   );
 }
 
-/**
- * One alert per failed edit: what failed, and one action when one exists.
- * Serve's own message for props it rejected stays in a disclosure.
- */
+/** One alert per failed edit: what failed, and one action when one exists. */
 function ControlsAlert({
+  notice,
   onRetry,
-  state: { detail, notice },
 }: {
+  notice: ControlsNotice | undefined;
   onRetry(): void;
-  state: ComponentEditorState;
 }) {
-  if (notice === "invalid" || notice === "invalid-together") {
-    const text =
-      notice === "invalid"
-        ? CONTROLS_COPY.invalid
-        : CONTROLS_COPY.invalidTogether;
-    return detail ? (
-      <div className="mbk-control-alert" role="alert">
-        <p>{text}</p>
-        <details>
-          <summary>Details</summary>
-          <p>{detail}</p>
-        </details>
-      </div>
-    ) : (
+  if (notice === "invalid" || notice === "invalid-together")
+    return (
       <p className="mbk-control-alert" role="alert">
-        {text}
+        {notice === "invalid"
+          ? CONTROLS_COPY.invalid
+          : CONTROLS_COPY.invalidTogether}
       </p>
     );
-  }
   if (notice !== "failed" && notice !== "expired") return null;
   const failed = notice === "failed";
   return (

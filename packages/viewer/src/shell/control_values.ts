@@ -1,4 +1,4 @@
-/** Pure draft, validation and number-step rules of the Props controls. */
+/** Pure draft and validation rules of the Props controls. */
 
 import { decodeProps } from "../components/codec.js";
 import type { ComponentControl } from "../components/control_types.js";
@@ -18,6 +18,10 @@ import type { ComponentOverride } from "../components/render_types.js";
 import type { ManifestEntry } from "../registry/types.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
+import {
+  effectiveNumberControl,
+  numberInputBounds,
+} from "./control_numbers.js";
 
 /** The shown entry whose props the controls edit: an entry's own or merged props. */
 export interface ControlTarget {
@@ -122,7 +126,7 @@ export function validateControlDraft(
       if (!Object.is(value, saved[key]))
         overrides[key] = { kind: "set", value };
     } catch {
-      errors[key] = fieldError(target, key, control);
+      errors[key] = fieldError(target, key, control, field);
     }
   }
   if (!Object.keys(errors).length)
@@ -137,52 +141,35 @@ export function validateControlDraft(
   };
 }
 
-/** A field's error names what a valid value looks like. */
+/**
+ * A field's error names what a valid value looks like. A value inside the
+ * range of a step-1 field that is not whole asks for a whole number.
+ */
 function fieldError(
   target: ControlTarget,
   key: string,
   control: ComponentControl,
+  field: ControlDraftField,
 ): string {
-  if (control.kind === "number") {
-    const { min, max } = numberInputBounds(control);
-    return CONTROLS_COPY.numberError(min, max, control.step);
-  }
-  if (control.kind === "select") return "Choose an available value.";
+  if (control.kind === "select") return CONTROLS_COPY.chooseAvailable;
   const property = propertySchema(target.propSchema, key);
-  const shortest = property?.minLength ?? 0;
-  const longest = control.kind === "text" ? control.maxLength : undefined;
-  const maximum = longest ?? property?.maxLength;
-  if (shortest && maximum !== undefined)
-    return `Enter ${shortest} to ${maximum} characters.`;
-  if (maximum !== undefined) return `Enter up to ${maximum} characters.`;
-  return shortest
-    ? `Enter at least ${shortest} characters.`
-    : "Enter an allowed value.";
-}
-
-/**
- * The HTML bounds that offer only multiples of the step counted from zero:
- * the first offered value is the smallest multiple at or above the minimum.
- */
-export function numberInputBounds(
-  control: Extract<ComponentControl, { kind: "number" }>,
-): { min?: number; max?: number; step: number | "any" } {
-  const step = control.step;
-  if (step === undefined)
-    return {
-      ...(control.minimum === undefined ? {} : { min: control.minimum }),
-      ...(control.maximum === undefined ? {} : { max: control.maximum }),
-      step: "any",
-    };
-  return {
-    ...(control.minimum === undefined
-      ? {}
-      : { min: multiple(control.minimum, step, "up") }),
-    ...(control.maximum === undefined
-      ? {}
-      : { max: multiple(control.maximum, step, "down") }),
-    step,
-  };
+  if (control.kind !== "number")
+    return CONTROLS_COPY.textError(
+      property?.minLength,
+      (control.kind === "text" ? control.maxLength : undefined) ??
+        property?.maxLength,
+    );
+  const number = effectiveNumberControl(target, key, control);
+  const { min, max } = numberInputBounds(number);
+  const value = Number(field.value);
+  const inside =
+    String(field.value).trim() !== "" &&
+    Number.isFinite(value) &&
+    (min === undefined || value >= min) &&
+    (max === undefined || value <= max);
+  return inside && number.step === 1 && !Number.isInteger(value)
+    ? CONTROLS_COPY.wholeNumberError(min, max)
+    : CONTROLS_COPY.numberError(min, max, number.step);
 }
 
 function fieldValue(
@@ -193,37 +180,16 @@ function fieldValue(
   if (control.kind === "select") {
     const option =
       field.value === "" ? undefined : control.options[Number(field.value)];
-    if (!option) throw new Error("Choose an available value.");
+    if (!option) throw new Error("no available option");
     return option.value;
   }
   if (control.kind === "number") {
     const value = Number(field.value);
     if (!String(field.value).trim() || !Number.isFinite(value))
-      throw new Error("Enter a finite number.");
+      throw new Error("not a finite number");
     return value;
   }
   return String(field.value);
-}
-
-/** The nearest multiple of `step` at or beyond `bound` in one direction. */
-function multiple(bound: number, step: number, direction: "up" | "down") {
-  const decimals = Math.min(20, Math.max(precision(step), precision(bound)));
-  const at = (count: number) => Number((count * step).toFixed(decimals));
-  let count =
-    direction === "up" ? Math.ceil(bound / step) : Math.floor(bound / step);
-  if (direction === "up") {
-    if (at(count) < bound) count += 1;
-    else if (at(count - 1) >= bound) count -= 1;
-  } else if (at(count) > bound) count -= 1;
-  else if (at(count + 1) <= bound) count += 1;
-  const value = at(count);
-  return Object.is(value, -0) ? 0 : value;
-}
-
-function precision(value: number): number {
-  const [mantissa = "", exponent = "0"] = String(value).split("e");
-  const fraction = mantissa.split(".")[1]?.length ?? 0;
-  return Math.max(0, fraction - Number(exponent));
 }
 
 /** The entry the Props controls edit: the shown component row, or the screen. */

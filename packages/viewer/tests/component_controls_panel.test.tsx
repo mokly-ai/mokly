@@ -182,23 +182,6 @@ test("invalid values: highlighted fields, or values not valid together", () => {
   );
 });
 
-test("Serve's message for props it rejected stays in a disclosure", () => {
-  const detail = "Check the prop values and their allowed limits.";
-  const node = panel("editable", {
-    detail,
-    dirty: true,
-    notice: "invalid-together",
-  });
-  assert.match(
-    renderToStaticMarkup(node),
-    /<div class="mbk-control-alert" role="alert"><p>These values are not valid together\.<\/p><details><summary>Details<\/summary><p>Check the prop values and their allowed limits\.<\/p><\/details><\/div>/,
-  );
-  assert.deepEqual(
-    buttons(node).map(({ label }) => label),
-    ["Reset to Default"],
-  );
-});
-
 test("fields wait while editing starts, and a failed start offers Try again", () => {
   const preparing = html("preparing");
   assert.match(

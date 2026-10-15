@@ -57,10 +57,12 @@ text, not fields. Merged props that fail as a whole highlight no field; the
 alert names the failure, and the heading's Reset is the one action. An expired
 temporary preview keeps the edits, shows the saved props, and offers Update
 preview. An optional field shows Optional, a Set check box, and Not set while
-unset; a number field's help and error name its bounds and its step. After
+unset; an optional toggle's value check box carries the field's name. A
+number field's help and error name its bounds and its step. After
 Reset, Try again, or Update preview, focus moves to the panel heading; after
-Switch to Current, to the first field; after a start or catalogue retry, to
-the status that replaces the button. The settled strings are in
+Switch to Current, to the first field; after a start retry, to the status
+that replaces the button, and to the heading when that status leaves; after
+a catalogue retry, to the loading status. The settled strings are in
 `examples/basic/specs/design/components/controls/parts/copy.ts`.
 Do not add environment badges or implementation details to the rendered UI.
 

@@ -222,8 +222,7 @@ is discarded, and the shell keeps the preview pending and retries with the
 installed revision after it adopts the new state; it shows the failure only when
 that retry fails. The shell checks each field and the props as a whole before it
 renders, so a 400 after those checks pass shows `These values are not valid
-together.` and keeps Serve's message, when it sends one, in a details
-disclosure. Shutdown stops admission, rejects queued work, cancels active
+together.` Shutdown stops admission, rejects queued work, cancels active
 renders, and releases the memory store. Controls cannot delay a watched rebuild,
 a publication, or a comparison generation.
 

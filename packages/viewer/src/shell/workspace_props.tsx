@@ -49,7 +49,7 @@ function emptyProps(
   if (data.viewUsagePending) return WAITING_REASON;
   if (usage && !usage.instances.length) return CONTROLS_COPY.noProps;
   if (!usage && data.entry.kind === "screen")
-    return "Props are unavailable for this screen.";
+    return CONTROLS_COPY.propsUnavailable;
   return "Select a component instance to see its supplied props.";
 }
 

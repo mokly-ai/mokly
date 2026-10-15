@@ -15,6 +15,7 @@ import {
 } from "./comparison_selection.js";
 import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
+import type { ShellContext } from "./context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
@@ -91,9 +92,9 @@ export function ControlledDiffScreen({
         {failure ? (
           <ComparisonFailure
             details={failure}
-            {...(store?.context.embedded === false
-              ? { reload: () => globalThis.location.reload() }
-              : {})}
+            reload={reviewReload(store?.context, () =>
+              globalThis.location.reload(),
+            )}
             retry={comparison.retry}
             versionError={comparison.versionError}
           />
@@ -115,9 +116,20 @@ export function ControlledDiffScreen({
 }
 
 /**
+ * The Reload of a rejected review: only the standalone shell offers it,
+ * because a reload loads the viewer that ships with its catalogue; an
+ * embedded viewer reports the failure to its host instead.
+ */
+export function reviewReload(
+  context: Pick<ShellContext, "embedded"> | undefined,
+  reload: () => void,
+): (() => void) | undefined {
+  return context?.embedded === false ? reload : undefined;
+}
+
+/**
  * A comparison that could not load offers Try again. A rejected review
- * shows the version headline; only the standalone shell offers Reload,
- * because a reload loads the viewer that ships with its catalogue.
+ * shows the version headline, with Reload when the host offers it.
  */
 export function ComparisonFailure({
   details,
@@ -126,7 +138,7 @@ export function ComparisonFailure({
   versionError,
 }: {
   details: string;
-  reload?: () => void;
+  reload?: (() => void) | undefined;
   retry(): void;
   versionError?: MoklyVersionError | undefined;
 }) {
@@ -138,7 +150,12 @@ export function ComparisonFailure({
           {reload ? (
             <>
               {" "}
-              <button data-diff-reload="" onClick={reload} type="button">
+              <button
+                className="mbk-empty-link"
+                data-diff-reload=""
+                onClick={reload}
+                type="button"
+              >
                 Reload
               </button>
             </>
@@ -147,7 +164,12 @@ export function ComparisonFailure({
       ) : (
         <p>
           The comparison could not be loaded.{" "}
-          <button data-diff-refresh="" onClick={retry} type="button">
+          <button
+            className="mbk-empty-link"
+            data-diff-refresh=""
+            onClick={retry}
+            type="button"
+          >
             Try again
           </button>
         </p>

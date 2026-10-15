@@ -1,7 +1,12 @@
-/** A number field's bounds: "0–24", "0 or more", "24 or less", or none. */
+/**
+ * A number field's bounds: "0–24", "0 or more", "24 or less", or none. A
+ * negative bound reads "-10 to -1", because a dash beside a minus misleads.
+ */
 function bounds(minimum?: number, maximum?: number): string {
   if (minimum !== undefined && maximum !== undefined)
-    return `${minimum}–${maximum}`;
+    return minimum < 0 || maximum < 0
+      ? `${minimum} to ${maximum}`
+      : `${minimum}–${maximum}`;
   if (minimum !== undefined) return `${minimum} or more`;
   return maximum === undefined ? "" : `${maximum} or less`;
 }
@@ -11,13 +16,19 @@ function steps(step?: number): string {
   return step === undefined || step === 1 ? "" : `in steps of ${step}`;
 }
 
+/** A count of characters: "1 character", "5 characters". */
+function characters(count: number): string {
+  return `${count} character${count === 1 ? "" : "s"}`;
+}
+
 /**
- * The settled copy of the Props tab's controls. The mockups render every
- * entry, and the viewer follows them. The range and number error functions
- * also give the one-sided and step forms that the viewer's fields use. The
- * Read-only and recovery gallery draws the removed entry, read-only props,
- * an entry without props, merged props that fail without one field to
- * highlight, and an expired preview.
+ * The settled copy of the Props tab's controls; the viewer follows it, and a
+ * tooling test compares the two. The mockups draw the entries of the states
+ * they show. The field functions also give the forms that no mockup draws:
+ * one-sided bounds, steps, whole numbers, and text lengths. The Read-only
+ * and recovery gallery draws the removed entry, read-only props, an entry
+ * without props, merged props that fail without one field to highlight, and
+ * an expired preview.
  */
 export const CONTROLS_COPY = {
   tab: "Props",
@@ -66,4 +77,29 @@ export const CONTROLS_COPY = {
       return `Enter a number of ${maximum} or less${tail}.`;
     return `Enter a number${tail}.`;
   },
+  /** A value inside the range of a step-1 field that is not whole. */
+  wholeNumberError: (minimum?: number, maximum?: number) => {
+    if (minimum !== undefined && maximum !== undefined)
+      return `Enter a whole number from ${minimum} to ${maximum}.`;
+    if (minimum !== undefined)
+      return `Enter a whole number of ${minimum} or more.`;
+    if (maximum !== undefined)
+      return `Enter a whole number of ${maximum} or less.`;
+    return "Enter a whole number.";
+  },
+  /** A text field's error names its length; no minimum below 1 counts. */
+  textError: (minimum?: number, maximum?: number) => {
+    const shortest = minimum !== undefined && minimum > 0 ? minimum : undefined;
+    if (shortest !== undefined && maximum !== undefined)
+      return shortest === maximum
+        ? `Enter ${characters(maximum)}.`
+        : `Enter ${shortest} to ${characters(maximum)}.`;
+    if (maximum !== undefined) return `Enter up to ${characters(maximum)}.`;
+    if (shortest !== undefined)
+      return `Enter at least ${characters(shortest)}.`;
+    return "Enter an allowed value.";
+  },
+  chooseValue: "Choose a value",
+  chooseAvailable: "Choose an available value.",
+  propsUnavailable: "Props are unavailable for this screen.",
 } as const;
