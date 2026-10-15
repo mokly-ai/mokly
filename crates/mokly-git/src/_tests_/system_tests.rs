@@ -7,7 +7,7 @@ use mokly_platform::error;
 use mokly_platform::processes::ProcessGroupsMock;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use crate::command::{CancellationMock, DEFAULT_OUTPUT_LIMIT, Request, Runner};
 use crate::error::Error;
 use crate::system::SystemRunner;
 
@@ -51,4 +51,20 @@ fn request(limit: usize) -> Request {
         args: vec!["--version".into()],
         output_limit: limit,
     }
+}
+
+#[test]
+fn explicit_cancellation_stops_before_platform_setup() {
+    let cancellation = Unimock::new(
+        CancellationMock::is_cancelled
+            .next_call(matching!())
+            .returns(true),
+    );
+    let runner: &dyn Runner = &SystemRunner {
+        groups: Arc::new(Unimock::new(())),
+    };
+    assert!(matches!(
+        runner.run_cancellable(&request(DEFAULT_OUTPUT_LIMIT), &cancellation),
+        Err(Error::Cancelled)
+    ));
 }

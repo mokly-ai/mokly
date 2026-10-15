@@ -1,5 +1,7 @@
 # Catalogue Upload Exchange v1
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Boundary
 
 The [CLI and manifest contract](./mokly-upload.md) owns repository metadata; the

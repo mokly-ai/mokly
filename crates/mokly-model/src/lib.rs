@@ -14,6 +14,7 @@ pub mod evidence;
 pub mod inference;
 pub mod limits;
 mod numeric;
+pub mod output;
 pub mod paths;
 mod profile;
 pub mod prop_schema;

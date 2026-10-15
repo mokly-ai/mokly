@@ -128,10 +128,12 @@ impl Style {
         if self.mode == Mode::Plain {
             return format!("[mokly/{code}] {message}\n");
         }
-        let detail = if fixed_upload || message.is_empty() || message == headline {
+        let detail = message.strip_prefix(headline).unwrap_or(&message).trim();
+        let detail = detail.strip_suffix(hint).unwrap_or(detail).trim();
+        let detail = if fixed_upload || detail.is_empty() {
             None
         } else {
-            Some(message.as_str())
+            Some(detail)
         };
         self.rich(code, headline, hint, detail)
     }
