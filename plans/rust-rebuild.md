@@ -815,6 +815,10 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
+      finding 7): at a narrow width, for example 1000 x 800, the component
+      stage with both viewports starts its row at the stage's left edge and
+      scrolls to the row's end, and a stage row that fits stays centred.
 - [ ] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,
@@ -826,6 +830,10 @@ renders again.
       the descriptor loads), "No editable props are declared for this
       entry.", and "Check the highlighted values." for a whole-props error
       that highlights no field.
+- [ ] Settle the component stage layout in the design port: with Both, the
+      shell places the 390px mobile and 1024px desktop canvases side by side
+      (below 760px, stacked at the stage's left edge), while the component
+      mockups stack the two views and centre the mobile canvas.
 - [x] Write the JavaScript authoring guides.
 
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
