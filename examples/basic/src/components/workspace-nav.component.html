@@ -21,34 +21,36 @@ props:
   current: Team
 ---
 
-<nav
-  class="side-nav"
-  lang="en"
-  aria-label="Workspace"
-  data-current="{{current}}"
-  mokly-viewport="desktop"
->
-  <p class="side-nav-name">{{workspace.name}}</p>
-  <p class="side-nav-plan">{{workspace.plan}}</p>
-  <ul class="side-nav-sections">
-    <li>
-      <span class="side-nav-section" data-section="Projects">Projects</span>
-    </li>
-    <li>
-      <a
-        class="side-nav-section"
-        data-section="Team"
-        href="mock:example/team/members"
-        >Team</a
-      >
-    </li>
-    <li>
-      <span class="side-nav-section" data-section="Settings">Settings</span>
-    </li>
-  </ul>
-</nav>
-<header class="top-bar" lang="en" mokly-viewport="mobile">
-  <span class="top-bar-menu" aria-hidden="true"></span>
-  <p class="top-bar-name">{{workspace.name}}</p>
-  <p class="top-bar-section">{{current}}</p>
-</header>
+<mokly-ignore id="workspace-nav" material-key="{{current}}">
+  <nav
+    class="side-nav"
+    lang="en"
+    aria-label="Workspace"
+    data-current="{{current}}"
+    mokly-viewport="desktop"
+  >
+    <p class="side-nav-name">{{workspace.name}}</p>
+    <p class="side-nav-plan">{{workspace.plan}}</p>
+    <ul class="side-nav-sections">
+      <li>
+        <span class="side-nav-section" data-section="Projects">Projects</span>
+      </li>
+      <li>
+        <a
+          class="side-nav-section"
+          data-section="Team"
+          href="mock:example/team/members"
+          >Team</a
+        >
+      </li>
+      <li>
+        <span class="side-nav-section" data-section="Settings">Settings</span>
+      </li>
+    </ul>
+  </nav>
+  <header class="top-bar" lang="en" mokly-viewport="mobile">
+    <span class="top-bar-menu" aria-hidden="true"></span>
+    <p class="top-bar-name">{{workspace.name}}</p>
+    <p class="top-bar-section">{{current}}</p>
+  </header>
+</mokly-ignore>

@@ -55,7 +55,7 @@ The three HTML components declare a prop schema, saved props, and slots:
 - `<workspace-member>` is one person, with a role from an `enum` and a
   `pending` boolean. Its `pending` variant shows an open invitation.
 
-The screens use the template language as follows:
+The screens and components use the template language as follows:
 
 | Feature              | Example                                                                      |
 | -------------------- | ---------------------------------------------------------------------------- |
@@ -68,12 +68,16 @@ The screens use the template language as follows:
 | `mokly-instance`     | each member row has its own instance id                                      |
 | `mock:` link         | the screens, the page, and the document link to each other by path           |
 | `to` link control    | **Send invitation** opens `example/team/members/invited`                     |
-| Review-ignore region | `<mokly-ignore id="workspace-nav">` around the shared navigation             |
+| Review-ignore region | `<mokly-ignore id="workspace-nav">` around the navigation's own output       |
 
 The navigation is shell chrome that repeats on every Team screen. Its
-Review-ignore region keeps a change to the chrome alone out of Changes. Its
-`material-key` names the selected section, so a change of the key still
-counts as a change.
+component wraps its own output in a Review-ignore region, so a change inside
+the chrome alone is ignored in the screens' comparison. The region's
+`material-key="{{current}}"` names the selected section, so a change of the
+section still counts as a change. A screen does not wrap the
+`<workspace-nav>` element itself: an ignore region may not enclose a component
+instance, under the
+[component changes contract](../../docs/protocol/mokly-component-changes.md).
 
 Screens and components render at the mobile and desktop viewports, in light
 and dark. The `example/{team,components/workspace-*}/**` stylesheet rule
