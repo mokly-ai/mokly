@@ -25,12 +25,15 @@ shutdown. A background pass fills usage after readiness and yields to foreground
 renders. A completed pass publishes complete consumer lists. In rich watched
 mode, `r` enqueues a complete manual rebuild and restarts that pass. A
 valid candidate replaces the public state and backend with the next revision;
-a failed candidate keeps the last good state. Port 0 requests a free port. An occupied concrete port advances to
+a failed candidate keeps the last good state. Preparation and projection run
+outside the serving task. A revision race stamps the same candidate again
+without repeating projection. Port 0 requests a free port. An occupied concrete port advances to
 the next available port through 65535. Repeated SIGINT requests coalesce.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
 
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
-diagnostics. It preserves carriage returns in raw mode and ignores shortcut
+diagnostics. It reports listener backoff and recovery in both output modes.
+It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
 counts without source text, props, or error payloads.
 

@@ -12,7 +12,9 @@ use tokio::net::TcpListener;
 use tokio::sync::watch;
 use tokio::task::JoinSet;
 
-use crate::accept::{AcceptBackoff, Acceptor, Backoff, TcpAcceptor, connection_error};
+use crate::accept::{
+    AcceptBackoff, AcceptPeriod, Acceptor, Backoff, TcpAcceptor, connection_error,
+};
 use crate::application::HttpApplication;
 use crate::error::{InternalError, Result, ServerError};
 use crate::shutdown::Lifecycle;
@@ -95,6 +97,7 @@ impl BoundServer for Listener {
         let router = app.clone().router(stop.clone());
         let mut clients = JoinSet::new();
         let mut failure = None;
+        let mut period = AcceptPeriod::default();
         loop {
             if *stop.borrow() {
                 break;
@@ -104,6 +107,7 @@ impl BoundServer for Listener {
                 client = self.socket.accept() => {
                     match client {
                         Ok(stream) => {
+                            if period.recovered() { app.accept_recovered(); }
                             let service = TowerToHyperService::new(router.clone());
                             clients.spawn(async move {
                                 if let Err(error) = http1::Builder::new().serve_connection(TokioIo::new(stream), service).await { tracing::debug!(%error, "client closed"); }
@@ -111,7 +115,7 @@ impl BoundServer for Listener {
                         },
                         Err(source) if connection_error(&source) => { tracing::debug!(%source, "connection could not be accepted"); },
                         Err(source) => {
-                            tracing::warn!(%source, "listener will retry after an accept failure");
+                            if period.failed() { app.accept_failed(&source); }
                             tokio::select! { _ = stop.changed() => break, _ = self.backoff.wait() => {} }
                         },
                     }

@@ -22,7 +22,8 @@ and temporary prop previews. `mokly-graph` owns rendering and resource closure.
 `TokioServer` implements `dyn ServerRuntime`. It uses Axum, Tokio, and Hyper.
 The transport owns each HTTP connection. Shutdown closes incomplete requests
 and event streams before it runs watcher, render, Git, sidecar, and lock hooks.
-An error in one hook does not skip later hooks.
+An error in one hook does not skip later hooks. The CLI reporter receives the
+first accept resource failure and the recovery once per backoff period.
 
 `Projector` implements `dyn SnapshotFactory`. It projects the initial revision
 from graph plans without rendering a document. Every JSON response has canonical
@@ -33,12 +34,21 @@ in order. Its subscription captures the initial state and receiver under one
 lock. A superseded revision admits no queued live render. Watch and Changes
 use these same boundaries.
 
+Evidence revisions share the generation's assets, routes, backend, and shell.
+Unchanged detail payloads and index bytes also stay shared. Delivery stamps the
+current revision into canonical JSON without copying the payload. Only changed
+details are validated and encoded. `Snapshot::detail` supplies the matching
+revision to typed consumers. Shutdown fences and drains queued publications.
+
 `UsagePass` renders every view in catalogue order after readiness. It yields
 between documents and waits while foreground requests need the worker pool.
-On-demand completions publish their usage immediately. A completed background
+Document responses queue completion notices without waiting for publication.
+One application-owned task coalesces notices and skips recorded routes and
+routes with no detail views. A completed background
 pass publishes its evidence in one batch. A replacement starts a new pass;
 `--no-watch` computes it once. Old backends cannot publish into a replacement.
-Workspace lists stay absent until all consumer usage is proven. Failed views
+Workspace lists stay absent until all consumer usage is proven. One unavailable
+view keeps every Used by list absent until the next generation. Failed views
 publish unavailable usage without inventing empty consumers.
 
 `GraphDocuments` implements `dyn Documents`. It coalesces requests for the same

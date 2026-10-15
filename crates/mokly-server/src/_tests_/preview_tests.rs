@@ -18,7 +18,7 @@ fn preview(bytes: usize) -> PreviewDocument {
         files: BTreeMap::from([(
             "index.html".into(),
             File {
-                bytes: vec![b'x'; bytes],
+                bytes: vec![b'x'; bytes].into(),
                 content_type: "text/html; charset=utf-8".into(),
             },
         )]),

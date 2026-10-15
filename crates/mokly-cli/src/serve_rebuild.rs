@@ -17,12 +17,14 @@ use tokio::sync::mpsc;
 use crate::serve_candidates::CandidateWork;
 use crate::serve_state::ServeStateFactory;
 
+#[cfg_attr(test, unimock::unimock(api = RebuildReporterMock))]
 pub(super) trait RebuildReporter: Send + Sync {
     fn completed(&self, summary: &BuildSummary, elapsed: Duration);
     fn catalogue_failure(&self, error: &BuildError);
     fn server_failure(&self, error: &ServerError);
 }
 
+#[derive(Clone)]
 pub(super) struct ManualRebuilds {
     pub(super) candidates: Arc<dyn CandidateWork>,
     pub(super) preparation: Arc<dyn ServePreparation>,
@@ -53,51 +55,60 @@ impl ServeActions for ManualRebuilds {
                 continue;
             };
             let started = Instant::now();
-            let preparation = self.preparation.clone();
-            let cwd = self.cwd.clone();
-            let options = self.options.clone();
+            let action = self.clone();
             let mut candidate = tokio::task::spawn_blocking(move || {
                 let _candidate = permit;
-                preparation.prepare(&cwd, &options)
+                action.rebuild()
             });
-            let prepared = tokio::select! {
+            let result = tokio::select! {
                 result = &mut serving => { let _ = candidate.await; return result; },
                 result = &mut candidate => result,
             };
-            let prepared = match prepared {
-                Ok(Ok(prepared)) => prepared,
-                Ok(Err(error)) => {
-                    self.reporter.catalogue_failure(&error);
-                    continue;
-                }
-                Err(source) => {
-                    self.reporter
-                        .server_failure(&ServerError::Internal(InternalError::Task { source }));
-                    continue;
-                }
-            };
-            if !self.candidates.active() {
-                continue;
-            }
-            while self.candidates.active() {
-                let Some(revision) = self.publications.current().index.revision.checked_add(1)
-                else {
-                    break;
-                };
-                match self.states.create(&prepared, revision) {
-                    Ok(snapshot) => {
-                        if self.writer.replace(snapshot) {
-                            self.reporter
-                                .completed(&prepared.summary, started.elapsed());
-                            break;
-                        }
-                    }
-                    Err(error) => {
-                        self.reporter.server_failure(&error);
-                        break;
-                    }
-                }
+            match result {
+                Ok(Some(summary)) => self.reporter.completed(&summary, started.elapsed()),
+                Ok(None) => {}
+                Err(source) => self
+                    .reporter
+                    .server_failure(&ServerError::Internal(InternalError::Task { source })),
             }
         }
     }
 }
+
+impl ManualRebuilds {
+    fn rebuild(&self) -> Option<BuildSummary> {
+        let prepared = match self.preparation.prepare(&self.cwd, &self.options) {
+            Ok(prepared) => prepared,
+            Err(error) => {
+                self.reporter.catalogue_failure(&error);
+                return None;
+            }
+        };
+        if !self.candidates.active() {
+            return None;
+        }
+        let revision = self.publications.current().index.revision.checked_add(1)?;
+        let mut snapshot = match self.states.create(&prepared, revision) {
+            Ok(snapshot) => snapshot,
+            Err(error) => {
+                self.reporter.server_failure(&error);
+                return None;
+            }
+        };
+        while self.candidates.active() {
+            if self.writer.replace(snapshot.clone()) {
+                return Some(prepared.summary);
+            }
+            let revision = self.publications.current().index.revision.checked_add(1)?;
+            if revision <= snapshot.index.revision {
+                return None;
+            }
+            snapshot = snapshot.at_revision(revision);
+        }
+        None
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/serve_rebuild_tests.rs"]
+mod serve_rebuild_tests;

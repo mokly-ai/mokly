@@ -60,9 +60,15 @@ pub struct Builder {
 }
 
 impl CatalogueBuilder for Builder {
-    #[tracing::instrument(name = "catalogue.validate", skip_all, err)]
     fn prepare(&self, config: &ResolvedConfig, output: Option<&Path>) -> Result<PreparedCatalogue> {
         let inventory = self.discovery.discover(config, output)?;
+        self.validate(config, inventory)
+    }
+}
+
+impl Builder {
+    #[tracing::instrument(name = "catalogue.validate", skip_all, err)]
+    fn validate(&self, config: &ResolvedConfig, inventory: Inventory) -> Result<PreparedCatalogue> {
         let schemes = config
             .input
             .color_schemes

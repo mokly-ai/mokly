@@ -28,6 +28,17 @@ pub(crate) trait Backoff: Send + Sync {
 }
 
 pub(crate) struct AcceptBackoff;
+
+#[derive(Default)]
+pub(crate) struct AcceptPeriod(bool);
+impl AcceptPeriod {
+    pub(crate) fn failed(&mut self) -> bool {
+        !std::mem::replace(&mut self.0, true)
+    }
+    pub(crate) fn recovered(&mut self) -> bool {
+        std::mem::replace(&mut self.0, false)
+    }
+}
 #[async_trait]
 impl Backoff for AcceptBackoff {
     async fn wait(&self) {

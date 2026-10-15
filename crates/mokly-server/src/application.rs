@@ -1,17 +1,19 @@
 //! HTTP route dispatch over an atomic publication and injected runtime services.
 
+use std::io;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use axum::body::{Body, to_bytes};
+use axum::body::{Body, Bytes, to_bytes};
 use axum::extract::{Request, State};
-use axum::http::{HeaderValue, Method, StatusCode};
+use axum::http::{Method, StatusCode};
 use axum::response::Response;
 use axum::{Router, routing};
 use mokly_model::namespace::{generated, viewer};
 use mokly_model::paths::is_entry_path;
 use tokio::sync::watch;
 
+use crate::application_evidence::{CompletionQueue, EvidencePublisher};
 use crate::diagnostics::Diagnostics;
 use crate::preview::{Lookup, PreviewStore};
 use crate::publication::Publications;
@@ -28,6 +30,7 @@ pub struct Application {
     pub previews: Arc<dyn PreviewStore>,
     pub(crate) diagnostics: Arc<dyn Diagnostics>,
     pub(crate) work: Arc<dyn Work>,
+    pub(crate) publisher: Arc<dyn EvidencePublisher>,
 }
 impl Application {
     /// Build an application around injected document and preview services.
@@ -38,6 +41,10 @@ impl Application {
         diagnostics: Arc<dyn Diagnostics>,
     ) -> Self {
         Self {
+            publisher: Arc::new(CompletionQueue::new(
+                publications.clone(),
+                diagnostics.clone(),
+            )),
             publications,
             previews,
             work,
@@ -54,17 +61,27 @@ pub trait HttpApplication: Send + Sync {
     fn router(self: Arc<Self>, stop: watch::Receiver<bool>) -> Router;
     /// Stop admission, drain render work, and release temporary bytes.
     async fn stop_renders(&self);
+    /// Send accept backoff diagnostics to the application reporter.
+    fn accept_failed(&self, error: &io::Error);
+    /// Send accept recovery diagnostics to the application reporter.
+    fn accept_recovered(&self);
 }
 
 #[async_trait]
 impl HttpApplication for Application {
+    fn accept_failed(&self, error: &io::Error) {
+        self.diagnostics.accept_failed(error);
+    }
+    fn accept_recovered(&self) {
+        self.diagnostics.accept_recovered();
+    }
     fn router(self: Arc<Self>, stop: watch::Receiver<bool>) -> Router {
         Router::new()
             .fallback(routing::any(dispatch))
             .with_state((self, stop))
     }
     async fn stop_renders(&self) {
-        self.close_publications().await;
+        self.publisher.close().await;
         self.work.stop().await;
         self.previews.clear();
     }
@@ -99,7 +116,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
     let snapshot = app.publications.current();
     if path == viewer("components/render") {
         if request.method() != Method::POST {
-            return method("POST");
+            return response::method("POST");
         }
         if !security::authorized(request.headers(), &snapshot.render_token) {
             return response::error(
@@ -117,7 +134,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             content_type,
             "application/json" | "application/json; charset=utf-8"
         ) {
-            return reject(Rejection::InvalidInput);
+            return response::reject(Rejection::InvalidInput);
         }
         let bytes = match to_bytes(request.into_body(), 64 * 1024).await {
             Ok(bytes) => bytes,
@@ -131,11 +148,11 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         };
         let request: RenderRequest = match serde_json::from_slice(&bytes) {
             Ok(request) => request,
-            Err(_) => return reject(Rejection::InvalidInput),
+            Err(_) => return response::reject(Rejection::InvalidInput),
         };
         let validated = match render_request::validate(&request, &snapshot.index) {
             Ok(validated) => validated,
-            Err(rejection) => return reject(rejection),
+            Err(rejection) => return response::reject(rejection),
         };
         let result = app
             .work
@@ -150,7 +167,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         if app.publications.current().index.revision != snapshot.index.revision
             || app.publications.current().index.deployment_id != snapshot.index.deployment_id
         {
-            return reject(Rejection::StaleRevision);
+            return response::reject(Rejection::StaleRevision);
         }
         return match result {
             Ok(preview) => match app
@@ -159,19 +176,19 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             {
                 Ok(response) => match crate::snapshot::encode(&response) {
                     Ok(file) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
-                    Err(_) => reject(Rejection::RenderFailed),
+                    Err(_) => response::reject(Rejection::RenderFailed),
                 },
-                Err(rejection) => reject(rejection),
+                Err(rejection) => response::reject(rejection),
             },
-            Err(rejection) => reject(rejection),
+            Err(rejection) => response::reject(rejection),
         };
     }
     if request.method() != Method::GET && request.method() != Method::HEAD {
-        return method("GET, HEAD");
+        return response::method("GET, HEAD");
     }
     if path == viewer("events") {
         if request.method() == Method::HEAD {
-            return response::bytes(StatusCode::OK, "text/event-stream", Vec::new());
+            return response::bytes(StatusCode::OK, "text/event-stream", Bytes::new());
         }
         return live::events(app.publications.subscribe(), stop);
     }
@@ -193,6 +210,9 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         return response::bytes(status, "text/html; charset=utf-8", snapshot.stub.clone());
     }
     if let Some(file) = snapshot.files.get(&path) {
+        return file.response(snapshot.index.revision);
+    }
+    if let Some(file) = snapshot.assets.get(&path) {
         return response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone());
     }
     if let Some(route) = path.strip_prefix(&generated("")) {
@@ -200,7 +220,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             .work
             .generated(snapshot.documents.clone(), route.into())
             .await;
-        app.completed(snapshot.clone(), route.into()).await;
+        app.publisher.completed(snapshot.clone(), route.into());
         return match result {
             Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
             Ok(None) => response::missing(),
@@ -226,8 +246,11 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
 }
 
 fn shell(path: &str, snapshot: &Snapshot) -> Option<StatusCode> {
-    if path.is_empty() || path == "404.html" {
+    if path.is_empty() || path == "index.html" || path == "404.html" {
         return Some(StatusCode::OK);
+    }
+    if path == "view/" {
+        return Some(StatusCode::NOT_FOUND);
     }
     let path = path.strip_prefix("view/")?;
     let path = path
@@ -241,45 +264,4 @@ fn shell(path: &str, snapshot: &Snapshot) -> Option<StatusCode> {
             StatusCode::NOT_FOUND
         }
     })
-}
-fn method(allow: &'static str) -> Response {
-    let mut response = response::error(
-        StatusCode::METHOD_NOT_ALLOWED,
-        "method",
-        "The request method is not supported.",
-    );
-    response
-        .headers_mut()
-        .insert("allow", HeaderValue::from_static(allow));
-    response
-}
-fn reject(rejection: Rejection) -> Response {
-    let (status, code, message) = match rejection {
-        Rejection::InvalidInput => (
-            StatusCode::BAD_REQUEST,
-            "invalid-input",
-            "Check the prop values and their allowed limits.",
-        ),
-        Rejection::UnknownEntry => (
-            StatusCode::NOT_FOUND,
-            "unknown-entry",
-            "This entry is unavailable.",
-        ),
-        Rejection::StaleRevision => (
-            StatusCode::CONFLICT,
-            "stale-revision",
-            "The catalogue changed. Try again.",
-        ),
-        Rejection::RenderFailed => (
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "render-failed",
-            "The preview could not be rendered. Try again or reset the props.",
-        ),
-        Rejection::Capacity => (
-            StatusCode::TOO_MANY_REQUESTS,
-            "capacity",
-            "The renderer is busy. Try again shortly.",
-        ),
-    };
-    response::error(status, code, message)
 }

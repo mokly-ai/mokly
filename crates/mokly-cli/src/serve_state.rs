@@ -13,6 +13,7 @@ use mokly_server::public_read::ConfinedReader;
 use mokly_server::snapshot::{Snapshot, SnapshotFactory, SnapshotInput};
 use mokly_source_interface::tree::SourceTree;
 
+#[cfg_attr(test, unimock::unimock(api = ServeStateFactoryMock))]
 pub(super) trait ServeStateFactory: Send + Sync {
     fn create(&self, prepared: &PreparedServe, revision: u64) -> Result<Arc<Snapshot>>;
 }

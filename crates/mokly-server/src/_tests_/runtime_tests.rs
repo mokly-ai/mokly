@@ -7,7 +7,7 @@ use axum::Router;
 use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::accept::{AcceptorMock, BackoffMock};
+use crate::accept::{AcceptPeriod, AcceptorMock, BackoffMock};
 use crate::application::HttpApplicationMock;
 use crate::runtime::{BoundServer, Listener};
 use crate::shutdown::LifecycleMock;
@@ -31,7 +31,16 @@ async fn connection_errors_continue_and_resource_errors_back_off_without_closing
         AcceptorMock::accept
             .next_call(matching!())
             .returns(Err(io::Error::from_raw_os_error(24))),
-        BackoffMock::wait.next_call(matching!()).returns(()),
+        HttpApplicationMock::accept_failed
+            .next_call(matching!(_))
+            .returns(()),
+        BackoffMock::wait
+            .each_call(matching!())
+            .returns(())
+            .n_times(2),
+        AcceptorMock::accept
+            .next_call(matching!())
+            .returns(Err(io::Error::from_raw_os_error(24))),
         AcceptorMock::accept
             .next_call(matching!())
             .answers_arc(Arc::new(move |_| {
@@ -66,4 +75,16 @@ async fn connection_errors_continue_and_resource_errors_back_off_without_closing
         .run(Arc::new(mock.clone()), receiver, Arc::new(mock.clone()))
         .await
         .unwrap();
+}
+
+#[test]
+fn a_backoff_period_reports_one_failure_and_one_recovery() {
+    let mut period = AcceptPeriod::default();
+    assert!(!period.recovered());
+    for _ in 0..2 {
+        assert!(period.failed());
+        assert!(!period.failed());
+        assert!(period.recovered());
+        assert!(!period.recovered());
+    }
 }

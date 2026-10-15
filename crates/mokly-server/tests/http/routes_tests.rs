@@ -7,7 +7,12 @@ use super::support;
 #[tokio::test]
 async fn missing_shell_routes_keep_the_stub_and_documents_keep_the_graph_bytes() {
     let harness = support::Harness::new().await;
-    for route in ["view/missing", "view/missing/", "view/missing/index.html"] {
+    for route in [
+        "view/",
+        "view/missing",
+        "view/missing/",
+        "view/missing/index.html",
+    ] {
         for head in [false, true] {
             let url = format!("{}/{route}", harness.url);
             let response = if head {
@@ -34,7 +39,7 @@ async fn missing_shell_routes_keep_the_stub_and_documents_keep_the_graph_bytes()
                 if head {
                     &[]
                 } else {
-                    harness.snapshot.stub.as_slice()
+                    harness.snapshot.stub.as_ref()
                 }
             );
         }
@@ -104,13 +109,14 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
         }
     }
     insta::assert_snapshot!("pending_details", canonical::to_string(&details).unwrap());
-    for route in ["", "404.html"] {
+    for route in ["", "index.html", "404.html"] {
         let response = harness
             .client
             .get(format!("{}/{route}", harness.url))
             .send()
             .await
             .unwrap();
+        assert_eq!(response.status(), 200);
         assert_eq!(response.bytes().await.unwrap(), harness.snapshot.stub);
     }
     assert_eq!(
@@ -124,7 +130,14 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
         404
     );
     assert!(harness.generation.public_files().is_empty());
-    let mut paths: Vec<_> = harness.snapshot.files.keys().cloned().collect();
+    let mut paths: Vec<_> = harness
+        .snapshot
+        .files
+        .keys()
+        .chain(harness.snapshot.assets.keys())
+        .cloned()
+        .collect();
+    paths.extend([String::new(), "index.html".into(), "404.html".into()]);
     paths.extend(
         harness
             .generation

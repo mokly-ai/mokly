@@ -8,16 +8,16 @@ use crate::public_index::CatalogueReadModel;
 use crate::usage::{CatalogueUsage, ComponentInputOwner};
 
 /// Omit unproven lists; install complete consumers once all visual usage is ready.
-pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV1>, index: &CatalogueReadModel) {
+pub fn workspaces(
+    details: &BTreeMap<String, &EntryDetailV1>,
+    index: &CatalogueReadModel,
+) -> BTreeMap<String, Workspace> {
     let ready = details
         .values()
         .flat_map(|detail| &detail.views)
         .all(|view| matches!(view.usage, CatalogueUsage::Ready { .. }));
-    for detail in details.values_mut() {
-        detail.workspace = None;
-    }
     if !ready {
-        return;
+        return BTreeMap::new();
     }
     let parents: BTreeMap<_, _> = index
         .components
@@ -48,25 +48,12 @@ pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV1>, index: &Catalog
         let Some(title) = titles.get(path) else {
             continue;
         };
-        let root_component = parents.get(path.as_str()).copied();
         for view in &detail.views {
             let CatalogueUsage::Ready { instances, .. } = &view.usage else {
                 continue;
             };
-            let root = instances.iter().find(|instance| {
-                root_component == Some(instance.component_id.as_str())
-                    && matches!(instance.owner, ComponentInputOwner::Entry)
-            });
             for instance in instances {
-                if root.is_some_and(|root| root.key == instance.key) {
-                    continue;
-                }
-                let direct = match &instance.owner {
-                    ComponentInputOwner::Entry => true,
-                    ComponentInputOwner::Instance { instance_key } => {
-                        root.is_some_and(|root| &root.key == instance_key)
-                    }
-                };
+                let direct = matches!(instance.owner, ComponentInputOwner::Entry);
                 consumers
                     .entry(&instance.component_id)
                     .or_default()
@@ -97,15 +84,24 @@ pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV1>, index: &Catalog
             )
         })
         .collect();
-    for (path, detail) in details.iter_mut() {
+    let mut workspaces = BTreeMap::new();
+    for (path, detail) in details {
         if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
-            detail.workspace = Some(Workspace {
-                comparison_eligible: false,
-                used_by: lists.get(path).cloned().unwrap_or_default(),
-                affected: Vec::new(),
-                related_components: Vec::new(),
-                input_changes: Vec::new(),
-            });
+            workspaces.insert(
+                path.clone(),
+                Workspace {
+                    comparison_eligible: false,
+                    used_by: lists.get(path).cloned().unwrap_or_default(),
+                    affected: Vec::new(),
+                    related_components: Vec::new(),
+                    input_changes: Vec::new(),
+                },
+            );
         }
     }
+    workspaces
 }
+
+#[cfg(test)]
+#[path = "_tests_/projection_usage_tests.rs"]
+mod projection_usage_tests;

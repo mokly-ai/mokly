@@ -1,6 +1,6 @@
 //! Usage completions replace one complete publication without changing document keys.
 
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use mokly_model::axes::{ColorScheme, Viewport};
@@ -9,9 +9,10 @@ use mokly_model::projection_usage;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::usage_schemas::UsageSchemas;
 
+use crate::detail_encoding::DetailEncoder;
 use crate::error::Result;
 use crate::revision::RevisionLease;
-use crate::snapshot::{Snapshot, encode_detail, revision_index};
+use crate::snapshot::Snapshot;
 
 /// A document's position and detail context in one immutable graph generation.
 #[derive(Clone)]
@@ -38,23 +39,13 @@ pub enum Completion {
 pub(crate) fn complete(
     current: &Snapshot,
     updates: &[(String, CatalogueUsage)],
+    encoder: &dyn DetailEncoder,
 ) -> Result<Option<Arc<Snapshot>>> {
-    let routes: BTreeMap<_, _> = current
-        .routes
-        .iter()
-        .map(|view| (view.route.as_str(), view))
-        .collect();
     let changed: Vec<_> = updates
         .iter()
         .filter_map(|(route, usage)| {
-            let view = routes.get(route.as_str())?;
-            let completion = if matches!(usage, CatalogueUsage::Ready { .. }) {
-                Completion::Ready
-            } else {
-                Completion::Unavailable
-            };
-            (current.completed.get(route) != Some(&completion))
-                .then_some((*view, usage, completion))
+            let view = current.views.get(route)?;
+            (!current.completed.contains_key(route)).then_some((view, usage))
         })
         .collect();
     if changed.is_empty() {
@@ -66,27 +57,53 @@ pub(crate) fn complete(
     let mut next = current.clone();
     next.lease = Arc::new(RevisionLease::default());
     next.index.revision = revision;
-    for (view, usage, completion) in changed {
-        if let Some(viewport) = view.viewport
-            && let Some(detail) = next.details.get_mut(&view.path)
-            && let Some(detail_view) = detail.views.iter_mut().find(|candidate| {
-                candidate.viewport == viewport && candidate.color_scheme == view.color_scheme
-            })
-        {
-            detail_view.usage = usage.clone();
+    let mut dirty = BTreeSet::new();
+    for (view, usage) in changed {
+        if let Some(detail) = next.details.get_mut(&view.path) {
+            let detail = Arc::make_mut(detail);
+            if let Some(detail_view) = detail.views.iter_mut().find(|candidate| {
+                Some(candidate.viewport) == view.viewport
+                    && candidate.color_scheme == view.color_scheme
+            }) {
+                detail_view.usage = usage.clone();
+                dirty.insert(view.path.clone());
+            }
         }
+        let completion = if matches!(usage, CatalogueUsage::Ready { .. }) {
+            Completion::Ready
+        } else {
+            Completion::Unavailable
+        };
         next.completed.insert(view.route.clone(), completion);
     }
-    projection_usage::workspaces(&mut next.details, &next.index);
+    if next.completed.len() == next.views.len()
+        && next
+            .completed
+            .values()
+            .all(|value| *value == Completion::Ready)
+    {
+        let details = next
+            .details
+            .iter()
+            .map(|(path, detail)| (path.clone(), detail.as_ref()))
+            .collect();
+        for (path, workspace) in projection_usage::workspaces(&details, &next.index) {
+            if let Some(detail) = next.details.get_mut(&path) {
+                Arc::make_mut(detail).workspace = Some(workspace);
+                dirty.insert(path);
+            }
+        }
+    }
     let mut schemas = UsageSchemas::new(&next.index.components);
-    next.files
-        .insert(viewer("index.json"), revision_index(&next.index)?);
-    for (path, detail) in &mut next.details {
-        detail.revision = Some(revision);
-        next.files.insert(
-            viewer(&format!("entries/{path}.json")),
-            encode_detail(detail, &next.index, &mut schemas)?,
-        );
+    for path in dirty {
+        if let Some(detail) = next.details.get_mut(&path) {
+            let detail = Arc::make_mut(detail);
+            detail.revision = Some(revision);
+            next.files.insert(
+                viewer(&format!("entries/{path}.json")),
+                encoder.encode(detail, &next.index, &mut schemas)?,
+            );
+        }
     }
     Ok(Some(Arc::new(next)))
 }

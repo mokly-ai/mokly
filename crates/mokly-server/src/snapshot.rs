@@ -1,6 +1,7 @@
 //! Atomic public snapshot bytes and declared shell routes.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+use std::ops::Deref;
 use std::sync::Arc;
 
 use mokly_graph::types::RenderGeneration;
@@ -17,34 +18,55 @@ use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
 use crate::backend::Documents;
+use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
 use crate::error::{InternalError, Result};
 use crate::evidence::{Completion, RenderRoute};
+use crate::generation::Generation;
 use crate::revision::{RenderLease, RevisionLease};
+use crate::revision_file::RevisionFile;
 use crate::stub;
 
 /// One immutable publication; replacement swaps this whole value.
 #[derive(Clone)]
 pub struct Snapshot {
-    /// Current parsed details for atomic evidence publications.
-    pub details: BTreeMap<String, EntryDetailV1>,
-    /// Work in catalogue and view order, independent of request order.
-    pub routes: Vec<RenderRoute>,
-    /// Completed usage without retaining document trees or bytes.
+    /// Shared routes, assets, and backend for this generation.
+    pub generation: Arc<Generation>,
+    /// Validated payloads; their wire revision is supplied by this snapshot.
+    pub details: BTreeMap<String, Arc<EntryDetailV1>>,
+    /// Completed visual usage; a recorded route is never published twice.
     pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
     pub lease: Arc<dyn RenderLease>,
-    /// Matching immutable render and public-file backend for this publication.
-    pub documents: Arc<dyn Documents>,
     /// Parsed index for render and detail context.
     pub index: CatalogueReadModel,
-    /// All JSON and package asset response bytes.
-    pub files: BTreeMap<String, File>,
-    /// Validated current entry identities.
-    pub entries: BTreeSet<String>,
-    /// Identical data-free HTML on all shell routes.
-    pub stub: Vec<u8>,
-    /// Secret capability, never stored in index or detail bytes.
-    pub render_token: String,
+    /// Shared canonical JSON payloads with a revision supplied at delivery.
+    pub files: BTreeMap<String, RevisionFile>,
+}
+
+impl Deref for Snapshot {
+    type Target = Generation;
+    fn deref(&self) -> &Generation {
+        &self.generation
+    }
+}
+
+impl Snapshot {
+    /// Stamp an already validated candidate without projecting its generation again.
+    pub fn at_revision(&self, revision: u64) -> Arc<Self> {
+        let mut next = self.clone();
+        next.index.revision = revision;
+        next.lease = Arc::new(RevisionLease::default());
+        Arc::new(next)
+    }
+
+    /// Materialize one detail with this publication's revision for typed consumers.
+    pub fn detail(&self, path: &str) -> Option<EntryDetailV1> {
+        self.details.get(path).map(|detail| {
+            let mut detail = detail.as_ref().clone();
+            detail.revision = Some(self.index.revision);
+            detail
+        })
+    }
 }
 
 /// Purely projected state plus per-process identities.
@@ -109,12 +131,12 @@ impl SnapshotFactory for Projector {
             live_generation: Some(live_generation.clone()),
         };
         let (index, encoded) = build_index(&generation.catalogue().model, &keys, &state)?;
-        let mut files = input.assets;
-        files.insert(viewer("index.json"), encoded);
+        let mut assets = input.assets;
+        let mut files = BTreeMap::from([(viewer("index.json"), RevisionFile::new(encoded)?)]);
         let details = projection::pending_details(&generation.catalogue().model, &index, &keys);
         let mut schemas = UsageSchemas::new(&index.components);
         for (path, detail) in &details {
-            let encoded = encode_detail(detail, &index, &mut schemas)?;
+            let encoded = ValidatedDetails.encode(detail, &index, &mut schemas)?;
             files.insert(viewer(&format!("entries/{path}.json")), encoded);
         }
         let render_token = self.render_token.clone();
@@ -126,10 +148,10 @@ impl SnapshotFactory for Projector {
                 token: render_token.clone(),
             },
         };
-        files.insert(viewer("live.json"), encode(&descriptor)?);
+        assets.insert(viewer("live.json"), encode(&descriptor)?);
         let mut plans: Vec<_> = generation.plans().values().collect();
         plans.sort_by_key(|plan| (plan.entry, plan.viewport, plan.color_scheme));
-        let routes = plans
+        let routes: Vec<RenderRoute> = plans
             .into_iter()
             .map(|plan| RenderRoute {
                 route: plan.route.clone(),
@@ -141,12 +163,16 @@ impl SnapshotFactory for Projector {
                 color_scheme: plan.color_scheme,
             })
             .collect();
-        Ok(Arc::new(Snapshot {
-            details,
+        let views = routes
+            .iter()
+            .filter(|route| route.viewport.is_some())
+            .map(|route| (route.route.clone(), route.clone()))
+            .collect();
+        let shared = Arc::new(Generation {
             routes,
-            completed: BTreeMap::new(),
+            views,
+            assets,
             documents: input.documents,
-            lease: Arc::new(RevisionLease::default()),
             entries: generation
                 .catalogue()
                 .model
@@ -154,10 +180,19 @@ impl SnapshotFactory for Projector {
                 .iter()
                 .map(|entry| entry.metadata.path.clone())
                 .collect(),
-            stub: stub::html(&index.identity.title),
+            stub: stub::html(&index.identity.title).into(),
+            render_token,
+        });
+        Ok(Arc::new(Snapshot {
+            generation: shared,
+            details: details
+                .into_iter()
+                .map(|(path, detail)| (path, Arc::new(detail)))
+                .collect(),
+            completed: BTreeMap::new(),
+            lease: Arc::new(RevisionLease::default()),
             index,
             files,
-            render_token,
         }))
     }
 }
@@ -165,7 +200,7 @@ impl SnapshotFactory for Projector {
 pub(crate) fn encode(value: &impl serde::Serialize) -> Result<File> {
     match canonical::to_string(value) {
         Ok(text) => Ok(File {
-            bytes: text.into_bytes(),
+            bytes: text.into_bytes().into(),
             content_type: "application/json; charset=utf-8".into(),
         }),
         Err(source) => Err(InternalError::Model { source }.into()),
@@ -186,27 +221,10 @@ fn build_index(
     Ok((index, file))
 }
 
-#[tracing::instrument(name = "index.build", skip_all, err)]
-pub(crate) fn revision_index(index: &CatalogueReadModel) -> Result<File> {
-    checked_index(index)
-}
-
 fn checked_index(index: &CatalogueReadModel) -> Result<File> {
     let encoded = encode(index)?;
     if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {
         return Err(InternalError::Read { source }.into());
     }
     Ok(encoded)
-}
-
-#[tracing::instrument(name = "detail.build", skip_all, err)]
-pub(crate) fn encode_detail(
-    detail: &EntryDetailV1,
-    index: &CatalogueReadModel,
-    schemas: &mut UsageSchemas<'_>,
-) -> Result<File> {
-    if let Err(source) = mokly_model::detail_context::validate_with(detail, index, schemas) {
-        return Err(InternalError::Read { source }.into());
-    }
-    encode(detail)
 }

@@ -122,7 +122,7 @@ impl Harness {
             assets.insert(
                 format!("mokly-viewer/{path}"),
                 File {
-                    bytes: b"fixture".to_vec(),
+                    bytes: b"fixture".to_vec().into(),
                     content_type: content_type.into(),
                 },
             );

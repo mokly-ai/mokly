@@ -8,7 +8,9 @@ use mokly_model::axes::EntryKind;
 use crate::build::BuildSummary;
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
-use crate::serve_output::{catalogue, changes_unavailable, ready, shortcuts};
+use crate::serve_output::{
+    accept_failure, accept_recovery, catalogue, changes_unavailable, ready, shortcuts,
+};
 
 #[test]
 fn ready_layouts_and_shortcuts_follow_the_terminal_contract() {
@@ -106,4 +108,24 @@ fn ready_durations_and_unavailable_reason_have_bounded_styled_rows() {
     };
     assert!(catalogue(&plain, &summary, Duration::ZERO).is_empty());
     assert!(changes_unavailable(&plain, "reason", &Redactor::default()).is_empty());
+}
+
+#[test]
+fn accept_failure_and_recovery_are_visible_in_both_modes() {
+    for mode in [Mode::Plain, Mode::Rich] {
+        let style = Style {
+            mode,
+            color: false,
+            ascii: false,
+            columns: 120,
+        };
+        assert_eq!(
+            accept_failure(&style, "too many open files", &Redactor::default()).trim(),
+            "! Serve cannot accept connections: too many open files. Retrying."
+        );
+        assert_eq!(
+            accept_recovery(&style).trim(),
+            "! Serve can accept connections again."
+        );
+    }
 }

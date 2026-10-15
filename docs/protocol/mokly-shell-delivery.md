@@ -15,17 +15,17 @@ Serve answers these routes over HTTP. `build` writes them as files under the
 output directory with the same relative paths, so a static host needs no
 rewrite rules.
 
-| Route                                                                                        | Serve | `build`                                 | Content                                                    |
-| -------------------------------------------------------------------------------------------- | ----- | --------------------------------------- | ---------------------------------------------------------- |
-| `/`, `/view/<route>`                                                                         | stub  | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
-| `/404.html`                                                                                  | stub  | `404.html`                              | the same stub                                              |
-| `/mokly-viewer/index.json`                                                                   | live  | file                                    | the catalogue index v7                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live  | one file per current entry              | the entry detail v1                                        |
-| `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live  | file                                    | review result v8, under the comparison contract            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live  | one file per removed entry              | the entry detail v1 of a removed entry's historical record |
-| `/mokly-viewer/live.json`                                                                    | live  | absent                                  | the live descriptor v3: the render capability              |
-| `/mokly-viewer/events`                                                                       | live  | absent                                  | the event stream: one message per publication              |
-| `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live  | files                                   | documents, the shell bundle, styles, and fonts             |
+| Route                                                                                        | Serve     | `build`                                 | Content                                                    |
+| -------------------------------------------------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------------- |
+| `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
+| `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
+| `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v7                                     |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v1                                        |
+| `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live      | file                                    | review result v8, under the comparison contract            |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v1 of a removed entry's historical record |
+| `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
+| `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
+| `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
 
 `<route>` is the entry route of the [path contract](./mokly-paths.md).
 `<entry path>` is the entry's path with `.json` appended; a path segment never

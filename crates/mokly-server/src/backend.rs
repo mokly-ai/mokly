@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
+use axum::body::Bytes;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
@@ -25,7 +26,7 @@ pub struct PreviewDocument {
 }
 
 /// Blocking graph work; HTTP runs each call outside its event loop.
-#[cfg_attr(test, unimock::unimock(api = DocumentsMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DocumentsMock))]
 pub trait Documents: Send + Sync {
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
@@ -69,18 +70,20 @@ impl GraphDocuments {
         let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
         match self.generation.render(route) {
             Ok(artifact) => {
-                *usage = Some(
-                    artifact
-                        .document
-                        .as_ref()
-                        .map_or(CatalogueUsage::Unavailable, |document| {
-                            document.usage.clone()
-                        }),
-                );
+                if usage.is_none() {
+                    *usage = Some(
+                        artifact
+                            .document
+                            .as_ref()
+                            .map_or(CatalogueUsage::Unavailable, |document| {
+                                document.usage.clone()
+                            }),
+                    );
+                }
                 Ok(Some(artifact))
             }
             Err(source) => {
-                *usage = Some(CatalogueUsage::Unavailable);
+                usage.get_or_insert(CatalogueUsage::Unavailable);
                 Err(ServerError::Render { source })
             }
         }
@@ -91,7 +94,7 @@ impl Documents for GraphDocuments {
     fn generated(&self, route: &str) -> Result<Option<File>> {
         if self.locks.contains_key(route) {
             return Ok(self.render(route)?.map(|artifact| File {
-                bytes: artifact.bytes.clone(),
+                bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
                 content_type: artifact.content_type.clone(),
             }));
         }
@@ -105,14 +108,19 @@ impl Documents for GraphDocuments {
         }
         match self.generation.resource(route) {
             Ok(bytes) => Ok(bytes.map(|bytes| File {
-                bytes,
+                bytes: bytes.into(),
                 content_type: content_type(route),
             })),
             Err(source) => Err(ServerError::Render { source }),
         }
     }
     fn background(&self, route: &str) -> Result<()> {
-        if self.usage(route).is_some() {
+        if self.locks.get(route).is_some_and(|state| {
+            state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .is_some()
+        }) {
             return Ok(());
         }
         self.render(route)?;
@@ -141,7 +149,7 @@ impl Documents for GraphDocuments {
         files.insert(
             document.clone(),
             File {
-                bytes: rendered.artifact.bytes.clone(),
+                bytes: Bytes::from_owner(ArtifactBytes(rendered.artifact.clone())),
                 content_type: rendered.artifact.content_type.clone(),
             },
         );
@@ -156,7 +164,7 @@ impl Documents for GraphDocuments {
                     files.insert(
                         generated(resource),
                         File {
-                            bytes,
+                            bytes: bytes.into(),
                             content_type: content_type(resource),
                         },
                     );
@@ -194,3 +202,10 @@ impl Documents for GraphDocuments {
 #[cfg(test)]
 #[path = "_tests_/backend_tests.rs"]
 mod backend_tests;
+
+struct ArtifactBytes(Arc<Artifact>);
+impl AsRef<[u8]> for ArtifactBytes {
+    fn as_ref(&self) -> &[u8] {
+        &self.0.bytes
+    }
+}

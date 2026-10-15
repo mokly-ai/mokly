@@ -166,6 +166,7 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
         "config.load",
         "catalogue.discover",
         "catalogue.validate",
+        "graph.prepare",
         "css.bundle",
         "index.build",
         "detail.build",
@@ -178,6 +179,15 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
             "missing {stage}"
         );
     }
+    let position = |stage, event| {
+        records
+            .iter()
+            .position(|record| record["stage"] == stage && record["event"] == event)
+            .unwrap()
+    };
+    assert!(position("catalogue.discover", "end") < position("catalogue.validate", "start"));
+    assert!(position("catalogue.validate", "end") < position("graph.prepare", "start"));
+    assert!(position("graph.prepare", "end") < position("serve.ready", "end"));
     let counts = records
         .iter()
         .find(|record| record["stage"] == "serve.background" && record["event"] == "counts")

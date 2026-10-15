@@ -46,6 +46,7 @@ pub struct Graph {
 }
 
 impl RenderGraph for Graph {
+    #[tracing::instrument(name = "graph.prepare", skip_all, err)]
     fn prepare(
         &self,
         config: ResolvedConfig,

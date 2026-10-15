@@ -87,7 +87,7 @@ impl PublicReader for ConfinedReader {
             return Err(ServerError::PreviewCapacity);
         }
         Ok(Some(File {
-            bytes,
+            bytes: bytes.into(),
             content_type: opened.content_type,
         }))
     }

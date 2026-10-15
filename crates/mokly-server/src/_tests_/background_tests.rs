@@ -11,6 +11,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::backend::Documents;
 use crate::background::{Background, UsagePass};
 use crate::evidence::RenderRoute;
+use crate::generation::Generation;
 use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
 use crate::revision::RevisionLease;
 use crate::snapshot::Snapshot;
@@ -22,23 +23,27 @@ fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> 
             "../../../../docs/protocol/fixtures/catalogue-v7.json"
         ))
         .unwrap(),
-        routes: paths
-            .into_iter()
-            .map(|path| RenderRoute {
-                route: format!("{path}/index.mobile.html"),
-                path,
-                viewport: Some(Viewport::Mobile),
-                color_scheme: ColorScheme::Light,
-            })
-            .collect(),
-        documents,
+        generation: Arc::new(Generation {
+            views: Default::default(),
+            assets: Default::default(),
+            routes: paths
+                .into_iter()
+                .map(|path| RenderRoute {
+                    route: format!("{path}/index.mobile.html"),
+                    path,
+                    viewport: Some(Viewport::Mobile),
+                    color_scheme: ColorScheme::Light,
+                })
+                .collect(),
+            documents,
+            entries: Default::default(),
+            stub: Default::default(),
+            render_token: "secret".into(),
+        }),
         details: Default::default(),
         completed: Default::default(),
         files: Default::default(),
-        entries: Default::default(),
         lease: Arc::new(RevisionLease::default()),
-        stub: Vec::new(),
-        render_token: "secret".into(),
     })
 }
 

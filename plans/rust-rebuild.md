@@ -725,6 +725,8 @@ Integration report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation
 Review fixes and smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-3.md`.
 Viewer key domains and complete smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-4.md`.
 
+Final review fixes and integration: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-5.md`.
+
 ## Milestone 7: Viewer reads read model v7
 
 Tags: ui
@@ -916,6 +918,9 @@ Tags: ui
 
 ## Milestone 11: Watch and incremental rendering
 
+- [ ] Reuse unchanged encoded details across watched generation rebuilds
+      (Milestone 6 review 2, finding 1C).
+
 - [ ] Tie Serve's watching copy to the active watcher and cover its terminal
       output (Milestone 6 review, finding 10).
 - [ ] Implement the content-addressed render graph: inputs hashed per entry,
@@ -1020,6 +1025,9 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 6 review 2, finding 6: decide failed-render detail status and
+    Usage copy; keep all Used by lists unavailable after one unavailable view
+    until the next generation while the user decision is pending.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support

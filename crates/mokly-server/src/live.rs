@@ -2,7 +2,7 @@
 
 use std::convert::Infallible;
 
-use axum::body::Body;
+use axum::body::{Body, Bytes};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::Response;
 use tokio::sync::watch;
@@ -23,7 +23,7 @@ pub(crate) fn events(mut subscription: Subscription, mut stop: watch::Receiver<b
             }
         }
     };
-    let mut response = response::bytes(StatusCode::OK, "text/event-stream", Vec::new());
+    let mut response = response::bytes(StatusCode::OK, "text/event-stream", Bytes::new());
     response.headers_mut().remove("content-length");
     response
         .headers_mut()

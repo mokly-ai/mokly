@@ -124,6 +124,35 @@ pub fn changes_unavailable(style: &Style, reason: &str, redactor: &Redactor) -> 
     format!("{line}\n")
 }
 
+/// Report one listener backoff period through either terminal mode.
+pub fn accept_failure(style: &Style, reason: &str, redactor: &Redactor) -> String {
+    accept_line(
+        style,
+        &format!(
+            "! Serve cannot accept connections: {}. Retrying.",
+            redactor.safe(reason)
+        ),
+    )
+}
+
+/// Report recovery once a listener accepts a connection again.
+pub fn accept_recovery(style: &Style) -> String {
+    accept_line(style, "! Serve can accept connections again.")
+}
+
+fn accept_line(style: &Style, line: &str) -> String {
+    if style.mode == Mode::Plain {
+        return format!("{line}\n");
+    }
+    let line = bounded(&format!("  {line}"), style.columns);
+    let line = if style.color {
+        line.replacen('!', "\x1b[33m!\x1b[0m", 1)
+    } else {
+        line
+    };
+    format!("{line}\n")
+}
+
 fn columns(left: &str, right: &str, width: usize) -> String {
     let right_width = unicode_width::UnicodeWidthStr::width(right);
     if width <= right_width + 3 {

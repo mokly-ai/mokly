@@ -79,6 +79,7 @@ fn stage(name: &str) -> bool {
             | "catalogue.discover"
             | "catalogue.validate"
             | "catalogue.describe"
+            | "graph.prepare"
             | "render.document"
             | "render.fragment"
             | "css.bundle"

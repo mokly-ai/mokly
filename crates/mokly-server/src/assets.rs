@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
+use axum::body::Bytes;
 use mokly_model::namespace::viewer;
 use mokly_source_interface::tree::SourceTree;
 use serde::Deserialize;
@@ -14,7 +15,7 @@ use crate::error::{InternalError, Result, ServerError};
 #[derive(Clone, Debug)]
 pub struct File {
     /// Exact encoded bytes.
-    pub bytes: Vec<u8>,
+    pub bytes: Bytes,
     /// Fixed validated HTTP MIME type.
     pub content_type: String,
 }
@@ -70,7 +71,7 @@ impl ViewerAssets for PackageAssets {
             routes.insert(
                 viewer(&format!("client/{name}")),
                 File {
-                    bytes,
+                    bytes: bytes.into(),
                     content_type: "text/javascript; charset=utf-8".into(),
                 },
             );
@@ -90,7 +91,7 @@ impl ViewerAssets for PackageAssets {
             routes.insert(
                 viewer(route),
                 File {
-                    bytes,
+                    bytes: bytes.into(),
                     content_type: mime.into(),
                 },
             );

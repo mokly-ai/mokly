@@ -1,5 +1,6 @@
 //! CLI-owned typed render and manual-rebuild diagnostics.
 
+use std::io;
 use std::sync::Arc;
 
 use mokly_cli::build::{BuildError, BuildSummary};
@@ -20,6 +21,17 @@ pub(super) struct ServeLines {
     pub(super) redactor: Arc<Redactor>,
 }
 impl Diagnostics for ServeLines {
+    fn accept_failed(&self, error: &io::Error) {
+        self.terminal.stderr(&serve_output::accept_failure(
+            &self.style,
+            &error.to_string(),
+            &self.redactor,
+        ));
+    }
+    fn accept_recovered(&self) {
+        self.terminal
+            .stderr(&serve_output::accept_recovery(&self.style));
+    }
     fn failed(&self, error: &ServerError) {
         let output = serve_errors::failure(&self.style, error, &self.redactor);
         self.terminal.stderr(&output);

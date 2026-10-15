@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use tokio::sync::broadcast;
 
+use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
 use crate::error::Result;
 use crate::evidence;
 use crate::snapshot::Snapshot;
@@ -33,7 +34,7 @@ pub struct Subscription {
 }
 
 /// Atomic state source for watch and Changes publications.
-#[cfg_attr(test, unimock::unimock(api = PublicationsMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PublicationsMock))]
 pub trait Publications: Send + Sync {
     /// Get matching index, details, routes, backend, and capability.
     fn current(&self) -> Arc<Snapshot>;
@@ -78,6 +79,7 @@ impl Publications for FixedPublication {
 }
 
 /// State replacement boundary for a serialized rebuild coordinator.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PublicationWriterMock))]
 pub trait PublicationWriter: Send + Sync {
     /// Atomically install only the next revision of this process.
     fn replace(&self, snapshot: Arc<Snapshot>) -> bool;
@@ -93,12 +95,14 @@ struct State {
 pub struct SharedPublication {
     state: Mutex<State>,
     build: Mutex<()>,
+    pub(crate) encoder: Arc<dyn DetailEncoder>,
 }
 impl SharedPublication {
     /// Install the already validated first publication.
     pub fn new(snapshot: Arc<Snapshot>) -> Self {
         Self {
             build: Mutex::new(()),
+            encoder: Arc::new(ValidatedDetails),
             state: Mutex::new(State {
                 closed: false,
                 snapshot,
@@ -116,8 +120,12 @@ impl Publications for SharedPublication {
                 return Ok(());
             }
         }
+        let recorded = self.current();
         let updates: Vec<_> = routes
             .iter()
+            .filter(|route| {
+                origin.views.contains_key(*route) && !recorded.completed.contains_key(*route)
+            })
             .filter_map(|route| {
                 origin
                     .documents
@@ -133,7 +141,7 @@ impl Publications for SharedPublication {
                 }
                 state.snapshot.clone()
             };
-            let Some(next) = evidence::complete(&current, &updates)? else {
+            let Some(next) = evidence::complete(&current, &updates, self.encoder.as_ref())? else {
                 return Ok(());
             };
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
