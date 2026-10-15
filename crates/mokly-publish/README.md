@@ -1,12 +1,13 @@
 # mokly-publish
 
 `mokly-publish` prepares immutable static output for Mokly Cloud and implements
-the public upload exchange v1. Callers use its traits for publication, Git
-checks, static output, HTTP, timing, cancellation, and reporting.
+the public upload exchange v1. Callers use its traits for the exchange, Git
+checks, output snapshots, HTTP, timing, cancellation, and reporting. The CLI
+owns publication orchestration and the static output adapter.
 
 ## Responsibilities
 
-- Build upload metadata v2 before ownership finalization.
+- Validate upload metadata v2 from the shared output model.
 - Validate ownership v3, exact bytes, portable paths, and upload limits.
 - Send Plan, missing content blobs, and Complete through one origin.
 - Apply bounded retries, one re-plan, cancellation, and digest accounting.
@@ -51,7 +52,7 @@ cargo run -p mokly-cli --bin mokly -- publish --help
 ```
 
 For a client integration, construct `Client` at the composition root. Pass it
-as `&dyn Exchange`. Supply a prepared `Artifact`, validated `Settings`, and
+as `&dyn Exchange`. Supply a `Prepared` upload, validated `Settings`, and
 `&dyn Cancellation`. The receipt contains the upload counts, publication
 outcome, and an optional normalized viewer URL.
 

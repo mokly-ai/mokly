@@ -36,7 +36,10 @@ external directory before the build starts. That parent also confines the
 output reservation. `mokly-publish` owns the exchange and cached preparation;
 `mokly-model` owns output formats and the marker writer. The static output adapter reports a single `build-invalid` line
 when its implementation is unavailable. Checkout failures list at most 20
-unique sorted paths and their recovery hint in both output modes.
+unique sorted paths and their recovery hint in both output modes. Completed
+output stays in the private directory after an upload failure. The warning
+policy waits for a user decision. The isolated `warnings_are_fatal` function
+makes publish warnings fatal with either value of `--strict`.
 
 ## Quick Start
 

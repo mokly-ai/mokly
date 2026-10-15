@@ -66,7 +66,7 @@ impl Code {
             Self::PublishDirectory => (
                 "export-invalid",
                 "The publish build directory could not be prepared.",
-                "Set TMPDIR or TEMP to a writable directory outside the checkout.",
+                "Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout.",
             ),
             Self::ExportInvalid => (
                 "export-invalid",

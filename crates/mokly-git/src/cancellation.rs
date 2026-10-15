@@ -49,8 +49,8 @@ pub(crate) fn graceful(group: &dyn ProcessGroup, shutdown: &dyn Shutdown) -> Res
         }
         shutdown.pause();
     }
-    let (status, _) = shutdown.poll()?;
-    if status.is_none()
+    let (status, drained) = shutdown.poll()?;
+    if (status.is_none() || !drained)
         && let Err(source) = group.kill()
     {
         return Err(Error::Platform { source });

@@ -28,8 +28,8 @@ Mokly catalogue already published for this commit.
 The counted lines show the exact plural rule for any counted summary:
 singular only for one. `<outDir>` is the output directory relative to the
 repository. `Mokly publish build: <directory>` appears once per `publish` process, before
-its build starts, and names the private directory that `publish` keeps after
-a failed upload. `Mokly cache: <directory>` appears at most once per process, when the command first opens the base-side
+its build starts, and names the output inside the private directory that
+`publish` keeps after a failed upload. `Mokly cache: <directory>` appears at most once per process, when the command first opens the base-side
 extraction cache or the dependency install cache, and names the directory
 under the operating system's cache directory. `<uploaded>` and `<unchanged>`
 use the same decimal counts as rich mode. A publish prints one counted line
@@ -132,8 +132,8 @@ values and the original typed error are unchanged outside this presentation
 layer.
 
 Private publication-directory allocation failures use `export-invalid`. The
-plain line names the temporary root and says to set `TMPDIR` or `TEMP` to a
-writable directory outside the checkout. Rich output uses headline
+plain line names the temporary root and says to set `TMPDIR`, or `TMP` on
+Windows, to a writable directory outside the checkout. Rich output uses headline
 `The publish build directory could not be prepared.`, the temporary-root
 detail, and that same hint once. A missing Git checkout or committed HEAD
 uses `git-failed` with `Publish requires a Git checkout with a committed HEAD.`

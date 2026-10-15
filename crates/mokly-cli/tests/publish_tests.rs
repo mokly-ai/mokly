@@ -236,7 +236,7 @@ fn an_in_repository_temporary_root_is_rejected_without_a_transient_write() {
     assert_eq!(
         String::from_utf8(output.stderr).unwrap(),
         format!(
-            "[mokly/export-invalid] The publish build directory could not be prepared. Temporary root: {}. Set TMPDIR or TEMP to a writable directory outside the checkout.\n",
+            "[mokly/export-invalid] The publish build directory could not be prepared. Temporary root: {}. Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout.\n",
             temporary_root.display()
         )
     );
@@ -260,9 +260,9 @@ fn a_missing_temporary_root_names_the_path_and_environment_recovery() {
             "--no-changes",
             "--repository=example.com/team/project",
         ])
-        .env("TMPDIR", &missing)
-        .env("TEMP", &missing)
-        .env("TMP", &missing)
+        .env("TMPDIR", missing.join(""))
+        .env("TEMP", missing.join(""))
+        .env("TMP", missing.join(""))
         .env("MOKLY_OUTPUT", "plain")
         .env_remove("MOKLY_SIDECARS")
         .output()
@@ -273,7 +273,7 @@ fn a_missing_temporary_root_names_the_path_and_environment_recovery() {
     assert_eq!(
         String::from_utf8(output.stderr).unwrap(),
         format!(
-            "[mokly/export-invalid] The publish build directory could not be prepared. Temporary root: {path}. Set TMPDIR or TEMP to a writable directory outside the checkout.\n"
+            "[mokly/export-invalid] The publish build directory could not be prepared. Temporary root: {path}. Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout.\n"
         )
     );
 }

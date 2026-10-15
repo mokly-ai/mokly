@@ -1,4 +1,4 @@
-//! Identify local static output folders for actionable checkout ignore guidance.
+//! Identify static output guidance and authenticate checkout reservation exclusions.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
@@ -8,7 +8,8 @@ use std::path::Path;
 use mokly_model::output::ownership::Ownership;
 use mokly_model::output::validation::{FILE_LIMIT, MARKER};
 
-/// Optional display guidance; failure to read a marker never replaces the dirty-checkout error.
+/// Output guidance and reservation authentication for the checkout check.
+/// Unreadable or invalid owners never exclude reservation paths from status.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = OutputHintsMock))]
 pub trait OutputHints: Send + Sync {
     /// Identify output directories above the paths that the terminal will list.
@@ -17,7 +18,7 @@ pub trait OutputHints: Send + Sync {
     fn reservations(&self, root: &Path, paths: &[String]) -> Vec<String>;
 }
 
-/// Read bounded regular ownership markers to identify custom build output folders.
+/// Read bounded regular markers for output guidance and reservation authentication.
 pub struct SystemOutputHints;
 
 impl OutputHints for SystemOutputHints {

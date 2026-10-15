@@ -59,7 +59,7 @@ impl StaticOutput for UnavailableOutput {
 /// Private build directory allocation, never tied to automatic upload cleanup.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DirectoriesMock))]
 pub trait Directories: Send + Sync {
-    /// Reserve a new private directory outside the real repository root.
+    /// Reserve a private parent outside the repository and return its absent site child.
     fn create(&self, repository_root: &Path) -> Result<PathBuf>;
 }
 
@@ -68,7 +68,7 @@ pub struct SystemDirectories;
 
 impl Directories for SystemDirectories {
     fn create(&self, repository_root: &Path) -> Result<PathBuf> {
-        let requested = std::env::temp_dir();
+        let requested: PathBuf = std::env::temp_dir().components().collect();
         let parent = match dunce::canonicalize(&requested) {
             Ok(parent) => parent,
             Err(source) => return Err(directory_error(requested, source)),

@@ -108,7 +108,7 @@ pub enum Error {
     BuildWarnings,
     /// Private output allocation failed before the static builder started.
     #[error(
-        "[mokly-publish/export-invalid] Unable to prepare temporary output at {temporary_root:?}. Set TMPDIR or TEMP to a writable directory outside the checkout."
+        "[mokly-publish/export-invalid] Unable to prepare temporary output at {temporary_root:?}. Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout."
     )]
     Directory {
         /// Normalized temporary root, safe to show after terminal redaction.

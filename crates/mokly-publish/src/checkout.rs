@@ -23,7 +23,7 @@ pub struct Inspection {
     pub root: PathBuf,
     /// Full committed checked-out object id.
     pub head_sha: String,
-    /// All changed paths except explicitly pinned operation-owned paths.
+    /// Changed paths except pinned operation-owned paths and authenticated reservations.
     pub changed_paths: Vec<String>,
     /// Output folders used only to suggest literal Git ignore rules.
     pub build_directories: Vec<String>,
@@ -54,7 +54,7 @@ pub trait Checkout: Send + Sync {
 pub struct GitCheckout {
     /// Git runner with bounded streams and command cancellation.
     pub runner: Arc<dyn Runner>,
-    /// Recognize build outputs without excluding them from the status check.
+    /// Identify build outputs for guidance and authenticate reservation exclusions.
     pub hints: Arc<dyn OutputHints>,
 }
 

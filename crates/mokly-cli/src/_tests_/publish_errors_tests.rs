@@ -1,6 +1,6 @@
 //! Publication copy, path escaping and recovery hints.
 
-use mokly_publish::error::Error;
+use mokly_publish::error::{DirectoryFailure, Error};
 
 use crate::output::{Mode, Style};
 use crate::publish_errors::{render, uncommitted};
@@ -119,4 +119,29 @@ fn build_recovery_errors_keep_their_category_and_redacted_recovery_path() {
         render(&error, &style, &redactor),
         "[mokly/export-invalid] Static build recovery needs /backup/[redacted]\n"
     );
+}
+
+#[test]
+fn rich_directory_errors_show_the_root_and_windows_recovery_once() {
+    let error = Error::Directory {
+        temporary_root: "missing-root".into(),
+        reason: DirectoryFailure::Unavailable {
+            source: std::io::Error::from(std::io::ErrorKind::NotFound),
+        },
+    };
+    let style = Style {
+        mode: Mode::Rich,
+        color: false,
+        ascii: false,
+        columns: 200,
+    };
+    let rendered = render(&error, &style, &Redactor::collect(&[], None));
+    for sentence in [
+        "The publish build directory could not be prepared.",
+        "Temporary root: missing-root.",
+        "Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout.",
+    ] {
+        assert_eq!(rendered.matches(sentence).count(), 1);
+    }
+    insta::assert_snapshot!(rendered);
 }

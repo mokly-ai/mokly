@@ -819,12 +819,19 @@ Tags: ui
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
         transitions, source changes, and the deferred gap-sweep scenarios.
+    - [ ] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
+          `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
+          `mokly-publish` into the CLI publication error contract when the
+          static adapter lands.
 - [x] Add the `git-uncommitted` detail layout and avoid repeated detail and
       recovery-hint sentences in terminal errors.
 
 Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
 Publish client review fixes and TLS checks:
 `.context/rust-rebuild/delegation/m12-publish/report-2.md`.
+Publish client final review and merge decisions:
+`.context/rust-rebuild/delegation/m12-publish/report-3.md` and
+`.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
 
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
