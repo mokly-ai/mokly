@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { runCommand } from "./command.mjs";
+import { validateCliReport, validateNativeReport } from "./package_reports.mjs";
 
 const ROOT_FILES = new Set([
   "CHANGELOG.md",
@@ -44,12 +45,13 @@ export async function inspectDryRun(repositoryRoot, name = "@mokly/viewer") {
 }
 
 export function validatePackageReport(report, name = "@mokly/viewer") {
-  assert.equal(name, "@mokly/viewer");
   assert.equal(report.name, name);
   assert.match(report.version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
   assert.match(report.integrity, /^sha512-/);
   assert.match(report.shasum, /^[a-f0-9]{40}$/);
-  validateViewerReport(report);
+  if (name === "@mokly/viewer") validateViewerReport(report);
+  else if (name === "@mokly/mokly") validateCliReport(report);
+  else validateNativeReport(report, name);
 }
 
 export async function inspectRuntimeLicenses(repositoryRoot) {

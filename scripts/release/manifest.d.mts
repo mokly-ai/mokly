@@ -3,9 +3,9 @@ export interface ViewerManifest {
   name: string;
   version: string;
   license: string;
-  exports: Record<string, string | Record<string, string>>;
+  exports?: Record<string, string | Record<string, string>>;
   files: string[];
-  peerDependencies: Record<string, string>;
+  peerDependencies?: Record<string, string>;
   dependencies?: Record<string, string>;
 }
 export function validatePackageManifest(

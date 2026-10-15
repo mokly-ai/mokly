@@ -39,16 +39,22 @@ export function auditPublicPackageExports(repositoryRoot, git) {
       continue;
     }
     baselines.push(`${currentManifest.name}: ${tag}`);
+    const releasedRoot = releasedPackageRoot(
+      git,
+      tag,
+      packageRoot,
+      currentManifest.name,
+    );
     const releasedManifest = readRevisionJson(
       git,
       tag,
-      packagePath(packageRoot, "package.json"),
+      packagePath(releasedRoot, "package.json"),
     );
     const released = packageSurface({
       exists: (file) => git.revisionFileExists(tag, file),
       label: tag,
       manifest: releasedManifest,
-      packageRoot,
+      packageRoot: releasedRoot,
       read: (file) => git.readRevision(tag, file).toString("utf8"),
     });
     const current = packageSurface({
@@ -189,4 +195,24 @@ function readCurrentJson(repositoryRoot, file) {
 
 function readRevisionJson(git, revision, file) {
   return JSON.parse(git.readRevision(revision, file).toString("utf8"));
+}
+
+function releasedPackageRoot(git, tag, currentRoot, name) {
+  const currentPath = packagePath(currentRoot, "package.json");
+  if (
+    git.revisionFileExists(tag, currentPath) &&
+    readRevisionJson(git, tag, currentPath).name === name
+  )
+    return currentRoot;
+  const config = readRevisionJson(git, tag, RELEASE_CONFIG);
+  const matches = Object.keys(config.packages ?? {}).filter((root) => {
+    const file = packagePath(root, "package.json");
+    return (
+      git.revisionFileExists(tag, file) &&
+      readRevisionJson(git, tag, file).name === name
+    );
+  });
+  if (matches.length !== 1)
+    throw new Error(`${name} has no unique package location at ${tag}`);
+  return matches[0];
 }

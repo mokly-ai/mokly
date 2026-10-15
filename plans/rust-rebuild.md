@@ -1056,26 +1056,46 @@ Publish client final review and merge decisions:
 
 ## Milestone 13: Release packaging
 
-- [ ] Build and pack the viewer before the CLI authoring declarations and
+- [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
-- [ ] Add the release build matrix for the five targets, the package set
+- [x] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
-- [ ] Update Release Please for the package set and write the breaking-change
+  - [x] Restore paired tags, native archive inspection, all package manifests,
+        registry guards, and native/viewer/CLI publication ordering.
+  - [x] Add Linux x64, Linux ARM64, macOS ARM64, and Windows x64 jobs.
+  - [x] Settle the Intel macOS runner-policy exception and add its matrix row.
+- [x] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
-- [ ] Make Release Please update the exact `@mokly/viewer` pin in
+- [x] Make Release Please update the exact `@mokly/viewer` pin in
       `packages/mokly/package.json` with the viewer release. Test the manifest
       and lockfile updates together.
-- [ ] Verify that Release Please preserves the private root native `file:`
+- [x] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
 - [ ] Verify native TLS on macOS and Windows CI. Build all five target
       binaries with a target C toolchain and check `ldd`, `otool -L`, or
       `dumpbin /dependents` for an unintended crypto shared-library dependency.
-- [ ] Reconnect the Node agreement and profile-selector tests to the shim's
+- [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
-- [ ] Commit.
+- [ ] Settle Release Please selection for core-only commits under the
+      Milestone 15 review decision.
+- [ ] Run the installed static output and Serve smoke after their integration.
+  - [x] Run installed Serve with the tiny HTML catalogue.
+  - [ ] Run installed static output after Milestone 12 supplies the writer.
+- [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
+      can pass; the bumped-copy sidecar tests and version-path regression stay
+      required.
+- [x] Commit.
+
+Release package evidence: `.context/rust-rebuild/delegation/m13/report-1.md`.
+Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
+Release review and merge decisions: `.context/rust-rebuild/delegation/m13/report-2.md`
+and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
+Final release review fixes: `.context/rust-rebuild/delegation/m13/report-3.md`.
+Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
+`.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1101,6 +1121,9 @@ Publish client final review and merge decisions:
 
 ## Milestone 15: Verification, close-out, and review
 
+- [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
+      the history page at close-out; retain their links and migration content.
+
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Open the pull request. Its description and squash body write `{target}`
@@ -1110,6 +1133,14 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 13 integration follow-up: resolve the full example's CSS-module
+    startup failure so strict build and `npm run dev` smoke checks pass.
+  - Milestone 13 review 2 follow-up: CI evidence selection compares a literal
+    workflow path in `evidence_contract.mjs`; review numeric workflow identity
+    matching so a GitHub `path` ending in `@main` can select valid evidence.
+  - Milestone 13 review 1, finding 5: the user must settle the Release Please
+    component for core-only commits; keep the `packages/mokly` layout until
+    that decision. Native builds and paired-tag publication remain unchanged.
   - Milestone 6 review 2, finding 6: decide failed-render detail status and
     Usage copy; keep all Used by lists unavailable after one unavailable view
     until the next generation while the user decision is pending.
@@ -1217,6 +1248,9 @@ Publish client final review and merge decisions:
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Replace the Intel macOS release runner before GitHub retires its Intel
+      images, preserving native build and execution coverage.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.

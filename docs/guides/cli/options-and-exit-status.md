@@ -10,12 +10,12 @@ order: 6
 The command comes first and its options follow it:
 
 ```shell
-npx mokly build --config tools/mokly.config.ts
+npx mokly build --config tools/mokly.config.json
 ```
 
 A value option also accepts the assigned form `--name=value`, which is how you
 pass a value beginning with `-`, such as `--token=-TOKEN` or
-`--config=-catalogue.config.ts`. Empty values are rejected, and a boolean flag
+`--config=-catalogue.config.json`. Empty values are rejected, and a boolean flag
 takes no value. There are no silent positional arguments.
 
 ## Options
