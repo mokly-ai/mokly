@@ -729,6 +729,7 @@ Tags: ui
 - [x] Commit.
 
 Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
