@@ -9,6 +9,7 @@ use ts_rs::TS;
 
 use crate::diagnostics::DefinitionCode;
 use crate::methods::Call;
+use crate::postcss_failure::PostcssFailure;
 
 /// Sidecar client operation result.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -16,6 +17,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Sidecar failures presented by the CLI as build-invalid.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// The consumer processor reported a catalogued configuration or plugin failure.
+    #[error("[mokly-sidecar/postcss] {source}")]
+    Postcss {
+        /// Structured processor failure.
+        source: PostcssFailure,
+    },
     /// A request's process crashed on both attempts.
     #[error("[mokly-sidecar/{kind}] sidecar exited twice during {call}")]
     RequestCrashed {

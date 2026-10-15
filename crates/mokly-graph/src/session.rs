@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::normalize_warnings;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::data::Props;
@@ -19,10 +20,10 @@ use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::types::{
-    DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TransientDocument,
+    DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TemporaryDocument,
 };
 use crate::workers::RenderWorkers;
-use crate::{route_inventory, styles, validation};
+use crate::{route_inventory, styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
@@ -31,6 +32,7 @@ pub(crate) struct Session {
 
 #[derive(Clone)]
 pub(crate) struct State {
+    pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) generation_key: String,
     pub(crate) public_files: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) matchers: Arc<styles::Matchers>,
@@ -40,7 +42,6 @@ pub(crate) struct State {
     pub(crate) catalogue: Arc<PreparedCatalogue>,
     pub(crate) plans: Arc<BTreeMap<String, DocumentPlan>>,
     pub(crate) resources: Arc<BTreeMap<String, ResourcePlan>>,
-    pub(crate) temporary_props: Option<(usize, Props)>,
     pub(crate) tree: Arc<dyn SourceTree>,
     pub(crate) composer: Arc<dyn Composer>,
     pub(crate) stylesheets: Arc<dyn StylesheetBundler>,
@@ -50,6 +51,7 @@ pub(crate) struct State {
 }
 
 pub(crate) struct SessionInput {
+    pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) config: ResolvedConfig,
     pub(crate) catalogue: PreparedCatalogue,
     pub(crate) plans: BTreeMap<String, DocumentPlan>,
@@ -64,6 +66,7 @@ impl Session {
         Self {
             state: Arc::new(State {
                 generation_key: input.generation_key,
+                directories: input.directories,
                 public_files: Arc::new(Mutex::new(BTreeSet::new())),
                 matchers: Arc::new(input.matchers),
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
@@ -72,7 +75,6 @@ impl Session {
                 catalogue: Arc::new(input.catalogue),
                 plans: Arc::new(input.plans),
                 resources: Arc::new(input.resources),
-                temporary_props: None,
                 tree: graph.tree.clone(),
                 composer: graph.composer.clone(),
                 stylesheets: graph.stylesheets.clone(),
@@ -153,11 +155,14 @@ impl RenderGeneration for Session {
         normalize_warnings(&mut summary.warnings);
         Ok(summary)
     }
+    fn stylesheet_directories(&self) -> &[DirectoryDependency] {
+        &self.state.directories
+    }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()
     }
-    fn render_props(&self, route: &str, props: &Props) -> Result<TransientDocument> {
-        crate::transient::render(self, route, props)
+    fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument> {
+        temporary::render(self, route, props)
     }
     fn public_files(&self) -> BTreeSet<String> {
         self.state

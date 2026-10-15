@@ -4,6 +4,8 @@
 
 pub mod build;
 pub mod build_output;
+pub mod cancellation;
+pub mod cancelled_work;
 pub mod codes;
 pub mod errors;
 pub mod grammar;

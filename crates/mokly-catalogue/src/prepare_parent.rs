@@ -9,7 +9,7 @@ use mokly_model::validation::PropValidator;
 
 use crate::diagnostic::{Code, Issue};
 use crate::input::{ParsedEntry, VariantInput};
-use crate::props;
+use crate::{declared_controls, props};
 
 pub(crate) struct Parent {
     pub(crate) visual: VisualEntry,
@@ -51,6 +51,17 @@ pub(crate) fn prepare(
             .get("/colorSchemes")
             .unwrap_or(source);
         let schemes = props::schemes(input.color_schemes.as_deref(), configured, scheme_source)?;
+        if kind == EntryKind::Component
+            && source.export.is_some()
+            && input.prop_schema.is_none()
+            && !input.infer_component_schema
+        {
+            return Err(Issue::new(
+                Code::ComponentSchema,
+                "propSchema is required for a component",
+            )
+            .at(source.clone()));
+        }
         let schema = match &input.prop_schema {
             Some(schema) => schema.clone(),
             None => match serde_json::to_value(&inferred) {
@@ -71,13 +82,19 @@ pub(crate) fn prepare(
             source,
         )?;
         props::validate(&validator, &input.props, None, parsed, source)?;
+        if let Some(controls) = &input.controls {
+            declared_controls::validate(validator.schema(), controls, &input.props, source)?;
+        }
         Ok((schemes, validator))
     };
     match result() {
         Ok((schemes, validator)) => {
             parent.visual.color_schemes = schemes;
             parent.visual.prop_schema = validator.schema().clone();
-            parent.visual.controls = controls::derive(validator.schema());
+            parent.visual.controls = input
+                .controls
+                .clone()
+                .unwrap_or_else(|| controls::derive(validator.schema()));
             parent.validator = Some(validator);
         }
         Err(issue) => parent.issues.push(issue),

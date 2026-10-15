@@ -136,6 +136,9 @@ fn fragment_cache_reuses_equal_props_and_separates_ignore_scope() {
     let memo: &dyn FragmentRenderer =
         &MemoFragments::new("generation".into(), renderer, cache.clone());
     let mut request = FragmentRequest {
+        entry_path: "components/chip".into(),
+        entry_title: "Chip".into(),
+        saved_slots: Default::default(),
         handle: "button.mockup.tsx#Button".into(),
         kind: RenderKind::Component,
         props: BTreeMap::new(),

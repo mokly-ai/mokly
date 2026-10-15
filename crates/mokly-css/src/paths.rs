@@ -5,6 +5,18 @@ use mokly_model::routes;
 
 /// Check an imported CSS or asset route before it becomes public.
 pub fn portable(path: &str, asset: bool) -> bool {
+    if let Some(rest) = path.strip_prefix("node_modules/.mokly-roots/") {
+        let Some((index, suffix)) = rest.split_once('/') else {
+            return false;
+        };
+        return !index.starts_with('0')
+            && index.bytes().all(|byte| byte.is_ascii_digit())
+            && portable_segments(&format!("node_modules/{suffix}"), asset);
+    }
+    portable_segments(path, asset)
+}
+
+fn portable_segments(path: &str, asset: bool) -> bool {
     let mut previous = "";
     path.split('/').all(|part| {
         let name = if previous == "node_modules" {

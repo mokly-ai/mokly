@@ -37,7 +37,7 @@ fn process_crash_retries_once_and_bad_hello_fails_closed() {
         })
     };
     let crashed = pool_with_entry(
-        env!("CARGO_PKG_VERSION"),
+        &super::super::package_version::read(),
         "tests/fixtures/sidecar/crash-peer.mjs",
     );
     assert!(matches!(
@@ -48,14 +48,14 @@ fn process_crash_retries_once_and_bad_hello_fails_closed() {
         })
     ));
     let malformed = pool_with_entry(
-        env!("CARGO_PKG_VERSION"),
+        &super::super::package_version::read(),
         "tests/fixtures/sidecar/bad-peer.mjs",
     );
     assert!(matches!(
         malformed.request(call()),
         Err(Error::Protocol(ProtocolError::Handshake))
     ));
-    let unavailable = pool_with_entry(env!("CARGO_PKG_VERSION"), "missing-sidecar.js");
+    let unavailable = pool_with_entry(&super::super::package_version::read(), "missing-sidecar.js");
     assert!(matches!(
         unavailable.request(call()),
         Err(Error::Unavailable { .. })

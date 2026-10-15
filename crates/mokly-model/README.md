@@ -42,7 +42,9 @@ schemas and Serde field names without a second hand-written type model.
 `typescript::generate` returns deterministic source. `cargo xtask generate-types`
 writes the schema module to `packages/viewer/src/generated/model.ts` and the
 catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
-per file. `catalogue::CatalogueModel` is private in-memory state. The public
+per file. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
+coordinates are one-based; a zero line or column means the coordinate is
+unavailable. JavaScript diagnostics can use the module and export instead. The public
 roots are `CatalogueReadModel` v7, `EntryDetailV1`, and `LiveDescriptorV3`.
 Their readers gate the version before decoding payload fields. Index validation
 checks private fields, paths, variants, trees, schemas, tagged props, flow
@@ -77,6 +79,8 @@ TypeScript constants.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`
 encode and decode tagged public props, including negative zero. Derived controls
 follow schema choices, labels, bounds, and zero-based number steps.
+`controls::with_bounds` supplies the narrowed schema for temporary prop checks.
+`runtime_diagnostic` carries expected runtime categories across adapters.
 
 ## Quick Start
 

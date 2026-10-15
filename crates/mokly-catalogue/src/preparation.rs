@@ -17,6 +17,7 @@ use crate::discovery::{Discovery, Inventory, SourceKind};
 use crate::error::{CatalogueError, Result};
 use crate::locations::at;
 use crate::prepare_sources::{append, canonical_order, duplicate_indices};
+use crate::render_sources::JavaScriptCatalogue;
 use crate::template_types::{ElementRegistry, Template};
 use crate::validate_templates;
 use crate::{documents, folders, identity, links, moves, parsing, registry, relationships};
@@ -38,6 +39,8 @@ pub struct PreparedCatalogue {
     pub elements: ElementRegistry,
     /// JavaScript sources awaiting the Milestone 8 sidecar implementation.
     pub deferred_modules: Vec<String>,
+    /// Private JavaScript handles, bundle inputs, and saved React slots.
+    pub javascript: JavaScriptCatalogue,
     /// Sorted unique non-fatal warnings.
     pub warnings: Vec<Warning>,
 }
@@ -55,7 +58,7 @@ pub struct Builder {
     pub tree: Arc<dyn SourceTree>,
     /// Once-per-pass root inventory.
     pub discovery: Arc<dyn Discovery>,
-    /// JavaScript description provider, called only when selected files need it.
+    /// JavaScript description provider for selected modules or a configured renderer.
     pub definitions: Arc<dyn DefinitionProvider>,
 }
 
@@ -91,6 +94,7 @@ impl Builder {
             slot_fragments: BTreeMap::new(),
             elements: BTreeMap::new(),
             deferred_modules: Vec::new(),
+            javascript: JavaScriptCatalogue::default(),
             warnings: Vec::new(),
         };
         let mut failed = BTreeSet::new();

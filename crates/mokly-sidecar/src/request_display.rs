@@ -15,9 +15,11 @@ impl Display for Call {
             Self::RenderStory(value) => write!(
                 formatter,
                 "{} ({}, {})",
-                value.story_id, value.viewport, value.color_scheme
+                location(&value.story_id),
+                value.viewport,
+                value.color_scheme
             ),
-            Self::RenderPage(value) => formatter.write_str(&value.handle),
+            Self::RenderPage(value) => formatter.write_str(&location(&value.handle)),
             Self::ProcessCss(value) => {
                 write!(formatter, "{} for {}", value.postcss, value.source_path)
             }
@@ -34,7 +36,9 @@ fn render(formatter: &mut Formatter<'_>, value: &Render) -> fmt::Result {
     write!(
         formatter,
         "{} ({}, {})",
-        value.handle, value.viewport, value.color_scheme
+        location(&value.handle),
+        value.viewport,
+        value.color_scheme
     )
 }
 
@@ -50,3 +54,10 @@ impl Display for ColorScheme {
 #[cfg(test)]
 #[path = "_tests_/request_display_tests.rs"]
 mod request_display_tests;
+
+fn location(handle: &str) -> String {
+    handle.rsplit_once('#').map_or_else(
+        || handle.into(),
+        |(module, export)| format!("{module} export {export}"),
+    )
+}

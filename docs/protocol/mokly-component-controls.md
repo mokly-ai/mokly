@@ -68,7 +68,7 @@ Navigating to another entry discards temporary edits, as does a reload.
 Viewport and scheme changes keep validated edits and render them in the new
 context. Temporary state is never written to a source, never encoded in a
 URL, local storage, a comparison, or a Changes count, and never enters the
-catalogue model or the render cache.
+catalogue model.
 
 Temporary edits operate in Current. Selecting a comparison restores the saved
 props and compares the base render with the current render of the saved
@@ -204,11 +204,12 @@ fails with a render failure; a sidecar render that passes its own deadline
 follows the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts),
 so a hanging consumer render cannot hang Browse or shutdown.
 
-Transient HTML, usage, props, and generated style and resource bytes live
-only in a process-local memory store behind opaque render ids; nothing is
+Preview document bundles, with usage, props, and resource bytes, live
+in a process-local memory store behind opaque render ids; nothing is
 spilled to disk, not to the cache directory, the OS temporary directory, or
-any root. They never enter the render cache, Git changed-path calculation,
-the watch set, or a publication. Reading validated public assets is allowed;
+any root. Temporary documents never enter the saved document cache, Git
+changed-path calculation, the watch set, or a publication. Content-addressed
+fragments may use the bounded fragment cache. Reading public assets is allowed;
 generated asset bytes stay in the same memory bundle as their document and
 are served through its render id. At most sixteen bundles and 32 MiB of
 encoded document, metadata, and resource bytes are kept; a result over the
@@ -246,5 +247,4 @@ Browser tests cover prop changes, reset, variant switching, viewport and
 scheme retention, rapid edits, stale responses, navigation, comparison
 selection, render errors, retry, sidecar replacement, and shutdown. Static
 smoke tests prove the saved props are usable and issue no render request.
-The mobile and desktop
-[controls mockups](./mokly-component-controls-design.md) show the states.
+The [controls mockups](./mokly-component-controls-design.md) show the states.

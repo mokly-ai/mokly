@@ -62,6 +62,11 @@ async fn start(extra: &[&str]) -> Running {
         .current_dir(root.path())
         .env("MOKLY_OUTPUT", "plain")
         .env("PATH", "")
+        .env(
+            "MOKLY_PACKAGE_ROOT",
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
+        )
+        .env_remove("MOKLY_NODE_EXECUTABLE")
         .env("MOKLY_VIEWER_DIST", root.path().join("viewer"))
         .env_remove("MOKLY_SIDECARS")
         .env_remove("CI")
@@ -219,7 +224,7 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
 }
 
 #[tokio::test]
-async fn a_configured_javascript_renderer_fails_before_listening() {
+async fn a_configured_renderer_without_node_fails_before_listening() {
     let root = TempDir::new().unwrap();
     write(
         root.path(),
@@ -246,6 +251,11 @@ async fn a_configured_javascript_renderer_fails_before_listening() {
         .current_dir(root.path())
         .env("MOKLY_OUTPUT", "plain")
         .env("PATH", "")
+        .env(
+            "MOKLY_PACKAGE_ROOT",
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
+        )
+        .env_remove("MOKLY_NODE_EXECUTABLE")
         .env_remove("MOKLY_SIDECARS")
         .kill_on_drop(true)
         .output()
@@ -253,5 +263,5 @@ async fn a_configured_javascript_renderer_fails_before_listening() {
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("JavaScript renderer is unavailable"));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("node is unavailable"));
 }

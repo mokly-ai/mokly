@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_cli::build::{BuildError, BuildSummary};
 use mokly_cli::build_output;
+use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::{serve_errors, serve_output};
@@ -16,6 +17,7 @@ use crate::serve_rebuild::RebuildReporter;
 use crate::terminal::Terminal;
 
 pub(super) struct ServeLines {
+    pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) terminal: Arc<dyn Terminal>,
     pub(super) style: Style,
     pub(super) redactor: Arc<Redactor>,
@@ -33,6 +35,9 @@ impl Diagnostics for ServeLines {
             .stderr(&serve_output::accept_recovery(&self.style));
     }
     fn failed(&self, error: &ServerError) {
+        if self.cancellation.requested() {
+            return;
+        }
         let output = serve_errors::failure(&self.style, error, &self.redactor);
         self.terminal.stderr(&output);
     }
@@ -48,6 +53,9 @@ impl RebuildReporter for ServeLines {
             .stdout(&serve_output::catalogue(&self.style, summary, elapsed));
     }
     fn catalogue_failure(&self, error: &BuildError) {
+        if self.cancellation.requested() {
+            return;
+        }
         self.terminal
             .stderr(&build_output::failure(&self.style, error, &self.redactor));
         if self.style.mode == Mode::Rich {

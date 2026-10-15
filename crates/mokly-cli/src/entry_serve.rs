@@ -6,19 +6,14 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use mokly_catalogue::config::{Loader, relative};
-use mokly_catalogue::definition_provider::DeferredDefinitions;
-use mokly_catalogue::discovery::Discoverer;
-use mokly_catalogue::preparation::Builder;
-use mokly_catalogue::working_tree::WorkingTree;
+use mokly_catalogue::config::relative;
 use mokly_cli::build_output;
+use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::codes::Code;
 use mokly_cli::grammar::{Common, Serve};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
-use mokly_cli::serve::{CatalogueServe, ServePreparation};
 use mokly_cli::{serve_errors, serve_output};
-use mokly_graph::cache::MemoryCache;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_server::background::{Background, UsagePass};
@@ -31,17 +26,16 @@ use mokly_server::runtime::{ServerRuntime, TokioServer};
 use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::Projector;
 use mokly_server::work::{Workers, parallelism};
-use mokly_source_interface::tree::SourceTree;
 use tokio::sync::{mpsc, watch};
 
-use crate::render_runtime::NativeGraphs;
 use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
+use crate::serve_services::ServeServices;
 use crate::serve_state::{NativeServeState, ServeStateFactory};
 use crate::serve_timing::ServeTiming;
 use crate::terminal::Terminal;
-use crate::{serve_controls, serve_signals, serve_trace};
+use crate::{serve_controls, serve_shutdown, serve_signals, serve_trace};
 
 pub(super) fn run(
     common: &Common,
@@ -67,26 +61,16 @@ pub(super) fn run(
             return ExitCode::FAILURE;
         }
     };
-    let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
-    let preparation: Arc<dyn ServePreparation> = Arc::new(CatalogueServe {
-        config: Arc::new(Loader { tree: tree.clone() }),
-        catalogue: Arc::new(Builder {
-            tree: tree.clone(),
-            discovery: Arc::new(Discoverer { tree: tree.clone() }),
-            definitions: Arc::new(DeferredDefinitions),
-        }),
-        graphs: Arc::new(NativeGraphs {
-            tree: tree.clone(),
-            cache: Arc::new(MemoryCache::new(256 * 1024 * 1024)),
-        }),
-    });
-    let prepared = match preparation.prepare(&cwd, common) {
-        Ok(prepared) => prepared,
+    let cancellation: Arc<dyn Cancellation> = Arc::new(ServeCancellation::default());
+    let services = match ServeServices::new(&cwd, common, redactor.clone(), cancellation.clone()) {
+        Ok(services) => services,
         Err(error) => {
             terminal.stderr(&build_output::failure(style, &error, &redactor));
             return ExitCode::FAILURE;
         }
     };
+    let tree = services.tree.clone();
+    let preparation = services.preparation.clone();
     let workers = parallelism(std::thread::available_parallelism().map_or(1, usize::from));
     let runtime = match tokio::runtime::Builder::new_multi_thread()
         .worker_threads(workers as usize)
@@ -105,7 +89,34 @@ pub(super) fn run(
             Ok(signals) => signals,
             Err(source) => return Err(ServerError::Internal(InternalError::Io { source })),
         };
+        let shutdown = serve_shutdown::start(
+            receiver.clone(),
+            cancellation.clone(),
+            services.pool.clone(),
+        );
         let result = async {
+            let prepare = preparation.clone();
+            let prepare_cwd = cwd.clone();
+            let prepare_common = common.clone();
+            let parent = tracing::Span::current();
+            let prepared = match tokio::task::spawn_blocking(move || {
+                parent.in_scope(|| prepare.prepare(&prepare_cwd, &prepare_common))
+            })
+            .await
+            {
+                Ok(Ok(prepared)) => prepared,
+                Ok(Err(error)) => {
+                    if *receiver.borrow() {
+                        return Ok(ExitCode::SUCCESS);
+                    }
+                    terminal.stderr(&build_output::failure(style, &error, &redactor));
+                    return Ok(ExitCode::FAILURE);
+                }
+                Err(source) => return Err(ServerError::Internal(InternalError::Task { source })),
+            };
+            if *receiver.borrow() {
+                return Ok(ExitCode::SUCCESS);
+            }
             let assets: &dyn ViewerAssets = &PackageAssets { tree: tree.clone() };
             let dist = viewer_dist().ok_or(ServerError::InvalidAssets)?;
             let states: Arc<dyn ServeStateFactory> = Arc::new(NativeServeState {
@@ -121,6 +132,7 @@ pub(super) fn run(
             let base = snapshot.index.base.clone().unwrap_or_default();
             let publications = Arc::new(SharedPublication::new(snapshot));
             let reporter = Arc::new(ServeLines {
+                cancellation: cancellation.clone(),
                 terminal: terminal.clone(),
                 style: style.clone(),
                 redactor: redactor.clone(),
@@ -210,14 +222,17 @@ pub(super) fn run(
             if let Some(controls) = controls {
                 let _ = controls.await;
             }
-            result
+            result.map(|()| ExitCode::SUCCESS)
         }
         .await;
+        stop.send_replace(true);
+        let shutdown = shutdown.await;
         signals.abort();
+        serve_shutdown::finish(shutdown)?;
         result
     });
     match result {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(status) => status,
         Err(error) => {
             terminal.stderr(&serve_errors::failure(style, &error, &redactor));
             ExitCode::FAILURE

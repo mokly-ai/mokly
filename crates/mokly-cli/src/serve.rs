@@ -29,7 +29,7 @@ pub trait ServePreparation: Send + Sync {
     fn prepare(&self, cwd: &Path, options: &Common) -> Result<PreparedServe, BuildError>;
 }
 
-/// Native fixed catalogue preparation without sidecar or Git work.
+/// Catalogue preparation through the shared definition and render factories.
 pub struct CatalogueServe {
     /// Configuration loading boundary.
     pub config: Arc<dyn ConfigLoader>,

@@ -31,10 +31,12 @@ export interface Owner {
   seen: Set<string>;
 }
 export interface RenderSession {
+  componentOutput?: boolean;
   context: RenderContext;
   sourceRoot: string;
   dependencyRoots: readonly string[];
   location: string;
+  inputOrders: Map<string, Map<string, number>>;
   instances: InstanceDraft[];
   slots: SlotDraft[];
   registrations: Map<object, Registration>;

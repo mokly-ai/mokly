@@ -6,11 +6,12 @@ use std::sync::Arc;
 
 use mokly_catalogue::diagnostic::Warning;
 use mokly_html::links::Reference;
+use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use rayon::prelude::*;
 
 use crate::cache::Artifact;
 use crate::closure::Closure;
-use crate::error::{InternalError, Result};
+use crate::error::{GraphError, InternalError, Result};
 
 /// A document action that can run on a worker's large stack.
 pub trait ArtifactWorker: Send + Sync {
@@ -56,6 +57,10 @@ impl fmt::Debug for dyn DocumentWorker + '_ {
 /// Worker scheduling is an injectable runtime boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWorkersMock))]
 pub trait RenderWorkers: Send + Sync {
+    /// Whether the command has cancelled preparation and queued document work.
+    fn cancelled(&self) -> bool {
+        false
+    }
     /// Collect an on-demand closure on the large render stack.
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
         worker.closure_job(route)
@@ -107,5 +112,19 @@ impl RenderWorkers for ThreadWorkers {
                 .map(|route| parent.in_scope(|| worker.validate(route)))
                 .collect()
         })
+    }
+}
+
+/// Stop preparation before the next entry or stylesheet starts.
+pub(crate) fn check_cancelled(workers: &dyn RenderWorkers) -> Result<()> {
+    if workers.cancelled() {
+        Err(GraphError::Runtime {
+            source: RuntimeDiagnostic {
+                code: RuntimeCode::Cancelled,
+                message: "build cancelled".into(),
+            },
+        })
+    } else {
+        Ok(())
     }
 }

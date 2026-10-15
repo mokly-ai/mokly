@@ -2,6 +2,11 @@ import { parseFragment } from "parse5";
 import type { DefaultTreeAdapterMap } from "parse5";
 
 import type { RenderSession } from "../authoring/runtime.js";
+import type { CollectedStyle } from "../generated/sidecar/CollectedStyle.js";
+import type { MarkerDraft } from "../generated/sidecar/MarkerDraft.js";
+
+import { uniqueMarkerIds } from "./marker-ids.js";
+import { markerRecords } from "./markup-records.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 
@@ -10,11 +15,13 @@ export function finishMarkup(
   html: string,
   session: RenderSession,
   extractStyles = true,
-): { html: string; styles: string[] } {
+): { html: string; styles: CollectedStyle[]; markers: MarkerDraft[] } {
+  uniqueMarkerIds(session);
   const document = parseFragment(html, { sourceCodeLocationInfo: true });
   const replacements: { start: number; end: number; text: string }[] = [];
   const used = new Set<string>();
-  const styles: string[] = [];
+  const styles: CollectedStyle[] = [];
+  const markers = markerRecords(session);
   function visit(node: Node) {
     if (
       node.nodeName === "#comment" &&
@@ -59,6 +66,7 @@ export function finishMarkup(
         if (!comment || used.has(token) || node.tagName !== "template")
           throw new Error("forged or duplicate Mokly marker");
         used.add(token);
+        markers.add(comment);
         const location = node.sourceCodeLocation!;
         replacements.push({
           start: location.startOffset,
@@ -71,7 +79,7 @@ export function finishMarkup(
       const text = node.childNodes
         .map((child) => ("value" in child ? child.value : ""))
         .join("");
-      styles.push(text);
+      styles.push({ css: text, owners: markers.owner() });
       const location = node.sourceCodeLocation!;
       replacements.push({
         start: location.startOffset,
@@ -86,10 +94,11 @@ export function finishMarkup(
   visit(document);
   if (used.size !== session.markers.size)
     throw new Error("render dropped a Mokly marker");
+  markers.finish();
   for (const replacement of replacements.sort((a, b) => b.start - a.start))
     html =
       html.slice(0, replacement.start) +
       replacement.text +
       html.slice(replacement.end);
-  return { html, styles };
+  return { html, styles, markers: markers.records };
 }

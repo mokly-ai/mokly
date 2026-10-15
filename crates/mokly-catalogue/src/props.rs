@@ -23,7 +23,11 @@ pub(crate) fn compile(
     let context = Context {
         entry: source.path.clone(),
         variant: None,
-        kind: AuthoringKind::Html,
+        kind: if source.export.is_some() {
+            AuthoringKind::JavaScript
+        } else {
+            AuthoringKind::Html
+        },
     };
     match PropValidator::compile(schema, &context) {
         Ok(validator) => Ok(validator),
@@ -41,7 +45,11 @@ pub(crate) fn validate(
     let context = Context {
         entry: source.path.clone(),
         variant: variant.map(|(slug, _)| slug.into()),
-        kind: AuthoringKind::Html,
+        kind: if source.export.is_some() {
+            AuthoringKind::JavaScript
+        } else {
+            AuthoringKind::Html
+        },
     };
     let value = match serde_json::to_value(props) {
         Ok(value) => value,
@@ -65,9 +73,17 @@ fn from_model(
     match error {
         ModelError::Schema(diagnostic) | ModelError::Props(diagnostic) => {
             let code = if field == "propSchema" {
-                Code::HtmlFrontMatter
+                if source.export.is_some() {
+                    Code::ComponentSchema
+                } else {
+                    Code::HtmlFrontMatter
+                }
             } else {
-                Code::HtmlAttribute
+                if source.export.is_some() {
+                    Code::ComponentProps
+                } else {
+                    Code::HtmlAttribute
+                }
             };
             let prefix = variant.map_or(String::new(), |(slug, _)| format!("variant {slug} "));
             let pointer = if let Some((_, index)) = variant {
@@ -127,7 +143,7 @@ pub(crate) fn declarations(
         } else {
             format!("props/{name}")
         };
-        if !prop_name(name) {
+        if source.export.is_none() && !prop_name(name) {
             return Err(issue(
                 &parsed.document,
                 &source.path,
@@ -136,31 +152,42 @@ pub(crate) fn declarations(
                 format!("invalid prop name {name}"),
             ));
         }
+        let reserved_input = component
+            && matches!(
+                name.as_str(),
+                "moklyInstance" | "key" | "ref" | "__moklySource"
+            );
         if component
             && matches!(
                 name.as_str(),
-                "moklyInstance"
-                    | "key"
-                    | "ref"
-                    | "__moklySource"
-                    | "to"
-                    | "fragment"
-                    | "slot"
-                    | "moklyViewport"
-                    | "moklyIf"
+                "moklyInstance" | "key" | "ref" | "__moklySource"
             )
+            || component
+                && parsed.input.element.is_some()
+                && matches!(
+                    name.as_str(),
+                    "to" | "fragment" | "slot" | "moklyViewport" | "moklyIf"
+                )
         {
             return Err(issue(
                 &parsed.document,
                 &source.path,
                 &field,
-                Code::HtmlAttribute,
+                if source.export.is_some() {
+                    if reserved_input {
+                        Code::ComponentSlots
+                    } else {
+                        Code::ComponentElement
+                    }
+                } else {
+                    Code::HtmlAttribute
+                },
                 format!("reserved prop name {name}"),
             ));
         }
     }
     for name in slots {
-        if !prop_name(name)
+        if source.export.is_none() && !prop_name(name)
             || !seen.insert(name)
             || properties.is_some_and(|props| props.contains_key(name))
             || matches!(
@@ -172,7 +199,11 @@ pub(crate) fn declarations(
                 &parsed.document,
                 &source.path,
                 "slots",
-                Code::HtmlSlot,
+                if source.export.is_some() {
+                    Code::ComponentSlots
+                } else {
+                    Code::HtmlSlot
+                },
                 format!("invalid or conflicting slot name {name}"),
             ));
         }

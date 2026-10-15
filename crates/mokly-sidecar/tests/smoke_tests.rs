@@ -19,6 +19,9 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 use serde_json::json;
 
+#[path = "../../../tests/rust/package_version.rs"]
+mod package_version;
+
 #[derive(Default)]
 struct Reporter(Mutex<Vec<String>>);
 impl Diagnostics for Reporter {
@@ -61,7 +64,7 @@ fn pool(version: &str) -> Pool {
 
 #[test]
 fn bundles_describes_and_renders_component_screen_story_and_page() {
-    let pool: Box<dyn SidecarPool> = Box::new(pool(env!("CARGO_PKG_VERSION")));
+    let pool: Box<dyn SidecarPool> = Box::new(pool(&package_version::read()));
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/fixtures/sidecar")
         .canonicalize()

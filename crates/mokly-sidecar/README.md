@@ -43,6 +43,12 @@ resident set, and `dyn Diagnostics` for events and standard error. Shutdown
 wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
 
+Expected PostCSS errors carry typed configuration, plugin, or dependency data.
+The core presents their catalogued code and text. Request diagnostics use
+logical stylesheet paths and module-and-export render labels. PostCSS syntax
+errors keep the logical source coordinate and reason. `abort` kills process trees
+without the graceful deadline when the command receives a second signal.
+
 ## Quick Start
 
 ```bash
@@ -86,7 +92,8 @@ The `mock` feature exposes the public trait mocks to other crates.
 - [Rust architecture](../../docs/architecture/rust-core.md).
 
 `cargo xtask generate-types` writes one Node declaration module per wire type
-under `packages/mokly/src/generated/sidecar/`. Authored schemas remain raw JSON
+under `packages/mokly/src/generated/sidecar/`. Authenticated marker drafts retain their API payload and physical parent.
+Collected style records carry CSS and component owner paths. Authored schemas remain raw JSON
 until the core validates them. A definition's source path identifies its
 helper module separately from the exporting module in its handle. PostCSS
 dependencies keep their plugin names and optional directory globs.

@@ -14,7 +14,6 @@ pub mod reference_index;
 pub mod references;
 pub mod route_inventory;
 pub mod source_snapshot;
-mod transient;
 pub mod types;
 pub mod urls;
 pub mod workers;
@@ -47,3 +46,10 @@ mod rendering_tests;
 #[cfg(test)]
 #[path = "_tests_/snapshot_tests.rs"]
 mod snapshot_tests;
+
+mod document_composition;
+mod temporary;
+
+#[cfg(test)]
+#[path = "_tests_/cancellation_tests.rs"]
+mod cancellation_tests;

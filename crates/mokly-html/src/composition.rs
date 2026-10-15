@@ -10,6 +10,7 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::data::Props;
 use mokly_model::prop_schema::PropSchema;
+use mokly_model::routes;
 use mokly_model::usage::{
     CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord,
 };
@@ -18,8 +19,11 @@ use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::{FragmentRenderer, OwnedStyle, RenderKind};
-use crate::tree::{Node, Region, RegionKind};
-use crate::{assembly, error, links, props, regions, relative_links, source_locations};
+use crate::tree::Node;
+use crate::{
+    assembly, component_root, error, links, props, raw_markers, regions, relative_links,
+    source_locations,
+};
 
 /// One effective document view. Pages ignore the axes.
 pub struct ComposeRequest<'a> {
@@ -161,15 +165,7 @@ impl Composer for HtmlComposer {
             };
             if matches!(entry.content, EntryContent::Component { .. }) {
                 engine.components.insert(0, parent.into());
-                tree = vec![Node::Region {
-                    region: Region {
-                        id: String::new(),
-                        kind: RegionKind::Root {
-                            path: parent.into(),
-                        },
-                    },
-                    children: tree,
-                }];
+                tree = component_root::attach(tree, parent)?;
             }
             if matches!(entry.content, EntryContent::Page) {
                 assembly::append_styles(&mut tree, &engine.styles);
@@ -183,6 +179,12 @@ impl Composer for HtmlComposer {
                     tree,
                 );
             }
+            let route = if matches!(entry.content, EntryContent::Page) {
+                routes::document(&entry.metadata.path, request.color_scheme)
+            } else {
+                routes::view(&entry.metadata.path, request.viewport, request.color_scheme)
+            };
+            raw_markers::warnings(&tree, &route, &mut engine.warnings);
             regions::validate(&tree)?;
             let ranges = regions::number(&mut tree);
             tracing::debug!(
@@ -231,10 +233,7 @@ impl Engine<'_> {
                     match self.element(element, context) {
                         Ok(nodes) => output.extend(nodes),
                         Err(source) => {
-                            return Err(error::HtmlError::Located {
-                                location,
-                                source: Box::new(source),
-                            });
+                            return Err(source.at(location));
                         }
                     }
                 }
