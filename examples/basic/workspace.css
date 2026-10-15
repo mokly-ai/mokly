@@ -110,6 +110,7 @@ a {
 
 .field input,
 .field select {
+  min-width: 0;
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -152,4 +153,12 @@ a {
 .columns:has(> .aside) {
   grid-template-columns: minmax(0, 1fr) 240px;
   align-items: start;
+}
+
+/* A narrow desktop frame, such as Browse's Both stage, stacks the roles aside
+   under the form so the fields keep their width. */
+@media (max-width: 900px) {
+  .columns:has(> .aside) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

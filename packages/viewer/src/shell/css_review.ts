@@ -95,6 +95,8 @@ export const SHELL_REVIEW_CSS = `
   padding: 24px;
   background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 / 22px 22px;
 }
+/* The empty state's action, inline in the comparison's failure line. */
+.mbk-diff-stage p > .mbk-empty-link { margin: 0 0 0 4px; }
 .mbk-diff-view { margin-bottom: 24px; }
 .mbk-diff-view h3 {
   margin: 0 0 12px;

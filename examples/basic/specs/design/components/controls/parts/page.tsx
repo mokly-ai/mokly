@@ -133,10 +133,13 @@ export function ControlsPage({
         state === "comparison" ? (
           <ComponentComparison viewport={previewViewport} />
         ) : (
-          <div className="ce-controls-preview" aria-busy={state === "pending"}>
-            <ComponentCanvas viewport={previewViewport}>
-              <ActionExample {...fixture.preview} />
-            </ComponentCanvas>
+          <div className="ce-controls-preview">
+            {/* The status stays outside the busy region, so it is announced. */}
+            <div aria-busy={state === "pending"}>
+              <ComponentCanvas viewport={previewViewport}>
+                <ActionExample {...fixture.preview} />
+              </ComponentCanvas>
+            </div>
             {state === "pending" ? (
               <p className="ce-preview-status" role="status">
                 <span aria-hidden="true" className="ce-pending-dot" />

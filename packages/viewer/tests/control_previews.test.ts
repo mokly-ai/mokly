@@ -31,6 +31,7 @@ const preview: ComponentRenderSuccess = {
 function target(path: string, kind: ControlTarget["kind"]): ControlTarget {
   return {
     path,
+    title: path,
     kind,
     propSchema: { type: "object", additionalProperties: false },
     props: {},

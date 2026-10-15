@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { encodeProps } from "../src/components/codec.js";
 import type { ComponentRenderSuccess } from "../src/components/render_types.js";
 import type { GeneratedComponentView } from "../src/components/views.js";
-import { controlsUnavailable } from "../src/shell/component_controls_state.js";
+import { controlsMode } from "../src/shell/component_controls_state.js";
 import {
   acceptedRender,
   editContextKey,
@@ -109,49 +110,38 @@ test("a revision, a render generation or the views change the edit context", () 
 });
 
 test("edited props render again after the context or the capability changes", () => {
-  assert.equal(shouldRerender("a", "b", true, undefined), true);
-  assert.equal(shouldRerender("a", "a", true, undefined), false);
-  assert.equal(shouldRerender("a", "b", false, undefined), false);
-  assert.equal(
-    shouldRerender(
-      "a",
-      "b",
-      true,
-      "Open this catalogue locally to edit props.",
-    ),
-    false,
-  );
+  assert.equal(shouldRerender("a", "b", true, true), true);
+  assert.equal(shouldRerender("a", "a", true, true), false);
+  assert.equal(shouldRerender("a", "b", false, true), false);
+  assert.equal(shouldRerender("a", "b", true, false), false);
 });
 
-test("controls are read-only without a live capability or editable props", () => {
+test("the Props panel edits only a current entry with controls in Serve", () => {
   const target: ControlTarget = {
     path: "components/action",
+    title: "Action",
     kind: "component",
     propSchema: { type: "object", additionalProperties: false },
-    props: {},
+    props: encodeProps({ label: "Go" }),
     controls: { label: { kind: "text" } },
     suppliedSlots: [],
     removed: false,
   };
-  assert.equal(controlsUnavailable(target, false, true), undefined);
-  assert.equal(
-    controlsUnavailable(target, false, false),
-    "Open this catalogue locally to edit props.",
-  );
-  assert.equal(
-    controlsUnavailable(target, true, true),
-    "Comparisons show the saved props. Return to Current to edit props.",
-  );
-  assert.equal(
-    controlsUnavailable({ ...target, removed: true }, false, true),
-    "Choose an available entry to edit props.",
-  );
-  assert.equal(
-    controlsUnavailable(undefined, false, true),
-    "Choose an available entry to edit props.",
-  );
-  assert.equal(
-    controlsUnavailable({ ...target, controls: {} }, false, true),
-    "No editable props are declared for this entry.",
-  );
+  assert.equal(controlsMode(target, false, "ready"), "editable");
+  assert.equal(controlsMode(target, false, "preparing"), "preparing");
+  assert.equal(controlsMode(target, false, "failed"), "preparing-failed");
+  assert.equal(controlsMode(target, false, undefined), "published");
+  assert.equal(controlsMode(target, true, "ready"), "comparison");
+  assert.equal(controlsMode(target, true, undefined), "comparison");
+  const removed = { ...target, removed: true };
+  assert.equal(controlsMode(removed, false, "ready"), "removed");
+  assert.equal(controlsMode(removed, true, undefined), "removed");
+  const readOnly = { ...target, controls: {} };
+  assert.equal(controlsMode(readOnly, false, "ready"), "read-only");
+  assert.equal(controlsMode(readOnly, true, undefined), "read-only");
+  const slotsOnly = { ...readOnly, props: {}, suppliedSlots: ["header"] };
+  assert.equal(controlsMode(slotsOnly, false, "ready"), "read-only");
+  const empty = { ...readOnly, props: {} };
+  assert.equal(controlsMode(empty, false, "ready"), "no-props");
+  assert.equal(controlsMode(empty, true, undefined), "no-props");
 });

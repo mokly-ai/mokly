@@ -131,9 +131,10 @@ data instead.
 [renderer module](../../docs/protocol/mokly-rendering.md#renderer-module) for a
 React Native Web component library. It returns the entry's React node inside
 the `@firna/ui` theme for the view's colour scheme, with the tokens in
-`theme.ts`. A `<style>` element sets the body colours for plain HTML. The
-sidecar collects that element and React Native Web's styles, and the Rust
-core writes the document head. The renderer also places each design library
+`theme.ts`. The sidecar collects React Native Web's styles, and the Rust core
+writes the document head. The collected styles come before the configured
+stylesheets, so `styles.css`, and `styles-dark.css` in dark views, colour the
+plain HTML around the components. The renderer also places each design library
 component in `LibraryHost`, which gives the standalone sample its frame. The
 `moduleResolution` settings give
 the bundle the `react-native-web` alias, the `react-native` conditions and
@@ -191,7 +192,9 @@ paths resolve from the file:
 - `renderer`, `postcss`, and `moduleResolution` configure the React render and
   the CSS transform.
 - `stylesheets` lists route rules in order. The first rule that matches an
-  entry route applies to all of its views.
+  entry route applies to all of its views. The last rule links `styles.css`
+  to the React example's screens and components, and adds `styles-dark.css`
+  to their dark views.
 - `repoRoot` is the repository root, two directories up.
 - `$schema` names the editor schema that `@mokly/mokly` ships.
 

@@ -66,6 +66,7 @@ test("a failed descriptor warns, keeps browsing, and retries on the next message
   await flush();
   assert.deepEqual(fixture.warnings, ["Live prop editing is unavailable."]);
   assert.equal(fixture.controller.live, undefined);
+  assert.equal(fixture.controller.editing, "failed");
   fixture.live.listener!.message(1, fixture.deployment);
   assert.equal(fixture.live.descriptors.length, 2);
   assert.equal(fixture.source.indexes.length, 0);
@@ -155,7 +156,7 @@ test("a refresh from another deployment is a full page load", async () => {
   assert.equal(fixture.commits.length, 0);
 });
 
-test("a new render generation replaces the descriptor", async () => {
+test("a new render generation keeps the installed capability until its replacement installs", async () => {
   const fixture = connected();
   fixture.live.descriptor().resolve(liveDescriptor(GENERATION));
   await flush();
@@ -164,10 +165,73 @@ test("a new render generation replaces the descriptor", async () => {
   await flush();
   fixture.source.detail(HOME).resolve(revised(HOME, 2));
   await flush();
-  assert.equal(fixture.controller.descriptor, undefined);
+  assert.equal(installed(fixture)?.generation, GENERATION);
+  assert.equal(fixture.controller.editing, "ready");
+  assert.equal(fixture.controller.live, fixture.live);
   fixture.live.descriptor().resolve(liveDescriptor(NEXT_GENERATION));
   await flush();
   assert.equal(installed(fixture)?.generation, NEXT_GENERATION);
+});
+
+test("a failed refetch keeps the installed capability and editing ready", async () => {
+  const fixture = connected();
+  fixture.live.descriptor().resolve(liveDescriptor(GENERATION));
+  await flush();
+  fixture.live.listener!.message(2, fixture.deployment);
+  fixture.source.index().resolve(liveIndex(2, NEXT_GENERATION));
+  await flush();
+  fixture.source.detail(HOME).resolve(revised(HOME, 2));
+  await flush();
+  fixture.live.descriptor().reject(new Error("offline"));
+  await flush();
+  assert.equal(installed(fixture)?.generation, GENERATION);
+  assert.equal(fixture.controller.editing, "ready");
+  fixture.live.listener!.message(2, fixture.deployment);
+  fixture.live.descriptor().resolve(liveDescriptor(NEXT_GENERATION));
+  await flush();
+  assert.equal(installed(fixture)?.generation, NEXT_GENERATION);
+});
+
+test("editing prepares until the first descriptor installs", async () => {
+  const fixture = connected();
+  const versions = [fixture.controller.version()];
+  assert.equal(fixture.controller.editing, "preparing");
+  fixture.live.descriptor().resolve(liveDescriptor(OTHER));
+  await flush();
+  assert.equal(fixture.controller.editing, "preparing");
+  fixture.live.listener!.message(1, fixture.deployment);
+  fixture.live.descriptor().resolve(liveDescriptor(GENERATION));
+  await flush();
+  versions.push(fixture.controller.version());
+  assert.equal(fixture.controller.editing, "ready");
+  assert.ok(versions[1]! > versions[0]!);
+});
+
+test("a failed start shows until Try again loads the descriptor again", async () => {
+  const fixture = connected();
+  fixture.live.descriptor().reject(new Error("offline"));
+  await flush();
+  assert.equal(fixture.controller.editing, "failed");
+  const failed = fixture.controller.version();
+  fixture.controller.retryDescriptor();
+  assert.equal(fixture.live.descriptors.length, 2);
+  assert.equal(fixture.controller.editing, "preparing");
+  assert.ok(fixture.controller.version() > failed);
+  fixture.controller.retryDescriptor();
+  assert.equal(fixture.live.descriptors.length, 2);
+  fixture.live.descriptor().resolve(liveDescriptor(GENERATION));
+  await flush();
+  assert.equal(fixture.controller.editing, "ready");
+});
+
+test("editing prepares before the shell connects, and has no status without a live index", () => {
+  const unconnected = controllerFixture(liveIndex(), { live: true });
+  assert.equal(unconnected.controller.editing, "preparing");
+  unconnected.controller.retryDescriptor();
+  assert.equal(unconnected.live.descriptors.length, 0);
+  const published = controllerFixture(indexFixture(), { live: true });
+  assert.equal(published.controller.editing, undefined);
+  assert.equal(controllerFixture(liveIndex()).controller.editing, undefined);
 });
 
 test("an unavailable stream warns once and browsing continues", () => {

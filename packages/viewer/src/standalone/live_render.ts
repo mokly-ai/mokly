@@ -10,33 +10,43 @@ import { RENDER_ID, RENDERS_PATH } from "../catalogue/delivery_paths.js";
 import { array, counter, object, string } from "../catalogue/values.js";
 import {
   ComponentRenderError,
+  renderStatus,
   type ComponentRenderRequest,
   type ComponentRenderSuccess,
   type RenderErrorCode,
 } from "../components/render_types.js";
 
-const FAILURES: Readonly<Record<number, readonly [RenderErrorCode, string]>> = {
-  400: ["invalid-input", "Check the prop values and their allowed limits."],
-  403: ["forbidden", "Reload the catalogue to continue editing."],
-  404: ["unknown-entry", "This entry is unavailable."],
-  405: ["method", "The preview could not be updated. Try again."],
-  409: ["stale-revision", "The catalogue changed. Try again."],
-  410: ["expired", "The temporary preview expired. Try again."],
-  413: ["too-large", "The prop values are too large."],
-  422: [
-    "render-failed",
-    "The preview could not be rendered. Try again or reset the props.",
-  ],
-  429: ["capacity", "The renderer is busy. Try again shortly."],
-};
+/** The code of each failed status, as `renderStatus` states it. */
+const CODES = new Map(
+  Object.entries(renderStatus).map(([code, status]) => [
+    status,
+    code as RenderErrorCode,
+  ]),
+);
 
-/** The typed product error of one failed render status. */
-export function renderFailure(status: number): ComponentRenderError {
-  const [code, message] = FAILURES[status] ?? [
-    "render-failed",
-    "The preview could not be updated. Try again.",
-  ];
-  return new ComponentRenderError(code, message);
+/**
+ * The typed error of one failed render answer. Its message is Serve's own
+ * generic message, when Serve sent one, kept as a diagnostic; the panel
+ * shows its copy by the code.
+ */
+export function renderFailure(
+  status: number,
+  message = "",
+): ComponentRenderError {
+  return new ComponentRenderError(
+    CODES.get(status) ?? "render-failed",
+    message,
+  );
+}
+
+/** Serve's message of a failed answer, or nothing when it sent none. */
+export async function failureMessage(response: Response): Promise<string> {
+  try {
+    const body = object(await response.json());
+    return typeof body.message === "string" ? body.message : "";
+  } catch {
+    return "";
+  }
 }
 
 /**

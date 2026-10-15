@@ -109,7 +109,8 @@ A sidecar starts when the catalogue uses any of these inputs:
 HTML, YAML, and Markdown alone start no sidecar. The
 [sidecar contract](./mokly-sidecar.md) defines pool size, deadlines, recycling,
 and failure codes. The core selects renders, cache keys, invalidation, and
-document composition. A sidecar failure affects the request that needs it.
+document composition. A sidecar failure fails only the request that needs it,
+with its typed code.
 Other routes and shutdown stay available.
 
 ## Routes

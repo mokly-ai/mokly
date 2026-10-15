@@ -146,7 +146,7 @@ export function ScreenDetails({
                       {loading
                         ? "Waiting for the component preview."
                         : state === "unavailable"
-                          ? "Props are unavailable for this screen."
+                          ? CONTROLS_COPY.propsUnavailable
                           : CONTROLS_COPY.noProps}
                     </p>
                   ) : state === "screen-props" ? (

@@ -693,7 +693,7 @@ from Milestone 12.
   - [x] Rewrite `examples/basic/README.md` to the end state.
   - [ ] Add HTML fixtures and run the gap sweep against the rendering
         contracts.
-  - [ ] Render the example's HTML part and check it at both viewports and in
+  - [x] Render the example's HTML part and check it at both viewports and in
         both schemes. Its stylesheets pass through the example's PostCSS
         module, which runs in the Milestone 8 sidecar.
 - [x] Write the HTML authoring guides under `docs/guides`.
@@ -845,7 +845,7 @@ renders again.
         and comparison integration land.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
-  - [ ] Render both catalogues through the integrated sidecar and check every
+  - [x] Render both catalogues through the integrated sidecar and check every
         page at both viewports and in both schemes.
   - [ ] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
@@ -893,10 +893,10 @@ renders again.
       the descriptor loads), "No editable props are declared for this
       entry.", and "Check the highlighted values." for a whole-props error
       that highlights no field.
-- [ ] Settle the component stage layout in the design port: with Both, the
-      shell places the 390px mobile and 1024px desktop canvases side by side
-      (below 760px, stacked at the stage's left edge), while the component
-      mockups stack the two views and centre the mobile canvas.
+- [x] Settle the component stage layout in the design port: with Both, the
+      component mockups place the 390px mobile canvas and the desktop canvas
+      side by side, as the shell does, and stack them from the stage's left
+      edge below 760px.
 - [x] Write the JavaScript authoring guides.
 
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
@@ -906,6 +906,7 @@ decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
+Example and design catalogue render and visual check: `.context/rust-rebuild/example-visual/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
@@ -915,6 +916,8 @@ Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
 Serve integration: `.context/rust-rebuild/delegation/m8-core/report-4.md`;
 smoke artifacts: `.context/rust-rebuild/m8-serve-smoke/`.
 Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-5.md`.
+CSS integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-7.md`.
+Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8-core/report-8.md`.
 
 - [ ] Commit.
 
@@ -990,7 +993,7 @@ Tags: ui
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
-- [ ] Make the viewer follow the settled design copy and states of the design
+- [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
       `design/components/controls/**`,
@@ -999,6 +1002,13 @@ Tags: ui
       `mokly-shell-delivery.md`, and `mokly-component-controls-design.md`. The
       copy tables in `.context/rust-rebuild/delegation/m5-example/report-2.md`
       and `report-3.md` there list the differences from the viewer.
+
+Settled copy and states with their Serve run: `.context/rust-rebuild/m10-copy-run/log.md`.
+Review fixes of the copy and states with their Serve run:
+`.context/rust-rebuild/m10-copy-run-2/log.md`.
+Final review fixes and their check logs:
+`.context/rust-rebuild/delegation/m7/report-9.md`.
+
 - [ ] Commit.
 
 ## Milestone 11: Watch and incremental rendering
@@ -1221,6 +1231,17 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
   - Milestone 8 example port review 2, finding 9: `mokly-design-links.md` sits
     at its 321-line cap with prose lines over 80 columns; split the page at
     its next edit.
+  - Example visual check (report 6), open findings for the user:
+    1. Use-case steps ignore the mobile layout. Severity Medium, effort
+       Medium. Recommended: A, the shell shows each step's mobile view in a
+       phone frame below 760px, as the use-case mockup does, and
+       `mokly-shell-device-chrome.md` follows.
+    2. Desktop component canvas width differs. Severity Low, effort Small.
+       Recommended: B, the component design and the mockups adopt the shell's
+       fixed 1024px desktop canvas.
+    3. The shell stub declares no icon. Severity Low, effort Small.
+       Recommended: A, the stub declares an icon, so no `/favicon.ico`
+       request fails.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

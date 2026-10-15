@@ -4,6 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { build } from "esbuild";
+
 import { definitionData } from "../packages/mokly/src/authoring/runtime.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { describe } from "../packages/mokly/src/sidecar/describe.js";
@@ -37,6 +39,7 @@ test("bundling hashes the source snapshot that esbuild compiles", async (context
       renderer: null,
       storiesFiles: [],
     }),
+    build,
   );
   fs.readFile = original;
   built.generation.maps = {};
