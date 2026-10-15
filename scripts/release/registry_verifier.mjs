@@ -6,6 +6,7 @@ import {
   comparePublishedPackage,
   isMissingPackage,
 } from "./registry_contract.mjs";
+import { nativeTarget } from "./targets.mjs";
 
 const DEFAULT_RETRY_DELAYS = [
   2_000,
@@ -172,6 +173,12 @@ async function verifySignatures(
       "--no-audit",
       "--no-fund",
       "--save-exact",
+      ...(spec.startsWith("@mokly/native-")
+        ? [
+            `--os=${nativeTarget(spec.slice(0, spec.lastIndexOf("@"))).os}`,
+            `--cpu=${nativeTarget(spec.slice(0, spec.lastIndexOf("@"))).cpu}`,
+          ]
+        : []),
       spec,
     ],
     temporaryRoot,

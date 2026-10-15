@@ -145,7 +145,10 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     publish.steps
       .filter((step) => step.env?.GITHUB_TOKEN)
       .map((step) => step.name),
-    ["Select verification evidence"],
+    [
+      "Resolve checked archives for publication",
+      "Select verification evidence",
+    ],
   );
   const preserve = publish.steps.find(
     (step) => step.name === "Preserve checked artifacts",
@@ -163,9 +166,13 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Smoke-test exact publish artifacts",
     "Recheck immutable tags and source",
     "Preserve checked artifacts",
+    "Publish and verify native packages",
     "Guard existing viewer version",
     "Publish viewer with npm trusted publishing",
     "Verify viewer registry package and provenance",
+    "Guard existing CLI version",
+    "Publish CLI with npm trusted publishing",
+    "Verify CLI registry package and provenance",
   ];
   for (const [index, name] of ordered.entries()) {
     assert.ok(names.includes(name), name);
@@ -173,7 +180,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
       assert.ok(names.indexOf(ordered[index - 1]) < names.indexOf(name), name);
   }
   assert.match(source, /group: npm-release/);
-  assert.match(source, /verify-ref\.mjs "\$VIEWER_REF"/);
+  assert.match(source, /verify-ref\.mjs "\$PUBLISH_REF" "\$VIEWER_REF"/);
   assert.match(source, /--artifacts .context\/release-artifact/);
   const setupNode = publish.steps.find((step) =>
     step.uses?.startsWith("actions/setup-node@"),

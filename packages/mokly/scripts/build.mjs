@@ -38,3 +38,8 @@ for (const file of [
     new URL(`dist/${file}`, root),
   );
 }
+
+await fs.copyFile(
+  new URL("../../../CHANGELOG.md", import.meta.url),
+  new URL("CHANGELOG.md", root),
+);

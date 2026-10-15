@@ -4,16 +4,20 @@ import fs from "node:fs/promises";
 import { runCommand } from "./command.mjs";
 import { remoteTagCommit, validateTagVersion } from "./context.mjs";
 
-/** The protected viewer tag identifies the clean release tree. */
-export async function verifyReleaseRefs(repositoryRoot, viewerRef) {
+/** Both protected tags identify the clean release tree. */
+export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
   const viewer = JSON.parse(
     await fs.readFile(`${repositoryRoot}/packages/viewer/package.json`, "utf8"),
   );
+  const cli = JSON.parse(
+    await fs.readFile(`${repositoryRoot}/packages/mokly/package.json`, "utf8"),
+  );
+  validateTagVersion(cliRef, cli.version);
   validateTagVersion(viewerRef, viewer.version, "viewer-");
   const git = async (...args) =>
     (await runCommand("git", args, { cwd: repositoryRoot })).stdout.trim();
   const head = await git("rev-parse", "HEAD");
-  for (const ref of [viewerRef]) {
+  for (const ref of [cliRef, viewerRef]) {
     const local = await git("rev-parse", `${ref}^{commit}`);
     const remote = await git(
       "ls-remote",

@@ -4,7 +4,7 @@ import { createBootstrapArchive } from "./bootstrap_archive.mjs";
 
 if (!process.argv[2] || process.argv.length > 5)
   throw new Error(
-    "Usage: node scripts/release/bootstrap.mjs <reviewed-full-commit-sha> [new-output-dir] [@mokly/viewer]",
+    "Usage: node scripts/release/bootstrap.mjs <reviewed-full-commit-sha> [new-output-dir] [@mokly/viewer|@mokly/native-{target}]",
   );
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");

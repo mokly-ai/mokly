@@ -115,12 +115,16 @@ jobs to set up that npm before `npm ci`, and rejects pins older than npm
 
 Linux and Windows jobs across the CI, preview, release, and Dependency Audit
 workflows use Blacksmith's 2-vCPU tiers. macOS jobs use the provider's smallest
-available tier, which is 6 vCPUs. The one exception is any job that publishes
+available tier, which is 6 vCPUs. The publishing exception is any job that publishes
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
 provenance only on GitHub-hosted runners and rejects a publish from a
 self-hosted runner such as Blacksmith. A tooling test enforces both rules.
-Every job in `ci.yml` has a 30-minute execution timeout.
+A second, narrow exception permits only the release matrix's `darwin-x64`
+build on GitHub-hosted `macos-26-intel`, with `actions/checkout`. Blacksmith's
+macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
+it has no npm publishing permission. Every other native release row follows
+the Blacksmith size rule. Every job in `ci.yml` has a 30-minute execution timeout.
 
 Action revisions are immutable commit hashes with reviewed version comments,
 runtime versions are explicit, and fork pull requests receive no release
