@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { folderTitleLookup } from "../src/registry/folder_titles.js";
 import { analyzeHierarchy } from "../src/registry/hierarchy.js";
 import type {
@@ -29,10 +27,11 @@ import type { ShellRoute } from "../src/shell/routes.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
 
+import { shellModelFixture } from "./catalogue_v7_fixture.js";
+
 const context: ShellContext = {
   base: "main",
   changesStatus: "ready",
-  updateVersion: 1,
 };
 
 /** Every row in the sections, keyed by entry path; removed rows win ties. */
@@ -193,17 +192,7 @@ test("Changes activation searches a removed variant as its row does", () => {
 });
 
 test("a route reveal keeps a search that the destination's folder title matches", () => {
-  const model = readCatalogue(
-    JSON.parse(
-      fs.readFileSync(
-        new URL(
-          "../../../docs/protocol/fixtures/catalogue-v6.json",
-          import.meta.url,
-        ),
-        "utf8",
-      ),
-    ),
-  );
+  const model = shellModelFixture();
   const catalogue = viewerCatalogue(model);
   const details = rows(catalogueNavSections(catalogue)).get(
     "product/browse/details",

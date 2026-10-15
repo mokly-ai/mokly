@@ -1,20 +1,13 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
-import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import { viewHref } from "../packages/viewer/dist/data.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
-const fixture = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL("../docs/protocol/fixtures/catalogue-v6.json", import.meta.url),
-      "utf8",
-    ),
-  ),
-);
+import { catalogueModel } from "./helpers/viewer_catalogue.js";
+
+const fixture = catalogueModel();
 const historical = fixture.removedEntries.find(
   ({ entry }) => entry.kind === "page",
 )!;

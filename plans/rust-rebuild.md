@@ -718,14 +718,14 @@ without JavaScript.
 
 Tags: ui
 
-- [ ] Update the viewer's data readers and validators to the generated read
+- [x] Update the viewer's data readers and validators to the generated read
       model v7 types.
-- [ ] Show a component's own props before its variants, offer the derived
+- [x] Show a component's own props before its variants, offer the derived
       controls on screens with the zero-based step and the title-or-value
       select labels, and validate control input with a profile validator
       that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Replace server rendering and hydration in the viewer package with the
+- [x] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
@@ -733,7 +733,10 @@ Tags: ui
       and the package README, rewritten under Decision 38, is checked
       against the package.
 - [ ] Run the viewer suite against the Milestone 6 routes.
-- [ ] Commit.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -780,6 +783,23 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
+- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+      routing, detail loading and retry, live publications without a page
+      load, and the frame reload by `documentKey`; and the live prop edits:
+      the 150 ms debounce, the rerender after a revision adoption or a
+      `live.generation` change, the retry after a 409, cancellation on
+      navigation, and read-only controls while no descriptor is installed.
+- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+      its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
+      the parent's own entry first in the variant bar, controls on screens,
+      the stage loading state, the index failure state, the version failure
+      state, the Props tab label against the mockups' "Controls", and the
+      controls copy "Choose an available entry to edit props.",
+      "Comparisons show the saved props. Return to Current to edit props.",
+      "Open this catalogue locally to edit props." (also shown in Serve while
+      the descriptor loads), "No editable props are declared for this
+      entry.", and "Check the highlighted values." for a whole-props error
+      that highlights no field.
 - [ ] Write the JavaScript authoring guides.
 - [ ] Commit.
 
@@ -839,6 +859,15 @@ Tags: ui
 
 - [ ] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
+- [ ] Check the shell's projection of the entry detail's review v8 rule and
+      resource records (`packages/viewer/src/review/view_evidence.ts`)
+      against Milestone 9 output.
+- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+      the serialization contract: `sourceKind` is the literal `base`.
+- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+      package README describe (the path functions, the directory names, the
+      path grammar, and the prop schema validators) when review v8 replaces
+      the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 
@@ -952,6 +981,10 @@ Publish client final review and merge decisions:
     after success; keep the existing retention until the user decides.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
+  - Milestone 7 review 1, finding 12: decide whether to delete the
+    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
+    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
+    user.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

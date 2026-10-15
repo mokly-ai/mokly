@@ -1,7 +1,7 @@
 {
   "name": "@mokly/viewer",
   "version": "0.5.0",
-  "description": "Embeddable Mokly catalogue viewer, frame adapters, and static shell rendering.",
+  "description": "Embeddable Mokly catalogue viewer, frame adapters, and the client-rendered Browse shell.",
   "license": "MIT",
   "type": "module",
   "sideEffects": [
@@ -13,14 +13,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "node": "./dist/server.js"
-    },
-    "./runtime": {
-      "types": "./dist/runtime.d.ts",
-      "import": "./dist/runtime.js"
     },
     "./browser": {
       "types": "./dist/browser.d.ts",
@@ -52,7 +44,7 @@
     "directory": "packages/viewer"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && node scripts/build.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc --project tsconfig.build.json && node scripts/build.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
     "prepack": "npm run build"

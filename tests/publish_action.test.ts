@@ -41,8 +41,8 @@ fs.writeFileSync(process.env.CALLS, JSON.stringify({ args, token: process.env.MO
 const cli = path.join(root, 'node_modules/@mokly/mokly'); fs.mkdirSync(cli, { recursive: true });
 fs.writeFileSync(path.join(cli, 'package.json'), JSON.stringify({name: '@mokly/mokly', version: process.env.MOKLY_VERSION, dependencies: process.env.LEGACY_CLI ? {} : {'@mokly/viewer': '0.1.0'}}));
 const viewer = path.join(root, 'node_modules/@mokly/viewer'); fs.mkdirSync(path.join(viewer, 'dist'), { recursive: true });
-fs.writeFileSync(path.join(viewer, 'package.json'), JSON.stringify({name: '@mokly/viewer', version: process.env.VIEWER_VERSION || '0.1.0', exports: {'./server': {node: './dist/server.js'}}}));
-fs.writeFileSync(path.join(viewer, 'dist/server.js'), '');
+fs.writeFileSync(path.join(viewer, 'package.json'), JSON.stringify({name: '@mokly/viewer', version: process.env.VIEWER_VERSION || '0.1.0', exports: {'.': {import: './dist/index.js'}}}));
+fs.writeFileSync(path.join(viewer, 'dist/index.js'), '');
 const bin = path.join(root, 'node_modules/.bin'); fs.mkdirSync(bin, { recursive: true });
 fs.writeFileSync(path.join(bin, 'mokly'), '#!${process.execPath}\\n' +
   'require("node:fs").writeFileSync(process.env.CLI_CALLS, JSON.stringify({ args: process.argv.slice(2), token: process.env.MOKLY_TOKEN, endpoint: process.env.MOKLY_ENDPOINT }));\\n', { mode: 0o755 });

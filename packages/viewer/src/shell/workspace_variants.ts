@@ -10,8 +10,9 @@ import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import { shownComparisonEligible, type EntryStatus } from "./view_status.js";
 
+/** One row of a component page's variant bar: the parent's own entry or a variant. */
 export interface WorkspaceVariant {
-  value: ManifestComponentVariant;
+  value: ManifestComponent;
   removed: boolean;
   comparisonEligible: boolean;
   snapshotId?: string;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import {
@@ -12,20 +12,26 @@ import {
   awaitHostBridgeFailureBarrier,
   consumeHostBridgeFailure,
 } from "./host_bridge_failure.js";
-import { viewerIdentifierPrefix } from "./identifiers.js";
+import { useIndexSource } from "./index_source.js";
 import { ReadyViewer } from "./ready.js";
-import { useCatalogue } from "./source_hook.js";
 import { themeAttributes } from "./theme.js";
 import type { MoklyViewerProps } from "./types.js";
 
 /** Mount a validated catalogue with host-owned slots and isolated runtime state. */
 export function MoklyViewer(props: MoklyViewerProps) {
-  const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
-  const source = useCatalogue(props.catalogue, props.baseUrl);
+  const identifierPrefix = `mokly-${useId().replace(/[^A-Za-z0-9_-]/g, "")}-`;
+  const source = useIndexSource(props.index, props.baseUrl);
+  const [detailVersion, setDetailVersion] = useState<{
+    key: unknown;
+    error: MoklyVersionError;
+  }>();
   const versionError =
     source.error?.cause instanceof MoklyVersionError
       ? source.error.cause
-      : undefined;
+      : detailVersion?.key === source.key
+        ? detailVersion.error
+        : undefined;
+  const failed = source.error !== undefined || versionError !== undefined;
   const [adapter] = useState(sameOriginAdapter);
   const [scrollTogether] = useState(memoryScrollTogether);
   const selectedAdapter = props.frameAdapter ?? adapter;
@@ -54,15 +60,18 @@ export function MoklyViewer(props: MoklyViewerProps) {
   const generation = useRef({
     source: source.key,
     adapter: selectedAdapter,
+    detail: props.detail,
     id: 0,
   });
   if (
     generation.current.source !== source.key ||
-    generation.current.adapter !== selectedAdapter
+    generation.current.adapter !== selectedAdapter ||
+    generation.current.detail !== props.detail
   )
     generation.current = {
       source: source.key,
       adapter: selectedAdapter,
+      detail: props.detail,
       id: generation.current.id + 1,
     };
   const mountedGeneration = generation.current;
@@ -78,39 +87,40 @@ export function MoklyViewer(props: MoklyViewerProps) {
   const callbacks = useRef(props);
   callbacks.current = props;
   const reported = useRef<
-    { key: typeof source.key; invalid: boolean } | undefined
+    { key: unknown; invalid: boolean; version: unknown } | undefined
   >(undefined);
   useEffect(() => {
-    if (!source.error && !invalidMode) {
+    if (!failed && !invalidMode) {
       reported.current = undefined;
       return;
     }
+    const current = reported.current;
     if (
-      reported.current?.key === source.key &&
-      reported.current.invalid === invalidMode
+      current?.key === source.key &&
+      current.invalid === invalidMode &&
+      current.version === versionError
     )
       return;
-    reported.current = { key: source.key, invalid: invalidMode };
-    if (source.error || invalidMode)
-      callbacks.current.onError?.({
-        code: invalidMode
-          ? "selection"
-          : versionError
-            ? "version"
-            : "catalogue",
-        message: invalidMode
-          ? "Remount the viewer to change how selection is managed."
-          : versionError
-            ? VERSION_ERROR_MESSAGE
-            : "The catalogue could not be loaded. Try again.",
-        ...(!invalidMode && versionError
-          ? { details: versionError.message }
-          : {}),
-      });
-  }, [source.error, source.key, invalidMode, versionError]);
+    reported.current = {
+      key: source.key,
+      invalid: invalidMode,
+      version: versionError,
+    };
+    callbacks.current.onError?.({
+      code: invalidMode ? "selection" : versionError ? "version" : "catalogue",
+      message: invalidMode
+        ? "Remount the viewer to change how selection is managed."
+        : versionError
+          ? VERSION_ERROR_MESSAGE
+          : "The catalogue could not be loaded. Try again.",
+      ...(!invalidMode && versionError
+        ? { details: versionError.message }
+        : {}),
+    });
+  }, [failed, source.key, invalidMode, versionError]);
   if (bridgeFailure?.drained) throw bridgeFailure.error;
   if (bridgeFailure) return null;
-  if (source.error || invalidMode)
+  if (failed || invalidMode)
     return (
       <div
         className={`${VIEWER_DIRECTORY} mbk-empty`}
@@ -145,6 +155,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
       adapter={selectedAdapter}
       bridgeOwner={bridgeOwner.current}
       identifierPrefix={identifierPrefix}
+      onVersionError={(error) => setDetailVersion({ key: source.key, error })}
       replaced={replaced}
       scrollTogether={scrollTogether}
     />

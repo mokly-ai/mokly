@@ -9,6 +9,7 @@ import {
 } from "@mokly/viewer";
 import type {
   CatalogueReadModel,
+  EntryDetailV1,
   MoklyViewerHandle,
   MoklyViewerProps,
   ViewerMarker,
@@ -24,7 +25,7 @@ interface HostOptions {
   strict?: boolean;
   cross?: boolean;
   slots?: boolean;
-  source?: MoklyViewerProps["catalogue"];
+  source?: MoklyViewerProps["index"];
   defaultSelection?: Partial<ViewerSelection>;
   responsive?: boolean;
   topBarSlots?: boolean;
@@ -43,7 +44,14 @@ interface Host {
 const hosts = new Map<string, Host>();
 const data = (
   window as unknown as {
-    fixture: { catalogue: CatalogueReadModel; baseUrl: string };
+    fixture: {
+      index: CatalogueReadModel;
+      details: {
+        current: Record<string, EntryDetailV1>;
+        removed: Record<string, EntryDetailV1>;
+      };
+      baseUrl: string;
+    };
   }
 ).fixture;
 const start = (id: string, options: HostOptions = {}) => {
@@ -113,8 +121,11 @@ const start = (id: string, options: HostOptions = {}) => {
     options.source === undefined ||
     (typeof options.source === "object" && !(options.source instanceof URL));
   host.props = {
-    viewerId: id,
-    catalogue: options.source ?? data.catalogue,
+    index: options.source ?? data.index,
+    detail: (path: string, snapshotId?: string) =>
+      snapshotId === undefined
+        ? data.details.current[path]!
+        : data.details.removed[snapshotId]!,
     ...(sourceNeedsBaseUrl
       ? { baseUrl: options.cross ? data.baseUrl : location.origin }
       : {}),

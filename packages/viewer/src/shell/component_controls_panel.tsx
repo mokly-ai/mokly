@@ -2,17 +2,14 @@
 
 import { decodeProps, encodeProps } from "../components/codec.js";
 
-import {
-  ComponentControlFields,
-  type ControlDraftField,
-} from "./component_control_fields.js";
+import { ComponentControlFields } from "./component_control_fields.js";
 import type { ComponentEditorState } from "./component_controls_state.js";
-import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
+import type { ControlDraftField, ControlTarget } from "./control_values.js";
+import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceProps } from "./workspace_props.js";
 
 /** Render controls with stable status, retry, reset, and readonly details. */
 export function ComponentControlsPanel({
-  component,
   data,
   disabled,
   onChange,
@@ -20,9 +17,8 @@ export function ComponentControlsPanel({
   onRetry,
   state,
   status,
-  variant,
+  target,
 }: {
-  component: WorkspaceData["component"];
   data: WorkspaceData;
   disabled: boolean;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
@@ -30,27 +26,25 @@ export function ComponentControlsPanel({
   onRetry(): void;
   state: ComponentEditorState;
   status: string;
-  variant?: WorkspaceVariant | undefined;
+  target: ControlTarget | undefined;
 }) {
-  const values = variant ? decodeProps(state.props) : {};
-  const uncontrolled = variant
-    ? component
-      ? Object.fromEntries(
-          Object.entries(values).filter(
-            ([name]) => !Object.hasOwn(component.controls, name),
-          ),
-        )
-      : values
+  const values = target ? decodeProps(state.props) : {};
+  const uncontrolled = target
+    ? Object.fromEntries(
+        Object.entries(values).filter(
+          ([name]) => !Object.hasOwn(target.controls, name),
+        ),
+      )
     : {};
   return (
     <div className="mbk-component-controls">
-      {component && variant ? (
+      {target ? (
         <ComponentControlFields
-          component={component}
           disabled={disabled}
           draft={state.draft}
           errors={state.errors}
           onChange={onChange}
+          target={target}
         />
       ) : null}
       <p className="mbk-control-error" hidden={!state.failure} role="alert">
@@ -77,14 +71,13 @@ export function ComponentControlsPanel({
           Reset
         </button>
       </div>
-      {variant &&
-      (Object.keys(uncontrolled).length ||
-        variant.value.suppliedSlots.length) ? (
+      {target &&
+      (Object.keys(uncontrolled).length || target.suppliedSlots.length) ? (
         <WorkspaceProps
           data={data}
           selection={{
             props: encodeProps(uncontrolled),
-            slots: variant.value.suppliedSlots,
+            slots: target.suppliedSlots,
           }}
         />
       ) : null}

@@ -1,6 +1,3 @@
-export type { StaticDeliveryParseResult } from "./navigation/delivery.js";
-export { parseStaticDelivery } from "./navigation/delivery.js";
-export type { StaticDelivery } from "./navigation/delivery.js";
 export {
   isPathSegment,
   firstPathCaseCollision,
@@ -62,7 +59,6 @@ export { encodeProps, decodeValue, decodeProps } from "./components/codec.js";
 export type {
   ComponentControlLabel,
   ComponentControl,
-  ControlFor,
 } from "./components/control_types.js";
 export {
   validateControls,
@@ -80,13 +76,10 @@ export type {
   PropPrimitive,
   PropValue,
   ComponentPropsData,
-  DataPropSchema,
-  DataPropField,
-  ObjectPropSchema,
-  InferProp,
+  PropSchema,
 } from "./components/prop_types.js";
 export { validateProps } from "./components/props.js";
-export { validatePropSchema } from "./components/schema.js";
+export { validatePropSchema } from "./components/profile_schema.js";
 export { validateComponentSource } from "./components/source.js";
 export {
   sortedStrings,
@@ -208,7 +201,6 @@ export {
 export type {
   ComponentRenderRequest,
   ComponentRenderSuccess,
-  RenderCapability,
 } from "./components/render_types.js";
 export type { ColorScheme, Viewport } from "./data/axes.js";
 export {

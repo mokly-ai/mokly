@@ -1,7 +1,6 @@
 import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
-import type { RenderCapability } from "../components/render_types.js";
-/** Serializable, source-derived state shared by the served and published inspector. */
+/** Serializable, source-derived state shared by every delivery's inspector. */
 import {
   generatedViews,
   type GeneratedComponentView,
@@ -51,11 +50,10 @@ export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
 export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
-  previewGeneration?: string;
+  /** False when no detail carried the Usage lists of this entry. */
   usageComplete?: boolean;
-  /** Selected public views are waiting for route-scoped usage evidence. */
+  /** Selected views are waiting for the routed entry's detail. */
   viewUsagePending?: boolean;
-  renderCapability?: RenderCapability;
   /** The exact routed entry whose chrome and lifecycle own this workspace. */
   entry: WorkspaceEntry;
   /** Parent schema and controls for a component parent or variant route. */
@@ -200,16 +198,10 @@ export function workspaceData(
       .map((item) => item.changedComponentId),
   );
   return {
-    ...(context.previewGeneration
-      ? { previewGeneration: context.previewGeneration }
-      : {}),
     ...(catalogue.manifest.schemaVersion === "live-index-2"
       ? {
           usageComplete: false,
         }
-      : {}),
-    ...(entry.kind === "component" && context.renderCapability
-      ? { renderCapability: context.renderCapability }
       : {}),
     entry,
     ...(component ? { component } : {}),
@@ -232,15 +224,9 @@ export function workspaceData(
           item.kind === "component" && !isManifestComponentVariant(item),
       )
       .map(({ path, title }) => ({ path, title })),
-    views: (component
+    views: component
       ? currentVariants.flatMap((variant) => generatedViews(variant))
-      : generatedViews(entry)
-    ).map((view) => {
-      if (!context.previewGeneration || removed) return view;
-      const demand = { ...view };
-      delete demand.usage;
-      return demand;
-    }),
+      : generatedViews(entry),
     changedViews: changedViewsBySelection(
       evidenceEntry,
       context,

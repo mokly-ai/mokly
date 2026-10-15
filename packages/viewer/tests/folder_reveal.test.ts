@@ -41,7 +41,6 @@ const context = (changedEntries: readonly string[]): ShellContext => ({
   base: "main",
   changedEntries,
   changesStatus: "ready",
-  updateVersion: 1,
 });
 const select = (partial: Partial<ViewerSelection>): ViewerSelection => ({
   ...defaultSelection,

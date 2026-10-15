@@ -35,7 +35,7 @@ exists only in Serve.
 
 On a message whose `data` differs from the installed `deploymentId` the
 standalone shell performs a full page load. On a message above the installed
-revision the shell cancels a refresh still in flight, fetches the index and the current entry's detail, and adopts them
+revision the shell cancels a refresh still in flight, fetches the index and the current route's details, and adopts them
 in one store commit under the shell delivery fences; the page never reloads.
 During and after adoption the shell keeps the navigation tree, the
 All/Changes buttons, the mounted preview frames, the filter, search text,
