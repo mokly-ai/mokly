@@ -3,14 +3,16 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::error::{Error, InternalError, Result};
-use crate::metadata::Publication;
-use crate::runtime::Cancellation;
-use crate::snapshot::OutputSnapshot;
+use mokly_model::output::upload::Publication;
+use mokly_publish::error::{DirectoryFailure, Error, Result};
+use mokly_publish::runtime::Cancellation;
+use mokly_publish::snapshot::OutputSnapshot;
 
 /// Inputs pinned before static output generation.
 #[derive(Clone, Debug)]
 pub struct BuildRequest {
+    /// Invocation directory for upward config discovery and relative --config.
+    pub invocation_directory: PathBuf,
     /// Git repository root for metadata and confinement.
     pub repository_root: PathBuf,
     /// Private output directory outside the repository.
@@ -66,32 +68,40 @@ pub struct SystemDirectories;
 
 impl Directories for SystemDirectories {
     fn create(&self, repository_root: &Path) -> Result<PathBuf> {
-        let parent = match std::env::temp_dir().canonicalize() {
+        let requested = std::env::temp_dir();
+        let parent = match dunce::canonicalize(&requested) {
             Ok(parent) => parent,
-            Err(source) => return Err(Error::Internal(InternalError::Directory { source })),
+            Err(source) => return Err(directory_error(requested, source)),
         };
-        if parent.starts_with(repository_root) {
-            return Err(Error::Internal(InternalError::DirectoryInsideRepository {
-                directory: parent,
-            }));
+        let repository_root = match dunce::canonicalize(repository_root) {
+            Ok(root) => root,
+            Err(source) => return Err(directory_error(parent, source)),
+        };
+        if parent.starts_with(&repository_root) {
+            return Err(Error::Directory {
+                temporary_root: parent,
+                reason: DirectoryFailure::InsideRepository,
+            });
         }
         let directory = match tempfile::Builder::new()
             .prefix("mokly-publish-")
             .tempdir_in(&parent)
         {
             Ok(directory) => directory,
-            Err(source) => return Err(Error::Internal(InternalError::Directory { source })),
+            Err(source) => return Err(directory_error(parent, source)),
         };
-        let real = match directory.path().canonicalize() {
+        let real = match dunce::canonicalize(directory.path()) {
             Ok(directory) => directory,
-            Err(source) => return Err(Error::Internal(InternalError::Directory { source })),
+            Err(source) => return Err(directory_error(parent, source)),
         };
-        if real.starts_with(repository_root) {
-            return Err(Error::Internal(InternalError::DirectoryInsideRepository {
-                directory: real,
-            }));
+        if real.starts_with(&repository_root) {
+            return Err(Error::Directory {
+                temporary_root: parent,
+                reason: DirectoryFailure::InsideRepository,
+            });
         }
-        Ok(directory.keep())
+        let _retained = directory.keep();
+        Ok(real.join("site"))
     }
 }
 
@@ -99,4 +109,11 @@ impl Directories for SystemDirectories {
 /// The specified policy makes all publish warnings fatal, with or without --strict.
 pub fn warnings_are_fatal(_strict: bool) -> bool {
     true
+}
+
+fn directory_error(temporary_root: PathBuf, source: std::io::Error) -> Error {
+    Error::Directory {
+        temporary_root,
+        reason: DirectoryFailure::Unavailable { source },
+    }
 }

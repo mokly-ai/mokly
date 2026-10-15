@@ -1,12 +1,12 @@
 //! Completion classification and optional normalized, secret-free viewer URLs.
 
+use mokly_model::output::validation::RESPONSE_LIMIT;
 use serde::Deserialize;
 use url::Url;
 
 use crate::error::{Error, Result};
 use crate::http::{Body, Response, is_json};
 use crate::settings::Token;
-use crate::validation::RESPONSE_LIMIT;
 
 /// Receiver's keep-first publication outcome.
 #[derive(Clone, Debug, Eq, PartialEq)]

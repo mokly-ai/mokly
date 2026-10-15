@@ -58,9 +58,28 @@ fn checkout_paths_are_sorted_bounded_escaped_and_have_literal_ignore_rules() {
     assert_eq!(output.matches("  - ").count(), 20);
     assert!(output.contains("5 other paths."));
     assert!(output.contains("a\\u000a[redacted]\\u0085"));
-    assert!(output.contains("/mokly-static/"));
+    assert!(!output.contains("/mokly-static/"));
     assert!(output.contains("Changes appeared during the build."));
     insta::assert_snapshot!(output);
+    let rich = Style {
+        mode: Mode::Rich,
+        ..style
+    };
+    let rich_output = uncommitted(&paths, true, &["mokly-static".to_owned()], &rich, &redactor);
+    assert_eq!(
+        rich_output
+            .matches("The checkout has uncommitted changes.")
+            .count(),
+        1
+    );
+    assert_eq!(
+        rich_output
+            .matches("Commit, stash or ignore these files, then publish again.")
+            .count(),
+        1
+    );
+    assert!(!rich_output.contains("/mokly-static/"));
+    insta::assert_snapshot!(rich_output);
     let output = uncommitted(
         &["out[1]*?/file".to_owned()],
         false,

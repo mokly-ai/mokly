@@ -1,12 +1,13 @@
 //! Upload metadata grammar, nullable fields and finalization inputs.
 
+use mokly_model::output::error::FormatError;
+use mokly_model::output::repository::Repository;
+use mokly_model::output::upload::UploadMetadata;
+use mokly_model::output::validation::{portable_path, timestamp};
 use serde_json::{Value, json};
 
-use crate::error::Error;
-use crate::identity::{ActionsContext, Repository};
-use crate::metadata::UploadMetadata;
+use crate::identity::ActionsContext;
 use crate::settings::{Settings, Token};
-use crate::validation::{portable_path, timestamp};
 
 use super::support::{inventory, publication};
 
@@ -78,7 +79,7 @@ fn metadata_validates_each_primitive_and_comparison_pair() {
     }
     assert!(matches!(
         UploadMetadata::parse(&vec![b' '; 16 * 1024 + 1]),
-        Err(Error::TooLarge)
+        Err(FormatError::TooLarge)
     ));
     assert!(portable_path("format\u{200d}/é.png").is_ok());
     for value in [

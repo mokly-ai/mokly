@@ -11,6 +11,7 @@ use crate::error::Error;
 use crate::exchange::{Client, Exchange};
 use crate::http::{HttpMock, Step};
 use crate::runtime::{CancellationMock, ClockMock};
+use crate::snapshot::Prepared;
 
 use super::support::{active, artifact, clock, missing, plan, reporter, response, settings};
 
@@ -66,7 +67,7 @@ async fn first_blob_failure_drops_in_flight_requests_and_starts_no_queued_blob()
         clock: clock(),
         reporter: reporter(),
     };
-    let prepared = artifact(false).prepare().unwrap();
+    let prepared = Prepared::new(&artifact(false)).unwrap();
     let settings = settings(2);
     let cancellation = active();
     let future = client.publish(&prepared, &settings, &cancellation);
@@ -97,7 +98,7 @@ async fn cancellation_during_a_request_aborts_it_and_never_retries_or_completes(
                 })),
         ));
         let planned = plan(if step == Step::Blob {
-            [crate::validation::digest(b"one")].into()
+            [mokly_model::output::validation::digest(b"one")].into()
         } else {
             Default::default()
         });
@@ -130,7 +131,7 @@ async fn cancellation_during_a_request_aborts_it_and_never_retries_or_completes(
                 Arc::new(Unimock::new(()))
             },
         };
-        let prepared = artifact(false).prepare().unwrap();
+        let prepared = Prepared::new(&artifact(false)).unwrap();
         let settings = settings(2);
         let future = client.publish(&prepared, &settings, &cancellation);
         tokio::pin!(future);
@@ -173,7 +174,7 @@ async fn cancellation_stops_a_pending_backoff_without_a_second_attempt() {
         clock: Arc::new(clock),
         reporter: Arc::new(Unimock::new(())),
     };
-    let prepared = artifact(false).prepare().unwrap();
+    let prepared = Prepared::new(&artifact(false)).unwrap();
     let settings = settings(1);
     let future = client.publish(&prepared, &settings, &cancellation);
     tokio::pin!(future);
@@ -197,7 +198,7 @@ async fn an_already_cancelled_command_starts_no_request() {
     assert!(matches!(
         client
             .publish(
-                &artifact(false).prepare().unwrap(),
+                &Prepared::new(&artifact(false)).unwrap(),
                 &settings(8),
                 &cancellation
             )

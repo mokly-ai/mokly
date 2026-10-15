@@ -1171,9 +1171,12 @@ dependencies = [
 name = "mokly-cli"
 version = "0.14.0"
 dependencies = [
+ "async-trait",
  "clap",
+ "dunce",
  "insta",
  "mokly-git",
+ "mokly-model",
  "mokly-platform",
  "mokly-publish",
  "serde_json",
@@ -1182,6 +1185,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "unicode-width",
+ "unimock",
  "url",
 ]
 
@@ -1199,13 +1203,17 @@ dependencies = [
 name = "mokly-model"
 version = "0.14.0"
 dependencies = [
+ "bytes",
+ "chrono",
  "insta",
  "jsonschema",
  "num-cmp",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror",
  "ts-rs",
+ "url",
 ]
 
 [[package]]
@@ -1231,12 +1239,12 @@ dependencies = [
  "futures-util",
  "insta",
  "mokly-git",
+ "mokly-model",
  "mokly-platform",
  "rand",
  "reqwest",
  "serde",
  "serde_json",
- "sha2",
  "tar",
  "tempfile",
  "thiserror",

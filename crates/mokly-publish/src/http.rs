@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use bytes::Bytes;
 use futures_util::future::BoxFuture;
+use mokly_model::output::validation::RESPONSE_LIMIT;
 use reqwest::header::{
     ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, HeaderValue, RETRY_AFTER,
 };
@@ -12,7 +13,6 @@ use thiserror::Error;
 use url::Url;
 
 use crate::settings::Token;
-use crate::validation::RESPONSE_LIMIT;
 
 /// Protocol request kind determines method and fixed headers.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

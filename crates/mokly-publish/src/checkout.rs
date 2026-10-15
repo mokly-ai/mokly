@@ -7,13 +7,14 @@ use std::sync::Arc;
 
 use mokly_git::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
 use mokly_git::error;
+use mokly_model::output::repository::Repository;
+use mokly_model::output::upload::Publication;
+use mokly_model::output::validation::{hexadecimal, text};
 
-use crate::error::{Error, Result};
+use crate::error::{Error, OutputResult, Result};
 use crate::hints::OutputHints;
-use crate::identity::{ActionsContext, Repository};
-use crate::metadata::Publication;
+use crate::identity::ActionsContext;
 use crate::runtime::Cancellation;
-use crate::validation::{hexadecimal, text};
 
 /// Repository state captured before or after a static build.
 #[derive(Clone, Debug)]
@@ -64,9 +65,9 @@ impl Checkout for GitCheckout {
         owned: &[PathBuf],
         cancellation: &dyn Cancellation,
     ) -> Result<Inspection> {
-        let root = self.run(directory, &["rev-parse", "--show-toplevel"], cancellation)?;
+        let root = self.revision(directory, &["rev-parse", "--show-toplevel"], cancellation)?;
         let root = PathBuf::from(line(&root)?);
-        let head = self.run(
+        let head = self.revision(
             &root,
             &["rev-parse", "--verify", "HEAD^{commit}"],
             cancellation,
@@ -87,11 +88,26 @@ impl Checkout for GitCheckout {
             ],
             cancellation,
         )?;
-        let changed_paths: Vec<_> = status_paths(&status)?
+        let paths = status_paths(&status)?;
+        let reservations = if paths.iter().any(|path| {
+            path.split('/')
+                .any(|part| part == ".mokly-export-reservations")
+        }) {
+            self.hints.reservations(&root, &paths)
+        } else {
+            Vec::new()
+        };
+        let changed_paths: Vec<_> = paths
             .into_iter()
             .filter(|path| {
                 let candidate = root.join(path);
                 !owned.iter().any(|owned| candidate.starts_with(owned))
+                    && !reservations.iter().any(|directory| {
+                        path == directory
+                            || path
+                                .strip_prefix(directory)
+                                .is_some_and(|suffix| suffix.starts_with('/'))
+                    })
             })
             .collect();
         let build_directories = if changed_paths.is_empty() {
@@ -116,7 +132,7 @@ impl Checkout for GitCheckout {
         cancellation: &dyn Cancellation,
     ) -> Result<Publication> {
         let repository = match repository {
-            Some(repository) => Repository::parse(repository)?,
+            Some(repository) => Repository::parse(repository).upload()?,
             None => {
                 let remotes = self.run(&inspection.root, &["remote"], cancellation)?;
                 let remotes = std::str::from_utf8(&remotes)
@@ -135,7 +151,7 @@ impl Checkout for GitCheckout {
                     &["remote", "get-url", "--", name],
                     cancellation,
                 )?;
-                Repository::remote(line(&remote)?)?
+                Repository::remote(line(&remote)?).upload()?
             }
         };
         let symbolic = match self.run(
@@ -167,6 +183,18 @@ impl Checkout for GitCheckout {
 }
 
 impl GitCheckout {
+    fn revision(
+        &self,
+        directory: &Path,
+        args: &[&str],
+        cancellation: &dyn Cancellation,
+    ) -> Result<Vec<u8>> {
+        match self.run(directory, args, cancellation) {
+            Err(Error::Git { .. }) => Err(Error::Checkout),
+            result => result,
+        }
+    }
+
     fn run(
         &self,
         directory: &Path,

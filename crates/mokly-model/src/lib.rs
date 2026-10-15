@@ -7,6 +7,7 @@ pub mod diagnostic;
 pub mod error;
 pub mod limits;
 mod numeric;
+pub mod output;
 mod profile;
 pub mod prop_schema;
 pub mod type_modules;

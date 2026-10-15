@@ -6,16 +6,16 @@ use std::sync::Arc;
 
 use bytes::Bytes;
 use mokly_git::command::CancellationMock;
+use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::repository::Repository;
+use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
+use mokly_model::output::validation::digest;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::http::{Body, Response};
-use crate::identity::Repository;
-use crate::metadata::{BuildInventory, Comparison, Publication};
 use crate::runtime::{self, ClockMock, ReporterMock};
 use crate::settings::Settings;
-use crate::snapshot::{Artifact, File};
-use crate::validation::digest;
 
 pub(super) fn publication() -> Publication {
     Publication {
@@ -56,9 +56,8 @@ pub(super) fn artifact(comparison: bool) -> Artifact {
     }
     Artifact::finalize(
         PathBuf::from("/private/publish"),
-        &publication(),
-        &inventory,
         files,
+        Some(publication().metadata(&inventory).unwrap()),
     )
     .unwrap()
 }

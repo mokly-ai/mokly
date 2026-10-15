@@ -30,9 +30,11 @@ width bounds that preserve ANSI sequences. Command subsystems share the Rust cor
 file writes.
 
 Publish validates credentials and the committed clean checkout before it calls
-the static builder. It reports its private build directory once, before the
-build starts. `mokly-publish` owns the upload exchange and its immutable byte
-snapshot. The static output adapter reports a single `build-invalid` line
+the CLI-owned `StaticOutput` adapter. It passes the invocation directory for
+configuration discovery. It reports a child output path inside a private
+external directory before the build starts. That parent also confines the
+output reservation. `mokly-publish` owns the exchange and cached preparation;
+`mokly-model` owns output formats and the marker writer. The static output adapter reports a single `build-invalid` line
 when its implementation is unavailable. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes.
 
@@ -56,7 +58,7 @@ cargo clippy -p mokly-cli --all-targets -- -D warnings
 - [Grammar](./src/grammar.rs) and [option validation](./src/options.rs).
 - [Output](./src/output.rs), [error copy](./src/errors.rs), and
   [redaction](./src/redaction.rs).
-- [Composition root](./src/entry.rs).
+- [Composition root](./src/entry.rs) and [static output adapter](./src/publication/mod.rs).
 
 ### Related Docs
 

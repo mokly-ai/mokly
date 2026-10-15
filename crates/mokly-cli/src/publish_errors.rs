@@ -91,6 +91,17 @@ pub fn render(error: &Error, style: &Style, redactor: &Redactor) -> String {
             Code::BuildInvalid,
             "The catalogue has build warnings. Fix the reported warnings and retry.",
         ),
+        Error::Directory { temporary_root, .. } => {
+            let (_, headline, hint) = Code::PublishDirectory.presentation();
+            return style.error(
+                Code::PublishDirectory,
+                &format!(
+                    "{headline} Temporary root: {}. {hint}",
+                    temporary_root.display()
+                ),
+                redactor,
+            );
+        }
         Error::Internal(_) => (
             Code::UploadFailed,
             "The catalogue could not be prepared for publication. Rebuild the catalogue and retry.",
@@ -130,7 +141,7 @@ pub fn uncommitted(
     let rules: BTreeSet<_> = build_directories
         .iter()
         .filter(|directory| {
-            paths.iter().any(|path| {
+            paths.iter().take(20).any(|path| {
                 path.strip_prefix(directory.as_str())
                     .is_some_and(|suffix| suffix.starts_with('/'))
             })

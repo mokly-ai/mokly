@@ -2,12 +2,13 @@
 
 use std::io::Read;
 use std::process::{Child, Command, ExitStatus, Stdio};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
+use crate::cancellation::{ChildShutdown, graceful};
 use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
 use crate::error::{Error, InternalError, IoResult, Result};
 
@@ -99,7 +100,7 @@ impl SystemRunner {
         let status = wait(&mut child, group.as_ref(), cancellation, &|| {
             output.is_finished() && errors.is_finished()
         });
-        if status.is_err() {
+        if status.is_err() && !matches!(status, Err(Error::Cancelled)) {
             let _ = group.kill();
             let _ = child.wait();
         }
@@ -142,20 +143,14 @@ fn wait(
             return Ok(status);
         }
         if cancellation.is_cancelled() {
-            if let Err(source) = group.terminate() {
-                return Err(Error::Platform { source });
-            }
-            let deadline = Instant::now() + Duration::from_secs(1);
-            while Instant::now() < deadline {
-                if status.is_none() {
-                    status = child.try_wait().git()?;
-                }
-                thread::sleep(Duration::from_millis(10));
-            }
-            if let Err(source) = group.kill() {
-                return Err(Error::Platform { source });
-            }
-            if status.is_none() {
+            let complete = graceful(
+                group,
+                &ChildShutdown {
+                    child: Mutex::new(child),
+                    drained,
+                },
+            )?;
+            if !complete {
                 child.wait().git()?;
             }
             return Err(Error::Cancelled);

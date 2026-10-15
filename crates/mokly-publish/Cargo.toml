@@ -13,13 +13,12 @@ chrono = { version = "0.4.45", default-features = false, features = ["std", "clo
 flate2 = "1.1.10"
 futures-util = "0.3.34"
 mokly-git = { workspace = true }
+mokly-model = { workspace = true }
 rand = "0.10.3"
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["raw_value"] }
-sha2 = "0.11.1"
 tar = "0.4.46"
-tempfile = "3.27.0"
 thiserror = "2.0.21"
 tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "time", "sync", "signal"] }
 tokio-util = { version = "0.7.20", features = ["rt"] }
@@ -32,6 +31,7 @@ mock = ["dep:unimock", "mokly-git/mock"]
 
 [dev-dependencies]
 insta = "1.49.0"
+tempfile = "3.27.0"
 unimock = "0.6.8"
 
 [dev-dependencies.mokly-git]

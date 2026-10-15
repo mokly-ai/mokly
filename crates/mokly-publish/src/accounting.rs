@@ -2,9 +2,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use mokly_model::output::validation::digest;
+
 use crate::completion::{Completion, Outcome};
 use crate::snapshot::Prepared;
-use crate::validation::digest;
 
 /// Safe per-round progress data, emitted only for a nonempty missing set.
 #[derive(Clone, Debug, Eq, PartialEq)]

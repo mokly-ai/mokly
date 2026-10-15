@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
+use mokly_model::output::validation::digest;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::accounting::Progress;
@@ -11,13 +12,13 @@ use crate::error::Error;
 use crate::exchange::{Client, Exchange};
 use crate::http::{Body, HttpMock, Step};
 use crate::runtime::ReporterMock;
-use crate::validation::digest;
+use crate::snapshot::Prepared;
 
 use super::support::{active, artifact, clock, missing, plan, reporter, response, settings};
 
 #[tokio::test]
 async fn each_missing_digest_is_uploaded_once_and_counts_every_marker_entry() {
-    let prepared = artifact(true).prepare().unwrap();
+    let prepared = Prepared::new(&artifact(true)).unwrap();
     let missing = missing();
     let expected_plan = plan(missing.clone());
     let plan_body = prepared.archive.clone();
@@ -101,7 +102,11 @@ async fn empty_missing_has_no_progress_and_complete_200_keeps_first_copy() {
         reporter: Arc::new(Unimock::new(())),
     };
     let result = client
-        .publish(&artifact(false).prepare().unwrap(), &settings(8), &active())
+        .publish(
+            &Prepared::new(&artifact(false)).unwrap(),
+            &settings(8),
+            &active(),
+        )
         .await
         .unwrap();
     assert_eq!(result.uploaded, 1);
@@ -148,7 +153,11 @@ async fn blobs_and_complete_share_one_replan_and_accumulate_attempted_digests() 
             reporter: reporter(),
         };
         let result = client
-            .publish(&artifact(false).prepare().unwrap(), &settings(1), &active())
+            .publish(
+                &Prepared::new(&artifact(false)).unwrap(),
+                &settings(1),
+                &active(),
+            )
             .await
             .unwrap();
         assert_eq!(result.uploaded, 3);
@@ -175,7 +184,11 @@ async fn blobs_and_complete_share_one_replan_and_accumulate_attempted_digests() 
     };
     assert!(matches!(
         client
-            .publish(&artifact(false).prepare().unwrap(), &settings(1), &active())
+            .publish(
+                &Prepared::new(&artifact(false)).unwrap(),
+                &settings(1),
+                &active()
+            )
             .await,
         Err(Error::Failed)
     ));
@@ -219,7 +232,11 @@ async fn receiver_rejections_stop_all_later_steps_and_never_parse_the_body() {
                 },
             };
             let error = client
-                .publish(&artifact(false).prepare().unwrap(), &settings(1), &active())
+                .publish(
+                    &Prepared::new(&artifact(false)).unwrap(),
+                    &settings(1),
+                    &active(),
+                )
                 .await
                 .unwrap_err();
             assert!(match status {
@@ -232,53 +249,4 @@ async fn receiver_rejections_stop_all_later_steps_and_never_parse_the_body() {
             assert!(!error.to_string().contains("SECRET"));
         }
     }
-}
-
-#[tokio::test]
-async fn second_completion_replan_and_archived_digest_in_missing_are_refused() {
-    let planned = plan(BTreeSet::new());
-    let http = Unimock::new((
-        HttpMock::send
-            .each_call(matching!((request, _) if request.step == Step::Plan))
-            .answers_arc(Arc::new(move |_, _, _| {
-                let response = planned.clone();
-                Box::pin(async { Ok(response) })
-            }))
-            .n_times(2),
-        HttpMock::send
-            .each_call(matching!((request, _) if request.step == Step::Complete))
-            .answers(&|_, _, _| Box::pin(async { Ok(response(409)) }))
-            .n_times(2),
-    ));
-    let client: &dyn Exchange = &Client {
-        http: Arc::new(http),
-        clock: clock(),
-        reporter: Arc::new(Unimock::new(())),
-    };
-    assert!(matches!(
-        client
-            .publish(&artifact(false).prepare().unwrap(), &settings(8), &active())
-            .await,
-        Err(Error::Failed)
-    ));
-    let prepared = artifact(false).prepare().unwrap();
-    let archived = digest(&prepared.plan_files[0].bytes);
-    let planned = plan([archived].into());
-    let http = Unimock::new(
-        HttpMock::send
-            .next_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, _, _| {
-                let response = planned.clone();
-                Box::pin(async { Ok(response) })
-            })),
-    );
-    let client: &dyn Exchange = &Client {
-        http: Arc::new(http),
-        clock: Arc::new(Unimock::new(())),
-        reporter: Arc::new(Unimock::new(())),
-    };
-    assert!(matches!(
-        client.publish(&prepared, &settings(8), &active()).await,
-        Err(Error::Failed)
-    ));
 }

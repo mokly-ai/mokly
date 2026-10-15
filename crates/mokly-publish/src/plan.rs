@@ -2,13 +2,14 @@
 
 use std::collections::BTreeSet;
 
+use mokly_model::output::validation::{RESPONSE_LIMIT, hexadecimal, timestamp};
+use mokly_model::versions::PLAN_EXCHANGE;
 use serde::Deserialize;
 use url::Url;
 
 use crate::error::{Error, Result};
 use crate::http::{Body, Response, is_json};
 use crate::settings::Settings;
-use crate::validation::{RESPONSE_LIMIT, hexadecimal, timestamp};
 
 /// Validated receiver Plan. Its paths are opaque to the client.
 #[derive(Clone, Debug)]
@@ -61,7 +62,7 @@ impl Plan {
         let Ok(document) = serde_json::from_slice::<Document>(bytes) else {
             return Err(Error::Failed);
         };
-        if document.schema_version != 1.0
+        if document.schema_version != f64::from(PLAN_EXCHANGE)
             || document.upload.id.is_empty()
             || document.upload.id.len() > 255
             || !document

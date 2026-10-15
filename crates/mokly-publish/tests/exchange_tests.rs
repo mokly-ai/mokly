@@ -1,21 +1,21 @@
 //! Real HTTP exchange with an independent local receiver and installed byte inventory.
 
-mod support;
-
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::sync::{Arc, Mutex};
 
+use mokly_model::output::validation::{MARKER, digest};
 use mokly_publish::completion::Outcome;
 use mokly_publish::exchange::{Client, Exchange};
 use mokly_publish::http::ReqwestHttp;
 use mokly_publish::runtime::{CommandCancellation, SilentReporter, SystemClock};
 use mokly_publish::settings::Settings;
-use mokly_publish::validation::{MARKER, digest};
+use mokly_publish::snapshot::Prepared;
 use serde_json::{Value, json};
-
 use support::catalogue::{artifact, validate_plan};
 use support::server::{Response, Server};
+
+mod support;
 
 #[derive(Default)]
 struct Receiver {
@@ -135,7 +135,7 @@ async fn finalized_output_is_uploaded_and_a_second_publication_keeps_the_first()
             clock: Arc::new(SystemClock),
             reporter: Arc::new(SilentReporter),
         };
-        let prepared = output.prepare().unwrap();
+        let prepared = Prepared::new(&output).unwrap();
         let result = client
             .publish(&prepared, &settings, &CommandCancellation::default())
             .await
@@ -188,7 +188,7 @@ async fn failed_upload_keeps_the_complete_installed_byte_snapshot() {
     };
     let result = client
         .publish(
-            &output.prepare().unwrap(),
+            &Prepared::new(&output).unwrap(),
             &settings,
             &CommandCancellation::default(),
         )

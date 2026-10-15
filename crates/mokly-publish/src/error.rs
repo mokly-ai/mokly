@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use mokly_git::error;
+use mokly_model::output::error::FormatError;
 use thiserror::Error;
 
 use crate::build_failure::BuildFailure;
@@ -105,6 +106,16 @@ pub enum Error {
         "[mokly-publish/build-invalid] The catalogue has build warnings. Fix the reported warnings and retry."
     )]
     BuildWarnings,
+    /// Private output allocation failed before the static builder started.
+    #[error(
+        "[mokly-publish/export-invalid] Unable to prepare temporary output at {temporary_root:?}. Set TMPDIR or TEMP to a writable directory outside the checkout."
+    )]
+    Directory {
+        /// Normalized temporary root, safe to show after terminal redaction.
+        temporary_root: PathBuf,
+        /// Typed reason; raw operating system messages are never printed.
+        reason: DirectoryFailure,
+    },
     /// Safe failures inside adapters retain their source for code inspection.
     #[error(
         "[mokly-publish/upload-failed] The catalogue could not be prepared for publication. Rebuild the catalogue and retry."
@@ -121,16 +132,36 @@ pub enum InternalError {
         /// Original source, for typed inspection only.
         source: std::io::Error,
     },
-    /// A private output directory could not be reserved.
-    #[error("private build directory preparation failed")]
-    Directory {
-        /// Original source, for typed inspection only.
+}
+
+/// Convert shared format validation into the stable upload categories.
+pub trait OutputResult<T> {
+    /// Preserve the format category without string matching.
+    fn upload(self) -> Result<T>;
+}
+
+impl<T> OutputResult<T> for std::result::Result<T, FormatError> {
+    fn upload(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(FormatError::InvalidBundle) => Err(Error::InvalidBundle),
+            Err(FormatError::TooLarge) => Err(Error::TooLarge),
+            Err(FormatError::UnsupportedVersion) => Err(Error::UnsupportedVersion),
+            Err(FormatError::Repository) => Err(Error::Repository),
+        }
+    }
+}
+
+/// Private-directory failures preserve their reason without exposing raw I/O text.
+#[derive(Debug, Error)]
+pub enum DirectoryFailure {
+    /// The selected temporary root is inside the checkout.
+    #[error("[mokly-publish/directory] temporary root is inside the checkout")]
+    InsideRepository,
+    /// The temporary directory could not be resolved or allocated.
+    #[error("[mokly-publish/directory] temporary root is unavailable")]
+    Unavailable {
+        /// Original operating-system failure, for typed inspection only.
         source: std::io::Error,
-    },
-    /// The operating system selected an in-repository temporary directory.
-    #[error("private build directory must be outside the repository")]
-    DirectoryInsideRepository {
-        /// The candidate retained for code inspection.
-        directory: PathBuf,
     },
 }

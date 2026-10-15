@@ -6,11 +6,11 @@ use serde_json::Number;
 
 pub(crate) fn version<'de, D: Deserializer<'de>>(
     deserializer: D,
-) -> std::result::Result<u8, D::Error> {
+) -> std::result::Result<u32, D::Error> {
     let number = Number::deserialize(deserializer)?;
     match number.as_f64() {
-        Some(number) if number.fract() == 0.0 && (0.0..=255.0).contains(&number) => {
-            Ok(number as u8)
+        Some(number) if number.fract() == 0.0 && (0.0..=u32::MAX as f64).contains(&number) => {
+            Ok(number as u32)
         }
         _ => Err(de::Error::custom("invalid version number")),
     }

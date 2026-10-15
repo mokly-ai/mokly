@@ -3,7 +3,7 @@
 use chrono::{NaiveDateTime, TimeZone, Utc};
 use sha2::{Digest, Sha256};
 
-use crate::error::{Error, Result};
+use crate::output::error::{FormatError, Result};
 
 /// Maximum byte length of a regular output file.
 pub const FILE_LIMIT: usize = 64 * 1024 * 1024;
@@ -37,7 +37,7 @@ pub fn hexadecimal(value: &str, lengths: &[usize]) -> bool {
 /// One portable root-relative path. Limit classification precedes grammar.
 pub fn portable_path(value: &str) -> Result<()> {
     if value.len() > 1024 {
-        return Err(Error::TooLarge);
+        return Err(FormatError::TooLarge);
     }
     if value.is_empty()
         || value
@@ -45,12 +45,13 @@ pub fn portable_path(value: &str) -> Result<()> {
             .any(|character| character.is_control() || "\\:".contains(character))
         || value.split('/').any(|part| matches!(part, "" | "." | ".."))
     {
-        return Err(Error::InvalidBundle);
+        return Err(FormatError::InvalidBundle);
     }
     Ok(())
 }
 
-pub(crate) fn text(value: &str, limit: usize) -> bool {
+/// Nonempty bounded metadata text without category Cc characters.
+pub fn text(value: &str, limit: usize) -> bool {
     !value.is_empty() && value.len() <= limit && !value.chars().any(char::is_control)
 }
 
@@ -67,16 +68,16 @@ pub fn timestamp(value: &str) -> Result<i64> {
             _ => !byte.is_ascii_digit(),
         })
     {
-        return Err(Error::InvalidBundle);
+        return Err(FormatError::InvalidBundle);
     }
     if &value[17..19] > "59" {
-        return Err(Error::InvalidBundle);
+        return Err(FormatError::InvalidBundle);
     }
     let Ok(date) = NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S%.3fZ") else {
-        return Err(Error::InvalidBundle);
+        return Err(FormatError::InvalidBundle);
     };
     if date.and_utc().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string() != value {
-        return Err(Error::InvalidBundle);
+        return Err(FormatError::InvalidBundle);
     }
     Ok(Utc.from_utc_datetime(&date).timestamp_millis())
 }

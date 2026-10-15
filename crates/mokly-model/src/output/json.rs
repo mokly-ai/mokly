@@ -5,13 +5,13 @@ use std::fmt;
 use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
 use serde_json::{Map, Number, Value};
 
-use crate::error::{Error, Result};
+use crate::output::error::{FormatError, Result};
 
 /// Decode JSON while rejecting duplicate keys in every nested object.
 pub(crate) fn unique(bytes: &[u8]) -> Result<Value> {
     match serde_json::from_slice::<Unique>(bytes) {
         Ok(value) => Ok(value.0),
-        Err(_) => Err(Error::InvalidBundle),
+        Err(_) => Err(FormatError::InvalidBundle),
     }
 }
 

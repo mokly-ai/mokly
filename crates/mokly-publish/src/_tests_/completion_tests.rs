@@ -1,6 +1,7 @@
 //! Optional Complete data never changes a known successful publication.
 
 use bytes::Bytes;
+use mokly_model::output::validation::RESPONSE_LIMIT;
 use serde_json::json;
 
 use crate::accounting::{Progress, Receipt};
@@ -8,7 +9,6 @@ use crate::completion::{Completion, Outcome};
 use crate::error::Error;
 use crate::http::{Body, Response};
 use crate::settings::Token;
-use crate::validation::RESPONSE_LIMIT;
 
 use super::support::response;
 

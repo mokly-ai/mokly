@@ -151,8 +151,33 @@ fn ambiguous_remotes_git_failures_and_actual_cancellation_keep_separate_types() 
         assert!(if cancelled {
             matches!(error, Error::Cancelled)
         } else {
-            matches!(error, Error::Git { .. })
+            matches!(error, Error::Checkout)
         });
         assert!(!error.to_string().contains("secret"));
     }
+}
+
+#[test]
+fn authenticated_reservation_paths_are_excluded_through_the_filesystem_boundary() {
+    let runner = Unimock::new((
+        RunnerMock::run_cancellable.next_call(matching!(_, _)).returns(Ok(output(b"/repo\n"))),
+        RunnerMock::run_cancellable.next_call(matching!(_, _)).returns(Ok(output(format!("{}\n", "a".repeat(40)).as_bytes()))),
+        RunnerMock::run_cancellable.next_call(matching!(_, _)).returns(Ok(output(b"?? .mokly-export-reservations/.owner\0?? .mokly-export-reservations/locks/site/.owner\0"))),
+    ));
+    let hints = Unimock::new(
+        OutputHintsMock::reservations
+            .next_call(matching!(_, _))
+            .returns(vec![".mokly-export-reservations".to_owned()]),
+    );
+    let checkout: &dyn Checkout = &GitCheckout {
+        runner: Arc::new(runner),
+        hints: Arc::new(hints),
+    };
+    assert!(
+        checkout
+            .inspect(Path::new("/repo"), &[], &Unimock::new(()))
+            .unwrap()
+            .changed_paths
+            .is_empty()
+    );
 }

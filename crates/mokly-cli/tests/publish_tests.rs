@@ -4,6 +4,9 @@ use std::fs;
 use std::path::Path;
 use std::process::{Command, Output};
 
+#[cfg(windows)]
+use std::os::windows::fs::OpenOptionsExt;
+
 fn git(directory: &Path, args: &[&str]) {
     let output = Command::new("git")
         .current_dir(directory)
@@ -72,10 +75,13 @@ fn clean_current_only_publish_prints_one_retained_directory_then_one_unavailable
             .unwrap();
         let path = Path::new(path);
         assert!(path.is_absolute());
-        assert!(path.is_dir());
+        assert_eq!(path.file_name().unwrap(), "site");
+        assert!(!path.exists());
+        assert!(path.parent().unwrap().is_dir());
+        assert!(!path.to_string_lossy().starts_with(r"\\?\"));
         assert!(!path.starts_with(directory.path()));
         assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 2);
-        fs::remove_dir(path).unwrap();
+        fs::remove_dir(path.parent().unwrap()).unwrap();
     }
 }
 
@@ -139,10 +145,25 @@ fn endpoint_and_token_environment_fallbacks_are_checked_before_build() {
     );
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
-    assert!(
-        String::from_utf8(output.stderr)
-            .unwrap()
-            .starts_with("[mokly/git-failed]")
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "[mokly/git-failed] Publish requires a Git checkout with a committed HEAD.\n"
+    );
+    git(empty.path(), &["init", "-q"]);
+    let unborn = run(
+        empty.path(),
+        &[
+            "--endpoint=https://example.com/plan",
+            "--token=secret",
+            "--repository=example.com/team/project",
+            "--no-changes",
+        ],
+        "plain",
+    );
+    assert!(unborn.stdout.is_empty());
+    assert_eq!(
+        String::from_utf8(unborn.stderr).unwrap(),
+        "[mokly/git-failed] Publish requires a Git checkout with a committed HEAD.\n"
     );
 }
 
@@ -174,15 +195,25 @@ fn dirty_custom_build_output_gets_a_literal_ignore_rule() {
     assert!(error.contains("/site\\[1\\]/"));
 }
 
-#[cfg(unix)]
 #[test]
 fn an_in_repository_temporary_root_is_rejected_without_a_transient_write() {
     let directory = checkout();
     let timestamp = std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(946_684_800);
+    #[cfg(unix)]
     fs::File::open(directory.path())
         .unwrap()
         .set_modified(timestamp)
         .unwrap();
+    #[cfg(windows)]
+    {
+        fs::OpenOptions::new()
+            .write(true)
+            .custom_flags(0x02000000)
+            .open(directory.path())
+            .unwrap()
+            .set_modified(timestamp)
+            .unwrap();
+    }
     let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
         .current_dir(directory.path())
         .args([
@@ -193,14 +224,56 @@ fn an_in_repository_temporary_root_is_rejected_without_a_transient_write() {
             "--repository=example.com/team/project",
         ])
         .env("TMPDIR", directory.path())
+        .env("TEMP", directory.path())
+        .env("TMP", directory.path())
         .env("MOKLY_OUTPUT", "plain")
         .env_remove("MOKLY_SIDECARS")
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
+    let temporary_root = dunce::canonicalize(directory.path()).unwrap();
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        format!(
+            "[mokly/export-invalid] The publish build directory could not be prepared. Temporary root: {}. Set TMPDIR or TEMP to a writable directory outside the checkout.\n",
+            temporary_root.display()
+        )
+    );
     assert_eq!(
         fs::metadata(directory.path()).unwrap().modified().unwrap(),
         timestamp
+    );
+}
+
+#[test]
+fn a_missing_temporary_root_names_the_path_and_environment_recovery() {
+    let directory = checkout();
+    let temporary = tempfile::tempdir().unwrap();
+    let missing = temporary.path().join("missing");
+    let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
+        .current_dir(directory.path())
+        .args([
+            "publish",
+            "--endpoint=https://example.com/plan",
+            "--token=secret",
+            "--no-changes",
+            "--repository=example.com/team/project",
+        ])
+        .env("TMPDIR", &missing)
+        .env("TEMP", &missing)
+        .env("TMP", &missing)
+        .env("MOKLY_OUTPUT", "plain")
+        .env_remove("MOKLY_SIDECARS")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert!(output.stdout.is_empty());
+    let path = missing.to_string_lossy();
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        format!(
+            "[mokly/export-invalid] The publish build directory could not be prepared. Temporary root: {path}. Set TMPDIR or TEMP to a writable directory outside the checkout.\n"
+        )
     );
 }

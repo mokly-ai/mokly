@@ -9,6 +9,7 @@ React viewer. It has no internal crate dependency and performs no file IO.
 ## Responsibilities
 
 - Own the independent format numbers in `versions`.
+- Own shared output shapes and one pure marker writer for build and publish.
 - Encode canonical JSON with recursive UTF-16 key order, two-space indentation,
   explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
@@ -23,6 +24,13 @@ unknown props without coercion or defaults. Both operations enforce 64 nesting
 levels and 10,000 visited values. Diagnostics keep the entry, variant, and an
 exact JSON Pointer. HTML uses `html-front-matter` or `html-attribute`.
 JavaScript and stories use `component-schema` or `component-props`.
+
+`output` defines the ownership marker, upload metadata, repository identity,
+and immutable file inventory. `Artifact::finalize` accepts optional upload
+metadata and writes the marker last. Plain builds pass no metadata. Both
+static output and publication use these shapes without a dependency on each
+other. The marker parser checks format shape; the publication client separately
+checks complete artifact bytes and upload-only file-count limits.
 
 Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
@@ -55,6 +63,7 @@ cargo xtask generate-types
 
 ### Key Code
 
+- [Shared output contracts and marker writer](./src/output/mod.rs).
 - [Schema types](./src/prop_schema.rs) and [validator](./src/validation.rs).
 - [Profile restrictions](./src/profile.rs) and [limits](./src/limits.rs).
 - [Canonical encoding](./src/canonical.rs) and [type generation](./src/typescript.rs).

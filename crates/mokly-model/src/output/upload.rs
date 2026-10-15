@@ -2,12 +2,13 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::error::{Error, Result};
-use crate::identity::Repository;
-use crate::json::unique;
-use crate::numbers;
-use crate::semver;
-use crate::validation::{MANIFEST_LIMIT, hexadecimal, portable_path, text, timestamp};
+use crate::output::error::{FormatError, Result};
+use crate::output::json::unique;
+use crate::output::numbers;
+use crate::output::repository::Repository;
+use crate::output::semver;
+use crate::output::validation::{MANIFEST_LIMIT, hexadecimal, portable_path, text, timestamp};
+use crate::versions::UPLOAD_METADATA;
 
 /// The pinned comparison selected by the static builder.
 #[derive(Clone, Debug)]
@@ -52,7 +53,7 @@ pub struct Publication {
 pub struct UploadMetadata {
     /// Independent envelope version, always 2.
     #[serde(deserialize_with = "numbers::version")]
-    pub schema_version: u8,
+    pub schema_version: u32,
     /// Installed Mokly package SemVer.
     pub mokly_version: String,
     /// Repository assertion for receiver authorization.
@@ -89,7 +90,7 @@ impl Publication {
     /// Build metadata from the finalized output inventory, before hashing it.
     pub fn metadata(&self, inventory: &BuildInventory) -> Result<UploadMetadata> {
         let document = UploadMetadata {
-            schema_version: 2,
+            schema_version: UPLOAD_METADATA,
             mokly_version: self.mokly_version.clone(),
             repository: self.repository.clone(),
             branch: self.branch.clone(),
@@ -116,20 +117,20 @@ impl UploadMetadata {
     /// Parse the envelope with exact fields, unique keys, and bounded bytes.
     pub fn parse(bytes: &[u8]) -> Result<Self> {
         if bytes.len() > MANIFEST_LIMIT {
-            return Err(Error::TooLarge);
+            return Err(FormatError::TooLarge);
         }
         let value = unique(bytes)?;
         let Some(version) = value
             .as_object()
             .and_then(|object| object.get("schemaVersion"))
         else {
-            return Err(Error::InvalidBundle);
+            return Err(FormatError::InvalidBundle);
         };
-        if version.as_f64() != Some(2.0) {
-            return Err(Error::UnsupportedVersion);
+        if version.as_f64() != Some(f64::from(UPLOAD_METADATA)) {
+            return Err(FormatError::UnsupportedVersion);
         }
         let Ok(metadata) = serde_json::from_value::<Self>(value) else {
-            return Err(Error::InvalidBundle);
+            return Err(FormatError::InvalidBundle);
         };
         metadata.validate()?;
         Ok(metadata)
@@ -137,8 +138,8 @@ impl UploadMetadata {
 
     /// Validate a constructed document before it enters the output inventory.
     pub fn validate(&self) -> Result<()> {
-        if self.schema_version != 2 {
-            return Err(Error::UnsupportedVersion);
+        if self.schema_version != UPLOAD_METADATA {
+            return Err(FormatError::UnsupportedVersion);
         }
         if self.repository.validate().is_err()
             || !text(&self.mokly_version, 255)
@@ -149,7 +150,7 @@ impl UploadMetadata {
                 .pull_request
                 .is_some_and(|number| !(1..=9_007_199_254_740_991).contains(&number))
         {
-            return Err(Error::InvalidBundle);
+            return Err(FormatError::InvalidBundle);
         }
         portable_path(&self.config_path)?;
         timestamp(&self.exported_at)?;
@@ -164,10 +165,10 @@ impl UploadMetadata {
                 if generation.is_some_and(|generation| hexadecimal(generation, &[64])) {
                     Ok(())
                 } else {
-                    Err(Error::InvalidBundle)
+                    Err(FormatError::InvalidBundle)
                 }
             }
-            _ => Err(Error::InvalidBundle),
+            _ => Err(FormatError::InvalidBundle),
         }
     }
 
@@ -175,11 +176,11 @@ impl UploadMetadata {
     pub fn bytes(&self) -> Result<Vec<u8>> {
         self.validate()?;
         let Ok(mut bytes) = serde_json::to_vec_pretty(self) else {
-            return Err(Error::InvalidBundle);
+            return Err(FormatError::InvalidBundle);
         };
         bytes.push(b'\n');
         if bytes.len() > MANIFEST_LIMIT {
-            return Err(Error::TooLarge);
+            return Err(FormatError::TooLarge);
         }
         Ok(bytes)
     }

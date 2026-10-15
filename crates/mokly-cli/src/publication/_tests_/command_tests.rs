@@ -3,17 +3,17 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use mokly_publish::accounting::Receipt;
+use mokly_publish::checkout::{CheckoutMock, Inspection};
+use mokly_publish::completion::{Completion, Outcome};
+use mokly_publish::error::Error;
+use mokly_publish::exchange::ExchangeMock;
+use mokly_publish::identity::ActionsContext;
+use mokly_publish::snapshot::{Finalized, OutputSnapshot, OutputSnapshotMock};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::accounting::Receipt;
-use crate::build::{DirectoriesMock, StaticOutputMock, warnings_are_fatal};
-use crate::checkout::{CheckoutMock, Inspection};
-use crate::command::{BuildReporterMock, Command, Options, Publish};
-use crate::completion::{Completion, Outcome};
-use crate::error::Error;
-use crate::exchange::ExchangeMock;
-use crate::identity::ActionsContext;
-use crate::snapshot::{OutputSnapshot, OutputSnapshotMock};
+use crate::publication::build::{DirectoriesMock, StaticOutputMock, warnings_are_fatal};
+use crate::publication::command::{BuildReporterMock, Command, Options, Publish};
 
 use super::support::{artifact, publication, settings};
 
@@ -53,7 +53,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
     let snapshot: Arc<dyn OutputSnapshot> = Arc::new(Unimock::new(
         OutputSnapshotMock::capture
             .next_call(matching!())
-            .returns(Ok(artifact(false))),
+            .returns(Ok(Finalized::new(artifact(false)).unwrap())),
     ));
     let expected = Receipt {
         completion: Completion {
@@ -81,6 +81,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
             .answers_arc(Arc::new(move |_, request, _| {
                 assert_eq!(request.directory, PathBuf::from("/private/publish"));
                 assert_eq!(request.repository_root, PathBuf::from("/repo"));
+                assert_eq!(request.invocation_directory, PathBuf::from("/repo/tools"));
                 assert!(request.no_changes);
                 assert!(request.warnings_are_fatal);
                 assert!(request.base.is_none());
@@ -177,7 +178,7 @@ async fn changed_head_or_new_paths_after_the_build_stop_before_plan() {
         let snapshot: Arc<dyn OutputSnapshot> = Arc::new(Unimock::new(
             OutputSnapshotMock::capture
                 .next_call(matching!())
-                .returns(Ok(artifact(false))),
+                .returns(Ok(Finalized::new(artifact(false)).unwrap())),
         ));
         let mock = Arc::new(Unimock::new((
             CheckoutMock::inspect

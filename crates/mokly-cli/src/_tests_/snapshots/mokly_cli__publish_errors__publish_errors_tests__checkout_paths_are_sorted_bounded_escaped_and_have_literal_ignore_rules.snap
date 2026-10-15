@@ -25,6 +25,4 @@ Changes appeared during the build.
   - file-17
   - file-18
   … 5 other paths.
-Add these rules to the repository's .gitignore:
-  /mokly-static/
 Commit, stash or ignore these files, then publish again.

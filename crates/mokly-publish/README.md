@@ -14,31 +14,34 @@ checks, static output, HTTP, timing, cancellation, and reporting.
 
 ## What This Crate Does
 
-`Artifact::finalize` adds publication metadata and ownership to captured output
-bytes. The static builder installs those exact bytes. `OutputSnapshot` returns
-that frozen inventory. Publish never walks the installed directory again.
-`Artifact::prepare` verifies every size and digest and creates the compressed
-USTAR/PAX Plan archive. The archive contains only the manifest, marker, and
-optional pinned review file, in that order.
+`mokly-model::output` owns the shared upload and ownership shapes and the
+single marker writer. The static builder installs its exact immutable bytes.
+The CLI adapter constructs `Finalized` once and retains both the artifact and
+its prepared upload. Repeated `OutputSnapshot::capture` calls share parsed
+metadata, hashes, and the compressed Plan body. No directory walk occurs.
+Review identity validation streams through the review JSON and rejects nested
+duplicate keys without constructing its full value tree.
 
 `Client` implements `Exchange`. It consumes `dyn Http`, `dyn Clock`, and
-`dyn Reporter`. The HTTP adapter uses reqwest with rustls. This maintained
-client supports cancellable async requests, verified TLS, bounded response
-reads, and a timeout that includes body reads. Redirects and implicit retries
-are disabled. The exchange owns the five-attempt policy and the single
-whole-command re-plan. A failed Blob drops the other active requests.
+`dyn Reporter`. The HTTP adapter uses reqwest with rustls and AWS-LC.
+Redirects and implicit retries are disabled. The exchange owns five attempts
+and one re-plan. A failed Blob drops the other active requests. Progress
+counts a digest once even when `missing` overlaps a Plan-archive digest.
 Credentials have a redacted debug representation. Transport failures and
-receiver rejections use fixed safe error messages.
+receiver rejections use fixed safe messages.
 
-`Command` implements `Publish`. It checks the checkout, allocates a private
-build directory, reports that directory once, calls `dyn StaticOutput`, checks
-HEAD and status again, then uploads. Directory allocation checks the real
-temporary parent before any write. It never deletes completed output after
-an upload failure. The static builder's typed errors retain their category
-and recovery paths through `BuildFailure`. `mokly-git` owns subprocess
-execution and cancellation.
-The `warnings_are_fatal` function holds the specified always-fatal publish
-policy while the user decision about `--strict` remains open.
+`mokly-git` supplies bounded process execution and cancellation. `GitCheckout`
+checks committed HEAD and complete fixed-argv status. It excludes only pinned
+owned paths and reservation namespaces whose regular `.owner` contains the
+exact ownership signature. The CLI owns static build orchestration and
+private-directory allocation. Neither the static crate nor this crate depends
+on the other; both use `mokly-model` output shapes.
+
+The TLS provider compiles bundled C and assembly with a target C compiler and
+archiver. Linux normally uses the cc builder; CMake is a fallback. Rustls
+enables prebuilt NASM objects for Windows x64. The workspace forces
+`AWS_LC_SYS_USE_SYSTEM=0` to disable automatic host libcrypto discovery. See
+[the developer toolchain rules](../../docs/protocol/developer-test-commands.md#native-tls-build-tools).
 
 ## Quick Start
 
@@ -65,11 +68,11 @@ trait mocks to downstream tests.
 
 ### Key Code
 
-- [Metadata](./src/metadata.rs), [ownership](./src/ownership.rs), and
-  [frozen output](./src/snapshot.rs).
+- [Shared output model](../mokly-model/src/output/mod.rs) and
+  [prepared output](./src/snapshot.rs).
 - [Exchange](./src/exchange.rs), [retry policy](./src/retry.rs), and
   [HTTP adapter](./src/http.rs).
-- [Command](./src/command.rs) and [Git checks](./src/checkout.rs).
+- [CLI adapter](../mokly-cli/src/publication/mod.rs) and [Git checks](./src/checkout.rs).
 
 ### Related Docs
 

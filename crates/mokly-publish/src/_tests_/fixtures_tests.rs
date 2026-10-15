@@ -1,5 +1,7 @@
 //! Public compatibility fixtures exercise the client-side protocol validators.
 
+use mokly_model::output::error::FormatError;
+use mokly_model::output::ownership::Ownership;
 use serde::Deserialize;
 use serde_json::value::RawValue;
 use serde_json::{Value, json};
@@ -7,7 +9,6 @@ use serde_json::{Value, json};
 use crate::completion::{Completion, Outcome, retryable};
 use crate::error::Error;
 use crate::http::{Body, Response};
-use crate::ownership::Ownership;
 use crate::plan::Plan;
 use crate::settings::Settings;
 
@@ -38,9 +39,9 @@ fn every_public_ownership_fixture_has_the_documented_classification() {
             assert!(result.is_ok(), "{}: {result:?}", case.name);
         } else {
             let classification = match result.unwrap_err() {
-                Error::InvalidBundle => "invalid",
-                Error::TooLarge => "too-large",
-                Error::UnsupportedVersion => "unsupported-version",
+                FormatError::InvalidBundle => "invalid",
+                FormatError::TooLarge => "too-large",
+                FormatError::UnsupportedVersion => "unsupported-version",
                 error => panic!("{error}"),
             };
             assert_eq!(
@@ -91,6 +92,12 @@ fn every_plan_and_completion_fixture_matches_the_client_contract() {
             ..response(status)
         };
         if case["step"] == "complete" {
+            assert_eq!(
+                completion_outcome(&response, &settings),
+                case["outcome"].as_str().unwrap(),
+                "{}",
+                case["name"]
+            );
             let result = Completion::parse(&response, &settings.token);
             if case["valid"] == true {
                 let completed = result.unwrap();
@@ -133,16 +140,38 @@ fn duplicate_keys_invalid_unicode_bom_and_type_precedence_are_rejected() {
             .as_slice(),
         b"\xef\xbb\xbf{}",
     ] {
-        assert!(matches!(Ownership::parse(input), Err(Error::InvalidBundle)));
+        assert!(matches!(
+            Ownership::parse(input),
+            Err(FormatError::InvalidBundle)
+        ));
     }
     assert!(matches!(
         Ownership::parse(br#"{"schemaVersion":9,"files":null}"#),
-        Err(Error::UnsupportedVersion)
+        Err(FormatError::UnsupportedVersion)
     ));
     assert!(matches!(
         Ownership::parse(
             br#"{"schemaVersion":3,"files":[{"path":1,"sha256":"bad","size":999999999}]}"#
         ),
-        Err(Error::InvalidBundle)
+        Err(FormatError::InvalidBundle)
     ));
+}
+
+fn completion_outcome(response: &Response, settings: &Settings) -> &'static str {
+    if retryable(response.status) {
+        return "retry";
+    }
+    match Completion::parse(response, settings.token()) {
+        Ok(completed) => match completed.outcome {
+            Outcome::Published => "published",
+            Outcome::AlreadyPublished => "already-published",
+        },
+        Err(Error::Replan) => "replan",
+        Err(Error::Unauthorized) => "upload-unauthorized",
+        Err(Error::InvalidBundle) => "upload-invalid-bundle",
+        Err(Error::UnsupportedVersion) => "upload-unsupported-version",
+        Err(Error::TooLarge) => "upload-too-large",
+        Err(Error::Failed) => "upload-failed",
+        result => panic!("unexpected completion result: {result:?}"),
+    }
 }

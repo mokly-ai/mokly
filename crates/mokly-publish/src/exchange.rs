@@ -96,14 +96,6 @@ impl Client {
             rejection(response.status)?;
         }
         let plan = Plan::parse(&response, requests.settings, &prepared.digests())?;
-        let archive_digests = plan_digests(prepared);
-        if plan
-            .missing
-            .iter()
-            .any(|digest| archive_digests.contains(digest))
-        {
-            return Err(Error::Failed);
-        }
         let attempted: Vec<_> = plan
             .missing
             .iter()
@@ -149,6 +141,7 @@ impl Client {
         }
         let mut progress = progress(prepared, &plan.missing, round);
         self.reporter.progress(&progress);
+        let mut completed = plan_digests(prepared);
         let jobs = stream::iter(
             plan.missing
                 .iter()
@@ -183,7 +176,9 @@ impl Client {
         tokio::pin!(jobs);
         while let Some(result) = jobs.next().await {
             let digest = result?;
-            progress.completed += counts.get(digest.as_str()).copied().unwrap_or(0);
+            if completed.insert(digest.clone()) {
+                progress.completed += counts.get(digest.as_str()).copied().unwrap_or(0);
+            }
             self.reporter.progress(&progress);
         }
         Ok(())

@@ -801,9 +801,9 @@ Tags: ui
 
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
-      documents, the comparison generation, the ownership marker, the `--out`
-      option with its default `mokly-static/` output directory, and the
-      transaction with backup, exclusive rename, and rollback.
+      documents, the comparison generation, the shared `mokly-model` ownership
+      marker writer, the `--out` option with its default `mokly-static/` output
+      directory, and the transaction with backup, exclusive rename, and rollback.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
@@ -814,12 +814,17 @@ Tags: ui
   - [x] Add clean-checkout checks, cancellable Git calls, the static-output
         trait, and the pre-build private-directory line. Keep completed
         output after upload failure.
-  - [ ] Connect `mokly-static` to publish and its rich terminal phases. Verify
-        real rendering, transaction cancellation, and deployment identity.
+  - [ ] Connect `mokly-static` to the CLI-owned publish adapter and its rich
+        terminal phases. Both crates use the shared output shapes and marker
+        writer in `mokly-model`. Verify real rendering, transaction cancellation,
+        and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
+        transitions, source changes, and the deferred gap-sweep scenarios.
 - [x] Add the `git-uncommitted` detail layout and avoid repeated detail and
       recovery-hint sentences in terminal errors.
 
 Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
+Publish client review fixes and TLS checks:
+`.context/rust-rebuild/delegation/m12-publish/report-2.md`.
 
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
@@ -838,6 +843,9 @@ Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
 - [ ] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
+- [ ] Verify native TLS on macOS and Windows CI. Build all five target
+      binaries with a target C toolchain and check `ldd`, `otool -L`, or
+      `dumpbin /dependents` for an unintended crypto shared-library dependency.
 - [ ] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
@@ -867,6 +875,10 @@ Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
+    keep the OS trust store until the user decides.
+  - Milestone 12 publish review 1, finding 13: decide private-directory retention
+    after success; keep the existing retention until the user decides.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

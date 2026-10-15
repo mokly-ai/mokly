@@ -5,10 +5,10 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use flate2::read::GzDecoder;
-use mokly_publish::identity::Repository;
-use mokly_publish::metadata::{BuildInventory, Comparison, Publication};
-use mokly_publish::snapshot::{Artifact, File};
-use mokly_publish::validation::{MANIFEST, MARKER, digest};
+use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::repository::Repository;
+use mokly_model::output::upload::{BuildInventory, Comparison, Publication};
+use mokly_model::output::validation::{MANIFEST, MARKER, digest};
 use serde_json::Value;
 
 pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
@@ -57,13 +57,16 @@ pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
     }
     Artifact::finalize(
         directory,
-        &publication,
-        &BuildInventory {
-            config_path: "nested/mokly.config.json".to_owned(),
-            exported_at: "2026-09-26T12:00:00.000Z".to_owned(),
-            comparison,
-        },
         files,
+        Some(
+            publication
+                .metadata(&BuildInventory {
+                    config_path: "nested/mokly.config.json".to_owned(),
+                    exported_at: "2026-09-26T12:00:00.000Z".to_owned(),
+                    comparison,
+                })
+                .unwrap(),
+        ),
     )
     .unwrap()
 }

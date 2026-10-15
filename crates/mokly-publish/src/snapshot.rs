@@ -1,122 +1,96 @@
-//! Frozen static output: validation never re-walks a mutable output directory.
+//! Validate finished output once and retain the prepared exchange snapshot.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use bytes::Bytes;
-use serde::Deserialize;
+use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::ownership::Ownership;
+use mokly_model::output::upload::UploadMetadata;
+use mokly_model::output::validation::{FILE_COUNT_LIMIT, FILE_LIMIT, MANIFEST, MARKER, digest};
 
 use crate::archive::plan_archive;
-use crate::error::{Error, Result};
-use crate::json::unique;
-use crate::metadata::{BuildInventory, Publication, UploadMetadata};
-use crate::ownership::{Entry, Ownership};
-use crate::validation::{FILE_COUNT_LIMIT, FILE_LIMIT, MANIFEST, MARKER, digest};
+use crate::error::{Error, OutputResult, Result};
+use crate::review::ReviewIdentity;
 
-/// One regular file's immutable final bytes.
-#[derive(Clone, Debug)]
-pub struct File {
-    /// Portable root-relative path.
-    pub path: String,
-    /// Exact bytes installed by the static output transaction.
-    pub bytes: Bytes,
+/// Immutable output with its prepared upload, retained together by the CLI adapter.
+#[derive(Clone)]
+pub struct Finalized {
+    artifact: Arc<Artifact>,
+    prepared: Arc<Prepared>,
 }
 
-/// Finished output and its complete byte snapshot, including its marker.
-#[derive(Clone, Debug)]
-pub struct Artifact {
-    /// Installed private directory, retained after a failed upload.
-    pub directory: PathBuf,
-    /// Inventory of exactly the files in that directory.
-    pub files: Vec<File>,
+impl Finalized {
+    /// Prepare a finalized model artifact once, before returning it from the build adapter.
+    pub fn new(artifact: Artifact) -> Result<Self> {
+        let prepared = Arc::new(Prepared::new(&artifact)?);
+        Ok(Self {
+            artifact: Arc::new(artifact),
+            prepared,
+        })
+    }
+
+    /// Exact output bytes that the static transaction installed.
+    pub fn artifact(&self) -> &Artifact {
+        &self.artifact
+    }
+    /// Cached hashes, parsed metadata and compressed Plan body.
+    pub fn prepared(&self) -> &Prepared {
+        &self.prepared
+    }
 }
 
-/// Static builder integration seam. Implementations return their finalized snapshot.
+/// Finished output boundary; captures share prepared bytes without hashing or compression.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = OutputSnapshotMock))]
 pub trait OutputSnapshot: Send + Sync {
-    /// Return frozen bytes captured during finalization, without reading the output back.
-    fn capture(&self) -> Result<Artifact>;
+    /// Return the installed artifact and its already prepared upload.
+    fn capture(&self) -> Result<Finalized>;
 }
 
-impl OutputSnapshot for Artifact {
-    fn capture(&self) -> Result<Artifact> {
+impl OutputSnapshot for Finalized {
+    fn capture(&self) -> Result<Finalized> {
         Ok(self.clone())
     }
 }
 
 /// Validated immutable exchange input.
 pub struct Prepared {
-    /// Output location retained for the caller.
+    /// Output directory retained for the caller.
     pub directory: PathBuf,
-    /// Validated envelope.
+    /// Validated upload envelope.
     pub metadata: UploadMetadata,
     /// Marker entries used for digest membership and accounting.
     pub ownership: Ownership,
-    /// Compressed Plan body, identical for every round.
+    /// Compressed Plan body, shared by every request round.
     pub archive: Bytes,
-    /// Exact Plan files, in their required order.
+    /// Exact Plan files in their required order.
     pub plan_files: Vec<File>,
-    /// Each distinct digest's exact bytes, including the marker.
+    /// Exact bytes for each distinct digest, including the marker.
     pub blobs: BTreeMap<String, Bytes>,
 }
 
-impl Artifact {
-    /// Add publication metadata, then ownership, to a static builder's captured files.
-    /// The builder installs these bytes and returns this same snapshot to publish.
-    pub fn finalize(
-        directory: PathBuf,
-        publication: &Publication,
-        inventory: &BuildInventory,
-        mut files: Vec<File>,
-    ) -> Result<Self> {
-        let metadata = publication.metadata(inventory)?;
-        files.push(File {
-            path: MANIFEST.to_owned(),
-            bytes: metadata.bytes()?.into(),
-        });
-        files.sort_by(|left, right| left.path.encode_utf16().cmp(right.path.encode_utf16()));
-        let ownership = Ownership {
-            schema_version: 3,
-            files: files
+impl Prepared {
+    /// Validate completeness, addresses, metadata and comparison, then compress once.
+    pub fn new(artifact: &Artifact) -> Result<Self> {
+        if artifact.files.len() > FILE_COUNT_LIMIT
+            || artifact
+                .files
                 .iter()
-                .map(|file| Entry {
-                    path: file.path.clone(),
-                    sha256: digest(&file.bytes),
-                    size: file.bytes.len() as u64,
-                })
-                .collect(),
-        };
-        let Ok(mut marker) = serde_json::to_vec_pretty(&ownership) else {
-            return Err(Error::InvalidBundle);
-        };
-        marker.push(b'\n');
-        Ownership::parse(&marker)?;
-        files.push(File {
-            path: MARKER.to_owned(),
-            bytes: marker.into(),
-        });
-        let artifact = Self { directory, files };
-        artifact.prepare()?;
-        Ok(artifact)
-    }
-
-    /// Validate completeness, addresses, metadata and comparison before any request.
-    pub fn prepare(&self) -> Result<Prepared> {
-        if self.files.len() > FILE_COUNT_LIMIT
-            || self.files.iter().any(|file| file.bytes.len() > FILE_LIMIT)
+                .any(|file| file.bytes.len() > FILE_LIMIT)
         {
             return Err(Error::TooLarge);
         }
         let mut by_path = BTreeMap::new();
-        for file in &self.files {
+        for file in &artifact.files {
             if by_path.insert(file.path.as_str(), file).is_some() {
                 return Err(Error::InvalidBundle);
             }
         }
         let marker = by_path.get(MARKER).ok_or(Error::InvalidBundle)?;
-        let ownership = Ownership::parse(&marker.bytes)?;
+        let ownership = Ownership::parse(&marker.bytes).upload()?;
         let manifest = by_path.get(MANIFEST).ok_or(Error::InvalidBundle)?;
-        let metadata = UploadMetadata::parse(&manifest.bytes)?;
+        let metadata = UploadMetadata::parse(&manifest.bytes).upload()?;
         if !by_path.contains_key("index.html")
             || !by_path.contains_key("404.html")
             || by_path.len() != ownership.files.len() + 1
@@ -137,12 +111,8 @@ impl Artifact {
         match &metadata.comparison_path {
             Some(path) => {
                 let review = by_path.get(path.as_str()).ok_or(Error::InvalidBundle)?;
-                let Ok(identity) = serde_json::from_value::<ReviewIdentity>(unique(&review.bytes)?)
-                else {
-                    return Err(Error::InvalidBundle);
-                };
-                if identity.schema_version != 8.0
-                    || Some(&identity.base_ref) != metadata.base_ref.as_ref()
+                let identity = ReviewIdentity::parse(&review.bytes)?;
+                if Some(&identity.base_ref) != metadata.base_ref.as_ref()
                     || Some(&identity.base_commit) != metadata.base_sha.as_ref()
                 {
                     return Err(Error::InvalidBundle);
@@ -158,28 +128,18 @@ impl Artifact {
                 }
             }
         }
-        let archive = plan_archive(&plan_files)?;
-        Ok(Prepared {
-            directory: self.directory.clone(),
+        let archive = plan_archive(&plan_files)?.into();
+        Ok(Self {
+            directory: artifact.directory.clone(),
             metadata,
             ownership,
-            archive: archive.into(),
+            archive,
             plan_files,
             blobs,
         })
     }
-}
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ReviewIdentity {
-    schema_version: f64,
-    base_ref: String,
-    base_commit: String,
-}
-
-impl Prepared {
-    /// Distinct inventory digests; the marker itself is not a marker entry.
+    /// Distinct marker digests; the marker itself is not a marker entry.
     pub fn digests(&self) -> BTreeSet<String> {
         self.ownership
             .files

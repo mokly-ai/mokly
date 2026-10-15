@@ -1,20 +1,21 @@
 //! Public upload fixtures cross the actual HTTP boundary without following redirects.
 
-mod support;
-
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use bytes::Bytes;
-use mokly_publish::completion::{Completion, retryable};
+use mokly_publish::completion::{Completion, Outcome, retryable};
+use mokly_publish::error::Error;
 use mokly_publish::http::{Http, Request, ReqwestHttp, Step};
 use mokly_publish::plan::Plan;
 use mokly_publish::settings::Settings;
+use mokly_publish::snapshot::Prepared;
 use serde_json::Value;
-
 use support::catalogue::{artifact, validate_plan};
 use support::server::{Response, Server};
+
+mod support;
 
 #[tokio::test]
 async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
@@ -72,7 +73,7 @@ async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
         .iter()
         .map(|value| value.as_str().unwrap().to_owned())
         .collect();
-    let prepared = output.prepare().unwrap();
+    let prepared = Prepared::new(&output).unwrap();
     for case in fixture_cases {
         let step = if case["step"] == "complete" {
             Step::Complete
@@ -98,8 +99,19 @@ async fn all_plan_and_complete_cases_run_against_the_local_fixture_receiver() {
                 case["name"]
             );
         } else if case["outcome"] == "retry" {
-            assert!(retryable(response.status));
+            assert_eq!(
+                completion_outcome(&response, &settings),
+                case["outcome"].as_str().unwrap(),
+                "{}",
+                case["name"]
+            );
         } else {
+            assert_eq!(
+                completion_outcome(&response, &settings),
+                case["outcome"].as_str().unwrap(),
+                "{}",
+                case["name"]
+            );
             let completed = Completion::parse(&response, settings.token());
             assert_eq!(completed.is_ok(), case["valid"] == true, "{}", case["name"]);
             if let Ok(completed) = completed {
@@ -223,4 +235,26 @@ async fn declared_and_streamed_excess_are_bounded_and_unreadable_completion_stil
             .is_none()
     );
     server.finish().await;
+}
+
+fn completion_outcome(
+    response: &mokly_publish::http::Response,
+    settings: &Settings,
+) -> &'static str {
+    if retryable(response.status) {
+        return "retry";
+    }
+    match Completion::parse(response, settings.token()) {
+        Ok(completed) => match completed.outcome {
+            Outcome::Published => "published",
+            Outcome::AlreadyPublished => "already-published",
+        },
+        Err(Error::Replan) => "replan",
+        Err(Error::Unauthorized) => "upload-unauthorized",
+        Err(Error::InvalidBundle) => "upload-invalid-bundle",
+        Err(Error::UnsupportedVersion) => "upload-unsupported-version",
+        Err(Error::TooLarge) => "upload-too-large",
+        Err(Error::Failed) => "upload-failed",
+        result => panic!("unexpected completion result: {result:?}"),
+    }
 }

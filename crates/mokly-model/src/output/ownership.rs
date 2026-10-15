@@ -1,12 +1,13 @@
 //! Ownership schema 3 validation, including portable path collisions.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Error, Result};
-use crate::json::unique;
-use crate::validation::{FILE_COUNT_LIMIT, FILE_LIMIT, MARKER, hexadecimal, portable_path};
+use crate::output::error::{FormatError, Result};
+use crate::output::json::unique;
+use crate::output::validation::{FILE_LIMIT, MARKER, hexadecimal, portable_path};
+use crate::versions::EXPORT_OWNERSHIP;
 
 /// A regular file's finalized content address.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -24,7 +25,7 @@ pub struct Entry {
 #[serde(rename_all = "camelCase")]
 pub struct Ownership {
     /// Independent ownership format version, always 3.
-    pub schema_version: u8,
+    pub schema_version: u32,
     /// Every regular file other than the marker.
     pub files: Vec<Entry>,
 }
@@ -45,45 +46,35 @@ impl Ownership {
     /// Decode a bounded marker. Version classification precedes entry shape.
     pub fn parse(bytes: &[u8]) -> Result<Self> {
         if bytes.len() > FILE_LIMIT {
-            return Err(Error::TooLarge);
+            return Err(FormatError::TooLarge);
         }
         let value = unique(bytes)?;
         let Some(version) = value
             .as_object()
             .and_then(|object| object.get("schemaVersion"))
         else {
-            return Err(Error::InvalidBundle);
+            return Err(FormatError::InvalidBundle);
         };
-        if version.as_f64() != Some(3.0) {
-            return Err(Error::UnsupportedVersion);
+        if version.as_f64() != Some(f64::from(EXPORT_OWNERSHIP)) {
+            return Err(FormatError::UnsupportedVersion);
         }
         let Ok(raw) = serde_json::from_value::<RawOwnership>(value) else {
-            return Err(Error::InvalidBundle);
+            return Err(FormatError::InvalidBundle);
         };
-        if raw.files.len() >= FILE_COUNT_LIMIT {
-            return Err(Error::TooLarge);
-        }
         let mut files = Vec::with_capacity(raw.files.len());
         let mut paths = BTreeSet::from([MARKER.to_owned()]);
-        let mut sizes = BTreeMap::new();
         for entry in raw.files {
             if !entry.size.is_finite() || entry.size < 0.0 || entry.size.fract() != 0.0 {
-                return Err(Error::InvalidBundle);
+                return Err(FormatError::InvalidBundle);
             }
             if entry.size > FILE_LIMIT as f64 || entry.path.len() > 1024 {
-                return Err(Error::TooLarge);
+                return Err(FormatError::TooLarge);
             }
             portable_path(&entry.path)?;
             if !hexadecimal(&entry.sha256, &[64]) || !paths.insert(entry.path.to_lowercase()) {
-                return Err(Error::InvalidBundle);
+                return Err(FormatError::InvalidBundle);
             }
             let size = entry.size as u64;
-            if sizes
-                .insert(entry.sha256.clone(), size)
-                .is_some_and(|old| old != size)
-            {
-                return Err(Error::InvalidBundle);
-            }
             files.push(Entry {
                 path: entry.path,
                 sha256: entry.sha256,
@@ -93,12 +84,12 @@ impl Ownership {
         for path in &paths {
             for (index, _) in path.match_indices('/') {
                 if paths.contains(&path[..index]) {
-                    return Err(Error::InvalidBundle);
+                    return Err(FormatError::InvalidBundle);
                 }
             }
         }
         Ok(Self {
-            schema_version: 3,
+            schema_version: EXPORT_OWNERSHIP,
             files,
         })
     }

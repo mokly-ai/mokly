@@ -130,3 +130,10 @@ when its edit distance is unambiguous; otherwise it uses the standard help
 hint. Unknown options likewise quote the option in the headline. Argument
 values and the original typed error are unchanged outside this presentation
 layer.
+
+Private publication-directory allocation failures use `export-invalid`. The
+plain line names the temporary root and says to set `TMPDIR` or `TEMP` to a
+writable directory outside the checkout. Rich output uses headline
+`The publish build directory could not be prepared.`, the temporary-root
+detail, and that same hint once. A missing Git checkout or committed HEAD
+uses `git-failed` with `Publish requires a Git checkout with a committed HEAD.`

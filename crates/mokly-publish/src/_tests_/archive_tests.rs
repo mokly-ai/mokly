@@ -3,9 +3,9 @@
 use std::io::Read;
 
 use flate2::read::GzDecoder;
+use mokly_model::output::artifact::File;
 
 use crate::error::Error;
-use crate::snapshot::File;
 
 use super::bounded_archive;
 

@@ -3,11 +3,13 @@
 use std::io::Read;
 
 use flate2::read::GzDecoder;
+use mokly_model::output::artifact::Artifact;
+use mokly_model::output::validation::{MANIFEST, MARKER, digest};
 use serde_json::json;
 
-use crate::error::Error;
-use crate::snapshot::{Artifact, OutputSnapshot};
-use crate::validation::{MANIFEST, MARKER, digest};
+use crate::error::{Error, OutputResult};
+use crate::snapshot::Prepared;
+use crate::snapshot::{Finalized, OutputSnapshot};
 
 use super::support::{artifact, file, inventory, publication};
 
@@ -15,7 +17,7 @@ use super::support::{artifact, file, inventory, publication};
 fn plan_archive_has_only_exact_finalized_files_in_fixed_order() {
     for comparison in [false, true] {
         let output = artifact(comparison);
-        let prepared = output.prepare().unwrap();
+        let prepared = Prepared::new(&output).unwrap();
         let mut tar = tar::Archive::new(GzDecoder::new(prepared.archive.as_ref()));
         let archived: Vec<_> = tar
             .entries()
@@ -45,8 +47,11 @@ fn plan_archive_has_only_exact_finalized_files_in_fixed_order() {
                     .bytes
             );
         }
-        assert_eq!(prepared.archive, output.prepare().unwrap().archive);
-        assert_eq!(output.capture().unwrap().files.len(), output.files.len());
+        assert_eq!(prepared.archive, Prepared::new(&output).unwrap().archive);
+        let finalized = Finalized::new(output.clone()).unwrap();
+        let captured = finalized.capture().unwrap();
+        assert_eq!(captured.artifact().files.len(), output.files.len());
+        assert!(std::ptr::eq(finalized.prepared(), captured.prepared()));
     }
 }
 
@@ -56,16 +61,16 @@ fn output_inventory_requires_every_file_and_rejects_mutated_or_unexpected_bytes(
         let mut output = artifact(false);
         output.files.retain(|file| file.path != path);
         assert!(
-            matches!(output.prepare(), Err(Error::InvalidBundle)),
+            matches!(Prepared::new(&output), Err(Error::InvalidBundle)),
             "{path}"
         );
     }
     let mut output = artifact(false);
     output.files.push(file("unexpected.txt", b"unexpected"));
-    assert!(output.prepare().is_err());
+    assert!(Prepared::new(&output).is_err());
     let mut output = artifact(false);
     output.files.push(output.files[0].clone());
-    assert!(output.prepare().is_err());
+    assert!(Prepared::new(&output).is_err());
     let mut output = artifact(false);
     output
         .files
@@ -73,18 +78,17 @@ fn output_inventory_requires_every_file_and_rejects_mutated_or_unexpected_bytes(
         .find(|file| file.path == "static/one.txt")
         .unwrap()
         .bytes = b"changed".as_slice().into();
-    assert!(output.prepare().is_err());
+    assert!(Prepared::new(&output).is_err());
     assert!(
         Artifact::finalize(
             "/private/build".into(),
-            &publication(),
-            &inventory(false),
             vec![
                 file("index.html", b"shell"),
                 file("404.html", b"shell"),
                 file("STATIC/a", b"a"),
                 file("static/A", b"b")
-            ]
+            ],
+            Some(publication().metadata(&inventory(false)).unwrap())
         )
         .is_err()
     );
@@ -98,7 +102,7 @@ fn comparison_path_and_base_are_pinned_and_current_only_has_no_comparison_files(
         ("baseCommit", json!("d".repeat(40))),
     ] {
         let output = artifact(true);
-        let prepared = output.prepare().unwrap();
+        let prepared = Prepared::new(&output).unwrap();
         let path = prepared.metadata.comparison_path.unwrap();
         let mut files = output
             .files
@@ -109,41 +113,41 @@ fn comparison_path_and_base_are_pinned_and_current_only_has_no_comparison_files(
         let mut document: serde_json::Value = serde_json::from_slice(&review.bytes).unwrap();
         document[field] = value;
         review.bytes = serde_json::to_vec(&document).unwrap().into();
-        assert!(
-            Artifact::finalize(
-                "/private/build".into(),
-                &publication(),
-                &inventory(true),
-                files
-            )
-            .is_err()
-        );
+        let output = Artifact::finalize(
+            "/private/build".into(),
+            files,
+            Some(publication().metadata(&inventory(true)).unwrap()),
+        )
+        .unwrap();
+        assert!(Prepared::new(&output).is_err());
     }
     let files = vec![
         file("index.html", b"shell"),
         file("404.html", b"shell"),
         file("mokly-viewer/diffs/generations/old/review.json", b"{}"),
     ];
-    assert!(
-        Artifact::finalize(
-            "/private/build".into(),
-            &publication(),
-            &inventory(false),
-            files
-        )
-        .is_err()
-    );
+    let output = Artifact::finalize(
+        "/private/build".into(),
+        files,
+        Some(publication().metadata(&inventory(false)).unwrap()),
+    )
+    .unwrap();
+    assert!(Prepared::new(&output).is_err());
     let mut first = inventory(false);
     let files = vec![file("index.html", b"shell"), file("404.html", b"shell")];
     let before = Artifact::finalize(
         "/private/build".into(),
-        &publication(),
-        &first,
         files.clone(),
+        Some(publication().metadata(&first).unwrap()),
     )
     .unwrap();
     first.exported_at = "2026-09-26T12:01:00.000Z".to_owned();
-    let after = Artifact::finalize("/private/build".into(), &publication(), &first, files).unwrap();
+    let after = Artifact::finalize(
+        "/private/build".into(),
+        files,
+        Some(publication().metadata(&first).unwrap()),
+    )
+    .unwrap();
     assert_ne!(
         before
             .files
@@ -160,7 +164,7 @@ fn comparison_path_and_base_are_pinned_and_current_only_has_no_comparison_files(
     );
     assert_eq!(
         digest(b"shell"),
-        before.prepare().unwrap().ownership.files[0].sha256
+        Prepared::new(&before).unwrap().ownership.files[0].sha256
     );
 }
 
@@ -171,14 +175,64 @@ fn file_count_and_regular_file_limits_fail_before_marker_decoding_or_hashing() {
         directory: "/private/build".into(),
         files: vec![repeated; 20_001],
     };
-    assert!(matches!(output.prepare(), Err(Error::TooLarge)));
+    assert!(matches!(Prepared::new(&output), Err(Error::TooLarge)));
     let output = Artifact {
         directory: "/private/build".into(),
         files: vec![file("oversized", &vec![0; 64 * 1024 * 1024 + 1])],
     };
-    assert!(matches!(output.prepare(), Err(Error::TooLarge)));
+    assert!(matches!(Prepared::new(&output), Err(Error::TooLarge)));
     assert!(matches!(
-        crate::ownership::Ownership::parse(&vec![b' '; 64 * 1024 * 1024 + 1]),
+        mokly_model::output::ownership::Ownership::parse(&vec![b' '; 64 * 1024 * 1024 + 1])
+            .upload(),
         Err(Error::TooLarge)
     ));
+}
+
+#[test]
+fn a_shared_digest_with_different_declared_sizes_is_a_valid_shape_but_invalid_bytes() {
+    let mut output = artifact(false);
+    let marker = output
+        .files
+        .iter_mut()
+        .find(|file| file.path == MARKER)
+        .unwrap();
+    let mut document: serde_json::Value = serde_json::from_slice(&marker.bytes).unwrap();
+    let entries = document["files"].as_array_mut().unwrap();
+    let index = entries
+        .iter()
+        .position(|entry| entry["path"] == "static/same.txt")
+        .unwrap();
+    entries[index]["size"] = json!(99);
+    marker.bytes = serde_json::to_vec(&document).unwrap().into();
+    assert!(mokly_model::output::ownership::Ownership::parse(&marker.bytes).is_ok());
+    assert!(matches!(Prepared::new(&output), Err(Error::InvalidBundle)));
+}
+
+#[test]
+fn streaming_review_identity_rejects_duplicate_keys_inside_discarded_fields() {
+    for unknown in [r#"{"nested":{"x":1,"x":2}}"#, r#"[{"x":1,"x":2}]"#] {
+        let mut output = artifact(true);
+        let review = output
+            .files
+            .iter_mut()
+            .find(|file| file.path.ends_with("/review.json"))
+            .unwrap();
+        let source = format!(
+            "{{\"schemaVersion\":8,\"baseRef\":\"origin/main\",\"baseCommit\":\"{}\",\"unknown\":{unknown}}}",
+            "b".repeat(40)
+        );
+        review.bytes = source.into();
+        let files = output
+            .files
+            .into_iter()
+            .filter(|file| file.path != MARKER && file.path != MANIFEST)
+            .collect();
+        let output = Artifact::finalize(
+            "/private/build".into(),
+            files,
+            Some(publication().metadata(&inventory(true)).unwrap()),
+        )
+        .unwrap();
+        assert!(matches!(Prepared::new(&output), Err(Error::InvalidBundle)));
+    }
 }

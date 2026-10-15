@@ -4,15 +4,15 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use mokly_publish::accounting::Receipt;
+use mokly_publish::checkout::Checkout;
+use mokly_publish::error::{Error, Result};
+use mokly_publish::exchange::Exchange;
+use mokly_publish::identity::ActionsContext;
+use mokly_publish::runtime::Cancellation;
+use mokly_publish::settings::Settings;
 
-use crate::accounting::Receipt;
-use crate::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
-use crate::checkout::Checkout;
-use crate::error::{Error, Result};
-use crate::exchange::Exchange;
-use crate::identity::ActionsContext;
-use crate::runtime::Cancellation;
-use crate::settings::Settings;
+use crate::publication::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
 
 /// Normalized command inputs. Secrets remain in Settings, outside this value.
 #[derive(Clone, Debug)]
@@ -99,6 +99,7 @@ impl Publish for Command {
         let directory = self.directories.create(&initial.root)?;
         self.reporter.build_directory(&directory);
         let request = BuildRequest {
+            invocation_directory: options.directory.clone(),
             repository_root: initial.root.clone(),
             directory: directory.clone(),
             config: options.config.clone(),
@@ -108,11 +109,12 @@ impl Publish for Command {
             publication,
         };
         let snapshot = self.output.build(&request, cancellation)?;
-        let artifact = snapshot.capture()?;
+        let finalized = snapshot.capture()?;
+        let artifact = finalized.artifact();
         if artifact.directory != directory {
             return Err(Error::InvalidBundle);
         }
-        let prepared = artifact.prepare()?;
+        let prepared = finalized.prepared();
         let final_state =
             self.checkout
                 .inspect(&initial.root, &options.owned_paths, cancellation)?;
@@ -136,7 +138,11 @@ impl Publish for Command {
             return Err(Error::InvalidBundle);
         }
         self.exchange
-            .publish(&prepared, settings, cancellation)
+            .publish(prepared, settings, cancellation)
             .await
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/mod.rs"]
+mod tests;

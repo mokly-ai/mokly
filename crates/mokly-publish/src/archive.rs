@@ -3,10 +3,10 @@
 use std::io::Write;
 
 use flate2::{Compression, GzBuilder};
+use mokly_model::output::artifact::File;
 use tar::{Builder, EntryType, Header};
 
 use crate::error::{Error, InternalError, Result};
-use crate::snapshot::File;
 
 pub(crate) fn plan_archive(files: &[File]) -> Result<Vec<u8>> {
     bounded_archive(files, 512 * 1024 * 1024, 100 * 1024 * 1024)
