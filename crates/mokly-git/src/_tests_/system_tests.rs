@@ -60,6 +60,7 @@ fn request(limit: usize) -> Request {
         args: vec!["--version".into()],
         stdin: vec![],
         output_limit: limit,
+        stderr_limit: 1024 * 1024,
     }
 }
 

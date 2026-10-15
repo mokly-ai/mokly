@@ -17,6 +17,7 @@ fn command() -> Command {
         directory: "/private".into(),
         timeout: Duration::from_secs(120),
         byte_limit: None,
+        size_root: None,
     }
 }
 

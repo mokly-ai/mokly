@@ -12,6 +12,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Recoverable preparation failures.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// The selected package manager executable could not be started.
+    #[error("[mokly-compare/install] package manager is unavailable")]
+    CommandUnavailable,
+    /// A local package path leaves the repository source root.
+    #[error("[mokly-compare/dependencies] local package is outside the repository: {path:?}")]
+    LocalOutside {
+        /// Rejected authored specification.
+        path: String,
+    },
     /// A package-manager pipe exceeded its capture budget.
     #[error("[mokly-compare/install] command output exceeds 1 MiB per stream")]
     CommandOutputLimit,
@@ -62,6 +71,9 @@ pub enum Error {
 /// Internal adapter source errors.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// Source-index initialization could not acquire its state.
+    #[error("source index state is poisoned")]
+    Poisoned,
     /// Cache receipt encoding failed.
     #[error("JSON encoding failed: {source}")]
     Json {

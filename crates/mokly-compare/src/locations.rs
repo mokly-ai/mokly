@@ -27,9 +27,12 @@ impl Locations for SystemLocations {
         let Some(base) = BaseDirs::new() else {
             return Err(Error::UnsafeCache { path: repository });
         };
-        let directory = project_cache_root(base.cache_dir())?
-            .join("mokly")
-            .join(repository_key(&repository));
+        let directory = project_cache_root(
+            &base
+                .cache_dir()
+                .join("mokly")
+                .join(repository_key(&repository)),
+        )?;
         if directory.starts_with(&repository) {
             return Err(Error::UnsafeCache { path: directory });
         }

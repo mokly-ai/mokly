@@ -37,6 +37,11 @@ impl Fixture {
 
     pub fn git(&self, args: &[&str]) -> Vec<u8> {
         let output = Command::new("git")
+            .env(
+                "GIT_CONFIG_GLOBAL",
+                if cfg!(windows) { "NUL" } else { "/dev/null" },
+            )
+            .env("GIT_CONFIG_NOSYSTEM", "1")
             .args(args)
             .current_dir(self.root())
             .output()

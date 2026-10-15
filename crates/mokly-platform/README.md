@@ -7,7 +7,7 @@ It depends on no other workspace crate.
 ## Responsibilities
 
 - Rename files and directories atomically without replacing a destination.
-- Acquire nonblocking exclusive file locks with handle-scoped release.
+- Acquire nonblocking shared and exclusive file locks with handle-scoped release.
 - Create Unix process groups and Windows kill-on-close job objects.
 - Expose typed errors that callers can handle without string matching.
 
@@ -15,7 +15,9 @@ It depends on no other workspace crate.
 
 `Rename` uses Linux `renameat2(RENAME_NOREPLACE)`, macOS
 `renamex_np(RENAME_EXCL)`, or Windows `MoveFileExW` without replacement flags.
-`Locks` uses the standard library's OS-backed exclusive lock. Dropping its
+`Locks` uses the standard library's OS-backed shared and exclusive locks.
+Shared leases coexist. Exclusive mutation and eviction fail while a lease
+is held. Dropping its
 guard releases the lock and leaves the lock file intact.
 
 `ProcessGroups` configures a child before spawn, then attaches an ownership

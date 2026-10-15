@@ -8,7 +8,8 @@ use std::time::Duration;
 use mokly_git::control::{Cancellation, Clock, Shutdown, Signal};
 
 use crate::cache_types::Storage;
-use crate::error::{Error, Result};
+use crate::error::{Error, InternalError, Result};
+use crate::storage_tree::vanished;
 
 /// A shell-free package-manager invocation.
 #[derive(Clone, Debug)]
@@ -23,6 +24,8 @@ pub struct Command {
     pub timeout: Duration,
     /// Optional bound of the installation tree, checked during execution.
     pub byte_limit: Option<u64>,
+    /// Whole private install root when the command runs in a configured package.
+    pub size_root: Option<PathBuf>,
 }
 
 /// Reaped process result after pipe workers close.
@@ -85,6 +88,7 @@ impl Commands for TimedCommands {
         let mut shutdown = Shutdown::default();
         let mut cancelled = false;
         let mut settled = false;
+        let mut size_check = start;
         let result = loop {
             let now = self.clock.now();
             cancelled |= self.cancellation.cancelled();
@@ -101,10 +105,18 @@ impl Commands for TimedCommands {
                 break Err(Error::InstallTimeout);
             }
             if !cancelled
+                && now >= size_check
                 && let Some(limit) = command.byte_limit
-                && let Err(error) = self.storage.size(&command.directory, limit)
             {
-                break Err(error);
+                match self.storage.size(
+                    command.size_root.as_deref().unwrap_or(&command.directory),
+                    limit,
+                ) {
+                    Ok(_) => {}
+                    Err(Error::Internal(InternalError::Io { source })) if vanished(&source) => {}
+                    Err(error) => break Err(error),
+                }
+                size_check = now.saturating_add(Duration::from_secs(1));
             }
             match child.poll() {
                 Ok(true) => {
@@ -140,3 +152,7 @@ impl Commands for TimedCommands {
 #[cfg(test)]
 #[path = "_tests_/commands_tests.rs"]
 mod commands_tests;
+
+#[cfg(test)]
+#[path = "_tests_/commands_size_tests.rs"]
+mod commands_size_tests;

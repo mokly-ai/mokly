@@ -1,7 +1,7 @@
 //! Lossless NUL-delimited Git status and rename records.
 
 use crate::error::{Error, Result};
-use crate::tree::text;
+use crate::tree::{candidate, text};
 
 /// A Git candidate path. It confers no permission to read a source file.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -65,30 +65,37 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Change>> {
         let Some(path) = fields.next() else {
             return Err(Error::MalformedOutput);
         };
-        let path = ChangedPath::parse(text(path)?)?;
+        let path = candidate(path);
+        if status.starts_with(b"R") {
+            let Some(next) = fields.next() else {
+                return Err(Error::MalformedOutput);
+            };
+            let (Some(path), Some(next)) = (path, candidate(next)) else {
+                continue;
+            };
+            let similarity = match text(&status[1..])?.parse::<u8>() {
+                Ok(value) if value <= 100 => value,
+                _ => return Err(Error::MalformedOutput),
+            };
+            result.push(Change {
+                path: ChangedPath::parse(next)?,
+                kind: Kind::Renamed {
+                    from: ChangedPath::parse(path)?,
+                    similarity,
+                },
+            });
+            continue;
+        }
+        let Some(path) = path else {
+            continue;
+        };
+        let path = ChangedPath::parse(path)?;
         let kind = match status {
             b"A" => Kind::Added,
             b"D" => Kind::Deleted,
             b"M" => Kind::Modified,
             b"T" => Kind::TypeChanged,
             b"U" => Kind::Unmerged,
-            value if value.starts_with(b"R") => {
-                let similarity = match text(&value[1..])?.parse::<u8>() {
-                    Ok(value) if value <= 100 => value,
-                    _ => return Err(Error::MalformedOutput),
-                };
-                let Some(next) = fields.next() else {
-                    return Err(Error::MalformedOutput);
-                };
-                result.push(Change {
-                    path: ChangedPath::parse(text(next)?)?,
-                    kind: Kind::Renamed {
-                        from: path,
-                        similarity,
-                    },
-                });
-                continue;
-            }
             _ => return Err(Error::MalformedOutput),
         };
         result.push(Change { path, kind });

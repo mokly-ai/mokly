@@ -1,4 +1,4 @@
-//! Locked cache reuse, staging and eviction decisions with mocked IO.
+//! Shared leases, durable publication order and cancellation through mocked IO.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -19,6 +19,22 @@ use crate::locations::{OnceReporter, plain_line, repository_key};
 fn key() -> String {
     "a".repeat(40)
 }
+fn receipt() -> Receipt {
+    Receipt {
+        bytes: 1025,
+        used: 7,
+    }
+}
+fn locks() -> Unimock {
+    Unimock::new((
+        LocksMock::try_lock
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(Box::new(Unimock::new(())))),
+        LocksMock::try_lock_shared
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(Box::new(Unimock::new(())))),
+    ))
+}
 fn cache(storage: Unimock, locks: Unimock) -> DiskCache {
     DiskCache {
         root: "/cache".into(),
@@ -33,46 +49,26 @@ fn cache(storage: Unimock, locks: Unimock) -> DiskCache {
                 .returns(false),
         )),
         reporter: Arc::new(Unimock::new(
-            ReporterMock::opened
-                .next_call(matching!((path) if *path == Path::new("/cache")))
-                .returns(()),
+            ReporterMock::opened.next_call(matching!(_)).returns(()),
         )),
     }
 }
 
-fn locks() -> Unimock {
-    Unimock::new(
-        LocksMock::try_lock
-            .each_call(matching!(_))
-            .answers(&|_, _| Ok(Box::new(Unimock::new(())))),
-    )
-}
-
 #[test]
-fn hit_touches_lru_and_never_builds_or_publishes() {
+fn hit_uses_shared_lease_and_recounted_receipt_without_hashing_or_building() {
     let storage = Unimock::new((
         StorageMock::prepare
             .each_call(matching!(_))
             .answers(&|_, _| Ok(())),
-        StorageMock::clear_staging
-            .next_call(matching!(_))
-            .returns(Ok(())),
+        StorageMock::inspect
+            .next_call(matching!(_, 5000))
+            .returns(Ok(Some(receipt()))),
         StorageMock::records
             .next_call(matching!(_))
             .returns(Ok(vec![Record {
                 key: key(),
-                receipt: Receipt {
-                    bytes: 1025,
-                    digest: "digest".into(),
-                    used: 7,
-                },
+                receipt: receipt(),
             }])),
-        StorageMock::size
-            .next_call(matching!((path, 5000) if path.ends_with("data")))
-            .returns(Ok(1)),
-        StorageMock::digest
-            .next_call(matching!(_, _))
-            .returns(Ok("digest".into())),
         StorageMock::receipt
             .next_call(matching!((_, receipt) if receipt.used == 8 && receipt.bytes == 1025))
             .returns(Ok(())),
@@ -84,23 +80,63 @@ fn hit_touches_lru_and_never_builds_or_publishes() {
 }
 
 #[test]
-fn miss_evicts_the_oldest_unleased_entry_before_atomic_publish() {
+fn miss_syncs_data_then_evicts_oldest_unleased_entry_before_publication() {
     let old = "b".repeat(40);
-    let recent = "c".repeat(40);
+    let records = vec![Record {
+        key: old,
+        receipt: Receipt {
+            bytes: 4000,
+            used: 1,
+        },
+    }];
     let storage = Unimock::new((
-        StorageMock::prepare.each_call(matching!(_)).answers(&|_, _| Ok(())),
-        StorageMock::clear_staging.next_call(matching!(_)).returns(Ok(())),
-        StorageMock::records.next_call(matching!(_)).returns(Ok(vec![
-            Record { key: old.clone(), receipt: Receipt { bytes: 3000, digest: "digest".into(), used: 1 } },
-            Record { key: recent, receipt: Receipt { bytes: 1000, digest: "digest".into(), used: 3 } },
-        ])),
-        StorageMock::remove.next_call(matching!((path) if path.to_string_lossy().contains("entries"))).returns(Ok(())),
-        StorageMock::remove.next_call(matching!((path) if path.to_string_lossy().contains("staging"))).returns(Ok(())),
-        StorageMock::size.next_call(matching!(_, 5000)).returns(Ok(1000)),
-        StorageMock::digest.next_call(matching!(_, _)).returns(Ok("digest".into())),
-        StorageMock::remove.next_call(matching!((path) if path.ends_with("b".repeat(40)))).returns(Ok(())),
-        StorageMock::receipt.next_call(matching!((_, receipt) if receipt.used == 4 && receipt.bytes == 2024)).returns(Ok(())),
-        StorageMock::publish.next_call(matching!((stage, target) if stage.to_string_lossy().contains("staging") && target.to_string_lossy().contains("entries"))).returns(Ok(())),
+        StorageMock::prepare
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(())),
+        StorageMock::inspect
+            .next_call(matching!(_, _))
+            .returns(Ok(None)),
+        StorageMock::inspect
+            .next_call(matching!(_, _))
+            .returns(Ok(None)),
+        StorageMock::records
+            .next_call(matching!(_))
+            .returns(Ok(vec![])),
+        StorageMock::stages
+            .next_call(matching!(_))
+            .returns(Ok(vec![])),
+        StorageMock::remove.next_call(matching!(_)).returns(Ok(())),
+        StorageMock::remove.next_call(matching!(_)).returns(Ok(())),
+        StorageMock::size
+            .next_call(matching!(_, 5000))
+            .returns(Ok(1000)),
+        StorageMock::synchronize
+            .next_call(matching!(_))
+            .returns(Ok(())),
+        StorageMock::records
+            .next_call(matching!(_))
+            .returns(Ok(records)),
+        StorageMock::remove
+            .next_call(matching!((path) if path.ends_with("b".repeat(40))))
+            .returns(Ok(())),
+        StorageMock::receipt
+            .next_call(matching!((_, receipt) if receipt.used == 2 && receipt.bytes == 2024))
+            .returns(Ok(())),
+        StorageMock::publish
+            .next_call(matching!(_, _))
+            .returns(Ok(())),
+        StorageMock::inspect
+            .next_call(matching!(_, _))
+            .returns(Ok(Some(Receipt {
+                bytes: 2024,
+                used: 2,
+            }))),
+        StorageMock::records
+            .next_call(matching!(_))
+            .returns(Ok(vec![])),
+        StorageMock::receipt
+            .next_call(matching!(_, _))
+            .returns(Ok(())),
     ));
     let builder = Unimock::new(
         BuilderMock::build
@@ -115,13 +151,52 @@ fn miss_evicts_the_oldest_unleased_entry_before_atomic_publish() {
 }
 
 #[test]
+fn contended_entry_can_be_cancelled_before_any_namespace_lock() {
+    let storage = Unimock::new(
+        StorageMock::prepare
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(())),
+    );
+    let locks = Unimock::new(
+        LocksMock::try_lock_shared
+            .next_call(matching!(_))
+            .returns(Err(error::Error::Locked {
+                path: "/entry".into(),
+            })),
+    );
+    let cache = DiskCache {
+        root: "/cache".into(),
+        source_bytes: 5000,
+        dependency_bytes: 9000,
+        storage: Arc::new(storage),
+        locks: Arc::new(locks),
+        clock: Arc::new(Unimock::new(
+            ClockMock::pause.next_call(matching!(_)).returns(()),
+        )),
+        cancellation: Arc::new(Unimock::new((
+            CancellationMock::cancelled
+                .next_call(matching!())
+                .returns(false),
+            CancellationMock::cancelled
+                .next_call(matching!())
+                .returns(true),
+        ))),
+        reporter: Arc::new(Unimock::new(
+            ReporterMock::opened.next_call(matching!(_)).returns(()),
+        )),
+    };
+    assert!(matches!(
+        cache.get(Kind::Sources, &key(), &Unimock::new(())),
+        Err(Error::Cancelled)
+    ));
+}
+
+#[test]
 fn announcement_is_once_for_both_namespaces_and_plain_bytes_are_exact() {
     let reporter: &dyn Reporter = &OnceReporter {
         announced: AtomicBool::new(false),
         reporter: Arc::new(Unimock::new(
-            ReporterMock::opened
-                .next_call(matching!((path) if *path == Path::new("/cache")))
-                .returns(()),
+            ReporterMock::opened.next_call(matching!(_)).returns(()),
         )),
     };
     reporter.opened(Path::new("/cache"));
@@ -132,47 +207,4 @@ fn announcement_is_once_for_both_namespaces_and_plain_bytes_are_exact() {
         repository_key(Path::new("/repo")),
         repository_key(Path::new("/other"))
     );
-}
-
-#[test]
-fn contended_entry_waits_without_holding_the_namespace_and_can_be_cancelled() {
-    let storage = Unimock::new(
-        StorageMock::prepare
-            .each_call(matching!(_))
-            .answers(&|_, _| Ok(())),
-    );
-    let locks = Unimock::new(
-        LocksMock::try_lock
-            .next_call(matching!((path) if path.ends_with(format!("{}.lock", key()))))
-            .returns(Err(error::Error::Locked {
-                path: "/entry".into(),
-            })),
-    );
-    let cancellation = Arc::new(Unimock::new((
-        CancellationMock::cancelled
-            .next_call(matching!())
-            .returns(false),
-        CancellationMock::cancelled
-            .next_call(matching!())
-            .returns(true),
-    )));
-    let clock = Arc::new(Unimock::new(
-        ClockMock::pause.next_call(matching!(_)).returns(()),
-    ));
-    let cache = DiskCache {
-        root: "/cache".into(),
-        source_bytes: 5000,
-        dependency_bytes: 9000,
-        storage: Arc::new(storage),
-        locks: Arc::new(locks),
-        clock,
-        cancellation,
-        reporter: Arc::new(Unimock::new(
-            ReporterMock::opened.next_call(matching!(_)).returns(()),
-        )),
-    };
-    assert!(matches!(
-        cache.get(Kind::Sources, &key(), &Unimock::new(())),
-        Err(Error::Cancelled)
-    ));
 }

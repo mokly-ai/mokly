@@ -45,6 +45,7 @@ impl Batches for BoundedRunner {
                 args,
                 stdin: vec![],
                 output_limit: DEFAULT_OUTPUT_LIMIT,
+                stderr_limit: 1024 * 1024,
             })?);
         }
         Ok(outputs)

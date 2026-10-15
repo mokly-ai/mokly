@@ -70,6 +70,7 @@ fn environment_probe() {
             ],
             stdin: vec![],
             output_limit: 1024,
+            stderr_limit: 1024 * 1024,
         })
         .unwrap();
     assert_eq!(result.stdout, b"retained\n");

@@ -17,3 +17,5 @@ pub mod repository;
 pub mod tree;
 
 mod blob_batches;
+
+pub mod access;

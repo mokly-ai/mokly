@@ -23,8 +23,10 @@ pub struct CachedExtraction {
     pub repository: Arc<dyn Repository>,
     /// Shared external cache.
     pub cache: Arc<dyn Cache>,
-    /// Source archive budgets.
-    pub limits: Limits,
+    /// Maximum source tree nodes.
+    pub files: usize,
+    /// Maximum size of one source blob.
+    pub blob_bytes: usize,
 }
 
 struct Extract<'a> {
@@ -43,13 +45,18 @@ impl Builder for Extract<'_> {
 
 impl Extraction for CachedExtraction {
     fn acquire(&self, commit: &ObjectId) -> Result<Lease> {
+        let limits = Limits {
+            bytes: self.cache.capacity(Kind::Sources).saturating_sub(1024) as usize,
+            files: self.files,
+            blob: self.blob_bytes,
+        };
         self.cache.get(
             Kind::Sources,
             commit.as_str(),
             &Extract {
                 repository: self.repository.as_ref(),
                 commit,
-                limits: self.limits,
+                limits,
             },
         )
     }

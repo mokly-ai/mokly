@@ -21,7 +21,8 @@ process groups and Windows job objects.
 `SystemRunner` starts Git without a shell. It removes repository-redirection
 environment variables and captures stdout and stderr concurrently. Each
 stream is limited to at most 64 MiB. A request can set a smaller bound.
-An excessive request fails with `InvalidOutputLimit` before process setup.
+Stderr has its own bound, 1 MiB by default, so Git warnings cannot exhaust a
+tiny exact stdout budget. An excessive request fails with `InvalidOutputLimit` before process setup.
 Exceeding the selected bound kills the process tree before returning
 `OutputLimit`.
 
@@ -38,10 +39,12 @@ untracked paths. Rename records keep Git's previous path and similarity.
 Untracked additions never infer a rename.
 
 Tree queries use literal pathspecs and NUL records. Blob batches use stdin,
-at most 4,096 objects, and at most 48 MiB including framing. Tree listings
-have a file count bound. Extraction also has total and per-file byte bounds.
-It copies regular blobs, preserves executable mode, and omits symbolic links
-and submodules. Export attributes never change source bytes. A destination
+at most 4,096 objects, and at most 48 MiB including framing. Tree listings retain directory and link modes and have a node count bound.
+The commit source reader indexes that metadata once. `read_many` accepts
+proved entries and reads their blobs through bounded batches. Extraction also has total and per-file byte bounds.
+It writes one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
+and submodules. Unsupported host names and non-UTF-8 candidates are traced
+and skipped. Ordinary colons and backslashes remain in Git path identities. Export attributes never change source bytes. A destination
 must be fresh; a failed extraction removes its partial directory.
 
 The runner writes and closes stdin concurrently with both output readers.
@@ -60,6 +63,8 @@ Construct `SystemRunner` with `Arc<dyn ProcessGroups>`, `Arc<dyn Clock>`, and
 boundary.
 
 ## Development
+
+Consumers enable the `mock` feature to use every public trait with unimock.
 
 ```bash
 cargo clippy -p mokly-git --all-targets -- -D warnings
@@ -82,5 +87,3 @@ tests execute Git and verify output limits and failed exit statuses.
 - [Rust architecture](../../docs/architecture/rust-core.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md).
-
-Consumers enable the `mock` feature to use every public trait with unimock.

@@ -19,22 +19,29 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 
 ## What This Crate Does
 
-`GitSources` lists regular files below exact configured roots. It keeps the
-commit fixed. The catalogue applies its roots, globs, and source rules to
+`GitSources::new` pins a commit and indexes every tree mode once. It lists
+regular files below exact configured roots and exposes batched blob reads.
+Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
 
 `SystemLocations` hashes the canonical repository path under the operating
 system's cache directory. `DiskCache` has separate source and dependency
 byte bounds. It uses OS locks for namespace mutation and entry leases. A
-receipt records completion, an access sequence, bytes, and a full tree
-digest. A hit verifies that digest. Deleting the cache permits a rebuild.
+durable receipt records completion, an access sequence, and bytes. A hit
+validates the receipt and recounts data size without hashing content.
+Leases are shared. Builds hold only their entry lock, so another key can
+complete while an install is pending. Deleting the cache permits a rebuild.
 The CLI shares one `OnceReporter` across both namespaces and uses
 `plain_line` for the exact cache announcement.
 
 `SourceInputs` reads dependency inputs from base blobs.
-`SystemWorkingInputs` reads their working-tree counterparts. `DependencyTiers`
-uses the working installation when both sets are equal. Different inputs use
-npm's locked install in the dependency cache. The key includes the exact
+`SystemWorkingInputs` gets tracked and nonignored candidates through Git and
+compares clean object identities. It reuses base bytes for equal inputs. `DependencyTiers`
+uses working third-party dependencies when both sets are equal. In every tier,
+`CachedOverlays` first resolves repository-owned packages from the leased base
+extraction, so workspace links never point at head sources. Different inputs use
+npm's locked install at the root and each configured independent package
+root in the dependency cache. They share one deadline. The key includes the exact
 lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
@@ -56,10 +63,13 @@ cargo test -p mokly-compare --test dependencies_tests
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 `dyn Extraction`, `dyn Dependencies`, and `dyn Cache` in the render graph
 and comparison coordinator. Call `InputReader::read` on `GitSources` and
-`WorkingInputs::read` on the current repository before dependency selection.
+`WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
+before dependency selection.
 Pass one cancellation token to the caches, Git runner, and install supervisor.
 
 ## Development
+
+Consumers enable the `mock` feature to use every public trait with unimock.
 
 ```bash
 cargo clippy -p mokly-compare --all-targets -- -D warnings
@@ -84,5 +94,3 @@ run. It needs no registry.
 - [Comparison](../../docs/protocol/mokly-comparison.md#sides).
 - [Git runtime](../../docs/protocol/mokly-git.md).
 - [Rust architecture](../../docs/architecture/rust-core.md).
-
-Consumers enable the `mock` feature to use every public trait with unimock.

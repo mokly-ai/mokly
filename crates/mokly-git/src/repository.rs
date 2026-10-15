@@ -2,9 +2,11 @@
 
 use std::collections::BTreeMap;
 use std::ffi::OsString;
+use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::access::WorkingFile;
 use crate::blob_batches;
 use crate::changes::{self, Change, ChangedPath, Kind};
 use crate::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
@@ -29,6 +31,12 @@ pub trait Repository: Send + Sync {
     ) -> Result<Vec<Entry>>;
     /// Read an exact regular blob by path, without filters or symlink traversal.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
+    /// Read regular entries in bounded batches using their already-proved object ids.
+    fn read_many(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>>;
+    /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
+    fn working_paths(&self) -> Result<Vec<RepoPath>>;
+    /// Read regular working bytes and their Git-clean object identity.
+    fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>>;
     /// Extract a bounded source archive into a fresh directory.
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()>;
 }
@@ -48,10 +56,10 @@ pub struct GitRepositories {
     pub disk: Arc<dyn Disk>,
 }
 
-struct GitRepository {
-    directory: PathBuf,
-    runner: Arc<dyn Runner>,
-    disk: Arc<dyn Disk>,
+pub(crate) struct GitRepository {
+    pub(crate) directory: PathBuf,
+    pub(crate) runner: Arc<dyn Runner>,
+    pub(crate) disk: Arc<dyn Disk>,
 }
 
 impl Repositories for GitRepositories {
@@ -78,7 +86,7 @@ impl Repositories for GitRepositories {
 }
 
 impl GitRepository {
-    fn command(&self, args: &[&str], stdin: Vec<u8>, limit: usize) -> Result<Vec<u8>> {
+    pub(crate) fn command(&self, args: &[&str], stdin: Vec<u8>, limit: usize) -> Result<Vec<u8>> {
         let mut arguments = vec![
             OsString::from("--no-optional-locks"),
             OsString::from("--literal-pathspecs"),
@@ -91,33 +99,9 @@ impl GitRepository {
                 args: arguments,
                 stdin,
                 output_limit: limit,
+                stderr_limit: 1024 * 1024,
             })?
             .stdout)
-    }
-
-    fn load(&self, entries: &[Entry], limit: usize) -> Result<Vec<Vec<u8>>> {
-        let total = entries
-            .iter()
-            .fold(0usize, |sum, entry| sum.saturating_add(entry.size));
-        if total > limit {
-            return Err(Error::ByteLimit { limit });
-        }
-        let mut result = Vec::new();
-        for range in blob_batches::split(entries, blob_batches::BYTES, blob_batches::COUNT)? {
-            let batch = &entries[range];
-            let mut input = Vec::new();
-            let mut bytes = 0usize;
-            for entry in batch {
-                input.extend_from_slice(entry.object.as_str().as_bytes());
-                input.push(b'\n');
-                bytes += blob_batches::cost(entry);
-            }
-            result.extend(tree::blobs(
-                &self.command(&["cat-file", "--batch"], input, bytes)?,
-                batch,
-            )?);
-        }
-        Ok(result)
     }
 }
 
@@ -164,11 +148,21 @@ impl Repository for GitRepository {
             DEFAULT_OUTPUT_LIMIT,
         )?;
         for field in changes::fields(&untracked)? {
-            let path = ChangedPath::parse(text(field)?)?;
-            changes.entry(path.clone()).or_insert(Change {
-                path,
-                kind: Kind::Added,
-            });
+            let Some(value) = tree::candidate(field) else {
+                continue;
+            };
+            let path = ChangedPath::parse(value)?;
+            changes
+                .entry(path.clone())
+                .and_modify(|change| {
+                    if change.kind == Kind::Deleted {
+                        change.kind = Kind::Modified;
+                    }
+                })
+                .or_insert(Change {
+                    path,
+                    kind: Kind::Added,
+                });
         }
         Ok(changes.into_values().collect())
     }
@@ -182,6 +176,7 @@ impl Repository for GitRepository {
         let mut args = vec![
             "ls-tree",
             "-r",
+            "-t",
             "-l",
             "-z",
             "--full-tree",
@@ -217,6 +212,18 @@ impl Repository for GitRepository {
             .ok_or(Error::MalformedOutput)
     }
 
+    fn read_many(&self, entries: &[Entry], limits: Limits) -> Result<Vec<Vec<u8>>> {
+        self.read_entries(entries, limits)
+    }
+
+    fn working_paths(&self) -> Result<Vec<RepoPath>> {
+        self.candidates()
+    }
+
+    fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>> {
+        self.working_file(path, limit)
+    }
+
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()> {
         let entries: Vec<_> = self
             .list(commit, None, limits)?
@@ -235,20 +242,31 @@ impl Repository for GitRepository {
                 });
             }
         }
-        let contents = self.load(&entries, limits.bytes)?;
-        let files = entries
-            .into_iter()
-            .zip(contents)
-            .map(|(entry, bytes)| ArchiveFile {
-                path: entry.path,
-                bytes,
-                executable: entry.mode == Mode::Executable,
-            })
-            .collect::<Vec<_>>();
-        self.disk.extract(destination, &files)
+        let mut archive = self.disk.archive(destination)?;
+        for range in blob_batches::split(&entries, blob_batches::BYTES, blob_batches::COUNT)? {
+            let batch = &entries[range];
+            let contents = self.load(batch, limits.bytes)?;
+            let files = batch
+                .iter()
+                .zip(contents)
+                .map(|(entry, bytes)| ArchiveFile {
+                    path: entry.path.clone(),
+                    bytes,
+                    executable: entry.mode == Mode::Executable,
+                })
+                .collect::<Vec<_>>();
+            archive.write(&files)?;
+        }
+        archive.finish()
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/repository_tests.rs"]
 mod repository_tests;
+
+impl fmt::Debug for dyn Repository + '_ {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("Repository")
+    }
+}

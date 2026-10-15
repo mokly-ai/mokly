@@ -31,6 +31,8 @@ impl Default for Limits {
 /// Mode stored by Git; links and submodules are never regular sources.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Mode {
+    /// Directory retained for direct-child and projection queries.
+    Directory,
     /// Ordinary file.
     File,
     /// Executable file.
@@ -80,13 +82,14 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
             return Err(Error::MalformedOutput);
         };
         let mode = match (*mode, *kind) {
+            ("040000", "tree") => Mode::Directory,
             ("100644", "blob") => Mode::File,
             ("100755", "blob") => Mode::Executable,
             ("120000", "blob") => Mode::Symlink,
             ("160000", "commit") => Mode::Submodule,
             _ => return Err(Error::MalformedOutput),
         };
-        let size = if mode == Mode::Submodule {
+        let size = if matches!(mode, Mode::Submodule | Mode::Directory) {
             0
         } else {
             match size.parse() {
@@ -94,7 +97,10 @@ pub(crate) fn parse(bytes: &[u8], limits: Limits) -> Result<Vec<Entry>> {
                 Err(_) => return Err(Error::MalformedOutput),
             }
         };
-        let path = RepoPath::parse(text(&record[tab + 1..])?)?;
+        let Some(value) = candidate(&record[tab + 1..]) else {
+            continue;
+        };
+        let path = RepoPath::parse(value)?;
         if !seen.insert(path.clone()) {
             return Err(Error::MalformedOutput);
         }
@@ -140,4 +146,18 @@ pub(crate) fn blobs(bytes: &[u8], entries: &[Entry]) -> Result<Vec<Vec<u8>>> {
         return Err(Error::MalformedOutput);
     }
     Ok(result)
+}
+
+pub(crate) fn candidate(bytes: &[u8]) -> Option<&str> {
+    match str::from_utf8(bytes) {
+        Ok(value) if value.ends_with('/') => {
+            tracing::trace!(path = value, "skipping a directory candidate");
+            None
+        }
+        Ok(value) => Some(value),
+        Err(_) => {
+            tracing::trace!("skipping a non-UTF-8 Git path");
+            None
+        }
+    }
 }

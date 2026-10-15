@@ -88,7 +88,10 @@ fn blobs_and_extraction_read_exact_regular_files_from_the_commit() {
             Some(&RepoPath::parse("specs").unwrap()),
             Limits::default(),
         )
-        .unwrap();
+        .unwrap()
+        .into_iter()
+        .filter(|entry| entry.mode.regular())
+        .collect::<Vec<_>>();
     assert_eq!(entries.len(), 2);
     assert_eq!(
         repository.read(&base, &entries[0].path, 4).unwrap(),

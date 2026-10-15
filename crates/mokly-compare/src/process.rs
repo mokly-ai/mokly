@@ -4,13 +4,12 @@ use std::io::Read;
 use std::process::{self, Stdio};
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
-#[cfg(windows)]
-use std::{env, fs, path::PathBuf};
 
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
 use crate::commands::{Child, Command, Output, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
+use crate::programs::command;
 
 const OUTPUT_LIMIT: usize = 1024 * 1024;
 
@@ -27,61 +26,9 @@ struct OwnedChild {
     stderr: Option<JoinHandle<Result<Vec<u8>>>>,
 }
 
-impl SystemSpawner {
-    fn command(&self, request: &Command) -> Result<process::Command> {
-        #[cfg(windows)]
-        if request.program == "npm" {
-            return self.npm();
-        }
-        Ok(process::Command::new(&request.program))
-    }
-
-    #[cfg(windows)]
-    fn npm(&self) -> Result<process::Command> {
-        let paths = env::var_os("PATH").unwrap_or_default();
-        let directories = env::split_paths(&paths)
-            .filter(|path| path.is_absolute())
-            .collect::<Vec<_>>();
-        let extensions = env::var_os("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".into());
-        for directory in &directories {
-            for extension in extensions
-                .to_string_lossy()
-                .split(';')
-                .filter(|extension| !extension.is_empty())
-            {
-                let candidate = directory.join(format!("npm{extension}"));
-                if !fs::metadata(&candidate).is_ok_and(|metadata| metadata.is_file()) {
-                    continue;
-                }
-                if extension.eq_ignore_ascii_case(".exe") || extension.eq_ignore_ascii_case(".com")
-                {
-                    return Ok(process::Command::new(candidate));
-                }
-                if !extension.eq_ignore_ascii_case(".cmd") {
-                    return Err(Error::UnsupportedManager);
-                }
-                let cli = directory.join("node_modules/npm/bin/npm-cli.js");
-                if !cli.is_file() {
-                    return Err(Error::UnsupportedManager);
-                }
-                let node: Option<PathBuf> = std::iter::once(directory.join("node.exe"))
-                    .chain(directories.iter().map(|path| path.join("node.exe")))
-                    .find(|path| path.is_file());
-                let Some(node) = node else {
-                    return Err(Error::UnsupportedManager);
-                };
-                let mut command = process::Command::new(node);
-                command.arg(cli);
-                return Ok(command);
-            }
-        }
-        Err(Error::UnsupportedManager)
-    }
-}
-
 impl Spawner for SystemSpawner {
     fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
-        let mut command = self.command(request)?;
+        let mut command = command(request)?;
         command
             .args(&request.args)
             .current_dir(&request.directory)
@@ -95,7 +42,10 @@ impl Spawner for SystemSpawner {
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }
-        let mut process = command.spawn().base()?;
+        let mut process = match command.spawn() {
+            Ok(process) => process,
+            Err(_) => return Err(Error::CommandUnavailable),
+        };
         let group: Arc<dyn ProcessGroup> = match self.groups.attach(&process) {
             Ok(group) => Arc::from(group),
             Err(source) => {

@@ -761,7 +761,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       `base-dependencies` warning, and the terminal line that names the cache
       directory.
       Part 1 gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-git.md`.
-
+- [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
+      the commit-pinned Git index and batched blob reader after Milestone 4
+      merges. Cover projection, direct children, every mode, and typed IO errors.
+- [ ] Implement branch-point entry lookup and its shared verification cases:
+      kind/case identity, accepted-pair precedence, removed destinations,
+      counterparts, variant parents, stored titles, and generation isolation.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
@@ -861,6 +866,10 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 9 part 1 review 1, finding 11: user decision pending on support
+    for package managers other than npm; retain the npm-only fallback policy.
+  - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
+    conversion for base render/resource bytes; retain raw Git blob bytes.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

@@ -91,15 +91,20 @@ fn corrupt_and_incomplete_receipts_are_rebuilt() {
     {
         let _lease = cache.get(Kind::Sources, &key, &builder).unwrap();
     }
-    fs::write(entry.join("data/file"), b"altered").unwrap();
+    fs::write(entry.join("data/file"), b"altered-size").unwrap();
     {
-        let _lease = cache.get(Kind::Sources, &key, &builder).unwrap();
+        let lease = cache.get(Kind::Sources, &key, &builder).unwrap();
+        assert_eq!(
+            fs::read(lease.directory.join("file")).unwrap(),
+            b"altered-size"
+        );
+        assert_eq!(builder.calls.load(Ordering::SeqCst), 2);
     }
     fs::remove_dir_all(entry.join("data")).unwrap();
     {
         let _lease = cache.get(Kind::Sources, &key, &builder).unwrap();
     }
-    assert_eq!(builder.calls.load(Ordering::SeqCst), 4);
+    assert_eq!(builder.calls.load(Ordering::SeqCst), 3);
 }
 
 #[test]
@@ -122,8 +127,8 @@ fn simultaneous_callers_build_one_entry() {
             .unwrap()
     });
     received.recv().unwrap();
-    std::mem::drop(first);
     let second = pending.join().unwrap();
+    assert!(first.directory.join("file").exists());
     assert_eq!(fs::read(second.directory.join("file")).unwrap(), b"content");
     assert_eq!(builder.calls.load(Ordering::SeqCst), 1);
 }
@@ -134,8 +139,9 @@ fn cache_symlinks_never_write_into_the_repository() {
     let temporary = tempfile::tempdir().unwrap();
     let outside = temporary.path().join("repository");
     fs::create_dir(&outside).unwrap();
-    let root = temporary.path().join("cache");
-    std::os::unix::fs::symlink(&outside, &root).unwrap();
+    let root = temporary.path().canonicalize().unwrap().join("cache");
+    fs::create_dir(&root).unwrap();
+    std::os::unix::fs::symlink(&outside, root.join("sources")).unwrap();
     let cache = cache(root, 10000);
     assert!(matches!(
         cache.get(Kind::Sources, &"a".repeat(40), &Files::new()),
@@ -182,15 +188,39 @@ fn another_process_holds_a_lease_against_eviction() {
         }
     }
     let cache = cache(root, 1032);
+    let same = cache
+        .get(Kind::Sources, &"a".repeat(40), &Files::new())
+        .unwrap();
+    assert_eq!(fs::read(same.directory.join("file")).unwrap(), b"content");
     assert!(matches!(
         cache.get(Kind::Sources, &"b".repeat(40), &Files::new()),
         Err(Error::CacheLimit { .. })
     ));
     std::io::Write::write_all(child.stdin.as_mut().unwrap(), &[1]).unwrap();
     assert!(child.wait().unwrap().success());
+    std::mem::drop(same);
     assert!(
         cache
             .get(Kind::Sources, &"b".repeat(40), &Files::new())
             .is_ok()
     );
+}
+
+#[test]
+fn finder_files_are_ignored_and_interrupted_dependency_entries_rebuild() {
+    let temporary = tempfile::tempdir().unwrap();
+    let cache = cache(
+        temporary.path().canonicalize().unwrap().join("cache"),
+        10000,
+    );
+    let key = "d".repeat(64);
+    let entry = cache.root.join("dependencies/entries").join(&key);
+    fs::create_dir_all(entry.join("data")).unwrap();
+    fs::write(entry.join("data/file"), b"interrupted").unwrap();
+    fs::write(cache.root.join("dependencies/entries/.DS_Store"), b"Finder").unwrap();
+    let builder = Files::new();
+    let lease = cache.get(Kind::Dependencies, &key, &builder).unwrap();
+    assert_eq!(fs::read(lease.directory.join("file")).unwrap(), b"content");
+    assert_eq!(builder.calls.load(Ordering::SeqCst), 1);
+    assert!(entry.join("receipt.json").is_file());
 }

@@ -4,9 +4,10 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 `mokly-git` runs Git through a trait-backed command runner, with an explicit
 checkout directory and argument vector. It starts no shell. Standard output
-and standard error are captured concurrently, with a 64 MiB bound per stream.
+and standard error are captured concurrently with independent bounds. Each
+has a 64 MiB ceiling; stderr defaults to 1 MiB even for a small stdout read.
 An output-limit failure terminates the owned process tree.
-Requests can select a smaller bound. A request above 64 MiB fails with
+Requests can select smaller independent bounds. A request above 64 MiB fails with
 `InvalidOutputLimit` before process configuration or command execution.
 
 ## Child Environment
@@ -56,14 +57,20 @@ unindexed tracked edits. Add untracked paths from `ls-files --others
 rename. Do not infer a rename from an untracked addition. Return unique
 current paths in lexical POSIX order. Candidate paths retain nonportable
 filename characters; they grant no source-read permission. Disable external diff and textconv.
-Entry move pairing remains under the [move contract](./mokly-moves.md).
+An indexed deletion that is also an untracked working file is `Modified`,
+because the working side retains it. Entry move pairing remains under the
+[move contract](./mokly-moves.md).
 
 ## Tree, Blob, And Source Archive Reads
 
 Repository paths preserve spelling and case. They are UTF-8 POSIX paths
-without an absolute prefix, empty or dot segments, backslash, colon, or NUL.
+without an absolute prefix, empty or dot segments, or NUL. Colons and literal
+backslashes remain ordinary Git name characters; the catalogue validates
+matched source names. Untracked directory records and non-UTF-8 candidates
+are skipped with a trace diagnostic.
 All tree pathspecs are literal. Tree output is NUL-delimited and bounded by
-the command limit and the selected leaf count, 100,000 by default. An empty
+the command limit and the selected node count, 100,000 by default. The commit index retains
+directories, links and submodule modes as well as regular leaves. An empty
 root request starts no source query. A whole-tree query is explicit.
 
 A blob read first proves exact regular-file mode and size from the pinned
@@ -75,11 +82,16 @@ An object that cannot fit one batch fails before any blob command starts.
 
 A source archive contains regular blobs from the commit. Extraction checks
 leaf count, each blob size, and total uncompressed bytes before file writes.
-The default aggregate bound is 64 MiB. Every command retains its own bound.
+The aggregate is a disk bound; base extraction sets it from the source cache
+capacity. Files are written one batch at a time, so a commit larger than one
+batch does not require its full contents in memory. Every command retains
+its own output bound.
 Extraction preserves executable files and omits links and submodules. It
 never applies `export-ignore`, `export-subst`, textconv or checkout filters.
 The destination must not exist. A partial extraction is removed on failure.
-Git metadata directories are never extracted.
+Git metadata directories are never extracted. A name unsupported by the host
+is skipped with a trace: Windows cannot store colon or backslash names,
+reserved device names, or names with trailing dots or spaces.
 
 Stdin is binary and bounded to 64 MiB. The writer closes it after the given
 bytes, including empty input. Output drains concurrently while stdin writes.

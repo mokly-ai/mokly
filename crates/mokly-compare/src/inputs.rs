@@ -2,19 +2,22 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use mokly_git::identity::RepoPath;
+use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::tree::Limits;
 use sha2::{Digest, Sha256};
 
-use crate::error::{Error, Result};
-use crate::manifest::{self, Manifest};
+use crate::error::Result;
+use crate::local_packages;
+use crate::manifest::Manifest;
 use crate::sources::Sources;
 
 /// Exact dependency inputs from one side, keyed by preserved POSIX spelling.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default)]
 pub struct Inputs {
     /// All repository-owned package manifests and lockfiles.
     pub files: BTreeMap<RepoPath, Vec<u8>>,
+    /// Git clean identities when the input reader can prove them.
+    pub objects: BTreeMap<RepoPath, ObjectId>,
 }
 
 impl Inputs {
@@ -45,7 +48,7 @@ impl Inputs {
         .find_map(|name| {
             self.files
                 .keys()
-                .find(|path| path.as_str() == *name)
+                .find(|path| path.as_str().rsplit('/').next() == Some(*name))
                 .cloned()
         })
     }
@@ -56,8 +59,8 @@ impl Inputs {
             return false;
         };
         if !matches!(
-            lockfile.as_str(),
-            "npm-shrinkwrap.json" | "package-lock.json"
+            lockfile.as_str().rsplit('/').next(),
+            Some("npm-shrinkwrap.json" | "package-lock.json")
         ) {
             return false;
         }
@@ -88,7 +91,7 @@ impl Inputs {
 
     /// Verify that local package and workspace paths stay in the extracted source root.
     pub fn validate_install(&self) -> Result<()> {
-        manifest::validate(&self.files)
+        local_packages::validate(&self.files)
     }
 
     fn manifests(&self) -> impl Iterator<Item = Manifest> + '_ {
@@ -134,39 +137,49 @@ pub struct SourceInputs;
 
 impl InputReader for SourceInputs {
     fn read(&self, sources: &dyn Sources, limits: Limits) -> Result<Inputs> {
-        let mut files = BTreeMap::new();
-        let mut total = 0usize;
-        for entry in sources.list(&[None], limits)? {
-            if selected(entry.path.as_str()) && !excluded(entry.path.as_str()) {
-                let bytes = sources.read(&entry.path, limits.blob)?;
-                total = total.saturating_add(bytes.len());
-                if total > limits.bytes {
-                    return Err(Error::CacheLimit {
-                        limit: limits.bytes as u64,
-                    });
-                }
-                files.insert(entry.path, bytes);
-            }
-        }
-        Ok(Inputs { files })
+        let entries: Vec<_> = sources
+            .list(&[None], limits)?
+            .into_iter()
+            .filter(|entry| {
+                selected(entry.path.as_str())
+                    && !entry
+                        .path
+                        .as_str()
+                        .split('/')
+                        .any(|part| part == "node_modules")
+            })
+            .collect();
+        let paths = entries
+            .iter()
+            .map(|entry| entry.path.clone())
+            .collect::<Vec<_>>();
+        let bytes = sources.read_many(&paths, limits)?;
+        let files = paths.into_iter().zip(bytes).collect();
+        let objects = entries
+            .into_iter()
+            .map(|entry| (entry.path, entry.object))
+            .collect();
+
+        Ok(Inputs { files, objects })
     }
 }
 
-pub(crate) fn excluded(path: &str) -> bool {
-    path.split('/').any(|part| {
-        matches!(
-            part,
-            ".git"
-                | "node_modules"
-                | ".context"
-                | "target"
-                | "dist"
-                | "coverage"
-                | "test-results"
-                | "playwright-report"
-        )
-    })
+impl PartialEq for Inputs {
+    fn eq(&self, other: &Self) -> bool {
+        self.files.len() == other.files.len()
+            && self.files.iter().all(|(path, bytes)| {
+                let Some(candidate) = other.files.get(path) else {
+                    return false;
+                };
+                match (self.objects.get(path), other.objects.get(path)) {
+                    (Some(left), Some(right)) => left == right,
+                    _ => bytes == candidate,
+                }
+            })
+    }
 }
+
+impl Eq for Inputs {}
 
 #[cfg(test)]
 #[path = "_tests_/inputs_tests.rs"]

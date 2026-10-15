@@ -63,6 +63,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
             args: vec![],
             stdin: vec![],
             output_limit: 100,
+            stderr_limit: 1024 * 1024,
         })
         .unwrap();
     let batches: &dyn Batches = &Unimock::new(

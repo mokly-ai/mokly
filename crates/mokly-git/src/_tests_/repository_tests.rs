@@ -181,9 +181,7 @@ fn malformed_status_and_tree_records_are_rejected() {
 
 #[test]
 fn path_identity_preserves_case_and_rejects_escapes() {
-    for path in [
-        "", "/root", "a//b", "a/../b", "a/./b", "C:/file", "a\\b", "a\0b",
-    ] {
+    for path in ["", "/root", "a//b", "a/../b", "a/./b", "a\0b"] {
         assert!(RepoPath::parse(path).is_err(), "{path:?}");
     }
     assert_ne!(RepoPath::parse("A").unwrap(), RepoPath::parse("a").unwrap());

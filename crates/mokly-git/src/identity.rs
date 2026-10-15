@@ -34,11 +34,10 @@ impl fmt::Display for ObjectId {
 pub struct RepoPath(String);
 
 impl RepoPath {
-    /// Reject absolute, traversing, platform-prefixed and malformed paths.
+    /// Reject absolute POSIX paths, traversal, empty segments and NUL.
     pub fn parse(value: &str) -> Result<Self> {
         if value.is_empty()
-            || value.contains(['\\', '\0', ':'])
-            || value.as_bytes().get(1) == Some(&b':')
+            || value.contains('\0')
             || value
                 .split('/')
                 .any(|part| part.is_empty() || matches!(part, "." | ".."))

@@ -11,6 +11,7 @@ use crate::sources::SourcesMock;
 
 fn inputs(lock: &[u8], manifest: &[u8]) -> Inputs {
     Inputs {
+        objects: BTreeMap::new(),
         files: BTreeMap::from([
             (RepoPath::parse("package-lock.json").unwrap(), lock.to_vec()),
             (RepoPath::parse("package.json").unwrap(), manifest.to_vec()),
@@ -63,15 +64,9 @@ fn inventory_reads_every_workspace_manifest_but_no_dependency_or_source_file() {
         SourcesMock::list
             .next_call(matching!(_, _))
             .returns(Ok(entries.to_vec())),
-        SourcesMock::read
-            .next_call(matching!((path, _) if path.as_str() == "package.json"))
-            .returns(Ok(b"{}".to_vec())),
-        SourcesMock::read
-            .next_call(matching!((path, _) if path.as_str() == "packages/ui/package.json"))
-            .returns(Ok(b"{}".to_vec())),
-        SourcesMock::read
-            .next_call(matching!((path, _) if path.as_str() == "package-lock.json"))
-            .returns(Ok(b"{}".to_vec())),
+        SourcesMock::read_many
+            .next_call(matching!((paths, _) if paths.len() == 3))
+            .returns(Ok(vec![b"{}".to_vec(), b"{}".to_vec(), b"{}".to_vec()])),
     ));
     let reader: &dyn InputReader = &SourceInputs;
     assert_eq!(

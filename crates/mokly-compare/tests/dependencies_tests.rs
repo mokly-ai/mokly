@@ -7,9 +7,11 @@ use std::time::Duration;
 
 use mokly_compare::cache_types::Cache;
 use mokly_compare::commands::{Command, Commands, TimedCommands};
-use mokly_compare::dependencies::{Dependencies, DependencyTiers, Request, Tier};
+use mokly_compare::dependencies::{Dependencies, DependencyTiers};
+use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_compare::inputs::{InputReader, SourceInputs};
+use mokly_compare::overlay::CachedOverlays;
 use mokly_compare::process::SystemSpawner;
 use mokly_compare::sources::{GitSources, Sources};
 use mokly_compare::working_inputs::{SystemWorkingInputs, WorkingInputs};
@@ -46,7 +48,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     git(&root, &["config", "user.email", "tests@mokly.invalid"]);
     write(&root, ".npmrc", b"offline=true\nupdate-notifier=false\n");
     write(&root, ".gitignore", b"node_modules\n.npm-cache\n");
-    write(&root, "package.json", br#"{"name":"base-fixture","version":"1.0.0","dependencies":{"local-fixture":"file:packages/local"},"scripts":{"preinstall":"node -e \"require('node:fs').writeFileSync('script-ran','bad')\""}}"#);
+    write(&root, "package.json", br#"{"name":"base-fixture","version":"1.0.0","workspaces":["packages/*"],"dependencies":{"local-fixture":"file:packages/local"},"scripts":{"preinstall":"node -e \"require('node:fs').writeFileSync('script-ran','bad')\""}}"#);
     write(&root, "packages/local/package.json", br#"{"name":"local-fixture","version":"1.0.0","main":"index.js","scripts":{"install":"node -e \"require('node:fs').writeFileSync('dependency-script-ran','bad')\""}}"#);
     write(
         &root,
@@ -63,7 +65,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         }),
         clock: clock.clone(),
         cancellation: token.clone(),
-        storage: storage(),
+        storage: storage(temporary.path()),
     });
     commands
         .run(&Command {
@@ -83,6 +85,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
             directory: root.clone(),
             timeout: Duration::from_secs(120),
             byte_limit: None,
+            size_root: None,
         })
         .unwrap();
     let outside_logs = temporary.path().join("outside-npm-logs");
@@ -109,14 +112,13 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         disk: Arc::new(SystemDisk),
     };
     let repository = repositories.open(&root).unwrap();
-    let sources: &dyn Sources = &GitSources {
-        repository: Arc::clone(&repository),
-        commit: commit.clone(),
-    };
+    let sources: &dyn Sources = &GitSources::new(Arc::clone(&repository), commit.clone());
     let reader: &dyn InputReader = &SourceInputs;
     let base = reader.read(sources, Limits::default()).unwrap();
     let working: &dyn WorkingInputs = &SystemWorkingInputs;
-    let head = working.read(&root, Limits::default()).unwrap();
+    let head = working
+        .read(repository.as_ref(), &base, Limits::default())
+        .unwrap();
     assert_eq!(base, head);
     let cache: Arc<dyn Cache> = Arc::new(cache(
         temporary.path().canonicalize().unwrap().join("cache"),
@@ -125,7 +127,8 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     let extraction: &dyn Extraction = &CachedExtraction {
         repository,
         cache: Arc::clone(&cache),
-        limits: Limits::default(),
+        files: Limits::default().files,
+        blob_bytes: Limits::default().blob,
     };
     let source = extraction.acquire(&commit).unwrap();
     assert_eq!(
@@ -133,9 +136,14 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         b"<p>Base</p>"
     );
     let tiers: &dyn Dependencies = &DependencyTiers {
+        overlays: Arc::new(CachedOverlays {
+            cache: cache.clone(),
+            storage: storage(temporary.path()),
+        }),
+        clock: clock.clone(),
         cache,
         commands,
-        storage: storage(),
+        storage: storage(temporary.path()),
         timeout: Duration::from_secs(120),
         install_bytes: 10 * 1024 * 1024,
     };
@@ -148,7 +156,35 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         configuration: RepoPath::parse("mokly.config.json").unwrap(),
         resolution: ModuleResolution::default(),
     };
-    assert_eq!(tiers.resolve(&request).unwrap().tier, Tier::Working);
+    fs::write(
+        root.join("packages/local/index.js"),
+        b"module.exports = 'head';\n",
+    )
+    .unwrap();
+    let working_result = tiers.resolve(&request).unwrap();
+    assert_eq!(working_result.tier, Tier::Working);
+    let overlay = working_result.overlay.as_ref().unwrap();
+    assert_eq!(
+        working_result.module_resolution.package_roots[0],
+        overlay.directory.to_string_lossy()
+    );
+    assert_eq!(
+        fs::read(
+            overlay
+                .directory
+                .join("node_modules/local-fixture/index.js")
+        )
+        .unwrap(),
+        b"module.exports = 'base';\n"
+    );
+    assert!(
+        overlay
+            .directory
+            .join("node_modules/local-fixture")
+            .canonicalize()
+            .unwrap()
+            .starts_with(&request.source_root)
+    );
     request
         .head
         .files
@@ -189,6 +225,28 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
     assert_eq!(result.node_modules, first_directory);
     assert!(
         result.module_resolution.package_roots[0].starts_with(temporary.path().to_str().unwrap())
+    );
+    request
+        .base
+        .files
+        .remove(&RepoPath::parse("package-lock.json").unwrap());
+    request.head.files.insert(
+        RepoPath::parse("package-lock.json").unwrap(),
+        b"different".to_vec(),
+    );
+    let fallback = tiers.resolve(&request).unwrap();
+    assert_eq!(fallback.tier, Tier::Fallback);
+    assert_eq!(
+        fs::read(
+            fallback
+                .overlay
+                .as_ref()
+                .unwrap()
+                .directory
+                .join("node_modules/local-fixture/index.js")
+        )
+        .unwrap(),
+        b"module.exports = 'base';\n"
     );
     assert!(!root.join("node_modules").exists());
 }

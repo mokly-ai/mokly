@@ -13,12 +13,16 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::cache_types::{CacheMock, Lease, StorageMock};
 use crate::commands::CommandsMock;
-use crate::dependencies::{Dependencies, DependencyTiers, Fallback, Request, Tier};
+use crate::dependencies::{Dependencies, DependencyTiers};
+use crate::dependency_types::{Fallback, Request, Tier};
 use crate::error::Error;
 use crate::inputs::Inputs;
+use crate::overlay::OverlaysMock;
+use mokly_git::control::ClockMock;
 
 fn request() -> Request {
     let inputs = Inputs {
+        objects: BTreeMap::new(),
         files: BTreeMap::from([
             (
                 RepoPath::parse("package-lock.json").unwrap(),
@@ -42,19 +46,36 @@ fn request() -> Request {
     }
 }
 
-fn tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
+fn working_tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
     DependencyTiers {
         cache: Arc::new(cache),
         commands: Arc::new(commands),
         storage: Arc::new(Unimock::new(())),
+        overlays: Arc::new(Unimock::new(
+            OverlaysMock::acquire
+                .each_call(matching!(_, _, _))
+                .answers(&|_, _, _, _| Ok(None)),
+        )),
+        clock: Arc::new(Unimock::new(())),
         timeout: Duration::from_secs(120),
         install_bytes: 10000,
     }
 }
 
+fn tiers(cache: Unimock, commands: Unimock) -> DependencyTiers {
+    DependencyTiers {
+        clock: Arc::new(Unimock::new(
+            ClockMock::now
+                .each_call(matching!())
+                .returns(Duration::ZERO),
+        )),
+        ..working_tiers(cache, commands)
+    }
+}
+
 #[test]
 fn identical_inputs_use_head_without_cache_or_package_manager() {
-    let result = tiers(Unimock::new(()), Unimock::new(()))
+    let result = working_tiers(Unimock::new(()), Unimock::new(()))
         .resolve(&request())
         .unwrap();
     assert_eq!(result.tier, Tier::Working);
@@ -146,12 +167,23 @@ fn installer_copies_private_sources_and_captures_script_deadline_and_size_option
             Ok(Lease { directory: "/install".into(), guard: Box::new(Unimock::new(())) })
         }),
         StorageMock::copy.next_call(matching!((source, target, 10000) if source.ends_with("base") && target.ends_with("install"))).returns(Ok(())),
-        CommandsMock::run.next_call(matching!((command) if command.directory == Path::new("/install") && command.timeout == Duration::from_secs(120) && command.byte_limit == Some(10000) && command.args.iter().any(|arg| arg == "--ignore-scripts") && command.args.first().unwrap() == "ci" && command.args.iter().any(|arg| arg == "--logs-dir") && command.args.last().unwrap() == "/install")).returns(Ok(vec![])),
+        CommandsMock::run.next_call(matching!((command) if command.directory == Path::new("/install") && command.timeout == Duration::from_secs(120) && command.byte_limit == Some(10000) && command.args.iter().any(|arg| arg == "--ignore-scripts") && command.args.first().unwrap() == "ci" && command.args.iter().any(|arg| arg == "--logs-dir") && Path::new(command.args.last().unwrap()) == Path::new("/install"))).returns(Ok(vec![])),
     ));
     let tiers = DependencyTiers {
         cache: Arc::new(boundaries.clone()),
         commands: Arc::new(boundaries.clone()),
         storage: Arc::new(boundaries),
+        overlays: Arc::new(Unimock::new(
+            OverlaysMock::acquire
+                .each_call(matching!(_, _, _))
+                .answers(&|_, _, _, _| Ok(None)),
+        )),
+        clock: Arc::new(Unimock::new(
+            ClockMock::now
+                .some_call(matching!())
+                .returns(Duration::ZERO)
+                .at_least_times(0),
+        )),
         timeout: Duration::from_secs(120),
         install_bytes: 10000,
     };
@@ -178,8 +210,29 @@ fn each_install_failure_uses_a_typed_reason_and_the_lockfile_warning() {
         assert_eq!(warning.reason, reason);
         assert_eq!(
             warning.message(),
-            "base dependencies differ at \"package-lock.json\"; using working-tree dependencies"
+            format!(
+                "base dependencies at \"package-lock.json\" could not be installed ({}); using working-tree dependencies",
+                match reason {
+                    Fallback::Timeout => "time limit",
+                    Fallback::Size => "cache size limit",
+                    Fallback::Unavailable => "package manager or lockfile unavailable",
+                    _ => "installation failed",
+                }
+            )
         );
         assert_eq!(warning.configuration.as_str(), "mokly.config.json");
     }
+}
+
+#[test]
+fn warnings_without_a_lockfile_name_the_actual_reason_without_a_fake_path() {
+    let warning = crate::dependency_types::Warning {
+        configuration: RepoPath::parse("mokly.config.json").unwrap(),
+        lockfile: None,
+        reason: Fallback::Unavailable,
+    };
+    assert_eq!(
+        warning.message(),
+        "base dependencies could not be installed (package manager or lockfile unavailable); using working-tree dependencies"
+    );
 }

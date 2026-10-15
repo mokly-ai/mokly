@@ -25,10 +25,13 @@ impl Reporter for Notices {
 
 pub fn cache(root: PathBuf, limit: u64) -> DiskCache {
     DiskCache {
-        root,
+        root: root.clone(),
         source_bytes: limit,
         dependency_bytes: limit,
-        storage: Arc::new(SystemStorage),
+        storage: Arc::new(SystemStorage {
+            root: root.clone(),
+            cancellation: Arc::new(Token::default()),
+        }),
         locks: Arc::new(SystemLocks),
         clock: Arc::new(SystemClock::default()),
         cancellation: Arc::new(Token::default()),
@@ -62,6 +65,11 @@ impl Builder for Files {
 
 pub fn git(root: &Path, args: &[&str]) -> Vec<u8> {
     let output = Command::new("git")
+        .env(
+            "GIT_CONFIG_GLOBAL",
+            if cfg!(windows) { "NUL" } else { "/dev/null" },
+        )
+        .env("GIT_CONFIG_NOSYSTEM", "1")
         .current_dir(root)
         .args(args)
         .output()
@@ -75,6 +83,9 @@ pub fn git(root: &Path, args: &[&str]) -> Vec<u8> {
     output.stdout
 }
 
-pub fn storage() -> Arc<dyn Storage> {
-    Arc::new(SystemStorage)
+pub fn storage(root: &Path) -> Arc<dyn Storage> {
+    Arc::new(SystemStorage {
+        root: root.canonicalize().unwrap(),
+        cancellation: Arc::new(Token::default()),
+    })
 }

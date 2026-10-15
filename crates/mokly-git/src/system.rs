@@ -25,9 +25,11 @@ pub struct SystemRunner {
 
 impl Runner for SystemRunner {
     fn run(&self, request: &Request) -> Result<Output> {
-        if request.output_limit > DEFAULT_OUTPUT_LIMIT {
+        if request.output_limit > DEFAULT_OUTPUT_LIMIT
+            || request.stderr_limit > DEFAULT_OUTPUT_LIMIT
+        {
             return Err(Error::InvalidOutputLimit {
-                limit: request.output_limit,
+                limit: request.output_limit.max(request.stderr_limit),
                 maximum: DEFAULT_OUTPUT_LIMIT,
             });
         }
@@ -69,7 +71,7 @@ impl Runner for SystemRunner {
             let output =
                 scope.spawn(move || capture(stdout, request.output_limit, output_group.as_ref()));
             let errors =
-                scope.spawn(move || capture(stderr, request.output_limit, error_group.as_ref()));
+                scope.spawn(move || capture(stderr, request.stderr_limit, error_group.as_ref()));
             let input_group = Arc::clone(&group);
             let input = scope.spawn(move || {
                 let result = stdin.write_all(&request.stdin);

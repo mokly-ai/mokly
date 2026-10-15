@@ -1,5 +1,6 @@
 //! Cache boundaries and lease data shared by base preparation.
 
+use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
@@ -31,8 +32,6 @@ impl Kind {
 pub struct Receipt {
     /// Conservative retained byte count.
     pub bytes: u64,
-    /// Digest of every retained file and link, including relative paths.
-    pub digest: String,
     /// Monotonic access sequence under the namespace lock.
     pub used: u64,
 }
@@ -46,7 +45,7 @@ pub struct Record {
     pub receipt: Receipt,
 }
 
-/// Builder invoked only for a missing entry and under the namespace lock.
+/// Builder invoked for a missing entry under its exclusive entry lock.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BuilderMock))]
 pub trait Builder: Send + Sync {
     /// Populate a fresh `data` directory. Never modify the repository.
@@ -64,7 +63,9 @@ pub struct Lease {
 /// Byte-bounded cache access, separate from its filesystem implementation.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CacheMock))]
 pub trait Cache: Send + Sync {
-    /// Open or build an immutable entry and retain its lease.
+    /// Maximum retained bytes in this namespace.
+    fn capacity(&self, kind: Kind) -> u64;
+    /// Open or build an immutable entry and retain its shared lease.
     fn get(&self, kind: Kind, key: &str, builder: &dyn Builder) -> Result<Lease>;
 }
 
@@ -73,20 +74,29 @@ pub trait Cache: Send + Sync {
 pub trait Storage: Send + Sync {
     /// Ensure a real directory exists without traversing a cache symlink.
     fn prepare(&self, directory: &Path) -> Result<()>;
-    /// Remove abandoned staging directories under the namespace lock.
-    fn clear_staging(&self, directory: &Path) -> Result<()>;
+    /// List staging names so the caller removes only entries with a free lock.
+    fn stages(&self, directory: &Path) -> Result<Vec<String>>;
+    /// Validate a completed receipt against recounted data bytes.
+    fn inspect(&self, entry: &Path, limit: u64) -> Result<Option<Receipt>>;
+    /// Flush file data and directory metadata before publishing completion.
+    fn synchronize(&self, directory: &Path) -> Result<()>;
     /// List completed and damaged entries without removing leased data.
     fn records(&self, entries: &Path) -> Result<Vec<Record>>;
     /// Update a receipt with atomic replacement.
     fn receipt(&self, entry: &Path, receipt: &Receipt) -> Result<()>;
     /// Count bytes without following symbolic links; stop at the limit.
     fn size(&self, path: &Path, limit: u64) -> Result<u64>;
-    /// Hash the complete entry without following symbolic links.
-    fn digest(&self, path: &Path, limit: u64) -> Result<String>;
     /// Remove a cache-owned directory without following links.
     fn remove(&self, path: &Path) -> Result<()>;
     /// Move a completed staging directory into its final name.
     fn publish(&self, stage: &Path, target: &Path) -> Result<()>;
+    /// Create package-name links into the leased extraction root.
+    fn packages(
+        &self,
+        destination: &Path,
+        source: &Path,
+        packages: &BTreeMap<String, String>,
+    ) -> Result<()>;
     /// Copy regular source files to a fresh install directory under a byte limit.
     fn copy(&self, source: &Path, destination: &Path, limit: u64) -> Result<()>;
 }

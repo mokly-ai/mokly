@@ -1,14 +1,15 @@
-//! Host path projection and safe extraction of an immutable source archive.
+//! Confined working reads and incremental immutable-source extraction.
 
 use std::fs;
+use std::io::{Read, Write};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
-use crate::error::{Error, IoResult, Result};
+use crate::error::{Error, InternalError, IoResult, Result};
 use crate::identity::RepoPath;
 
-/// One regular file in a bounded source archive.
+/// One regular file of a bounded source batch.
 #[derive(Debug)]
 pub struct ArchiveFile {
     /// Confined repository-relative path.
@@ -19,70 +20,168 @@ pub struct ArchiveFile {
     pub executable: bool,
 }
 
-/// Filesystem boundary for repository identity and archive publication.
+/// An owned fresh extraction, removed on failure until `finish` succeeds.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ArchiveMock))]
+pub trait Archive: Send + Sync {
+    /// Write one batch without retaining previous batch contents.
+    fn write(&mut self, files: &[ArchiveFile]) -> Result<()>;
+    /// Keep the complete extraction.
+    fn finish(&mut self) -> Result<()>;
+}
+
+/// Filesystem boundary for checkout identity and source access.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DiskMock))]
 pub trait Disk: Send + Sync {
-    /// Resolve the filesystem identity of an existing directory.
+    /// Resolve an existing directory's identity.
     fn canonicalize(&self, path: &Path) -> Result<PathBuf>;
-    /// Create a fresh directory and extract regular blobs without following links.
+    /// Read a confined regular working file; a vanished candidate returns none.
+    fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>>;
+    /// Start incremental extraction in a fresh directory.
+    fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>>;
+    /// Extract a single batch through the same ownership rules.
     fn extract(&self, destination: &Path, files: &[ArchiveFile]) -> Result<()>;
 }
 
-/// Host extraction adapter. A failed extraction removes its fresh directory.
+/// Host source IO adapter.
 pub struct SystemDisk;
+
+struct Extraction {
+    destination: PathBuf,
+    complete: bool,
+}
 
 impl Disk for SystemDisk {
     fn canonicalize(&self, path: &Path) -> Result<PathBuf> {
         fs::canonicalize(path).git()
     }
 
-    fn extract(&self, destination: &Path, files: &[ArchiveFile]) -> Result<()> {
-        fs::create_dir(destination).git()?;
-        let result = write_files(destination, files);
-        if result.is_err() {
-            let _ = fs::remove_dir_all(destination);
+    fn read(&self, root: &Path, path: &RepoPath, limit: usize) -> Result<Option<Vec<u8>>> {
+        if !host_path(path) {
+            tracing::trace!(path = %path, "skipping a name unsupported by the host");
+            return Ok(None);
         }
-        result
-    }
-}
-
-fn write_files(destination: &Path, files: &[ArchiveFile]) -> Result<()> {
-    for file in files {
-        if file
-            .path
-            .as_str()
-            .split('/')
-            .any(|part| part.eq_ignore_ascii_case(".git"))
-        {
-            return Err(Error::InvalidPath {
-                path: file.path.as_str().to_owned(),
-            });
+        let file = root.join(path.as_str());
+        for ancestor in file.ancestors().take_while(|ancestor| *ancestor != root) {
+            let metadata = match fs::symlink_metadata(ancestor) {
+                Ok(metadata) => metadata,
+                Err(error)
+                    if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
+                    ) =>
+                {
+                    return Ok(None);
+                }
+                Err(source) => return Err(InternalError::Io { source }.into()),
+            };
+            if metadata.is_symlink() {
+                return Err(Error::NotRegular {
+                    path: path.to_string(),
+                });
+            }
         }
-        let path = destination.join(file.path.as_str());
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).git()?;
-        }
-        let mut output = fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-            .git()?;
-        if !output.metadata().git()?.is_file() {
+        let metadata = fs::metadata(&file).git()?;
+        if !metadata.is_file() {
             return Err(Error::NotRegular {
-                path: file.path.as_str().to_owned(),
+                path: path.to_string(),
             });
         }
-        use_write(&mut output, &file.bytes)?;
-        #[cfg(unix)]
-        fs::set_permissions(
-            &path,
-            fs::Permissions::from_mode(if file.executable { 0o755 } else { 0o644 }),
-        )
-        .git()?;
+        if metadata.len() > limit as u64 {
+            return Err(Error::ByteLimit { limit });
+        }
+        let mut bytes = Vec::new();
+        fs::File::open(file)
+            .git()?
+            .take(limit.saturating_add(1) as u64)
+            .read_to_end(&mut bytes)
+            .git()?;
+        if bytes.len() > limit {
+            return Err(Error::ByteLimit { limit });
+        }
+        Ok(Some(bytes))
     }
-    Ok(())
+
+    fn archive(&self, destination: &Path) -> Result<Box<dyn Archive>> {
+        fs::create_dir(destination).git()?;
+        Ok(Box::new(Extraction {
+            destination: destination.to_owned(),
+            complete: false,
+        }))
+    }
+
+    fn extract(&self, destination: &Path, files: &[ArchiveFile]) -> Result<()> {
+        let mut archive = self.archive(destination)?;
+        archive.write(files)?;
+        archive.finish()
+    }
 }
 
-fn use_write(output: &mut dyn std::io::Write, bytes: &[u8]) -> Result<()> {
-    output.write_all(bytes).git()
+impl Archive for Extraction {
+    fn write(&mut self, files: &[ArchiveFile]) -> Result<()> {
+        for file in files {
+            if file
+                .path
+                .as_str()
+                .split('/')
+                .any(|part| part.eq_ignore_ascii_case(".git"))
+            {
+                return Err(Error::InvalidPath {
+                    path: file.path.to_string(),
+                });
+            }
+            if !host_path(&file.path) {
+                tracing::trace!(path = %file.path, "skipping a name unsupported by the host");
+                continue;
+            }
+            let path = self.destination.join(file.path.as_str());
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent).git()?;
+            }
+            let mut output = fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&path)
+                .git()?;
+            output.write_all(&file.bytes).git()?;
+            #[cfg(unix)]
+            fs::set_permissions(
+                &path,
+                fs::Permissions::from_mode(if file.executable { 0o755 } else { 0o644 }),
+            )
+            .git()?;
+        }
+        Ok(())
+    }
+
+    fn finish(&mut self) -> Result<()> {
+        self.complete = true;
+        Ok(())
+    }
+}
+
+impl Drop for Extraction {
+    fn drop(&mut self) {
+        if !self.complete {
+            let _ = fs::remove_dir_all(&self.destination);
+        }
+    }
+}
+
+fn host_path(path: &RepoPath) -> bool {
+    #[cfg(windows)]
+    return path.as_str().split('/').all(|part| {
+        let stem = part.split('.').next().unwrap_or("").to_ascii_lowercase();
+        !part.contains([':', '\\', '<', '>', '"', '|', '?', '*'])
+            && !part.ends_with(['.', ' '])
+            && !part.chars().any(char::is_control)
+            && !matches!(stem.as_str(), "con" | "prn" | "aux" | "nul")
+            && !(stem.len() == 4
+                && (stem.starts_with("com") || stem.starts_with("lpt"))
+                && matches!(stem.as_bytes()[3], b'1'..=b'9'))
+    });
+    #[cfg(not(windows))]
+    {
+        let _ = path;
+        true
+    }
 }

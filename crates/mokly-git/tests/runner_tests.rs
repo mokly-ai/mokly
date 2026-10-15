@@ -20,12 +20,14 @@ fn git_output_is_bounded_and_failures_are_typed() {
         args: vec!["--version".into()],
         stdin: vec![],
         output_limit: 1024,
+        stderr_limit: 1024 * 1024,
     };
     let output = runner.run(&request).unwrap();
     assert!(output.stdout.starts_with(b"git version "));
     assert!(matches!(
         runner.run(&Request {
             output_limit: 1,
+            stderr_limit: 1024 * 1024,
             ..request.clone()
         }),
         Err(Error::OutputLimit { limit: 1 })
