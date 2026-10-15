@@ -76,7 +76,7 @@ pub struct AffectedConsumerAddress {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AffectedConsumer {
-    /// Included component parent path.
+    /// Component identity with included parent or variant implementation impact.
     pub changed_component_id: String,
     /// Canonical consuming entry.
     pub consumer: AffectedConsumerAddress,

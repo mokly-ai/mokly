@@ -72,17 +72,37 @@ pub fn validate(result: &ReviewResultV8) -> Result<(), ReadError> {
             return Err(failure());
         }
     }
+    let impact_owners: BTreeSet<_> = entries
+        .iter()
+        .filter(|entry| {
+            entry.kind == ReviewKind::Component
+                && entry.included
+                && entry.reasons.iter().any(|reason| {
+                    matches!(
+                        reason,
+                        EntryChangeReason::Added
+                            | EntryChangeReason::Removed
+                            | EntryChangeReason::Material
+                            | EntryChangeReason::Implementation
+                            | EntryChangeReason::Dependency { .. }
+                    )
+                })
+        })
+        .map(|entry| {
+            owners
+                .get(entry.path.as_str())
+                .copied()
+                .unwrap_or(&entry.path)
+        })
+        .collect();
+    let reference_index = review_affected_validation::Index::new(&entries);
     let mut affected_keys = BTreeSet::new();
     for affected in &result.affected {
-        if !review_affected_validation::valid(affected, &entries)
+        if !review_affected_validation::valid(affected, &reference_index)
             || affected.evidence.is_empty()
             || !is_entry_path(&affected.consumer.path)
             || !affected_keys.insert(review_order::affected_key(affected))
-            || !entries.iter().any(|entry| {
-                entry.kind == ReviewKind::Component
-                    && entry.path == affected.changed_component_id
-                    && entry.included
-            })
+            || !impact_owners.contains(affected.changed_component_id.as_str())
         {
             return Err(failure());
         }
@@ -144,6 +164,12 @@ fn valid_entry(entry: &ReviewEntry, component_owner: &str) -> bool {
     {
         return false;
     }
+    if entry.before.is_some() && entry.after.is_some() {
+        let aggregate = ReviewState::aggregate(entry.views.iter().map(|view| view.state));
+        if entry.state != aggregate {
+            return false;
+        }
+    }
     if entry.kind == ReviewKind::UseCase && (!entry.views.is_empty() || entry.variants.is_some()) {
         return false;
     }
@@ -159,8 +185,17 @@ fn valid_entry(entry: &ReviewEntry, component_owner: &str) -> bool {
             {
                 return false;
             }
-            EntryChangeReason::Dependency { path }
-                if !entry.views.iter().any(|view| {
+            EntryChangeReason::Implementation
+                if entry.kind != ReviewKind::Component || entry.path != component_owner =>
+            {
+                return false;
+            }
+            EntryChangeReason::Dependency { path } => {
+                let external = entry.kind == ReviewKind::Component
+                    && entry.path == component_owner
+                    && resource_path(path)
+                    && !path.ends_with(".css");
+                let own = entry.views.iter().any(|view| {
                     view.rules.iter().any(|rule| {
                         &rule.stylesheet == path
                             && rule.status != RuleStatus::Excluded
@@ -168,9 +203,10 @@ fn valid_entry(entry: &ReviewEntry, component_owner: &str) -> bool {
                     }) || view.resources.iter().any(|resource| {
                         &resource.path == path && owned(&resource.owner, component_owner)
                     })
-                }) =>
-            {
-                return false;
+                });
+                if !(external || own) {
+                    return false;
+                }
             }
             _ => {}
         }

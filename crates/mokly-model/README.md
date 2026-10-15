@@ -63,7 +63,12 @@ the structural detail reader does not substitute guessed context.
 usage chains. `review_order` supplies canonical order for producers and readers.
 `readers::review` gates v8 before validating sides, membership, order, and evidence.
 The classifier also validates source coverage and actual ownership proof.
-`readers::change_snapshot` gates v4 before reading historical records.
+`readers::change_snapshot` gates v4 before reading historical records and
+rejects unknown flattened fields, invalid IDs, and snapshot-local order errors.
+`CatalogueChangeSnapshotV4::validate_sources` checks the full removed order
+against both catalogues, including base-authored variant order.
+Component identity impact can come from an included parent or variant. An
+actual-instance `implementation` reason does not alter own view states.
 
 `material` owns the catalogue, historical snapshot, props, instance, and slot digest preimages.
 `routes` owns Rust artifact routes and portable relative URL operations.

@@ -123,7 +123,7 @@ fn ignored_links_speculative_hints_and_unreferenced_assets_supply_no_evidence() 
 }
 
 #[test]
-fn referenced_resource_edits_and_verified_deletions_stay_ready() {
+fn referenced_resource_edits_stay_ready_and_missing_targets_fail() {
     let fixture = Fixture::new(&[
         (
             "specs/home.screen.html",
@@ -133,7 +133,7 @@ fn referenced_resource_edits_and_verified_deletions_stay_ready() {
         ("second.svg", "before"),
     ]);
     fixture.edit("image.svg", "after");
-    fixture.remove("second.svg");
+    fixture.edit("second.svg", "after");
     let result = fixture.compare().unwrap();
     assert_eq!(result.snapshot.changed_entries, ["home"]);
     assert_eq!(entry(&result, "home").views[0].resources.len(), 2);
@@ -144,7 +144,7 @@ fn referenced_resource_edits_and_verified_deletions_stay_ready() {
             .all(|resource| resource.owner == EvidenceOwner::Entry)
     );
     fixture.remove("image.svg");
-    assert!(fixture.compare().is_ok());
+    assert!(fixture.compare().is_err());
 }
 
 #[test]

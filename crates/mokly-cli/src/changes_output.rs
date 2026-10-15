@@ -1,9 +1,8 @@
-//! Changes presentation shares the shell's entry, move, and ignored-view counts.
+//! Changes presentation shares the shell's entry, move, and ignored-entry counts.
 
 use mokly_compare::comparison_types::ComparisonCounts;
 
 use crate::build::BuildChanges;
-use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::redaction::Redactor;
 
@@ -33,8 +32,14 @@ pub fn ready(style: &Style, counts: ComparisonCounts) -> String {
 pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> String {
     match changes {
         BuildChanges::Disabled => String::new(),
-        BuildChanges::Unavailable { .. } if style.mode == Mode::Rich => {
-            format!("{}\n", bounded("  ! Changes unavailable", style.columns))
+        BuildChanges::Unavailable { reason, .. } if style.mode == Mode::Rich => {
+            format!(
+                "{}\n",
+                bounded(
+                    &format!("  ! Changes unavailable · {}", redactor.safe(reason)),
+                    style.columns
+                )
+            )
         }
         BuildChanges::Unavailable { .. } => String::new(),
         BuildChanges::Ready(result) => {
@@ -56,9 +61,23 @@ pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> St
 /// Base diagnostics make Changes unavailable while the head catalogue remains usable.
 pub fn diagnostics(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> String {
     match changes {
-        BuildChanges::Unavailable { diagnostics } => diagnostics
+        BuildChanges::Unavailable {
+            base_commit,
+            diagnostics,
+            ..
+        } => diagnostics
             .iter()
-            .map(|diagnostic| style.error(Code::ReviewInvalid, diagnostic, redactor))
+            .map(|diagnostic| {
+                let text = redactor.safe(&format!("base {base_commit}: {diagnostic}"));
+                format!(
+                    "{}\n",
+                    if style.mode == Mode::Plain {
+                        text
+                    } else {
+                        format!("  {text}")
+                    }
+                )
+            })
             .collect(),
         _ => String::new(),
     }

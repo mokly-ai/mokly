@@ -23,7 +23,7 @@ impl Session {
                 ));
             }
         };
-        match self.state.tree.read(&file.absolute) {
+        match self.state.tree.read_public(&file.absolute) {
             Ok(bytes) => Ok(Some(bytes)),
             Err(source) if source.is_vanished() => Ok(None),
             Err(source) => Err(invalid(

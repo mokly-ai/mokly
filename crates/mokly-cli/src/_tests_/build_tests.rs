@@ -25,7 +25,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::build::{BuildError, BuildService, CatalogueBuild};
 use crate::grammar::{Build, Common};
 
-fn config() -> ResolvedConfig {
+pub(super) fn config() -> ResolvedConfig {
     ResolvedConfig {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
@@ -35,7 +35,7 @@ fn config() -> ResolvedConfig {
     }
 }
 
-fn options() -> Build {
+pub(super) fn options() -> Build {
     Build {
         common: Common::default(),
         out: None,
@@ -44,7 +44,7 @@ fn options() -> Build {
     }
 }
 
-fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
+pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
     let entries = ["home", "home/one"]
         .into_iter()
         .map(|path| ModelEntry {
@@ -96,7 +96,7 @@ fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
     }
 }
 
-fn graphs(warnings: Vec<Warning>) -> Arc<dyn GraphFactory> {
+pub(super) fn graphs(warnings: Vec<Warning>) -> Arc<dyn GraphFactory> {
     let generation: Arc<dyn RenderGeneration> = Arc::new(Unimock::new(
         RenderGenerationMock::render_all
             .next_call(matching!())

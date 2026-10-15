@@ -47,4 +47,12 @@ pub trait SourceTree: Send + Sync {
     fn children(&self, path: &Path) -> Result<Vec<Child>>;
     /// Read the bytes of one confined, inventoried source.
     fn read(&self, path: &Path) -> Result<Vec<u8>>;
+    /// Hint a confined read set. Adapters may batch these exact paths only.
+    fn prefetch(&self, _paths: &[PathBuf]) -> Result<()> {
+        Ok(())
+    }
+    /// Read public resource bytes without retaining them in a source snapshot.
+    fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
+        self.read(path)
+    }
 }

@@ -16,7 +16,7 @@ pub(crate) struct MaterialComparison {
     pub(crate) inputs: bool,
     pub(crate) structure: bool,
     pub(crate) root_changed: bool,
-    pub(crate) instance_impact: BTreeSet<String>,
+    pub(crate) instances: Vec<instance_impact::PairedInstance>,
 }
 
 pub(crate) fn compare(
@@ -33,7 +33,7 @@ pub(crate) fn compare(
         material::canonical(&before.tree, &left) != material::canonical(&after.tree, &right);
     let root_changed = material::canonical(root(&before.tree).unwrap_or_default(), &left)
         != material::canonical(root(&after.tree).unwrap_or_default(), &right);
-    let instance_impact = instance_impact::collect(&before.tree, &after.tree, &left, &right);
+    let instances = instance_impact::collect(&before.tree, &after.tree, &left, &right);
     let ignored_ids = left.ignored.iter().cloned().collect();
     left.ignored.clear();
     right.ignored.clear();
@@ -47,7 +47,7 @@ pub(crate) fn compare(
         inputs,
         structure,
         root_changed,
-        instance_impact,
+        instances,
     }
 }
 

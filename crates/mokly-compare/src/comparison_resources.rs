@@ -5,30 +5,19 @@ use std::sync::Arc;
 
 use mokly_css::attribution::{PageObservation, observe};
 use mokly_css::match_tree::MatchTree;
-use mokly_css::parsed_cache::ParsedCssCache;
 use mokly_css::rule_matching::match_document;
 use mokly_css::{observation, rules};
-use mokly_graph::closure::{Closure, MissingResources};
-use mokly_graph::error;
+use mokly_graph::closure::Closure;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
-use mokly_model::material::digest;
+use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
 use crate::css_documents;
 use crate::error::Result;
 use crate::material::mapped;
 use crate::material_urls;
-
-pub(crate) struct HistoricalResources {
-    pub(crate) before: Arc<dyn RenderGeneration>,
-}
-
-impl MissingResources for HistoricalResources {
-    fn read(&self, route: &str) -> error::Result<Option<Vec<u8>>> {
-        self.before.resource_bytes(route)
-    }
-}
+use crate::resource_memo::ResourceMemo;
 
 /// Per-pair closure evidence. No resource byte set remains after this call.
 pub(crate) struct Resources {
@@ -43,6 +32,7 @@ pub(crate) fn closures(
     before_route: Option<&str>,
     after_route: Option<&str>,
     relocate: bool,
+    memo: &dyn ResourceMemo,
 ) -> Result<Resources> {
     let left = before_route.map_or_else(
         || Ok(Closure::default()),
@@ -50,19 +40,10 @@ pub(crate) fn closures(
     )?;
     let right = after_route.map_or_else(
         || Ok(Closure::default()),
-        |route| {
-            after
-                .comparison_closure(
-                    route,
-                    Arc::new(HistoricalResources {
-                        before: before.clone(),
-                    }),
-                )
-                .compare()
-        },
+        |route| after.closure(route).compare(),
     )?;
     let aliases = if relocate {
-        aliases(&left, &right, before.as_ref(), after.as_ref())?
+        aliases(&left, &right, memo)?
     } else {
         BTreeMap::new()
     };
@@ -76,8 +57,7 @@ pub(crate) fn closures(
 fn aliases(
     before: &Closure,
     after: &Closure,
-    left: &dyn RenderGeneration,
-    right: &dyn RenderGeneration,
+    memo: &dyn ResourceMemo,
 ) -> Result<BTreeMap<String, String>> {
     let before: BTreeSet<_> = before
         .evidence
@@ -93,19 +73,13 @@ fn aliases(
     let mut right_hashes: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut result = BTreeMap::new();
     for path in before.difference(&after) {
-        if let Some(bytes) = left.resource_bytes(path).compare()? {
-            left_hashes
-                .entry(digest(&bytes))
-                .or_default()
-                .push((*path).into());
+        if let Some(hash) = memo.fact(ReviewSide::Before, path)?.digest {
+            left_hashes.entry(hash).or_default().push((*path).into());
         }
     }
     for path in after.difference(&before) {
-        if let Some(bytes) = right.resource_bytes(path).compare()? {
-            right_hashes
-                .entry(digest(&bytes))
-                .or_default()
-                .push((*path).into());
+        if let Some(hash) = memo.fact(ReviewSide::After, path)?.digest {
+            right_hashes.entry(hash).or_default().push((*path).into());
         }
     }
     for (hash, left) in &left_hashes {
@@ -139,12 +113,10 @@ fn aliases(
 
 pub(crate) struct ResourceInput<'a> {
     pub(crate) resources: &'a Resources,
-    pub(crate) before: &'a dyn RenderGeneration,
-    pub(crate) after: &'a dyn RenderGeneration,
+    pub(crate) memo: &'a dyn ResourceMemo,
     pub(crate) before_tree: Option<&'a MatchTree>,
     pub(crate) after_tree: Option<&'a MatchTree>,
     pub(crate) paths: &'a BTreeMap<String, String>,
-    pub(crate) css: &'a dyn ParsedCssCache,
     pub(crate) before_route: &'a str,
     pub(crate) after_route: &'a str,
 }
@@ -155,13 +127,15 @@ pub(crate) fn evidence(
 ) -> Result<Vec<ResourceEvidence>> {
     let resources = input.resources;
     let before_documents = css_documents::collect(
-        input.before,
+        input.memo,
+        ReviewSide::Before,
         input.before_route,
         input.before_tree,
         &resources.aliases,
     )?;
     let after_documents = css_documents::collect(
-        input.after,
+        input.memo,
+        ReviewSide::After,
         input.after_route,
         input.after_tree,
         &BTreeMap::new(),
@@ -193,26 +167,12 @@ pub(crate) fn evidence(
     let mut output = Vec::new();
     for path in candidates {
         let before_path = inverse.get(&path).copied().unwrap_or(&path);
-        let before = input.before.resource_bytes(before_path).compare()?;
-        let after = input.after.resource_bytes(&path).compare()?;
-        if before == after {
+        if input.memo.equal(before_path, &path, &resources.aliases)? {
             continue;
         }
         if path.ends_with(".css") {
-            let before = css_urls(
-                before.as_deref().unwrap_or_default(),
-                before_path,
-                &resources.aliases,
-            );
-            let after = css_urls(
-                after.as_deref().unwrap_or_default(),
-                &path,
-                &BTreeMap::new(),
-            );
-            let before = input.css.parse(&before);
-            let after = input.css.parse(&after);
-            let diff = rules::diff(&before, &after);
-            if matches!(&diff, rules::RuleDiff::Resolved { added, removed, changed } if added.is_empty() && removed.is_empty() && changed.is_empty())
+            let diff = input.memo.diff(before_path, &path, &resources.aliases)?;
+            if matches!(diff.as_ref(), rules::RuleDiff::Resolved { added, removed, changed } if added.is_empty() && removed.is_empty() && changed.is_empty())
             {
                 continue;
             }

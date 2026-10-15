@@ -33,6 +33,10 @@ The working-tree adapter lives in `mokly-catalogue::working_tree`. Consumers
 inject it as `Arc<dyn SourceTree>`. The Git adapter is `mokly-compare::git_tree::GitTree`. It uses one commit index
 and bounded blob batches for these operations. It never follows link blobs.
 
+`prefetch` accepts an exact confined read set for batched adapters. Its default
+is a no-op. `read_public` bypasses private source-snapshot retention; the caller
+must first apply the same public-path policy as resource delivery.
+
 ## Quick Start
 
 ```rust

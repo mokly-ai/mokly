@@ -19,8 +19,40 @@ pub(crate) fn collect(
     pairing: &Pairing,
     before: &CatalogueModel,
     after: &CatalogueModel,
-) -> Vec<AffectedConsumer> {
+) -> (Vec<AffectedConsumer>, usize) {
     let paths = pairing.paths(before, after);
+    let mut lookups = 0;
+    let before_contexts: BTreeMap<_, _> = before
+        .entries
+        .iter()
+        .map(|entry| (entry.metadata.path.as_str(), entry))
+        .collect();
+    let after_contexts: BTreeMap<_, _> = after
+        .entries
+        .iter()
+        .map(|entry| (entry.metadata.path.as_str(), entry))
+        .collect();
+    let mut destinations = BTreeMap::new();
+    for pair in &pairing.entries {
+        for (side, model, index) in [
+            (ReviewSide::Before, before, pair.before),
+            (ReviewSide::After, after, pair.after),
+        ] {
+            let Some(entry) = index.and_then(|index| model.entries.get(index)) else {
+                continue;
+            };
+            let kind = match entry.content {
+                EntryContent::Screen { .. } => ConsumerKind::Screen,
+                EntryContent::Component { .. } => ConsumerKind::Component,
+                _ => continue,
+            };
+            let destination = pair.after.map_or(entry, |index| &after.entries[index]);
+            destinations.insert(
+                (side, kind, entry.metadata.path.to_ascii_lowercase()),
+                destination.metadata.path.clone(),
+            );
+        }
+    }
     let mut records: BTreeMap<(String, ConsumerKind, String), Vec<AffectedUsageEvidence>> =
         BTreeMap::new();
     for view in usage {
@@ -34,15 +66,13 @@ pub(crate) fn collect(
             .iter()
             .map(|instance| (instance.key.as_str(), instance))
             .collect();
-        let catalogue = if view.side == ReviewSide::Before {
-            before
+        let contexts = if view.side == ReviewSide::Before {
+            &before_contexts
         } else {
-            after
+            &after_contexts
         };
-        let context_entry = catalogue
-            .entries
-            .iter()
-            .find(|entry| entry.metadata.path == view.entry.path);
+        lookups += 1;
+        let context_entry = contexts.get(view.entry.path.as_str());
         let component_path = context_entry
             .and_then(|entry| entry.metadata.variant_of.as_ref())
             .unwrap_or(&view.entry.path);
@@ -92,7 +122,11 @@ pub(crate) fn collect(
                 ));
             }
             for (kind, path, start) in consumers {
-                let Some(path) = destination(view.side, kind, path, pairing, before, after) else {
+                lookups += 1;
+                let Some(path) = destinations
+                    .get(&(view.side, kind, path.to_ascii_lowercase()))
+                    .cloned()
+                else {
                     continue;
                 };
                 if path == changed && kind == ConsumerKind::Component {
@@ -121,7 +155,7 @@ pub(crate) fn collect(
             }
         }
     }
-    records
+    let records = records
         .into_iter()
         .map(
             |((changed_component_id, kind, path), evidence)| AffectedConsumer {
@@ -130,39 +164,6 @@ pub(crate) fn collect(
                 evidence,
             },
         )
-        .collect()
-}
-
-fn destination(
-    side: ReviewSide,
-    kind: ConsumerKind,
-    path: &str,
-    pairing: &Pairing,
-    before: &CatalogueModel,
-    after: &CatalogueModel,
-) -> Option<String> {
-    let matches = |entry: &mokly_model::catalogue::ModelEntry| {
-        entry.metadata.path.eq_ignore_ascii_case(path)
-            && matches!(
-                (&entry.content, kind),
-                (EntryContent::Component { .. }, ConsumerKind::Component)
-                    | (EntryContent::Screen { .. }, ConsumerKind::Screen)
-            )
-    };
-    if side == ReviewSide::After {
-        return after
-            .entries
-            .iter()
-            .find(|entry| matches(entry))
-            .map(|entry| entry.metadata.path.clone());
-    }
-    let index = before.entries.iter().position(matches)?;
-    let pair = pairing
-        .entries
-        .iter()
-        .find(|pair| pair.before == Some(index))?;
-    Some(pair.after.map_or_else(
-        || before.entries[index].metadata.path.clone(),
-        |index| after.entries[index].metadata.path.clone(),
-    ))
+        .collect();
+    (records, lookups)
 }

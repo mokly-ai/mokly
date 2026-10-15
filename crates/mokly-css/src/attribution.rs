@@ -195,46 +195,38 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                         continue;
                     }
                     let changed = changed.get(&rule.identity);
-                    let owner = if !selector.unresolved {
-                        changed
-                            .and_then(|paths| {
-                                let candidates: BTreeSet<_> = selector
-                                    .matches
-                                    .first()
-                                    .into_iter()
-                                    .flat_map(|matched| &matched.regions)
-                                    .filter(|region| paths.contains(&region.path))
-                                    .map(|region| &region.path)
-                                    .collect();
-                                let covering: Vec<_> = candidates
-                                    .into_iter()
-                                    .filter(|component| {
-                                        selector.matches.iter().all(|matched| {
-                                            matched
-                                                .regions
-                                                .iter()
-                                                .any(|region| &region.path == *component)
-                                        })
-                                    })
-                                    .collect();
-                                (covering.len() == 1).then(|| EvidenceOwner::Component {
-                                    path: covering[0].clone(),
-                                })
-                            })
-                            .unwrap_or(EvidenceOwner::Entry)
+                    let owners: BTreeSet<_> = if selector.unresolved {
+                        BTreeSet::from([None])
                     } else {
-                        EvidenceOwner::Entry
+                        selector
+                            .matches
+                            .iter()
+                            .map(|matched| {
+                                matched
+                                    .regions
+                                    .iter()
+                                    .rev()
+                                    .find(|region| {
+                                        changed.is_some_and(|paths| paths.contains(&region.path))
+                                    })
+                                    .map(|region| region.path.clone())
+                            })
+                            .collect()
                     };
-                    records.push(RuleEvidence {
-                        stylesheet: rule.stylesheet.clone(),
-                        selector: selector.selector.clone(),
-                        status: if selector.unresolved {
-                            RuleStatus::Unresolved
-                        } else {
-                            RuleStatus::Matched
-                        },
-                        owner,
-                    });
+                    for owner in owners {
+                        records.push(RuleEvidence {
+                            stylesheet: rule.stylesheet.clone(),
+                            selector: selector.selector.clone(),
+                            status: if selector.unresolved {
+                                RuleStatus::Unresolved
+                            } else {
+                                RuleStatus::Matched
+                            },
+                            owner: owner.map_or(EvidenceOwner::Entry, |path| {
+                                EvidenceOwner::Component { path }
+                            }),
+                        });
+                    }
                 }
             }
             for stylesheet in examined {

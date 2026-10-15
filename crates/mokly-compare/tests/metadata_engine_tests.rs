@@ -11,6 +11,29 @@ mod engine_support;
 use engine_support::{Fixture, entry};
 
 #[test]
+fn metadata_membership_does_not_override_an_unchanged_view_aggregate() {
+    let fixture = Fixture::new(&[(
+        "specs/home.screen.html",
+        "---\ntitle: Home\ndescription: Before\n---\n<p>Stable</p>",
+    )]);
+    fixture.edit(
+        "specs/home.screen.html",
+        "---\ntitle: Home\ndescription: After\n---\n<p>Stable</p>",
+    );
+    let result = fixture.compare().unwrap();
+    let entry = entry(&result, "home");
+    assert!(entry.included);
+    assert_eq!(entry.reasons, [EntryChangeReason::Metadata]);
+    assert_eq!(entry.state, ReviewState::Unchanged);
+    assert!(
+        entry
+            .views
+            .iter()
+            .all(|view| view.state == ReviewState::Unchanged)
+    );
+}
+
+#[test]
 fn metadata_marks_exact_variants_and_direct_screens_propagate_to_use_cases() {
     let fixture = Fixture::new(&[
         (
@@ -120,6 +143,39 @@ fn removed_variant_keeps_its_parent_title_when_a_document_reuses_the_parent_path
             .parent(
                 "other",
                 mokly_compare::lookup::Destination::Removed(removed)
+            )
+            .is_err()
+    );
+}
+
+#[test]
+fn snapshot_source_validation_rejects_reversed_base_authored_variant_order() {
+    let source = "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, properties: {}}\nVARIANTS---\n<p>Card</p>";
+    let fixture = Fixture::new(&[(
+        "specs/card.component.html",
+        &source.replace(
+            "VARIANTS",
+            "variants: [{slug: z, title: Z, props: {}}, {slug: a, title: A, props: {}}]\n",
+        ),
+    )]);
+    fixture.edit("specs/card.component.html", &source.replace("VARIANTS", ""));
+    let result = fixture.compare().unwrap();
+    assert_eq!(
+        result
+            .snapshot
+            .removed_entries
+            .iter()
+            .map(|record| record.entry.metadata().path.as_str())
+            .collect::<Vec<_>>(),
+        ["card/z", "card/a"]
+    );
+    let mut snapshot = result.snapshot.clone();
+    snapshot.removed_entries.reverse();
+    assert!(
+        snapshot
+            .validate_sources(
+                &result.before.catalogue().model,
+                &result.after.catalogue().model
             )
             .is_err()
     );

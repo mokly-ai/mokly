@@ -30,7 +30,13 @@ type ReviewState =
 type EntryChangeReason =
   | {
       kind:
-        "added" | "removed" | "metadata" | "material" | "inputs" | "structure";
+        | "added"
+        | "removed"
+        | "metadata"
+        | "material"
+        | "implementation"
+        | "inputs"
+        | "structure";
     }
   | { kind: "dependency"; path: string }
   | { kind: "screen"; screenPath: string };
@@ -102,7 +108,10 @@ view axes, under the [comparison pane contract](./mokly-comparison-panes.md).
 An `added` view has no before side and a `removed` view no after side; those
 states are the only record of a missing side. The entry `state` takes the
 precedence changed, added, removed, ignored-only, unchanged over its views. A
-metadata-only or dependency-only entry can have unchanged views.
+metadata-only, actual-instance implementation, or dependency-only entry can
+have unchanged views. Reasons never override the view aggregate. An entry
+with no views is unchanged when both entry sides exist; a missing entry
+side gives added or removed.
 
 A view state follows the [materiality](./mokly-comparison.md#materiality) and
 [style ownership](./mokly-comparison.md#style-ownership) rules: the canonical

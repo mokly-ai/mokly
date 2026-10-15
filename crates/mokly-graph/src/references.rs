@@ -17,6 +17,8 @@ pub struct ResourceReference {
     pub owner: EvidenceOwner,
     /// Ignored references require delivery but supply no change evidence.
     pub ignored: bool,
+    /// Exact logical supplier instance, absent on an entry or own component root.
+    pub instance_key: Option<String>,
 }
 
 /// Collect URL-bearing attributes, style URLs, and embedded documents.
@@ -24,13 +26,21 @@ pub fn collect(nodes: &[Node]) -> Vec<ResourceReference> {
     let mut output = Vec::new();
     let mut instances = BTreeMap::new();
     instance_paths(nodes, &mut instances);
-    walk(nodes, &EvidenceOwner::Entry, false, &instances, &mut output);
+    walk(
+        nodes,
+        &EvidenceOwner::Entry,
+        None,
+        false,
+        &instances,
+        &mut output,
+    );
     output
 }
 
 fn walk(
     nodes: &[Node],
     owner: &EvidenceOwner,
+    instance_key: Option<&str>,
     ignored: bool,
     instances: &BTreeMap<String, String>,
     output: &mut Vec<ResourceReference>,
@@ -53,9 +63,20 @@ fn walk(
                     RegionKind::Slot { .. } => EvidenceOwner::Entry,
                     _ => owner.clone(),
                 };
+                let nested_instance = match &region.kind {
+                    RegionKind::Instance { key, .. } => Some(key.as_str()),
+                    RegionKind::Root { .. } => None,
+                    RegionKind::Slot {
+                        owner: ComponentInputOwner::Instance { instance_key },
+                        ..
+                    } => Some(instance_key.as_str()),
+                    RegionKind::Slot { .. } => None,
+                    _ => instance_key,
+                };
                 walk(
                     children,
                     &nested,
+                    nested_instance,
                     ignored || matches!(region.kind, RegionKind::Ignore { .. }),
                     instances,
                     output,
@@ -88,6 +109,7 @@ fn walk(
                             url: attribute.value.clone(),
                             owner: owner.clone(),
                             ignored,
+                            instance_key: instance_key.map(str::to_owned),
                         });
                     } else if attribute.name == "srcset" {
                         for url in srcset(&attribute.value) {
@@ -95,6 +117,7 @@ fn walk(
                                 url,
                                 owner: owner.clone(),
                                 ignored,
+                                instance_key: instance_key.map(str::to_owned),
                             });
                         }
                     } else if attribute.name == "style" {
@@ -103,12 +126,14 @@ fn walk(
                                 url: reference.value,
                                 owner: owner.clone(),
                                 ignored,
+                                instance_key: instance_key.map(str::to_owned),
                             });
                         }
                     } else if attribute.name == "srcdoc" {
                         walk(
                             &parse::document(&attribute.value),
                             owner,
+                            instance_key,
                             ignored,
                             instances,
                             output,
@@ -123,12 +148,20 @@ fn walk(
                                     url: reference.value,
                                     owner: owner.clone(),
                                     ignored,
+                                    instance_key: instance_key.map(str::to_owned),
                                 });
                             }
                         }
                     }
                 }
-                walk(&element.children, owner, ignored, instances, output);
+                walk(
+                    &element.children,
+                    owner,
+                    instance_key,
+                    ignored,
+                    instances,
+                    output,
+                );
             }
             _ => {}
         }

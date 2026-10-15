@@ -123,3 +123,34 @@ fn a_nested_self_instance_never_takes_its_own_component_proof() {
     }];
     assert!(attribute(&pages).changed_components.contains("card"));
 }
+
+#[test]
+fn the_innermost_changed_component_owns_a_nested_match() {
+    let pages = [
+        PageObservation {
+            component: Some("outer".into()),
+            rules: vec![proof("static/x.css", ".hit", &[("outer", true)])],
+        },
+        PageObservation {
+            component: Some("inner".into()),
+            rules: vec![proof("static/x.css", ".hit", &[("inner", true)])],
+        },
+        PageObservation {
+            component: None,
+            rules: vec![proof(
+                "static/x.css",
+                ".hit",
+                &[("outer", false), ("inner", false)],
+            )],
+        },
+    ];
+    let result = attribute(&pages);
+    assert_eq!(result.changed_components.len(), 2);
+    assert_eq!(result.pages[2].len(), 1);
+    assert_eq!(
+        result.pages[2][0].owner,
+        EvidenceOwner::Component {
+            path: "inner".into()
+        }
+    );
+}

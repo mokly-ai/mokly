@@ -12,6 +12,7 @@ pub mod git_tree;
 pub mod inputs;
 pub mod locations;
 pub mod process;
+mod source_cache;
 pub mod sources;
 pub mod storage;
 mod storage_tree;
@@ -79,3 +80,18 @@ mod move_context;
 #[cfg(test)]
 #[path = "_tests_/inline_seam_tests.rs"]
 mod inline_seam_tests;
+
+mod resource_comparison;
+pub mod resource_memo;
+mod resource_memo_state;
+
+mod inline_styles;
+mod instance_proof;
+
+mod implementation;
+
+mod impact_validation;
+
+mod use_case_impact;
+
+pub mod source_failures;

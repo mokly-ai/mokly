@@ -1,33 +1,67 @@
 //! Review-local reference checks complement the producer's actual instance ownership proof.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::canonical;
-use crate::review::{ReviewEntry, ReviewKind, ReviewState};
+use crate::review::{ReviewEntry, ReviewEntryAddress, ReviewKind, ReviewState};
 use crate::review_affected::{AffectedConsumer, ConsumerKind, ReviewSide};
 
-pub(crate) fn valid(affected: &AffectedConsumer, entries: &[&ReviewEntry]) -> bool {
+pub(crate) struct Index<'a> {
+    current: BTreeSet<(ConsumerKind, &'a str)>,
+    sides: BTreeMap<(ReviewSide, ConsumerKind, &'a str), (&'a ReviewEntry, &'a ReviewEntryAddress)>,
+    before_components: BTreeMap<String, &'a str>,
+}
+
+impl<'a> Index<'a> {
+    pub(crate) fn new(entries: &[&'a ReviewEntry]) -> Self {
+        let mut index = Self {
+            current: BTreeSet::new(),
+            sides: BTreeMap::new(),
+            before_components: BTreeMap::new(),
+        };
+        for entry in entries {
+            let Some(kind) = kind(entry.kind) else {
+                continue;
+            };
+            index.current.insert((kind, &entry.path));
+            for (side, address) in [
+                (ReviewSide::Before, &entry.before),
+                (ReviewSide::After, &entry.after),
+            ] {
+                if let Some(address) = address {
+                    index
+                        .sides
+                        .insert((side, kind, &address.path), (entry, address));
+                    if side == ReviewSide::Before && kind == ConsumerKind::Component {
+                        index
+                            .before_components
+                            .insert(address.path.to_ascii_lowercase(), &entry.path);
+                    }
+                }
+            }
+        }
+        index
+    }
+}
+
+pub(crate) fn valid(affected: &AffectedConsumer, index: &Index<'_>) -> bool {
     if affected.consumer.kind == ConsumerKind::Component
         && affected.consumer.path == affected.changed_component_id
     {
         return false;
     }
-    if !entries.iter().any(|entry| {
-        kind(entry.kind) == Some(affected.consumer.kind) && entry.path == affected.consumer.path
-    }) {
+    if !index
+        .current
+        .contains(&(affected.consumer.kind, affected.consumer.path.as_str()))
+    {
         return false;
     }
     for evidence in &affected.evidence {
-        let context = entries.iter().find_map(|entry| {
-            if kind(entry.kind) != Some(evidence.context.kind) {
-                return None;
-            }
-            let side = match evidence.side {
-                ReviewSide::Before => entry.before.as_ref(),
-                ReviewSide::After => entry.after.as_ref(),
-            }?;
-            (side.path == evidence.context.entry.path).then_some((*entry, side))
-        });
+        let context = index.sides.get(&(
+            evidence.side,
+            evidence.context.kind,
+            evidence.context.entry.path.as_str(),
+        ));
         let Some((entry, address)) = context else {
             return false;
         };
@@ -49,15 +83,10 @@ pub(crate) fn valid(affected: &AffectedConsumer, entries: &[&ReviewEntry]) -> bo
             return false;
         };
         let resolved = if evidence.side == ReviewSide::Before {
-            entries
-                .iter()
-                .find(|entry| {
-                    entry.kind == ReviewKind::Component
-                        && entry.before.as_ref().is_some_and(|address| {
-                            address.path.eq_ignore_ascii_case(&last.component_id)
-                        })
-                })
-                .map(|entry| entry.path.as_str())
+            index
+                .before_components
+                .get(&last.component_id.to_ascii_lowercase())
+                .copied()
         } else {
             Some(last.component_id.as_str())
         };

@@ -30,11 +30,11 @@ to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
-validation. `comparison_closure` accepts a historical missing-resource provider.
-Only a proved absent lexical path can use it. Directories, unreadable nodes, and
-symbolic links remain invalid. `resource_bytes` reads confined public routes
-for comparison without granting access to private sources. Ordinary rendering
-and delivery use no historical fallback.
+validation. Both sides require complete, valid closures. A missing referenced
+head resource is `build-invalid`. `resource_bytes` reads confined public routes
+without granting access to private sources or retaining assets in the private
+source snapshot. Closure evidence retains exact logical instance and referring
+edge context for comparison proof.
 
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.

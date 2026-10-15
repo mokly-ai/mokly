@@ -1,55 +1,35 @@
 //! Candidate resource digests are prefilters; paired reads still prove relocation equality.
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 use mokly_graph::types::RenderGeneration;
-use mokly_model::material::digest;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
-use crate::comparison_resources::{HistoricalResources, css_urls};
 use crate::error::Result;
+use crate::resource_memo::ResourceMemo;
 
 pub(crate) fn resources(
     generation: &dyn RenderGeneration,
-    base: Arc<dyn RenderGeneration>,
+    memo: &dyn ResourceMemo,
     side: ReviewSide,
     route: &str,
 ) -> Result<BTreeMap<String, String>> {
-    let closure = match side {
-        ReviewSide::Before => generation.closure(route).compare()?,
-        ReviewSide::After => generation
-            .comparison_closure(
-                route,
-                Arc::new(HistoricalResources {
-                    before: base.clone(),
-                }),
-            )
-            .compare()?,
-    };
+    let closure = generation.closure(route).compare()?;
     let mut hashes = BTreeMap::new();
-    let mut stylesheets = BTreeMap::new();
+    let mut stylesheets = Vec::new();
     for resource in &closure.evidence {
-        let bytes = match generation.resource_bytes(&resource.path).compare()? {
-            Some(bytes) => bytes,
-            None if side == ReviewSide::After => base
-                .resource_bytes(&resource.path)
-                .compare()?
-                .unwrap_or_default(),
-            None => Vec::new(),
-        };
-        hashes.insert(
-            resource.path.clone(),
-            format!("resource:{}", digest(&bytes)),
-        );
-        if resource.path.ends_with(".css") {
-            stylesheets.insert(resource.path.clone(), bytes);
+        if let Some(hash) = memo.fact(side, &resource.path)?.digest {
+            hashes.insert(resource.path.clone(), format!("resource:{hash}"));
+            if resource.path.ends_with(".css") {
+                stylesheets.push(resource.path.clone());
+            }
         }
     }
-    for (path, bytes) in stylesheets {
-        let normalized = css_urls(&bytes, &path, &hashes);
-        hashes.insert(path, format!("resource:{}", digest(&normalized)));
+    for path in stylesheets {
+        if let Some(hash) = memo.fingerprint(side, &path, &hashes)? {
+            hashes.insert(path, format!("resource:{hash}"));
+        }
     }
     Ok(hashes)
 }

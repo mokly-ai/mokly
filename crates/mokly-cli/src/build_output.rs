@@ -58,6 +58,21 @@ pub fn summary(style: &Style, summary: &BuildSummary, redactor: &Redactor) -> St
 /// Report retained warnings first, then the command's typed failure.
 pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
+        BuildError::Comparison {
+            base_ref,
+            source,
+            warnings: records,
+        } => {
+            warnings(style, records, redactor)
+                + &style.error(
+                    crate::changes_diagnostics::failure_code(source),
+                    &format!(
+                        "comparison against base ref {base_ref:?} failed: {}",
+                        crate::changes_diagnostics::failure_detail(source)
+                    ),
+                    redactor,
+                )
+        }
         BuildError::Deferred {
             modules,
             warnings: records,

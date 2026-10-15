@@ -71,6 +71,8 @@ impl Pairing {
 pub struct MoveSignature {
     /// Normalized material hash.
     pub hash: String,
+    /// Material with every ignore treated as ordinary content, for disjoint contracts.
+    pub unignored_hash: String,
     /// Ignore identities and material-key presence; differing contracts require paired proof.
     pub ignores: Vec<(String, bool)>,
 }

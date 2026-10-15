@@ -47,8 +47,10 @@ the HTML adapter omits ignored regions and inert template contents.
 filters nested component matches and produces per-view owner records. A sheet
 with no kept rule has one empty-selector `excluded` record. `MemoryParsedCss`
 shares equal bytes across paths and sides. Eviction changes work only.
-`inline_attribution` is the tested whole-screen style ownership seam for the
-sidecar integration.
+`inline_attribution` uses physical containment for unowned style rules. The
+comparison engine connects it to inline and head styles with the containing
+public document route as their evidence address. Linked selectors emit one
+record per innermost changed component owner, plus outside entry evidence.
 
 ## Quick Start
 

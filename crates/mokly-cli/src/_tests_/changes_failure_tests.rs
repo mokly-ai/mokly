@@ -1,0 +1,110 @@
+//! Strict warning counts wait for base preparation; internal results remain failures.
+
+use std::path::Path;
+use std::sync::Arc;
+
+use mokly_catalogue::config::ConfigLoaderMock;
+use mokly_catalogue::diagnostic::{Warning, WarningSubject};
+use mokly_catalogue::error::CatalogueError;
+use mokly_catalogue::preparation::CatalogueBuilderMock;
+use mokly_compare::base_render::ChangesServiceMock;
+use mokly_compare::error::Error;
+use mokly_model::read_contract::ContractViolation;
+use mokly_model::readers::ReadError;
+use unimock::{MockFn, Unimock, matching};
+
+use crate::build::{BuildError, BuildService, CatalogueBuild};
+use crate::changes_diagnostics;
+use crate::codes::Code;
+
+use super::build_tests::{config, graphs, options, prepared};
+
+#[test]
+fn strict_counts_head_and_base_preparation_warnings_after_classification() {
+    let head = Warning {
+        code: "html-unused-props",
+        subject: WarningSubject::Entry("home".into()),
+        message: "unused".into(),
+    };
+    let preparation = Warning {
+        code: "base-dependencies",
+        subject: WarningSubject::Entry("base".into()),
+        message: "fallback".into(),
+    };
+    let service: &dyn BuildService = &CatalogueBuild {
+        config: Arc::new(Unimock::new(
+            ConfigLoaderMock::load
+                .next_call(matching!(_, _))
+                .returns(Ok(config())),
+        )),
+        catalogue: Arc::new(Unimock::new(
+            CatalogueBuilderMock::prepare
+                .next_call(matching!(_, _))
+                .returns(Ok(prepared(vec![head.clone()]))),
+        )),
+        graphs: graphs(vec![head.clone()]),
+        changes: Arc::new(Unimock::new(
+            ChangesServiceMock::classify
+                .next_call(matching!(_, _, _))
+                .returns(Err(Error::Base {
+                    commit: "a".repeat(40),
+                    source: Box::new(Error::Catalogue {
+                        source: CatalogueError::Invalid {
+                            issues: Vec::new(),
+                            warnings: vec![preparation.clone()],
+                        },
+                    }),
+                })),
+        )),
+    };
+    let mut options = options();
+    options.no_changes = false;
+    options.strict = true;
+    let BuildError::Strict { warnings } = service.run(Path::new("/repo"), &options).unwrap_err()
+    else {
+        panic!()
+    };
+    assert_eq!(warnings.len(), 2);
+    assert!(warnings.contains(&head));
+    assert!(warnings.contains(&preparation));
+}
+
+#[test]
+fn an_invalid_internal_review_is_a_fatal_build_error() {
+    let service: &dyn BuildService = &CatalogueBuild {
+        config: Arc::new(Unimock::new(
+            ConfigLoaderMock::load
+                .next_call(matching!(_, _))
+                .returns(Ok(config())),
+        )),
+        catalogue: Arc::new(Unimock::new(
+            CatalogueBuilderMock::prepare
+                .next_call(matching!(_, _))
+                .returns(Ok(prepared(Vec::new()))),
+        )),
+        graphs: graphs(Vec::new()),
+        changes: Arc::new(Unimock::new(
+            ChangesServiceMock::classify
+                .next_call(matching!(_, _, _))
+                .returns(Err(Error::Review {
+                    source: ReadError::Contract {
+                        boundary: "review",
+                        message: ContractViolation::Review,
+                    },
+                })),
+        )),
+    };
+    let mut options = options();
+    options.no_changes = false;
+    let BuildError::Comparison {
+        base_ref, source, ..
+    } = service.run(Path::new("/repo"), &options).unwrap_err()
+    else {
+        panic!()
+    };
+    assert_eq!(base_ref, "origin/main");
+    assert!(matches!(
+        changes_diagnostics::failure_code(&source),
+        Code::ReviewInvalid
+    ));
+}

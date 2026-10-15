@@ -3,7 +3,10 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::catalogue::CatalogueModel;
+use crate::readers::ReadError;
 use crate::snapshot_records::EntryRecord;
+use crate::{snapshot_source_order, snapshot_validation};
 
 /// One accepted current path and historical counterpart.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -63,4 +66,16 @@ pub struct RemovedPagePreview {
     pub base_commit: String,
     /// Selected historical entry.
     pub path: String,
+}
+
+impl CatalogueChangeSnapshotV4 {
+    /// Validate full removed ordering, including base-authored sibling order and surviving parents.
+    pub fn validate_sources(
+        &self,
+        before: &CatalogueModel,
+        after: &CatalogueModel,
+    ) -> Result<(), ReadError> {
+        snapshot_validation::validate(self)?;
+        snapshot_source_order::validate(self, before, after)
+    }
 }

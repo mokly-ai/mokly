@@ -57,6 +57,7 @@ pub fn reason_key(reason: &EntryChangeReason) -> (&str, &str) {
         EntryChangeReason::Removed => ("removed", ""),
         EntryChangeReason::Metadata => ("metadata", ""),
         EntryChangeReason::Material => ("material", ""),
+        EntryChangeReason::Implementation => ("implementation", ""),
         EntryChangeReason::Inputs => ("inputs", ""),
         EntryChangeReason::Structure => ("structure", ""),
         EntryChangeReason::Dependency { path } => ("dependency", path),

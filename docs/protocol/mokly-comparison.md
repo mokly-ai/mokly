@@ -105,6 +105,10 @@ record with status `excluded`, an empty `selector`, and the entry as owner, so
 the shell can say that the stylesheet changed without applying. An excluded
 record never makes a view material; a rule attributed to a
 component is that component's change and keeps the screen listed as affected.
+The rule's `stylesheet` address is the containing public document route.
+Containment uses physical component regions, including caller-supplied slot
+nodes, and selects the innermost region common to every match. Input owners
+do not replace this containment test.
 
 ## Resources
 

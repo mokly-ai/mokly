@@ -12,6 +12,7 @@ use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 
 use crate::error::Result;
 use crate::move_types::Pairing;
+use crate::resource_memo::ResourceWork;
 
 /// Document identity. Pages and documents have no viewport axis.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -65,12 +66,18 @@ pub struct ComparisonCounts {
     pub changes: usize,
     /// Accepted moves, counted once within changes too.
     pub moved: usize,
-    /// Views classified ignored-only, never included as a Changes reason.
+    /// Entries whose aggregate state is ignored-only.
     pub ignored_only: usize,
 }
 
 /// Complete validated comparison, retained for later snapshot and static delivery.
 pub struct ComparisonResult {
+    /// Observed route reads, comparisons, diffs, and bounded resource retention.
+    pub resource_work: ResourceWork,
+    /// Actual indexed consumer identity lookups.
+    pub affected_lookups: usize,
+    /// Actual indexed classification-to-review lookups.
+    pub validation_lookups: usize,
     /// Base-side preparation and composition warnings remain outside public JSON.
     pub warnings: Vec<Warning>,
     /// Strict review v8.

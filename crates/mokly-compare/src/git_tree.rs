@@ -10,6 +10,9 @@ use mokly_git::tree::{Limits, Mode};
 use mokly_source_interface::error::{InternalError, Result, SourceError};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
+use crate::error::Error;
+use crate::source_cache::SourceCache;
+use crate::source_failures::SourceFailures;
 use crate::sources::{Sources, TreeIndex};
 
 /// Git files share the working tree's private absolute namespace without reading it.
@@ -17,18 +20,20 @@ pub struct GitTree {
     root: PathBuf,
     sources: Arc<dyn Sources>,
     bound: usize,
-    cache: Mutex<BTreeMap<RepoPath, Vec<u8>>>,
+    cache: Mutex<SourceCache>,
+    failure: Mutex<Option<Arc<Error>>>,
     children: OnceLock<BTreeMap<String, Vec<Child>>>,
 }
 
 impl GitTree {
-    /// Create an adapter without IO. A read caches at most one bounded blob batch.
+    /// Create an adapter without IO, with a byte-bounded per-file LRU.
     pub fn new(root: PathBuf, sources: Arc<dyn Sources>, bytes: usize) -> Self {
         Self {
             root,
             sources,
             bound: bytes,
-            cache: Mutex::new(BTreeMap::new()),
+            cache: Mutex::new(SourceCache::new(bytes)),
+            failure: Mutex::new(None),
             children: OnceLock::new(),
         }
     }
@@ -58,8 +63,16 @@ impl GitTree {
     fn index(&self, path: &Path) -> Result<Arc<TreeIndex>> {
         match self.sources.index() {
             Ok(index) => Ok(index),
-            Err(source) => Err(adapter("index", path, source)),
+            Err(source) => Err(self.failed("index", path, source)),
         }
+    }
+    fn failed(&self, operation: &'static str, path: &Path, source: Error) -> SourceError {
+        let source = Arc::new(source);
+        self.failure
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get_or_insert_with(|| source.clone());
+        adapter(operation, path, source)
     }
 }
 
@@ -126,48 +139,84 @@ impl SourceTree for GitTree {
         if !entry.mode.regular() {
             return Err(failure("read", path, io::ErrorKind::InvalidInput));
         }
-        let mut cache = match self.cache.lock() {
-            Ok(cache) => cache,
-            Err(_) => return Err(failure("read", path, io::ErrorKind::Other)),
-        };
-        if let Some(bytes) = cache.get(&relative) {
-            return Ok(bytes.clone());
+        if let Some(bytes) = self
+            .cache
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(&relative)
+        {
+            return Ok(bytes);
         }
-        let mut total = 0usize;
+        let mut contents = match self
+            .sources
+            .read_many(std::slice::from_ref(&relative), Limits::default())
+        {
+            Ok(contents) => contents,
+            Err(source) => return Err(self.failed("read", path, source)),
+        };
+        let bytes = contents
+            .pop()
+            .ok_or_else(|| failure("read", path, io::ErrorKind::UnexpectedEof))?;
+        self.cache
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .insert(relative, bytes.clone());
+        Ok(bytes)
+    }
+
+    fn prefetch(&self, requested: &[PathBuf]) -> Result<()> {
+        let index = self.index(&self.root)?;
+        let mut batches = Vec::new();
         let mut paths = Vec::new();
-        for (_, candidate) in index.entries.range(relative.clone()..) {
-            if !candidate.mode.regular() {
+        let mut total = 0usize;
+        for path in requested {
+            let Some(relative) = self.relative(path)? else {
+                continue;
+            };
+            let Some(entry) = index
+                .entries
+                .get(&relative)
+                .filter(|entry| entry.mode.regular())
+            else {
+                continue;
+            };
+            if self
+                .cache
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .contains(&relative)
+            {
                 continue;
             }
-            let cost = candidate
+            let cost = entry
                 .size
-                .saturating_add(candidate.path.as_str().len())
+                .saturating_add(relative.as_str().len())
                 .saturating_add(128);
+            if cost > self.bound.min(48 * 1024 * 1024) {
+                continue;
+            }
             if paths.len() == 4096 || total.saturating_add(cost) > self.bound.min(48 * 1024 * 1024)
             {
-                break;
+                batches.push(std::mem::take(&mut paths));
+                total = 0;
             }
             total += cost;
-            paths.push(candidate.path.clone());
+            paths.push(relative);
         }
-        if paths.is_empty() {
-            paths.push(relative.clone());
+        if !paths.is_empty() {
+            batches.push(paths);
         }
-        let contents = match self.sources.read_many(&paths, Limits::default()) {
-            Ok(contents) => contents,
-            Err(source) => return Err(adapter("read", path, source)),
-        };
-        cache.clear();
-        let mut selected = None;
-        for (key, bytes) in paths.into_iter().zip(contents) {
-            if key == relative {
-                selected = Some(bytes.clone());
-            }
-            if total > 0 && total <= self.bound {
-                cache.insert(key, bytes);
+        for paths in batches {
+            let bytes = match self.sources.read_many(&paths, Limits::default()) {
+                Ok(bytes) => bytes,
+                Err(source) => return Err(self.failed("prefetch", &self.root, source)),
+            };
+            let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
+            for (path, bytes) in paths.into_iter().zip(bytes) {
+                cache.insert(path, bytes);
             }
         }
-        selected.ok_or_else(|| failure("read", path, io::ErrorKind::UnexpectedEof))
+        Ok(())
     }
 }
 
@@ -204,3 +253,16 @@ fn adapter(
 #[cfg(test)]
 #[path = "_tests_/git_tree_tests.rs"]
 mod git_tree_tests;
+
+#[cfg(test)]
+#[path = "_tests_/git_tree_scale_tests.rs"]
+mod git_tree_scale_tests;
+
+impl SourceFailures for GitTree {
+    fn failure(&self) -> Option<Arc<Error>> {
+        self.failure
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
+    }
+}

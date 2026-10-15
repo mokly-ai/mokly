@@ -29,6 +29,12 @@ impl SourceSnapshot {
 }
 
 impl SourceTree for SourceSnapshot {
+    fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
+        self.source.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
+        self.source.read_public(path)
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(node) = nodes.get(path) {
@@ -60,3 +66,7 @@ impl SourceTree for SourceSnapshot {
         Ok(bytes)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/public_snapshot_tests.rs"]
+mod public_snapshot_tests;

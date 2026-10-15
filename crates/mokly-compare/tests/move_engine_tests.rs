@@ -180,3 +180,24 @@ fn pure_moved_references_do_not_propagate_screen_reasons_into_a_flow() {
     assert!(!entry(&result, "tour").included);
     assert!(entry(&result, "new").reasons.is_empty());
 }
+
+#[test]
+fn an_unmatched_variant_declaration_stays_blocked_when_its_parent_pairs() {
+    let fixture = Fixture::new(&[(
+        "specs/old.component.html",
+        "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, properties: {}}\nvariants: [{slug: one, title: One, props: {}}]\n---\n<p>Card</p>",
+    )]);
+    fixture.remove("specs/old.component.html");
+    fixture.edit("specs/new.component.html", "---\ntitle: Card\nelement: ui-card\nmovedFrom: old\npropSchema: {type: object, additionalProperties: false, properties: {}}\nvariants: [{slug: one, title: One, props: {}, movedFrom: absent}]\n---\n<p>Card</p>");
+    let result = fixture.compare().unwrap();
+    assert_eq!(result.counts.moved, 1);
+    assert!(entry(&result, "new/one").previous_path.is_none());
+    assert_eq!(
+        result.snapshot.removed_entries[0].entry.metadata().path,
+        "old/one"
+    );
+    assert_eq!(
+        result.pairing.diagnostics,
+        ["new/one: movedFrom absent matched no removed base entry of kind component"]
+    );
+}

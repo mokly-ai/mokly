@@ -24,6 +24,21 @@ pub enum ReviewState {
     IgnoredOnly,
 }
 
+impl ReviewState {
+    /// Aggregate actual view states without deriving materiality from entry reasons.
+    pub fn aggregate(states: impl Iterator<Item = Self>) -> Self {
+        states
+            .max_by_key(|state| match state {
+                Self::Changed => 4,
+                Self::Added => 3,
+                Self::Removed => 2,
+                Self::IgnoredOnly => 1,
+                Self::Unchanged => 0,
+            })
+            .unwrap_or(Self::Unchanged)
+    }
+}
+
 /// Kinds represented by visual review records.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize, TS)]
 #[serde(rename_all = "kebab-case")]
@@ -88,6 +103,8 @@ pub enum EntryChangeReason {
     Metadata,
     /// Canonical owned material changed.
     Material,
+    /// Render difference proved only at an actual unchanged-input instance.
+    Implementation,
     /// Caller-owned instance props changed.
     Inputs,
     /// Caller-owned instance identity or order changed.

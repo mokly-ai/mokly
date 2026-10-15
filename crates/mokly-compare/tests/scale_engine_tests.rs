@@ -125,12 +125,85 @@ fn one_changed_stylesheet_parses_once_per_content_across_all_saved_views() {
         assert!(result.entries.iter().all(|entry| entry.included));
         assert!(result.review.affected.is_empty());
         assert!(cache.stats().bytes <= 65536);
-        cache.stats()
+        (cache.stats(), result.resource_work)
     };
     let smaller = count(16);
     let larger = count(64);
-    assert_eq!(smaller.parses, 2);
-    assert_eq!(larger.parses, smaller.parses);
-    assert!(smaller.hits > 0);
-    assert!(larger.hits * 2 <= smaller.hits * 9);
+    assert_eq!(smaller.0.parses, 2);
+    assert_eq!(larger.0.parses, smaller.0.parses);
+    assert_eq!(smaller.1.diffs, 1);
+    assert_eq!(larger.1.diffs, smaller.1.diffs);
+    assert!(smaller.1.reads > 0);
+    assert_eq!(larger.1.reads, smaller.1.reads);
+}
+
+#[test]
+fn distinct_ignore_ids_use_bounded_full_comparisons_for_unique_author_content() {
+    let run = |size| {
+        let files: Vec<_> = (0..size).map(|index| (format!("specs/old-{index}.screen.html"), format!("---\ntitle: Entry\n---\n<mokly-ignore id=\"left-{index}\">Unique {index}</mokly-ignore>"))).collect();
+        let fixture = Fixture::new(
+            &files
+                .iter()
+                .map(|(path, body)| (path.as_str(), body.as_str()))
+                .collect::<Vec<_>>(),
+        );
+        for (index, (path, body)) in files.iter().enumerate() {
+            fixture.remove(path);
+            fixture.edit(
+                &format!("specs/new-{index}.screen.html"),
+                &body.replace("left-", "right-"),
+            );
+        }
+        let calls = Arc::new(AtomicUsize::new(0));
+        let result = fixture
+            .compare_with(
+                Arc::new(CountingDetector(calls.clone())),
+                Arc::new(MemoryParsedCss::new(4096)),
+            )
+            .unwrap();
+        assert_eq!(result.counts.moved, size);
+        calls.load(Ordering::SeqCst)
+    };
+    let small = run(8);
+    let large = run(32);
+    assert_eq!(small, 8);
+    assert!(large * 2 <= small * 9);
+}
+
+#[test]
+fn widely_used_changed_components_and_shared_resources_use_indexed_work() {
+    let run = |size| {
+        let mut files: Vec<_> = (0..size)
+            .map(|index| {
+                (
+                    format!("specs/home-{index}.screen.html"),
+                    "---\ntitle: Home\n---\n<ui-card></ui-card>".to_owned(),
+                )
+            })
+            .collect();
+        files.push(("specs/card.component.html".into(), "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, properties: {}}\n---\n<p>Card</p><img src=\"../../image.svg\">".into()));
+        files.push(("image.svg".into(), "before".repeat(1024)));
+        let fixture = Fixture::new(
+            &files
+                .iter()
+                .map(|(path, body)| (path.as_str(), body.as_str()))
+                .collect::<Vec<_>>(),
+        );
+        fixture.edit("image.svg", &"after".repeat(1024));
+        let result = fixture.compare().unwrap();
+        assert_eq!(result.snapshot.changed_entries, ["card"]);
+        assert_eq!(result.review.affected.len(), size);
+        (
+            result.affected_lookups,
+            result.validation_lookups,
+            result.resource_work,
+        )
+    };
+    let small = run(8);
+    let large = run(32);
+    assert!(small.0 > 0 && small.1 > 0 && small.2.reads > 0);
+    assert!(large.0 * 2 <= small.0 * 9);
+    assert!(large.1 * 2 <= small.1 * 9);
+    assert_eq!(large.2.reads, small.2.reads);
+    assert_eq!(large.2.read_bytes, small.2.read_bytes);
 }

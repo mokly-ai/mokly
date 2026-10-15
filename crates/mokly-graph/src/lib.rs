@@ -40,3 +40,6 @@ mod boundaries_tests;
 mod cache_tests;
 
 mod resource_access;
+
+mod closure_prefetch;
+pub mod resource_reach;

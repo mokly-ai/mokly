@@ -38,6 +38,7 @@ fn a_nonmatching_declaration_blocks_every_later_signal() {
             .answers(&|_, _, _, _| {
                 Ok(MoveSignature {
                     hash: "same".into(),
+                    unignored_hash: "same".into(),
                     ignores: Vec::new(),
                 })
             }),
@@ -60,6 +61,7 @@ fn identical_ambiguity_is_permanent_and_uses_the_exact_diagnostic_order() {
             .answers(&|_, _, _, _| {
                 Ok(MoveSignature {
                     hash: "same".into(),
+                    unignored_hash: "same".into(),
                     ignores: Vec::new(),
                 })
             }),
@@ -102,6 +104,7 @@ fn unique_material_runs_one_full_comparison_per_candidate_at_both_scales() {
                 .answers(&|_, _, index, _| {
                     Ok(MoveSignature {
                         hash: index.to_string(),
+                        unignored_hash: index.to_string(),
                         ignores: Vec::new(),
                     })
                 }),
@@ -149,6 +152,7 @@ fn similarity_ties_report_ambiguity_once_and_do_not_accept_a_mutual_subset() {
             .answers(&|_, side, index, _| {
                 Ok(MoveSignature {
                     hash: format!("{side:?}-{index}"),
+                    unignored_hash: format!("{side:?}-{index}"),
                     ignores: Vec::new(),
                 })
             }),

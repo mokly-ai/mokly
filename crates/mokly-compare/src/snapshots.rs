@@ -78,7 +78,7 @@ pub(crate) fn create(
         });
     }
     let removed = crate::removal_order::sort(removed, before, after, pairing, &selected);
-    Ok(CatalogueChangeSnapshotV4 {
+    let snapshot = CatalogueChangeSnapshotV4 {
         schema_version: 4,
         base_ref: base_ref.into(),
         base_commit: base_commit.into(),
@@ -92,7 +92,9 @@ pub(crate) fn create(
             })
             .collect(),
         removed_entries: removed,
-    })
+    };
+    snapshot.validate_sources(before, after).compare()?;
+    Ok(snapshot)
 }
 
 fn folders(entry: &ModelEntry, catalogue: &CatalogueModel) -> Vec<String> {

@@ -8,6 +8,7 @@ use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 use crate::record_validation;
 use crate::snapshot::CatalogueChangeSnapshotV4;
+use crate::snapshot_order;
 use crate::snapshot_records::EntryRecord;
 
 pub(crate) fn validate(snapshot: &CatalogueChangeSnapshotV4) -> Result<(), ReadError> {
@@ -15,7 +16,8 @@ pub(crate) fn validate(snapshot: &CatalogueChangeSnapshotV4) -> Result<(), ReadE
         boundary: "change snapshot",
         message: ContractViolation::Snapshot,
     };
-    if !matches!(snapshot.base_commit.len(), 40 | 64)
+    if !snapshot_order::valid(snapshot)
+        || !matches!(snapshot.base_commit.len(), 40 | 64)
         || !snapshot
             .base_commit
             .bytes()

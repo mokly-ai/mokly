@@ -9,8 +9,10 @@ use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_types::ViewKey;
 use crate::move_inventory::{self, PlanIndex, VariantIndex};
+use crate::resource_memo::ResourceMemo;
 
 pub(crate) struct RenderedMoves<'a> {
+    pub(crate) memo: Arc<dyn ResourceMemo>,
     pub(crate) before: Arc<dyn RenderGeneration>,
     pub(crate) after: Arc<dyn RenderGeneration>,
     before_plans: &'a PlanIndex<'a>,
@@ -26,10 +28,12 @@ impl<'a> RenderedMoves<'a> {
         after: Arc<dyn RenderGeneration>,
         before_plans: &'a PlanIndex<'a>,
         after_plans: &'a PlanIndex<'a>,
+        memo: Arc<dyn ResourceMemo>,
     ) -> Self {
         let before_variants = move_inventory::variant_index(&before.catalogue().model);
         let after_variants = move_inventory::variant_index(&after.catalogue().model);
         Self {
+            memo,
             before,
             after,
             before_plans,

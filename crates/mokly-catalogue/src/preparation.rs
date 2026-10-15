@@ -62,6 +62,18 @@ pub struct Builder {
 impl CatalogueBuilder for Builder {
     fn prepare(&self, config: &ResolvedConfig, output: Option<&Path>) -> Result<PreparedCatalogue> {
         let inventory = self.discovery.discover(config, output)?;
+        let paths: Vec<_> = inventory
+            .files
+            .iter()
+            .filter(|file| !file.excluded)
+            .map(|file| file.absolute.clone())
+            .collect();
+        if let Err(source) = self.tree.prefetch(&paths) {
+            return Err(CatalogueError::Config(Issue::new(
+                Code::ConfigInvalid,
+                format!("source prefetch failed: {}", source.code()),
+            )));
+        }
         let schemes = config
             .input
             .color_schemes

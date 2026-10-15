@@ -76,7 +76,7 @@ fn warnings_print_once_and_strict_fails_before_any_write() {
     assert_eq!(String::from_utf8(output.stderr).unwrap(), warning);
     let output = run(
         directory.path(),
-        &["build", "--strict", "--out", "existing"],
+        &["build", "--no-changes", "--strict", "--out", "existing"],
         "plain",
     );
     assert_eq!(output.status.code(), Some(1));
@@ -103,7 +103,11 @@ fn config_search_and_explicit_paths_do_not_depend_on_the_package_directory() {
     write(directory.path(), "mokly.config.json", "{}");
     write(directory.path(), "specs/guide.md", "# Guide");
     fs::create_dir_all(directory.path().join("nested/deep")).unwrap();
-    let output = run(&directory.path().join("nested/deep"), &["build"], "plain");
+    let output = run(
+        &directory.path().join("nested/deep"),
+        &["build", "--no-changes"],
+        "plain",
+    );
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -117,7 +121,7 @@ fn config_search_and_explicit_paths_do_not_depend_on_the_package_directory() {
     .unwrap();
     let output = run(
         &directory.path().join("nested/deep"),
-        &["build", "--config", "../../catalogue.json"],
+        &["build", "--no-changes", "--config", "../../catalogue.json"],
         "plain",
     );
     assert_eq!(
@@ -137,7 +141,7 @@ fn html_errors_report_the_exact_one_based_source_location() {
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<main><ui-missing></ui-missing></main>\n",
     );
-    let output = run(directory.path(), &["build"], "plain");
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
     assert_eq!(

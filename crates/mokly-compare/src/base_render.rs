@@ -14,12 +14,15 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
-use crate::error::{GitResult, Result};
+use crate::error::{Error, GitResult, Result};
 use crate::git_tree::GitTree;
+use crate::source_failures::SourceFailures;
 use crate::sources::{GitSources, Sources};
 
 /// Both source interfaces pin one immutable index and cancellation generation.
 pub struct HistoricalSources {
+    /// Typed Git failures remain fatal even when source validation reports a diagnostic.
+    pub failures: Arc<dyn SourceFailures>,
     /// Catalogue, HTML, CSS, Markdown, and resource reads.
     pub tree: Arc<dyn SourceTree>,
     /// Batched dependency reads and the later sidecar's extraction inputs.
@@ -54,9 +57,12 @@ impl BaseSourceFactory for GitSourceFactory {
         root: &Path,
     ) -> Result<HistoricalSources> {
         let sources: Arc<dyn Sources> = Arc::new(GitSources::new(repository, commit, self.limits));
-        let tree: Arc<dyn SourceTree> =
-            Arc::new(GitTree::new(root.into(), sources.clone(), self.batch_bytes));
-        Ok(HistoricalSources { sources, tree })
+        let tree = Arc::new(GitTree::new(root.into(), sources.clone(), self.batch_bytes));
+        Ok(HistoricalSources {
+            sources,
+            failures: tree.clone(),
+            tree,
+        })
     }
 }
 
@@ -110,27 +116,41 @@ impl ChangesService for Changes {
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
-        let base = base
-            .or_else(|| {
-                config
-                    .input
-                    .review
-                    .as_ref()
-                    .and_then(|review| review.base.as_deref())
-            })
-            .unwrap_or("origin/main");
+        let base = selected_base(config, base);
         let repository = self.repositories.open(&config.repo_root).base()?;
         let commit = repository.merge_base(base).base()?;
         let sources = self
             .sources
             .create(repository.clone(), commit.clone(), &config.repo_root)?;
-        let before = self.provider.prepare(&BaseRequest {
+        let failures = sources.failures.clone();
+        let prepared = self.provider.prepare(&BaseRequest {
             working_config: config,
             repository,
             commit: commit.clone(),
             sources,
-        })?;
-        self.comparison.compare(
+        });
+        if let Some(source) = failures.failure() {
+            return Err(Error::SourceFailure { source });
+        }
+        let before = match prepared {
+            Ok(before) => before,
+            Err(source) => {
+                return Err(Error::Base {
+                    commit: commit.to_string(),
+                    source: Box::new(source),
+                });
+            }
+        };
+        if let Err(source) = before.render_all() {
+            if let Some(source) = failures.failure() {
+                return Err(Error::SourceFailure { source });
+            }
+            return Err(Error::Base {
+                commit: commit.to_string(),
+                source: Box::new(Error::Graph { source }),
+            });
+        }
+        let result = self.comparison.compare(
             &ComparisonRequest {
                 base_ref: base.into(),
                 base_commit: commit.to_string(),
@@ -139,6 +159,23 @@ impl ChangesService for Changes {
             },
             before,
             head,
-        )
+        );
+        if let Some(source) = failures.failure() {
+            return Err(Error::SourceFailure { source });
+        }
+        result
     }
+}
+
+/// Select the same base ref for preparation and terminal failures.
+pub fn selected_base<'a>(config: &'a ResolvedConfig, explicit: Option<&'a str>) -> &'a str {
+    explicit
+        .or_else(|| {
+            config
+                .input
+                .review
+                .as_ref()
+                .and_then(|review| review.base.as_deref())
+        })
+        .unwrap_or("origin/main")
 }

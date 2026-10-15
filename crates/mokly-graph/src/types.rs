@@ -11,7 +11,7 @@ use mokly_css::types::StylesheetRoot;
 use mokly_model::axes::{ColorScheme, Viewport};
 
 use crate::cache::Artifact;
-use crate::closure::{Closure, GeneratedResources, MissingResources};
+use crate::closure::{Closure, GeneratedResources};
 use crate::error::Result;
 use crate::key::NodeKey;
 
@@ -60,16 +60,10 @@ pub trait RenderGeneration: GeneratedResources {
     fn catalogue(&self) -> &PreparedCatalogue;
     /// Obtain one document, using the cache or rendering an evicted node again.
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
-    /// Compose comparison material before closure checks, including verified deletions.
+    /// Compose comparison material before closure checks, without changing document bytes.
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>>;
     /// Read a confined resource by its public route. Missing regular targets return None.
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>>;
-    /// Validate the complete closure with an optional proved historical deletion reader.
-    fn comparison_closure(
-        &self,
-        route: &str,
-        missing: Arc<dyn MissingResources>,
-    ) -> Result<Closure>;
     /// Obtain the referenced authored files and evidence of one document.
     fn closure(&self, route: &str) -> Result<Closure>;
     /// Render and validate every view across the worker pool.

@@ -9,7 +9,7 @@ use mokly_model::review_affected::ReviewSide;
 use crate::error::Result;
 use crate::move_candidates::Candidates;
 use crate::move_similarity;
-use crate::move_types::{MoveDetector, MoveEvidence, MoveSignature, Pairing};
+use crate::move_types::{MoveDetector, MoveEvidence, Pairing};
 
 /// The common move policy. It never uses Git rename scores as entry evidence.
 pub struct Detector;
@@ -94,15 +94,26 @@ fn identical(state: &mut Candidates<'_>, evidence: &dyn MoveEvidence) -> Result<
             );
         }
     }
-    let mut groups: BTreeMap<(EntryKind, String), Vec<usize>> = BTreeMap::new();
+    let mut groups: BTreeMap<_, Vec<usize>> = BTreeMap::new();
+    let mut ordinary: BTreeMap<_, Vec<usize>> = BTreeMap::new();
+    let mut ignores: BTreeMap<_, Vec<usize>> = BTreeMap::new();
     for (index, signature) in &before {
+        let entry = &state.before.entries[*index];
+        let role = entry.metadata.variant_of.is_some();
         groups
-            .entry((
-                state.before.entries[*index].content.kind(),
-                signature.hash.clone(),
-            ))
+            .entry((entry.content.kind(), role, signature.hash.clone()))
             .or_default()
             .push(*index);
+        ordinary
+            .entry((entry.content.kind(), role, signature.unignored_hash.clone()))
+            .or_default()
+            .push(*index);
+        for (id, _) in &signature.ignores {
+            ignores
+                .entry((entry.content.kind(), role, id.clone()))
+                .or_default()
+                .push(*index);
+        }
     }
     for variants in [false, true] {
         if variants {
@@ -115,19 +126,29 @@ fn identical(state: &mut Candidates<'_>, evidence: &dyn MoveEvidence) -> Result<
             {
                 continue;
             }
+            let kind = state.after.entries[*right].content.kind();
             let mut candidates = groups
-                .get(&(
-                    state.after.entries[*right].content.kind(),
-                    signature.hash.clone(),
-                ))
+                .get(&(kind, variants, signature.hash.clone()))
                 .cloned()
                 .unwrap_or_default();
             candidates.extend(
-                before
-                    .iter()
-                    .filter(|(_, left)| different_ignores(left, signature))
-                    .map(|(index, _)| *index),
+                ordinary
+                    .get(&(kind, variants, signature.unignored_hash.clone()))
+                    .into_iter()
+                    .flatten()
+                    .filter(|index| before[index].ignores != signature.ignores)
+                    .copied(),
             );
+            for (id, _) in &signature.ignores {
+                candidates.extend(
+                    ignores
+                        .get(&(kind, variants, id.clone()))
+                        .into_iter()
+                        .flatten()
+                        .filter(|index| before[index].ignores != signature.ignores)
+                        .copied(),
+                );
+            }
             candidates.sort_unstable();
             candidates.dedup();
             for left in candidates {
@@ -143,10 +164,6 @@ fn identical(state: &mut Candidates<'_>, evidence: &dyn MoveEvidence) -> Result<
     }
     state.children(false);
     Ok(())
-}
-
-fn different_ignores(left: &MoveSignature, right: &MoveSignature) -> bool {
-    left.ignores != right.ignores
 }
 
 fn source_title(state: &mut Candidates<'_>) {

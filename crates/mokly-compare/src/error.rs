@@ -2,6 +2,7 @@
 
 use std::io;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use mokly_git::error;
 use thiserror::Error;
@@ -12,6 +13,20 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Recoverable preparation failures.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Original Git IO failure retained while the authoring layer emits its diagnostics.
+    #[error("[mokly-compare/source] {source}")]
+    SourceFailure {
+        /// Typed original adapter error.
+        source: Arc<Error>,
+    },
+    /// Historical source validation failed at a named immutable base.
+    #[error("[mokly-compare/base] base {commit}: {source}")]
+    Base {
+        /// Pinned historical commit.
+        commit: String,
+        /// Typed validation or preparation failure.
+        source: Box<Error>,
+    },
     /// Catalogue configuration or historical sources failed current validation.
     #[error("[mokly-compare/catalogue] {source}")]
     Catalogue {

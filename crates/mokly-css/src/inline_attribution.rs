@@ -9,7 +9,7 @@ use crate::match_tree::MatchTree;
 use crate::rule_matching::DocumentMatching;
 
 /// Inline rules use all-match ownership rather than linked-CSS own-page membership.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct InlineAttribution {
     /// One owner-attributed record per retained selector, or one excluded sheet.
     pub rules: Vec<RuleEvidence>,
@@ -36,13 +36,18 @@ pub fn attribute(
                 selector
                     .matches
                     .first()
-                    .map(|matched| matched.owner.clone())
-                    .filter(|owner| {
-                        matches!(owner, EvidenceOwner::Component { .. })
-                            && selector
-                                .matches
-                                .iter()
-                                .all(|matched| &matched.owner == owner)
+                    .and_then(|first| {
+                        first.regions.iter().rev().find(|region| {
+                            selector.matches.iter().all(|matched| {
+                                matched
+                                    .regions
+                                    .iter()
+                                    .any(|other| other.path == region.path)
+                            })
+                        })
+                    })
+                    .map(|region| EvidenceOwner::Component {
+                        path: region.path.clone(),
                     })
                     .unwrap_or(EvidenceOwner::Entry)
             } else {

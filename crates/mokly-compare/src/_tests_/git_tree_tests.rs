@@ -61,6 +61,11 @@ fn projections_children_and_reads_share_an_index_and_one_blob_batch() {
         FileKind::Other
     );
     assert!(tree.project(Path::new("/repo/missing")).unwrap().is_none());
+    tree.prefetch(&[
+        PathBuf::from("/repo/specs/a"),
+        PathBuf::from("/repo/specs/b"),
+    ])
+    .unwrap();
     assert_eq!(tree.read(Path::new("/repo/specs/a")).unwrap(), [1]);
     assert_eq!(tree.read(Path::new("/repo/specs/b")).unwrap(), [2]);
     assert!(tree.read(Path::new("/repo/link")).is_err());

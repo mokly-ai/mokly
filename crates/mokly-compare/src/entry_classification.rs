@@ -75,10 +75,8 @@ pub(crate) fn classify(
         ReviewState::Added
     } else if current.is_none() {
         ReviewState::Removed
-    } else if !reasons.is_empty() {
-        ReviewState::Changed
     } else {
-        aggregate(views.views.iter().map(|view| view.document.state))
+        ReviewState::aggregate(views.views.iter().map(|view| view.document.state))
     };
     Ok(EntryClassification {
         kind: entry.content.kind(),
@@ -91,18 +89,6 @@ pub(crate) fn classify(
         reasons,
         documents: views.views.into_iter().map(|view| view.document).collect(),
     })
-}
-
-pub(crate) fn aggregate(states: impl Iterator<Item = ReviewState>) -> ReviewState {
-    states
-        .max_by_key(|state| match state {
-            ReviewState::Changed => 4,
-            ReviewState::Added => 3,
-            ReviewState::Removed => 2,
-            ReviewState::IgnoredOnly => 1,
-            ReviewState::Unchanged => 0,
-        })
-        .unwrap_or(ReviewState::Unchanged)
 }
 
 fn owned(owner: &EvidenceOwner, own_component: Option<&String>) -> bool {

@@ -28,8 +28,10 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 `GitSources::new` pins a commit and explicit file and metadata-node bounds.
 It indexes every tree mode once. `GitTree` implements `dyn SourceTree` over
 that index. Projection and direct-child queries start no per-file Git command.
-Sequential reads share a bounded blob batch. Links and submodules supply no
-regular source bytes. It lists
+Catalogue inventories and known closure targets request exact prefetch sets.
+Reads retain a byte-bounded file LRU. A miss reads only its requested path;
+Git IO holds no cache lock. Unrelated adjacent blobs are not prefetched.
+Links and submodules supply no regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
@@ -70,17 +72,12 @@ and the base source copy for tier two. Supply
 repository-relative package roots in the request; the result names absolute
 roots from the selected installation and keeps the other settings.
 
-## Quick Start
-
-```bash
-cargo test -p mokly-compare
-cargo test -p mokly-compare --test dependencies_tests
-```
-
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds graph handles, view states, reasons, ownership
-records, and immutable historical metadata. Removed previews read the same
+records, and immutable historical metadata. Resource facts and byte proofs
+are reused per route; public resource bytes and stylesheet diffs have explicit
+cache bounds. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
 
@@ -95,6 +92,13 @@ and comparison coordinator. Call `InputReader::read` on `GitSources` and
 `WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
 before dependency selection.
 Pass one cancellation token to the caches, Git runner, and install supervisor.
+
+## Quick Start
+
+```bash
+cargo test -p mokly-compare
+cargo test -p mokly-compare --test dependencies_tests
+```
 
 ## Development
 

@@ -8,7 +8,7 @@ use mokly_model::material::digest;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
-use crate::comparison_resources::{closures, css_urls};
+use crate::comparison_resources::closures;
 use crate::error::Result;
 use crate::material::{self, Projection};
 use crate::move_context::RenderedMoves;
@@ -27,6 +27,7 @@ impl MoveEvidence for RenderedMoves<'_> {
         let entry = &generation.catalogue().model.entries[index];
         let mut views = Vec::new();
         let mut ignored = Vec::new();
+        let mut unignored = Vec::new();
         for (key, plan) in self.plans(side, index) {
             let artifact = generation.comparison_document(&plan.route).compare()?;
             let Some(document) = &artifact.document else {
@@ -39,8 +40,8 @@ impl MoveEvidence for RenderedMoves<'_> {
                 .collect();
             let route = format!("static/mokly-generated/{}", plan.route);
             let resources =
-                move_fingerprint::resources(generation, self.before.clone(), side, &plan.route)?;
-            let projection = Projection {
+                move_fingerprint::resources(generation, self.memo.as_ref(), side, &plan.route)?;
+            let mut projection = Projection {
                 ignored: ignores,
                 instances,
                 paths: paths.clone(),
@@ -50,6 +51,12 @@ impl MoveEvidence for RenderedMoves<'_> {
                 inputs: instance_inputs::collect(&document.usage),
             };
             views.push((
+                key.viewport,
+                key.color_scheme,
+                material::canonical(&document.tree, &projection),
+            ));
+            projection.ignored.clear();
+            unignored.push((
                 key.viewport,
                 key.color_scheme,
                 material::canonical(&document.tree, &projection),
@@ -77,11 +84,13 @@ impl MoveEvidence for RenderedMoves<'_> {
             _ => String::new(),
         };
         let mut variants = Vec::new();
+        let mut unignored_variants = Vec::new();
         if matches!(entry.content, EntryContent::Component { .. })
             && entry.metadata.variant_of.is_none()
         {
             for (slug, index) in self.children(side, entry, paths) {
                 let signature = self.signature(side, index, paths)?;
+                unignored_variants.push((slug.clone(), signature.unignored_hash));
                 variants.push((slug, signature.hash));
                 ignored.extend(signature.ignores);
             }
@@ -89,6 +98,11 @@ impl MoveEvidence for RenderedMoves<'_> {
         ignored.sort();
         ignored.dedup();
         Ok(MoveSignature {
+            unignored_hash: digest(
+                canonical::to_string(&(unignored, &steps, &extra, unignored_variants))
+                    .compare()?
+                    .as_bytes(),
+            ),
             hash: digest(
                 canonical::to_string(&(views, steps, extra, variants))
                     .compare()?
@@ -127,6 +141,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 Some(&left_plan.route),
                 Some(&right_plan.route),
                 true,
+                self.memo.as_ref(),
             )?;
             let comparison = view_material::compare(
                 left_document,
@@ -154,21 +169,9 @@ impl MoveEvidence for RenderedMoves<'_> {
                     .iter()
                     .find_map(|(left, right)| (right == after_path).then_some(left))
                     .unwrap_or(after_path);
-                let left_bytes = self.before.resource_bytes(before_path).compare()?;
-                let right_bytes = self.after.resource_bytes(after_path).compare()?;
-                let equal = if after_path.ends_with(".css") {
-                    css_urls(
-                        left_bytes.as_deref().unwrap_or_default(),
-                        before_path,
-                        &resources.aliases,
-                    ) == css_urls(
-                        right_bytes.as_deref().unwrap_or_default(),
-                        after_path,
-                        &BTreeMap::new(),
-                    )
-                } else {
-                    left_bytes == right_bytes
-                };
+                let equal = self
+                    .memo
+                    .equal(before_path, after_path, &resources.aliases)?;
                 if !equal {
                     return Ok(false);
                 }

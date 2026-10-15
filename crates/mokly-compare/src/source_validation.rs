@@ -1,6 +1,6 @@
 //! Validate source coverage and affected proof against the recorded classifier inputs.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::axes::EntryKind;
 use mokly_model::canonical;
@@ -15,6 +15,9 @@ use crate::comparison_error::CompareResult;
 use crate::comparison_types::EntryClassification;
 use crate::comparison_views::{UsageView, address};
 use crate::error::{Error, Result};
+use crate::impact_validation;
+use crate::implementation::InlineProof;
+use crate::instance_proof::InstanceProof;
 use crate::move_types::Pairing;
 
 pub(crate) struct SourceValidation<'a> {
@@ -24,10 +27,12 @@ pub(crate) struct SourceValidation<'a> {
     pub(crate) classifications: &'a [EntryClassification],
     pub(crate) usage: &'a [UsageView],
     pub(crate) impact: &'a BTreeSet<String>,
+    pub(crate) instance_proofs: &'a [InstanceProof],
+    pub(crate) inline_proofs: &'a [InlineProof],
 }
 
 /// Validate the complete result before any host can project or capture it.
-pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) -> Result<()> {
+pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) -> Result<usize> {
     review_validation::validate(result).compare()?;
     let entries: Vec<_> = result
         .entries
@@ -39,6 +44,12 @@ pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) ->
                 .flat_map(|entry| entry.variants.iter().flatten()),
         )
         .collect();
+    let index: BTreeMap<_, _> = entries
+        .iter()
+        .map(|entry| ((entry.kind, entry.path.as_str()), *entry))
+        .collect();
+    let mut lookups = 0;
+    impact_validation::validate(&inputs)?;
     let expected = inputs
         .pairing
         .entries
@@ -65,10 +76,8 @@ pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) ->
             EntryKind::UseCase => ReviewKind::UseCase,
             _ => continue,
         };
-        let Some(entry) = entries
-            .iter()
-            .find(|entry| entry.kind == kind && entry.path == classification.path)
-        else {
+        lookups += 1;
+        let Some(entry) = index.get(&(kind, classification.path.as_str())) else {
             return Err(invalid());
         };
         let before = pair
@@ -110,7 +119,8 @@ pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) ->
             inputs.pairing,
             inputs.before,
             inputs.after,
-        ),
+        )
+        .0,
         diagnostics: Vec::new(),
     };
     review_order::normalize(&mut expected).compare()?;
@@ -119,7 +129,7 @@ pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) ->
     {
         return Err(invalid());
     }
-    Ok(())
+    Ok(lookups)
 }
 
 fn reasons_equal(entry: &ReviewEntry, classification: &EntryClassification) -> bool {
@@ -131,7 +141,7 @@ fn reasons_equal(entry: &ReviewEntry, classification: &EntryClassification) -> b
     entry.reasons == expected
 }
 
-fn invalid() -> Error {
+pub(crate) fn invalid() -> Error {
     Error::Review {
         source: ReadError::Contract {
             boundary: "review result sources",

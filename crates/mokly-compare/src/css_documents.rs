@@ -3,14 +3,13 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use mokly_css::match_tree::MatchTree;
-use mokly_css::syntax;
-use mokly_graph::types::RenderGeneration;
 use mokly_graph::urls::local_target;
 use mokly_html::parse;
 
-use crate::comparison_error::CompareResult;
 use crate::error::Result;
 use crate::matching_tree;
+use crate::resource_memo::ResourceMemo;
+use mokly_model::review_affected::ReviewSide;
 
 pub(crate) struct CssDocument {
     pub(crate) id: String,
@@ -19,7 +18,8 @@ pub(crate) struct CssDocument {
 }
 
 pub(crate) fn collect(
-    generation: &dyn RenderGeneration,
+    memo: &dyn ResourceMemo,
+    side: ReviewSide,
     source: &str,
     root: Option<&MatchTree>,
     aliases: &BTreeMap<String, String>,
@@ -44,7 +44,7 @@ pub(crate) fn collect(
                 && let Some(href) = element.attributes.get("href")
                 && let Ok(Some(route)) = local_target(&source, href)
             {
-                imports(generation, &route, aliases, &mut stylesheets)?;
+                imports(memo, side, &route, aliases, &mut stylesheets)?;
             }
             if !matches!(element.name.as_str(), "iframe" | "object" | "embed") {
                 continue;
@@ -72,7 +72,7 @@ pub(crate) fn collect(
             if !route.ends_with(".html") && !route.ends_with(".htm") {
                 continue;
             }
-            let Some(bytes) = generation.resource_bytes(&route).compare()? else {
+            let Some(bytes) = memo.read(side, &route)? else {
                 continue;
             };
             let nodes = parse::document(&String::from_utf8_lossy(&bytes));
@@ -90,7 +90,8 @@ pub(crate) fn collect(
 }
 
 fn imports(
-    generation: &dyn RenderGeneration,
+    memo: &dyn ResourceMemo,
+    side: ReviewSide,
     route: &str,
     aliases: &BTreeMap<String, String>,
     output: &mut BTreeSet<String>,
@@ -101,17 +102,7 @@ fn imports(
         if !output.insert(identity.clone()) {
             continue;
         }
-        let Some(bytes) = generation.resource_bytes(&route).compare()? else {
-            continue;
-        };
-        for reference in syntax::references(&String::from_utf8_lossy(&bytes))
-            .into_iter()
-            .filter(|reference| reference.import)
-        {
-            if let Ok(Some(target)) = local_target(&route, &reference.value) {
-                queue.push(target);
-            }
-        }
+        queue.extend(memo.fact(side, &route)?.imports);
     }
     Ok(())
 }

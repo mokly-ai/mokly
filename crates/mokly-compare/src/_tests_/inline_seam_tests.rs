@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_css::inline_attribution;
-use mokly_css::match_tree::{MatchElement, MatchTree};
+use mokly_css::match_tree::{Containment, MatchElement, MatchTree};
 use mokly_css::rule_collection::collect;
 use mokly_css::rule_matching::match_document;
 use mokly_css::rules::diff;
@@ -19,10 +19,11 @@ fn inline_rules_use_one_matched_owner_and_keep_unresolved_or_excluded_entry_reco
             parent: None,
             children: Vec::new(),
             text: true,
-            regions: Vec::new(),
-            owner: EvidenceOwner::Component {
+            regions: vec![Containment {
                 path: "card".into(),
-            },
+                root: false,
+            }],
+            owner: EvidenceOwner::Entry,
         }],
     };
     for (selector, status, owner) in [

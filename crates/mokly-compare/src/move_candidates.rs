@@ -62,7 +62,11 @@ impl<'a> Candidates<'a> {
     }
 
     pub(crate) fn accept(&mut self, previous: usize, current: usize) {
-        if !self.removed.remove(&previous) || !self.added.remove(&current) {
+        if self.blocked_before.contains(&previous)
+            || self.blocked_after.contains(&current)
+            || !self.removed.remove(&previous)
+            || !self.added.remove(&current)
+        {
             return;
         }
         let left = &self.before.entries[previous];
@@ -101,7 +105,8 @@ impl<'a> Candidates<'a> {
                 .iter()
                 .filter_map(|index| {
                     let entry = &self.before.entries[*index];
-                    (entry.content.kind() == kind
+                    (!self.blocked_before.contains(index)
+                        && entry.content.kind() == kind
                         && entry.metadata.variant_of.as_deref() == Some(previous.as_str()))
                     .then(|| (slug(entry), *index))
                 })
@@ -111,7 +116,8 @@ impl<'a> Candidates<'a> {
                 .iter()
                 .filter_map(|index| {
                     let entry = &self.after.entries[*index];
-                    if entry.content.kind() != kind
+                    if self.blocked_after.contains(index)
+                        || entry.content.kind() != kind
                         || entry.metadata.variant_of.as_deref() != Some(current.as_str())
                         || (declared && entry.metadata.moved_from.is_some())
                     {

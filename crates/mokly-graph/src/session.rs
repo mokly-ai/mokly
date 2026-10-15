@@ -14,7 +14,7 @@ use mokly_model::catalogue::EntryContent;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
-use crate::closure::{Closure, ClosureBuilder, MissingResources, Walker};
+use crate::closure::{Closure, ClosureBuilder, Walker};
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{GraphError, Result, invalid};
 use crate::graph::Graph;
@@ -138,7 +138,6 @@ impl Session {
 
     pub(crate) fn walker(&self) -> Walker {
         Walker {
-            missing: None,
             tree: self.state.tree.clone(),
             policy: self.state.policy.clone(),
             generated: Arc::new(self.clone()),
@@ -166,20 +165,6 @@ impl RenderGeneration for Session {
     }
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>> {
         self.read_resource(route)
-    }
-    fn comparison_closure(
-        &self,
-        route: &str,
-        missing: Arc<dyn MissingResources>,
-    ) -> Result<Closure> {
-        let artifact = self.comparison_document(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        let mut walker = self.walker();
-        walker.missing = Some(missing);
-        walker.collect(route, &document.tree, &document.resources)
     }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
         let artifact = self.raw(route)?;

@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use mokly_catalogue::diagnostic::Warning;
 use mokly_css::attribution::PageObservation;
-use mokly_css::parsed_cache::ParsedCssCache;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::evidence::ViewEvidence;
@@ -20,9 +19,11 @@ use crate::comparison_error::CompareResult;
 use crate::comparison_resources::{self, ResourceInput};
 use crate::comparison_types::{DocumentComparison, ViewKey};
 use crate::error::{Error, Result};
+use crate::instance_proof::{InstanceProof, ProofInput};
 use crate::move_inventory::PlanIndex;
 use crate::move_types::EntryPair;
-use crate::{matching_tree, view_material};
+use crate::resource_memo::ResourceMemo;
+use crate::{inline_styles, instance_proof, matching_tree, view_material};
 
 pub(crate) struct UsageView {
     pub(crate) side: ReviewSide,
@@ -39,7 +40,8 @@ pub(crate) struct PendingView {
     pub(crate) inputs: bool,
     pub(crate) structure: bool,
     pub(crate) root_changed: bool,
-    pub(crate) instance_impact: BTreeSet<String>,
+    pub(crate) proofs: Vec<InstanceProof>,
+    pub(crate) inline_components: BTreeSet<String>,
 }
 
 pub(crate) struct PairViews {
@@ -53,7 +55,7 @@ pub(crate) fn collect(
     before: Arc<dyn RenderGeneration>,
     after: Arc<dyn RenderGeneration>,
     paths: &BTreeMap<String, String>,
-    css: &dyn ParsedCssCache,
+    memo: &dyn ResourceMemo,
     before_plans: &PlanIndex<'_>,
     after_plans: &PlanIndex<'_>,
 ) -> Result<PairViews> {
@@ -123,6 +125,7 @@ pub(crate) fn collect(
             before_route.as_deref(),
             after_route.as_deref(),
             pair.moved,
+            memo,
         )?;
         let before_tree =
             before_document.map(|document| matching_tree::document(&document.tree, paths));
@@ -133,15 +136,13 @@ pub(crate) fn collect(
             ..Default::default()
         };
         let aliases = resources.aliases.clone();
-        let resources = comparison_resources::evidence(
+        let evidence = comparison_resources::evidence(
             ResourceInput {
                 resources: &resources,
-                before: before.as_ref(),
-                after: after.as_ref(),
+                memo,
                 before_tree: before_tree.as_ref(),
                 after_tree: after_tree.as_ref(),
                 paths,
-                css,
                 before_route: &format!(
                     "static/mokly-generated/{}",
                     before_route.as_deref().unwrap_or("")
@@ -170,6 +171,32 @@ pub(crate) fn collect(
             )),
             _ => None,
         };
+        let inline = inline_styles::compare(
+            before_document.map(|document| document.tree.as_slice()),
+            after_document.map(|document| document.tree.as_slice()),
+            before_tree.as_ref(),
+            after_tree.as_ref(),
+            &format!(
+                "static/mokly-generated/{}",
+                after_route
+                    .as_ref()
+                    .or(before_route.as_ref())
+                    .map_or("", String::as_str)
+            ),
+            memo,
+        )?;
+        let proofs = match (&comparison, previous, current) {
+            (Some(comparison), Some(before), Some(after)) => instance_proof::collect(ProofInput {
+                comparison,
+                before,
+                after,
+                view: key,
+                resources: &resources,
+                evidence: &evidence,
+                paths,
+            }),
+            _ => Vec::new(),
+        };
         let state = match &comparison {
             None if before_document.is_none() => ReviewState::Added,
             None => ReviewState::Removed,
@@ -188,8 +215,8 @@ pub(crate) fn collect(
                 state,
                 ignored_ids,
                 evidence: ViewEvidence {
-                    rules: Vec::new(),
-                    resources,
+                    rules: inline.rules,
+                    resources: evidence,
                 },
             },
             observation,
@@ -202,16 +229,13 @@ pub(crate) fn collect(
             structure: comparison
                 .as_ref()
                 .is_some_and(|comparison| comparison.structure),
-            instance_impact: comparison
-                .as_ref()
-                .map_or_else(BTreeSet::new, |comparison| {
-                    comparison.instance_impact.clone()
-                }),
+            proofs,
+            inline_components: inline.components,
             root_changed: comparison
                 .as_ref()
                 .is_none_or(|comparison| comparison.root_changed),
         });
-        if key.viewport.is_some() {
+        {
             for (side, entry, document) in [
                 (ReviewSide::Before, previous, before_document),
                 (ReviewSide::After, current, after_document),

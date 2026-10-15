@@ -62,7 +62,7 @@ fn source_formatting_ignored_changes_and_each_missing_side_classify_independentl
         ["added", "changed", "removed"]
     );
     assert_eq!(result.counts.changes, 3);
-    assert_eq!(result.counts.ignored_only, 2);
+    assert_eq!(result.counts.ignored_only, 1);
     assert_eq!(entry(&result, "ignored").views[0].ignored_ids, ["chrome"]);
     let text = canonical::to_string(&result.review).unwrap();
     assert_eq!(

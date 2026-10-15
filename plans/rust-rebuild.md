@@ -820,7 +820,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       affected consumers, and review result v8.
   - [x] Implement the HTML comparison engine, strict review v8 and snapshot v4
         readers, metadata, move pairing, and historical records.
-  - [ ] Resolve variant-only affected identity and actual-instance resource
+  - [x] Resolve variant-only affected identity and actual-instance resource
         proof contracts before closing the engine.
 - [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
       selector matching with the keep list, own-page membership, the inline
@@ -828,10 +828,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       cache.
   - [x] Implement linked-rule collection, diffing, matching, catalogue-wide
         own-page proof, and a byte-bounded parse cache.
-  - [ ] Resolve multi-component selector ownership and inline evidence
-        addresses. Connect page head styles and sidecar style ownership.
+  - [x] Resolve multi-component selector ownership and inline evidence
+        addresses. Connect page head styles.
+  - [ ] Connect sidecar style ownership through the base render provider.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
+- [x] Apply comparison review round 1: exact instance proof, entry state and
+      counts, strict failures, base warning scope, bounded resource reads,
+      indexed attribution, move exclusions, and snapshot admission.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-2.md`.
+- [ ] Add the Comparing phase spinner and measured durations to build Changes.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new

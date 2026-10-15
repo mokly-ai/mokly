@@ -8,8 +8,9 @@ use mokly_catalogue::config::ConfigLoader;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
-use mokly_compare::base_render::ChangesService;
+use mokly_compare::base_render::{ChangesService, selected_base};
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::error::Error;
 use mokly_graph::error::GraphError;
 use mokly_graph::types::GraphFactory;
 use mokly_model::axes::EntryKind;
@@ -36,6 +37,16 @@ pub struct BuildSummary {
 /// Typed build failure; warning records survive both error paths.
 #[derive(Debug, Error)]
 pub enum BuildError {
+    /// Git or internal comparison failure aborts output publication.
+    #[error("[mokly-cli/build] comparison against {base_ref:?} failed: {source}")]
+    Comparison {
+        /// Selected authored or default ref.
+        base_ref: String,
+        /// Original comparison failure.
+        source: Box<Error>,
+        /// Current build and base preparation warnings.
+        warnings: Vec<Warning>,
+    },
     /// The injected definition provider cannot evaluate discovered JavaScript.
     #[error("[mokly-cli/build] JavaScript rendering is unavailable for {}", .modules.join(", "))]
     Deferred {
@@ -132,11 +143,6 @@ impl BuildService for CatalogueBuild {
                 });
             }
         };
-        if options.strict && !rendered.warnings.is_empty() {
-            return Err(BuildError::Strict {
-                warnings: rendered.warnings,
-            });
-        }
         let mut warnings = rendered.warnings;
         let changes = if options.no_changes {
             BuildChanges::Disabled
@@ -151,8 +157,14 @@ impl BuildService for CatalogueBuild {
                 }
                 Err(source) => {
                     warnings.extend(changes_diagnostics::warnings(&source));
-                    BuildChanges::Unavailable {
-                        diagnostics: changes_diagnostics::details(&source),
+                    if let Some(unavailable) = changes_diagnostics::unavailable(&source) {
+                        unavailable
+                    } else {
+                        return Err(BuildError::Comparison {
+                            base_ref: selected_base(&config, options.common.base.as_deref()).into(),
+                            source: Box::new(source),
+                            warnings,
+                        });
                     }
                 }
             }
@@ -186,9 +198,17 @@ pub enum BuildChanges {
     Disabled,
     /// Complete validated result and the same historical generation.
     Ready(Arc<ComparisonResult>),
-    /// The catalogue remains usable when base validation or Git fails.
+    /// The current catalogue remains usable when historical sources fail validation.
     Unavailable {
-        /// Preserved base or comparison diagnostic.
+        /// Full immutable historical commit.
+        base_commit: String,
+        /// Short reason for the unavailable completion line.
+        reason: String,
+        /// Preserved base validation diagnostic.
         diagnostics: Vec<String>,
     },
 }
+
+#[cfg(test)]
+#[path = "_tests_/changes_failure_tests.rs"]
+mod changes_failure_tests;

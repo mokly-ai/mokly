@@ -7,12 +7,14 @@ use mokly_html::tree::Node;
 use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 use mokly_source_interface::tree::SourceTree;
 
+use crate::closure_prefetch;
 use crate::error;
 use crate::error::{Result, invalid};
 use crate::policy::PublicPolicy;
 use crate::public_denial::PublicDenial;
 use crate::reference_index::ReferenceIndex;
 use crate::references::{ResourceReference, collect};
+use crate::resource_reach::ResourceReach;
 use crate::urls::local_target;
 
 /// Generation-owned resources are read from plans and cache, never by disk route.
@@ -24,13 +26,6 @@ pub trait GeneratedResources: Send + Sync {
     fn is_document(&self, route: &str) -> bool;
 }
 
-/// Historical fallback used only when a current public resource is proved absent.
-#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = MissingResourcesMock))]
-pub trait MissingResources: Send + Sync {
-    /// Return the base's validated bytes, or None when there is no deletion proof.
-    fn read(&self, route: &str) -> Result<Option<Vec<u8>>>;
-}
-
 /// Sorted authored closure with traversal and ownership evidence.
 #[derive(Clone, Debug, Default)]
 pub struct Closure {
@@ -40,6 +35,8 @@ pub struct Closure {
     pub edges: BTreeMap<String, Vec<String>>,
     /// Every resource reached by an entry or component owner.
     pub evidence: Vec<ResourceEvidence>,
+    /// Exact instance and referring edge for comparison-only implementation proof.
+    pub references: Vec<ResourceReach>,
 }
 
 /// Injected closure traversal boundary.
@@ -50,8 +47,6 @@ pub trait ClosureBuilder: Send + Sync {
 
 /// Reuses one generation's public policy for every target.
 pub struct Walker {
-    /// Comparison-only fallback. Ordinary delivery never substitutes historical bytes.
-    pub missing: Option<Arc<dyn MissingResources>>,
     /// Authored bytes from a working or Git tree.
     pub tree: Arc<dyn SourceTree>,
     /// Cached eligibility decisions for this generation.
@@ -77,9 +72,11 @@ impl ClosureBuilder for Walker {
                     url: seed.clone(),
                     owner: EvidenceOwner::Entry,
                     ignored: false,
+                    instance_key: None,
                 },
             ));
         }
+        closure_prefetch::prefetch(self, &source, &collect(tree))?;
         let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
         let mut visited = BTreeSet::new();
         let mut evidence = BTreeMap::new();
@@ -102,8 +99,20 @@ impl ClosureBuilder for Walker {
             };
             if !reference.ignored {
                 evidence.insert((target.clone(), owner_key.clone()), reference.owner.clone());
+                result.references.push(ResourceReach {
+                    path: target.clone(),
+                    owner: reference.owner.clone(),
+                    instance_key: reference.instance_key.clone(),
+                    source: source.clone(),
+                    url: reference.url.clone(),
+                });
             }
-            if !visited.insert((target.clone(), owner_key, reference.ignored)) {
+            if !visited.insert((
+                target.clone(),
+                owner_key,
+                reference.instance_key.clone(),
+                reference.ignored,
+            )) {
                 continue;
             }
             let urls = if let Some(cached) = edges.get(&target) {
@@ -120,6 +129,7 @@ impl ClosureBuilder for Walker {
                                     url,
                                     owner: reference.owner.clone(),
                                     ignored: reference.ignored,
+                                    instance_key: reference.instance_key.clone(),
                                 },
                             ));
                         }
@@ -134,29 +144,7 @@ impl ClosureBuilder for Walker {
                         .ok_or_else(|| missing(route, &reference.url))?;
                     let file = match self.policy.check(path) {
                         Ok(file) => file,
-                        Err(PublicDenial::Missing) => {
-                            let bytes = if let Some(missing) = &self.missing {
-                                missing.read(&target)?
-                            } else {
-                                None
-                            };
-                            let Some(bytes) = bytes else {
-                                return Err(missing(route, &reference.url));
-                            };
-                            let urls = self.index.parse(&target, &bytes)?;
-                            edges.insert(target.clone(), urls.clone());
-                            for url in urls {
-                                queue.push_back((
-                                    target.clone(),
-                                    ResourceReference {
-                                        url,
-                                        owner: reference.owner.clone(),
-                                        ignored: reference.ignored,
-                                    },
-                                ));
-                            }
-                            continue;
-                        }
+                        Err(PublicDenial::Missing) => return Err(missing(route, &reference.url)),
                         Err(reason) => {
                             return Err(invalid(
                                 route,
@@ -178,17 +166,19 @@ impl ClosureBuilder for Walker {
                                     url,
                                     owner: reference.owner.clone(),
                                     ignored: reference.ignored,
+                                    instance_key: reference.instance_key.clone(),
                                 },
                             ));
                         }
                         continue;
                     }
-                    match self.tree.read(&file.absolute) {
+                    match self.tree.read_public(&file.absolute) {
                         Ok(bytes) => bytes,
                         Err(_) => return Err(missing(route, &reference.url)),
                     }
                 };
                 let urls = self.index.parse(&target, &bytes)?;
+                closure_prefetch::urls(self, &target, &urls)?;
                 edges.insert(target.clone(), urls.clone());
                 urls
             };
@@ -199,6 +189,7 @@ impl ClosureBuilder for Walker {
                         url,
                         owner: reference.owner.clone(),
                         ignored: reference.ignored,
+                        instance_key: reference.instance_key.clone(),
                     },
                 ));
             }

@@ -127,7 +127,7 @@ fn ready_counts_use_entry_membership_and_base_override_and_no_changes_stays_git_
     );
     assert!(
         String::from_utf8_lossy(&output.stdout)
-            .contains("Changes ready · 4 changes · 1 moved · 2 ignored-only")
+            .contains("Changes ready · 4 changes · 1 moved · 1 ignored-only")
     );
     write(
         root,
@@ -180,10 +180,14 @@ fn base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagn
     assert!(stderr.contains("unexpected"), "{stderr}");
     assert!(stderr.contains("alsoBad"), "{stderr}");
     assert!(stderr.contains("specs/home.screen.html"));
+    assert!(stderr.contains("base "));
+    assert!(!stderr.contains("review-invalid"));
+    assert!(!stderr.contains("✖"));
+    assert!(stdout.contains("Changes unavailable · base validation failed"));
 }
 
 #[test]
-fn strict_mode_counts_historical_preparation_warnings_before_any_output_write() {
+fn strict_mode_ignores_fixed_historical_authoring_warnings() {
     let directory = base(&[(
         "specs/home.screen.html",
         "---\ntitle: Home\nprops: {label: Hello}\n---\n<p>Home</p>",
@@ -193,17 +197,16 @@ fn strict_mode_counts_historical_preparation_warnings_before_any_output_write() 
         "specs/home.screen.html",
         "---\ntitle: Home\nprops: {label: Hello}\n---\n<p>{{label}}</p>",
     );
-    let output = run(directory.path(), &["build", "--strict"]);
-    assert_eq!(output.status.code(), Some(1));
-    let stderr = String::from_utf8(output.stderr).unwrap();
-    assert_eq!(
-        stderr
-            .matches("prop \"label\" is not read by the body")
-            .count(),
-        1
-    );
-    assert!(stderr.contains("1 build warning with --strict"), "{stderr}");
-    assert!(!directory.path().join("mokly-static").exists());
+    for options in [&["build", "--strict"][..], &["build"][..]] {
+        let output = run(directory.path(), options);
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(output.stderr.is_empty());
+    }
 }
 
 #[test]

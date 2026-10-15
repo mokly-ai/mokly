@@ -6,7 +6,7 @@ import type { AffectedUsageEvidence } from "./AffectedUsageEvidence.js";
 // prettier-ignore
 export type AffectedConsumer = {
 /**
- * Included component parent path.
+ * Component identity with included parent or variant implementation impact.
  */
 changedComponentId: string,
 /**
