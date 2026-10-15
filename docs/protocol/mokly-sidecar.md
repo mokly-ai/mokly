@@ -232,8 +232,8 @@ Render labels split the last `#` as `{module} export {name}`.
 | `render-failed`       | a render throws or returns a non-string                              | `build-invalid` with the entry and, for a view render, the viewport and scheme |
 | `render-timeout`      | a deadline passed twice                                              | `build-invalid` with the entry and the deadline                                |
 
-There is no fallback render and no partial output. Commands that need no
-JavaScript rendering or PostCSS never start a sidecar or fail for these reasons.
+There is no fallback render and no partial output. Commands that need neither
+JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 
 ## Security
 

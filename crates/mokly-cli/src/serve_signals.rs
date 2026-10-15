@@ -12,9 +12,10 @@ pub(super) fn install(stop: watch::Sender<bool>) -> io::Result<JoinHandle<()>> {
             tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt())?;
         let mut terminate =
             tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+        let mut hangup = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup())?;
         Ok(tokio::spawn(async move {
             loop {
-                tokio::select! { _ = interrupt.recv() => {}, _ = terminate.recv() => {} }
+                tokio::select! { _ = interrupt.recv() => {}, _ = terminate.recv() => {}, _ = hangup.recv() => {} }
                 stop.send_replace(true);
             }
         }))

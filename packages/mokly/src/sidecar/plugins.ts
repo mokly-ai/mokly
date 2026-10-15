@@ -26,6 +26,9 @@ export function consumerPlugins(
 ): Plugin[] {
   const root = params.sourceRoot;
   const ownPackage = path.resolve(import.meta.dirname, "../..");
+  const aliases = Object.entries(params.moduleResolution.aliases).sort(
+    ([left], [right]) => right.length - left.length,
+  );
   return [
     {
       name: "mokly-consumer",
@@ -104,16 +107,20 @@ export function consumerPlugins(
             }
           },
         );
-        build.onResolve(
-          {
-            filter:
-              /^(styled-components|react-native-web|@emotion\/(react|cache|styled))(\/.*)?$/,
-          },
-          (args) => {
-            inputs.stylePackages.add(args.path);
-            return undefined;
-          },
-        );
+        build.onResolve({ filter: /.*/ }, (args) => {
+          const alias = aliases.find(
+            ([name]) => args.path === name || args.path.startsWith(`${name}/`),
+          );
+          const resolved = alias
+            ? alias[1] + args.path.slice(alias[0].length)
+            : args.path;
+          const library =
+            /^(styled-components|react-native-web|@emotion\/(react|cache|styled))(?:\/|$)/.exec(
+              resolved,
+            )?.[1];
+          if (library) inputs.stylePackages.add(library);
+          return undefined;
+        });
         build.onResolve({ filter: /\.css$/ }, async (args) => {
           if (args.pluginData === "css-resolved") return;
           const resolved = await build.resolve(args.path, {

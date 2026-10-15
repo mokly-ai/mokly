@@ -9,6 +9,8 @@ mod serve_candidates;
 mod serve_controls;
 mod serve_rebuild;
 mod serve_reporter;
+mod serve_services;
+mod serve_shutdown;
 mod serve_signals;
 mod serve_state;
 mod serve_timing;

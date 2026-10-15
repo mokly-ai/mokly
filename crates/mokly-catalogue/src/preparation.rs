@@ -58,7 +58,7 @@ pub struct Builder {
     pub tree: Arc<dyn SourceTree>,
     /// Once-per-pass root inventory.
     pub discovery: Arc<dyn Discovery>,
-    /// JavaScript description provider, called only when selected files need it.
+    /// JavaScript description provider for selected modules or a configured renderer.
     pub definitions: Arc<dyn DefinitionProvider>,
 }
 

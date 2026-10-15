@@ -53,3 +53,19 @@ impl Cancellation for BuildCancellation {
 #[cfg(test)]
 #[path = "_tests_/cancellation_tests.rs"]
 mod cancellation_tests;
+
+/// Serve stop state never requests a forced process exit.
+#[derive(Default)]
+pub struct ServeCancellation {
+    requested: AtomicBool,
+}
+
+impl Cancellation for ServeCancellation {
+    fn requested(&self) -> bool {
+        self.requested.load(Ordering::Acquire)
+    }
+    fn interrupt(&self) -> bool {
+        self.requested.store(true, Ordering::Release);
+        false
+    }
+}

@@ -18,8 +18,9 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 
 `Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
 its source readers, sidecar pool, worker scheduler, and byte-bounded render
-cache. Construction starts no sidecar. An HTML-only catalogue has no bundle,
-class-map exchange, description, or render request. Consumer PostCSS can run
+cache. Construction starts no sidecar. An HTML-only catalogue with no renderer has
+no bundle, class-map exchange, description, or render request. A configured
+renderer is bundled and inventoried even without JavaScript entries. Consumer PostCSS can run
 without a JavaScript bundle.
 
 Catalogue preparation resolves paths, variants, controls, schemas, props,
@@ -59,7 +60,8 @@ cargo test -p mokly-render
 
 Inject one `Arc<Runtime>` as both `Builder.definitions` and
 `CatalogueBuild.graphs`. Consume each factory through its trait. The binary
-owns pool shutdown.
+owns pool shutdown. Serve uses the same factories for initial preparation,
+manual rebuilds, and authenticated temporary prop renders.
 
 ## Development
 

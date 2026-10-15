@@ -192,7 +192,7 @@ fn render_warnings_survive_a_later_failure_and_hide_internal_error_prefixes() {
 }
 
 #[test]
-fn a_renderer_only_catalogue_cannot_skip_its_javascript_source_inventory() {
+fn a_renderer_only_catalogue_requires_node_for_its_source_inventory() {
     let directory = TempDir::new().unwrap();
     write(
         directory.path(),
@@ -216,6 +216,6 @@ fn a_renderer_only_catalogue_cannot_skip_its_javascript_source_inventory() {
     );
     let output = run(directory.path(), &["build", "--no-changes"], "plain");
     assert_eq!(output.status.code(), Some(1));
-    assert!(String::from_utf8_lossy(&output.stderr).contains("JavaScript renderer is unavailable"));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("node is unavailable"));
     assert!(output.stdout.is_empty());
 }

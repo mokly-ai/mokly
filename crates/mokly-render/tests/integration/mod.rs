@@ -11,6 +11,7 @@ mod ownership_tests;
 mod postcss_contract_tests;
 mod render_tests;
 mod review_validation_tests;
+mod slot_order_tests;
 mod source_alias_tests;
 mod support;
 mod validation_tests;

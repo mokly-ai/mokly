@@ -66,7 +66,9 @@ A cancelled build has this exact plain output and exits `1`:
 The first interrupt cancels source reads, graph preparation, and queued
 renders, then drains the sidecar pool. Copies received within one second of
 that first signal count as the same interruption. A signal at or after that
-boundary kills owned sidecars and exits immediately.
+boundary kills owned sidecars and exits immediately. Serve coalesces all stop
+signals and closes with status `0`; it does not use build's forced exit.
+Its stop request cancels active native work and drains the shared sidecar pool.
 
 The
 [exchange cancellation rule](./mokly-upload-exchange.md#accounting-and-output)

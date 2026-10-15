@@ -34,7 +34,7 @@ impl Builder {
             })
             .cloned()
             .collect();
-        if !javascript.is_empty() {
+        if !javascript.is_empty() || config.input.renderer.is_some() {
             let described = self.definitions.describe(config, &javascript)?;
             if !described.deferred {
                 prepared.deferred_modules.clear();

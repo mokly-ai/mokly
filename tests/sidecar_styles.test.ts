@@ -107,3 +107,36 @@ test("persistent registry rules exclude unused styles and do not depend on rende
   );
   assert.deepEqual(await render(false), first);
 });
+
+test("runtime style adapters follow consumer package aliases", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["aliased-native.mockup.tsx"],
+      renderer: null,
+      storiesFiles: [],
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        aliases: { "react-native": "react-native-web" },
+        mainFields: ["module", "main"],
+      },
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await installBindings(sidecar, generation);
+  const result = await sidecar.call<RenderResult>("renderScreen", {
+    generation,
+    handle: "aliased-native.mockup.tsx#default",
+    entry: { path: "native", title: "Native" },
+    props: {},
+    viewport: "desktop",
+    colorScheme: "light",
+  });
+  assert.match(result.html, /Aliased native/);
+  assert.match(
+    result.styles.map((style) => style.css).join(""),
+    /rgba\(4,5,6,1.00\)/,
+  );
+});

@@ -83,7 +83,9 @@ Each instance placement has these fields:
 
 Repeated placement of one input instance returns one draft per region. Each
 placement agrees on the logical inputs. Encounter order is zero-based within
-each input owner and original receiving slot. The component root of its own
+each input owner and original receiving slot. Nested slot providers share
+that scope's encounter counter, and repeated placement of the same input
+keeps its first order. The component root of its own
 entry is not a used instance and has no instance draft.
 
 ## Slot Drafts And Inputs

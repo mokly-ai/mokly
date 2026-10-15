@@ -89,6 +89,9 @@ fn mixed_catalogue_renders_react_html_stories_pages_and_saved_slots() {
     assert!(rendered.closure.contains("assets/banner.svg"));
     let mixed = generation.render("mixed/index.mobile.html").unwrap();
     let html = String::from_utf8(mixed.bytes.clone()).unwrap();
+    assert_slot_receivers(&html);
+    let screen_bytes = generation.render("screen/index.mobile.html").unwrap();
+    assert_slot_receivers(&String::from_utf8(screen_bytes.bytes.clone()).unwrap());
     assert!(html.contains("HTML child"));
     assert!(!html.contains("mokly-slot name="));
     assert!(html.contains("data-mokly-owners=\"components/chip\""));
@@ -166,4 +169,24 @@ fn mixed_catalogue_renders_react_html_stories_pages_and_saved_slots() {
         .position(|call| matches!(call, Call::CssModules(_)))
         .unwrap();
     assert!(maps < describe);
+}
+
+fn assert_slot_receivers(html: &str) {
+    let markers: Vec<_> = html.split("<!--mokly-slot:start ").skip(1).collect();
+    assert!(!markers.is_empty(), "the built fixture must contain slots");
+    for marker in markers {
+        let attributes = marker.split_once("-->").unwrap().0;
+        let receiver = attributes
+            .split_once("instance=\"")
+            .unwrap()
+            .1
+            .split('"')
+            .next()
+            .unwrap();
+        assert!(receiver.starts_with("r-"), "{attributes}");
+        assert!(
+            html.contains(&format!("<!--mokly-instance:start id=\"{receiver}\"")),
+            "{attributes}"
+        );
+    }
 }

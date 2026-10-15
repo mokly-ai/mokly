@@ -18,7 +18,7 @@ presentation. The npm shim starts this binary with inherited streams.
 Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
 
-Serve validates an HTML catalogue before it reserves a loopback port. It
+Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a loopback port. It
 serves its initial state through `mokly-server`, with lazy document rendering,
 canonical public JSON, authenticated live prop previews, and clean signal
 shutdown. A background pass fills usage after readiness and yields to foreground
@@ -42,10 +42,14 @@ The composition root constructs a
 lazy sidecar pool with the normalized `--sidecars` or environment count.
 The npm shim supplies its package root and Node executable. Direct binary
 execution checks the adjacent installed package and development ancestors.
-An HTML-only catalogue without PostCSS starts no sidecar and needs no package
-lookup result. Direct execution uses `node` from `PATH` when the shim has not
+An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
+needs no package lookup result. A configured renderer contributes its complete
+bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
-Catalogue and graph factories share the same runtime, cache, and pool.
+Build and Serve share the same runtime composition. Each command owns one
+pool and cache across catalogue preparation, document rendering, and live
+prop previews. Serve checks the render token and installed revision before
+passing validated props to the graph. Control bounds also apply in the core.
 Build installs interrupt and termination handling before command work. Both
 the signal path and normal exit drain the pool through one shutdown guard.
 Cancellation stops source reads, graph planning, and queued native documents
@@ -54,6 +58,9 @@ count as one interruption. A later signal kills owned sidecars and exits
 immediately. The interval uses an injected monotonic clock. The pool starts in
 the resolved repository root and uses the embedded npm version for hello and
 graph keys.
+Serve uses its own idempotent stop state. Signals and `q` cancel native work
+and drain sidecars while the HTTP workers stop. Repeated signals cannot
+force a build-style failure exit. A normal interruption exits 0.
 The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option
 validation accepts a positive 64-bit integer and retains it for PoolOptions.
 Invalid values fail `cli-invalid` with the accepted range.
@@ -112,7 +119,8 @@ cargo clippy -p mokly-cli --all-targets -- -D warnings
   [redaction](./src/redaction.rs).
 - [Composition root](./src/entry.rs), [native rendering services](./src/render_runtime.rs),
   and [static output adapter](./src/publication/mod.rs).
-- [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
+- [Shared Serve services](./src/serve_services.rs), [Serve shutdown](./src/serve_shutdown.rs),
+  [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

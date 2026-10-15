@@ -37,7 +37,8 @@ ownership. Later stages reuse it instead of walking again.
 `Builder` implements `CatalogueBuilder`. It produces `PreparedCatalogue`: a
 validated in-memory model, private HTML and Markdown bodies, variant slot
 fragments, the element registry, warnings, and the source inventory. It calls
-`dyn DefinitionProvider` with the resolved configuration only for discovered JavaScript files. The sidecar
+`dyn DefinitionProvider` with the resolved configuration for discovered JavaScript files or a configured renderer. Renderer imports
+join the private source inventory even without a JavaScript entry. The sidecar
 adapter supplies definitions through that boundary. Private JavaScript
 recipes retain handles separately from source attribution, saved React slots,
 module edges, class-map identity, and the resolved handle table. Declared

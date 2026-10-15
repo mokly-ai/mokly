@@ -772,7 +772,7 @@ At completion React components, React screens, JavaScript pages, and
 Storybook stories render through the sidecar, and the example catalogue
 renders again.
 
-- [ ] Replace the configured-renderer refusal in both Serve and `build` with
+- [x] Replace the configured-renderer refusal in both Serve and `build` with
       the sidecar bundle's complete source inventory (Milestone 6 review, finding 13).
 - [x] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
@@ -824,10 +824,10 @@ renders again.
       declared controls, story control hints, slot handles, excluded non-data
       prop keys, and authoring diagnostics; emit `props-not-data` after path
       derivation names the entry and key.
-- [ ] Implement live prop editing in Serve through the same render path.
+- [x] Implement live prop editing in Serve through the same render path.
   - [x] Add the shared `RenderGeneration::render_props` path with Rust prop
         validation, fragment caching, document composition, and closure checks.
-  - [ ] Wire the Serve live render route to the shared JavaScript runtime.
+  - [x] Wire the Serve live render route to the shared JavaScript runtime.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
@@ -895,6 +895,8 @@ sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
 `.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
 Core review fixes: `.context/rust-rebuild/delegation/m8-core/report-2.md`.
 Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
+Serve integration: `.context/rust-rebuild/delegation/m8-core/report-4.md`;
+smoke artifacts: `.context/rust-rebuild/m8-serve-smoke/`.
 
 - [ ] Commit.
 

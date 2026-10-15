@@ -6,28 +6,14 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::grammar::Common;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
-use mokly_css::compiler::Compiler;
-use mokly_css::error::CssError;
-use mokly_css::resolution::Resolution;
-use mokly_css::resolver::SourceResolver;
-use mokly_css::types::IdentityProcessor;
 use mokly_graph::cache::MemoryCache;
-use mokly_graph::cache::RenderCache;
-use mokly_graph::error::GraphError;
 use mokly_graph::error::Result;
-use mokly_graph::graph::Graph;
-use mokly_graph::source_snapshot::SourceSnapshot;
-use mokly_graph::types::{GraphFactory, RenderGraph};
 use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
-use mokly_html::composition::HtmlComposer;
-use mokly_html::diagnostic_code::Code;
-use mokly_html::fragment::DeferredFragments;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::{Pool, SidecarPool};
@@ -153,71 +139,3 @@ fn sidecar_entry(cwd: &Path) -> PathBuf {
 #[cfg(test)]
 #[path = "_tests_/runtime_version_tests.rs"]
 mod runtime_version_tests;
-
-/// Resolved-config native graph factory, injected into the build service.
-pub(super) struct NativeGraphs {
-    pub(super) tree: Arc<dyn SourceTree>,
-    pub(super) cache: Arc<dyn RenderCache>,
-}
-
-impl GraphFactory for NativeGraphs {
-    fn create(&self, config: &ResolvedConfig) -> Result<Arc<dyn RenderGraph>> {
-        if let Some(renderer) = &config.input.renderer {
-            return Err(GraphError::Invalid {
-                code: Code::BuildInvalid,
-                route: renderer.clone(),
-                message: format!("JavaScript renderer is unavailable for {renderer}"),
-            });
-        }
-        let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(self.tree.clone()));
-        let workers =
-            ThreadWorkers::new(std::thread::available_parallelism().map_or(1, usize::from))?;
-        if let Some(module) = &config.input.postcss {
-            return Err(GraphError::Css {
-                source: CssError::PostcssUnavailable {
-                    module: module.clone(),
-                },
-            });
-        }
-        Ok(Arc::new(Graph {
-            inputs: Default::default(),
-            tree: tree.clone(),
-            composer: Arc::new(HtmlComposer {
-                fragments: Arc::new(DeferredFragments),
-            }),
-            stylesheets: Arc::new(Compiler {
-                tree: tree.clone(),
-                repo_root: config.repo_root.clone(),
-                resolver: Arc::new(SourceResolver {
-                    settings: resolution(config),
-                    tree: tree.clone(),
-                    repo_root: config.repo_root.clone(),
-                }),
-                processor: Arc::new(IdentityProcessor),
-            }),
-            cache: self.cache.clone(),
-            workers: Arc::new(workers),
-            version: VERSION.into(),
-        }))
-    }
-}
-
-fn resolution(config: &ResolvedConfig) -> Resolution {
-    let directory = config.file.parent().unwrap_or(&config.repo_root);
-    let config_directory = mokly_catalogue::config::relative(directory, &config.repo_root);
-    let input = config.input.module_resolution.clone().unwrap_or_default();
-    Resolution {
-        dependency_roots: Vec::new(),
-        config_directory,
-        aliases: input.aliases.unwrap_or_default(),
-        conditions: input.conditions.unwrap_or_default(),
-        main_fields: input.main_fields.unwrap_or_default(),
-        package_roots: input
-            .package_roots
-            .unwrap_or_default()
-            .iter()
-            .map(|root| mokly_catalogue::config::relative(&directory.join(root), &config.repo_root))
-            .collect(),
-        extensions: input.resolve_extensions.unwrap_or_default(),
-    }
-}

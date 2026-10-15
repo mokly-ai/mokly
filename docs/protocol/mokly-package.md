@@ -220,7 +220,7 @@ release-managed version literals, and package boundary.
 The shim passes `MOKLY_PACKAGE_ROOT` as the executing `@mokly/mokly` package
 root and `MOKLY_NODE_EXECUTABLE` as its `process.execPath`. The binary starts
 `dist/sidecar.js` from that package with the resolved repository as its working
-directory. An HTML-only catalogue without configured PostCSS needs neither
+directory. An HTML-only catalogue without a renderer or configured PostCSS needs neither
 Node nor a sidecar entry. Configured PostCSS starts a sidecar when the CSS
 pipeline processes a stylesheet. Direct binary execution uses `node` from
 `PATH` when `MOKLY_NODE_EXECUTABLE` is absent. It first checks the adjacent installed package, then

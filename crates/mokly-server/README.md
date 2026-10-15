@@ -69,7 +69,10 @@ Every response uses `no-store` and `nosniff`. No route adds a CORS header.
 
 Temporary renders validate the installed revision, view, controls, and complete
 props. They use the graph's isolated prop render path outside the HTTP event
-loop. `MemoryPreviews` holds at most 16 bundles and 32 MiB for five minutes.
+loop. The CLI supplies the shared JavaScript runtime, so React entries use
+the same pool, cache, renderer, PostCSS, and fragment keys as their saved
+views. The HTTP token and revision checks apply before that render path.
+`MemoryPreviews` holds at most 16 bundles and 32 MiB for five minutes.
 Authenticated expired ids return 410. Foreign or malformed ids return 404.
 No temporary bytes enter a source file, the catalogue, or its render cache.
 

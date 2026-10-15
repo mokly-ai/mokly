@@ -36,8 +36,19 @@ export function componentWrapper(definition: object, data: DefinitionData) {
     )
       throw new Error("moklyInstance must be lowercase kebab-case");
     if (parent.seen.has(id)) throw new Error(`duplicate instance ${id}`);
-    const order = parent.seen.size;
     parent.seen.add(id);
+    const scope = JSON.stringify([
+      parent.kind,
+      parent.instanceKey ?? null,
+      parent.slotKey ?? null,
+    ]);
+    let orders = session.inputOrders.get(scope);
+    if (!orders) {
+      orders = new Map();
+      session.inputOrders.set(scope, orders);
+    }
+    const order = orders.get(id) ?? orders.size;
+    orders.set(id, order);
     const key = digest([
       "mokly-instance-v1",
       parent.kind,
