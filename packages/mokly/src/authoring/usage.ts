@@ -15,6 +15,7 @@ export function inputOwner(owner: Owner): InputOwner {
 export function invocationSource(
   value: unknown,
   root: string,
+  dependencies: readonly string[] = [],
 ): InvocationSource | undefined {
   if (value === undefined) return;
   if (!value || typeof value !== "object")
@@ -31,10 +32,19 @@ export function invocationSource(
     Number(columnNumber) < 1
   )
     throw new Error("invalid invocation source");
-  const relative = path
-    .relative(root, path.resolve(root, fileName))
-    .split(path.sep)
-    .join("/");
+  const absolute = path.resolve(root, fileName);
+  if (
+    dependencies.some((directory) => {
+      const relative = path.relative(directory, absolute);
+      return (
+        relative !== ".." &&
+        !relative.startsWith(`..${path.sep}`) &&
+        !path.isAbsolute(relative)
+      );
+    })
+  )
+    return;
+  const relative = path.relative(root, absolute).split(path.sep).join("/");
   if (
     !relative ||
     relative
@@ -45,6 +55,7 @@ export function invocationSource(
     relative.includes("\0")
   )
     throw new Error("invocation source is outside sourceRoot");
+  if (relative.split("/").includes("node_modules")) return;
   return {
     path: relative,
     line: Number(lineNumber),

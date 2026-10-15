@@ -62,7 +62,11 @@ export function componentWrapper(definition: object, data: DefinitionData) {
       else props[name] = value;
     }
     const normalized = copyData(props) as Record<string, unknown>;
-    const source = invocationSource(__moklySource, session.sourceRoot);
+    const source = invocationSource(
+      __moklySource,
+      session.sourceRoot,
+      session.dependencyRoots,
+    );
     session.instances.push({
       regionId: region,
       key,

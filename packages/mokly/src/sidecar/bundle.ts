@@ -23,6 +23,7 @@ import { resolutionOptions } from "./resolution.js";
 export interface Generation {
   id: string;
   params: BundleParams;
+  dependencyRoots: string[];
   code: string;
   runtimeKey: string;
   bindings?: Record<string, EntryBinding>;
@@ -212,6 +213,7 @@ export async function bundle(
     const generation: Generation = {
       id,
       params,
+      dependencyRoots: paths.dependencyRoots,
       code: compiled.outputFiles![0]!.text,
       runtimeKey,
       cssModules: inputs.cssModules,

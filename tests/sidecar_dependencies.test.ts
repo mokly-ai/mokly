@@ -5,6 +5,7 @@ import test from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
+import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
 
 import {
   bundleParams,
@@ -130,3 +131,47 @@ for (const extension of ["mjs", "css"])
       },
     );
   });
+
+test("base package JSX renders wrappers without catalogue source attribution", async (context) => {
+  const { head, base } = await sidecarSources(context);
+  await dependency(
+    head,
+    "pkg",
+    "export function Shell({Card}){return <Card/>;}",
+    "jsx",
+  );
+  await fs.writeFile(
+    path.join(base, "entry.mjs"),
+    `import {createElement} from 'react'; import {defineComponent,defineScreen} from '@mokly/mokly'; import {Shell} from 'pkg'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],propSchema:{type:'object',additionalProperties:false},render:()=>createElement('b',null,'Dependency JSX')}); export const screen=defineScreen({title:'Screen',description:'',relatedDocs:[],render:()=>createElement(Shell,{Card:card.Component})});`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      sourceRoot: base,
+      entryFiles: ["entry.mjs"],
+      storiesFiles: [],
+      renderer: null,
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        packageRoots: [head, path.resolve(".")],
+      },
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await installBindings(sidecar, generation, {
+    "entry.mjs#card": { path: "components/card", title: "Card" },
+    "entry.mjs#screen": { path: "screen", title: "Screen" },
+  });
+  const rendered = await sidecar.call<RenderResult>("renderScreen", {
+    generation,
+    handle: "entry.mjs#screen",
+    entry: { path: "screen", title: "Screen" },
+    props: {},
+    viewport: "mobile",
+    colorScheme: "light",
+  });
+  assert.match(rendered.html, /Dependency JSX/);
+  assert.equal(rendered.instances[0]?.source, undefined);
+});

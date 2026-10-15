@@ -41,7 +41,8 @@ dependency inputs, and reads stylesheet order from these edges under the
 ## Authoring And Evaluation
 
 Repository-owned imports of `@mokly/mokly` receive the attributed authoring
-facade. Installed dependencies receive the unattributed API. The virtual
+facade. Installed dependencies receive the unattributed API. Their JSX
+wrapper call sites omit optional catalogue source metadata. The virtual
 entry, authoring facade, and JSX shim do not appear as catalogue modules.
 The JSX development shim forwards to the consumer's `react/jsx-runtime` and
 attaches invocation metadata only to `defineComponent` wrappers under the

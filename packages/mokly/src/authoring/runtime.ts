@@ -33,6 +33,7 @@ export interface Owner {
 export interface RenderSession {
   context: RenderContext;
   sourceRoot: string;
+  dependencyRoots: readonly string[];
   location: string;
   instances: InstanceDraft[];
   slots: SlotDraft[];

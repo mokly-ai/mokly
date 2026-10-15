@@ -17,6 +17,7 @@ export function renderSession(
   const session: RenderSession = {
     context,
     sourceRoot: generation.params.sourceRoot,
+    dependencyRoots: generation.dependencyRoots,
     location,
     instances: [],
     slots: [],
