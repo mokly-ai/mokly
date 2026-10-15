@@ -7,10 +7,27 @@ import { build } from "esbuild";
 
 const root = path.resolve(import.meta.dirname, "..");
 
-test("the browser hydration entry is a documented package subpath", async () => {
+async function sources(directory: string): Promise<string[]> {
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map((entry) => {
+      const full = path.join(directory, entry.name);
+      return entry.isDirectory() ? sources(full) : Promise.resolve([full]);
+    }),
+  );
+  return files.flat().filter((file) => /\.tsx?$/.test(file));
+}
+
+test("the package's public entries are the root, browser, data and styles", async () => {
   const manifest = JSON.parse(
     await fs.readFile(path.join(root, "package.json"), "utf8"),
   ) as { exports: Record<string, unknown>; sideEffects: string[] };
+  assert.deepEqual(Object.keys(manifest.exports), [
+    ".",
+    "./browser",
+    "./data",
+    "./styles.css",
+  ]);
   assert.deepEqual(manifest.exports["./browser"], {
     types: "./dist/browser.d.ts",
     import: "./dist/browser.js",
@@ -29,57 +46,59 @@ test("React entry bundles for browsers without CLI, server or Node code", async 
     logLevel: "silent",
   });
   for (const input of Object.keys(result.metafile.inputs))
+    assert.doesNotMatch(input, /(?:^|\/)src\/(?:cli|server|build)\//);
+});
+
+test("the shell renders on the client and nothing hydrates server markup", async () => {
+  const entry = await fs.readFile(path.join(root, "src/browser.tsx"), "utf8");
+  assert.match(entry, /from "react-dom\/client"/);
+  assert.match(entry, /createRoot\(/);
+  for (const file of await sources(path.join(root, "src")))
     assert.doesNotMatch(
-      input,
-      /(?:^|\/)src\/(?:cli|server|build)\/|viewer\/server\.(?:js|tsx)$/,
+      await fs.readFile(file, "utf8"),
+      /hydrateRoot|react-dom\/server/,
+      path.relative(root, file),
     );
 });
-test("standalone browser modules isolate React to the hydration bundle", async () => {
-  const directories = [path.join(root, "dist/browser")];
-  let hydrationBundles = 0;
-  for (const directory of directories) {
-    for (const file of await fs.readdir(directory)) {
-      if (!file.endsWith(".js")) continue;
-      const code = await fs.readFile(path.join(directory, file), "utf8");
-      assert.doesNotMatch(code, /from\s*["']node:/);
-      if (file === "react-shell.js") {
-        hydrationBundles++;
-        assert.match(code, /hydrateRoot/);
-      } else {
-        assert.doesNotMatch(
-          code,
-          /from\s*["']react(?:-dom)?|react-dom|hydrateRoot|react\.production/,
-        );
-      }
-    }
-  }
-  assert.equal(hydrationBundles, 1);
-});
-test("standalone appearance startup is a self-contained classic bundle", async () => {
-  const code = await fs.readFile(
-    path.join(root, "dist/browser/appearance-startup.js"),
+
+test("the browser bundles are the standalone shell and the frame inspector", async () => {
+  const directory = path.join(root, "dist/browser");
+  assert.deepEqual((await fs.readdir(directory)).sort(), [
+    "inspector.js",
+    "shell.js",
+  ]);
+  assert.deepEqual(
+    JSON.parse(
+      await fs.readFile(path.join(root, "dist/browser.manifest.json"), "utf8"),
+    ),
+    { schemaVersion: 1, modules: ["inspector.js", "shell.js"] },
+  );
+  const shell = await fs.readFile(path.join(directory, "shell.js"), "utf8");
+  assert.match(shell, /createRoot/);
+  assert.doesNotMatch(shell, /from\s*["'](?:node:|react|react-dom)/);
+  const inspector = await fs.readFile(
+    path.join(directory, "inspector.js"),
     "utf8",
   );
-  assert.match(code, /^\s*(?:"use strict";\s*)?\(\(\) => \{/);
-  assert.match(code, /mokly:theme/);
-  assert.doesNotMatch(code, /^\s*(?:import|export)\b/m);
   assert.doesNotMatch(
-    code,
-    /react-dom|hydrateRoot|react\.production|["'](?:react|node:|@mokly\/mokly)|(?:^|\/)dist\/cli\//,
+    inspector,
+    /from\s*["']node:|react-dom|createRoot|react\.production/,
   );
 });
-test("the Node-only SSR entry cannot be imported into a browser graph", async () => {
-  await assert.rejects(
-    build({
-      stdin: {
-        contents:
-          'import { renderViewer } from "@mokly/viewer/server"; console.log(renderViewer);',
-        resolveDir: root,
-      },
-      bundle: true,
-      write: false,
-      platform: "browser",
-      logLevel: "silent",
-    }),
-  );
+
+test("the removed server and runtime entries cannot be imported", async () => {
+  for (const specifier of ["@mokly/viewer/server", "@mokly/viewer/runtime"])
+    await assert.rejects(
+      build({
+        stdin: {
+          contents: `import * as entry from "${specifier}"; console.log(entry);`,
+          resolveDir: root,
+        },
+        bundle: true,
+        write: false,
+        platform: "browser",
+        logLevel: "silent",
+      }),
+      specifier,
+    );
 });

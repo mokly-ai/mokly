@@ -5,14 +5,13 @@ import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import type {
-  CatalogueReadModel,
-  CatalogueScreen,
-  CatalogueUsage,
-  CatalogueView,
-} from "../src/catalogue/types.js";
+  ShellCatalogueScreen,
+  ShellCatalogueView,
+} from "../src/catalogue/scoped_types.js";
+import type { CatalogueUsage } from "../src/catalogue/types.js";
 import { ShellFrameMarkerLayer } from "../src/shell/frame_marker_layer.js";
 import { ViewerHostBridge } from "../src/viewer/host_bridge.js";
-import type { LoadedCatalogue } from "../src/viewer/source.js";
+import type { LoadedIndex } from "../src/viewer/sources.js";
 import type {
   MoklyViewerHandle,
   MoklyViewerProps,
@@ -29,16 +28,14 @@ export function EvidenceRuntime({
   home,
   initial,
   loaded,
-  model,
   probe,
   views,
 }: {
-  home: CatalogueScreen;
+  home: ShellCatalogueScreen;
   initial: Record<EvidenceViewport, CatalogueUsage>;
-  loaded: LoadedCatalogue;
-  model: CatalogueReadModel;
+  loaded: LoadedIndex;
   probe: EvidenceRuntimeProbe;
-  views: readonly CatalogueView[];
+  views: readonly ShellCatalogueView[];
 }) {
   const root = useRef<HTMLDivElement>(null);
   const handle = useRef<MoklyViewerHandle>(null);
@@ -47,9 +44,9 @@ export function EvidenceRuntime({
   const [usages, setUsages] = useState(initial);
   const [markers, setMarkers] = useState<readonly ViewerMarker[]>([]);
   const callbacks = useRef<MoklyViewerProps>({
-    viewerId: "evidence",
-    baseUrl: loaded.url,
-    catalogue: model,
+    baseUrl: loaded.root,
+    index: loaded.index,
+    detail: () => Promise.reject(new Error("The harness holds its details.")),
     defaultSelection: {
       colorScheme: "light",
       screenPath: home.path,
@@ -120,7 +117,6 @@ export function EvidenceRuntime({
         callbacks={callbacks}
         failureOwner={failureOwner.current}
         handleRef={handle}
-        loaded={loaded}
         navigationEnd={navigationEnd}
         replaced={sourceReplaced}
         root={root}

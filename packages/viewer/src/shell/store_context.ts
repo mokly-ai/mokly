@@ -1,7 +1,6 @@
 /** React context boundary for one live Browse shell. */
 
 import { createContext, useContext } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { ViewerSelection } from "../viewer/types.js";
@@ -9,7 +8,8 @@ import type { ViewerSelection } from "../viewer/types.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
-import type { ShellState, ShellRecoverySnapshot } from "./store_state.js";
+import type { ShellClickEvent, ShellKeyEvent } from "./store_browser_routes.js";
+import type { ShellState } from "./store_state.js";
 
 /** State and actions consumed by shell-owned interactive components. */
 export interface ShellStore {
@@ -23,7 +23,6 @@ export interface ShellStore {
   navigateFrame(href: string, navigation?: FrameNavigation): void;
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
-  recoverySnapshot(): ShellRecoverySnapshot;
   /**
    * Expand and focus one section's folder row without changing the content
    * area, clearing only the filters that would hide it.
@@ -43,8 +42,8 @@ export interface ShellStore {
   setTagPicker(open: boolean, index?: number): void;
   setView(value: "all" | "changes"): void;
   toggleTag(tag: string): void;
-  onShellClick(event: MouseEvent<HTMLElement>): void;
-  onShellKeyDown(event: KeyboardEvent<HTMLElement>): void;
+  onShellClick(event: ShellClickEvent): void;
+  onShellKeyDown(event: ShellKeyEvent): void;
 }
 
 const ShellStoreContext = createContext<ShellStore | undefined>(undefined);
@@ -60,6 +59,6 @@ export function useOptionalShellStore(): ShellStore | undefined {
 /** Require the live store from a standalone-only bridge. */
 export function useShellStore(): ShellStore {
   const store = useOptionalShellStore();
-  if (!store) throw new Error("The hydrated shell store is unavailable.");
+  if (!store) throw new Error("The shell store is unavailable.");
   return store;
 }

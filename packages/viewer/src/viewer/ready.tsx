@@ -9,25 +9,30 @@ import {
 } from "react";
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
+import { dataSnapshot } from "../shell/data_commit.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
 import { ShellStoreProvider } from "../shell/store.js";
+import { viewRoute } from "../shell/store_initial.js";
 
 import {
   viewerComparisonEnvironment,
   viewerShellEnvironment,
 } from "./environment.js";
-import { viewerFailures } from "./failures.js";
+import { EntryUnavailableError, viewerFailures } from "./failures.js";
 import { ViewerHostBridge } from "./host_bridge.js";
-import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
+import { embeddedDataSource } from "./index_source.js";
+import { viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
-import type { LoadedCatalogue } from "./source.js";
+import type { LoadedIndex } from "./sources.js";
 import { themeAttributes } from "./theme.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
 type ReadyProps = MoklyViewerProps & {
-  loaded: LoadedCatalogue;
+  loaded: LoadedIndex;
+  onVersionError(error: MoklyVersionError): void;
   adapter: NonNullable<MoklyViewerProps["frameAdapter"]>;
   bridgeOwner: object;
   identifierPrefix: string;
@@ -43,16 +48,20 @@ const serverSnapshot = () => false;
 /** Validate host props before React constructs an interactive runtime. */
 export function ReadyViewer(props: ReadyProps) {
   const [defaults] = useState(props.defaultSelection);
+  const model = useMemo(
+    () => dataSnapshot(props.loaded.index, new Map()).catalogue.publicModel!,
+    [props.loaded.index],
+  );
   const normalized = useMemo(() => {
     try {
       return normalizeSelection(
-        props.loaded.catalogue,
+        model,
         props.selection ?? { ...defaultSelection, ...defaults },
       );
     } catch {
       return undefined;
     }
-  }, [props.loaded.catalogue, props.selection, defaults]);
+  }, [model, props.selection, defaults]);
   const reported = useRef(false);
   const callbacks = useRef(props);
   callbacks.current = props;
@@ -95,7 +104,14 @@ function MountedViewer(
     ),
   );
   const [initial] = useState(props.normalized);
-  const [catalogue] = useState(() => viewerCatalogue(props.loaded.catalogue));
+  const [source] = useState(() => {
+    // One failure object, so another deployment emits `onError` once.
+    const replacedDeployment = new Error("another deployment answered");
+    return embeddedDataSource(props.index, props.loaded, props.detail, {
+      deploymentChanged: () => report(replacedDeployment, "catalogue"),
+      detailFailed: () => report(new EntryUnavailableError(), "catalogue"),
+    });
+  });
   const interactive = useSyncExternalStore(
     subscribeBrowser,
     browserSnapshot,
@@ -126,14 +142,25 @@ function MountedViewer(
   return (
     <ShellIdentifierProvider prefix={props.identifierPrefix}>
       <ShellStoreProvider
-        catalogue={catalogue}
         comparisonEnvironment={comparisonEnvironment}
-        context={viewerContext(props.loaded.catalogue, initial)}
+        context={{
+          embedded: true,
+          ...(props.theme ? { theme: props.theme } : {}),
+        }}
         embeddedHost={environment}
         frameAdapter={props.adapter}
-        frameBaseUrl={props.loaded.url}
+        frameBaseUrl={props.loaded.root}
+        index={props.loaded.index}
         interactive={interactive}
-        view={viewerView(catalogue, initial)}
+        onVersionError={props.onVersionError}
+        route={(catalogue) =>
+          viewRoute(
+            catalogue,
+            viewerView(catalogue, initial),
+            initial.snapshotId,
+          )
+        }
+        source={source}
       >
         <EmbeddedViewerShell
           inspection={
@@ -142,7 +169,6 @@ function MountedViewer(
                 callbacks={callbacks}
                 failureOwner={props.bridgeOwner}
                 handleRef={props.ref}
-                loaded={props.loaded}
                 navigationEnd={navigationEnd}
                 replaced={props.replaced}
                 root={root}

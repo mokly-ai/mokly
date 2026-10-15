@@ -699,14 +699,14 @@ without JavaScript.
 
 Tags: ui
 
-- [ ] Update the viewer's data readers and validators to the generated read
+- [x] Update the viewer's data readers and validators to the generated read
       model v7 types.
-- [ ] Show a component's own props before its variants, offer the derived
+- [x] Show a component's own props before its variants, offer the derived
       controls on screens with the zero-based step and the title-or-value
       select labels, and validate control input with a profile validator
       that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Replace server rendering and hydration in the viewer package with the
+- [x] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
@@ -714,7 +714,9 @@ Tags: ui
       and the package README, rewritten under Decision 38, is checked
       against the package.
 - [ ] Run the viewer suite against the Milestone 6 routes.
-- [ ] Commit.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -753,6 +755,9 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
+- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+      routing, detail loading and retry, live publications without a page
+      load, and the frame reload by `documentKey`.
 - [ ] Write the JavaScript authoring guides.
 - [ ] Commit.
 
@@ -797,6 +802,11 @@ Tags: ui
 
 - [ ] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
+- [ ] Check the shell's projection of the entry detail's review v8 rule and
+      resource records (`packages/viewer/src/review/view_evidence.ts`)
+      against Milestone 9 output.
+- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+      the serialization contract: `sourceKind` is the literal `base`.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 

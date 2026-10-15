@@ -1,6 +1,6 @@
 // The changed mark a catalogue row carries. The stylesheet draws it from
-// `data-changed` and `data-changed-variants`, so the server render and every
-// client update agree on it without a second state channel: the row markup
+// `data-changed` and `data-changed-variants`, so every render agrees on it
+// without a second state channel: the row markup
 // always holds the wording, and CSS decides whether it reaches the
 // accessibility tree beside the dot.
 

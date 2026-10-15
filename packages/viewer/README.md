@@ -383,7 +383,7 @@ order, cancellation, and evidence refresh.
 | `@mokly/viewer`            | `MoklyViewer`, its types, the frame adapters, `resolveInstance`, and the readers of the catalogue index and the entry detail |
 | `@mokly/viewer/styles.css` | The scoped stylesheet of an embedded root; import it once                                                                    |
 | `@mokly/viewer/browser`    | Mounts the standalone Browse shell into the stub that `mokly serve` and `mokly build` deliver                                |
-| `@mokly/viewer/data`       | Pure path functions and the generated directory names, with no React dependency                                              |
+| `@mokly/viewer/data`       | React-free data functions and types: paths, directory names, prop schema validation, and the navigation tree                 |
 
 React applications need only the root entry and the stylesheet. Do not import
 `@mokly/viewer/browser` in an application-owned React root: it mounts the
@@ -400,11 +400,13 @@ The embedded viewer reports the same failure through `onError` with code
 list every boundary.
 
 `@mokly/viewer/data` exports the path functions and `GENERATED_DIRECTORY` of
-the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md) and
-the grammar functions `isPathSegment`, `isEntryPath`, and
-`isWindowsDeviceName` of the
-[path contract](../../docs/protocol/mokly-paths.md); it has no React
-dependency.
+the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md), the
+grammar functions `isPathSegment`, `isEntryPath`, and `isWindowsDeviceName` of
+the [path contract](../../docs/protocol/mokly-paths.md), the profile
+validators `validatePropSchema` and `validateProps` of the
+[entry props contract](../../docs/protocol/mokly-entry-props.md#prop-schema-profile),
+which generate no code, the canonical props codec, the navigation hierarchy,
+and the review result types; it has no React dependency.
 
 ## Theming
 
@@ -559,8 +561,8 @@ and Review regressions against `mokly serve` of the example catalogue.
   shared by the embedded viewer and the browser entry
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
-- [`src/data`](./src/data) — the `./data` entry: path functions and directory
-  names
+- [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
+  directory names, prop schema validation, and the navigation tree
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
   snapshot, preview, and shell URL derivation
 - [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and

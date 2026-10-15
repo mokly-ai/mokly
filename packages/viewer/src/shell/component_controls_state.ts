@@ -1,11 +1,10 @@
-/** Shared state and scope helpers for temporary component prop editing. */
+/** Shared state and scope helpers for temporary prop editing. */
 
 import type { ComponentWireProps } from "../components/prop_types.js";
 import type { ComponentRenderSuccess } from "../components/render_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
-import type { ControlDraft } from "./component_control_fields.js";
-import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
+import type { ControlDraft, ControlTarget } from "./control_values.js";
 
 /** One edit scope's current draft and last valid previews. */
 export interface ComponentEditorState {
@@ -19,20 +18,19 @@ export interface ComponentEditorState {
   status: string;
 }
 
-/** Reset state for a new variant, renderer generation, or comparison mode. */
+/** Reset state for a new entry or comparison mode. */
 export function initialComponentEditorState(
-  component: WorkspaceData["component"],
-  variant: WorkspaceVariant | undefined,
+  target: ControlTarget | undefined,
   scope: string,
   draft: ControlDraft,
 ): ComponentEditorState {
   return {
-    draft: component && variant ? draft : {},
+    draft: target ? draft : {},
     errors: {},
     failure: undefined,
     dirty: false,
     previews: new Map(),
-    props: variant?.value.props ?? {},
+    props: target?.props ?? {},
     scope,
     status: "Saved props",
   };
@@ -40,18 +38,17 @@ export function initialComponentEditorState(
 
 /** Explain why controls are read-only in the current product context. */
 export function controlsUnavailable(
-  data: WorkspaceData,
-  variant: WorkspaceVariant | undefined,
+  target: ControlTarget | undefined,
   comparing: boolean,
   live: boolean,
 ): string | undefined {
-  if (!variant || variant.removed)
-    return "Choose an available saved variant to edit props.";
+  if (!target || target.removed)
+    return "Choose an available entry to edit props.";
   if (comparing)
-    return "Comparisons show the saved variant. Return to Current to edit props.";
+    return "Comparisons show the saved props. Return to Current to edit props.";
   if (!live) return "Open this catalogue locally to edit props.";
-  if (data.component && !Object.keys(data.component.controls).length)
-    return "No editable props are declared for this component.";
+  if (!Object.keys(target.controls).length)
+    return "No editable props are declared for this entry.";
 }
 
 /** Context identity for saved and temporary preview results. */

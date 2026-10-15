@@ -12,7 +12,7 @@ export type AuthenticatedDocument = Document & {
 
 /** Mount-scoped document transfer and assigned-resource authentication. */
 export interface MountAuthentication {
-  /** Last adapter assignment; absence identifies the first hydration mount. */
+  /** Last adapter assignment; absence identifies the first mount. */
   readonly previousResource: string | undefined;
   /** The authenticated starting document eligible for ownership transfer. */
   readonly transferredDocument: AuthenticatedDocument | undefined;

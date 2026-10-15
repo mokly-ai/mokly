@@ -6,6 +6,14 @@ import {
 import { ObsoleteInspection } from "./inspection_work.js";
 import type { ViewerError, ViewerEvents } from "./types.js";
 
+/** A detail the viewer could not load or accept; the entry offers a retry. */
+export class EntryUnavailableError extends Error {
+  constructor() {
+    super("The entry detail could not be loaded.");
+    this.name = "EntryUnavailableError";
+  }
+}
+
 /** Report an operation once, even when a mount and its waiting handle both fail. */
 export function viewerFailures(
   events: () => ViewerEvents,
@@ -25,7 +33,11 @@ export function viewerFailures(
           ? "The comparison could not be loaded. Try again."
           : code === "markers"
             ? "The requested markers could not be displayed."
-            : "This instance is unavailable in the current view.";
+            : error instanceof EntryUnavailableError
+              ? "This entry could not be loaded. Try again."
+              : code === "catalogue"
+                ? "The catalogue changed. Reload it to see the new version."
+                : "This instance is unavailable in the current view.";
     const failure = new Error(message);
     reported.set(error, failure);
     reported.set(failure, failure);

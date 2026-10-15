@@ -2,67 +2,62 @@ import assert from "node:assert/strict";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
+import {
+  detailKey,
+  type DetailRequest,
+} from "../src/catalogue/detail_fences.js";
+import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
 import type {
   CataloguePage,
   CatalogueReadModel,
+  EntryDetailV1,
+  ViewEvidence,
 } from "../src/catalogue/types.js";
-import { cssAnalysis } from "../src/review/css/evidence.js";
-import type {
-  CssRuleAttribution,
-  DependencyReason,
-  ResourceEvidence,
-} from "../src/review/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { ShellMain } from "../src/shell/views.js";
 
-import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
-
-const { model: fixture } = componentWorkspaceFixture();
+import {
+  detailPairs,
+  indexFixture,
+  rawDetailFixtures,
+  shellModelFixture,
+} from "./catalogue_v7_fixture.js";
 
 export const BASE = "origin/main";
 
-const rule = (fields: Partial<CssRuleAttribution>): CssRuleAttribution => ({
-  status: "matched",
-  selectors: [],
-  changedComponentPaths: [],
-  pageSelectors: [],
-  ...fields,
-});
-const reason = (
-  path: string,
-  rules: readonly CssRuleAttribution[],
-): DependencyReason => ({
-  kind: "dependency",
-  path,
-  analysis: cssAnalysis(rules),
-});
-
-/** The approved story: one rule also changes Action; the page's own sheet has two. */
-export const CHANGED: ResourceEvidence = {
-  reasons: [
-    reason("mockups/actions.css", [
-      rule({
-        ruleKey: "1".repeat(64),
-        selectors: [".action"],
-        changedComponentPaths: ["action"],
-        pageSelectors: [".action"],
-      }),
-    ]),
-    reason("mockups/handbook.css", [
-      rule({
-        ruleKey: "2".repeat(64),
-        selectors: ["article h2"],
-        pageSelectors: ["article h2"],
-      }),
-      rule({
-        ruleKey: "3".repeat(64),
-        status: "unresolved",
-        selectors: [":root"],
-      }),
-    ]),
+/**
+ * The approved story as review v8 records: one rule also changes Action; the
+ * page's own sheet has two.
+ */
+export const CHANGED: ViewEvidence = {
+  rules: [
+    {
+      stylesheet: "mockups/actions.css",
+      selector: ".action",
+      status: "matched",
+      owner: { kind: "component", path: "components/action" },
+    },
+    {
+      stylesheet: "mockups/actions.css",
+      selector: ".action",
+      status: "matched",
+      owner: { kind: "entry" },
+    },
+    {
+      stylesheet: "mockups/handbook.css",
+      selector: "article h2",
+      status: "matched",
+      owner: { kind: "entry" },
+    },
+    {
+      stylesheet: "mockups/handbook.css",
+      selector: ":root",
+      status: "unresolved",
+      owner: { kind: "entry" },
+    },
   ],
+  resources: [],
 };
 
 /** The exact comparison details the shell renders for {@link CHANGED}. */
@@ -81,13 +76,46 @@ export const CHANGED_SECTION =
   '<ul><li><code class="mbk-code">:root</code></li></ul></li></ul>' +
   "</section>";
 
-/** The published fixture with its one page record replaced. */
-export function published(page: Partial<CataloguePage>): CatalogueReadModel {
-  const guide = fixture.pages.find((item) => item.path === "guide");
+/**
+ * The published index with its one page record edited and `base` as its
+ * branch name; `null` publishes no branch name.
+ */
+export function publishedIndex(
+  page: Partial<CataloguePage>,
+  base: string | null = BASE,
+): CatalogueReadModel {
+  return indexFixture((index) => {
+    if (base === null) delete index.base;
+    else index.base = base;
+    index.pages = index.pages.map((guide) => ({ ...guide, ...page }));
+  });
+}
+
+/** Every fixture detail, with the page's detail carrying `evidence` or none. */
+export function publishedDetails(
+  evidence?: ViewEvidence,
+): (readonly [DetailRequest, EntryDetailV1])[] {
+  const fixtures = rawDetailFixtures();
+  const guide = fixtures.current["guide"];
   assert.ok(guide);
-  const { resourceEvidence: _evidence, ...plain } = guide;
-  return readCatalogue(
-    JSON.parse(JSON.stringify({ ...fixture, pages: [{ ...plain, ...page }] })),
+  delete guide.resourceEvidence;
+  if (evidence) guide.resourceEvidence = evidence;
+  return detailPairs(undefined, fixtures);
+}
+
+/** The shell model of the published index and its held details. */
+export function published(
+  page: Partial<CataloguePage>,
+  evidence?: ViewEvidence,
+): ShellCatalogueReadModel {
+  return shellModelFixture(
+    publishedIndex(page),
+    new Map(
+      publishedDetails(evidence).map(([request, detail]) => [
+        detailKey(request),
+        detail,
+      ]),
+    ),
   );
 }
 
@@ -101,7 +129,7 @@ export function renderPage(
   return renderToStaticMarkup(
     <ShellMain
       catalogue={catalogue}
-      context={{ base: BASE, updateVersion: 1, ...context }}
+      context={{ base: BASE, ...context }}
       view={{ kind: "target", target: { entry, kind: "entry" } }}
     />,
   );

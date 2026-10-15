@@ -19,7 +19,7 @@ export function documentLightOnly(
 /**
  * The quiet band above a current document with no dark render. It is always
  * rendered for such a document, and the stylesheet shows it only while the
- * shell is Dark, so the server render and hydration agree.
+ * shell is Dark, so a change of appearance needs no render.
  */
 export function LightOnlyBand() {
   return (

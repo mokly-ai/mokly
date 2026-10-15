@@ -1,6 +1,6 @@
 // The one previous-version presentation shared by removed documents and
 // removed screens. The React shell owns the request, lifecycle, and historical
-// frames while the server render remains an explicit unavailable state.
+// frames; a shell without a request shows the explicit unavailable state.
 
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { entryRoute } from "../navigation/routes.js";
@@ -51,7 +51,7 @@ export function removedPreviewData(
     entry.kind !== "screen"
   )
     return undefined;
-  const model = catalogue.publicModel ?? context.readModel;
+  const model = catalogue.publicModel;
   const removed = model?.removedEntries.find(
     (removed) => removed.entry.path === entry.path,
   );
@@ -264,10 +264,9 @@ function PreviewState(props: {
 }
 
 /**
- * The stage a removed entry opens in. The served markup says the previous
- * version is unavailable, because a shell whose client never runs has nothing
- * on the way; the client's first update replaces it with the loading state and
- * then with the previous version, since opening a removed entry is the request.
+ * The stage a removed entry opens in. Opening a removed entry is the request:
+ * the stage shows the loading state, then the previous version. A shell that
+ * cannot request it shows that the previous version is unavailable.
  */
 export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const store = useOptionalShellStore();

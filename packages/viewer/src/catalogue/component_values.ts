@@ -1,6 +1,9 @@
 import { decodeProps, encodeProps } from "../components/codec.js";
 import type { ComponentControl } from "../components/control_types.js";
-import { validateControls } from "../components/controls.js";
+import {
+  validateControlledValues,
+  validateControls,
+} from "../components/controls.js";
 import { invalidData } from "../components/data.js";
 import type {
   ComponentInputOwner,
@@ -8,15 +11,14 @@ import type {
   ComponentRangeRecord,
   ComponentSlotRecord,
 } from "../components/manifest_types.js";
+import { validatePropSchema } from "../components/profile_schema.js";
 import type {
   ComponentWireProps,
-  DataPropSchema,
-  ObjectPropSchema,
+  PropSchema,
 } from "../components/prop_types.js";
-import { validatePropSchema } from "../components/schema.js";
+import { validateProps } from "../components/props.js";
 
 import {
-  array,
   choice,
   counter,
   hash,
@@ -26,111 +28,34 @@ import {
   string,
 } from "./values.js";
 
-/** Select contract fields before invoking the strict shared component validators. */
-function select(
-  value: unknown,
-  keys: readonly string[],
-): Record<string, unknown> {
-  const input = object(value);
-  return Object.fromEntries(
-    keys
-      .filter((key) => Object.hasOwn(input, key))
-      .map((key) => [key, input[key]]),
-  );
+/** Read one prop schema under the JSON Schema profile as an owned copy. */
+export function readSchema(value: unknown, context = "$catalogue"): PropSchema {
+  validatePropSchema(value, context);
+  return structuredClone(value);
 }
 
-export function readSchema(value: unknown): DataPropSchema {
-  const input = object(value);
-  const kind = choice(input.kind, [
-    "string",
-    "boolean",
-    "number",
-    "null",
-    "enum",
-    "array",
-    "object",
-    "union",
-  ] as const);
-  let result: Record<string, unknown>;
-  switch (kind) {
-    case "object":
-      result = {
-        kind,
-        properties: Object.fromEntries(
-          Object.entries(object(input.properties)).map(([key, field]) => [
-            key,
-            {
-              ...select(field, ["optional"]),
-              schema: readSchema(object(field).schema),
-            },
-          ]),
-        ),
-      };
-      break;
-    case "array":
-      result = {
-        ...select(input, ["minItems", "maxItems"]),
-        kind,
-        items: readSchema(input.items),
-      };
-      break;
-    case "union":
-      result = { kind, anyOf: array(input.anyOf).map(readSchema) };
-      break;
-    case "string":
-      result = select(input, ["kind", "minLength", "maxLength"]);
-      break;
-    case "number":
-      result = select(input, ["kind", "minimum", "maximum", "integer"]);
-      break;
-    case "enum":
-      result = { kind, values: array(input.values).slice() };
-      break;
-    default:
-      result = { kind };
-  }
-  validatePropSchema(result);
-  return result;
-}
-
+/** Read the controls of one entry, which name only its declared props. */
 export function readControls(
   value: unknown,
-  schema: ObjectPropSchema,
+  schema: PropSchema,
+  context = "$catalogue",
 ): Readonly<Record<string, ComponentControl>> {
-  const result = Object.fromEntries(
-    Object.entries(object(value)).map(([key, raw]) => {
-      const input = object(raw);
-      const kind = choice(input.kind, [
-        "text",
-        "boolean",
-        "number",
-        "select",
-      ] as const);
-      const common = select(input, ["kind", "label", "description"]);
-      const control =
-        kind === "select"
-          ? {
-              ...common,
-              options: array(input.options).map((option) =>
-                select(option, ["label", "value"]),
-              ),
-            }
-          : {
-              ...common,
-              ...select(
-                input,
-                kind === "text"
-                  ? ["maxLength"]
-                  : kind === "number"
-                    ? ["minimum", "maximum", "step"]
-                    : [],
-              ),
-            };
-      return [key, control];
-    }),
-  );
-  validateControls(schema, result);
-  return result;
+  object(value);
+  validateControls(schema, value, context);
+  return structuredClone(value);
+}
+
+/** Read an entry's own or merged props and check them against its schema. */
+export function readEntryProps(
+  value: unknown,
+  schema: PropSchema,
+  controls: Readonly<Record<string, ComponentControl>>,
+  context = "$catalogue",
+): ComponentWireProps {
+  const props = readProps(value);
+  const decoded = validateProps(schema, decodeProps(props), context);
+  validateControlledValues(controls, decoded, context);
+  return props;
 }
 
 export function readProps(value: unknown): ComponentWireProps {

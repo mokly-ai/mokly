@@ -1,45 +1,26 @@
 # Browse client and frame adapters
 
 These browser modules provide the frame adapters, message transport, geometry
-and revision-adoption boundaries consumed by the hydrated React shell. Shell
-navigation, selection, comparisons and component inspection live under
-`src/shell`; this directory contains no second interaction runtime. The package
-build bundles the browser-safe modules into `dist/browser` and generates an
-adjacent manifest from the completed esbuild outputs. Serve validates exact
-manifest/directory equality before binding and uses that inventory for delivery
-and export. The package graph check verifies every delivered static and dynamic
-import resolves within that complete inventory.
+and usage-adoption boundaries consumed by the client-rendered React shell.
+Shell navigation, selection, comparisons and component inspection live under
+`src/shell`, and the shell's index, detail and live transports under
+`src/shell/data_*` and `src/standalone`; this directory contains no second
+interaction runtime. The package build bundles the standalone shell and the
+frame inspector into `dist/browser/shell.js` and `dist/browser/inspector.js`
+and generates the adjacent `dist/browser.manifest.json` from the completed
+esbuild outputs. Serve and `build` deliver them as
+`/mokly-viewer/client/shell.js` and the inspector script of the
+[frame adapter contract](../../../../docs/protocol/mokly-frame-adapter.md).
 
-`host_capability_descriptor.ts` validates the private live Serve bootstrap and
-source identity. Live capability requests select an `entryPath` (or `null` for home).
-`host_capabilities.ts` defines the behavior context, atomic
-public/private evidence revision and route/source cancellation scope. Route and
-live evidence use the one strict live reader, which accepts only the exact
-scope derived from the page route. The accepted catalogue and optional complete
-private workspace replace the installed scoped model together, so usage from
-visited routes never accumulates. A rejected current route read is reported to the
-shell as failed Usage; obsolete or aborted reads stay inert. Both modules are
-kept protocol modules; static export omits their standalone browser outputs.
-
-Disclosure capture and pre-hydration navigation width capture are owned directly
-under `src/standalone`. The synchronous navigation bootstrap records native
-disclosure choices outside the React-owned DOM, and React reads that state for
-its initial hydration render. Interactive navigation resizing starts after
-hydration. Load or page exit cleans up capture state, and unfiltered choices use
-the existing durable preference. The standalone build continues to deliver
-this entry as `navigation-resize.js`.
-
-Standalone appearance is also owned under `src/standalone`, not by a second
-client interaction runtime. The classic `appearance-startup.js` bundle restores
-the document mark, preference and system listener before styles paint, updates
-parsed frames and the native selector, and exposes a narrow refresh handoff.
-The browser entry refreshes that controller before hydration; the React bridge
-then adopts its effective document scheme while the shell store independently
-selects an available preview scheme. The selector stays hidden if the classic
-host is absent. Persisted page exits keep the controller for back-forward-cache
+Standalone appearance is owned under `src/standalone`, not by a second
+client interaction runtime. The browser entry installs the controller of
+`startup.ts` before the shell's first render: it restores the document mark,
+preference and system listener, updates frames and the native selector, and
+exposes a narrow refresh handoff. The React bridge then adopts its effective
+document scheme while the shell store independently selects an available
+preview scheme. Persisted page exits keep the controller for back-forward-cache
 restoration and refresh it on return; final exits dispose it and its lifecycle
-listeners. The complete build-output manifest delivers both the classic bundle
-and `react-shell.js`.
+listeners.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).
@@ -64,13 +45,13 @@ match exactly. It records authenticated `Document` objects without
 retaining them, transfers mount-time navigation ownership only when the exact
 current object was previously authenticated for that frame, and separately
 checks every watcher or `load` candidate against the assigned resource through
-a mount-scoped capability. Weak frame provenance permits matching SSR content
+a mount-scoped capability. Weak frame provenance permits a matching document
 on the first same-origin mount. A later mount excludes its exact unrecorded
 starting object even when its URL equals the assignment, so an unowned document
 reached through native frame navigation keeps portable link behavior until a
 different replacement object authenticates.
-Once hydrated, adapters exclusively navigate live previews with history
-replacement. The server's initial `src` may therefore remain unchanged after a
+Once mounted, adapters exclusively navigate live previews with history
+replacement. A frame's first `src` may therefore remain unchanged after a
 scheme swap. `same_origin_load.ts` decides reuse, waiting, or replacement from
 document ownership and the last assigned resource before considering readiness.
 A new resource assignment cancels any superseded navigation, even if the
@@ -102,9 +83,10 @@ nonce after load. `message_transport.ts` owns the five-second request timeouts,
 16-request bound and response matching. A replacement or disposal invalidates
 the session and all pending work. Subscriptions share one remote event set;
 removing the final subscriber sends an empty replacement set.
-`stage_sources.ts` normalizes bootstrap-only omitted usage to the same pending
-frame state as a view awaiting evidence before it reaches an adapter, so it
-shows the existing waiting copy rather than empty or unavailable inspection.
+`stage_sources.ts` normalizes the omitted usage of a view whose entry detail is
+not held yet to the same pending frame state as a view awaiting evidence before
+it reaches an adapter, so it shows the existing waiting copy rather than empty
+or unavailable inspection.
 `frame_usage.ts` shares the automatic event capability rule: only validated
 ready usage enables pointer inspection and geometry events; other usage retains
 only navigation. Both built-in mounts accept
@@ -139,8 +121,8 @@ cargo xtask check --suite viewer
 
 Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../docs/protocol/mokly-export-delivery.md),
-[logical navigation](../../../../docs/protocol/mokly-navigation.md),
-standalone bootstrap.
+[logical navigation](../../../../docs/protocol/mokly-navigation.md), and the
+[shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md).
 
 The approved frame identity boundary
 uses one same-origin URL comparison for readiness and later inspection. It

@@ -68,7 +68,8 @@ export function useComparison({
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
-  const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
+  // A publication returns an active comparison to Current.
+  const evidenceKey = String(store?.catalogue.publicModel?.revision ?? 0);
   const scope = useMemo<ComparisonScope>(() => ({ id: entryId }), [entryId]);
   const scopeKey = useMemo(() => JSON.stringify([entryId]), [entryId]);
   const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;

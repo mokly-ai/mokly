@@ -59,7 +59,7 @@ const DARK_ROLES = `
  * sees a light first paint and no script decides the appearance. An explicit
  * choice wins over the system in either direction, and both rules select the
  * root that states the appearance, never the host document.
- * Standalone Auto depends on `appearance-startup.js` restoring the root mark;
+ * The standalone browser entry restores the root mark before its first render;
  * embedded roots receive that mark from their React `theme` prop instead.
  */
 export const SHELL_THEME_CSS = `

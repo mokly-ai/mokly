@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
+import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { projectTree } from "../src/catalogue/tree.js";
 import { analyzeHierarchy } from "../src/registry/hierarchy.js";
 import type { ManifestEntry } from "../src/registry/types.js";
@@ -10,6 +9,9 @@ import type { ShellContext } from "../src/shell/context.js";
 import { navNodeVisible } from "../src/shell/nav_model.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
+
+import { indexFixture, rawIndexFixture } from "./catalogue_v7_fixture.js";
+import { standaloneMarkup } from "./shell_markup.js";
 
 const entry = (path: string, kind = "page", title = path): ManifestEntry =>
   ({ path, kind, title }) as ManifestEntry;
@@ -23,20 +25,9 @@ const selection = (
 });
 const context: ShellContext = {
   base: "main",
-  updateVersion: 1,
   changesStatus: "ready",
   changedEntries: ["account/private/item"],
 };
-const fixture = () =>
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  );
 
 test("screen index folders use their rendered row kind for ordering", () => {
   const plain = [
@@ -101,77 +92,70 @@ test("hidden folders stay in the wire tree and Changes but disappear from All an
 });
 
 test("public reader accepts hidden folder metadata and rejects invalid hidden values", () => {
-  const model = fixture();
-  model.tree[0].hidden = true;
-  assert.equal(readCatalogue(model).tree[0]?.hidden, true);
-  model.tree[0].hidden = "true";
-  assert.throws(() => readCatalogue(model), /hidden/);
+  const model = rawIndexFixture();
+  model.tree[0]!.hidden = true;
+  assert.equal(readCatalogueIndex(model).tree[0]?.hidden, true);
+  Object.assign(model.tree[0]!, { hidden: "true" });
+  assert.throws(() => readCatalogueIndex(model), /hidden/);
 });
 
 test("public reader requires the immediate parent of every tree node", () => {
-  const model = fixture();
-  const product = model.tree.find(
-    (node: { path: string }) => node.path === "product",
+  const model = rawIndexFixture();
+  const product = model.tree.find((node) => node.path === "product");
+  const browse = product?.children?.find(
+    (node) => node.path === "product/browse",
   );
-  const browse = product.children.find(
-    (node: { path: string }) => node.path === "product/browse",
-  );
-  model.tree = model.tree.filter(
-    (node: { path: string }) => node.path !== "product",
-  );
+  assert.ok(browse);
+  model.tree = model.tree.filter((node) => node.path !== "product");
   model.tree.push(browse);
-  assert.throws(() => readCatalogue(model), /parent/);
+  assert.throws(() => readCatalogueIndex(model), /parent/);
 });
 
 test("removed entries cannot declare previousPath", () => {
-  const model = fixture();
-  model.removedEntries[0].entry.previousPath = "old/path";
-  assert.throws(() => readCatalogue(model), /previousPath/);
+  const model = rawIndexFixture();
+  model.removedEntries[0]!.entry.previousPath = "old/path";
+  assert.throws(() => readCatalogueIndex(model), /previousPath/);
 });
 
 test("authored movedFrom metadata cannot cross the public boundary", () => {
-  const model = fixture();
-  model.pages[0].movedFrom = "old/path";
-  assert.throws(() => readCatalogue(model), /private evidence/);
+  const model = rawIndexFixture();
+  Object.assign(model.pages[0]!, { movedFrom: "old/path" });
+  assert.throws(
+    () => readCatalogueIndex(model),
+    /movedFrom is not public catalogue data/,
+  );
 });
 
 test("current and removed records cannot overlap after case folding", () => {
-  const model = fixture();
-  const current = model.screens[0];
+  const model = rawIndexFixture();
+  const { previousPath: _previousPath, ...current } = model.screens[0]!;
   model.removedEntries = [
     {
       entry: {
         ...current,
         path: current.path.toUpperCase(),
-        previousPath: undefined,
         changes: { status: "ready", kind: "removed", included: true },
       },
       folderTitles: [],
       snapshotId: "d".repeat(64),
     },
   ];
-  delete model.removedEntries[0].entry.previousPath;
   assert.throws(
-    () => readCatalogue(model),
+    () => readCatalogueIndex(model),
     /current and removed entries cannot share a path/,
   );
 });
 
-test("All folder counts exclude hidden children without hiding their Changes ancestry", async () => {
-  const { renderViewer } = await import("../src/viewer/server.js");
-  const model = fixture();
-  const product = model.tree.find(
-    (node: { path: string }) => node.path === "product",
-  );
-  product.children.find(
-    (node: { path: string }) => node.path === "product/browse",
-  ).hidden = true;
-  const html = renderViewer({
-    viewerId: "fixture",
-    catalogue: model,
-    baseUrl: "https://catalogue.example",
-    defaultSelection: { screenPath: "guide" },
+test("All folder counts exclude hidden children without hiding their Changes ancestry", () => {
+  const index = indexFixture((model) => {
+    const product = model.tree.find((node) => node.path === "product");
+    const browse = product?.children?.find(
+      (node) => node.path === "product/browse",
+    );
+    assert.ok(browse);
+    browse.hidden = true;
   });
+  const html = standaloneMarkup({ index, path: "/view/guide/" });
   const summary = html
     .slice(html.indexOf('data-nav-folder="folder:product"'))
     .split("</summary>")[0]!;

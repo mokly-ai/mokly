@@ -3,7 +3,6 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
-import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import { folderTitleLookup } from "../registry/folder_titles.js";
 import {
@@ -36,7 +35,6 @@ export interface EmbeddedShellEnvironment {
   baseUrl: URL;
   controlled: boolean;
   events(): ViewerEvents;
-  model: CatalogueReadModel;
   onNavigation(): void;
   open(url: string, target: string, features: string): unknown;
   selection: ViewerSelection;
@@ -69,6 +67,8 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
   const pendingQuery = useRef<PendingQuery | undefined>(undefined);
   stateRef.current = input.state;
   environmentRef.current = input.environment;
+  const catalogueRef = useRef(input.catalogue);
+  catalogueRef.current = input.catalogue;
 
   const commit = useCallback(
     (
@@ -115,7 +115,13 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       input.setState(next);
       if (frameChanged || displayChanged) environment.onNavigation();
       if (displayChanged) {
-        announceNavigation(environment, selection, fragment, pending);
+        announceNavigation(
+          environment,
+          input.catalogue,
+          selection,
+          fragment,
+          pending,
+        );
       }
     },
     [input.catalogue, input.sections, input.setState],
@@ -126,16 +132,17 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const environment = environmentRef.current;
       if (!environment) return;
       const current = stateRef.current.selection;
+      const catalogue = catalogueRef.current;
       const next = mergeSelection(
-        environment.model,
-        folderTitleLookup(input.catalogue.hierarchy),
+        catalogue.publicModel!,
+        folderTitleLookup(catalogue.hierarchy),
         current,
         partial,
       );
       if (sameSelection(current, next)) {
         if (
           !environment.controlled &&
-          hostSelectionRouteChanged(input.catalogue, stateRef.current, next)
+          hostSelectionRouteChanged(catalogue, stateRef.current, next)
         ) {
           commit(next, rawQuery);
           return;
@@ -174,9 +181,10 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       if (!environment) return;
       const screenPath =
         route.view.kind === "target" ? route.view.target.entry.path : null;
+      const catalogue = catalogueRef.current;
       const next = mergeSelection(
-        environment.model,
-        folderTitleLookup(input.catalogue.hierarchy),
+        catalogue.publicModel!,
+        folderTitleLookup(catalogue.hierarchy),
         stateRef.current.selection,
         {
           screenPath,

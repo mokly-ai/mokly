@@ -1,4 +1,4 @@
-/** Versioned disclosure persistence shared by early capture, hydration and recovery. */
+/** Versioned disclosure persistence shared by stored preferences and the store. */
 
 import { isDisclosureKey } from "./disclosure_keys.js";
 

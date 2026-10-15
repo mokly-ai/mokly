@@ -1,30 +1,14 @@
-import type { CatalogueReadModel } from "../catalogue/types.js";
-import type { RenderCapability } from "../components/render_types.js";
-import type { StaticDelivery } from "../navigation/delivery.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
 import type { ShellEvidence, LiveChangesStatus } from "./metadata.js";
 
-/** Server-side context shared by every shell page. */
+/** Route-independent context shared by every view of one shell root. */
 export interface ShellContext {
-  /** Accepted public snapshot supplied by the first-party server integration. */
-  readModel?: CatalogueReadModel;
-  /** Revision of the rendered content, independent of background evidence. */
-  contentVersion?: number;
-  /** Generation accepted by the on-demand document service. */
-  previewGeneration?: string;
-  /** Live calculation state; omitted by static catalogues without Changes. */
+  /** Changes calculation state; omitted when Changes is disabled. */
   changesStatus?: LiveChangesStatus;
-  /** Authenticated temporary renderer, independent of document availability. */
-  renderCapability?: RenderCapability;
-  /** Validated delivery information for a static export. */
-  delivery?: StaticDelivery;
   /** Id of the currently selected catalogue entry, when one is active. */
   activeId?: string;
-  /**
-   * Review comparison base ref for the serve session; empty when the shell
-   * does not know it, as for an embedded public catalogue.
-   */
+  /** The index's Changes base ref; empty when the index names none. */
   base: string;
   /** Interface appearance the document starts from; omission means `auto`. */
   theme?: ViewerTheme;
@@ -39,11 +23,7 @@ export interface ShellContext {
    * base-ref branch point, and each one a move paired. Absent when unknown.
    */
   changedEntries?: readonly string[];
-  /**
-   * The entries in `changedEntries` that changed beyond a move, set by the
-   * public projection. Server pages read the same list from
-   * `componentChanges`.
-   */
+  /** The entries in `changedEntries` that changed beyond a move. */
   materialEntries?: readonly string[];
   /** Whether on-demand comparison serving is available. */
   comparisons?: boolean;
@@ -53,8 +33,6 @@ export interface ShellContext {
   fragment?: string;
   /** Exact removed record selected for this route. */
   snapshotId?: string;
-  /** Update-stream version captured when this page request began. */
-  updateVersion: number;
 }
 
 /**
@@ -71,15 +49,13 @@ export function materialChangedEntries(
   );
 }
 
-/** Create one page context from the current mutable server snapshot. */
+/** Create one context from a base ref and the entries Changes lists. */
 export function shellContext(
   base: string,
   changedEntries: readonly string[] | undefined,
-  updateVersion: number,
 ): ShellContext {
   return {
     base,
     ...(changedEntries ? { changedEntries } : {}),
-    updateVersion,
   };
 }

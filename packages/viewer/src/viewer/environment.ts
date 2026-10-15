@@ -4,22 +4,21 @@ import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import type { EmbeddedShellEnvironment } from "../shell/store_host.js";
 
-import type { LoadedCatalogue } from "./source.js";
+import type { LoadedIndex } from "./sources.js";
 import type { ViewerEvents, ViewerSelection } from "./types.js";
 
 /** Bind public viewer data to shell selection and navigation behavior. */
 export function viewerShellEnvironment(
-  loaded: LoadedCatalogue,
+  loaded: LoadedIndex,
   selection: ViewerSelection,
   controlled: boolean,
   events: () => ViewerEvents,
   onNavigation: () => void,
 ): EmbeddedShellEnvironment {
   return {
-    baseUrl: loaded.url,
+    baseUrl: loaded.root,
     controlled,
     events,
-    model: loaded.catalogue,
     onNavigation,
     open(url, target, features) {
       return typeof window === "undefined"
@@ -36,15 +35,15 @@ export function viewerShellEnvironment(
  * the caller supplies the one it keeps above source replacement.
  */
 export function viewerComparisonEnvironment(
-  loaded: LoadedCatalogue,
+  loaded: LoadedIndex,
   reportError?: (error: unknown) => void,
   scrollTogether?: ScrollTogetherPreference,
 ): ComparisonEnvironment {
   return {
-    baseUrl: loaded.url,
+    baseUrl: loaded.root,
     delivery: () => ({
       kind: "pinned",
-      comparisonUrl: loaded.catalogue.comparisonUrl,
+      comparisonUrl: loaded.index.comparisonUrl,
     }),
     fetch: (input, init) => fetch(input, init),
     ...(reportError ? { reportError } : {}),

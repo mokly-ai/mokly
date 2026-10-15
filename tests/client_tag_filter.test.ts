@@ -22,7 +22,6 @@ const context: ShellContext = {
   base: "",
   changedEntries: [],
   changesStatus: "ready",
-  updateVersion: 0,
 };
 const welcome = leaf("welcome/index.html", "Welcome", ["forms", "onboarding"]);
 const details = leaf("details/index.html", "Details", ["forms"]);

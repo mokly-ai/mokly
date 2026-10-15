@@ -15,9 +15,11 @@ import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { ComponentStage } from "./component_stage.js";
+import { useRouteDelivery } from "./data_context.js";
 import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
 import { PublicStage } from "./public_stage.js";
 import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
+import { StageDelivery } from "./stage_delivery.js";
 import { framePath } from "./stage_sources.js";
 import type { RouteTarget } from "./target.js";
 
@@ -74,8 +76,11 @@ export function TargetStage(props: {
   variantPath?: string | undefined;
 }) {
   const selection = useContext(DisplaySelection);
+  const delivery = useRouteDelivery();
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
+  if (delivery && delivery.status !== "ready")
+    return <StageDelivery delivery={delivery} />;
   if (model) {
     const current = routedEntries(model).find(
       (item) => item.path === entry.path,
