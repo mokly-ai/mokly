@@ -130,3 +130,26 @@ fn controls_cover_unicode_numbers_choices_null_optional_and_uneditable_props() {
     assert!(!result.props.contains_key("text"));
     assert!(result.props.contains_key("locked"));
 }
+
+#[test]
+fn complete_props_obey_control_bounds_even_when_the_prop_is_not_overridden() {
+    let mut index = readers::index(include_str!(
+        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+    ))
+    .unwrap();
+    index.revision = 1;
+    let visual = &mut index.components[0].visual;
+    visual.prop_schema = serde_json::from_value(json!({"type":"object","additionalProperties":false,"properties":{"label":{"type":"string"}},"required":["label"]})).unwrap();
+    visual.controls =
+        serde_json::from_value(json!({"label":{"kind":"text","maxLength":3}})).unwrap();
+    visual.props =
+        mokly_model::wire_props::encode(&serde_json::from_value(json!({"label":"Long"})).unwrap());
+    let mut edit = request();
+    edit.overrides.clear();
+    assert_eq!(
+        validate(&edit, &index).unwrap_err(),
+        Rejection::InvalidInput
+    );
+    edit.overrides = serde_json::from_value(json!({"label":{"kind":"set","value":"Fit"}})).unwrap();
+    assert!(validate(&edit, &index).is_ok());
+}

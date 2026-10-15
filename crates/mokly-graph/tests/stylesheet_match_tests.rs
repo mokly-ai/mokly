@@ -1,6 +1,9 @@
 //! Stylesheet rules use one compiled POSIX matcher set for every view.
 
+use std::collections::BTreeMap;
 use std::fs;
+
+use mokly_graph::delivery_inputs::DeliveryInputs;
 
 use tempfile::TempDir;
 
@@ -37,5 +40,66 @@ fn single_stars_stop_at_separators_and_double_stars_match_nested_entries() {
         assert!(plan.stylesheets[0].ends_with(chosen));
         let html = String::from_utf8(generation.render(route).unwrap().bytes.clone()).unwrap();
         assert!(html.contains(&plan.stylesheets[0]));
+    }
+}
+
+#[test]
+fn parent_segments_inside_the_repository_share_normalized_stylesheet_routes() {
+    let root = TempDir::new().unwrap();
+    for directory in ["nested", "specs", "css"] {
+        fs::create_dir(root.path().join(directory)).unwrap();
+    }
+    fs::write(root.path().join("nested/mokly.config.json"), r#"{"repoRoot":"..","roots":[{"dir":"../specs"}],"colorSchemes":["light","dark"],"stylesheets":[{"match":"**","stylesheets":["../css/base.css"],"lightStylesheets":["../css/./light.css"],"darkStylesheets":["../css/../css/dark.css"]}]}"#).unwrap();
+    fs::write(
+        root.path().join("specs/home.screen.html"),
+        "---\ntitle: Home\n---\n<ui-card></ui-card>",
+    )
+    .unwrap();
+    fs::write(
+        root.path().join("specs/card.component.html"),
+        "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, properties: {}}\nprops: {}\n---\n<p>Card</p>",
+    )
+    .unwrap();
+    for file in ["base", "light", "dark", "component"] {
+        fs::write(
+            root.path().join(format!("css/{file}.css")),
+            "p { color: red }",
+        )
+        .unwrap();
+    }
+    let generation = support::prepare_with_inputs(
+        &root.path().join("nested"),
+        8 * 1024 * 1024,
+        2,
+        DeliveryInputs {
+            component_stylesheets: BTreeMap::from([(
+                "card".into(),
+                vec!["../css/component.css".into()],
+            )]),
+            ..Default::default()
+        },
+    )
+    .0
+    .unwrap();
+    for (route, scheme) in [
+        ("home/index.mobile.html", "light"),
+        ("home/index.mobile.dark.html", "dark"),
+    ] {
+        let plan = &generation.plans()[route];
+        assert_eq!(
+            plan.stylesheets,
+            ["base", "component", scheme].map(|file| format!("../styles/css/{file}.css"))
+        );
+        let html = String::from_utf8(generation.render(route).unwrap().bytes.clone()).unwrap();
+        for link in &plan.stylesheets {
+            assert!(html.contains(link), "{html}");
+        }
+    }
+    for file in ["base", "light", "dark", "component"] {
+        assert!(
+            generation
+                .resource_routes()
+                .contains(&format!("styles/css/{file}.css"))
+        );
     }
 }

@@ -28,6 +28,46 @@ fn timeout_diagnostic_names_the_entry_axes_and_deadline() {
             deadline_ms: 71
         }
         .to_string(),
-        "[mokly-sidecar/render-timeout] entry.tsx#screen (mobile, dark) exceeded 71ms"
+        "[mokly-sidecar/render-timeout] entry.tsx export screen (mobile, dark) exceeded 71ms"
     );
+}
+
+#[test]
+fn render_labels_split_only_the_last_handle_separator() {
+    let render = json!({"generation":"g","handle":"dir#name/entry.tsx#screen","entry":{"path":"screen","title":"Screen"},"props":{},"viewport":"mobile","colorScheme":"dark"});
+    for (method, params, expected) in [
+        (
+            "renderScreen",
+            render.clone(),
+            "dir#name/entry.tsx export screen (mobile, dark)",
+        ),
+        (
+            "renderComponent",
+            {
+                let mut value = render;
+                value["slots"] = json!({});
+                value["ignoreScope"] = json!("enabled");
+                value
+            },
+            "dir#name/entry.tsx export screen (mobile, dark)",
+        ),
+        (
+            "renderStory",
+            json!({"generation":"g","storyId":"dir#name/entry.tsx#story","props":{},"viewport":"mobile","colorScheme":"dark"}),
+            "dir#name/entry.tsx export story (mobile, dark)",
+        ),
+        (
+            "renderPage",
+            json!({"generation":"g","handle":"dir#name/page.ts#default"}),
+            "dir#name/page.ts export default",
+        ),
+        (
+            "processCss",
+            json!({"context":"c","sourceRoot":"/physical/repo","repositoryRoots":[],"moduleResolution":{},"postcss":"postcss.mjs","sourcePath":"styles/input.css","text":""}),
+            "postcss.mjs for styles/input.css",
+        ),
+    ] {
+        let call: Call = serde_json::from_value(json!({"method":method,"params":params})).unwrap();
+        assert_eq!(call.to_string(), expected);
+    }
 }

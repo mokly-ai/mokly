@@ -34,6 +34,7 @@ fn bundle_render_and_definition_errors_allow_another_request() {
                 .returns(Ok(Frame::Response(Response::Failure {
                     id: 1,
                     error: RemoteError {
+                        postcss: None,
                         code,
                         message: "source diagnostic".into(),
                     },
@@ -91,6 +92,7 @@ fn a_remote_protocol_failure_closes_the_session() {
             .returns(Ok(Frame::Response(Response::Failure {
                 id: 1,
                 error: RemoteError {
+                    postcss: None,
                     code: RemoteCode::Request(RequestCode::SidecarProtocol),
                     message: "invalid request".into(),
                 },

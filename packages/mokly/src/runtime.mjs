@@ -35,11 +35,15 @@ export function systemRuntime() {
     execute: (binary, arguments_) =>
       executeNative(binary, arguments_, {
         platform: process.platform,
-        spawn: (binary, arguments_, options) =>
-          spawn(binary, arguments_, {
+        spawn: (program, args, options) =>
+          spawn(program, args, {
             ...options,
             env: {
               ...process.env,
+              MOKLY_PACKAGE_ROOT: fileURLToPath(
+                new URL("../", import.meta.url),
+              ),
+              MOKLY_NODE_EXECUTABLE: process.execPath,
               MOKLY_VIEWER_DIST: path.dirname(
                 fileURLToPath(import.meta.resolve("@mokly/viewer/browser")),
               ),

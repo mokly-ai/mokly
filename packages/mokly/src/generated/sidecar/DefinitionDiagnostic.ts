@@ -17,6 +17,10 @@ module: string,
  */
 exportName?: string,
 /**
+ * Variant whose path the core derives after registering the parent.
+ */
+variantSlug?: string,
+/**
  * Safe detail following the owning authoring contract.
  */
 message: string, };

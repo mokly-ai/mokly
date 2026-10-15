@@ -56,6 +56,7 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
     ]
     .into_iter()
     .map(|(kind, path)| ProvidedDefinition {
+        rendering: Default::default(),
         exporting_file: javascript.into(),
         source: SourceLocation {
             path: javascript.into(),
@@ -65,6 +66,8 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
         },
         kind,
         input: EntryInput {
+            prop_schema: (kind == EntryKind::Component)
+                .then(|| json!({"type":"object","additionalProperties":false,"properties":{}})),
             title: path.into(),
             path: Some(path.into()),
             ..EntryInput::default()
@@ -76,7 +79,7 @@ fn captured_markdown_entries_match_kind_path_title_and_tags() {
             .next_call(matching!(_, _))
             .returns(Ok(inventory)),
         DefinitionProviderMock::describe
-            .next_call(matching!((files) if files.len()==1 && files[0].path=="examples/basic/specs/entries.mockup.ts"))
+            .next_call(matching!((_, files) if files.len()==1 && files[0].path=="examples/basic/specs/entries.mockup.ts"))
             .returns(Ok(Definitions {
                 entries: definitions,
                 ..Definitions::default()

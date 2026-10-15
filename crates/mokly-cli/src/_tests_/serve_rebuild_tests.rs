@@ -64,6 +64,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
         roots: Vec::new(),
     };
     let prepared = PreparedCatalogue {
+        javascript: Default::default(),
         model: CatalogueModel {
             entries: Vec::new(),
             folders: Vec::new(),

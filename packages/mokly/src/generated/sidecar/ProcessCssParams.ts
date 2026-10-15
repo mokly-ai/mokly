@@ -25,7 +25,7 @@ moduleResolution: ModuleResolution,
  */
 postcss: string,
 /**
- * Stylesheet source path.
+ * Logical stylesheet source path, relative to sourceRoot or a selected dependency root.
  */
 sourcePath: string,
 /**

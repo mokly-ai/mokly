@@ -3,6 +3,8 @@ import type { AcceptedPlugin } from "postcss";
 
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
+import { attributed } from "./postcss-attribution.js";
+import { PostcssError } from "./postcss-errors.js";
 import { importPostcssModule } from "./postcss-module.js";
 import {
   importPlugin,
@@ -15,17 +17,26 @@ export async function loadPostcss(
   file: string,
   paths: ModulePaths,
 ): Promise<{ processor: ReturnType<typeof postcss>; modules: string[] }> {
-  const { module, modules } = await importPostcssModule(file, paths);
+  const loaded = await importPostcssModule(file, paths).catch(
+    (error: unknown) => {
+      throw new PostcssError({
+        kind: "load",
+        module: paths.name(file),
+        detail: detail(error),
+      });
+    },
+  );
+  const { module, modules } = loaded;
   const config: unknown = module.default;
   if (!config || typeof config !== "object" || Array.isArray(config))
-    throw new Error(
-      `could not load postcss module ${file}: invalid default export; default-export an object with plugins`,
-    );
+    throw new PostcssError({
+      kind: "load",
+      module: paths.name(file),
+      detail: "invalid default export",
+    });
   for (const key of Object.keys(config))
     if (key !== "plugins" && key !== "map")
-      throw new Error(
-        `postcss configuration has unsupported key: ${key}; only plugins and map are supported`,
-      );
+      throw new PostcssError({ kind: "key", key });
   const plugins = (config as { plugins?: unknown }).plugins;
   const accepted: AcceptedPlugin[] = [];
   if (Array.isArray(plugins)) {
@@ -33,18 +44,17 @@ export async function loadPostcss(
       try {
         accepted.push(...postcss([plugin]).plugins);
       } catch (error) {
-        throw new Error(
-          `postcss plugins[${index}] is not a PostCSS 8 plugin: ${detail(error)}; use a plugin instance, creator, function or object with a postcss factory`,
-          { cause: error },
-        );
+        throw new PostcssError({
+          kind: "arrayPlugin",
+          index,
+          detail: detail(error),
+        });
       }
     }
   } else if (plainObject(plugins)) {
     for (const [name, options] of Object.entries(plugins)) {
       if (!plainObject(options))
-        throw new Error(
-          `postcss plugins[${name}] must be a plain option object`,
-        );
+        throw new PostcssError({ kind: "options", plugin: name });
       try {
         const imported = await importPlugin(await resolvePlugin(name, file));
         const factory = imported.default ?? imported;
@@ -52,18 +62,17 @@ export async function loadPostcss(
           throw new Error("plugin export is not a factory");
         accepted.push(...postcss([factory(options)]).plugins);
       } catch (error) {
-        throw new Error(
-          `could not load PostCSS plugin ${name} from ${file}: ${detail(error)}; install and configure it in the consumer repository`,
-          { cause: error },
-        );
+        throw new PostcssError({
+          kind: "factory",
+          plugin: name,
+          module: paths.name(file),
+          detail: detail(error),
+        });
       }
     }
-  } else
-    throw new Error(
-      "postcss plugins must be an array of plugin instances or an object mapping package names to option objects",
-    );
+  } else throw new PostcssError({ kind: "plugins" });
   return {
-    processor: postcss(accepted),
+    processor: postcss(postcss(accepted).plugins.map(attributed)),
     modules,
   };
 }

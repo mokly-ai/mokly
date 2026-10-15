@@ -34,6 +34,7 @@ pub mod read_contract;
 pub mod readers;
 mod removed_validation;
 pub mod routes;
+pub mod runtime_diagnostic;
 mod tree_validation;
 pub mod type_modules;
 pub mod typescript;

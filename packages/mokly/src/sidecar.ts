@@ -36,7 +36,15 @@ try {
     } catch (error) {
       const code = error instanceof SidecarError ? error.code : "render-failed";
       if (id !== undefined)
-        await send(id, { error: { code, message: detail(error) } });
+        await send(id, {
+          error: {
+            code,
+            message: detail(error),
+            ...(error instanceof SidecarError && error.postcss
+              ? { postcss: error.postcss }
+              : {}),
+          },
+        });
       else process.stderr.write(detail(error) + "\n");
       stop = code === "sidecar-protocol";
       if (stop) process.exitCode = 1;

@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::{ColorScheme, Viewport};
-use mokly_model::controls::ControlInput;
+use mokly_model::controls::{self, ControlInput};
 use mokly_model::data::{DataValue, Props};
 use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::prop_schema::{JsonType, PropSchema, Types};
@@ -148,16 +148,24 @@ fn valid_props(visual: &CatalogueVisual, props: &Props, path: &str) -> bool {
         variant: None,
         kind: AuthoringKind::Html,
     };
-    let Ok(schema) = serde_json::to_value(&visual.prop_schema) else {
-        return false;
-    };
-    let Ok(validator) = PropValidator::compile(&schema, &context) else {
-        return false;
-    };
     let Ok(props) = serde_json::to_value(props) else {
         return false;
     };
-    validator.validate(&props, &context).is_ok()
+    for schema in [
+        &visual.prop_schema,
+        &controls::with_bounds(&visual.prop_schema, &visual.controls),
+    ] {
+        let Ok(schema) = serde_json::to_value(schema) else {
+            return false;
+        };
+        let Ok(validator) = PropValidator::compile(&schema, &context) else {
+            return false;
+        };
+        if validator.validate(&props, &context).is_err() {
+            return false;
+        }
+    }
+    true
 }
 
 fn controlled(control: &ControlInput, value: &DataValue) -> bool {

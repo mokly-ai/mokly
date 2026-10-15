@@ -23,8 +23,8 @@ expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
 <article>
   <h2>Details</h2>
   
-  <!--mokly-slot:start id="r-3" name="header"--><strong>Supplier &lt;Save &amp; &quot;go&quot;&gt;</strong><!--mokly-slot:end id="r-3"-->
-  <time>Now</time><!--mokly-slot:start id="r-4" name="children"-->
+  <!--mokly-slot:start id="r-3" instance="r-2" name="header"--><strong>Supplier &lt;Save &amp; &quot;go&quot;&gt;</strong><!--mokly-slot:end id="r-3"-->
+  <time>Now</time><!--mokly-slot:start id="r-4" instance="r-2" name="children"-->
       
       <span>Supplied text</span>
       <!--mokly-instance:start id="r-5" path="components/button" instance="feb92f82bf38485d98b5b0912c7fec31c3eda4283d80ea4ade27c33e09577d84" props="7e5585a3f92753a3747c8485d191b5ecfaa40324846f5c9bd1dedcb8afeac23b"-->
@@ -32,7 +32,7 @@ expression: "String::from_utf8(artifact.bytes.clone()).unwrap()"
   Slot action <i></i> <small>Default</small>
 </button>
 <!--mokly-instance:end id="r-5"-->
-    <!--mokly-slot:end id="r-4"--><!--mokly-slot:start id="r-6" name="children"-->
+    <!--mokly-slot:end id="r-4"--><!--mokly-slot:start id="r-6" instance="r-2" name="children"-->
       
       <span>Supplied text</span>
       <!--mokly-instance:start id="r-7" path="components/button" instance="feb92f82bf38485d98b5b0912c7fec31c3eda4283d80ea4ade27c33e09577d84" props="7e5585a3f92753a3747c8485d191b5ecfaa40324846f5c9bd1dedcb8afeac23b"-->

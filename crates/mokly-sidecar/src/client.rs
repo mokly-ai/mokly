@@ -46,6 +46,7 @@ enum State {
 
 impl Client {
     /// Compose a session from an injected framed transport and event sink.
+    /// The executable supplies its embedded npm package version as the expected version.
     pub fn new(transport: Box<dyn Transport>, events: Box<dyn Events>, version: String) -> Self {
         Self {
             transport,
@@ -105,6 +106,7 @@ impl SidecarClient for Client {
                     let reusable = match &result {
                         Ok(_) => true,
                         Err(Error::Remote { code, .. }) => code.reusable(),
+                        Err(Error::Postcss { .. }) => true,
                         _ => false,
                     };
                     if reusable && !matches!(request.call, Call::Shutdown(_)) {

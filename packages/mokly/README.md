@@ -65,7 +65,7 @@ The root also exports `definePage`, `defineUseCase`, `defineFolder`, `MockLink`,
 input, definition, configuration, and renderer types. A page callback returns
 one complete synchronous HTML string. React and React DOM are optional peers;
 React authoring resolves both from the consumer. HTML-only catalogues need
-neither package and start no sidecar.
+neither package. They start a sidecar when configured PostCSS processes CSS.
 
 The package ships the authoring guides and protocol sources as Markdown.
 Read the [source guide](../../docs/guides/authoring/screens.md) and
@@ -84,8 +84,13 @@ workspace packages and PostCSS presets use the side's own source copy.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed
-instance and slot drafts, and render warnings. A consumer
-renderer wraps React screens and components. Portable stories use the
+instance and slot drafts, and render warnings. Nested supplied slots share
+one encounter order per original input scope; repeated placements keep that
+input's order. A consumer
+renderer wraps React screens and components and must default-export a function.
+Bundle diagnostics use the compiler's source coordinates and reason without
+its framing text. Runtime style adapters follow consumer package aliases,
+including `react-native` mapped to `react-native-web`. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
 worker with consumer plugin packages kept unbundled. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.

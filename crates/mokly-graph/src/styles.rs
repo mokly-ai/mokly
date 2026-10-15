@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::iter;
 
 use globset::{GlobBuilder, GlobMatcher};
+use mokly_catalogue::config::normalize;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::types::StylesheetRoot;
 use mokly_html::tree;
@@ -215,11 +216,7 @@ fn external(value: &str) -> bool {
 }
 
 fn logical(config: &ResolvedConfig, path: &str) -> String {
-    config
-        .file
-        .parent()
-        .unwrap_or(&config.repo_root)
-        .join(path)
+    normalize(&config.file.parent().unwrap_or(&config.repo_root).join(path))
         .strip_prefix(&config.repo_root)
         .map_or_else(
             |_| path.into(),
