@@ -34,7 +34,7 @@ a depiction. The Additions story, the stylesheet stories, and the controls limit
 pages each depict a story of their own: on their pages every option except the
 shown entry is a depiction, and no option on another page links into them.
 Navigation variant rows follow the same rule.
-The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Canvases have a 10px radius, a light
+The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Both places the two canvases side by side, 40px apart: centred while the row fits, otherwise from the left edge of the scrolling pane, and stacked from the left edge below 760px. Canvases have a 10px radius, a light
 border, a small context caption, and a centered component, without device chrome.
 The same `ActionExample` and `ToolbarExample` are reused in consuming screens.
 
