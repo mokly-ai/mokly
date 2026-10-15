@@ -1,0 +1,105 @@
+//! Cache boundaries and lease data shared by base preparation.
+
+use std::fmt;
+use std::path::{Path, PathBuf};
+
+use mokly_platform::locks::FileLock;
+use serde::{Deserialize, Serialize};
+
+use crate::error::Result;
+
+/// Independent extraction and dependency budgets.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Kind {
+    /// Extracted immutable source trees.
+    Sources,
+    /// Installed immutable dependency sets.
+    Dependencies,
+}
+
+impl Kind {
+    pub(crate) fn directory(self) -> &'static str {
+        match self {
+            Self::Sources => "sources",
+            Self::Dependencies => "dependencies",
+        }
+    }
+}
+
+/// Receipt written only after a cache entry is complete.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Receipt {
+    /// Conservative retained byte count.
+    pub bytes: u64,
+    /// Digest of every retained file and link, including relative paths.
+    pub digest: String,
+    /// Monotonic access sequence under the namespace lock.
+    pub used: u64,
+}
+
+/// One complete on-disk cache entry.
+#[derive(Clone, Debug)]
+pub struct Record {
+    /// Content key.
+    pub key: String,
+    /// Completed entry metadata.
+    pub receipt: Receipt,
+}
+
+/// Builder invoked only for a missing entry and under the namespace lock.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BuilderMock))]
+pub trait Builder: Send + Sync {
+    /// Populate a fresh `data` directory. Never modify the repository.
+    fn build(&self, destination: &Path) -> Result<()>;
+}
+
+/// A cache result held against eviction until its lock guard is released.
+pub struct Lease {
+    /// Source root or package-install root.
+    pub directory: PathBuf,
+    /// Held entry lock. Callers keep the lease while they use the files.
+    pub guard: Box<dyn FileLock>,
+}
+
+/// Byte-bounded cache access, separate from its filesystem implementation.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CacheMock))]
+pub trait Cache: Send + Sync {
+    /// Open or build an immutable entry and retain its lease.
+    fn get(&self, kind: Kind, key: &str, builder: &dyn Builder) -> Result<Lease>;
+}
+
+/// Filesystem boundary of cache orchestration and install size supervision.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StorageMock))]
+pub trait Storage: Send + Sync {
+    /// Ensure a real directory exists without traversing a cache symlink.
+    fn prepare(&self, directory: &Path) -> Result<()>;
+    /// Remove abandoned staging directories under the namespace lock.
+    fn clear_staging(&self, directory: &Path) -> Result<()>;
+    /// List completed and damaged entries without removing leased data.
+    fn records(&self, entries: &Path) -> Result<Vec<Record>>;
+    /// Update a receipt with atomic replacement.
+    fn receipt(&self, entry: &Path, receipt: &Receipt) -> Result<()>;
+    /// Count bytes without following symbolic links; stop at the limit.
+    fn size(&self, path: &Path, limit: u64) -> Result<u64>;
+    /// Hash the complete entry without following symbolic links.
+    fn digest(&self, path: &Path, limit: u64) -> Result<String>;
+    /// Remove a cache-owned directory without following links.
+    fn remove(&self, path: &Path) -> Result<()>;
+    /// Move a completed staging directory into its final name.
+    fn publish(&self, stage: &Path, target: &Path) -> Result<()>;
+    /// Copy regular source files to a fresh install directory under a byte limit.
+    fn copy(&self, source: &Path, destination: &Path, limit: u64) -> Result<()>;
+}
+
+/// Terminal boundary. A process shares one reporter across both cache kinds.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReporterMock))]
+pub trait Reporter: Send + Sync {
+    /// Name the cache directory when it is first opened.
+    fn opened(&self, directory: &Path);
+}
+
+impl fmt::Debug for dyn Builder + '_ {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("Builder")
+    }
+}

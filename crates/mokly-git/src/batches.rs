@@ -43,6 +43,7 @@ impl Batches for BoundedRunner {
             outputs.push(self.runner.run(&Request {
                 directory: directory.to_owned(),
                 args,
+                stdin: vec![],
                 output_limit: DEFAULT_OUTPUT_LIMIT,
             })?);
         }

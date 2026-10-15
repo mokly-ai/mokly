@@ -11,7 +11,10 @@ process groups and Windows job objects.
 - Run Git with an explicit argument vector and checkout directory.
 - Bound captured output on both streams.
 - Split path arguments into ordered, bounded batches.
-- Preserve binary output and typed process failures.
+- Preserve binary input, output, and typed process failures.
+- Validate checkout identity before resolving a merge base.
+- Read changed paths, tree metadata, and regular source blobs.
+- Extract exact commit sources without Git export substitutions.
 
 ## What This Crate Does
 
@@ -26,7 +29,25 @@ Exceeding the selected bound kills the process tree before returning
 arguments and 16 KiB of conservative encoded argument cost. A path too large
 for one batch fails before any command runs. Empty path input issues no
 command. A failed batch stops the sequence. Merge-base, changed-path, tree,
-blob, and archive operations build on this boundary.
+blob, and source archive operations build on this boundary.
+
+`GitRepositories::open` compares canonical filesystem identities with Git's
+checkout root. Its `Repository` trait resolves the configured ref to a commit
+before `merge-base`. Changed paths include committed, staged, unstaged, and
+untracked paths. Rename records keep Git's previous path and similarity.
+Untracked additions never infer a rename.
+
+Tree queries use literal pathspecs and NUL records. Blob batches use stdin,
+at most 4,096 objects, and at most 48 MiB including framing. Tree listings
+have a file count bound. Extraction also has total and per-file byte bounds.
+It copies regular blobs, preserves executable mode, and omits symbolic links
+and submodules. Export attributes never change source bytes. A destination
+must be fresh; a failed extraction removes its partial directory.
+
+The runner writes and closes stdin concurrently with both output readers.
+Input is bounded to 64 MiB. Cancellation before spawn starts nothing. Active
+cancellation sends TERM once and KILL at one second. The runner waits for the
+child and every pipe before it returns. It also disposes remaining helpers.
 
 ## Quick Start
 
@@ -34,8 +55,8 @@ blob, and archive operations build on this boundary.
 cargo test -p mokly-git
 ```
 
-Construct `SystemRunner` with `Arc<dyn ProcessGroups>` at the CLI composition
-root. Pass it as `Arc<dyn Runner>` to consumers. Tests use `unimock` at this
+Construct `SystemRunner` with `Arc<dyn ProcessGroups>`, `Arc<dyn Clock>`, and
+`Arc<dyn Cancellation>` at the CLI composition root. Pass it as `Arc<dyn Runner>` to consumers. Tests use `unimock` at this
 boundary.
 
 ## Development
@@ -51,7 +72,10 @@ tests execute Git and verify output limits and failed exit statuses.
 
 - [Request and runner trait](./src/command.rs).
 - [Batch coordinator](./src/batches.rs).
-- [Host adapter](./src/system.rs) and [errors](./src/error.rs).
+- [Host adapter](./src/system.rs), [control](./src/control.rs), and
+  [repository operations](./src/repository.rs).
+- [Tree metadata](./src/tree.rs), [extraction](./src/disk.rs), and
+  [errors](./src/error.rs).
 
 ### Related Docs
 

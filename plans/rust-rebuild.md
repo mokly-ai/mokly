@@ -747,16 +747,21 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
+- [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
-- [ ] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
+- [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
       one second, and drain process pipes before settling.
+- [x] Add the part 1 base source reader, leased extraction cache, dependency
+      input readers, three dependency tiers, and bounded install cache in
+      `mokly-compare`, ready for the render graph connection.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, the
       `base-dependencies` warning, and the terminal line that names the cache
       directory.
+      Part 1 gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-git.md`.
+
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,

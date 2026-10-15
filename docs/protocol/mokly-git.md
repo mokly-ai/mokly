@@ -35,3 +35,55 @@ runner. Cancellation requests SIGTERM for the whole process group, then
 SIGKILL after one second if it remains. Windows uses the owned job. A command
 settles after the process and its pipes close. The
 [runtime shutdown contract](./mokly-runtime.md#shutdown) owns shutdown order.
+
+## Repository And History
+
+Before other reads, compare the canonical configured repository directory
+with the canonical result of `git rev-parse --show-toplevel`. A mismatch
+keeps both paths in the typed root error. A symlink alias of the same root
+is valid. No Git command refreshes the index through optional locks.
+
+Resolve `review.base` with `rev-parse --verify --end-of-options` as a commit,
+then run `merge-base` against `HEAD`. Pin that object id for the comparison.
+Missing refs retain their Git failure. Unrelated or shallow histories that
+cannot prove a common ancestor return the typed history failure. Do not use
+a reflog fork point as a substitute.
+
+Diff the pinned base against the working tree with NUL-delimited name/status
+records and Git rename detection. This includes committed, indexed and
+unindexed tracked edits. Add untracked paths from `ls-files --others
+--exclude-standard`. Keep old and new paths and Git's similarity for a
+rename. Do not infer a rename from an untracked addition. Return unique
+current paths in lexical POSIX order. Candidate paths retain nonportable
+filename characters; they grant no source-read permission. Disable external diff and textconv.
+Entry move pairing remains under the [move contract](./mokly-moves.md).
+
+## Tree, Blob, And Source Archive Reads
+
+Repository paths preserve spelling and case. They are UTF-8 POSIX paths
+without an absolute prefix, empty or dot segments, backslash, colon, or NUL.
+All tree pathspecs are literal. Tree output is NUL-delimited and bounded by
+the command limit and the selected leaf count, 100,000 by default. An empty
+root request starts no source query. A whole-tree query is explicit.
+
+A blob read first proves exact regular-file mode and size from the pinned
+commit's tree. A missing path and a nonregular path have distinct errors.
+Symbolic links are not followed. Cat-file batches receive full object ids on
+stdin. Each batch has at most 4,096 objects and 48 MiB of framed output.
+Headers, object ids, sizes, delimiters and trailing bytes are checked.
+An object that cannot fit one batch fails before any blob command starts.
+
+A source archive contains regular blobs from the commit. Extraction checks
+leaf count, each blob size, and total uncompressed bytes before file writes.
+The default aggregate bound is 64 MiB. Every command retains its own bound.
+Extraction preserves executable files and omits links and submodules. It
+never applies `export-ignore`, `export-subst`, textconv or checkout filters.
+The destination must not exist. A partial extraction is removed on failure.
+Git metadata directories are never extracted.
+
+Stdin is binary and bounded to 64 MiB. The writer closes it after the given
+bytes, including empty input. Output drains concurrently while stdin writes.
+Cancellation before spawn starts no process. On completion the runner also
+terminates remaining owned helpers. The
+[base preparation contract](./mokly-base-preparation.md) owns source readers,
+extraction leases and dependency installations.

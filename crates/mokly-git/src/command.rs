@@ -15,6 +15,8 @@ pub struct Request {
     pub directory: PathBuf,
     /// Exact argument vector.
     pub args: Vec<OsString>,
+    /// Bounded binary input. The runner closes stdin after these bytes.
+    pub stdin: Vec<u8>,
     /// Per-stream capture bound, at most `DEFAULT_OUTPUT_LIMIT`.
     pub output_limit: usize,
 }

@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_git::command::{Request, Runner};
+use mokly_git::control::{SystemClock, Token};
 use mokly_git::error::Error;
 use mokly_git::system::SystemRunner;
 use mokly_platform::processes::SystemProcessGroups;
@@ -10,11 +11,14 @@ use mokly_platform::processes::SystemProcessGroups;
 #[test]
 fn git_output_is_bounded_and_failures_are_typed() {
     let runner: &dyn Runner = &SystemRunner {
+        clock: Arc::new(SystemClock::default()),
+        cancellation: Arc::new(Token::default()),
         groups: Arc::new(SystemProcessGroups),
     };
     let request = Request {
         directory: std::env::current_dir().unwrap(),
         args: vec!["--version".into()],
+        stdin: vec![],
         output_limit: 1024,
     };
     let output = runner.run(&request).unwrap();

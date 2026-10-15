@@ -4,6 +4,7 @@ use std::process::{Child, Command};
 use std::sync::Arc;
 
 use mokly_git::command::{Request, Runner};
+use mokly_git::control::{SystemClock, Token};
 use mokly_git::system::SystemRunner;
 use mokly_platform::error::Result;
 use mokly_platform::processes::{ProcessGroup, ProcessGroups, SystemProcessGroups};
@@ -53,6 +54,8 @@ fn environment_probe() {
         "inherited-history"
     );
     let runner: &dyn Runner = &SystemRunner {
+        clock: Arc::new(SystemClock::default()),
+        cancellation: Arc::new(Token::default()),
         groups: Arc::new(CapturingGroups {
             inner: Arc::new(SystemProcessGroups),
         }),
@@ -65,6 +68,7 @@ fn environment_probe() {
                 "--get".into(),
                 "mokly.environment-rule".into(),
             ],
+            stdin: vec![],
             output_limit: 1024,
         })
         .unwrap();

@@ -158,6 +158,8 @@ three tiers:
 
 A base whose sources fail the current validation makes Changes unavailable
 with those diagnostics.
+The [base preparation contract](./mokly-base-preparation.md) defines input
+identity, dependency installation, cache leases and bundle settings.
 
 ## Review Result v8 And Snapshot v4
 
