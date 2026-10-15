@@ -30,8 +30,8 @@ an error code, with `unknown` as the fallback. A Git adapter never follows a
 symbolic-link blob as a regular source file.
 
 The working-tree adapter lives in `mokly-catalogue::working_tree`. Consumers
-inject it as `Arc<dyn SourceTree>`. The Git adapter belongs to the Git source
-boundary and supplies the same operations over commit trees.
+inject it as `Arc<dyn SourceTree>`. The Git adapter is `mokly-compare::git_tree::GitTree`. It uses one commit index
+and bounded blob batches for these operations. It never follows link blobs.
 
 ## Quick Start
 

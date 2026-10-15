@@ -15,7 +15,8 @@ Repeated root queries use that index. Regular-file listings retain
 actual POSIX spelling, return each file once and apply the selected count
 bound. An empty root list starts no query; an explicit whole-tree root lists
 all regular files. The catalogue applies its root ownership, globs and
-source diagnostics. The later `SourceTree` adapter uses the same index.
+source diagnostics. `GitTree` implements `SourceTree` over that index. Projection and direct-child
+queries use cached metadata. Sequential reads share bounded blob batches.
 
 Reads by entry use the proved object id and run in bounded cat-file batches.
 Dependency input reads use this batch API. HTML, Markdown, YAML and CSS need

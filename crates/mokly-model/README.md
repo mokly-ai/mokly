@@ -14,6 +14,7 @@ React viewer. It has no internal crate dependency and performs no file IO.
   explicit empty values, omitted absent optionals, and a final LF.
 - Validate the JSON Schema 2020-12 prop profile and complete JSON props with
   one validator on `jsonschema`.
+- Own review v8, change snapshot v4, removed-preview v3, and their strict readers.
 - Generate TypeScript declarations for the viewer.
 
 ## What This Crate Does
@@ -58,7 +59,13 @@ usage references, ownership graphs, source locations, and view ordering
 need the index and composition context. These reader checks are in progress;
 the structural detail reader does not substitute guessed context.
 
-`material` owns the shared props, instance, and slot digest preimages.
+`review` and `review_affected` define direct reasons, view states, and complete
+usage chains. `review_order` supplies canonical order for producers and readers.
+`readers::review` gates v8 before validating sides, membership, order, and evidence.
+The classifier also validates source coverage and actual ownership proof.
+`readers::change_snapshot` gates v4 before reading historical records.
+
+`material` owns the catalogue, historical snapshot, props, instance, and slot digest preimages.
 `routes` owns Rust artifact routes and portable relative URL operations.
 
 `inference::infer` builds closed schemas from own and merged variant props.

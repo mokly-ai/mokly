@@ -131,6 +131,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
         .next_call(matching!((config, output) if config.file == Path::new("/repo/mokly.config.json") && *output == Some(Path::new("/repo/mokly-static"))))
         .returns(Ok(prepared(Vec::new())))));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         config: loader,
         catalogue: builder,
         graphs: graphs(Vec::new()),
@@ -160,6 +161,7 @@ fn strict_build_keeps_warnings_and_resolves_explicit_output_from_cwd() {
             .returns(Ok(prepared(vec![warning.clone()]))),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         config: loader,
         catalogue: builder,
         graphs: graphs(vec![warning.clone()]),
@@ -187,6 +189,7 @@ fn a_loader_failure_preserves_the_typed_error_without_preparing_a_catalogue() {
             )))),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         config: loader,
         catalogue: Arc::new(Unimock::new(())),
         graphs: Arc::new(Unimock::new(())),
@@ -216,6 +219,7 @@ fn deferred_definitions_fail_before_graph_creation() {
             .returns(Ok(prepared)),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         config: loader,
         catalogue: builder,
         graphs: Arc::new(Unimock::new(())),

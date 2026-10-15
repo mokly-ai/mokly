@@ -156,10 +156,10 @@ fn walk(
                             target: path,
                             fragment: fragment.map(str::to_owned),
                         });
+                        element.navigation = references.last().cloned();
                         if attribute == "href" {
                             active = true;
                             element.set("data-mokly-link", complete);
-                            element.navigation = references.last().cloned();
                             if let Some(target) = element.get("target").or(base_target) {
                                 let target = request_target(target)?;
                                 if let Some(target) = target {

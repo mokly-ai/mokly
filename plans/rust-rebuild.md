@@ -808,29 +808,46 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       rename encoding, warning locations, and concurrent cache misses.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/logs/m9-git/round3-targeted-tests.log`.
       Integration choices: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-git/merge-decisions.md`.
-- [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
+- [x] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
       the commit-pinned Git index and batched blob reader. Cover projection,
       direct children, every mode, and typed IO errors.
-- [ ] Implement branch-point entry lookup and its shared verification cases:
+- [x] Implement branch-point entry lookup and its shared verification cases:
       kind/case identity, accepted-pair precedence, removed destinations,
       counterparts, variant parents, stored titles, and generation isolation.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
       affected consumers, and review result v8.
+  - [x] Implement the HTML comparison engine, strict review v8 and snapshot v4
+        readers, metadata, move pairing, and historical records.
+  - [ ] Resolve variant-only affected identity and actual-instance resource
+        proof contracts before closing the engine.
 - [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
       selector matching with the keep list, own-page membership, the inline
       rule for whole-screen React entries, and a content-addressed parsed-CSS
       cache.
+  - [x] Implement linked-rule collection, diffing, matching, catalogue-wide
+        own-page proof, and a byte-bounded parse cache.
+  - [ ] Resolve multi-component selector ownership and inline evidence
+        addresses. Connect page head styles and sidecar style ownership.
+- [x] Compute and retain HTML Changes in `mokly build`, with base selection,
+      disabled Changes, invalid-base diagnostics, and terminal counts.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+  - [x] Add the index v7/detail v1/review v8 adapter and HTML behavior fixtures.
+  - [x] Run the bounded previous-contract and test-title sweep.
+        Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
+  - [ ] Replay the eleven full references after the sidecar and source
+        migration are ready. Every captured catalogue has JavaScript entries.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
       prove large-scale Changes with the Rust implementation.
+  - [x] Prove bounded full-comparison work at 128 and 512 component parents
+        with variants, and shared before/after CSS parse reuse.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4

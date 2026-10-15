@@ -24,6 +24,13 @@ pub trait GeneratedResources: Send + Sync {
     fn is_document(&self, route: &str) -> bool;
 }
 
+/// Historical fallback used only when a current public resource is proved absent.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = MissingResourcesMock))]
+pub trait MissingResources: Send + Sync {
+    /// Return the base's validated bytes, or None when there is no deletion proof.
+    fn read(&self, route: &str) -> Result<Option<Vec<u8>>>;
+}
+
 /// Sorted authored closure with traversal and ownership evidence.
 #[derive(Clone, Debug, Default)]
 pub struct Closure {
@@ -43,6 +50,8 @@ pub trait ClosureBuilder: Send + Sync {
 
 /// Reuses one generation's public policy for every target.
 pub struct Walker {
+    /// Comparison-only fallback. Ordinary delivery never substitutes historical bytes.
+    pub missing: Option<Arc<dyn MissingResources>>,
     /// Authored bytes from a working or Git tree.
     pub tree: Arc<dyn SourceTree>,
     /// Cached eligibility decisions for this generation.
@@ -125,10 +134,30 @@ impl ClosureBuilder for Walker {
                         .ok_or_else(|| missing(route, &reference.url))?;
                     let file = match self.policy.check(path) {
                         Ok(file) => file,
-                        Err(reason) => {
-                            if reason == PublicDenial::Unavailable {
+                        Err(PublicDenial::Missing) => {
+                            let bytes = if let Some(missing) = &self.missing {
+                                missing.read(&target)?
+                            } else {
+                                None
+                            };
+                            let Some(bytes) = bytes else {
                                 return Err(missing(route, &reference.url));
+                            };
+                            let urls = self.index.parse(&target, &bytes)?;
+                            edges.insert(target.clone(), urls.clone());
+                            for url in urls {
+                                queue.push_back((
+                                    target.clone(),
+                                    ResourceReference {
+                                        url,
+                                        owner: reference.owner.clone(),
+                                        ignored: reference.ignored,
+                                    },
+                                ));
                             }
+                            continue;
+                        }
+                        Err(reason) => {
                             return Err(invalid(
                                 route,
                                 format!(

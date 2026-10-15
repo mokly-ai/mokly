@@ -1,5 +1,6 @@
 //! Mokly binary composition root.
 
+mod changes_runtime;
 mod entry;
 mod entry_publish;
 mod render_runtime;

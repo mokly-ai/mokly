@@ -9,7 +9,10 @@ use crate::detail_validation;
 use crate::public_detail::{EntryDetailV1, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::read_contract::ContractViolation;
+use crate::review::ReviewResultV8;
+use crate::snapshot::CatalogueChangeSnapshotV4;
 use crate::{public_validation, versions};
+use crate::{review_validation, snapshot_validation};
 
 /// Typed public read failure.
 #[derive(Debug, Error)]
@@ -140,3 +143,21 @@ fn version_text(received: &Option<u64>) -> String {
         |number| number.to_string(),
     )
 }
+
+/// Decode review v8 after its version gate and strict structural validation.
+pub fn review(text: &str) -> Result<ReviewResultV8, ReadError> {
+    let result = decode(text, "review result", versions::REVIEW_RESULT)?;
+    review_validation::validate(&result)?;
+    Ok(result)
+}
+
+/// Decode membership snapshot v4 before reading its historical records.
+pub fn change_snapshot(text: &str) -> Result<CatalogueChangeSnapshotV4, ReadError> {
+    let snapshot = decode(text, "change snapshot", versions::CHANGE_SNAPSHOT)?;
+    snapshot_validation::validate(&snapshot)?;
+    Ok(snapshot)
+}
+
+#[cfg(test)]
+#[path = "_tests_/review_reader_tests.rs"]
+mod review_reader_tests;

@@ -2,13 +2,19 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-`mokly-compare` prepares the base side of Mokly Changes. Use its traits to
-read historical sources, lease an extracted commit, and select dependencies
-for a sidecar bundle. `mokly-git` owns Git IO. `mokly-platform` owns locks
+`mokly-compare` classifies Mokly Changes from two rendered source trees. Use
+its traits to prepare a Git base, compare annotated documents, attribute
+component impact, and retain review v8 and change snapshot v4. Its base
+preparation also leases extracted sources and selects sidecar dependencies. `mokly-git` owns Git IO. `mokly-platform` owns locks
 and process groups. `mokly-sidecar` owns the bundle settings type.
 
 ## Responsibilities
 
+- Project a commit-pinned `dyn SourceTree` with bounded batched blob reads.
+- Compare canonical trees, paired ignores, caller inputs, and component regions.
+- Pair moves, keep removed metadata, and resolve branch-point references.
+- Compare reached resources and use catalogue-wide CSS own-page proof.
+- Produce strict review v8, snapshot v4, and affected-consumer chains.
 - Read regular base files from Git blobs with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
 - Store source and dependency caches outside the repository.
@@ -20,7 +26,10 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 ## What This Crate Does
 
 `GitSources::new` pins a commit and explicit file and metadata-node bounds.
-It indexes every tree mode once. It lists
+It indexes every tree mode once. `GitTree` implements `dyn SourceTree` over
+that index. Projection and direct-child queries start no per-file Git command.
+Sequential reads share a bounded blob batch. Links and submodules supply no
+regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
@@ -68,6 +77,18 @@ cargo test -p mokly-compare
 cargo test -p mokly-compare --test dependencies_tests
 ```
 
+`Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+It releases parsed documents after collecting canonical and containment proof.
+The retained result holds graph handles, view states, reasons, ownership
+records, and immutable historical metadata. Removed previews read the same
+pinned base generation. `Lookup` resolves explicit before/after references,
+accepted moves, removed records, counterparts, and variant parents.
+
+`Changes` implements `dyn ChangesService`. `BaseProvider` supplies the base
+render generation through the common graph. HTML needs no extraction. A
+JavaScript provider can use the same request's source and repository handles
+for extraction and dependency leases.
+
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 `dyn Extraction`, `dyn Dependencies`, and `dyn Cache` in the render graph
 and comparison coordinator. Call `InputReader::read` on `GitSources` and
@@ -90,7 +111,10 @@ run. It needs no registry.
 
 ### Key Code
 
-- [Source reader](./src/sources.rs) and [extraction](./src/extraction.rs).
+- [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
+- [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
+- [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).
+- [Extraction](./src/extraction.rs).
 - [Cache coordinator](./src/cache.rs), [storage](./src/storage.rs), and
   [OS locations](./src/locations.rs).
 - [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and

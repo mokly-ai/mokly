@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { adaptLegacyScenario } from "./legacy-adapter.mjs";
+import { adaptRustScenario } from "./rust-adapter.mjs";
 
 /** Sort sets and object keys without retaining deployment or source-format ids. */
 export function behaviourTable(scenario, adapter) {
@@ -49,16 +50,36 @@ export async function readScenario(directory) {
   return { catalogue, review, inventory, closures };
 }
 
+/** Read the Rust capture and its separately stored entry-detail records. */
+export async function readRustScenario(directory) {
+  return {
+    ...(await readScenario(directory)),
+    details: await readOptional(directory, "entry-details.json"),
+  };
+}
+
 if (
   process.argv[1] &&
   fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
 ) {
-  const [directory, destination] = process.argv.slice(2);
+  const arguments_ = process.argv.slice(2);
+  const adapter =
+    arguments_.find((value) => value.startsWith("--adapter="))?.slice(10) ??
+    "legacy";
+  if (!["legacy", "rust"].includes(adapter))
+    throw new Error(`Unknown adapter: ${adapter}`);
+  const [directory, destination] = arguments_.filter(
+    (value) => !value.startsWith("--adapter="),
+  );
   if (!directory)
-    throw new Error("Usage: behaviour-table.mjs SCENARIO [OUTPUT]");
+    throw new Error(
+      "Usage: behaviour-table.mjs SCENARIO [OUTPUT] [--adapter=legacy|rust]",
+    );
   const table = behaviourTable(
-    await readScenario(directory),
-    adaptLegacyScenario,
+    await (adapter === "rust"
+      ? readRustScenario(directory)
+      : readScenario(directory)),
+    adapter === "rust" ? adaptRustScenario : adaptLegacyScenario,
   );
   await fs.writeFile(
     destination ?? path.join(directory, "behaviour-table.json"),

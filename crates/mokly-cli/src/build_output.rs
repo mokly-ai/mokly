@@ -29,9 +29,9 @@ pub fn warnings(style: &Style, warnings: &[Warning], redactor: &Redactor) -> Str
 }
 
 /// Discovery-only success. Plain mode adds no phase line and names no output.
-pub fn summary(style: &Style, summary: &BuildSummary) -> String {
+pub fn summary(style: &Style, summary: &BuildSummary, redactor: &Redactor) -> String {
     if style.mode == Mode::Plain {
-        return String::new();
+        return crate::changes_output::summary(style, &summary.changes, redactor);
     }
     let mut parts = vec![format!(
         "  {} Catalogue ready",
@@ -52,6 +52,7 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
         }
     }
     format!("{}\n", bounded(&parts.join(" · "), style.columns))
+        + &crate::changes_output::summary(style, &summary.changes, redactor)
 }
 
 /// Report retained warnings first, then the command's typed failure.
@@ -144,7 +145,7 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
     }
 }
 
-fn issue_text(issue: &Issue, outer: Code) -> String {
+pub(crate) fn issue_text(issue: &Issue, outer: Code) -> String {
     let prefix = issue.location.as_ref().map_or(String::new(), |location| {
         format!("{}:{}:{} ", location.path, location.line, location.column)
     });

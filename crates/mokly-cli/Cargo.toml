@@ -7,6 +7,7 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+mokly-compare = { workspace = true }
 mokly-html = { workspace = true }
 mokly-css = { workspace = true }
 mokly-graph = { workspace = true }
@@ -26,6 +27,7 @@ url = "2.5.8"
 serde_json = "1.0.154"
 
 [dev-dependencies]
+mokly-compare = { workspace = true, features = ["mock"] }
 mokly-catalogue = { workspace = true, features = ["mock"] }
 mokly-graph = { workspace = true, features = ["mock"] }
 insta = "1.49.0"

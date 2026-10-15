@@ -1,0 +1,90 @@
+[
+  {
+    "name": "moved-consumers",
+    "base": {
+      "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<p>Before {{label}}</p>",
+      "specs/old-consumer.component.html": "---\ntitle: Consumer\nelement: ui-consumer\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<ui-card label=\"Nested\"></ui-card>",
+      "specs/old-screen.screen.html": "---\ntitle: Screen\n---\n<ui-card label=\"Screen\"></ui-card>"
+    },
+    "head": {
+      "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<p>After {{label}}</p>",
+      "specs/old-consumer.component.html": null,
+      "specs/old-screen.screen.html": null,
+      "specs/new-consumer.component.html": "---\ntitle: Consumer\nelement: ui-consumer\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<ui-card label=\"Nested\"></ui-card>",
+      "specs/new-screen.screen.html": "---\ntitle: Screen\n---\n<ui-card label=\"Screen\"></ui-card>"
+    },
+    "moves": {
+      "new-consumer": "old-consumer",
+      "new-screen": "old-screen"
+    },
+    "removed": {},
+    "affected": ["new-consumer", "new-screen"]
+  },
+  {
+    "name": "parent-move-removed-variant",
+    "base": {
+      "specs/card.component.html": "---\ntitle: Base Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: kept, title: Kept, props: {label: Kept}}, {slug: removed, title: Removed, props: {label: Removed}}]\n---\n<p>{{label}}</p>"
+    },
+    "head": {
+      "specs/card.component.html": null,
+      "specs/new-card.component.html": "---\ntitle: Current Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nmovedFrom: card\nvariants: [{slug: kept, title: Kept, props: {label: New}}]\n---\n<p>{{label}}</p>"
+    },
+    "moves": {
+      "new-card": "card",
+      "new-card/kept": "card/kept"
+    },
+    "removed": {
+      "card/removed": "Base Card"
+    },
+    "affected": []
+  },
+  {
+    "name": "variant-between-parents",
+    "base": {
+      "specs/donor.component.html": "---\ntitle: Donor\nelement: ui-donor\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: moving, title: Moving, props: {label: Moving}}, {slug: stay, title: Stay, props: {label: Stay}}]\n---\n<p>{{label}}</p>",
+      "specs/receiver.component.html": "---\ntitle: Receiver\nelement: ui-receiver\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\n---\n<p>{{label}}</p>"
+    },
+    "head": {
+      "specs/donor.component.html": "---\ntitle: Donor\nelement: ui-donor\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: stay, title: Stay, props: {label: Stay}}]\n---\n<p>{{label}}</p>",
+      "specs/receiver.component.html": "---\ntitle: Receiver\nelement: ui-receiver\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: arrived, title: Moving, movedFrom: donor/moving, props: {label: Edited}}]\n---\n<p>{{label}}</p>"
+    },
+    "moves": {
+      "receiver/arrived": "donor/moving"
+    },
+    "removed": {},
+    "affected": []
+  },
+  {
+    "name": "case-only-identities",
+    "base": {
+      "specs/Card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: Large, title: Large, props: {label: Large}}, {slug: removed, title: Removed, props: {label: Removed}}]\n---\n<p>{{label}}</p>",
+      "specs/Home.screen.html": "---\ntitle: Home\n---\n<ui-card label=\"Use\"></ui-card>"
+    },
+    "head": {
+      "specs/Card.component.html": null,
+      "specs/Home.screen.html": null,
+      "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: large, title: Large, props: {label: Large}}]\n---\n<p>{{label}}</p>",
+      "specs/home.screen.html": "---\ntitle: Home\n---\n<ui-card label=\"Use\"></ui-card>"
+    },
+    "moves": {},
+    "removed": {
+      "Card/removed": "Card"
+    },
+    "affected": []
+  },
+  {
+    "name": "kind-reuse-parent-title",
+    "base": {
+      "specs/card.component.html": "---\ntitle: Historical Card\nelement: ui-card\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Own}\nvariants: [{slug: removed, title: Removed, props: {label: Removed}}]\n---\n<p>{{label}}</p>"
+    },
+    "head": {
+      "specs/card.component.html": null,
+      "specs/card.md": "# Replacement document\n"
+    },
+    "moves": {},
+    "removed": {
+      "card/removed": "Historical Card"
+    },
+    "affected": []
+  }
+]

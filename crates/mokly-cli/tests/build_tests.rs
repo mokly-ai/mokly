@@ -1,4 +1,4 @@
-//! The built CLI validates catalogues without a sidecar, Git, or output writes.
+//! The built CLI validates HTML catalogues and skips Changes when requested.
 
 use std::fs;
 use std::path::Path;
@@ -66,7 +66,11 @@ fn warnings_print_once_and_strict_fails_before_any_write() {
     );
     write(directory.path(), "existing/sentinel.txt", "keep");
     let warning = "[mokly/warning] entry \"home\": prop \"label\" is not read by the body\n";
-    let output = run(directory.path(), &["build", "--out", "existing"], "plain");
+    let output = run(
+        directory.path(),
+        &["build", "--no-changes", "--out", "existing"],
+        "plain",
+    );
     assert_eq!(output.status.code(), Some(0));
     assert!(output.stdout.is_empty());
     assert_eq!(String::from_utf8(output.stderr).unwrap(), warning);

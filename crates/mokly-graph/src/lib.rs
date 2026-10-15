@@ -38,3 +38,5 @@ mod boundaries_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_tests.rs"]
 mod cache_tests;
+
+mod resource_access;

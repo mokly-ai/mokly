@@ -62,6 +62,20 @@ fn walk(
                 );
             }
             Node::Element(element) => {
+                let rel: Vec<_> = element
+                    .get("rel")
+                    .unwrap_or("")
+                    .split_ascii_whitespace()
+                    .collect();
+                let speculative = element.name == "link"
+                    && rel.iter().any(|value| {
+                        value.eq_ignore_ascii_case("preload")
+                            || value.eq_ignore_ascii_case("prefetch")
+                    })
+                    && !rel
+                        .iter()
+                        .any(|value| value.eq_ignore_ascii_case("stylesheet"));
+                let ignored = ignored || speculative;
                 for attribute in &element.attributes {
                     if element.name == "base" && attribute.name == "href" {
                         continue;

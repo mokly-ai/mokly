@@ -40,6 +40,9 @@ pub enum PublicDenial {
     /// Missing or non-file target.
     #[error("[mokly-graph/public-policy] missing, non-regular, or outside the repository")]
     Unavailable,
+    /// A lexical child query proves the target is absent, rather than unreadable or nonregular.
+    #[error("[mokly-graph/public-policy] missing public file")]
+    Missing,
     /// A lexical path component is a symbolic link.
     #[error("[mokly-graph/public-policy] symbolic link in public path")]
     Symlink,
@@ -63,7 +66,9 @@ impl PublicDenial {
             Self::Imported { stylesheet } => format!(
                 "imported by {stylesheet}; reference the delivered route under static/mokly-generated/ or keep a separate public copy"
             ),
-            Self::Unavailable => "missing, non-regular, or outside the repository".into(),
+            Self::Unavailable | Self::Missing => {
+                "missing, non-regular, or outside the repository".into()
+            }
             Self::Symlink => "symbolic link in public path".into(),
             Self::Escape => "outside the repository".into(),
         }

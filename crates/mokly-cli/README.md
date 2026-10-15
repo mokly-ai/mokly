@@ -12,6 +12,7 @@ presentation. The npm shim starts this binary with inherited streams.
 - Select plain or rich output and protect terminal diagnostics.
 - Keep success and failure exit statuses at 0 and 1.
 - Load JSON configuration, validate the catalogue, and render every HTML view.
+- Compute Changes from a pinned Git base and keep its validated result in memory.
 
 ## What This Crate Does
 
@@ -38,6 +39,14 @@ lines in both plain and rich output. A diagnostic omits its inner code tag
 only when it equals the command's outer code. Configuration locations are
 repository-relative, or use the basename when the root does not contain
 the configuration file.
+
+The build service computes Changes unless `--no-changes` is set. `--base`
+overrides `review.base`; the default ref is `origin/main`. It retains review v8,
+snapshot v4, and the two graph generations in memory for static output.
+A base validation or Git failure reports its diagnostics and makes Changes
+unavailable while the current catalogue remains valid. Rich output reports
+Changes, moved, and ignored-only counts from the classifier. Plain output
+keeps its phase-free contract. The static writer consumes the retained generations for catalogue output.
 
 Publish validates credentials and the committed clean checkout before it calls
 the CLI-owned `StaticOutput` adapter. It passes the invocation directory for

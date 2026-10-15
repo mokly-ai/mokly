@@ -12,6 +12,31 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Recoverable preparation failures.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Catalogue configuration or historical sources failed current validation.
+    #[error("[mokly-compare/catalogue] {source}")]
+    Catalogue {
+        /// Original validation diagnostics.
+        source: mokly_catalogue::error::CatalogueError,
+    },
+    /// A rendered document or resource failed validation.
+    #[error("[mokly-compare/render] {source}")]
+    Graph {
+        /// Original graph diagnostics.
+        source: mokly_graph::error::GraphError,
+    },
+    /// The injected provider cannot render discovered JavaScript yet.
+    #[error("[mokly-compare/base] JavaScript rendering is unavailable for {}", .modules.join(", "))]
+    Deferred {
+        /// Historical module paths awaiting a sidecar adapter.
+        modules: Vec<String>,
+    },
+    /// A complete result failed its strict model contract.
+    #[error("[mokly-compare/review-invalid] {source}")]
+    Review {
+        /// Original strict reader diagnostic.
+        source: mokly_model::readers::ReadError,
+    },
+
     /// The selected package manager executable could not be started.
     #[error("[mokly-compare/install] package manager is unavailable")]
     CommandUnavailable,
@@ -71,6 +96,16 @@ pub enum Error {
 /// Internal adapter source errors.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// Pairing must retain at least one side of every identity.
+    #[error("entry pairing has neither side")]
+    EmptyPair,
+    /// Pure model serialization failed.
+    #[error("model encoding failed: {source}")]
+    Model {
+        /// Original serialization source.
+        source: mokly_model::error::ModelError,
+    },
+
     /// Source-index initialization could not acquire its state.
     #[error("source index state is poisoned")]
     Poisoned,

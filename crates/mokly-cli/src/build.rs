@@ -8,16 +8,21 @@ use mokly_catalogue::config::ConfigLoader;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
+use mokly_compare::base_render::ChangesService;
+use mokly_compare::comparison_types::ComparisonResult;
 use mokly_graph::error::GraphError;
 use mokly_graph::types::GraphFactory;
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
+use crate::changes_diagnostics;
 use crate::grammar::Build;
 
 /// Validated catalogue counts and warnings for terminal presentation.
 #[derive(Clone, Debug)]
 pub struct BuildSummary {
+    /// In-memory Changes result retained for static output.
+    pub changes: BuildChanges,
     /// Complete rendered view, page, and document count.
     pub documents: usize,
     /// Counts come only from the validated catalogue model, including variants.
@@ -70,6 +75,8 @@ pub trait BuildService: Send + Sync {
 
 /// Build coordinator with injected config and catalogue boundaries.
 pub struct CatalogueBuild {
+    /// Shared base preparation and comparison service.
+    pub changes: Arc<dyn ChangesService>,
     /// Data-only configuration loader.
     pub config: Arc<dyn ConfigLoader>,
     /// Source discovery and validation.
@@ -107,7 +114,7 @@ impl BuildService for CatalogueBuild {
                 });
             }
         };
-        let generation = match graph.prepare(config, prepared.clone(), Some(&output)) {
+        let generation = match graph.prepare(config.clone(), prepared.clone(), Some(&output)) {
             Ok(generation) => generation,
             Err(source) => {
                 return Err(BuildError::Rendering {
@@ -130,14 +137,39 @@ impl BuildService for CatalogueBuild {
                 warnings: rendered.warnings,
             });
         }
+        let mut warnings = rendered.warnings;
+        let changes = if options.no_changes {
+            BuildChanges::Disabled
+        } else {
+            match self
+                .changes
+                .classify(&config, options.common.base.as_deref(), generation)
+            {
+                Ok(result) => {
+                    warnings.extend(result.warnings.iter().cloned());
+                    BuildChanges::Ready(Arc::new(result))
+                }
+                Err(source) => {
+                    warnings.extend(changes_diagnostics::warnings(&source));
+                    BuildChanges::Unavailable {
+                        diagnostics: changes_diagnostics::details(&source),
+                    }
+                }
+            }
+        };
+        mokly_catalogue::diagnostic::normalize_warnings(&mut warnings);
+        if options.strict && !warnings.is_empty() {
+            return Err(BuildError::Strict { warnings });
+        }
         let mut counts = BTreeMap::new();
         for entry in &prepared.model.entries {
             *counts.entry(entry.content.kind()).or_default() += 1;
         }
         Ok(BuildSummary {
+            changes,
             documents: rendered.documents,
             counts,
-            warnings: rendered.warnings,
+            warnings,
             deferred_modules: prepared.deferred_modules,
         })
     }
@@ -146,3 +178,17 @@ impl BuildService for CatalogueBuild {
 #[cfg(test)]
 #[path = "_tests_/build_tests.rs"]
 mod build_tests;
+
+/// Build computes Changes once and keeps the result for the static writer.
+#[derive(Clone, Debug)]
+pub enum BuildChanges {
+    /// --no-changes starts no Git or comparison work.
+    Disabled,
+    /// Complete validated result and the same historical generation.
+    Ready(Arc<ComparisonResult>),
+    /// The catalogue remains usable when base validation or Git fails.
+    Unavailable {
+        /// Preserved base or comparison diagnostic.
+        diagnostics: Vec<String>,
+    },
+}

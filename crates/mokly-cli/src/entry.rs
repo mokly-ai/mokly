@@ -11,7 +11,6 @@ use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::Builder;
 use mokly_catalogue::working_tree::WorkingTree;
 use mokly_cli::build::{BuildService, CatalogueBuild};
-use mokly_cli::build_output;
 use mokly_cli::codes::Code;
 use mokly_cli::errors::Failure;
 use mokly_cli::grammar::Verb;
@@ -20,10 +19,12 @@ use mokly_cli::output::{Style, select};
 use mokly_cli::parsing::{ParseError, parse};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
+use mokly_cli::{build_output, changes_output};
+use mokly_graph::cache::{MemoryCache, RenderCache};
 use mokly_source_interface::tree::SourceTree;
 use terminal_size::{Width, terminal_size};
 
-use crate::entry_publish;
+use crate::{changes_runtime, entry_publish};
 
 use super::render_runtime::NativeGraphs;
 
@@ -113,8 +114,13 @@ pub(super) fn main() -> ExitCode {
             }
         };
         let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+        let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(256 * 1024 * 1024));
         let service: &dyn BuildService = &CatalogueBuild {
-            graphs: Arc::new(NativeGraphs { tree: tree.clone() }),
+            changes: changes_runtime::service(cache.clone()),
+            graphs: Arc::new(NativeGraphs {
+                tree: tree.clone(),
+                cache,
+            }),
             config: Arc::new(Loader { tree: tree.clone() }),
             catalogue: Arc::new(Builder {
                 tree: tree.clone(),
@@ -129,7 +135,12 @@ pub(super) fn main() -> ExitCode {
                     &summary.warnings,
                     &redactor,
                 ));
-                terminal.stdout(&build_output::summary(&style, &summary));
+                terminal.stderr(&changes_output::diagnostics(
+                    &style,
+                    &summary.changes,
+                    &redactor,
+                ));
+                terminal.stdout(&build_output::summary(&style, &summary, &redactor));
                 ExitCode::SUCCESS
             }
             Err(error) => {
