@@ -4,7 +4,19 @@
 
 pub mod batches;
 pub mod command;
+pub mod control;
 pub mod error;
 pub mod system;
 
 mod cancellation;
+mod pipes;
+
+pub mod changes;
+pub mod disk;
+pub mod identity;
+pub mod repository;
+pub mod tree;
+
+mod blob_batches;
+
+pub mod access;

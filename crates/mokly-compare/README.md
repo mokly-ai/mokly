@@ -1,0 +1,104 @@
+# mokly-compare
+
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
+`mokly-compare` prepares the base side of Mokly Changes. Use its traits to
+read historical sources, lease an extracted commit, and select dependencies
+for a sidecar bundle. `mokly-git` owns Git IO. `mokly-platform` owns locks
+and process groups. `mokly-sidecar` owns the bundle settings type.
+
+## Responsibilities
+
+- Read regular base files from Git blobs with preserved POSIX paths.
+- Extract JavaScript sources only when a caller requests them.
+- Store source and dependency caches outside the repository.
+- Bound cache bytes, retain active leases, and evict the least used entries.
+- Compare all package manifests and lockfiles before dependency selection.
+- Install base dependencies with scripts disabled, a deadline, and a size bound.
+- Return bundle settings and a configuration warning when an install fails.
+
+## What This Crate Does
+
+`GitSources::new` pins a commit and explicit file and metadata-node bounds.
+It indexes every tree mode once. It lists
+regular files below exact configured roots and exposes batched blob reads.
+Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
+these files. HTML reads require no extraction or package manager.
+
+`SystemLocations` hashes the canonical repository path under the operating
+system's cache directory. `DiskCache` has separate source and dependency
+byte bounds. It uses OS locks for namespace mutation and entry leases. A
+durable receipt records completion, an access sequence, and bytes. A hit
+validates the receipt and recounts data size without hashing content or
+flushing. Linux synchronizes new entries with one `syncfs`; macOS uses plain
+`fsync` per data file, then a completion barrier. Windows flushes each file.
+Eviction renames victims to trash under the namespace lock and deletes them
+outside it. Walks check cancellation; later opens sweep interrupted trash.
+Leases are shared. Builds hold only their entry lock, so another key can
+complete while an install is pending. Deleting the cache permits a rebuild.
+The CLI shares one `OnceReporter` across both namespaces and uses
+`plain_line` for the exact cache announcement.
+
+`SourceInputs` reads dependency inputs from base blobs.
+`SystemWorkingInputs` gets tracked and nonignored candidates through Git and
+compares clean object identities. It reuses base bytes for equal inputs. `DependencyTiers`
+uses working third-party dependencies when both sets are equal. In every tier,
+the sidecar maps resolved repository-owned paths into that side's sources.
+Different inputs use
+npm's locked install at the root and each configured independent package
+root in the dependency cache. They share one deadline. Successful installs
+remove their private npm download cache before publication. The key includes the exact
+lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
+include the immutable source identity. Unsupported managers and failed,
+expired, or oversized installs use the working installation with a typed
+`base-dependencies` warning. Cancellation propagates without a warning.
+
+The caller retains the source and dependency leases until its sidecar has
+finished using their directories. `Resolved` returns the primary
+`node_modules` path, the complete `ModuleResolution` value, and typed
+`repository_roots` for sidecar mapping. These roots include the working tree
+and the base source copy for tier two. Supply
+repository-relative package roots in the request; the result names absolute
+roots from the selected installation and keeps the other settings.
+
+## Quick Start
+
+```bash
+cargo test -p mokly-compare
+cargo test -p mokly-compare --test dependencies_tests
+```
+
+Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
+`dyn Extraction`, `dyn Dependencies`, and `dyn Cache` in the render graph
+and comparison coordinator. Call `InputReader::read` on `GitSources` and
+`WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
+before dependency selection.
+Pass one cancellation token to the caches, Git runner, and install supervisor.
+
+## Development
+
+Consumers enable the `mock` feature to use every public trait with unimock.
+
+```bash
+cargo clippy -p mokly-compare --all-targets -- -D warnings
+```
+
+Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
+isolated Git repositories, OS locks, and a local `file:` npm package. The
+fixture enables npm's offline mode and checks that lifecycle scripts did not
+run. It needs no registry.
+
+### Key Code
+
+- [Source reader](./src/sources.rs) and [extraction](./src/extraction.rs).
+- [Cache coordinator](./src/cache.rs), [storage](./src/storage.rs), and
+  [OS locations](./src/locations.rs).
+- [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and
+  [command supervision](./src/commands.rs).
+
+### Related Docs
+
+- [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Comparison](../../docs/protocol/mokly-comparison.md#sides).
+- [Git runtime](../../docs/protocol/mokly-git.md).
+- [Rust architecture](../../docs/architecture/rust-core.md).

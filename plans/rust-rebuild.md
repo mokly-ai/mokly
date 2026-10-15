@@ -797,16 +797,31 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
+- [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
-- [ ] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
+- [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
       one second, and drain process pipes before settling.
+- [x] Add the part 1 base source reader, leased extraction cache, dependency
+      input readers, three dependency tiers, and bounded install cache in
+      `mokly-compare`, ready for the render graph connection.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, the
       `base-dependencies` warning, and the terminal line that names the cache
       directory.
+      Part 1 gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-git.md`.
+- [x] Apply final part 1 review fixes: sidecar repository roots, cache flush
+      and trash handling, batched working hashes, independent tree bounds,
+      rename encoding, warning locations, and concurrent cache misses.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/logs/m9-git/round3-targeted-tests.log`.
+      Integration choices: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-git/merge-decisions.md`.
+- [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
+      the commit-pinned Git index and batched blob reader. Cover projection,
+      direct children, every mode, and typed IO errors.
+- [ ] Implement branch-point entry lookup and its shared verification cases:
+      kind/case identity, accepted-pair precedence, removed destinations,
+      counterparts, variant parents, stored titles, and generation isolation.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
@@ -941,6 +956,10 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 9 part 1 review 1, finding 11: user decision pending on support
+    for package managers other than npm; retain the npm-only fallback policy.
+  - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
+    conversion for base render/resource bytes; retain raw Git blob bytes.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention

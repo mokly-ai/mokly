@@ -5,7 +5,7 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use mokly_git::command::{DEFAULT_OUTPUT_LIMIT, Request, Runner};
+use mokly_git::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
 use mokly_git::error;
 use mokly_model::output::repository::Repository;
 use mokly_model::output::upload::Publication;
@@ -205,6 +205,8 @@ impl GitCheckout {
             directory: directory.to_owned(),
             args: args.iter().map(OsString::from).collect(),
             output_limit: DEFAULT_OUTPUT_LIMIT,
+            stderr_limit: DEFAULT_STDERR_LIMIT,
+            stdin: vec![],
         };
         match self.runner.run_cancellable(&request, cancellation) {
             Ok(output) => Ok(output.stdout),
