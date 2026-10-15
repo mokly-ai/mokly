@@ -62,10 +62,14 @@ The sidecar's [`bundle` call](./mokly-sidecar.md#bundling) reports the module
 graph. The core reads each root's stylesheet imports from it in
 first-reachability depth-first order of the JavaScript imports, including
 re-exports and dynamic imports, with modules and stylesheets keyed by their
-resolved logical path, so one root lists a file at most once. A CSS import
-that resolves outside the repository fails, naming the authored importer and
-the original specifier; a diagnostic never shows a virtual module or an
-absolute path.
+resolved logical path, so one root lists a file at most once. A CSS import may resolve inside the source root or a selected dependency
+root. A package stylesheet uses its stable dependency name, such as
+`node_modules/pkg/style.css`, on both sides. The binary reads it from that
+installation and excludes it from catalogue sources. Repository packages
+use the side's mapped copy under the
+[sidecar module rules](./mokly-sidecar-modules.md). An import outside all
+allowed roots fails at the authored importer. A diagnostic names the logical
+module and never shows a virtual module or an absolute path.
 
 The core then resolves nested local `@import`s, quoted and `url()` forms, to
 form each root's complete stylesheet closure. The renderer's closure includes
@@ -94,7 +98,8 @@ stylesheet pass evaluates no consumer JavaScript.
 A root's stylesheet is one node of the render graph, keyed by its stylesheet
 sources, its assets, the PostCSS module, and the resolution settings. For
 each stylesheet of the closure the core reads the text from the working tree,
-or from a Git blob on the base side; runs the consumer's PostCSS plugins
+or from a Git blob on the base side, with package inputs read from the
+selected dependency root; runs the consumer's PostCSS plugins
 through the sidecar's `processCss` when the configuration names a `postcss`
 module; scopes a `*.module.css` file under the
 [CSS Modules contract](./mokly-imported-styles-modules.md); and then bundles

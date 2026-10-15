@@ -719,14 +719,14 @@ without JavaScript.
 
 Tags: ui
 
-- [ ] Update the viewer's data readers and validators to the generated read
+- [x] Update the viewer's data readers and validators to the generated read
       model v7 types.
-- [ ] Show a component's own props before its variants, offer the derived
+- [x] Show a component's own props before its variants, offer the derived
       controls on screens with the zero-based step and the title-or-value
       select labels, and validate control input with a profile validator
       that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Replace server rendering and hydration in the viewer package with the
+- [x] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
@@ -734,7 +734,10 @@ Tags: ui
       and the package README, rewritten under Decision 38, is checked
       against the package.
 - [ ] Run the viewer suite against the Milestone 6 routes.
-- [ ] Commit.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -745,18 +748,38 @@ renders again.
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
+  - [x] Add the standalone Node entry, bounded NDJSON, method dispatch,
+        exact-version hello, and the Rust pool's lazy process lifecycle.
+  - [x] Test request deadlines, retry, recycling, shutdown, and queue
+        cancellation with mocked Rust boundaries and real Node processes.
+  - [x] Separate head and base generations, replay disposed generations on
+        every worker, share canonical model wire values, and validate the
+        CLI timeout override.
+  - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
+        and fragment-scoped registry style collection.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
+  - [x] Add unevaluated esbuild generations, attributed facades, the JSX
+        development shim, CSS Modules tables, and consumer style collectors.
+  - [x] Map workspace PostCSS presets into each side and keep installed
+        JavaScript and CSS under stable dependency graph names.
+  - [x] Add the PostCSS worker and preserve local module locations, plugin
+        creation lifetime, and dependency plugin names and globs.
 - [ ] Implement component, screen, page, and story renders, with
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
       inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
-      Rust keyed by bundle generation, handle, props, viewport, scheme, and
+      Rust keyed by bundle generation, binding table, effective entry, class-map
+      digest, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
+  - [x] Add the authoring API with schema and literal prop inference, and
+        standalone component, screen, story, and page renders.
+  - [ ] Connect resolved catalogue paths, complete usage records, schema
+        validation, and fragment caching through the approved binding.
 - [ ] Implement `describe`: every definition the entry modules and stories
-      files export, one per export with `array-export` otherwise, with the
+      files export, one per export, rejecting arrays containing definitions, with the
       story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
@@ -784,7 +807,31 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
-- [ ] Write the JavaScript authoring guides.
+- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+      routing, detail loading and retry, live publications without a page
+      load, and the frame reload by `documentKey`; and the live prop edits:
+      the 150 ms debounce, the rerender after a revision adoption or a
+      `live.generation` change, the retry after a 409, cancellation on
+      navigation, and read-only controls while no descriptor is installed.
+- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+      its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
+      the parent's own entry first in the variant bar, controls on screens,
+      the stage loading state, the index failure state, the version failure
+      state, the Props tab label against the mockups' "Controls", and the
+      controls copy "Choose an available entry to edit props.",
+      "Comparisons show the saved props. Return to Current to edit props.",
+      "Open this catalogue locally to edit props." (also shown in Serve while
+      the descriptor loads), "No editable props are declared for this
+      entry.", and "Check the highlighted values." for a whole-props error
+      that highlights no field.
+- [x] Write the JavaScript authoring guides.
+
+Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
+and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
+decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
+`.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
+fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -843,6 +890,15 @@ Tags: ui
 
 - [ ] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
+- [ ] Check the shell's projection of the entry detail's review v8 rule and
+      resource records (`packages/viewer/src/review/view_evidence.ts`)
+      against Milestone 9 output.
+- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+      the serialization contract: `sourceKind` is the literal `base`.
+- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+      package README describe (the path functions, the directory names, the
+      path grammar, and the prop schema validators) when review v8 replaces
+      the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 
@@ -900,6 +956,8 @@ Publish client final review and merge decisions:
 
 ## Milestone 13: Release packaging
 
+- [ ] Build and pack the viewer before the CLI authoring declarations and
+      CLI `prepack`; verify this order in clean package consumers.
 - [ ] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
@@ -948,6 +1006,8 @@ Publish client final review and merge decisions:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M8 sidecar review D2: the user must settle schema validation of dynamic
+    wrapper props before the adapter runs; add no validator or callback yet.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
@@ -960,6 +1020,10 @@ Publish client final review and merge decisions:
     delivery model; keep the current bundled code and pages pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
+  - Milestone 7 review 1, finding 12: decide whether to delete the
+    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
+    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
+    user.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

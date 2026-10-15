@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueDetails,
   CatalogueReadModel,
@@ -13,17 +14,14 @@ import { viewerCatalogue } from "../src/viewer/projection.js";
 function renderedBaselineHash(details: CatalogueDetails): string {
   const entry = {
     changes: {
-      eligible: true,
       included: true,
       kind: "removed" as const,
       status: "ready" as const,
     },
     details,
-    documentPath: null,
+    documentKey: "1".repeat(64),
     path: "removed-page",
     kind: "page" as const,
-
-    route: "removed.html",
     tags: [],
     title: "Removed page",
   };
@@ -36,19 +34,19 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     identity: { id: "fixture", title: "Fixture" },
     pages: [],
     removedEntries: [{ folderTitles: [], entry }],
-    revision: { content: 1, evidence: 1 },
-    schemaVersion: 6 as const,
+    revision: 1,
+    schemaVersion: 7,
     screens: [],
     tree: [],
     useCases: [],
   };
-  const catalogue = viewerCatalogue(model);
+  const catalogue = viewerCatalogue(shellCatalogueModel(model, new Map()));
   const removed = catalogue.removedEntries[0]?.entry;
   assert.ok(removed);
   const html = renderToStaticMarkup(
     <ShellMain
       catalogue={catalogue}
-      context={{ base: "origin/main", updateVersion: 1 }}
+      context={{ base: "origin/main" }}
       view={{ kind: "target", target: { entry: removed, kind: "entry" } }}
     />,
   );

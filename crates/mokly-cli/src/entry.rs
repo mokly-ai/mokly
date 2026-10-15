@@ -89,6 +89,7 @@ pub(super) fn main() -> ExitCode {
     };
     let environment = Environment {
         sidecars: env::var("MOKLY_SIDECARS").ok(),
+        sidecar_timeout_ms: env::var("MOKLY_SIDECAR_TIMEOUT_MS").ok(),
         endpoint: env::var("MOKLY_ENDPOINT").ok(),
         token,
         cores: std::thread::available_parallelism().map_or(1, usize::from),

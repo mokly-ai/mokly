@@ -5,7 +5,7 @@ import { useLayoutEffect, useRef } from "react";
 import { sameNavFilters } from "./nav_reveal.js";
 import type { ShellStore } from "./store_context.js";
 
-/** Bind the rail scroller to recovery state, routes, and folder reveals. */
+/** Bind the rail scroller to its stored offset, routes, and folder reveals. */
 export function useNavigationScroll(
   store: ShellStore | undefined,
   route: ShellStore["state"]["route"] | undefined,

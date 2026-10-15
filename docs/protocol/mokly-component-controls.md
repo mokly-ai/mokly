@@ -49,7 +49,9 @@ type ComponentControl = ComponentControlLabel &
   );
 ```
 
-Text length uses non-negative integers of UTF-16 code units. Number bounds
+Text length is a non-negative integer of Unicode code points, as the schema's
+`maxLength` counts; the shell checks it itself and never uses the input's
+native `maxlength`, which counts UTF-16 code units, as the limit. Number bounds
 are finite, ordered, and never negative zero; `step` is finite and positive
 and counts from zero, with the first offered value the smallest multiple at
 or above `minimum`. A number control offers only values the schema accepts.

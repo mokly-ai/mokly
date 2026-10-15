@@ -31,8 +31,7 @@ contains them. Never ignore the content the screen is about.
 ## Keep stateful chrome honest
 
 When the repeated region renders from state, give it a material key derived
-from the typed props it rendered with. The signal sits outside the ignored
-region and stays part of classification, so a real change to that state is
+from the typed props it rendered with. The key stays part of classification, so a real change to that state is
 still reviewed.
 
 ```tsx
@@ -45,7 +44,7 @@ import { AppHeader } from "./app-header.js";
 ```
 
 `reviewMaterialKey` hashes plain structured data into a deterministic key.
-Malformed, duplicate, nested, overlapping or mismatched signals fail the build
+Malformed, duplicate, crossing, or mismatched boundaries fail the build
 with the entry that caused them.
 
 ## Turn markers off for a subtree

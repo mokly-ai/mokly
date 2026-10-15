@@ -1,64 +1,74 @@
-/** Catalogue shapes used only by a route-scoped standalone shell bootstrap. */
+/** The shell's working catalogue: the index v7 with usage from held details. */
 
 import type {
   CatalogueComponent,
-  CatalogueComponentVariant,
-  CataloguePage,
+  EntryDetailV1,
   CatalogueDocument,
+  CataloguePage,
   CatalogueReadModel,
   CatalogueScreen,
   CatalogueUsage,
   CatalogueUseCase,
   CatalogueView,
+  RemovedEntry,
+  ViewEvidence,
 } from "./types.js";
 
-/** Public usage plus the absence marker permitted only in shell bootstraps. */
+/** Detail usage, or `omitted` while the shell holds no detail for the entry. */
 export type ShellCatalogueUsage =
   CatalogueUsage | { readonly status: "omitted" };
 
-/** One public view whose usage may be outside the current entry's scope. */
-export interface ShellCatalogueView extends Omit<CatalogueView, "usage"> {
+/** One index view with the usage and evidence its entry's detail carries. */
+export interface ShellCatalogueView extends CatalogueView {
   usage: ShellCatalogueUsage;
+  resourceEvidence?: ViewEvidence;
 }
 
-/** A screen retained in the shell index with entry-scoped view usage. */
+/** A screen whose views carry detail usage. */
 export interface ShellCatalogueScreen extends Omit<CatalogueScreen, "views"> {
   views: readonly ShellCatalogueView[];
 }
 
-/** A component variant retained with entry-scoped view usage. */
-export interface ShellCatalogueVariant extends Omit<
-  CatalogueComponentVariant,
+/** A component parent or variant whose views carry detail usage. */
+export interface ShellCatalogueComponent extends Omit<
+  CatalogueComponent,
   "views"
 > {
   views: readonly ShellCatalogueView[];
 }
 
-/** Component parents own schema while their variant entries own views. */
-export type ShellCatalogueComponent = CatalogueComponent;
+/** A component variant whose views carry detail usage. */
+export type ShellCatalogueVariant = ShellCatalogueComponent & {
+  variantOf: string;
+};
 
-/** Any current or historical entry retained by a scoped shell catalogue. */
+/** A page with the resource evidence its detail carries. */
+export interface ShellCataloguePage extends CataloguePage {
+  resourceEvidence?: ViewEvidence;
+}
+
+/** Any current or historical entry of the working catalogue. */
 export type ShellCatalogueRoutedEntry =
   | ShellCatalogueScreen
-  | CataloguePage
+  | ShellCataloguePage
   | CatalogueDocument
   | CatalogueUseCase
-  | ShellCatalogueComponent
-  | ShellCatalogueVariant;
+  | ShellCatalogueComponent;
 
-/** Complete public index data with usage projected to one shell entry. */
+/** One removed record of the working catalogue. */
+export interface ShellRemovedEntry extends Omit<RemovedEntry, "entry"> {
+  entry: ShellCatalogueRoutedEntry;
+}
+
+/** The complete index with the usage and evidence of every held detail. */
 export interface ShellCatalogueReadModel extends Omit<
   CatalogueReadModel,
-  "screens" | "components" | "removedEntries"
+  "screens" | "pages" | "components" | "removedEntries"
 > {
   screens: readonly ShellCatalogueScreen[];
-  components: readonly (ShellCatalogueComponent | ShellCatalogueVariant)[];
-  removedEntries: readonly {
-    entry: ShellCatalogueRoutedEntry;
-    folderTitles: readonly string[];
-    /** Required exactly when the removed entry is a variant. */
-    parentTitle?: string;
-    snapshotId?: string;
-    preview?: CatalogueReadModel["removedEntries"][number]["preview"];
-  }[];
+  pages: readonly ShellCataloguePage[];
+  components: readonly ShellCatalogueComponent[];
+  removedEntries: readonly ShellRemovedEntry[];
+  /** The accepted details by `detailKey`, each fenced against this index. */
+  details: ReadonlyMap<string, EntryDetailV1>;
 }

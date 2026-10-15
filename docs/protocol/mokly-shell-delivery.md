@@ -167,10 +167,11 @@ build has none.
 
 ## Fetch And Fences
 
-At start the shell fetches the index, then the detail of the routed entry; it
-renders the navigation when the index arrives and the frames when the detail
-arrives. On navigation inside the shell it commits the route from the index
-at once and fetches the destination's detail. It accepts a current entry's
+At start the shell fetches the index, then the detail of the routed entry and,
+for a use case, the detail of each step screen whose views its frames show; it
+renders the navigation when the index arrives and the frames when those
+details arrive. On navigation inside the shell it commits the route from the
+index at once and fetches the destination's details. It accepts a current entry's
 detail only when `identity`, `deploymentId`, and `revision` equal the
 installed index. On a revision mismatch it refetches the index once; if the
 pair still disagrees, the entry shows its unavailable state with retry. A
@@ -204,7 +205,7 @@ On a message whose `data` differs from the installed `deploymentId`, another
 server process answers, and the standalone shell performs a full page load of
 the current URL. On a message whose id is above the installed revision, the
 shell cancels a refresh still in flight, fetches the index and the current
-entry's detail, requires one `revision` on both at or above the message id,
+route's details, requires one `revision` on all of them at or above the message id,
 and adopts them in one store commit: the navigation, the Changes marks,
 Usage, and the details panel update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame

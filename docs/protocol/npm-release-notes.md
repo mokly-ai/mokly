@@ -37,6 +37,23 @@ and is unavailable with those diagnostics otherwise. Review result v8 and read m
 numbers; no reader accepts an earlier number. The authoring API and config load with no compatibility shims. Mokly
 Cloud resets and republishes; the upload exchange is unchanged.
 
+## Breaking Viewer Delivery Release Note
+
+The Browse shell renders only in the browser, from the catalogue index v7 and
+one entry detail v1 per entry under the
+[shell delivery contract](./mokly-shell-delivery.md). `@mokly/viewer/server`
+and `@mokly/viewer/runtime` are removed, and `@mokly/viewer/browser` mounts
+the standalone shell without `hydrateMoklyShell`. `MoklyViewer` takes an
+`index` source and a `detail` source and has no `viewerId`. `readCatalogueIndex`
+and `readEntryDetail` replace `readCatalogue`; `IndexSource`, `DetailSource`
+and `DetailResult` replace `CatalogueSource` and `CatalogueFetcher`. Prop
+schemas follow the JSON Schema profile of the
+[entry props contract](./mokly-entry-props.md): `PropSchema` and
+`validatePropSchema` replace `ObjectPropSchema`, `DataPropSchema`,
+`DataPropField`, `InferProp` and `ControlFor`. `@mokly/viewer/data` no longer
+exports `parseStaticDelivery`, `StaticDelivery`, `StaticDeliveryParseResult`
+or `RenderCapability`; the standalone shell reads the live descriptor v3.
+
 ## Breaking Publish Checkout Release Note
 
 `mokly publish` requires a clean checkout before export and before upload.

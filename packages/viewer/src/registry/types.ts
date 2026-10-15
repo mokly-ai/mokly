@@ -1,8 +1,13 @@
+import type { ComponentControl } from "../components/control_types.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
   ComponentViewRecord,
 } from "../components/manifest_types.js";
+import type {
+  ComponentWireProps,
+  PropSchema,
+} from "../components/prop_types.js";
 import type { ColorScheme } from "../data/axes.js";
 
 /** Serializable common metadata for a current manifest entry. */
@@ -25,6 +30,12 @@ export interface ManifestScreen extends ManifestEntryBase {
   kind: "screen";
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
+  /** Validated declared or inferred schema of the screen's props. */
+  propSchema?: PropSchema;
+  /** The screen's own props, or a variant's merged props. */
+  props?: ComponentWireProps;
+  /** Controls derived or declared for the screen's props. */
+  controls?: Readonly<Record<string, ComponentControl>>;
   useCasePaths: readonly string[];
   /** Parent screen path, present only when this screen is a variant. */
   variantOf?: string;

@@ -28,7 +28,7 @@ the `mokly-` prefix is reserved for markers.
 | Marker                                                                 | Meaning                                                                         |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `<!--mokly-instance:start id="r-3" path="…" instance="…" props="…"-->` | a rendered component instance; `props` is the canonical props digest            |
-| `<!--mokly-slot:start id="r-4" name="children"-->`                     | a distinct slot placement supplied to instance `r-3` by its enclosing owner     |
+| `<!--mokly-slot:start id="r-4" instance="r-3" name="children"-->`      | slot region `r-4` supplied to instance `r-3` by its input owner                 |
 | `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                           |
 | `<!--mokly-link:start id="…" to="…"-->`                                | a `MockLink asChild` control in a sidecar fragment; consumed by link adaptation |
 | `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                                  |

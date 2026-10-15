@@ -121,7 +121,11 @@ impl Response {
                 }
                 Call::RenderPage(_) => Ok(MethodResult::Page(decode(result)?)),
                 Call::ProcessCss(_) => Ok(MethodResult::Css(decode(result)?)),
-                Call::CssModules(_) | Call::Dispose(_) | Call::Shutdown(_) => {
+                Call::CssModules(_)
+                | Call::Bindings(_)
+                | Call::DisposeContext(_)
+                | Call::Dispose(_)
+                | Call::Shutdown(_) => {
                     decode::<()>(result)?;
                     Ok(MethodResult::Empty)
                 }

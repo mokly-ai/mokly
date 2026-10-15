@@ -46,7 +46,8 @@ Markdown document have no viewport axis.
 Mokly depends on no consumer component library, React Native Web, product
 tokens, or app components. `@mokly/mokly` declares `react` and `react-dom`
 `>=19.0.0` as peer dependencies and ships no private runtime. The sidecar
-resolves both from the consumer and bundles every entry module, stories file,
+resolves both from the side's configuration directory through that side's
+module resolution settings and bundles every entry module, stories file,
 and the renderer module into one graph with one React instance, under the
 [bundling rules](./mokly-sidecar.md#bundling). The same holds when Mokly is
 installed locally and when npx fetches it into its cache; the `renderer` and `postcss` modules resolve from the configuration

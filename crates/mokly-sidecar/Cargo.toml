@@ -9,12 +9,14 @@ publish = false
 [dependencies]
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
+sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
 thiserror = "2.0.21"
 tracing = "0.1.44"
 ts-rs = { version = "12.0.1", features = ["serde-json-impl", "no-serde-warnings"] }
 unimock = { version = "0.6.8", optional = true }
 
 [dev-dependencies]
+mokly-platform = { workspace = true, features = ["mock"] }
 insta = "1.49.0"
 unimock = "0.6.8"
 
@@ -23,4 +25,7 @@ mock = ["dep:unimock"]
 
 
 [dependencies.mokly-model]
+workspace = true
+
+[dependencies.mokly-platform]
 workspace = true

@@ -1,28 +1,14 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
-import { renderViewer } from "../src/viewer/server.js";
+import { viewHref } from "../src/navigation/routes.js";
 
-const fixture = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
+import { standaloneMarkup } from "./shell_markup.js";
 
+/** The standalone shell at one entry's route, or at the catalogue home. */
 function render(screenPath: string | null): string {
-  return renderViewer({
-    viewerId: "fixture",
-    catalogue: fixture,
-    baseUrl: "https://catalogue.example",
-    defaultSelection: { screenPath },
+  return standaloneMarkup({
+    path: screenPath === null ? "/" : viewHref(screenPath),
   });
 }
 

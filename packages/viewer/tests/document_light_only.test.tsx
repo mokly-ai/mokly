@@ -1,44 +1,33 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
+import type { ColorScheme } from "../src/data/axes.js";
 import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { SHELL_PREVIEW_CSS } from "../src/shell/css_previews.js";
+import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import {
   removedPreviewData,
   RemovedPreviewStage,
 } from "../src/shell/previews.js";
-import { DocumentStageFrame } from "../src/shell/stage_frame.js";
+
+import { indexFixture } from "./catalogue_v7_fixture.js";
 
 const BAND =
   '<p class="mbk-previous mbk-scheme-fallback" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note">Light only</span></p>';
 
-function fixtureDocument(colorSchemes: readonly ("light" | "dark")[]) {
-  const model = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  );
-  const document = readCatalogue(model).documents[0];
+function fixtureDocument(colorSchemes: ColorScheme[]) {
+  const document = indexFixture().documents[0];
   assert.ok(document);
   return { ...document, colorSchemes };
 }
 
 test("a current document with no dark render names its fallback above its pane", () => {
-  const stage = (
-    colorSchemes: readonly ("light" | "dark")[],
-    hasDarkFragments: boolean,
-  ) =>
+  const stage = (colorSchemes: ColorScheme[], hasDarkFragments: boolean) =>
     renderToStaticMarkup(
       <DocumentStageFrame
         entry={fixtureDocument(colorSchemes)}
@@ -86,7 +75,6 @@ function removedStage(
   const context: ShellContext = {
     base: "main",
     changesStatus: "ready",
-    updateVersion: 1,
   };
   const data = removedPreviewData(catalogue, context, removed);
   assert.ok(data);

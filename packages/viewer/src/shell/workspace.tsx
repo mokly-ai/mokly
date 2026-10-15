@@ -2,12 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { canonicalJson } from "../components/data.js";
-
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
+import { controlTarget, type ControlTarget } from "./control_values.js";
 import { ControlledDiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
@@ -15,7 +14,6 @@ import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useComparison } from "./use_comparison.js";
-import { useWorkspaceUsage } from "./use_workspace_usage.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
@@ -44,8 +42,7 @@ export function ComponentWorkspace({
   const workspaceRef = useRef<HTMLElement>(null);
   const workspace = useActiveWorkspace();
   if (!workspace) throw new Error("The active workspace is unavailable.");
-  const { data, refresh, request, selection, resolvedView, presentation } =
-    workspace;
+  const { data, selection, resolvedView, presentation } = workspace;
   const variant = selection.variant;
   const variantPath = variant?.value.path;
   const previousPath = branchPoints(catalogue).previousPath(
@@ -66,12 +63,12 @@ export function ComponentWorkspace({
     ...(data.component ? { owner: data.component.path } : {}),
   });
   const comparing = comparison.mode !== "current";
+  const editTarget = controlTarget(entry, variant, data.removed);
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,
     data,
-    request,
-    variant,
+    target: editTarget,
     workspaceRef,
   });
   const views = useMemo(
@@ -103,13 +100,6 @@ export function ComponentWorkspace({
   );
 
   useInspectorResize(workspaceRef, store?.interactive ?? false);
-  useWorkspaceUsage({
-    active: !comparing && !data.removed,
-    data,
-    refresh,
-    ...(request ? { request } : {}),
-    views: savedViews,
-  });
 
   useEffect(() => {
     setActiveViewport(
@@ -176,7 +166,6 @@ export function ComponentWorkspace({
     />
   );
   const showComponents =
-    data.previewGeneration !== undefined ||
     entry.kind === "screen" ||
     views.some((view) => view.usage?.instances.length);
   const propsPanel = selectedInstance ? (
@@ -187,7 +176,7 @@ export function ComponentWorkspace({
         ...(activeView?.usage ? { usage: activeView.usage } : {}),
       }}
     />
-  ) : entry.kind === "component" ? (
+  ) : editTarget && (entry.kind === "component" || hasControls(editTarget)) ? (
     controls.panel
   ) : (
     <WorkspaceProps data={data} selection={{}} />
@@ -281,13 +270,10 @@ export function ComponentWorkspace({
         />
       </div>
       {inspection.overlay}
-      <script
-        data-workspace-data=""
-        dangerouslySetInnerHTML={{
-          __html: canonicalJson(data).replaceAll("<", "\\u003c"),
-        }}
-        type="application/json"
-      />
     </section>
   );
+}
+
+function hasControls(target: ControlTarget): boolean {
+  return Object.keys(target.controls).length > 0;
 }

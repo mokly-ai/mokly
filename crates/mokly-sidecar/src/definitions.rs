@@ -10,6 +10,7 @@ use crate::controls::{Control, StoryHints};
 use crate::definition_metadata::{EntryMetadata, EntryReference, UseCaseStep};
 use crate::diagnostics::DefinitionDiagnostic;
 use crate::methods::ColorScheme;
+use crate::results::Warning;
 
 /// A saved props set with typed metadata overrides.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -64,6 +65,10 @@ pub struct Variant {
 pub struct Definition {
     /// Repository-relative module and export name.
     pub handle: String,
+    /// Module that created the definition; it can differ from the exporting module.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub source_path: Option<String>,
     /// Shared entry metadata.
     #[serde(flatten)]
     pub metadata: EntryMetadata,
@@ -92,6 +97,10 @@ pub struct Definition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub controls: Option<BTreeMap<String, Control>>,
+    /// Storybook meta hints for the component parent's own controls.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub arg_types: Option<BTreeMap<String, StoryHints>>,
     /// Effective colour schemes.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -153,6 +162,8 @@ pub struct Definitions {
     /// Source-attributed authoring diagnostics; these do not invalidate framing.
     #[serde(default)]
     pub diagnostics: Vec<DefinitionDiagnostic>,
+    /// Generation diagnostics from excluded non-data props.
+    pub warnings: Vec<Warning>,
 }
 
 fn schema_value<'de, D: serde::Deserializer<'de>>(

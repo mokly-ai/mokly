@@ -34,6 +34,8 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
             "node scripts/verification/repository-ratchets.mjs",
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
+            "npm run build --workspace \"@mokly/viewer\"",
+            "npm run build --workspace \"@mokly/mokly\"",
             "cargo test --workspace",
             "npm run build",
             "npm run typecheck",
@@ -85,6 +87,8 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings"))
             .returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"")).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"")).returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo test --workspace"))
             .returns(Ok(())),

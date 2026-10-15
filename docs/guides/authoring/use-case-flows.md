@@ -46,8 +46,7 @@ import { defineScreen } from "@mokly/mokly";
 export default defineScreen({
   title: "Account home",
   description: "The start of the account tour.",
-  mobile: <main>Account</main>,
-  desktop: <main>Account</main>,
+  render: () => <main>Account</main>,
 
   relatedDocs: [],
   useCasePaths: ["./account-tour"],

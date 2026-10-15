@@ -14,9 +14,8 @@ export interface ScrollTogether {
 const serverChoice = () => true;
 
 /**
- * Read the mounted viewer's Scroll together choice. Server rendering and the
- * hydration render show it on; the stored choice follows right after, so a
- * standalone document never mismatches its server markup.
+ * Read the mounted viewer's Scroll together choice from its store; a render
+ * outside the browser shows it on.
  */
 export function useScrollTogether(): ScrollTogether {
   const preference =

@@ -7,7 +7,7 @@ Continuation of [CI Verification](./ci-verification.md).
 The repository suite
 starts with the live lockfile-only workspace audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
-with warnings denied, Rust tests and the Rust file-length audit. The
+with warnings denied, viewer and sidecar package builds, Rust tests and the Rust file-length audit. The
 [test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
 checks to ESLint under `tests/`. The live
 dependency audit defaults to baseline mode for local checks, ordinary pull
@@ -20,6 +20,10 @@ strict mode; the scheduled `main` audit and release publish step also stay
 strict. The [baseline contract](./dependency-audit-baseline.md) defines the
 mode selection and comparison rules. Reviewed path and expiry
 rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
+
+The repository and native suites build `@mokly/viewer` then `@mokly/mokly`
+before `cargo test --workspace`. The real sidecar smoke tests require these
+fresh package outputs on every host, including a clean checkout.
 
 The Rust file-length auditor runs inside `xtask` rather than as a
 subprocess in the command list; it has the same failure semantics as the

@@ -6,9 +6,13 @@ import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { shellStore } from "../src/shell/store_actions.js";
 import { withFilterSelection } from "../src/shell/store_filters.js";
 import type { ShellState } from "../src/shell/store_state.js";
-import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
+import { viewerContext } from "../src/viewer/projection.js";
 
-import { baseModel, initialState } from "./disclosure_evidence_fixture.js";
+import {
+  baseModel,
+  initialState,
+  shellCatalogue,
+} from "./disclosure_evidence_fixture.js";
 
 /** A standalone or embedded store over the public fixture with fake storage. */
 function harness(
@@ -16,14 +20,14 @@ function harness(
   initial: ShellState,
   options: { embedded?: boolean; changedEntries?: readonly string[] } = {},
 ) {
-  const catalogue = viewerCatalogue(model);
+  const catalogue = shellCatalogue(model);
   let state = initial;
   const stateRef = { current: state };
   const proposals: unknown[] = [];
   const store = shellStore({
     catalogue,
     context: {
-      ...viewerContext(model, state.selection),
+      ...viewerContext(catalogue.publicModel!, state.selection),
       changedEntries: options.changedEntries ?? [],
       changesStatus: "ready",
     },

@@ -17,7 +17,7 @@ Rust model crate. The package has four entry points:
   `data-mokly-shell` element of the stub that the
   [shell delivery contract](./mokly-shell-delivery.md) defines. Serve and
   `build` deliver it as `/mokly-viewer/client/shell.js`.
-- `./data` exports the pure path functions of the [artifact path contract](./mokly-artifact-paths.md) with no React dependency, and `./styles.css` is the scoped stylesheet of an embedded root.
+- `./data` exports, with no React dependency, the pure path functions and directory names of the [artifact path contract](./mokly-artifact-paths.md), the path grammar of the [path contract](./mokly-paths.md), and the prop schema validators of the [entry props contract](./mokly-entry-props.md#prop-schema-profile); `./styles.css` is the scoped stylesheet of an embedded root.
 
 Every delivery renders the shell from data in the browser.
 
@@ -364,7 +364,7 @@ Shell state is one store scoped to a mounted viewer:
 - **Data** is the installed index and the details the shell holds for the
   page's lifetime. In Serve the standalone shell follows the event stream of
   the shell delivery contract: a publication raises `revision`, the shell
-  fetches the index and the current entry's detail, adopts them in one store
+  fetches the index and the current route's details, adopts them in one store
   commit, updates the navigation, Changes marks, Usage and Details in place,
   and reloads only the mounted frames whose `documentKey` changed; only a
   message from another server process reloads the page. A React host supplies newer data by replacing `index`.

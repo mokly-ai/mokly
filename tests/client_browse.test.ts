@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../packages/viewer/dist/catalogue/scoped_types.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { eligibleShellAnchor } from "../packages/viewer/dist/shell/store_browser_routes.js";
-import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
 import {
@@ -143,51 +142,22 @@ test("shell link interception leaves native and external activations alone", () 
     );
 });
 
-test("recovery restores dark only when the catalogue supplies dark views", () => {
+test("a stored dark preference applies only when the catalogue supplies dark views", () => {
   assert.equal(
     fixtureShellState({
-      initial: { recovery: recovery({ colorScheme: "dark" }) },
+      initial: { colorScheme: "dark" },
       model: darkCatalogue(),
     }).selection.colorScheme,
     "dark",
   );
   assert.equal(
-    fixtureShellState({
-      initial: { recovery: recovery({ colorScheme: "dark" }) },
-    }).selection.colorScheme,
+    fixtureShellState({ initial: { colorScheme: "dark" } }).selection
+      .colorScheme,
     "light",
   );
 });
 
-test("recovery restores viewport, details, drawer, and scroll state", () => {
-  const state = fixtureShellState({
-    initial: {
-      recovery: recovery({
-        detailsOpen: true,
-        drawerOpen: true,
-        navScroll: 12,
-        regionScrolls: { stage: 42 },
-        viewport: "mobile",
-      }),
-    },
-  });
-  assert.equal(state.detailsOpen, true);
-  assert.equal(state.drawerOpen, true);
-  assert.equal(state.navScroll, 12);
-  assert.deepEqual(state.regionScrolls, { stage: 42 });
-  assert.equal(state.selection.viewport, "mobile");
-});
-
-test("recovery parses its tag query into the selected chips", () => {
-  const state = fixtureShellState({
-    initial: { recovery: recovery({ query: "tag:forms" }) },
-  });
-  assert.equal(state.query, "tag:forms");
-  assert.equal(state.selection.search, "");
-  assert.deepEqual(state.selection.tags, ["forms"]);
-});
-
-test("recovery matches current disclosure keys and ignores earlier forms of their paths", () => {
+test("stored disclosures match current keys and ignore earlier forms of their paths", () => {
   const stored = {
     "/product": true,
     "collection:product": true,
@@ -199,22 +169,15 @@ test("recovery matches current disclosure keys and ignores earlier forms of thei
   };
   const state = fixtureShellState({
     href: "https://example.test/",
-    initial: {
-      recovery: recovery({
-        disclosures: stored,
-        filterBaselineDisclosures: stored,
-      }),
-    },
+    initial: { disclosures: stored },
   });
   assert.equal(state.disclosures["folder:specs:product"], false);
   assert.equal(state.disclosures["folder:components:components"], true);
-  assert.equal(state.filterBaseline?.["folder:specs:product"], false);
-  assert.equal(state.filterBaseline?.["folder:components:components"], true);
   for (const key of ["/product", "folder:pages:product", "/components"])
     assert.equal(Object.hasOwn(state.disclosures, key), false, key);
 });
 
-function darkCatalogue(): CatalogueReadModel {
+function darkCatalogue(): ShellCatalogueReadModel {
   const model = catalogueModel();
   const screen = model.screens[0]!;
   return {
@@ -231,24 +194,6 @@ function darkCatalogue(): CatalogueReadModel {
           }
         : entry,
     ),
-  };
-}
-
-function recovery(
-  overrides: Partial<ShellRecoverySnapshot> = {},
-): ShellRecoverySnapshot {
-  return {
-    disclosures: {},
-    colorScheme: "light",
-    detailsOpen: false,
-    drawerOpen: false,
-    filterBaselineDisclosures: null,
-    navScroll: 0,
-    query: "",
-    regionScrolls: {},
-    view: "all",
-    viewport: "both",
-    ...overrides,
   };
 }
 

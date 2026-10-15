@@ -4,16 +4,13 @@ import type {
   ComponentInstanceRecord,
   ComponentSlotRecord,
   ComponentViewRecord,
-  ManifestComponent,
+  ComponentSchemaRecord,
 } from "./manifest_types.js";
 
 /** Input ownership and physical range placement have separate validated graphs. */
 export function validateViewReferences(
   view: ComponentViewRecord,
-  components: ReadonlyMap<
-    string,
-    Pick<ManifestComponent, "propSchema" | "slots">
-  >,
+  components: ReadonlyMap<string, ComponentSchemaRecord>,
   instances: ReadonlyMap<string, ComponentInstanceRecord>,
   slots: ReadonlyMap<string, ComponentSlotRecord>,
   at: string,

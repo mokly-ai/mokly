@@ -78,7 +78,7 @@ Each completed action publishes one state under the
 [shell delivery contract](./mokly-shell-delivery.md#updates-in-serve):
 `revision` rises by one, the index and every detail are replaced together,
 and the event stream carries the revision as the message id. The shell
-refetches the index and the current entry's detail, updates the navigation,
+refetches the index and the current route's details, updates the navigation,
 the Changes marks, Usage, and the details panel in place, and reloads only
 the mounted frames whose `documentKey` changed. Only a message from another
 server process reloads the page; browser state such as search, filter,

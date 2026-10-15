@@ -1,4 +1,4 @@
-/** Comparison metadata requests shared by the hydrated shell controller. */
+/** Comparison metadata requests shared by the shell's comparison controller. */
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { parseReviewResult } from "../review/result_validation.js";
