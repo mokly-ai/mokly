@@ -23,7 +23,8 @@ interface ComponentNavigationDefinition {
 /**
  * Action and Toolbar mirror the real example registrations. Help hint and Badge
  * are synthetic component-explorer fixtures with the saved Default state their
- * mockups depict.
+ * mockups depict. A variant row links to the artboard that shows that variant,
+ * as the variant bar does; the parent row opens the parent's own page.
  */
 export const COMPONENT_NAVIGATION = {
   action: {
@@ -33,7 +34,7 @@ export const COMPONENT_NAVIGATION = {
       {
         id: "example/components/action/default",
         title: "Default",
-        to: COMPONENT_PAGES.default,
+        to: COMPONENT_PAGES.affected,
       },
       {
         id: "example/components/action/disabled",
@@ -46,26 +47,18 @@ export const COMPONENT_NAVIGATION = {
   toolbar: {
     id: "example/components/toolbar",
     title: "Toolbar",
-    variants: [
-      {
-        id: "example/components/toolbar/default",
-        title: "Default",
-        to: COMPONENT_PAGES.toolbar,
-      },
-    ],
+    variants: [{ id: "example/components/toolbar/default", title: "Default" }],
   },
   "help-hint": {
     id: "help-hint",
     title: "Help hint",
-    variants: [
-      { id: "help-hint-default", title: "Default", to: COMPONENT_PAGES.hidden },
-    ],
+    variants: [{ id: "help-hint-default", title: "Default" }],
   },
   badge: {
     id: "badge",
     title: "Badge",
     variants: [
-      { id: "badge-default", title: "Default", to: COMPONENT_PAGES.unused },
+      { id: "badge-default", title: "Default", to: COMPONENT_PAGES.added },
     ],
   },
   checklist: {

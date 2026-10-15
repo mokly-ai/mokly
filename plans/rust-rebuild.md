@@ -797,10 +797,20 @@ renders again.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
-- [ ] Update commands and test names in `examples/basic/README.md` and
+  - [x] Port the React example, the React components, and the design
+        catalogue to the authoring API.
+  - [ ] Render both catalogues through the integrated sidecar and check every
+        page at both viewports and in both schemes.
+  - [ ] Add the packed consumer smoke.
+  - [ ] Run the gap sweep against the old rendering and component contracts.
+- [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
 - [ ] Restore the example typecheck; validate or replace the viewer browser
       fixtures, including their component paths and cross-origin setup.
+  - [x] Restore the example typecheck: the root typecheck includes the
+        example.
+  - [ ] Validate or replace the viewer browser fixtures, including their
+        component paths and cross-origin setup.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -811,7 +821,7 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
-- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+- [x] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,
       the stage loading state, the index failure state, the version failure
@@ -829,6 +839,7 @@ and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
 decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 `.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 
 - [ ] Commit.
 
@@ -1015,11 +1026,11 @@ Publish client final review and merge decisions:
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
     `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
     user.
-  - Milestone 5: decide whether `{{ name }}` with inner spaces is a
-    substitution. Prettier formats `*.component.html` files as Angular
-    templates and writes that form; `.prettierrc.json` formats them as HTML.
-  - Milestone 5: decide whether the example keeps its `watch.rules` reload
-    rule, which repeats the package-owned stylesheet classification.
+  - Milestone 5: `{{ name }}` with inner spaces settled by Decision 39 on
+    2026-10-15. `.prettierrc.json` stays: Prettier's Angular parser rewrites
+    `{{open-seats}}` to `{{ open - seats }}` and stops on a literal `{`.
+  - Milestone 5: settled on 2026-10-15; the example drops its `watch.rules`
+    reload rule, which had no effect.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

@@ -1,7 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { controlsDesignMetadata } from "../../../metadata.js";
-import { artboards } from "../../../parts/artboards.js";
+import { artboards, artboardStates } from "../../../parts/artboards.js";
 import { ControlsPage } from "../parts/page.js";
 
 export function PendingControlsDesktop() {
@@ -9,6 +9,18 @@ export function PendingControlsDesktop() {
 }
 export function PendingControlsMobile() {
   return <ControlsPage state="pending" viewport="mobile" />;
+}
+export function PreparingControlsDesktop() {
+  return <ControlsPage state="preparing" viewport="desktop" />;
+}
+export function PreparingControlsMobile() {
+  return <ControlsPage state="preparing" viewport="mobile" />;
+}
+export function PreparingFailedControlsDesktop() {
+  return <ControlsPage state="preparing-failed" viewport="desktop" />;
+}
+export function PreparingFailedControlsMobile() {
+  return <ControlsPage state="preparing-failed" viewport="mobile" />;
 }
 export function InvalidControlsDesktop() {
   return <ControlsPage state="invalid" viewport="desktop" />;
@@ -40,6 +52,32 @@ export const pendingScreen = defineScreen({
     desktop: <PendingControlsDesktop />,
     mobile: <PendingControlsMobile />,
   }),
+});
+export const preparingScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "preparing",
+  title: "Preparing to edit",
+  description:
+    "Local Serve shows the saved props while editing starts; the fields wait until they can update the preview.",
+  colorSchemes: ["light"],
+  ...artboardStates(
+    {
+      state: "preparing",
+      title: "Preparing to edit",
+      desktop: <PreparingControlsDesktop />,
+      mobile: <PreparingControlsMobile />,
+    },
+    [
+      {
+        slug: "failed",
+        title: "Editing could not start",
+        description:
+          "The saved props stay visible and read-only; Try again prepares editing once more.",
+        desktop: <PreparingFailedControlsDesktop />,
+        mobile: <PreparingFailedControlsMobile />,
+      },
+    ],
+  ),
 });
 export const invalidScreen = defineScreen({
   ...controlsDesignMetadata,

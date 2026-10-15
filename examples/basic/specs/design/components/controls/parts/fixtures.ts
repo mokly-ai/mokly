@@ -11,6 +11,8 @@ export type ControlsState =
   | "variant"
   | "reset"
   | "pending"
+  | "preparing"
+  | "preparing-failed"
   | "invalid"
   | "error"
   | "comparison"
@@ -48,6 +50,18 @@ export const controlsFixtures: Record<ControlsState, ControlsFixture> = {
   },
   reset: { variant: "default", draft: saved, preview: saved, edited: false },
   pending: { variant: "default", draft: edited, preview: saved, edited: true },
+  preparing: {
+    variant: "default",
+    draft: saved,
+    preview: saved,
+    edited: false,
+  },
+  "preparing-failed": {
+    variant: "default",
+    draft: saved,
+    preview: saved,
+    edited: false,
+  },
   invalid: {
     variant: "default",
     draft: { ...saved, cornerRadius: 40 },

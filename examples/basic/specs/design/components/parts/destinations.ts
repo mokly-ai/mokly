@@ -40,6 +40,7 @@ export const INSPECTION_PAGES = {
   unavailable: "design/components/states/unavailable",
   "inspection-loading": "design/components/states/loading/inspection-loading",
   "removed-consumer": "design/components/states/removed-consumer",
+  "screen-props": "design/components/controls/editing/screen",
 } as const satisfies Record<ScreenPageState, string>;
 
 export const CONTROLS_PAGES = {
@@ -49,6 +50,8 @@ export const CONTROLS_PAGES = {
   variant: "design/components/controls/editing/variant",
   reset: "design/components/controls/editing/reset",
   pending: "design/components/controls/states/pending",
+  preparing: "design/components/controls/states/preparing",
+  "preparing-failed": "design/components/controls/states/preparing/failed",
   invalid: "design/components/controls/states/invalid",
   error: "design/components/controls/states/error",
   comparison: "design/components/controls/states/comparison",

@@ -23,6 +23,8 @@ export const COMPONENT_NAVIGATION_STATES = {
   [CONTROLS_PAGES["variant"]]: {},
   [CONTROLS_PAGES["reset"]]: {},
   [CONTROLS_PAGES["pending"]]: {},
+  [CONTROLS_PAGES["preparing"]]: {},
+  [CONTROLS_PAGES["preparing-failed"]]: {},
   [CONTROLS_PAGES["invalid"]]: {},
   [CONTROLS_PAGES["error"]]: {},
   [CONTROLS_PAGES["comparison"]]: {},
@@ -58,4 +60,5 @@ export const COMPONENT_NAVIGATION_STATES = {
   [INSPECTION_PAGES["inspection-loading"]]: {},
   [INSPECTION_PAGES["removed-consumer"]]: {},
   [INSPECTION_PAGES["style-outside"]]: {},
+  [INSPECTION_PAGES["screen-props"]]: {},
 } satisfies Record<ComponentDesignDestination, NavigationState>;

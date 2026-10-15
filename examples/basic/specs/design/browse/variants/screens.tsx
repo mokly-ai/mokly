@@ -1,3 +1,5 @@
+import type { ComponentProps } from "react";
+
 import { MockLink, defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
@@ -20,6 +22,7 @@ import {
   type ChangedView,
   type Crumb,
 } from "../../parts/shell.js";
+import type { ScreenSubject } from "../../parts/subjects.js";
 import {
   CHANGED_VARIANT_ROWS,
   CHANGED_VIEW_ROWS,
@@ -100,10 +103,21 @@ function ChangedVariant({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
+/** A removed variant under the parent it had, with its previous render. */
+function RemovedVariant({
+  design,
+  nodes,
+  subject,
+  viewport,
+}: {
+  design: ComponentProps<typeof Shell>["design"];
+  nodes: ComponentProps<typeof NavTree>["nodes"];
+  subject: ScreenSubject;
+  viewport: ArtboardViewport;
+}) {
   return (
     <Shell
-      design={DESTINATIONS.variantRemoved}
+      design={design}
       viewport={viewport}
       nav={
         viewport === "desktop" ? (
@@ -111,7 +125,7 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
             activeLabel="Save failed · Removed"
             changedCount={1}
             changedOnly
-            nodes={REMOVED_VARIANT_ROWS}
+            nodes={nodes}
           />
         ) : null
       }
@@ -126,9 +140,7 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
       <PreviousVersionLabel />
       <PreviewWorkspace
         viewport={viewport}
-        inspector={
-          <DetailsPanel comparisonEvidence open subject="welcomeError" />
-        }
+        inspector={<DetailsPanel comparisonEvidence open subject={subject} />}
         render={(previewViewport) => (
           <RemovedView
             address="example.test/welcome"
@@ -143,56 +155,16 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-function ReparentedRemovedVariant({
-  viewport,
-}: {
-  viewport: ArtboardViewport;
-}) {
-  return (
-    <Shell
-      design={DESTINATIONS.variantReparented}
-      viewport={viewport}
-      nav={
-        viewport === "desktop" ? (
-          <NavTree
-            activeLabel="Save failed · Removed"
-            changedCount={1}
-            changedOnly
-            nodes={REPARENTED_REMOVED_VARIANT_ROWS}
-          />
-        ) : null
-      }
-    >
-      <ScreenHead
-        action={<ViewSwitch active={viewport} />}
-        crumbs={VARIANT_CRUMBS}
-        path={ENTRY_PATHS.welcomeError}
-        status="removed"
-        title="Save failed"
-      />
-      <PreviousVersionLabel />
-      <PreviewWorkspace
-        viewport={viewport}
-        inspector={
-          <DetailsPanel
-            comparisonEvidence
-            open
-            subject="welcomeErrorReparented"
-          />
-        }
-        render={(previewViewport) => (
-          <RemovedView
-            address="example.test/welcome"
-            compact={viewport === "mobile"}
-            viewport={previewViewport}
-          >
-            <MiniSaveFailed compact={previewViewport === "mobile"} />
-          </RemovedView>
-        )}
-      />
-    </Shell>
-  );
-}
+const removed = {
+  design: DESTINATIONS.variantRemoved,
+  nodes: REMOVED_VARIANT_ROWS,
+  subject: "welcomeError",
+} as const;
+const reparented = {
+  design: DESTINATIONS.variantReparented,
+  nodes: REPARENTED_REMOVED_VARIANT_ROWS,
+  subject: "welcomeErrorReparented",
+} as const;
 
 function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
   return (
@@ -267,8 +239,8 @@ export const variantRemovedScreen = defineScreen({
   description:
     "A deleted variant retained as a Removed row under its surviving parent.",
   ...artboards({
-    desktop: <RemovedVariant viewport="desktop" />,
-    mobile: <RemovedVariant viewport="mobile" />,
+    desktop: <RemovedVariant {...removed} viewport="desktop" />,
+    mobile: <RemovedVariant {...removed} viewport="mobile" />,
   }),
   slug: "variant-removed",
   rationale:
@@ -281,8 +253,8 @@ export const variantReparentedScreen = defineScreen({
   description:
     "A removed variant kept as a flat Changes row because its former parent is now another screen's variant.",
   ...artboards({
-    desktop: <ReparentedRemovedVariant viewport="desktop" />,
-    mobile: <ReparentedRemovedVariant viewport="mobile" />,
+    desktop: <RemovedVariant {...reparented} viewport="desktop" />,
+    mobile: <RemovedVariant {...reparented} viewport="mobile" />,
   }),
   slug: "variant-reparented",
   rationale:

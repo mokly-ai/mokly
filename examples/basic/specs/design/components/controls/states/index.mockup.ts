@@ -1,5 +1,6 @@
 export {
   pendingScreen,
+  preparingScreen,
   invalidScreen,
   errorScreen,
   comparisonScreen,

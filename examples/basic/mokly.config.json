@@ -142,29 +142,5 @@
       "match": "**/*.html",
       "stylesheets": ["styles.css"]
     }
-  ],
-  "watch": {
-    "rules": [
-      {
-        "action": "reload",
-        "paths": [
-          "examples/basic/design-library.css",
-          "examples/basic/design-components.css",
-          "examples/basic/design-component-inspection.css",
-          "examples/basic/design-component-details.css",
-          "examples/basic/design-component-inspector.css",
-          "examples/basic/design-component-controls.css",
-          "examples/basic/design-component-workspace.css",
-          "examples/basic/design-component-view.css",
-          "examples/basic/design-review.css",
-          "examples/basic/design-review-scroll.css",
-          "examples/basic/design-documents.css",
-          "examples/basic/design-stage.css",
-          "examples/basic/design.css",
-          "examples/basic/styles.css",
-          "examples/basic/example-components.css"
-        ]
-      }
-    ]
-  }
+  ]
 }

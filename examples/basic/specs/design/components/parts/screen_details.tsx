@@ -1,5 +1,7 @@
 import { MockLink } from "@mokly/mokly";
 
+import { ScreenControls } from "../controls/parts/screen_controls.js";
+
 import { ComparisonDetails } from "./comparison_details.js";
 import { screenComparison } from "./comparison_fixtures.js";
 import { welcomeInstances } from "./fixtures.js";
@@ -135,6 +137,8 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
                         ? "Props are unavailable for this screen."
                         : "Select a component to see its supplied props."}
                   </p>
+                ) : state === "screen-props" ? (
+                  <ScreenControls />
                 ) : (
                   <InstanceDetails state={state} />
                 ),

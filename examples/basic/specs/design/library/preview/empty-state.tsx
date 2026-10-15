@@ -2,20 +2,20 @@ import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
-import { destination, text, type LibraryProps } from "../schemas.js";
+import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
 import { EmptyStateView } from "./empty-state.view.js";
 
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "body"],
   properties: {
     title: text,
     body: text,
     code: text,
     actionLabel: text,
     destination,
+    busy: flag,
   },
 } as const;
 export type EmptyStateProps = LibraryProps<typeof propSchema>;
@@ -37,6 +37,7 @@ export const emptyState = defineComponent({
   controls: {
     title: { kind: "text", label: "Title" },
     body: { kind: "text", label: "Description" },
+    busy: { kind: "boolean", label: "Loading" },
     actionLabel: { kind: "text", label: "Action label" },
   },
   render: EmptyStateView,

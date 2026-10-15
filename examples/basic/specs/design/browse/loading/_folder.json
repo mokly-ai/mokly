@@ -1,0 +1,9 @@
+{
+  "title": "Loading and recovery",
+  "order": [
+    "catalogue-loading",
+    "catalogue-failed",
+    "viewer-version",
+    "preview-loading"
+  ]
+}

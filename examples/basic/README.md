@@ -81,26 +81,38 @@ links `workspace.css`, the tokens and screen layout, and
 `workspace-components.css`, the component styles, into every view. It adds
 `workspace-dark.css`, the dark tokens, to the dark views.
 
-Prettier formats `*.component.html` files as Angular templates by default,
-which rewrites `{{name}}` to `{{ name }}`. The repository's
-[`.prettierrc.json`](../../.prettierrc.json) formats them as plain HTML.
+`{{ name }}` with spaces inside the braces is the same substitution as
+`{{name}}`. Prettier formats `*.component.html` files as Angular templates by
+default. The Angular parser reads a substitution as an expression, so it
+rewrites a prop with a hyphen, such as `{{open-seats}}`, to
+`{{ open - seats }}`, which is no longer a prop path. It also stops on a
+literal `{` in text. The repository's
+[`.prettierrc.json`](../../.prettierrc.json) formats these files as plain
+HTML, which keeps every substitution as written.
 
 ## The React example
 
-The Welcome and Details screens use `@firna/ui` controls. Welcome has an
-`empty` variant, a Review-ignore region around its navigation, and a small
-`WorkspaceNote`. Both screens link to each other with `MockLink`, and their
-Firna buttons use `MockLink asChild`. `getting-started` is a `definePage`
-handbook that `specs/document.tsx` renders, and `tour` is a use case through
-both screens. `specs/example/workspace-guide.md` is a document with the
-`workspace.svg` image.
+The Welcome and Details screens use `@firna/ui` controls. Welcome declares
+one boolean prop, `empty`, with the title **Empty workspace**, and its `empty`
+variant sets it. Welcome has a Review-ignore region around its navigation and
+a small `WorkspaceNote`. Both screens read the viewport from the render
+context and use the compact layout on mobile. Both screens link to each other
+with `MockLink`, and their Firna buttons use `MockLink asChild`.
+`getting-started` is a `definePage` handbook that `specs/document.tsx`
+renders, and `tour` is a use case through both screens.
+`specs/example/workspace-guide.md` is a document with the `workspace.svg`
+image.
 
 `Action` and `Toolbar` under `src/components/` are React components. Each
-directory holds the plain component, its `defineComponent` registration, and
-the entry module that exports it. Action has `default`, `disabled`, and
-`secondary` variants and live controls. Toolbar composes two Action instances
-and takes caller content in its `children` slot. Both declare
-`example-components.css`.
+directory holds the plain component, its `defineComponent` definition in
+`*.mokly.tsx`, and the entry module `*.mockup.tsx`, which re-exports the
+definition. A definition declares a JSON prop schema, its own props, and its
+variants as props sets. A variant's props replace the own props key by key,
+so the own props hold only the keys that every variant sets. Action has
+`default`, `disabled`, and `secondary` variants and live controls. Toolbar
+composes two Action instances and takes caller content in its `children`
+slot; its variant fills the slot. Both declare `example-components.css`. No
+HTML file uses them, so neither declares an `element` name.
 
 `WorkspaceNote` combines a CSS Module, a stylesheet that references
 `examples/imported-assets/workspace-note-signal.png` outside the catalogue
@@ -113,9 +125,13 @@ data instead.
 
 `renderer.tsx` is the reference
 [renderer module](../../docs/protocol/mokly-rendering.md#renderer-module) for a
-React Native Web component library. It wraps every React render in the
-`@firna/ui` theme for the view's colour scheme, with the tokens in `theme.ts`,
-and collects React Native Web's styles. The `moduleResolution` settings give
+React Native Web component library. It returns the entry's React node inside
+the `@firna/ui` theme for the view's colour scheme, with the tokens in
+`theme.ts`. A `<style>` element sets the body colours for plain HTML. The
+sidecar collects that element and React Native Web's styles, and the Rust
+core writes the document head. The renderer also places each design library
+component in `LibraryHost`, which gives the standalone sample its frame. The
+`moduleResolution` settings give
 the bundle the `react-native-web` alias, the `react-native` conditions and
 fields, the `.web.*` extensions, and the JSX loader for `.js` files. A
 consumer that renders plain React DOM needs none of these settings.
@@ -130,6 +146,17 @@ component's own styles live in `design-library/`, and the shared, layout, and
 global design styles stay in the `design*.css` files. The configured rules
 link those styles by route, and `$componentStylesheets` marks where each
 document links the styles that its rendered components declare.
+
+Each design screen is one `defineScreen` definition per export, and each
+folder's `index.mockup.ts` re-exports the definitions from its helper
+modules. A design screen draws a separate artboard for each viewport:
+`artboards()` in `specs/design/parts/artboards.ts` selects the artboard from
+the render context's viewport. `artboardStates()` makes one screen whose
+variants show other states: a `state` prop names the state, and each variant
+sets it. `specs/design/browse/loading/` shows the shell before the catalogue
+arrives, its failure and version states, and the stage while a preview
+loads. `specs/design/components/controls/parts/copy.ts` holds the settled
+copy of the Props tab's controls.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),
@@ -157,9 +184,6 @@ paths resolve from the file:
   the CSS transform.
 - `stylesheets` lists route rules in order. The first rule that matches an
   entry route applies to all of its views.
-- `watch` adds a `reload` rule for the example's stylesheets. Serve
-  classifies configured and declared stylesheets itself, and that
-  classification takes precedence over the rule.
 - `repoRoot` is the repository root, two directories up.
 - `$schema` names the editor schema that `@mokly/mokly` ships.
 

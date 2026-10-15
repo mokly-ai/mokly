@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { controlsDesignMetadata } from "../../../metadata.js";
 import { artboards } from "../../../parts/artboards.js";
+import { ScreenPage } from "../../parts/screen_page.js";
 import { ControlsPage } from "../parts/page.js";
 
 export function EditedControlsDesktop() {
@@ -75,5 +76,17 @@ export const resetScreen = defineScreen({
   ...artboards({
     desktop: <ResetControlsDesktop />,
     mobile: <ResetControlsMobile />,
+  }),
+});
+export const screenPropsScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "screen",
+  title: "Screen props",
+  description:
+    "With no component selected, a screen's Props tab edits the screen's own props.",
+  colorSchemes: ["light"],
+  ...artboards({
+    desktop: <ScreenPage state="screen-props" viewport="desktop" />,
+    mobile: <ScreenPage state="screen-props" viewport="mobile" />,
   }),
 });

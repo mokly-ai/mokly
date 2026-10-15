@@ -41,7 +41,7 @@ export function EmptyState({
   title,
   to,
 }: {
-  body: string;
+  body?: string;
   code?: string;
   linkLabel?: string;
   title: string;
@@ -50,11 +50,22 @@ export function EmptyState({
   return (
     <emptyState.Component
       moklyInstance={useDesignInstance("empty")}
-      body={body}
       title={title}
       destination={to}
+      {...optional("body", body)}
       {...optional("actionLabel", linkLabel)}
       {...optional("code", code)}
+    />
+  );
+}
+
+/** A loading stage or page: one busy status line, as the viewer shows it. */
+export function LoadingState({ status }: { status: string }) {
+  return (
+    <emptyState.Component
+      moklyInstance={useDesignInstance("loading")}
+      body={status}
+      busy
     />
   );
 }
