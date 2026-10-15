@@ -228,3 +228,24 @@ fn failed_parents_keep_variant_slug_checks_without_checking_child_props() {
     assert_eq!(errors[0].code.as_str(), "html-attribute");
     assert_eq!(errors[1].code.as_str(), "duplicate-path");
 }
+
+#[test]
+fn a_case_colliding_leaf_with_a_variant_and_child_reports_once() {
+    fixtures::check("case-collision-with-variant");
+}
+
+#[test]
+fn a_failed_slot_declaration_does_not_blame_a_valid_consumer() {
+    fixtures::check("failed-component-slots");
+}
+
+#[test]
+fn screen_and_component_references_accept_optional_ascii_whitespace() {
+    fixtures::check("spaced-screen-references");
+    fixtures::check("spaced-component-references");
+}
+
+#[test]
+fn spaced_missing_references_report_the_trimmed_name_at_the_opening_braces() {
+    fixtures::check("spaced-undeclared-reference");
+}

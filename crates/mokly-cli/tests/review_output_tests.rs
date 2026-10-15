@@ -92,3 +92,50 @@ fn config_errors_have_one_code_and_a_repository_relative_location() {
     let text = failure(directory.path(), "nope.json", "plain");
     assert_eq!(text, "[mokly/config-invalid] nope.json: ENOENT\n");
 }
+
+#[test]
+fn configurations_outside_their_repo_root_use_the_basename() {
+    let directory = TempDir::new().unwrap();
+    write(
+        directory.path(),
+        "tools/mokly.config.json",
+        "{\n  \"repoRoot\": \"../app\",\n  \"colourSchemes\": []\n}",
+    );
+    fs::create_dir(directory.path().join("app")).unwrap();
+    for mode in ["plain", "rich"] {
+        let text = failure(directory.path(), "tools/mokly.config.json", mode);
+        assert!(
+            !text.contains(&directory.path().display().to_string()),
+            "{text}"
+        );
+        assert!(
+            text.contains("mokly.config.json:3:3 unknown configuration field: colourSchemes"),
+            "{text}"
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn configurations_reached_through_a_directory_symlink_keep_relative_locations() {
+    let directory = TempDir::new().unwrap();
+    write(
+        directory.path(),
+        "real/mokly.config.json",
+        "{\n  \"repoRoot\": \".\",\n  \"colourSchemes\": []\n}",
+    );
+    std::os::unix::fs::symlink("real", directory.path().join("link")).unwrap();
+    for config in ["real/mokly.config.json", "link/mokly.config.json"] {
+        for mode in ["plain", "rich"] {
+            let text = failure(directory.path(), config, mode);
+            assert!(
+                !text.contains(&directory.path().display().to_string()),
+                "{text}"
+            );
+            assert!(
+                text.contains("mokly.config.json:3:3 unknown configuration field: colourSchemes"),
+                "{text}"
+            );
+        }
+    }
+}

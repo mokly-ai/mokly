@@ -74,6 +74,10 @@ this same template language with the component's own props and adds slot
 placeholders under the [HTML components contract](./mokly-html-components.md#body);
 one parser and one renderer serve both.
 
+Substitutions accept optional ASCII whitespace around the prop path inside
+the braces: `{{ name }}` equals `{{name}}`, including in attribute values.
+Whitespace inside a dotted path is not allowed.
+
 A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
 JavaScript component registered with `element`, which the sidecar's `describe`

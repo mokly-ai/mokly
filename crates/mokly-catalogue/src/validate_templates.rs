@@ -36,6 +36,7 @@ pub(crate) fn validate(prepared: &mut PreparedCatalogue, failed: &BTreeSet<Strin
                 schema,
                 slots,
                 &prepared.elements,
+                failed,
             );
             issues.extend(result.issues);
             prepared.warnings.extend(result.warnings);

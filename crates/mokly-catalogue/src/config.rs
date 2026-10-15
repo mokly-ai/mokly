@@ -77,12 +77,19 @@ impl ConfigLoader for Loader {
                     .map(str::to_owned)
             });
         let lexical_root = normalize(
-            &file
+            &lexical_file
                 .parent()
                 .unwrap_or(cwd)
                 .join(declared_root.as_deref().unwrap_or(".")),
         );
-        let display = relative(&lexical_file, &lexical_root);
+        let display = if lexical_file.starts_with(&lexical_root) {
+            relative(&lexical_file, &lexical_root)
+        } else {
+            lexical_file.file_name().map_or_else(
+                || "mokly.config.json".into(),
+                |name| name.to_string_lossy().into_owned(),
+            )
+        };
         let input = parse(&text, &display)?;
         let directory = file.parent().unwrap_or(cwd);
         let repository = normalize(&directory.join(input.repo_root.as_deref().unwrap_or(".")));

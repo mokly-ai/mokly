@@ -30,8 +30,10 @@ recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust core. The binary owns catalogue work and
 file writes. Catalogue counts include variants. Shared-body warnings name
 the parent once. Identity diagnostics keep their location continuation
-lines in both plain and rich output. Configuration errors use one code tag
-and repository-relative source locations.
+lines in both plain and rich output. A diagnostic omits its inner code tag
+only when it equals the command's outer code. Configuration locations are
+repository-relative, or use the basename when the root does not contain
+the configuration file.
 
 ## Quick Start
 

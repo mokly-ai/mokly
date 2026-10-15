@@ -113,8 +113,8 @@ interactive stdin. Serve then reports its lifecycle boundaries:
 ```
 
 Catalogue counts come from the catalogue model; zero-valued kinds are omitted.
-Unavailable Changes says `! Changes unavailable` with its reason and keeps
 Catalogue counts include saved variants as entries of their parent's kind.
+Unavailable Changes says `! Changes unavailable` with its reason and keeps
 All browsable. Serve reports each state's
 [build warnings](./mokly-build-warnings.md) immediately before
 `Catalogue ready`; on-demand renders never repeat them, and the

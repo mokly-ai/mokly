@@ -39,9 +39,11 @@ fragments, the element registry, warnings, and the source inventory. It calls
 adapter supplies definitions through that boundary. `DeferredDefinitions`
 leaves those files in `deferred_modules` without evaluating them.
 
-A failed semantic definition stays in the preparation pass for path and
-relationship checks. Variant shape checks still run. Props and slots are
-checked against a parent only when that parent is valid. Shared HTML bodies
+A failed semantic definition stays in the preparation pass for path checks
+and as a relationship target. Its own body, link, and flow-target checks run
+once it is valid. Variant shape checks still run. Props and slots are
+checked against a parent only when that parent is valid. Consumer slot
+checks also wait for valid component declarations. Shared HTML bodies
 are checked once, and their warnings name the parent. `Inventory::default()`
 provides an empty inventory for injected adapters and tests.
 

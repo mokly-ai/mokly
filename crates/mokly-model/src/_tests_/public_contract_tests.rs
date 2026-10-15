@@ -1,9 +1,12 @@
 //! Public kind fixtures and structural rules for historical records and details.
 
+use std::fmt::Debug;
+
 use serde_json::{Value, json};
 
+use crate::read_contract::ContractViolation;
 use crate::readers::public_reader_tests::{empty_index, metadata, screen};
-use crate::readers::{detail, index};
+use crate::readers::{ReadError, detail, index};
 
 fn page(path: &str) -> Value {
     let mut value = metadata(path);
@@ -23,6 +26,14 @@ fn generation_url() -> String {
         "mokly-viewer/diffs/generations/{}/review.json",
         "c".repeat(64)
     )
+}
+
+fn expect_contract<T: Debug>(result: Result<T, ReadError>, expected: ContractViolation) {
+    let error = result.unwrap_err();
+    let ReadError::Contract { message, .. } = error else {
+        panic!("{error:?}")
+    };
+    assert_eq!(message, expected);
 }
 
 #[test]
@@ -65,12 +76,32 @@ fn invalid_removed_records_and_generation_urls_are_rejected() {
     good["comparisonUrl"] = json!(generation_url());
     assert!(index(&good.to_string()).is_ok());
     let mut cases = Vec::new();
-    for (pointer, replacement) in [
-        ("/comparisonUrl", json!("not/a/generation/url")),
-        ("/removedEntries/0/entry/previousPath", json!("earlier")),
-        ("/removedEntries/0/parentTitle", json!("Parent")),
-        ("/removedEntries/0/snapshotId", json!("not-a-hash")),
-        ("/removedEntries/0/entry/changes/kind", json!("changed")),
+    for (pointer, replacement, expected) in [
+        (
+            "/comparisonUrl",
+            json!("not/a/generation/url"),
+            ContractViolation::ComparisonUrl,
+        ),
+        (
+            "/removedEntries/0/entry/previousPath",
+            json!("earlier"),
+            ContractViolation::RemovedPreviousPath,
+        ),
+        (
+            "/removedEntries/0/parentTitle",
+            json!("Parent"),
+            ContractViolation::RemovedParentTitle,
+        ),
+        (
+            "/removedEntries/0/snapshotId",
+            json!("not-a-hash"),
+            ContractViolation::Snapshot,
+        ),
+        (
+            "/removedEntries/0/entry/changes/kind",
+            json!("changed"),
+            ContractViolation::RemovedChanges,
+        ),
     ] {
         let mut value = good.clone();
         if pointer.ends_with("previousPath") {
@@ -80,27 +111,27 @@ fn invalid_removed_records_and_generation_urls_are_rejected() {
         } else {
             *value.pointer_mut(pointer).unwrap() = replacement;
         }
-        cases.push(value);
+        cases.push((value, expected));
     }
     let mut value = good.clone();
     value["removedEntries"][0]
         .as_object_mut()
         .unwrap()
         .remove("snapshotId");
-    cases.push(value);
+    cases.push((value, ContractViolation::MissingSnapshot));
     let mut value = good.clone();
     value["removedEntries"]
         .as_array_mut()
         .unwrap()
         .push(removed());
-    cases.push(value);
+    cases.push((value, ContractViolation::DuplicateRemovedPath));
     let mut value = good.clone();
     let mut other = removed();
     other["entry"]["path"] = json!("other");
     value["removedEntries"].as_array_mut().unwrap().push(other);
-    cases.push(value);
-    for value in cases {
-        assert!(index(&value.to_string()).is_err(), "accepted {value}");
+    cases.push((value, ContractViolation::Snapshot));
+    for (value, expected) in cases {
+        expect_contract(index(&value.to_string()), expected);
     }
 }
 
@@ -111,7 +142,7 @@ fn current_entries_cannot_have_removed_aggregate_changes() {
     current["changes"] = json!({"status":"ready","kind":"removed","included":true});
     value["pages"] = json!([current]);
     value["tree"] = json!([{"kind":"entry","path":"about"}]);
-    assert!(index(&value.to_string()).is_err());
+    expect_contract(index(&value.to_string()), ContractViolation::CurrentRemoved);
 }
 
 #[test]
@@ -122,15 +153,29 @@ fn historical_variants_require_a_nonempty_parent_title() {
     value["comparisonUrl"] = json!(generation_url());
     value["removedEntries"] = json!([{"entry":variant,"parentTitle":"Former parent","folderTitles":[],"snapshotId":"d".repeat(64)}]);
     assert!(index(&value.to_string()).is_ok());
-    for title in [json!(""), json!("   "), json!(42)] {
+    for title in [json!(""), json!("   ")] {
         value["removedEntries"][0]["parentTitle"] = title;
-        assert!(index(&value.to_string()).is_err());
+        expect_contract(
+            index(&value.to_string()),
+            ContractViolation::RemovedParentTitle,
+        );
     }
+    value["removedEntries"][0]["parentTitle"] = json!(42);
+    assert!(matches!(
+        index(&value.to_string()),
+        Err(ReadError::Invalid {
+            boundary: "catalogue index",
+            ..
+        })
+    ));
     value["removedEntries"][0]
         .as_object_mut()
         .unwrap()
         .remove("parentTitle");
-    assert!(index(&value.to_string()).is_err());
+    expect_contract(
+        index(&value.to_string()),
+        ContractViolation::RemovedParentTitle,
+    );
     value["removedEntries"] = json!([removed()]);
     value["comparisonUrl"] = Value::Null;
     value["removedEntries"][0]
@@ -164,13 +209,16 @@ fn detail_views_usage_evidence_and_workspace_round_trip() {
     for kind in ["page", "document", "use-case"] {
         let mut invalid = value.clone();
         invalid["entry"]["kind"] = json!(kind);
-        assert!(detail(&invalid.to_string()).is_err(), "accepted {invalid}");
+        expect_contract(detail(&invalid.to_string()), ContractViolation::DetailKind);
         invalid["views"] = json!([]);
-        assert!(detail(&invalid.to_string()).is_err(), "accepted {invalid}");
+        expect_contract(detail(&invalid.to_string()), ContractViolation::DetailKind);
     }
     let mut invalid = value.clone();
     invalid["resourceEvidence"] = json!({"rules":[],"resources":[]});
-    assert!(detail(&invalid.to_string()).is_err());
+    expect_contract(
+        detail(&invalid.to_string()),
+        ContractViolation::DetailEvidence,
+    );
 }
 
 #[test]
@@ -178,7 +226,7 @@ fn usage_props_must_decode_as_canonical_plain_data() {
     let mut value = screen_detail();
     value["views"][0]["usage"]["instances"] = json!([{"key":"a".repeat(64),"id":"button", "componentId":"button",
         "owner":{"kind":"entry"},"order":0,"props":{"value":["number","1.0"]},"propsKey":"b".repeat(64)}]);
-    assert!(detail(&value.to_string()).is_err());
+    expect_contract(detail(&value.to_string()), ContractViolation::UsageProps);
     value["views"][0]["usage"]["instances"][0]["props"]["value"] = json!(["number", "1"]);
     assert!(detail(&value.to_string()).is_ok());
 }

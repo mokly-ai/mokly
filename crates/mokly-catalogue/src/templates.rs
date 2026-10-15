@@ -23,6 +23,7 @@ pub(crate) fn validate(
     schema: &PropSchema,
     slots: Option<&[String]>,
     registry: &ElementRegistry,
+    failed: &BTreeSet<String>,
 ) -> Validation {
     let mut checker = Checker {
         template,
@@ -30,6 +31,7 @@ pub(crate) fn validate(
         schema,
         slots,
         registry,
+        failed,
         used: BTreeSet::new(),
         stack: Vec::new(),
         result: Validation {
@@ -107,6 +109,7 @@ struct Checker<'a> {
     schema: &'a PropSchema,
     slots: Option<&'a [String]>,
     registry: &'a ElementRegistry,
+    failed: &'a BTreeSet<String>,
     used: BTreeSet<String>,
     stack: Vec<String>,
     result: Validation,
@@ -134,6 +137,7 @@ impl Checker<'_> {
     }
     fn slot_content(&mut self, name: &str, offset: usize) {
         if let Some(parent) = self.stack.last().and_then(|name| self.registry.get(name))
+            && !self.failed.contains(&parent.path)
             && !parent.slots.iter().any(|slot| slot == name)
         {
             self.fail(

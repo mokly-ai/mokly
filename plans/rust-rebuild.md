@@ -335,6 +335,11 @@ more than re-deriving the behaviour from the requirements.
     now. The guides wait for the user's decision on the guide tests, recorded
     under the review TODO as item E.
 
+39. Template spacing (2026-10-15): substitution accepts optional ASCII
+    whitespace around the prop path inside `{{ }}`. `{{ name }}` equals
+    `{{name}}` in text and attributes. The catalogue checker and HTML renderer
+    use the same rule.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -644,6 +649,7 @@ Evidence: `.context/rust-rebuild/sweeps/m4.md` and
 Integration evidence: `.context/rust-rebuild/delegation/m4/report-2.md` and
 `.context/rust-rebuild/delegation/m4/merge-decisions.md`.
 Review 1 fixes and evidence: `.context/rust-rebuild/delegation/m4/report-3.md`.
+Final fixes and evidence: `.context/rust-rebuild/delegation/m4/report-4.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 

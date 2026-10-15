@@ -158,9 +158,10 @@ Flow relationship failures use `invalid-metadata` with these exact texts:
 
 Attribution failures from the definition provider use the same code with
 `definition is not exported by a resolved entry module` or
-`definition source is not inventoried`. Invalid definitions stay present for
-relationship checks after their metadata and paths are resolved. A failed
-flow or screen does not cause a reciprocal-membership error in its peers.
+`definition source is not inventoried`. Invalid definitions stay present as
+relationship targets after their metadata and paths are resolved. Their own
+body, link, and flow-target checks run once the definitions are valid. A
+failed flow or screen does not cause a reciprocal-membership error in its peers.
 
 ## Diagnostics
 

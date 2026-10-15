@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/card.component.html": "---\ntitle: Card\nelement: ui-card\nslots: header\npropSchema: {type: object, additionalProperties: false, properties: {}}\n---\n<div><slot name=\"header\"></slot></div>",
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<ui-card><h2 slot=\"header\">Header</h2></ui-card>"
+  },
+  "errors": [
+    {
+      "code": "html-front-matter",
+      "message": "slots must be an array of strings",
+      "path": "specs/card.component.html",
+      "line": 4,
+      "column": 1
+    }
+  ]
+}

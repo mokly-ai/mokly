@@ -149,6 +149,7 @@ pub(crate) fn collisions(entries: &[ModelEntry]) -> Vec<Issue> {
             .or_default()
             .push(entry);
     }
+    let mut reported = std::collections::BTreeSet::new();
     for group in paths.values().filter(|group| group.len() > 1) {
         let first = &group[0].metadata.path;
         let directory = Path::new(&group[0].metadata.source.path).parent();
@@ -181,13 +182,13 @@ pub(crate) fn collisions(entries: &[ModelEntry]) -> Vec<Issue> {
                 .map(|entry| location(&entry.metadata.source))
                 .collect(),
         ));
+        reported.insert(first.to_ascii_lowercase());
     }
     let by_path: BTreeMap<_, _> = entries
         .iter()
         .map(|entry| (entry.metadata.path.to_ascii_lowercase(), entry))
         .collect();
     let mut folders: BTreeMap<String, (&str, &ModelEntry)> = BTreeMap::new();
-    let mut reported = std::collections::BTreeSet::new();
     for entry in entries {
         let mut prefix = entry.metadata.path.as_str();
         while let Some((parent, _)) = prefix.rsplit_once('/') {
