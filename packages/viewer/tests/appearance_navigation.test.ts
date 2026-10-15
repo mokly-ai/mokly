@@ -50,7 +50,7 @@ test("Auto continues to follow the system after a conflicting route pin", () => 
   assert.equal(world.body.attributes["data-mokly-color-scheme"], "dark");
 });
 
-test("a hydrated appearance host exclusively owns live fragment navigation", () => {
+test("a mounted appearance host exclusively owns live fragment navigation", () => {
   const dual = frame("welcome.html", "welcome.dark.html");
   const world = environment({ frames: [dual] });
   const handle = installAppearance(world.document, world.window);

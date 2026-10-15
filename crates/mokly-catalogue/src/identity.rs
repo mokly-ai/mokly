@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use mokly_model::canonical::compare_utf16;
-use mokly_model::catalogue::{ModelEntry, SourceLocation};
+use mokly_model::catalogue::{EntryContent, ModelEntry, SourceLocation};
 use mokly_model::paths::{is_entry_path, is_path_segment};
 use serde_json::Value;
 
@@ -108,7 +108,16 @@ pub(crate) fn segment(value: &str, field: &str, source: &SourceLocation) -> Resu
     if is_path_segment(value) {
         Ok(())
     } else {
-        Err(Issue::new(Code::InvalidSegment, format!("{}: {field} {} is not a valid path segment; use letters, digits, hyphens and underscores", location(source), Value::String(value.into()))).at(source.clone()))
+        let rule = "is not a valid path segment; use letters, digits, hyphens and underscores";
+        Err(Issue::new(
+            Code::InvalidSegment,
+            format!(
+                "{}: {field} {} {rule}",
+                location(source),
+                Value::String(value.into())
+            ),
+        )
+        .at(source.clone()))
     }
 }
 
@@ -140,8 +149,17 @@ pub(crate) fn collisions(entries: &[ModelEntry]) -> Vec<Issue> {
             .or_default()
             .push(entry);
     }
+    let mut reported = std::collections::BTreeSet::new();
     for group in paths.values().filter(|group| group.len() > 1) {
         let first = &group[0].metadata.path;
+        let directory = Path::new(&group[0].metadata.source.path).parent();
+        if group.iter().all(|entry| {
+            entry.metadata.is_index
+                && matches!(entry.content, EntryContent::Document { .. })
+                && Path::new(&entry.metadata.source.path).parent() == directory
+        }) {
+            continue;
+        }
         let second = group.iter().find(|entry| entry.metadata.path != *first);
         let (code, message) = match second {
             Some(second) => (
@@ -164,13 +182,13 @@ pub(crate) fn collisions(entries: &[ModelEntry]) -> Vec<Issue> {
                 .map(|entry| location(&entry.metadata.source))
                 .collect(),
         ));
+        reported.insert(first.to_ascii_lowercase());
     }
     let by_path: BTreeMap<_, _> = entries
         .iter()
-        .map(|entry| (entry.metadata.path.as_str(), entry))
+        .map(|entry| (entry.metadata.path.to_ascii_lowercase(), entry))
         .collect();
     let mut folders: BTreeMap<String, (&str, &ModelEntry)> = BTreeMap::new();
-    let mut reported = std::collections::BTreeSet::new();
     for entry in entries {
         let mut prefix = entry.metadata.path.as_str();
         while let Some((parent, _)) = prefix.rsplit_once('/') {
@@ -187,15 +205,29 @@ pub(crate) fn collisions(entries: &[ModelEntry]) -> Vec<Issue> {
                     ));
                 }
             } else {
-                folders.insert(lower, (parent, entry));
+                folders.insert(lower.clone(), (parent, entry));
             }
-            if let Some(owner) = by_path.get(parent) {
+            if let Some(owner) = by_path.get(&lower) {
                 let valid_variant = entry.metadata.variant_of.as_deref() == Some(parent);
-                if !owner.metadata.is_index && !valid_variant && reported.insert(parent.to_owned())
+                let spelling = &owner.metadata.path;
+                let case_collision = spelling != parent;
+                if (case_collision || !owner.metadata.is_index && !valid_variant)
+                    && reported.insert(lower)
                 {
+                    let (code, heading) = if case_collision {
+                        (
+                            Code::CaseCollision,
+                            format!("paths {spelling} and {parent} differ only by letter case:"),
+                        )
+                    } else {
+                        (
+                            Code::DuplicatePath,
+                            format!("path {parent} is defined twice:"),
+                        )
+                    };
                     issues.push(list(
-                        Code::DuplicatePath,
-                        format!("path {parent} is defined twice:"),
+                        code,
+                        heading,
                         vec![
                             location(&owner.metadata.source),
                             location(&entry.metadata.source),

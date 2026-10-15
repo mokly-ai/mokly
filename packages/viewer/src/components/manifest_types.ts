@@ -1,43 +1,18 @@
 import type { ColorScheme } from "../data/axes.js";
+import type { ComponentInstanceRecord } from "../generated/catalogue/ComponentInstanceRecord.js";
+import type { ComponentRangeRecord } from "../generated/catalogue/ComponentRangeRecord.js";
+import type { ComponentSlotRecord } from "../generated/catalogue/ComponentSlotRecord.js";
 import type { ManifestEntryBase } from "../registry/types.js";
 
 import type { ComponentControl } from "./control_types.js";
-import type { ComponentWireProps, ObjectPropSchema } from "./prop_types.js";
+import type { ComponentWireProps, PropSchema } from "./prop_types.js";
 
-export type ComponentInputOwner =
-  { kind: "entry" } | { kind: "instance"; instanceKey: string };
-export interface ComponentInstanceRecord {
-  key: string;
-  id: string;
-  componentId: string;
-  owner: ComponentInputOwner;
-  slotKey?: string;
-  order: number;
-  props: ComponentWireProps;
-  propsKey: string;
-  source?: ComponentSourceLocation;
-}
-export interface ComponentSourceLocation {
-  path: string;
-  line: number;
-  column: number;
-}
-export interface ComponentSlotRecord {
-  key: string;
-  instanceKey: string;
-  name: string;
-  owner: ComponentInputOwner;
-  sourceSlotKey?: string;
-}
-export type ComponentRangeTarget =
-  | { kind: "instance"; instanceKey: string }
-  | { kind: "slot"; slotKey: string }
-  | { kind: "root" };
-export interface ComponentRangeRecord {
-  id: string;
-  target: ComponentRangeTarget;
-  parentId?: string;
-}
+export type { ComponentInputOwner } from "../generated/catalogue/ComponentInputOwner.js";
+export type { ComponentInstanceRecord } from "../generated/catalogue/ComponentInstanceRecord.js";
+export type { ComponentRangeRecord } from "../generated/catalogue/ComponentRangeRecord.js";
+export type { ComponentRangeTarget } from "../generated/catalogue/ComponentRangeTarget.js";
+export type { ComponentSlotRecord } from "../generated/catalogue/ComponentSlotRecord.js";
+export type { ComponentSourceLocation } from "../generated/catalogue/ComponentSourceLocation.js";
 export interface ComponentStyleOwnership {
   startOffset: number;
   endOffset: number;
@@ -65,33 +40,38 @@ export interface ComponentViewRecord {
   insertedStylesheets?: readonly InsertedComponentStylesheet[];
 }
 
-/** Current identity-only component parent. */
+/** The schema and slots that validate one component's instances. */
+export interface ComponentSchemaRecord {
+  propSchema: PropSchema;
+  slots: readonly string[];
+}
+
+/**
+ * One component entry: a parent rendered from its own props, or a variant
+ * rendered from its parent's render with merged props.
+ */
 export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
   colorSchemes: readonly ColorScheme[];
   kind: "component";
   tags?: readonly string[];
-  propSchema: ObjectPropSchema;
-  slots: readonly string[];
-  controls: Readonly<Record<string, ComponentControl>>;
-}
-
-/** Current identity-only flattened component variant. */
-export interface ManifestComponentVariant extends Omit<
-  ManifestEntryBase,
-  "kind"
-> {
-  colorSchemes: readonly ColorScheme[];
-  kind: "component";
-  tags?: readonly string[];
-  variantOf: string;
+  propSchema: PropSchema;
   props: ComponentWireProps;
+  controls: Readonly<Record<string, ComponentControl>>;
+  slots: readonly string[];
   suppliedSlots: readonly string[];
-  componentViews: readonly ComponentViewRecord[];
+  componentViews?: readonly ComponentViewRecord[];
+  /** Parent component path, present only when this component is a variant. */
+  variantOf?: string;
 }
 
-/** Whether one current or baseline-v10 component is a variant entry. */
+/** A component entry that varies its parent's props. */
+export type ManifestComponentVariant = ManifestComponent & {
+  variantOf: string;
+};
+
+/** Whether one component entry is a variant of its parent. */
 export function isManifestComponentVariant(
-  entry: ManifestComponent | ManifestComponentVariant,
+  entry: ManifestComponent,
 ): entry is ManifestComponentVariant {
-  return "variantOf" in entry && typeof entry.variantOf === "string";
+  return typeof entry.variantOf === "string";
 }

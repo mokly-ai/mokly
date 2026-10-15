@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "document-front-matter",
-      "message": "specs/guide.md: front matter title must be a string"
+      "message": "specs/guide.md: front matter title must be a string",
+      "path": "specs/guide.md",
+      "line": 2,
+      "column": 1
     }
   ]
 }

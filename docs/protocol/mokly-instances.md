@@ -154,7 +154,8 @@ both 1-based. No absolute path, drive prefix, URL, backslash, NUL, empty or
 dot segment, or `..` escape is permitted. A location is confined to `repoRoot`
 and serialized as the normalized relative path only; an escaping location
 fails validation, and an unavailable location is omitted, never guessed from
-definition attribution or stack traces.
+definition attribution or stack traces. A call site inside `node_modules`
+or a selected dependency root omits this optional source metadata.
 
 The sidecar supplies the location for a `defineComponent` wrapper through the
 JSX development shim of its [bundling rules](./mokly-sidecar.md#bundling). The

@@ -109,7 +109,7 @@ empty, `.` or `..` segments. Validation adds no public-file defaults. Root
 diagnostics name `roots[<index>].files`; folder diagnostics name the owning
 folder record.
 
-When a file matches two roots after exclusions, fail `config-invalid` with
+When a file matches two roots before exclusions, fail `config-invalid` with
 `file <path> is matched by roots[<n>] and roots[<m>]`. The path is
 repository-relative and the root indices are zero-based. Physical aliases
 participate in this check.

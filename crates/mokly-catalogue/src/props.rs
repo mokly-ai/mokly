@@ -115,31 +115,48 @@ pub(crate) fn schemes(
 pub(crate) fn declarations(
     schema: &PropSchema,
     slots: &[String],
-    element: Option<&str>,
+    component: bool,
+    parsed: &ParsedEntry,
     source: &SourceLocation,
 ) -> Result<(), Issue> {
     let properties = schema.properties.as_ref();
     let mut seen = BTreeSet::new();
     for name in properties.into_iter().flat_map(|props| props.keys()) {
+        let field = if parsed.input.prop_schema.is_some() {
+            format!("propSchema/properties/{name}")
+        } else {
+            format!("props/{name}")
+        };
         if !prop_name(name) {
-            return Err(
-                Issue::new(Code::HtmlFrontMatter, format!("invalid prop name {name}"))
-                    .at(source.clone()),
-            );
+            return Err(issue(
+                &parsed.document,
+                &source.path,
+                &field,
+                Code::HtmlFrontMatter,
+                format!("invalid prop name {name}"),
+            ));
         }
-        if matches!(
-            name.as_str(),
-            "moklyInstance" | "key" | "ref" | "__moklySource"
-        ) || (element.is_some()
+        if component
             && matches!(
                 name.as_str(),
-                "to" | "fragment" | "slot" | "moklyViewport" | "moklyIf"
-            ))
+                "moklyInstance"
+                    | "key"
+                    | "ref"
+                    | "__moklySource"
+                    | "to"
+                    | "fragment"
+                    | "slot"
+                    | "moklyViewport"
+                    | "moklyIf"
+            )
         {
-            return Err(
-                Issue::new(Code::HtmlAttribute, format!("reserved prop name {name}"))
-                    .at(source.clone()),
-            );
+            return Err(issue(
+                &parsed.document,
+                &source.path,
+                &field,
+                Code::HtmlAttribute,
+                format!("reserved prop name {name}"),
+            ));
         }
     }
     for name in slots {
@@ -151,11 +168,13 @@ pub(crate) fn declarations(
                 "moklyInstance" | "key" | "ref" | "__moklySource"
             )
         {
-            return Err(Issue::new(
+            return Err(issue(
+                &parsed.document,
+                &source.path,
+                "slots",
                 Code::HtmlSlot,
                 format!("invalid or conflicting slot name {name}"),
-            )
-            .at(source.clone()));
+            ));
         }
     }
     Ok(())

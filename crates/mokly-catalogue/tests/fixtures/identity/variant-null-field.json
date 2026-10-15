@@ -7,7 +7,9 @@
     {
       "code": "html-front-matter",
       "message": "description must be a string",
-      "line": 4
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 33
     }
   ]
 }

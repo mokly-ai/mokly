@@ -1,6 +1,6 @@
 //! Source preparation helpers and canonical catalogue order.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::axes::EntryKind;
 use mokly_model::canonical::compare_utf16;
@@ -21,6 +21,7 @@ pub(crate) fn append(
     file: &SourceFile,
     config: &ResolvedConfig,
     issues: &mut Vec<Issue>,
+    failed: &mut BTreeSet<String>,
 ) {
     let kind = match file.kind {
         SourceKind::Screen => EntryKind::Screen,
@@ -31,8 +32,11 @@ pub(crate) fn append(
     };
     let source = at(&file.path, &parsed.text, 0);
     if file.kind == SourceKind::Document
-        && let Err(issue) = parsing::validate_metadata(&parsed.input, &parsed.document, &file.path)
+        && let Err(mut issue) =
+            parsing::validate_metadata(&parsed.input, &parsed.document, &file.path)
     {
+        issue.code = Code::DocumentFrontMatter;
+        issue.message = format!("{}: front matter {}", file.path, issue.message);
         issues.push(issue);
         return;
     }
@@ -45,8 +49,16 @@ pub(crate) fn append(
         source,
         schemes,
     ) {
-        Ok((entries, errors)) => {
-            let path = entries[0].metadata.path.clone();
+        Ok(result) => {
+            let path = result.entries[0].metadata.path.clone();
+            if result.failed {
+                failed.extend(
+                    result
+                        .entries
+                        .iter()
+                        .map(|entry| entry.metadata.path.clone()),
+                );
+            }
             if kind == EntryKind::Document {
                 prepared.documents.insert(path.clone(), parsed.body.clone());
             } else if kind != EntryKind::UseCase {
@@ -69,8 +81,8 @@ pub(crate) fn append(
                     );
                 }
             }
-            prepared.model.entries.extend(entries);
-            issues.extend(errors);
+            prepared.model.entries.extend(result.entries);
+            issues.extend(result.issues);
         }
         Err(issue) => issues.push(issue),
     }

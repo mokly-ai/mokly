@@ -4,6 +4,7 @@ import type { ColorScheme } from "./ColorScheme.js";
 import type { Control } from "./Control.js";
 import type { EntryReference } from "./EntryReference.js";
 import type { JsonValue } from "./JsonValue.js";
+import type { StoryHints } from "./StoryHints.js";
 import type { UseCaseStep } from "./UseCaseStep.js";
 import type { Variant } from "./Variant.js";
 
@@ -13,6 +14,10 @@ export type Definition = {
  * Repository-relative module and export name.
  */
 handle: string,
+/**
+ * Module that created the definition; it can differ from the exporting module.
+ */
+sourcePath?: string,
 /**
  * Authored schema JSON; only the core's PropValidator interprets it.
  */
@@ -37,6 +42,10 @@ element?: string,
  * Explicit control overrides.
  */
 controls?: { [key in string]: Control },
+/**
+ * Storybook meta hints for the component parent's own controls.
+ */
+argTypes?: { [key in string]: StoryHints },
 /**
  * Effective colour schemes.
  */

@@ -335,6 +335,11 @@ more than re-deriving the behaviour from the requirements.
     now. The guides wait for the user's decision on the guide tests, recorded
     under the review TODO as item E.
 
+39. Template spacing (2026-10-15): substitution accepts optional ASCII
+    whitespace around the prop path inside `{{ }}`. `{{ name }}` equals
+    `{{name}}` in text and attributes. The catalogue checker and HTML renderer
+    use the same rule.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -643,6 +648,8 @@ Evidence: `.context/rust-rebuild/sweeps/m4.md` and
 `.context/rust-rebuild/delegation/m4/report-1.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m4/report-2.md` and
 `.context/rust-rebuild/delegation/m4/merge-decisions.md`.
+Review 1 fixes and evidence: `.context/rust-rebuild/delegation/m4/report-3.md`.
+Final fixes and evidence: `.context/rust-rebuild/delegation/m4/report-4.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 
@@ -662,7 +669,8 @@ from Milestone 12.
       their scopes resolved, and the ownership annotations the comparison
       relies on.
 - [ ] Implement the render cache: content keys, the byte bound, eviction, and
-      the source tree trait over the working tree and Git trees; the `build`
+      reads through the existing `mokly-source-interface` for working and Git
+      trees; the `build`
       validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
@@ -702,6 +710,10 @@ without JavaScript.
       routes, the live descriptor, the event stream with the revision as the
       message id and the deployment id as its data, shutdown ordering, and
       the terminal output contract in the CLI.
+- [ ] Complete context-aware usage readers: validate recorded props against
+      component schemas; recompute instance and slot keys and `propsKey` with
+      the shared material key; validate usage references, ownership cycles,
+      source locations, duplicate records, root ranges, and view ordering.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
@@ -712,14 +724,14 @@ without JavaScript.
 
 Tags: ui
 
-- [ ] Update the viewer's data readers and validators to the generated read
+- [x] Update the viewer's data readers and validators to the generated read
       model v7 types.
-- [ ] Show a component's own props before its variants, offer the derived
+- [x] Show a component's own props before its variants, offer the derived
       controls on screens with the zero-based step and the title-or-value
       select labels, and validate control input with a profile validator
       that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Replace server rendering and hydration in the viewer package with the
+- [x] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
@@ -727,7 +739,10 @@ Tags: ui
       and the package README, rewritten under Decision 38, is checked
       against the package.
 - [ ] Run the viewer suite against the Milestone 6 routes.
-- [ ] Commit.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -738,22 +753,46 @@ renders again.
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
+  - [x] Add the standalone Node entry, bounded NDJSON, method dispatch,
+        exact-version hello, and the Rust pool's lazy process lifecycle.
+  - [x] Test request deadlines, retry, recycling, shutdown, and queue
+        cancellation with mocked Rust boundaries and real Node processes.
+  - [x] Separate head and base generations, replay disposed generations on
+        every worker, share canonical model wire values, and validate the
+        CLI timeout override.
+  - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
+        and fragment-scoped registry style collection.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
+  - [x] Add unevaluated esbuild generations, attributed facades, the JSX
+        development shim, CSS Modules tables, and consumer style collectors.
+  - [x] Map workspace PostCSS presets into each side and keep installed
+        JavaScript and CSS under stable dependency graph names.
+  - [x] Add the PostCSS worker and preserve local module locations, plugin
+        creation lifetime, and dependency plugin names and globs.
 - [ ] Implement component, screen, page, and story renders, with
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
       inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
-      Rust keyed by bundle generation, handle, props, viewport, scheme, and
+      Rust keyed by bundle generation, binding table, effective entry, class-map
+      digest, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
+  - [x] Add the authoring API with schema and literal prop inference, and
+        standalone component, screen, story, and page renders.
+  - [ ] Connect resolved catalogue paths, complete usage records, schema
+        validation, and fragment caching through the approved binding.
 - [ ] Implement `describe`: every definition the entry modules and stories
-      files export, one per export with `array-export` otherwise, with the
+      files export, one per export, rejecting arrays containing definitions, with the
       story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Extend the definition-provider boundary for `describe` handles,
+      declared controls, story control hints, slot handles, excluded non-data
+      prop keys, and authoring diagnostics; emit `props-not-data` after path
+      derivation names the entry and key.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -766,7 +805,31 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
-- [ ] Write the JavaScript authoring guides.
+- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+      routing, detail loading and retry, live publications without a page
+      load, and the frame reload by `documentKey`; and the live prop edits:
+      the 150 ms debounce, the rerender after a revision adoption or a
+      `live.generation` change, the retry after a 409, cancellation on
+      navigation, and read-only controls while no descriptor is installed.
+- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+      its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
+      the parent's own entry first in the variant bar, controls on screens,
+      the stage loading state, the index failure state, the version failure
+      state, the Props tab label against the mockups' "Controls", and the
+      controls copy "Choose an available entry to edit props.",
+      "Comparisons show the saved props. Return to Current to edit props.",
+      "Open this catalogue locally to edit props." (also shown in Serve while
+      the descriptor loads), "No editable props are declared for this
+      entry.", and "Check the highlighted values." for a whole-props error
+      that highlights no field.
+- [x] Write the JavaScript authoring guides.
+
+Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
+and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
+decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
+`.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
+fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -775,16 +838,31 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
+- [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
-- [ ] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
+- [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
       one second, and drain process pipes before settling.
+- [x] Add the part 1 base source reader, leased extraction cache, dependency
+      input readers, three dependency tiers, and bounded install cache in
+      `mokly-compare`, ready for the render graph connection.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, the
       `base-dependencies` warning, and the terminal line that names the cache
       directory.
+      Part 1 gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-git.md`.
+- [x] Apply final part 1 review fixes: sidecar repository roots, cache flush
+      and trash handling, batched working hashes, independent tree bounds,
+      rename encoding, warning locations, and concurrent cache misses.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/logs/m9-git/round3-targeted-tests.log`.
+      Integration choices: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-git/merge-decisions.md`.
+- [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
+      the commit-pinned Git index and batched blob reader. Cover projection,
+      direct children, every mode, and typed IO errors.
+- [ ] Implement branch-point entry lookup and its shared verification cases:
+      kind/case identity, accepted-pair precedence, removed destinations,
+      counterparts, variant parents, stored titles, and generation isolation.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
@@ -810,6 +888,15 @@ Tags: ui
 
 - [ ] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
+- [ ] Check the shell's projection of the entry detail's review v8 rule and
+      resource records (`packages/viewer/src/review/view_evidence.ts`)
+      against Milestone 9 output.
+- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+      the serialization contract: `sourceKind` is the literal `base`.
+- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+      package README describe (the path functions, the directory names, the
+      path grammar, and the prop schema validators) when review v8 replaces
+      the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 
@@ -829,21 +916,46 @@ Tags: ui
 
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
-      documents, the comparison generation, the ownership marker, the `--out`
-      option with its default `mokly-static/` output directory, and the
-      transaction with backup, exclusive rename, and rollback.
+      documents, the comparison generation, the shared `mokly-model` ownership
+      marker writer, the `--out` option with its default `mokly-static/` output
+      directory, and the transaction with backup, exclusive rename, and rollback.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
       changes rules, and the upload validation fixtures.
-- [ ] Add the `git-uncommitted` detail layout and avoid repeated detail and
+  - [x] Implement the `mokly-publish` exchange client with immutable output
+        snapshots, metadata v2, ownership v3, bounded HTTP, retries, expiry,
+        one re-plan, digest accounting, and public fixture tests.
+  - [x] Add clean-checkout checks, cancellable Git calls, the static-output
+        trait, and the pre-build private-directory line. Keep completed
+        output after upload failure.
+  - [ ] Connect `mokly-static` to the CLI-owned publish adapter and its rich
+        terminal phases. Both crates use the shared output shapes and marker
+        writer in `mokly-model`. Verify real rendering, transaction cancellation,
+        and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
+        transitions, source changes, and the deferred gap-sweep scenarios.
+    - [ ] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
+          `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
+          `mokly-publish` into the CLI publication error contract when the
+          static adapter lands.
+- [x] Add the `git-uncommitted` detail layout and avoid repeated detail and
       recovery-hint sentences in terminal errors.
+
+Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
+Publish client review fixes and TLS checks:
+`.context/rust-rebuild/delegation/m12-publish/report-2.md`.
+Publish client final review and merge decisions:
+`.context/rust-rebuild/delegation/m12-publish/report-3.md` and
+`.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
+
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
 - [ ] Commit.
 
 ## Milestone 13: Release packaging
 
+- [ ] Build and pack the viewer before the CLI authoring declarations and
+      CLI `prepack`; verify this order in clean package consumers.
 - [ ] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
@@ -855,6 +967,9 @@ Tags: ui
 - [ ] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
+- [ ] Verify native TLS on macOS and Windows CI. Build all five target
+      binaries with a target C toolchain and check `ldd`, `otool -L`, or
+      `dumpbin /dependents` for an unintended crypto shared-library dependency.
 - [ ] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
@@ -884,7 +999,22 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M8 sidecar review D2: the user must settle schema validation of dynamic
+    wrapper props before the adapter runs; add no validator or callback yet.
+  - Milestone 9 part 1 review 1, finding 11: user decision pending on support
+    for package managers other than npm; retain the npm-only fallback policy.
+  - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
+    conversion for base render/resource bytes; retain raw Git blob bytes.
+  - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
+    keep the OS trust store until the user decides.
+  - Milestone 12 publish review 1, finding 13: decide private-directory retention
+    after success; keep the existing retention until the user decides.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
+  - Milestone 7 review 1, finding 12: decide whether to delete the
+    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
+    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
+    user.
   - Milestone 5: decide whether `{{ name }}` with inner spaces is a
     substitution. Prettier formats `*.component.html` files as Angular
     templates and writes that form; `.prettierrc.json` formats them as HTML.

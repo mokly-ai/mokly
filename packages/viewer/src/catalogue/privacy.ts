@@ -31,13 +31,45 @@ const PRIVATE_KEYS = new Set([
   "cookies",
 ]);
 
+/** Index fields that only an entry detail carries, rejected at any depth. */
+const DETAIL_KEYS = new Set(["usage", "resourceEvidence"]);
+
+/** The index carries no private evidence and no per-view usage or evidence. */
+export function assertPublicIndex(value: unknown): void {
+  assertPublicData(
+    value,
+    "$catalogue",
+    (key) => PRIVATE_KEYS.has(key) || DETAIL_KEYS.has(key),
+  );
+}
+
+/** A detail carries public evidence records but no private evidence. */
+export function assertPublicDetail(value: unknown): void {
+  assertPublicData(
+    value,
+    "$detail",
+    (key, parent) =>
+      PRIVATE_KEYS.has(key) &&
+      !(key === "resources" && parent === "resourceEvidence"),
+  );
+}
+
 /** Unknown extensions stay additive but cannot smuggle private evidence or paths. */
-export function assertPublicCatalogue(value: unknown): void {
+function assertPublicData(
+  value: unknown,
+  at: string,
+  forbidden: (key: string, parent: string | undefined) => boolean,
+): void {
   const ancestors = new Set<object>();
   let nodes = 0;
-  const visit = (item: unknown, depth: number, data = false): void => {
+  const visit = (
+    item: unknown,
+    depth: number,
+    data = false,
+    parent?: string,
+  ): void => {
     if (++nodes > 5_000_000 || depth > 128)
-      invalidData("$catalogue", "public data limit exceeded");
+      invalidData(at, "public data limit exceeded");
     if (
       item === null ||
       typeof item === "string" ||
@@ -46,19 +78,16 @@ export function assertPublicCatalogue(value: unknown): void {
     )
       return;
     if (typeof item !== "object" || item === null || ancestors.has(item))
-      invalidData("$catalogue", "expected acyclic JSON data");
+      invalidData(at, "expected acyclic JSON data");
     ancestors.add(item);
     if (Array.isArray(item)) {
-      denseArray(item, "$catalogue");
-      for (const child of item) visit(child, depth + 1, data);
+      denseArray(item, at);
+      for (const child of item) visit(child, depth + 1, data, parent);
     } else
-      for (const key of plainKeys(item, "$catalogue")) {
+      for (const key of plainKeys(item, at)) {
         const child = (item as Record<string, unknown>)[key];
-        if (!data && PRIVATE_KEYS.has(key))
-          invalidData(
-            "$catalogue",
-            "private evidence is not public catalogue data",
-          );
+        if (!data && forbidden(key, parent))
+          invalidData(at, `${key} is not public catalogue data`);
         if (!data && /(?:Path$|^path$)/.test(key) && typeof child === "string")
           repositoryPath(child);
         if (
@@ -68,9 +97,15 @@ export function assertPublicCatalogue(value: unknown): void {
           typeof child === "object" &&
           !Array.isArray(child)
         ) {
-          for (const field of plainKeys(child, "$catalogue"))
+          for (const field of plainKeys(child, at))
             visit((child as Record<string, unknown>)[field], depth + 1);
-        } else visit(child, depth + 1, data || key === "props");
+        } else
+          visit(
+            child,
+            depth + 1,
+            data || key === "props" || key === "before" || key === "after",
+            key,
+          );
       }
     ancestors.delete(item);
   };

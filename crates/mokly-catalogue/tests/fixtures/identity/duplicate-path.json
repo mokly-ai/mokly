@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "duplicate-path",
-      "message": "path a is defined twice:\n  specs/a.md\n  specs/a.screen.html"
+      "message": "path a is defined twice:\n  specs/a.md\n  specs/a.screen.html",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

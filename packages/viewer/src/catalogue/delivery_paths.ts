@@ -1,4 +1,4 @@
-import { isSafeCatalogueRoute } from "../data/paths.js";
+import { encodeUrlPath, isSafeCatalogueRoute } from "../data/paths.js";
 
 /** Public output directory shared by the viewer and CLI. */
 export const GENERATED_DIRECTORY = "mokly-generated" as const;
@@ -35,4 +35,33 @@ export function generatedResourcePath(route: string): string {
 export function generatedResourceRoute(route: string): string | undefined {
   const prefix = `${GENERATED_DIRECTORY}/`;
   return route.startsWith(prefix) ? route.slice(prefix.length) : undefined;
+}
+
+/** The catalogue index route, relative to the artifact origin root. */
+export const INDEX_PATH = `${VIEWER_DIRECTORY}/index.json` as const;
+
+/** The live descriptor route that only Serve answers. */
+export const LIVE_PATH = `${VIEWER_DIRECTORY}/live.json` as const;
+
+/** The event stream route that only Serve answers. */
+export const EVENTS_PATH = `${VIEWER_DIRECTORY}/events` as const;
+
+/** The route prefix of every temporary live render preview. */
+export const RENDERS_PATH = `${VIEWER_DIRECTORY}/components/renders` as const;
+
+/** A current entry's detail, relative to the artifact origin root. */
+export function entryDetailPath(path: string): string {
+  return `${VIEWER_DIRECTORY}/entries/${encodeUrlPath(path)}.json`;
+}
+
+/**
+ * A removed entry's detail inside the comparison generation that the index's
+ * validated `comparisonUrl` names, relative to the artifact origin root.
+ */
+export function removedEntryDetailPath(
+  comparisonUrl: string,
+  path: string,
+): string {
+  const generation = comparisonUrl.slice(0, -"review.json".length);
+  return `${generation}entries/${encodeUrlPath(path)}.json`;
 }

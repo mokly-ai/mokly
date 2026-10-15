@@ -12,7 +12,11 @@
   },
   "errors": [
     {
-      "code": "config-invalid"
+      "code": "config-invalid",
+      "message": "roots[0].files: not a safe relative POSIX glob: \"../**/*.md\"",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

@@ -15,7 +15,8 @@ contributes exactly one definition when it is the object returned by
 forged brand or a spread copy fails `invalid-definition`, because copying a
 brand cannot copy a definition's identity. Every other export is ignored, so
 helper functions, fixtures, shared metadata, and React components may live in
-the same file. An array export fails `array-export` naming the export; no
+the same file. An exported array that contains a Mokly definition fails `array-export`,
+naming the export. Plain-data arrays remain allowed as fixtures. No
 helper returns an array, because a variant is a props set under the
 [entry props contract](./mokly-entry-props.md) and not a definition of its
 own. A module that contributes no definition fails `empty-module`.
@@ -147,6 +148,22 @@ export; Mokly resolves the reference to that entry's path when it renders.
 The [authoring contract](./mokly-authoring.md#links) defines the complete
 link surface.
 
+## Shared Metadata Diagnostics
+
+Flow relationship failures use `invalid-metadata` with these exact texts:
+
+- `<location>: <entryPath> target <target> does not name a current <kind>`,
+  where the kind is `screen` or `use-case`;
+- `screen <screenPath> lists use case <flowPath>, but its steps do not name the screen`;
+- `use case <flowPath> steps through screen <screenPath>, but the screen does not list the use case`.
+
+Attribution failures from the definition provider use the same code with
+`definition is not exported by a resolved entry module` or
+`definition source is not inventoried`. Invalid definitions stay present as
+relationship targets after their metadata and paths are resolved. Their own
+body, link, and flow-target checks run once the definitions are valid. A
+failed flow or screen does not cause a reciprocal-membership error in its peers.
+
 ## Diagnostics
 
 | Code                      | Exact text                                                                                                             |
@@ -155,7 +172,7 @@ link surface.
 | `empty-module`            | `<location> exports no Mokly definition`                                                                               |
 | `array-export`            | `<location>: export <name> is an array; export one definition per export`                                              |
 | `unknown-link-definition` | `<location>: referenced definition <title> from <definedIn> is not exported by an entry module`                        |
-| `invalid-definition`      | `<location>: export <name> is not a Mokly definition`                                                                  |
+| `invalid-definition`      | `<location>: export <name> is not a Mokly definition`, followed by `: <reason>` for a field-shape failure              |
 | `invalid-moved-from`      | `<location>: movedFrom <path> equals the entry's own path`                                                             |
 | `moved-from-current`      | `<location>: movedFrom <path> names a current entry`                                                                   |
 | `duplicate-moved-from`    | `movedFrom <path> is declared twice:` then one `  <location>` line                                                     |

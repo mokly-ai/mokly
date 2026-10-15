@@ -7,25 +7,26 @@ use crate::wire::{MethodResult, Request, Response};
 
 #[test]
 fn every_method_and_result_round_trips() {
-    let render = json!({"generation":"g","handle":"specs/button.tsx#Button","props":{"label":"Save"},"viewport":"mobile","colorScheme":"light"});
+    let render = json!({"generation":"g","handle":"specs/button.tsx#Button","entry":{"path":"button","title":"Button"},"props":{"label":"Save"},"viewport":"mobile","colorScheme":"light"});
     let mut component = render.clone();
-    component["slots"] = json!({"children":"token"});
+    component["slots"] = json!({"children":{"kind":"placeholder","token":"token"}});
     component["ignoreScope"] = json!("enabled");
     let mut story = render.clone();
     story.as_object_mut().unwrap().remove("handle");
+    story.as_object_mut().unwrap().remove("entry");
     story["storyId"] = json!("specs/button.stories.tsx#Primary");
-    let fragment = json!({"html":"<button>Save</button>","styles":[],"resources":[],"warnings":[]});
+    let fragment = json!({"html":"<button>Save</button>","styles":[],"resources":[],"warnings":[],"instances":[],"slots":[]});
     for (method, params, result) in [
         ("hello", json!({}), json!({"version":"fixture-version"})),
         (
             "bundle",
-            json!({"entryFiles":[],"renderer":null,"storiesFiles":[],"moduleResolution":{},"sourceRoot":"/checkout"}),
+            json!({"entryFiles":[],"renderer":null,"storiesFiles":[],"moduleResolution":{},"sourceRoot":"/checkout","configurationDirectory":".","repositoryRoots":[]}),
             json!({"generation":"g","modules":[{"path":"specs/a.tsx","imports":["ui/button.tsx"]}],"warnings":[]}),
         ),
         (
             "describe",
             json!({"generation":"g"}),
-            json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[],"stories":[]}),
+            json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[],"warnings":[],"stories":[]}),
         ),
         ("renderScreen", render, fragment.clone()),
         ("renderComponent", component, fragment.clone()),
@@ -37,7 +38,7 @@ fn every_method_and_result_round_trips() {
         ),
         (
             "processCss",
-            json!({"postcss":"postcss.cjs","sourcePath":"ui/a.css","text":""}),
+            json!({"context":"css","sourceRoot":"/repo","moduleResolution":{},"repositoryRoots":[],"postcss":"postcss.cjs","sourcePath":"ui/a.css","text":""}),
             json!({"text":"","dependencies":[{"kind":"directory","path":"ui"}]}),
         ),
         (
@@ -45,6 +46,12 @@ fn every_method_and_result_round_trips() {
             json!({"generation":"g","classMaps":{"ui/a.module.css":{"button":"button-hash"}}}),
             Value::Null,
         ),
+        (
+            "bindings",
+            json!({"generation":"g","entries":{"entry#default":{"path":"entry","title":"Entry"}}}),
+            Value::Null,
+        ),
+        ("disposeContext", json!({"context":"css"}), Value::Null),
         ("dispose", json!({"generation":"g"}), Value::Null),
         ("shutdown", json!({}), Value::Null),
     ] {
@@ -61,7 +68,7 @@ fn every_method_and_result_round_trips() {
 
 #[test]
 fn authoring_metadata_is_preserved_until_catalogue_validation() {
-    let result = json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","controls":{"tone":{"kind":"select","options":[]}},"movedFrom":"old/button","variants":[],"props":{},"slots":[],"tags":[]}],"stories":[]});
+    let result = json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","controls":{"tone":{"kind":"select","options":[]}},"movedFrom":"old/button","variants":[],"props":{},"slots":[],"tags":[]}],"warnings":[],"stories":[]});
     let request: Request =
         serde_json::from_value(json!({"id":1,"method":"describe","params":{"generation":"g"}}))
             .unwrap();

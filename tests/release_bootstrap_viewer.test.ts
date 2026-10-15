@@ -24,7 +24,7 @@ test("viewer first publication packs only reviewed viewer bytes with source proo
     report.sourceTree,
     await fixture.git("rev-parse", "HEAD^{tree}"),
   );
-  assert.ok(report.files.some((file) => file.path === "dist/server.js"));
+  assert.ok(report.files.some((file) => file.path === "dist/browser/shell.js"));
   assert.ok(report.files.some((file) => file.path === "CHANGELOG.md"));
   assert.equal(
     report.files.some((file) => file.path.startsWith("dist/cli/")),

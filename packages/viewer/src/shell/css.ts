@@ -1,5 +1,5 @@
-/** Assembled package-owned stylesheet served at /mokly-viewer/shell.css and
- * inlined into static Review artifact pages. */
+/** The package-owned shell stylesheet: the shared rules of every root, and the
+ * standalone stylesheet Serve and `build` deliver as /mokly-viewer/shell.css. */
 
 import { SHELL_CHROME_CSS } from "./css_chrome.js";
 import { SHELL_DETAILS_CSS } from "./css_details.js";
@@ -12,13 +12,13 @@ import { CSS_NAV_VARIANTS } from "./css_nav_variants.js";
 import { SHELL_PREVIEW_SCHEME_CSS } from "./css_preview_scheme.js";
 import { SHELL_PREVIEW_CSS } from "./css_previews.js";
 import { SHELL_REVIEW_CSS } from "./css_review.js";
-import { SHELL_THEME_CSS } from "./css_theme.js";
+import { SHELL_THEME_CSS, STANDALONE_STUB_THEME_CSS } from "./css_theme.js";
 import { SHELL_TOKENS_CSS } from "./css_tokens.js";
 import { SHELL_VIEW_CSS } from "./css_views.js";
 import { SHELL_WORKSPACE_CSS } from "./css_workspace.js";
 import { CSS_WORKSPACE_MARKS } from "./css_workspace_marks.js";
 
-/** The complete shell stylesheet. */
+/** The rules every shell root shares; the embedded stylesheet scopes them. */
 export const SHELL_CSS =
   SHELL_TOKENS_CSS +
   SHELL_THEME_CSS +
@@ -36,3 +36,6 @@ export const SHELL_CSS =
   CSS_WORKSPACE_MARKS +
   SHELL_PREVIEW_CSS +
   SHELL_INSPECTOR_RESIZE_CSS;
+
+/** The standalone stylesheet: the shared rules and the stub's Auto appearance. */
+export const STANDALONE_SHELL_CSS = SHELL_CSS + STANDALONE_STUB_THEME_CSS;

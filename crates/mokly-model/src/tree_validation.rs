@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::paths::{is_entry_path, is_path_segment};
 use crate::public_index::{CatalogueNode, CatalogueReadModel};
 use crate::public_validation::{entries, invalid};
+use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 
 pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
@@ -41,7 +42,7 @@ pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
         None,
     )?;
     if seen != entries {
-        return Err(invalid("tree must contain each current entry exactly once"));
+        return Err(invalid(ContractViolation::TreeEntries));
     }
     Ok(())
 }
@@ -72,10 +73,16 @@ fn walk<'a>(
                     || !direct(path, parent)
                     || entries.contains(path.as_str()) && index.as_deref() != Some(path)
                 {
-                    return Err(invalid("invalid folder node"));
+                    return Err(invalid(ContractViolation::TreeFolder));
                 }
                 order(authored.as_deref())?;
-                if index.as_ref().is_some_and(|index|index!=path || !matches!(children.first(),Some(CatalogueNode::Entry { path,.. }) if path==index)) { return Err(invalid("folder index must be its first entry child")); }
+                if index.as_ref().is_some_and(|index| {
+                    index != path
+                        || !matches!(children.first(),
+                        Some(CatalogueNode::Entry { path, .. }) if path == index)
+                }) {
+                    return Err(invalid(ContractViolation::TreeIndex));
+                }
                 walk(
                     children,
                     path,
@@ -96,17 +103,17 @@ fn walk<'a>(
                     || !seen.insert(path)
                     || !(direct(path, parent) || position == 0 && own_index == Some(path))
                 {
-                    return Err(invalid("invalid or duplicate entry tree node"));
+                    return Err(invalid(ContractViolation::TreeEntry));
                 }
                 if let Some(variant_parent) = variants.get(path.as_str())
                     && (*variant_parent != parent || children.is_some())
                 {
-                    return Err(invalid("variant is outside its parent or has children"));
+                    return Err(invalid(ContractViolation::TreeVariant));
                 }
                 order(authored.as_deref())?;
                 if let Some(children) = children {
                     if children.is_empty() {
-                        return Err(invalid("empty entry children"));
+                        return Err(invalid(ContractViolation::EmptyChildren));
                     }
                     walk(children, path, entries, variants, seen, folders, None)?;
                 }
@@ -128,7 +135,7 @@ fn order(items: Option<&[String]>) -> Result<(), ReadError> {
         .flatten()
         .any(|item| !seen.insert(item) || (item != "..." && !is_path_segment(item)))
     {
-        return Err(invalid("invalid tree order"));
+        return Err(invalid(ContractViolation::TreeOrder));
     }
     Ok(())
 }

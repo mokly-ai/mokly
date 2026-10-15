@@ -7,6 +7,7 @@ import {
   controlDraft,
   validateControlDraft,
 } from "../src/shell/component_control_fields.js";
+import { controlTarget } from "../src/shell/control_values.js";
 import { type WorkspaceVariant } from "../src/shell/workspace_data.js";
 
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
@@ -14,8 +15,7 @@ import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 const { source, sourceVariant } = componentWorkspaceFixture();
 
 test("control drafts preserve primitive edits and emit typed overrides", () => {
-  const component: ManifestComponent = {
-    ...source,
+  const declared: Pick<ManifestComponent, "controls" | "propSchema"> = {
     controls: {
       label: { kind: "text" },
       count: { kind: "number", minimum: -1, maximum: 10 },
@@ -37,18 +37,17 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
       hint: { kind: "text" },
     },
     propSchema: {
-      kind: "object",
+      type: "object",
       properties: {
-        label: { schema: { kind: "string" } },
-        count: { schema: { kind: "number", minimum: -1, maximum: 10 } },
-        disabled: { schema: { kind: "boolean" } },
-        tone: { schema: { kind: "enum", values: ["strong", "quiet"] } },
-        accent: {
-          optional: true,
-          schema: { kind: "enum", values: ["warm", "cool"] },
-        },
-        hint: { optional: true, schema: { kind: "string" } },
+        label: { type: "string" },
+        count: { type: "number", minimum: -1, maximum: 10 },
+        disabled: { type: "boolean" },
+        tone: { type: "string", enum: ["strong", "quiet"] },
+        accent: { type: "string", enum: ["warm", "cool"] },
+        hint: { type: "string" },
       },
+      required: ["label", "count", "disabled", "tone"],
+      additionalProperties: false,
     },
   };
   const variant: WorkspaceVariant = {
@@ -56,6 +55,7 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     removed: false,
     value: {
       ...sourceVariant,
+      ...declared,
       props: encodeProps({
         label: "Continue",
         count: -0,
@@ -65,7 +65,10 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
       }),
     },
   };
-  const draft = controlDraft(component, variant);
+  // The Props controls edit the shown saved variant with its own declarations.
+  const target = controlTarget(source, variant, false);
+  assert.ok(target);
+  const draft = controlDraft(target);
   assert.deepEqual(draft, {
     label: { supplied: true, value: "Continue" },
     count: { supplied: true, value: "-0" },
@@ -75,7 +78,7 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     hint: { supplied: true, value: "Optional" },
   });
 
-  const emptySelects = validateControlDraft(component, variant, {
+  const emptySelects = validateControlDraft(target, {
     ...draft,
     tone: { supplied: true, value: "" },
     accent: { supplied: true, value: "" },
@@ -84,7 +87,7 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
   assert.equal(emptySelects.errors["tone"], "Choose an available value.");
   assert.equal(emptySelects.errors["accent"], "Choose an available value.");
 
-  const invalid = validateControlDraft(component, variant, {
+  const invalid = validateControlDraft(target, {
     ...draft,
     count: { supplied: true, value: "11" },
   });
@@ -94,14 +97,15 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     "Enter a number within the allowed range.",
   );
 
-  const valid = validateControlDraft(component, variant, {
+  const valid = validateControlDraft(target, {
     ...draft,
     label: { supplied: true, value: "Purchase" },
     hint: { supplied: false, value: "Optional" },
   });
   assert.deepEqual(valid.errors, {});
+  // A render request carries a set value as JSON under the schema.
   assert.deepEqual(valid.overrides, {
-    label: { kind: "set", value: ["string", "Purchase"] },
+    label: { kind: "set", value: "Purchase" },
     hint: { kind: "unset" },
   });
 });

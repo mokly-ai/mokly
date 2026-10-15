@@ -135,7 +135,6 @@ const context = {
     "billing/invoice/paid",
   ],
   materialEntries: ["account/billing/invoice", "billing/invoice/paid"],
-  updateVersion: 0,
 } satisfies ShellContext;
 
 test("Changes labels a moved row Moved in place of its changed mark", () => {

@@ -1,4 +1,4 @@
-/** Pure navigation-tree state used by SSR and the hydrated shell. */
+/** Pure navigation-tree state of the shell. */
 
 import { folderTitlesAt } from "../registry/folder_titles.js";
 import type { ViewerSelection } from "../viewer/types.js";

@@ -100,6 +100,62 @@ fn variant(
             ));
         }
     }
+    for key in ["slug", "title"] {
+        if !object.get(key).is_some_and(Value::is_string) {
+            return Err(failure(
+                key,
+                Code::HtmlFrontMatter,
+                format!("{key} must be a string"),
+            ));
+        }
+    }
+    if kind == EntryKind::Component && !object.contains_key("props") {
+        return Err(failure(
+            "props",
+            Code::HtmlFrontMatter,
+            "props is required for a component variant".into(),
+        ));
+    }
+    if object.get("props").is_some_and(|value| !value.is_object()) {
+        return Err(failure(
+            "props",
+            Code::HtmlFrontMatter,
+            "props must be an object".into(),
+        ));
+    }
+    if object
+        .get("colorSchemes")
+        .and_then(Value::as_array)
+        .is_some_and(|schemes| {
+            schemes
+                .iter()
+                .any(|scheme| !matches!(scheme.as_str(), Some("light" | "dark")))
+        })
+    {
+        return Err(failure(
+            "colorSchemes",
+            Code::HtmlFrontMatter,
+            "colorSchemes must contain only light or dark".into(),
+        ));
+    }
+    if let Some(slots) = object.get("slots") {
+        let Some(slots) = slots.as_object() else {
+            return Err(failure(
+                "slots",
+                Code::HtmlFrontMatter,
+                "slots must be an object".into(),
+            ));
+        };
+        for (name, value) in slots {
+            if !value.is_string() {
+                return Err(failure(
+                    &format!("slots/{name}"),
+                    Code::HtmlFrontMatter,
+                    format!("slot {name} must be a string"),
+                ));
+            }
+        }
+    }
     let variant: VariantInput = match serde_json::from_value(value.clone()) {
         Ok(variant) => variant,
         Err(error) => {

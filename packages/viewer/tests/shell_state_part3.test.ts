@@ -13,12 +13,7 @@ test("standalone store actions preserve every sequential search byte", () => {
     catalogue,
     new URL("https://example.test/view/home/"),
   );
-  let state = createInitialShellState(
-    catalogue,
-    context,
-    route.view,
-    undefined,
-  );
+  let state = createInitialShellState(catalogue, context, route, undefined);
   const stateRef = { current: state };
   const store = shellStore({
     catalogue,

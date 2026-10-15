@@ -3,6 +3,7 @@
 import type { Definition } from "./Definition.js";
 import type { DefinitionDiagnostic } from "./DefinitionDiagnostic.js";
 import type { Story } from "./Story.js";
+import type { Warning } from "./Warning.js";
 
 // prettier-ignore
 export type Definitions = {
@@ -33,4 +34,8 @@ stories: Array<Story>,
 /**
  * Source-attributed authoring diagnostics; these do not invalidate framing.
  */
-diagnostics: Array<DefinitionDiagnostic>, };
+diagnostics: Array<DefinitionDiagnostic>,
+/**
+ * Generation diagnostics from excluded non-data props.
+ */
+warnings: Array<Warning>, };

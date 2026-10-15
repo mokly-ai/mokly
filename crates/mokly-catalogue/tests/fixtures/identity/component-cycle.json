@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "html-element",
-      "message": "component cycle: specs/components/button.component.html -> specs/components/other.component.html -> specs/components/button.component.html"
+      "message": "component cycle: specs/components/button.component.html -> specs/components/other.component.html -> specs/components/button.component.html",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

@@ -2,22 +2,25 @@
 
 import { createRoot } from "react-dom/client";
 
+import {
+  detailKey,
+  type DetailRequest,
+} from "../src/catalogue/detail_fences.js";
+import type { ShellCatalogueView } from "../src/catalogue/scoped_types.js";
+import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
   CatalogueUsage,
-  CatalogueView,
+  EntryDetailV1,
 } from "../src/catalogue/types.js";
 import { postMessageAdapter } from "../src/client/post_message_adapter.js";
 import { sameOriginAdapter } from "../src/client/same_origin_adapter.js";
 import { ShellStoreProvider } from "../src/shell/store.js";
+import { viewRoute } from "../src/shell/store_initial.js";
 import { viewerShellEnvironment } from "../src/viewer/environment.js";
 import type { MarkerPlacement } from "../src/viewer/marker_store.js";
-import {
-  viewerCatalogue,
-  viewerContext,
-  viewerView,
-} from "../src/viewer/projection.js";
-import type { LoadedCatalogue } from "../src/viewer/source.js";
+import { viewerView } from "../src/viewer/projection.js";
+import type { LoadedIndex } from "../src/viewer/sources.js";
 import type {
   InstanceRef,
   MarkerState,
@@ -67,13 +70,18 @@ export interface EvidenceRuntimeProbe extends EvidenceProbe {
 
 /** Mount the new registry owners with the same observable fixture controls. */
 export function startEvidenceHarness(
-  model: CatalogueReadModel,
+  index: CatalogueReadModel,
+  details: readonly (readonly [DetailRequest, EntryDetailV1])[],
   origin: string,
   cross: boolean,
   sibling: "ready" | "pending" | "unavailable",
 ): EvidenceProbe {
   const root = document.createElement("div");
   document.body.replaceChildren(root);
+  const model = shellCatalogueModel(
+    index,
+    new Map(details.map(([request, detail]) => [detailKey(request), detail])),
+  );
   const home = model.screens[0]!;
   const original = home.views.map((view) => ({ ...view }));
   const mobile = original.find((view) => view.viewport === "mobile")!;
@@ -126,10 +134,7 @@ export function startEvidenceHarness(
     : sameOriginAdapter();
   const adapter = evidenceAdapter(selected, probe);
   const baseUrl = cross ? origin : location.origin;
-  const loaded: LoadedCatalogue = {
-    catalogue: model,
-    url: new URL("/", baseUrl),
-  };
+  const loaded: LoadedIndex = { index, root: new URL("/", baseUrl) };
   const selection: ViewerSelection = {
     colorScheme: "light",
     screenPath: home.path,
@@ -138,19 +143,17 @@ export function startEvidenceHarness(
     view: "all",
     viewport: "both",
   };
-  const catalogue = viewerCatalogue(model);
   const initial = Object.fromEntries(
     original.map((view) => [
       view.viewport,
       view.viewport === "desktop" && sibling !== "ready"
         ? ({ status: sibling } satisfies CatalogueUsage)
-        : view.usage,
+        : (view.usage as CatalogueUsage),
     ]),
   ) as Record<EvidenceViewport, CatalogueUsage>;
   createRoot(root).render(
     <ShellStoreProvider
-      catalogue={catalogue}
-      context={viewerContext(model, selection)}
+      context={{ embedded: true }}
       embeddedHost={viewerShellEnvironment(
         loaded,
         selection,
@@ -159,15 +162,18 @@ export function startEvidenceHarness(
         () => undefined,
       )}
       frameAdapter={adapter}
-      frameBaseUrl={loaded.url}
+      frameBaseUrl={loaded.root}
+      index={index}
+      initialDetails={details}
       interactive
-      view={viewerView(catalogue, selection)}
+      route={(catalogue) =>
+        viewRoute(catalogue, viewerView(catalogue, selection))
+      }
     >
       <EvidenceRuntime
         home={home}
         initial={initial}
         loaded={loaded}
-        model={model}
         probe={probe}
         views={original}
       />
@@ -177,14 +183,14 @@ export function startEvidenceHarness(
 }
 
 function evidenceUsage(
-  views: readonly CatalogueView[],
+  views: readonly ShellCatalogueView[],
   viewport: EvidenceViewport,
   status: EvidenceStatus,
 ): CatalogueUsage {
   if (status === "ready")
     return structuredClone(
       views.find((view) => view.viewport === viewport)!.usage,
-    );
+    ) as CatalogueUsage;
   if (status === "empty")
     return { status: "ready", instances: [], slots: [], ranges: [] };
   return { status };

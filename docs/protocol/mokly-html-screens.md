@@ -74,6 +74,10 @@ this same template language with the component's own props and adds slot
 placeholders under the [HTML components contract](./mokly-html-components.md#body);
 one parser and one renderer serve both.
 
+Substitutions accept optional ASCII whitespace around the prop path inside
+the braces: `{{ name }}` equals `{{name}}`, including in attribute values.
+Whitespace inside a dotted path is not allowed.
+
 A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
 JavaScript component registered with `element`, which the sidecar's `describe`
@@ -187,8 +191,9 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 The discovery warning messages are exactly
 `prop "<name>" is not read by the body` for `html-unused-props` and
 `component element <element> is moved out of a table` for `html-foster-parented`.
-The subject is the complete entry path; an unused component prop uses a
-component subject. Source coordinates are one-based.
+Each shared body is checked once. The warning subject is the parent's
+complete entry path; both warnings use a component subject in a component
+body and an entry subject in a screen body. Source coordinates are one-based.
 
 Errors are `build-invalid` failures with the repository-relative file, line,
 and column. Warnings use the [build warning record](./mokly-build-warnings.md).

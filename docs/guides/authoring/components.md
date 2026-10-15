@@ -1,173 +1,126 @@
 ---
 title: "Components"
-description: "Give a shared component its own page, typed props and variants."
+description: "Register a product component with typed data props, slots, and saved states."
 section: "authoring"
 order: 3
 ---
 
 ## Register a component
 
-`defineComponent` returns the component to render and the parent-plus-variant
-entries that join the catalogue when the object is exported.
-Data belongs in `propSchema`; React content belongs in declared `slots`.
+`defineComponent` returns one definition with a typed `Component` wrapper.
+Export that definition from an entry module to register it.
 
 ```tsx
+// specs/components/action.mockup.tsx
 import { defineComponent } from "@mokly/mokly";
 
 export const action = defineComponent({
+  element: "app-action",
   title: "Action",
-  description: "A shared action.",
-  stylesheets: ["components/action.css"],
+  description: "The primary action.",
   relatedDocs: [],
   propSchema: {
-    kind: "object",
-    properties: { label: { schema: { kind: "string" } } },
-  },
-  controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
-  render: (props) => <button>{props.label}</button>,
+    type: "object",
+    additionalProperties: false,
+    required: ["label"],
+    properties: {
+      label: { type: "string", maxLength: 80 },
+      disabled: { type: "boolean" },
+    },
+  } as const,
+  props: { label: "Continue" },
+  slots: ["children"],
+  render: (props, context) => (
+    <button disabled={props.disabled} data-viewport={context.viewport}>
+      {props.label}
+      {props.children}
+    </button>
+  ),
   variants: [
-    { slug: "default", title: "Default", props: { label: "Continue" } },
+    { slug: "disabled", title: "Disabled", props: { disabled: true } },
   ],
 });
 ```
 
-Render it in a screen with `action.Component`, and give repeated siblings
-distinct `moklyInstance` values so their identity survives an edit; the
-default value is the last segment of the component's path. The
-`button/index.mockup.tsx` example therefore defaults to `button`.
+The parent page renders `props`. The saved state renders those props with
+`disabled: true`. Under the default root, their paths are `components/action`
+and `components/action/disabled`. A link to the parent opens its own props.
 
-## Keep the registration beside the component
+## Use the wrapper
 
-A root over your component library puts every registration beside the code it
-describes. With `roots: [{ dir: "packages/ui/src", path: "components" }]`,
-a `packages/ui/src/button` directory holds the product component, its
-registration, and the entry module that exports it, and Mokly records the
-registration file as the component's source.
+Import the definition into a React screen and render its `Component`.
 
 ```tsx
-// packages/ui/src/button/button.mokly.tsx
-import { defineComponent } from "@mokly/mokly";
+import { action } from "./components/action.mockup.js";
 
-import { Button } from "./button.js";
-
-export const button = defineComponent({
-  title: "Button",
-  description: "The product button.",
-  stylesheets: ["components/button.css"],
-  relatedDocs: [],
-  propSchema: {
-    kind: "object",
-    properties: { label: { schema: { kind: "string" } } },
-  },
-  render: (props) => <Button>{props.label}</Button>,
-  variants: [{ slug: "default", title: "Default", props: { label: "Save" } }],
-});
+<action.Component label="Save" moklyInstance="save-action">
+  <span>Save your changes</span>
+</action.Component>;
 ```
 
-```tsx
-// packages/ui/src/button/index.mockup.tsx
-export { button } from "./button.mokly.js";
-```
+`moklyInstance` names this use. It defaults to the last segment of the
+component's resolved path. Give repeated siblings distinct lowercase kebab-case
+names. The wrapper removes this prop before it calls your adapter.
+Imports alone do not record usage. Only a rendered wrapper records an instance.
 
-The entry module is named `index.mockup.tsx`, so the component takes its
-directory's path: `components/button`, with the variant at
-`components/button/default`. Screens anywhere in the repository import `button` from the registration and
-render `button.Component`. A source edit that changes rendered output is
-attributed through the actual render; a source-only edit that leaves output
-unchanged is not evidence. See the Changes guide for how stylesheet changes
-affect components and screens. A component's path derives like every other entry's, so the
-`components` prefix is a convention set by the root, not a rule, and a
-component and a screen can never share one path.
+The optional `element` enables the same adapter in HTML bodies, such as
+`<app-action label="Save"></app-action>`. It must be a unique lowercase custom
+element name with a hyphen. Names that start with `mokly-` are reserved.
 
-## Variants
+## Keep data separate from slots
 
-Variants are explicit named examples, never inferred. Each variant declares a
-`slug` and is its own catalogue entry at the parent's path plus that slug: it
-is grouped beneath the component in navigation, has its own page at
-`/view/components/button/default/`, its own Changes row, and can be the
-target of a link. Every variant is built for both viewports and every
-configured scheme. A link to the component's path opens its first variant; a
-link to a variant's path opens that variant. A variant inherits the parent's
-color schemes, related docs and tags, and copies the parent's
-description unless it declares its own.
+A component requires `propSchema`. TypeScript uses `json-schema-to-ts` to
+derive the types of `render`, `props`, variants, and the wrapper from the
+literal schema. `required` selects required fields. Arrays reach the adapter
+as readonly arrays. The context is `{ viewport, colorScheme }`.
 
-## Controls
+The schema supports JSON types, closed objects, arrays, primitive `enum` and
+`const` values, `oneOf` of constants, `anyOf`, and the documented bounds.
+Every object includes `additionalProperties: false`.
+It has no defaults, coercion, executable rules, or external references.
 
-`controls` declares what can be edited while serving locally: `text`,
-`boolean`, `number` and primitive `select` presets. Complex props stay
-inspectable but are not edited. Reset restores the variant's declared props,
-and a published catalogue keeps the variants and inspection with controls read
-only.
+Props contain plain JSON data. Functions, React elements, class instances,
+cycles, array holes, and non-finite numbers are invalid data props.
+Expose callbacks and icons as string preset keys. Resolve those keys in the
+adapter. Every supplied data prop contributes to comparison, including props
+without a visible control.
 
-## Prop schemas
+`slots` declares optional React-node props. Declare `children` to accept
+children. Slot names and schema data keys must be disjoint. Neither can use
+`key`, `ref`, `moklyInstance`, or `__moklySource`.
+A slot keeps the ownership of the code that supplied it, including when a
+component forwards it. It is never serialized as a data prop.
 
-A schema is declarative and validates the actual values, and TypeScript infers
-the props from it. The kinds are `string`, `number`, `boolean`, `null`,
-`enum`, `array`, `object` and `union`, each with the bounds it supports.
+The adapter receives a fresh copy. Its edits cannot change saved props or a
+later render.
 
-```ts
-import type { ObjectPropSchema } from "@mokly/mokly";
+## Saved states and controls
 
-export const propSchema = {
-  kind: "object",
-  properties: {
-    label: { schema: { kind: "string", maxLength: 80 } },
-    tone: { schema: { kind: "enum", values: ["neutral", "danger"] } },
-    count: { schema: { kind: "number", integer: true }, optional: true },
-  },
-} satisfies ObjectPropSchema;
-```
+Each variant declares `slug`, `title`, and a partial `props` map.
+Keys replace the parent's top-level keys. Optional fields are `description`,
+`tags`, `movedFrom`, and `slots`. The slots map supplies React content for that
+state's page. A variant cannot declare a path or another variant.
 
-## Ownership
+Mokly derives text, boolean, number, and select controls from the schema.
+Use `controls` to replace that set. Each control names a declared data prop.
+The schema remains the validator. A published catalogue keeps saved states and
+inspection; live editing belongs to Serve.
 
-`stylesheets` names existing public CSS files relative to `mockupsDir`, in
-authored order. Mokly links them only where the component actually renders,
-including an empty render, and records the links it inserts. HTTP(S),
-missing or non-public CSS paths fail validation. Public paths must contain no
-symbolic links. A repeated valid file is linked once with a warning. Two components may share a file. Changed rules
-are checked against component output on the component's own saved pages.
-A component keeps only matches outside a different nested component that has
-its own-page matches for the same rule. Self-nesting does not remove matches.
-Imports follow the same rule. Screen-only styles inside a component invocation
-change the screen, not every use of that component. A renderer may return
-exact document style ranges or non-CSS resource ownership. A resource owner
-record for any stylesheet is ignored with a warning. Put
-`componentStylesheets` in a configured rule's shared list to choose where
-declared CSS is linked.
+## Put registrations beside product code
 
-## Resolve a saved instance
+A root such as `{ "dir": "packages/ui/src", "path": "components" }` gives
+co-located registrations a `components` prefix. An `index.mockup.tsx` file can
+re-export a definition from a helper beside the component. The exporting entry
+module determines its catalogue path. The helper's module remains its source
+attribution.
 
-Use `resolveInstance` to compare one validated instance record with the record
-that has the same key in another version of the same view.
+A definition exported twice in one module registers once. A definition exported
+from two entry modules is an error. A spread copy cannot copy its identity.
 
-```ts
-import { resolveInstance } from "@mokly/mokly";
-import type { ComponentInstanceRecord, InstanceResolution } from "@mokly/mokly";
+## Component styles
 
-export function resolveSavedInstance(
-  previous: ComponentInstanceRecord,
-  current: ComponentInstanceRecord | undefined,
-): InstanceResolution {
-  return resolveInstance(previous, current);
-}
-```
-
-The result is `present` when the saved inputs and order still match, `moved`
-when the key remains but those recorded inputs changed, and `missing` when no
-equal-key record exists. The helper compares records only; it does not load a
-catalogue, inspect rendered markup or classify a visual change.
-
-## Exported types
-
-| Type                                                                                              | Use                                     |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `ComponentInput`, `ComponentDefinition`, `ComponentVariantDefinition`, `ComponentEntryDefinition` | What `defineComponent` takes and stores |
-| `RegisteredComponent`                                                                             | The returned `Component` and `entries`  |
-| `ComponentProps`, `ComponentRenderContext`                                                        | What `render` receives                  |
-| `ComponentVariant`                                                                                | One variant declaration                 |
-| `ComponentControl`, `ComponentControlLabel`, `ControlFor`                                         | The editable controls                   |
-| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`                                             | The schema of a component's data        |
-| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive`                                   | The values a schema allows              |
-| `ComponentStyleOwnership`, `ComponentResourceOwnership`                                           | Exact ownership a renderer may report   |
-| `ComponentInstanceRecord`, `ComponentSourceLocation`                                              | Saved instance identity and source      |
-| `InstanceResolution`                                                                              | The result of `resolveInstance`         |
+Import CSS from the component or declare `stylesheets` for public CSS.
+The core adds the relevant links. A renderer supplies product providers and
+can declare non-CSS resources. Rendered output, matching CSS rules, and used
+resources determine comparison changes.
+See [styles](/docs/authoring/styles/).

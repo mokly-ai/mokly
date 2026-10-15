@@ -10,6 +10,8 @@ use crate::grammar::{Cli, Publish, Verb};
 pub struct Environment {
     /// MOKLY_SIDECARS override.
     pub sidecars: Option<String>,
+    /// MOKLY_SIDECAR_TIMEOUT_MS override, parsed before command work.
+    pub sidecar_timeout_ms: Option<String>,
     /// MOKLY_ENDPOINT fallback.
     pub endpoint: Option<String>,
     /// MOKLY_TOKEN fallback.
@@ -41,6 +43,13 @@ pub fn validate(cli: &mut Cli, environment: &Environment) -> Result<(), Failure>
         },
     };
     common.sidecars = Some(sidecars);
+    common.sidecar_timeout_ms = match environment.sidecar_timeout_ms.as_deref() {
+        None => None,
+        Some(value) => match value.parse::<u64>() {
+            Ok(value) if value > 0 => Some(value),
+            _ => return Err(Failure::SidecarTimeoutEnvironment),
+        },
+    };
     if let Some(Verb::Publish(publish)) = &mut cli.command {
         validate_publish(publish, environment)?;
     }

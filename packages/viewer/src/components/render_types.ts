@@ -1,64 +1,68 @@
-/** Private Serve controls protocol; these values never enter generated metadata. */
+/** The private Serve render route of the controls contract; never catalogue data. */
+
+import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
-import type { ComponentViewRecord } from "./manifest_types.js";
-import type {
-  ComponentWirePrimitive,
-  ComponentWireProps,
-} from "./prop_types.js";
+import type { ComponentWireProps, PropValue } from "./prop_types.js";
 
+/** One temporary edit: a JSON value under the schema, or an unset optional. */
 export type ComponentOverride =
-  { kind: "set"; value: ComponentWirePrimitive } | { kind: "unset" };
+  { kind: "set"; value: PropValue } | { kind: "unset" };
+
+/** One live render of a screen, a component, or a variant of either. */
 export interface ComponentRenderRequest {
-  componentId: string;
-  variantPath: string;
+  entryPath: string;
   viewport: Viewport;
   colorScheme: ColorScheme;
-  generation: string;
+  /** The index revision the shell installed. */
+  revision: number;
   pageId: string;
   overrides: Readonly<Record<string, ComponentOverride>>;
 }
+
+/** The temporary preview of one accepted live render. */
 export interface ComponentRenderSuccess {
   renderId: string;
-  generation: string;
+  revision: number;
   previewUrl: string;
+  /** The complete validated props. */
   props: ComponentWireProps;
-  view: ComponentViewRecord;
+  /** The rendered view's usage, status `ready`. */
+  usage: Extract<CatalogueUsage, { status: "ready" }>;
 }
-export interface RenderCapability {
-  generation: string;
-  token: string;
-}
+
+/** The structured failures of the render route. */
 export type RenderErrorCode =
   | "invalid-input"
   | "unknown-entry"
-  | "stale-generation"
+  | "stale-revision"
   | "render-failed"
   | "capacity"
   | "forbidden"
   | "too-large"
   | "method"
-  | "expired"
-  | "cancelled";
-export class ComponentRenderError extends Error {
-  constructor(
-    readonly code: RenderErrorCode,
-    message: string,
-    /** Server-only diagnostic; never include this detail in client responses. */
-    readonly detail?: string,
-  ) {
-    super(message);
-  }
-}
+  | "expired";
+
+/** The HTTP status of each render failure. */
 export const renderStatus: Readonly<Record<RenderErrorCode, number>> = {
   "invalid-input": 400,
+  forbidden: 403,
   "unknown-entry": 404,
-  "stale-generation": 409,
+  method: 405,
+  "stale-revision": 409,
+  expired: 410,
+  "too-large": 413,
   "render-failed": 422,
   capacity: 429,
-  forbidden: 403,
-  "too-large": 413,
-  method: 405,
-  expired: 410,
-  cancelled: 409,
 };
+
+/** A failed live render with product-safe copy. */
+export class ComponentRenderError extends Error {
+  constructor(
+    readonly code: RenderErrorCode | "invalid-response",
+    message: string,
+  ) {
+    super(message);
+    this.name = "ComponentRenderError";
+  }
+}

@@ -67,12 +67,15 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Render Sidecar](./mokly-sidecar.md)
 - [Sidecar Definition Transport](./mokly-sidecar-definitions.md)
+- [Sidecar Module Sources](./mokly-sidecar-modules.md)
+- [Sidecar Render Records](./mokly-sidecar-render-records.md)
 - [Rendering And Document Assembly](./mokly-rendering.md)
 
 ## Comparison And Changes
 
 How two commits are compared: tree comparison, CSS attribution, component evidence, moves, removed entries, and the comparison routes.
 
+- [Base Source And Dependency Preparation](./mokly-base-preparation.md)
 - [Branch-Point Entry Lookup](./mokly-branch-point-lookup.md)
 - [Catalogue Change Metadata And Removed Pages](./mokly-catalogue-changes.md)
 - [Catalogue Entry Records](./mokly-component-manifest.md)

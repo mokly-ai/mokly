@@ -5,16 +5,18 @@ import path from "node:path";
 
 import { serveStaticFiles } from "../../../tests/helpers/static_server.js";
 
-import { fixture } from "./server_fixture.js";
+import { rawDetailFixtures, rawIndexFixture } from "./catalogue_v7_fixture.js";
 
 export async function crossOriginFixture() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-viewer-"));
-  const catalogue = structuredClone(fixture);
+  const index = rawIndexFixture();
+  const details = rawDetailFixtures();
   const host = await serveStaticFiles(root);
   const frames = await serveStaticFiles(root, { allowedOrigin: host.url });
   return {
     root,
-    catalogue,
+    index,
+    details,
     host,
     frames,
     async close() {

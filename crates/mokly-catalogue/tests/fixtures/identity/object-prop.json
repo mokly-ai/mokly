@@ -6,7 +6,17 @@
   "errors": [
     {
       "code": "html-props",
-      "message": "prop reference user must name a scalar value"
+      "message": "prop reference user must name a scalar value",
+      "path": "specs/home.screen.html",
+      "line": 5,
+      "column": 5
+    }
+  ],
+  "warnings": [
+    {
+      "code": "html-unused-props",
+      "subject": "entry \"home\"",
+      "message": "prop \"user\" is not read by the body"
     }
   ]
 }

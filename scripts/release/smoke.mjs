@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { runCommand } from "./command.mjs";
+import { SMOKE_SOURCE } from "./smoke_source.mjs";
 
 const archive = process.argv[2];
 if (!archive) throw new Error("Usage: smoke.mjs ARCHIVE");
@@ -26,19 +27,7 @@ try {
     ["install", "--ignore-scripts", "--no-audit", "--no-fund"],
     { cwd: root },
   );
-  await fs.writeFile(
-    path.join(root, "smoke.mjs"),
-    `
-import assert from "node:assert/strict";
-import fs from "node:fs";
-import { MoklyViewer, readCatalogue } from "@mokly/viewer";
-import { resolveInstance } from "@mokly/viewer/data";
-assert.equal(typeof MoklyViewer, "function");
-assert.equal(typeof readCatalogue, "function");
-assert.equal(typeof resolveInstance, "function");
-assert.ok(fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8").length > 0);
-`,
-  );
+  await fs.writeFile(path.join(root, "smoke.mjs"), SMOKE_SOURCE);
   await runCommand(process.execPath, ["smoke.mjs"], { cwd: root });
   process.stdout.write(
     "The installed viewer archive passed its smoke check.\n",

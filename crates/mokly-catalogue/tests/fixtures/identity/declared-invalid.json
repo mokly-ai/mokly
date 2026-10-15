@@ -5,7 +5,11 @@
   },
   "errors": [
     {
-      "code": "invalid-path"
+      "code": "invalid-path",
+      "message": "specs/a.screen.html: path \"../unsafe\" is not a valid path",
+      "path": "specs/a.screen.html",
+      "line": 3,
+      "column": 1
     }
   ]
 }

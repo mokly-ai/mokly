@@ -3,10 +3,10 @@
 import type {
   ShellCatalogueComponent,
   ShellCatalogueScreen,
-  ShellCatalogueVariant,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { ReviewState, ViewResourceEvidence } from "../review/types.js";
+import { viewEvidenceReasons } from "../review/view_evidence.js";
 import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
 import type { ViewState, ViewStatesBySelection } from "../shell/view_status.js";
 import type { ChangedViewsBySelection } from "../shell/workspace_views_data.js";
@@ -36,8 +36,8 @@ function publishedChangedViews(
 
 /** Key public comparison evidence exactly like the served workspace data. */
 export function publishedChangedViewsBySelection(
-  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
-  variants: readonly ShellCatalogueVariant[] = [],
+  entry: ShellCatalogueScreen | ShellCatalogueComponent,
+  variants: readonly ShellCatalogueComponent[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
     return { [entry.path]: publishedChangedViews(entry.views) };
@@ -69,8 +69,8 @@ function publishedViewStates(
 
 /** Key published ready states like the served workspace evidence. */
 export function publishedViewStatesBySelection(
-  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
-  variants: readonly ShellCatalogueVariant[] = [],
+  entry: ShellCatalogueScreen | ShellCatalogueComponent,
+  variants: readonly ShellCatalogueComponent[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
@@ -94,6 +94,8 @@ export function publishedResourceEvidence(
   views: readonly ShellCatalogueView[],
 ): readonly ViewResourceEvidence[] {
   return views.flatMap(({ viewport, colorScheme, resourceEvidence }) =>
-    resourceEvidence ? [{ viewport, colorScheme, ...resourceEvidence }] : [],
+    resourceEvidence
+      ? [{ viewport, colorScheme, ...viewEvidenceReasons(resourceEvidence) }]
+      : [],
   );
 }

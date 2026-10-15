@@ -12,6 +12,7 @@ tracing = "0.1.44"
 unimock = { version = "0.6.8", optional = true }
 
 [dev-dependencies]
+tempfile = "3.27.0"
 unimock = "0.6.8"
 
 [features]

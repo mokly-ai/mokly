@@ -1,0 +1,21 @@
+---
+source: crates/mokly-publish/src/_tests_/metadata_tests.rs
+expression: "String::from_utf8(bytes).unwrap()"
+---
+{
+  "schemaVersion": 2,
+  "moklyVersion": "0.14.0-beta.1+test",
+  "repository": {
+    "host": "example.com",
+    "owner": "group",
+    "name": "project"
+  },
+  "branch": "feature",
+  "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "baseRef": "origin/main",
+  "baseSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "pullRequest": null,
+  "configPath": "tools/mokly.config.json",
+  "exportedAt": "2026-09-26T12:00:00.000Z",
+  "comparisonPath": "mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/review.json"
+}

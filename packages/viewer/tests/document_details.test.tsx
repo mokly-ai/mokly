@@ -1,34 +1,27 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
 import type { ManifestEntry } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+
+import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
 
 /** The public fixture, with a screen that names the overview document. */
 function catalogue() {
-  const model = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
+  return catalogueFixture(
+    indexFixture((model) => {
+      const details = model.screens.find(
+        (entry) => entry.path === "product/browse/details",
+      );
+      assert.ok(details);
+      details.details.relatedDocs = ["mock:product", "docs/notes.md"];
+      model.documents[0]!.tags = ["guide"];
+    }),
   );
-  const details = model.screens.find(
-    (entry: { path: string }) => entry.path === "product/browse/details",
-  );
-  details.details.relatedDocs = ["mock:product", "docs/notes.md"];
-  const document = model.documents[0];
-  document.tags = ["guide"];
-  return viewerCatalogue(readCatalogue(model));
 }
 
 function details(path: string): string {

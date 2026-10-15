@@ -17,7 +17,7 @@ fn schema_mistakes_reach_the_single_rust_profile_validator() {
     for keyword in ["default", "pattern", "$ref"] {
         let mut schema = json!({"type":"object","additionalProperties":false});
         schema[keyword] = json!("unsupported");
-        let response: Response = serde_json::from_value(json!({"id":1,"result":{"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","propSchema":schema}],"stories":[],"diagnostics":[]}})).unwrap();
+        let response: Response = serde_json::from_value(json!({"id":1,"result":{"screens":[],"pages":[],"useCases":[],"folders":[],"components":[{"handle":"ui/button.tsx#Button","propSchema":schema}],"warnings":[],"stories":[],"diagnostics":[]}})).unwrap();
         let request = Request {
             id: 1,
             call: Call::Describe(Generation {
@@ -49,7 +49,7 @@ fn schema_mistakes_reach_the_single_rust_profile_validator() {
 
 #[test]
 fn describe_diagnostics_and_error_replies_keep_the_authoring_code() {
-    let definitions: Definitions = serde_json::from_value(json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[],"stories":[],"diagnostics":[{"code":"array-export","module":"specs/a.tsx","exportName":"default","message":"export default is an array; export one definition per export"}]})).unwrap();
+    let definitions: Definitions = serde_json::from_value(json!({"screens":[],"pages":[],"useCases":[],"folders":[],"components":[],"warnings":[],"stories":[],"diagnostics":[{"code":"array-export","module":"specs/a.tsx","exportName":"default","message":"export default is an array; export one definition per export"}]})).unwrap();
     assert!(matches!(
         definitions.diagnostics[0].code,
         DefinitionCode::ArrayExport

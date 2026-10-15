@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "invalid-folder",
-      "message": "specs/a/_folder.json: exclude must be an array of safe relative globs"
+      "message": "specs/a/_folder.json: exclude must be an array of safe relative globs",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 2
     }
   ]
 }

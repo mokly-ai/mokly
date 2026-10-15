@@ -7,15 +7,18 @@ It depends on no other workspace crate.
 ## Responsibilities
 
 - Rename files and directories atomically without replacing a destination.
-- Acquire nonblocking exclusive file locks with handle-scoped release.
+- Acquire nonblocking shared and exclusive file locks with handle-scoped release.
 - Create Unix process groups and Windows kill-on-close job objects.
+- Flush cache data with a filesystem barrier or plain file synchronization.
 - Expose typed errors that callers can handle without string matching.
 
 ## What This Crate Does
 
 `Rename` uses Linux `renameat2(RENAME_NOREPLACE)`, macOS
 `renamex_np(RENAME_EXCL)`, or Windows `MoveFileExW` without replacement flags.
-`Locks` uses the standard library's OS-backed exclusive lock. Dropping its
+`Locks` uses the standard library's OS-backed shared and exclusive locks.
+Shared leases coexist. Exclusive mutation and eviction fail while a lease
+is held. Dropping its
 guard releases the lock and leaves the lock file intact.
 
 `ProcessGroups` configures a child before spawn, then attaches an ownership
@@ -28,7 +31,12 @@ graceful termination, and terminates the job for forceful cancellation.
 The runner must kill and reap a child if attachment fails. The runner owns
 shutdown deadlines and pipe draining.
 
-The FFI is isolated in the Unix and Windows modules. Each unsafe call documents
+`Flush` uses one Linux `syncfs` for a filesystem. Its per-file fallback uses
+plain Unix `fsync`, which avoids a macOS drive-cache barrier for each data
+file. Windows flushes individual files. The cache coordinator publishes its
+completion receipt only after data synchronization.
+
+The FFI is isolated in the Unix, Windows and flush modules. Each unsafe call documents
 its pointer, handle, or process-identity requirements.
 
 ## Quick Start
@@ -53,7 +61,7 @@ Real OS tests live in `tests/` and use isolated temporary directories.
 
 ### Key Code
 
-- [Rename](./src/rename.rs), [locks](./src/locks.rs), and
+- [Flush](./src/flush.rs), [rename](./src/rename.rs), [locks](./src/locks.rs), and
   [process groups](./src/processes.rs).
 - [Unix adapter](./src/unix.rs) and [Windows adapter](./src/windows.rs).
 

@@ -11,3 +11,10 @@ await fs.promises.rm(path.join(repositoryRoot, "packages/viewer/dist"), {
   force: true,
   recursive: true,
 });
+
+for (const directory of ["packages/mokly/dist", "packages/mokly/docs"]) {
+  await fs.promises.rm(path.join(repositoryRoot, directory), {
+    force: true,
+    recursive: true,
+  });
+}

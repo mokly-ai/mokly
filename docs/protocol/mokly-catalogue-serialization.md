@@ -77,6 +77,17 @@ follows the [comparison contract](./mokly-comparison.md). The generated
 TypeScript types of the model crate are the normative shapes, and a reader
 validates a document against them before use.
 
+The viewer's readers of the index, the detail, the
+[live descriptor v3](./mokly-shell-delivery.md#live-descriptor), and the
+render route's answer of the
+[controls contract](./mokly-component-controls.md) read the fields their
+version defines and ignore any other field at every depth, so an older viewer
+reads a newer writer's additive optional fields. A field that contradicts its
+own record's kind, such as ready evidence on a pending state, stays invalid,
+and the privacy rules still reject private evidence anywhere and `usage` or
+`resourceEvidence` anywhere in the index. The core reads only its own output
+and rejects an unknown or misplaced field.
+
 ## Tree Validation
 
 The index reader requires `tree`; `[]` is valid when the catalogue has no

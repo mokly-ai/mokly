@@ -136,7 +136,7 @@ leaves the repository. Protected authoring inputs are never served.
 ## Browse Shell
 
 The Browse shell is the viewer package's React tree, rendered only in the
-browser from the catalogue index and the current entry's detail under the
+browser from the catalogue index and the current route's details under the
 [shell delivery contract](./mokly-shell-delivery.md). Serve and `build`
 deliver one identical stub page per shell route and never render shell HTML.
 The [viewer contract](./mokly-viewer.md#shell-tree-and-state) owns the tree:

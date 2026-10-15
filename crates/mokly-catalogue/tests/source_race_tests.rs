@@ -66,3 +66,17 @@ fn directory_reads_do_not_follow_a_replacement_symlink() {
     let error = WorkingTree.children(&original).unwrap_err();
     assert_eq!(error.code(), "ENOTDIR");
 }
+
+#[test]
+fn source_reads_do_not_follow_a_symlink_swapped_after_projection() {
+    let directory = TempDir::new().unwrap();
+    let original = directory.path().join("home.md");
+    let outside = TempDir::new().unwrap();
+    let secret = outside.path().join("private.md");
+    fs::write(&original, "# Home").unwrap();
+    fs::write(&secret, "private bytes").unwrap();
+    let projected = WorkingTree.project(&original).unwrap().unwrap();
+    fs::remove_file(&original).unwrap();
+    std::os::unix::fs::symlink(&secret, &original).unwrap();
+    assert!(WorkingTree.read(&projected.identity).is_err());
+}

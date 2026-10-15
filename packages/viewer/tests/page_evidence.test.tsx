@@ -4,36 +4,39 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
+import { detailKey } from "../src/catalogue/detail_fences.js";
 import type { ManifestPage, ManifestV10 } from "../src/registry/types.js";
+import { viewEvidenceReasons } from "../src/review/view_evidence.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
-import { renderHydratedShellPage } from "../src/shell/document.js";
 import { ShellMain } from "../src/shell/views.js";
-import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
+import { viewerCatalogue } from "../src/viewer/projection.js";
 
+import {
+  detailFixture,
+  indexFixture,
+  shellModelFixture,
+} from "./catalogue_v7_fixture.js";
 import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,
   CHANGED,
   CHANGED_SECTION,
   published,
+  publishedDetails,
+  publishedIndex,
   renderPage,
   section,
   status,
 } from "./page_evidence_fixture.js";
+import { standaloneMarkup } from "./shell_markup.js";
 
 const { model: fixture } = componentWorkspaceFixture();
+const CHANGED_PAGE = {
+  changes: { status: "ready", kind: "changed", included: true },
+} as const;
 
 test("a changed document shows its status and each stylesheet once in Details", () => {
-  const markup = renderPage(
-    viewerCatalogue(
-      published({
-        changes: { status: "ready", kind: "changed", included: true },
-        resourceEvidence: CHANGED,
-      }),
-    ),
-  );
+  const markup = renderPage(viewerCatalogue(published(CHANGED_PAGE, CHANGED)));
   assert.deepEqual(status(markup), ["Changed"]);
   assert.ok(markup.includes(`${CHANGED_SECTION}</details>`), markup);
   assert.doesNotMatch(
@@ -99,7 +102,7 @@ test("live classification supplies the same page facts without a published catal
       changedEntries,
       componentChanges: {
         baseline: { ...manifest, entries: baseline },
-        pageEvidence: [{ path: "guide", ...CHANGED }],
+        pageEvidence: [{ path: "guide", ...viewEvidenceReasons(CHANGED) }],
       },
     });
   const changed = live(["guide"]);
@@ -112,25 +115,33 @@ test("live classification supplies the same page facts without a published catal
 });
 
 test("Changes that are not ready show no page status or comparison details", () => {
-  const guide = fixture.pages.find((item) => item.path === "guide");
-  assert.ok(guide);
-  const { resourceEvidence: _evidence, ...plain } = guide;
+  const { resourceEvidence: _evidence, ...guide } = detailFixture({
+    path: "guide",
+  });
   for (const changesStatus of ["pending", "unavailable", "disabled"] as const) {
+    const index = indexFixture((model) => {
+      Object.assign(model, {
+        changesStatus,
+        comparisonUrl: null,
+        screens: [],
+        components: [],
+        useCases: [],
+        removedEntries: [],
+        tree: [{ kind: "entry", path: "guide" }],
+        documents: [],
+        treeOrder: [],
+      });
+      model.pages = model.pages.map((page) => ({
+        ...page,
+        changes: { status: changesStatus },
+      }));
+    });
     const markup = renderPage(
       viewerCatalogue(
-        readCatalogue({
-          ...fixture,
-          changesStatus,
-          comparisonUrl: null,
-          screens: [],
-          components: [],
-          useCases: [],
-          removedEntries: [],
-          tree: [{ kind: "entry", path: "guide" }],
-          documents: [],
-          treeOrder: [],
-          pages: [{ ...plain, changes: { status: changesStatus } }],
-        }),
+        shellModelFixture(
+          index,
+          new Map([[detailKey({ path: "guide" }), guide]]),
+        ),
       ),
     );
     assert.deepEqual(status(markup), [], changesStatus);
@@ -147,7 +158,7 @@ test("a removed document keeps its Removed badge and no comparison details", () 
   const markup = renderToStaticMarkup(
     <ShellMain
       catalogue={catalogue}
-      context={{ base: BASE, updateVersion: 1 }}
+      context={{ base: BASE }}
       view={{ kind: "target", target: { entry: removed.entry, kind: "entry" } }}
     />,
   );
@@ -155,20 +166,12 @@ test("a removed document keeps its Removed badge and no comparison details", () 
   assert.equal(section(markup), undefined);
 });
 
-test("server rendering carries the page evidence that the browser hydrates", () => {
-  const model = published({
-    changes: { status: "ready", kind: "changed", included: true },
-    resourceEvidence: CHANGED,
+test("the standalone shell renders the page evidence of the held detail", () => {
+  const html = standaloneMarkup({
+    index: publishedIndex(CHANGED_PAGE),
+    details: publishedDetails(CHANGED),
+    path: "/view/guide/",
   });
-  const view = viewerView(viewerCatalogue(model), {
-    ...defaultSelection,
-    screenPath: "guide",
-  });
-  const html = renderHydratedShellPage(view, {
-    base: BASE,
-    readModel: model,
-    updateVersion: 1,
-  }).replaceAll("<!-- -->", "");
   assert.deepEqual(status(html), ["Changed"]);
   assert.ok(html.includes(`${CHANGED_SECTION}</details>`));
 });

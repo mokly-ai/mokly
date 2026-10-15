@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-element",
-      "message": "forbidden element mokly-custom"
+      "message": "forbidden element mokly-custom",
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 1
     }
   ]
 }
