@@ -143,7 +143,10 @@ the viewer that matches their catalogue; it logs the diagnostic separately and
 renders no navigation and no frame after a rejected index or detail. The
 embedded viewer shows the headline without an action, because only its host can
 update the viewer, and reports `onError` with `code: "version"`, the headline as
-`message`, and `details` with the typed diagnostic. `ViewerError` is:
+`message`, and `details` with the typed diagnostic. A rejected review follows the
+same rule in the comparison pane: the standalone shell shows the headline with
+`Reload`, and the embedded viewer shows it without an action and reports
+`onError`. `ViewerError` is:
 
 ```ts
 interface ViewerError {

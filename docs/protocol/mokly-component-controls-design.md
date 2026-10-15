@@ -56,7 +56,13 @@ component without declared controls, and an entry without props show read-only
 text, not fields. Merged props that fail as a whole highlight no field; the
 alert names the failure, and the heading's Reset is the one action. An expired
 temporary preview keeps the edits, shows the saved props, and offers Update
-preview. The settled strings are in
+preview. An optional field shows Optional, a Set check box, and Not set while
+unset; an optional toggle's value check box carries the field's name. A
+number field's help and error name its bounds and its step. After
+Reset, Try again, or Update preview, focus moves to the panel heading; after
+Switch to Current, to the first field; after a start retry, to the status
+that replaces the button, and to the heading when that status leaves; after
+a catalogue retry, to the loading status. The settled strings are in
 `examples/basic/specs/design/components/controls/parts/copy.ts`.
 Do not add environment badges or implementation details to the rendered UI.
 
@@ -107,7 +113,7 @@ the Props panel.
 Serve the example with `mokly serve` so that Mokly renders every matching
 artboard, and commit only the authored changes. Test all input labels/types, current variant identity, full reset
 values, optional/unset states, pending/error preservation, validation errors,
-disabled comparison inputs, read-only guidance, and links between owning states.
+read-only comparison values, read-only guidance, and links between owning states.
 Open every artboard in the served Browse frames and visually inspect both
 viewport variants. Test inspector open/switch/close and keyboard behavior in
 served frames and in the `mokly build` output.

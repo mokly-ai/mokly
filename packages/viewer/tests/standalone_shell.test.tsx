@@ -25,18 +25,25 @@ test("the standalone shell paints its loading state before the index arrives", (
   );
   assert.equal(
     html,
-    '<div class="mbk mbk-empty" role="status">Loading catalogue…</div>',
+    '<div aria-busy="true" class="mbk mbk-empty" tabindex="-1"><p role="status">Loading catalogue…</p></div>',
   );
 });
 
-test("a version failure shows only the product message", () => {
+test("a version failure shows the one headline and Reload", () => {
   const html = renderToStaticMarkup(
-    <VersionFailure error={new MoklyVersionError("catalogue", 8, 7)} />,
+    <VersionFailure
+      error={new MoklyVersionError("catalogue", 8, 7)}
+      reload={() => undefined}
+    />,
   );
-  assert.match(html, /data-mokly-version-error=""/);
-  assert.match(html, /role="alert"/);
-  assert.ok(html.includes(VERSION_ERROR_MESSAGE));
-  assert.doesNotMatch(html, /\b8\b|\b7\b/);
+  assert.equal(
+    VERSION_ERROR_MESSAGE,
+    "This catalogue needs a compatible viewer",
+  );
+  assert.equal(
+    html,
+    '<div class="mbk mbk-empty" data-mokly-version-error="" role="alert"><h2>This catalogue needs a compatible viewer</h2><button class="mbk-empty-link" type="button">Reload</button></div>',
+  );
 });
 
 test("stored preferences restore disclosures, Details and a clamped width", () => {

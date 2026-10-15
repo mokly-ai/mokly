@@ -30,8 +30,13 @@ export interface ViewerCapabilities {
   temporaryPreviews: TemporaryPreviews;
 }
 
+/** Live prop editing in Serve before its capability installs. */
+export type LiveEditingStart =
+  { status: "preparing" } | { status: "failed"; retry(): void };
+
 interface ShellDataContextValue {
   capabilities?: ViewerCapabilities;
+  editingStart?: LiveEditingStart;
   routeDelivery?: DetailDelivery;
 }
 
@@ -45,7 +50,7 @@ export function ShellDataBoundary({
   children: ReactNode;
   store: ShellDataStore;
 }) {
-  const { descriptor, source } = store.live;
+  const { descriptor, editing, retry, source } = store.live;
   const index = store.snapshot.index;
   const capabilities = useMemo<ViewerCapabilities | undefined>(() => {
     if (!descriptor || !source) return undefined;
@@ -62,12 +67,22 @@ export function ShellDataBoundary({
       },
     };
   }, [descriptor, index.deploymentId, index.revision, source]);
+  const editingStart = useMemo<LiveEditingStart | undefined>(
+    () =>
+      capabilities || !editing || editing === "ready"
+        ? undefined
+        : editing === "failed"
+          ? { status: "failed", retry }
+          : { status: "preparing" },
+    [capabilities, editing, retry],
+  );
   const value = useMemo(
     () => ({
       ...(capabilities ? { capabilities } : {}),
+      ...(editingStart ? { editingStart } : {}),
       ...(store.routeDelivery ? { routeDelivery: store.routeDelivery } : {}),
     }),
-    [capabilities, store.routeDelivery],
+    [capabilities, editingStart, store.routeDelivery],
   );
   return <ShellDataContext value={value}>{children}</ShellDataContext>;
 }
@@ -78,6 +93,14 @@ export function ShellDataBoundary({
  */
 export function useViewerCapabilities(): ViewerCapabilities | undefined {
   return useContext(ShellDataContext).capabilities;
+}
+
+/**
+ * Live prop editing that waits for, or failed to load, its descriptor in
+ * Serve; `undefined` once the capability installs and outside Serve.
+ */
+export function useLiveEditingStart(): LiveEditingStart | undefined {
+  return useContext(ShellDataContext).editingStart;
 }
 
 /** The delivery of the routed entry's detail; absent on home and missing routes. */

@@ -56,7 +56,10 @@ export const renderStatus: Readonly<Record<RenderErrorCode, number>> = {
   capacity: 429,
 };
 
-/** A failed live render with product-safe copy. */
+/**
+ * A failed live render: the route's code, which the Props panel maps to its
+ * own copy, and a diagnostic message that no screen shows.
+ */
 export class ComponentRenderError extends Error {
   constructor(
     readonly code: RenderErrorCode | "invalid-response",

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { type ManifestComponentVariant } from "../src/components/manifest_types.js";
-import { controlsUnavailable } from "../src/shell/component_controls_state.js";
+import { controlsMode } from "../src/shell/component_controls_state.js";
 import { controlTarget } from "../src/shell/control_values.js";
 import { type WorkspaceVariant } from "../src/shell/workspace_data.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
@@ -19,24 +19,14 @@ test("control availability and usage URLs explain the active product state", () 
   } satisfies WorkspaceVariant;
   const target = controlTarget(source, variant, false);
   assert.ok(target);
-  assert.equal(
-    controlsUnavailable(target, true, true),
-    "Comparisons show the saved props. Return to Current to edit props.",
-  );
-  assert.equal(
-    controlsUnavailable(target, false, false),
-    "Open this catalogue locally to edit props.",
-  );
-  assert.equal(controlsUnavailable(target, false, true), undefined);
-  for (const unavailable of [undefined, { ...target, removed: true }])
-    assert.equal(
-      controlsUnavailable(unavailable, false, true),
-      "Choose an available entry to edit props.",
-    );
-  assert.equal(
-    controlsUnavailable({ ...target, controls: {} }, false, true),
-    "No editable props are declared for this entry.",
-  );
+  assert.equal(target.title, sourceVariant.title);
+  assert.equal(controlsMode(target, true, "ready"), "comparison");
+  assert.equal(controlsMode(target, false, undefined), "published");
+  assert.equal(controlsMode(target, false, "preparing"), "preparing");
+  assert.equal(controlsMode(target, false, "ready"), "editable");
+  const removed = controlTarget(source, { ...variant, removed: true }, false);
+  assert.ok(removed);
+  assert.equal(controlsMode(removed, false, "ready"), "removed");
   assert.equal(
     usageHref({
       title: "Home",

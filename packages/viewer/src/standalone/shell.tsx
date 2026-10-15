@@ -6,6 +6,7 @@ import type { CatalogueReadModel } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
 import { storedScrollTogether } from "../shell/comparison_scroll_preference.js";
+import { useFocusAfter } from "../shell/focus_after.js";
 import { CatalogueNav } from "../shell/nav.js";
 import { useNavigationBounds } from "../shell/nav_resize.js";
 import { routeFromUrl } from "../shell/routes.js";
@@ -43,6 +44,7 @@ export function StandaloneShell({
 }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<IndexState>({ kind: "loading" });
+  const focus = useFocusAfter<"loading">();
   useEffect(() => {
     const controller = new AbortController();
     void fetchStandaloneIndex(win, controller.signal).then(
@@ -60,13 +62,21 @@ export function StandaloneShell({
     );
     return () => controller.abort();
   }, [attempt, win]);
-  if (state.kind === "version") return <VersionFailure error={state.error} />;
+  if (state.kind === "version")
+    return (
+      <VersionFailure
+        error={state.error}
+        reload={() => win.location.reload()}
+      />
+    );
   if (state.kind === "failed")
     return (
       <div className="mbk mbk-empty" role="alert">
         <h2>The catalogue could not be loaded</h2>
         <button
+          className="mbk-empty-link"
           onClick={() => {
+            focus.request("loading");
             setState({ kind: "loading" });
             setAttempt((value) => value + 1);
           }}
@@ -78,8 +88,13 @@ export function StandaloneShell({
     );
   if (state.kind === "loading")
     return (
-      <div className="mbk mbk-empty" role="status">
-        Loading catalogue…
+      <div
+        aria-busy="true"
+        className="mbk mbk-empty"
+        ref={focus.ref("loading")}
+        tabIndex={-1}
+      >
+        <p role="status">Loading catalogue…</p>
       </div>
     );
   return (

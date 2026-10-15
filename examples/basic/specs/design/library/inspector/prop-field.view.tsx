@@ -1,3 +1,5 @@
+import { CONTROLS_COPY } from "../../components/controls/parts/copy.js";
+
 import type { PropFieldProps } from "./prop-field.js";
 
 export function PropFieldView({
@@ -19,7 +21,7 @@ export function PropFieldView({
         {optional ? (
           <>
             {" "}
-            <span aria-hidden="true">Optional</span>
+            <span aria-hidden="true">{CONTROLS_COPY.optional}</span>
           </>
         ) : null}
       </label>
