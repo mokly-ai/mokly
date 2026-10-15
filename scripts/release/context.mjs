@@ -2,42 +2,19 @@ import fs from "node:fs";
 
 const VERSION = "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
 
-function resolvePublishRef({
-  eventName,
-  manualRef,
-  releaseCreated,
-  releaseTag,
-}) {
-  if (eventName === "workflow_dispatch") {
-    if (!manualRef) throw new Error("manual publish_ref is required");
-    validateTag(manualRef);
-    return manualRef;
-  }
-  if (eventName === "push" && releaseCreated === "true") {
-    if (!releaseTag) throw new Error("release-please omitted its release tag");
-    validateTag(releaseTag);
-    return releaseTag;
-  }
-  if (eventName === "push") return undefined;
-  throw new Error(`unsupported release event: ${eventName}`);
-}
-
+/** Select the viewer release independently while the CLI package is private. */
 export function resolvePublishRefs(input) {
-  const cli = resolvePublishRef(input);
-  if (!cli) {
-    if (input.viewerReleaseCreated === "true")
-      throw new Error("viewer release requires a paired CLI release");
-    return undefined;
-  }
-  const viewer =
-    input.eventName === "workflow_dispatch"
-      ? input.manualViewerRef
-      : input.viewerReleaseCreated === "true"
-        ? input.viewerReleaseTag
-        : undefined;
-  if (!viewer) throw new Error("a paired immutable viewer_ref is required");
+  let viewer;
+  if (input.eventName === "workflow_dispatch") {
+    viewer = input.manualViewerRef;
+    if (!viewer) throw new Error("manual viewer_ref is required");
+  } else if (input.eventName === "push") {
+    if (input.viewerReleaseCreated !== "true") return undefined;
+    viewer = input.viewerReleaseTag;
+    if (!viewer) throw new Error("release-please omitted its viewer tag");
+  } else throw new Error(`unsupported release event: ${input.eventName}`);
   validateTag(viewer, "viewer-");
-  return { cli, viewer };
+  return { viewer };
 }
 
 export function validateTagVersion(ref, version, prefix = "") {

@@ -55,11 +55,11 @@ fn snapshot_runs_use_the_base_and_follow_the_preparation_and_execution_order() {
                 .take(position("suite"))
                 .filter(|event| event.as_str() == "probe")
                 .count()
-                == 11
+                == 2
         );
-        assert_eq!(count(&events, "warmup"), 11);
-        assert_eq!(count(&events, "suite"), 11);
-        assert_eq!(count(&events, "download"), 9);
+        assert_eq!(count(&events, "warmup"), 2);
+        assert_eq!(count(&events, "suite"), 2);
+        assert_eq!(count(&events, "download"), 1);
         assert_eq!(count(&events, "remove"), 1);
         let final_fingerprint = events
             .iter()
@@ -82,9 +82,8 @@ fn snapshot_runs_use_the_base_and_follow_the_preparation_and_execution_order() {
             )
         );
         assert!(events.iter().any(|event| {
-            event.contains(
-                "summary: commands=11/11 reports=9/9 aggregate=passed unchanged-tree=true",
-            ) && event.contains(&format!("base={base}"))
+            event.contains("summary: commands=2/2 reports=1/1 aggregate=passed unchanged-tree=true")
+                && event.contains(&format!("base={base}"))
         }));
     }
 }

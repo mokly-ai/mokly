@@ -5,46 +5,12 @@ import { promisify } from "node:util";
 
 const execute = promisify(execFile);
 
-export function parseShardArgument(args) {
-  if (args.length === 0) return undefined;
-  if (args.length !== 2 || args[0] !== "--shard")
-    throw new Error("usage: --shard INDEX/TOTAL");
-  const match = /^(\d+)\/(\d+)$/.exec(args[1]);
-  if (!match) throw new Error("shard must use one-based INDEX/TOTAL");
-  const index = Number(match[1]);
-  const total = Number(match[2]);
-  if (
-    !Number.isSafeInteger(index) ||
-    !Number.isSafeInteger(total) ||
-    index < 1 ||
-    total < 1 ||
-    index > total
-  )
-    throw new Error("shard must use one-based INDEX/TOTAL with INDEX <= TOTAL");
-  return { index, total };
-}
-
-export async function discoverUnitFiles(repositoryRoot) {
+export async function discoverNodeFiles(repositoryRoot) {
   const roots = ["tests", "packages/viewer/tests"];
   const files = [];
   for (const root of roots)
     await collectFiles(path.join(repositoryRoot, root), repositoryRoot, files);
   return files.filter((file) => /\.test\.tsx?$/.test(file)).sort();
-}
-
-export async function discoverBrowserFiles(repositoryRoot) {
-  const files = [];
-  await collectFiles(
-    path.join(repositoryRoot, "tests/browser"),
-    repositoryRoot,
-    files,
-  );
-  return files.filter((file) => file.endsWith(".spec.ts")).sort();
-}
-
-export function nodeShardFiles(files, shard) {
-  if (!shard) return [...files];
-  return files.filter((_, offset) => offset % shard.total === shard.index - 1);
 }
 
 export async function verificationIdentity(repositoryRoot) {
@@ -64,12 +30,11 @@ export async function verificationIdentity(repositoryRoot) {
   };
 }
 
-export function defaultReportPath(repositoryRoot, suite, shard) {
-  const suffix = shard ? `shard-${shard.index}-of-${shard.total}` : "full";
+export function defaultReportPath(repositoryRoot) {
   return path.join(
     repositoryRoot,
     ".context/verification-reports",
-    `${suite}-${process.versions.node}-${suffix}.json`,
+    `viewer-${process.versions.node}-full.json`,
   );
 }
 

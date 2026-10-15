@@ -7,9 +7,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { minVersion } from "semver";
 import { parse } from "yaml";
 
-import { TESTED_NODE_VERSIONS } from "../dist/cli/bootstrap.js";
 import { RELEASE_VERIFICATION_RUNTIMES } from "../scripts/release/evidence_contract.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -46,7 +46,11 @@ test("the Node profile selector adds release runtimes only for release pull requ
       `\${{ steps.${id}.outputs.${output} }}`,
       `the selector's job must expose its ${output} output`,
     );
-  const [minimumTestedNode] = TESTED_NODE_VERSIONS;
+  const manifest = JSON.parse(
+    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+  ) as { engines: { node: string } };
+  const minimumTestedNode = minVersion(manifest.engines.node)?.version;
+  assert.ok(minimumTestedNode);
   const [ordinaryRuntime] = RELEASE_VERIFICATION_RUNTIMES;
   for (const profile of [
     { release: false, nodes: [minimumTestedNode], runtimes: [ordinaryRuntime] },
@@ -86,7 +90,7 @@ test("the Testbox lockfile stamp holds only the lockfile digest and a newline", 
   );
 });
 
-test("Testbox sessions receive the job PATH and Playwright channel only", async (context) => {
+test("Testbox sessions receive the job PATH only", async (context) => {
   const original = await testboxScript(
     "Expose job environment to Testbox sessions",
   );
@@ -100,7 +104,7 @@ test("Testbox sessions receive the job PATH and Playwright channel only", async 
   const file = path.join(root, "environment");
   await fs.writeFile(
     file,
-    "LANG=en_US.UTF-8\nPATH=old\nPLAYWRIGHT_CHANNEL=old\nKEEP=value\nPATH=duplicate\n",
+    "LANG=en_US.UTF-8\nPATH=old\nKEEP=value\nPATH=duplicate\n",
   );
   const script = original.replaceAll(
     "/etc/environment",
@@ -108,14 +112,14 @@ test("Testbox sessions receive the job PATH and Playwright channel only", async 
   );
   const output = await runBash(`sudo() { "$@"; }\n${script}`, root, {
     PATH: process.env.PATH,
-    PLAYWRIGHT_CHANNEL: "chromium",
+    UNEXPORTED_SECRET: "must-not-leak",
     MOKLY_TESTBOX_ENVIRONMENT: file,
   });
   assert.equal(output.stdout, "");
   assert.equal(output.stderr, "");
   assert.equal(
     await fs.readFile(file, "utf8"),
-    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\n`,
+    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\n`,
   );
 });
 

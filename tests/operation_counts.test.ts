@@ -5,8 +5,6 @@ import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { projectRealPath } from "../dist/config/paths.js";
-
 import {
   asynchronousResults,
   operationScalingFailures,
@@ -207,19 +205,6 @@ test("rejects nested use without replacing the outer wrappers", () => {
   );
   assert.deepEqual(originals(), saved);
   assert.equal(countOperations(() => fs.existsSync(file)).result, true);
-});
-
-test("intercepts the default imports used by compiled dist code", () => {
-  const expected = projectRealPath(directory);
-  const counted = countOperations(() => projectRealPath(directory));
-  assert.equal(counted.result, expected);
-  assert.equal(counted.counts.totals["fs.realpathSync.native"], 1);
-  assert.equal(
-    counted.counts.byPath["fs.realpathSync.native"].get(directory),
-    1,
-  );
-  assert.equal(counted.counts.totals["fs.lstatSync"], 1);
-  assert.equal(counted.counts.totals["path.resolve"], 1);
 });
 
 function measured(fixed: number, scaled: number) {

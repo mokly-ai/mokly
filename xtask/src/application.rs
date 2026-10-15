@@ -49,6 +49,7 @@ impl Xtask for Application {
         match command {
             Command::BuildNative => self.artifacts.build_native(),
             Command::GenerateTypes => self.artifacts.generate_types(),
+            Command::CheckGeneratedTypes => self.artifacts.check_generated_types(),
             Command::Check {
                 suite,
                 shard,

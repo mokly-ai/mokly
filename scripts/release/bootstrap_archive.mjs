@@ -4,18 +4,15 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import {
-  createPackageArchive,
-  inspectRuntimeLicenses,
-} from "../package/archive.mjs";
-import { runCommand } from "../package/command.mjs";
+import { createPackageArchive, inspectRuntimeLicenses } from "./archive.mjs";
+import { runCommand } from "./command.mjs";
 
 /** Build registration evidence from reviewed committed bytes, never local dist. */
 export async function createBootstrapArchive({
   repositoryRoot,
   expectedCommit,
   destination,
-  packageName = "@mokly/mokly",
+  packageName = "@mokly/viewer",
 }) {
   assert.match(
     expectedCommit,
@@ -125,12 +122,6 @@ async function verifySource(repositoryRoot, expectedCommit) {
 }
 
 function bootstrapTarget(packageName) {
-  if (packageName === "@mokly/mokly")
-    return {
-      relative: ".",
-      version: "0.8.0",
-      filename: "mokly-mokly-0.8.0.tgz",
-    };
   assert.equal(packageName, "@mokly/viewer", "unknown bootstrap package");
   return {
     relative: "packages/viewer",

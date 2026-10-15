@@ -50,12 +50,14 @@ pub(crate) enum Command {
     BuildNative,
     /// Write TypeScript declarations from mokly-model.
     GenerateTypes,
+    /// Compare generated TypeScript bytes without writing files.
+    CheckGeneratedTypes,
     /// Run the full gate or one selected verification suite.
     Check {
         /// Run one partial verification suite.
         #[arg(long, value_enum)]
         suite: Option<VerificationSuite>,
-        /// Run one one-based whole-file shard of a unit or browser suite.
+        /// Reserved shard option; reduced suites are unsharded.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
         /// Select the workspace audit policy for complete or repository checks.

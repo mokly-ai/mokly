@@ -5,7 +5,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::application::{Application, Xtask};
-use crate::artifacts::{BuildNativeMock, GenerateTypesMock};
+use crate::artifacts::{BuildNativeMock, CheckGeneratedTypesMock, GenerateTypesMock};
 use crate::cli::Command;
 
 #[test]
@@ -13,6 +13,9 @@ fn application_dispatches_native_build_and_type_generation() {
     let artifacts = Arc::new(Unimock::new((
         BuildNativeMock.next_call(matching!()).returns(Ok(())),
         GenerateTypesMock.next_call(matching!()).returns(Ok(())),
+        CheckGeneratedTypesMock
+            .next_call(matching!())
+            .returns(Ok(())),
     )));
     let unused = Arc::new(Unimock::new(()));
     let application = Application {
@@ -28,4 +31,5 @@ fn application_dispatches_native_build_and_type_generation() {
     };
     application.run(Command::BuildNative).unwrap();
     application.run(Command::GenerateTypes).unwrap();
+    application.run(Command::CheckGeneratedTypes).unwrap();
 }

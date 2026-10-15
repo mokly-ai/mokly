@@ -109,7 +109,6 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Audit workspace dependencies",
     "Select verification evidence",
     "Set up Rust",
-    "Install Chromium",
     "Run complete verification",
     "Prepare exact publish artifacts",
   ];
@@ -132,11 +131,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     'GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict',
   );
   const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
-  for (const name of [
-    "Set up Rust",
-    "Install Chromium",
-    "Run complete verification",
-  ])
+  for (const name of ["Set up Rust", "Run complete verification"])
     assert.equal(
       publish.steps.find((step) => step.name === name)?.if,
       fallbackCondition,
@@ -171,9 +166,6 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Guard existing viewer version",
     "Publish viewer with npm trusted publishing",
     "Verify viewer registry package and provenance",
-    "Guard existing CLI version",
-    "Publish CLI with npm trusted publishing",
-    "Verify CLI registry package and provenance",
   ];
   for (const [index, name] of ordered.entries()) {
     assert.ok(names.includes(name), name);
@@ -181,7 +173,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
       assert.ok(names.indexOf(ordered[index - 1]) < names.indexOf(name), name);
   }
   assert.match(source, /group: npm-release/);
-  assert.match(source, /verify-ref\.mjs "\$CLI_REF" "\$VIEWER_REF"/);
+  assert.match(source, /verify-ref\.mjs "\$VIEWER_REF"/);
   assert.match(source, /--artifacts .context\/release-artifact/);
   const setupNode = publish.steps.find((step) =>
     step.uses?.startsWith("actions/setup-node@"),

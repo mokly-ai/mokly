@@ -5,7 +5,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local
-executor runs every suite sequentially in one checkout. It starts with the live
+executor runs the local suites sequentially in one checkout. Native runs only
+when selected. The local gate starts with the live
 baseline workspace audit, which fails on new issues and reports inherited ones
 as notices. `--dependency-audit strict` selects strict mode for the complete
 gate or the repository suite;
@@ -25,6 +26,7 @@ cargo xtask check
 cargo xtask check --dependency-audit strict
 cargo xtask check --suite repository
 cargo xtask check --suite viewer
+cargo xtask check --suite native
 cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/4
 ```
@@ -43,14 +45,19 @@ viewer suite fail before any subprocess starts.
 | Repository       | Live audit first: baseline for ordinary pull requests, pushes, and local checks; strict for release and dependency update pull requests. Prettier; ESLint; the JavaScript and TypeScript, protocol, and Rust file-length audits; the protocol-cap, unused-internal-export, unused-member, and public-package-export ratchets; the public API report check; Rust formatting; workspace Clippy with warnings denied; the Rust tests of every crate. |
 | Viewer           | The viewer typecheck, then every discovered Node test file, including the inspector size test of the [published inspector contract](./mokly-published-inspector.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard.                                                                                                                                                          |
 | Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                                                                                                                |
-| Native platforms | On macOS and Windows, build the `mokly` binary once and run the Rust tests of every crate.                                                                                                                                                                                                                                                                                                                                                        |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                                                                                                                      |
 | Required CI      | Evaluate the result and evidence from the repository job, the viewer job and every browser shard on each runtime selected for the event, and both native platforms.                                                                                                                                                                                                                                                                               |
 
-Complete and selected suites share gate definitions; adding a suite command
-adds it to the complete gate. In-process auditors fail like subprocesses.
+Complete and selected local suites share gate definitions. Every Native
+command has local coverage; `npm run build` covers `cargo xtask build-native`.
+In-process auditors fail like subprocesses.
+The local Repository and Viewer suites cover the native build and Rust checks
+once. The selected Native suite repeats those checks on the hosted macOS and
+Windows runners. Required CI requires both native jobs.
 
-Every suite that runs the binary or the viewer bundle builds them first through
-`npm run build`. No suite prepares a baseline, a compiled example, a generated
+Viewer and Browser build the binary and viewer bundle first through
+`npm run build`. Native builds the host binary through
+`cargo xtask build-native`. No suite prepares a baseline, a compiled example, a generated
 tree, or a packed archive. Serve renders the example catalogue from its sources
 into the render cache, and the tests read nothing back from the repository.
 

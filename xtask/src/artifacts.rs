@@ -1,6 +1,7 @@
 //! Native package assembly and shared TypeScript source generation.
 
 use std::fs;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -11,21 +12,27 @@ use crate::command::{CommandRunner, CommandSpec};
 use crate::error::{Error, FilesystemResult, Result};
 
 /// Artifact operations composed by the CLI.
-#[cfg_attr(test, unimock::unimock(api = [BuildNativeMock, GenerateTypesMock]))]
+#[cfg_attr(test, unimock::unimock(api = [BuildNativeMock, GenerateTypesMock, CheckGeneratedTypesMock]))]
 pub(crate) trait Artifacts: Send + Sync {
     /// Build the host binary and copy it into the host npm package.
     fn build_native(&self) -> Result<()>;
     /// Write the model declarations imported by the viewer.
     fn generate_types(&self) -> Result<()>;
+    /// Compare generated sources with disk without writing any file.
+    fn check_generated_types(&self) -> Result<()>;
 }
 
 /// Filesystem boundary for artifact assembly.
-#[cfg_attr(test, unimock::unimock(api = [CopyMock, WriteMock]))]
+#[cfg_attr(test, unimock::unimock(api = [CopyMock, WriteMock, ReadMock, EntriesMock]))]
 pub(crate) trait ArtifactFiles: Send + Sync {
     /// Copy a built executable, creating the destination directory.
     fn copy(&self, source: &Path, destination: &Path) -> Result<()>;
     /// Write generated source, creating its parent directory.
     fn write(&self, destination: &Path, text: &str) -> Result<()>;
+    /// Read exact source bytes, or return absence for a missing file.
+    fn read(&self, path: &Path) -> Result<Option<Vec<u8>>>;
+    /// List the paths in a generated directory, or an empty missing directory.
+    fn entries(&self, directory: &Path) -> Result<Vec<PathBuf>>;
 }
 
 /// Host filesystem adapter.
@@ -43,6 +50,40 @@ impl ArtifactFiles for SystemArtifactFiles {
         make_parent(destination)?;
         fs::write(destination, text)
             .with_filesystem_context("write generated types", &destination.display().to_string())
+    }
+
+    fn read(&self, path: &Path) -> Result<Option<Vec<u8>>> {
+        match fs::read(path) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(source) if source.kind() == ErrorKind::NotFound => Ok(None),
+            result => result
+                .with_filesystem_context("read generated types", &path.display().to_string())
+                .map(Some),
+        }
+    }
+
+    fn entries(&self, directory: &Path) -> Result<Vec<PathBuf>> {
+        let entries = match fs::read_dir(directory) {
+            Ok(entries) => entries,
+            Err(source) if source.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
+            result => result.with_filesystem_context(
+                "list generated types",
+                &directory.display().to_string(),
+            )?,
+        };
+        let mut paths = Vec::new();
+        for entry in entries {
+            paths.push(
+                entry
+                    .with_filesystem_context(
+                        "read generated entry",
+                        &directory.display().to_string(),
+                    )?
+                    .path(),
+            );
+        }
+        paths.sort();
+        Ok(paths)
     }
 }
 
@@ -136,34 +177,70 @@ impl Artifacts for DefaultArtifacts {
     }
 
     fn generate_types(&self) -> Result<()> {
-        self.files.write(
-            &self
-                .workspace
-                .join("packages/viewer/src/generated/model.ts"),
-            &typescript::generate(),
-        )?;
-        for (name, text) in typescript::catalogue_modules() {
-            self.files.write(
-                &self
-                    .workspace
-                    .join("packages/viewer/src/generated/catalogue")
-                    .join(name),
-                &text,
-            )?;
+        for (path, text) in generated_sources(&self.workspace) {
+            self.files.write(&path, &text)?;
         }
-        for (name, text) in generate() {
-            self.files.write(
-                &self
-                    .workspace
-                    .join("packages/mokly/src/generated/sidecar")
-                    .join(name),
-                &text,
-            )?;
+        Ok(())
+    }
+
+    fn check_generated_types(&self) -> Result<()> {
+        let sources = generated_sources(&self.workspace);
+        for (path, text) in &sources {
+            if self.files.read(path)?.as_deref() != Some(text.as_bytes()) {
+                return Err(Error::GeneratedTypeMismatch { path: path.clone() });
+            }
+        }
+        for directory in [
+            "packages/viewer/src/generated",
+            "packages/viewer/src/generated/catalogue",
+            "packages/mokly/src/generated/sidecar",
+        ] {
+            for path in self.files.entries(&self.workspace.join(directory))? {
+                if !sources
+                    .iter()
+                    .any(|(expected, _)| expected.starts_with(&path))
+                {
+                    return Err(Error::UnexpectedGeneratedType { path });
+                }
+            }
         }
         Ok(())
     }
 }
 
+/// One stable inventory shared by generation and byte comparison.
+fn generated_sources(workspace: &Path) -> Vec<(PathBuf, String)> {
+    let mut sources = vec![(
+        workspace.join("packages/viewer/src/generated/model.ts"),
+        typescript::generate(),
+    )];
+    sources.extend(
+        typescript::catalogue_modules()
+            .into_iter()
+            .map(|(name, text)| {
+                (
+                    workspace
+                        .join("packages/viewer/src/generated/catalogue")
+                        .join(name),
+                    text,
+                )
+            }),
+    );
+    sources.extend(generate().into_iter().map(|(name, text)| {
+        (
+            workspace
+                .join("packages/mokly/src/generated/sidecar")
+                .join(name),
+            text,
+        )
+    }));
+    sources
+}
+
 #[cfg(test)]
 #[path = "_tests_/artifacts_tests.rs"]
 mod artifacts_tests;
+
+#[cfg(test)]
+#[path = "_tests_/generated_types_tests.rs"]
+mod generated_types_tests;

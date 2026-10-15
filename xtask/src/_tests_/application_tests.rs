@@ -94,7 +94,7 @@ fn auto_and_selected_suites_keep_local_behavior() {
         (None, None),
         (Some("auto"), None),
         (Some("local"), None),
-        (None, Some(VerificationSuite::Package)),
+        (None, Some(VerificationSuite::Viewer)),
     ] {
         application(mode, suite, false, None)
             .run(Command::Check {
@@ -159,7 +159,7 @@ fn remote_with_suite_and_invalid_environment_fail_before_any_work() {
         });
         let app = rejecting_application(environment, Arc::new(Unimock::new(())));
         let result = app.run(Command::Check {
-            suite: Some(VerificationSuite::Package),
+            suite: Some(VerificationSuite::Viewer),
             shard: None,
             dependency_audit: None,
             executor: flag,

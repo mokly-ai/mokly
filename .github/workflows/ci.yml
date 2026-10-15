@@ -1,20 +1,14 @@
 name: CI
-
 on:
-  pull_request:
+  pull_request: null
   push:
-    branches: [main]
-
+    branches:
+      - main
 permissions:
   contents: read
-
-env:
-  PLAYWRIGHT_CHANNEL: chromium
-
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
 jobs:
   repository:
     name: Repository
@@ -32,7 +26,7 @@ jobs:
       - name: Select Node verification profile
         id: profile
         env:
-          RELEASE_PULL_REQUEST: >-
+          RELEASE_PULL_REQUEST: |-
             ${{
               github.event_name == 'pull_request' &&
               github.event.pull_request.head.repo.full_name == github.repository &&
@@ -65,9 +59,11 @@ jobs:
         run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
+      - name: Build native artifacts
+        run: cargo xtask build-native
       - name: Run repository verification
         env:
-          DEPENDENCY_AUDIT: >-
+          DEPENDENCY_AUDIT: |-
             ${{
               github.event_name == 'pull_request' &&
               github.event.pull_request.head.repo.full_name == github.repository &&
@@ -79,137 +75,10 @@ jobs:
               ) && 'strict' || 'baseline'
             }}
         run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
-
-  package:
-    name: Package (Node ${{ matrix.node }})
-    needs: [repository]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
-    steps:
-      - name: Check out repository
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
-        with:
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
-          package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Set up npm
-        run: npm install --global npm@11.21.0
-      - name: Set up Rust
-        run: rustup toolchain install
-      - name: Install dependencies
-        run: npm ci
-      - name: Run package verification
-        run: cargo xtask check --suite package
-
-  unit:
-    name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
-    needs: [repository]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
-        shard: [1, 2, 3, 4]
-    env:
-      MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/unit-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
-    steps:
-      - name: Check out repository
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
-        with:
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
-          package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Set up npm
-        run: npm install --global npm@11.21.0
-      - name: Set up Rust
-        run: rustup toolchain install
-      - name: Install dependencies
-        run: npm ci
-      - name: Run unit shard
-        run: cargo xtask check --suite unit --shard ${{ matrix.shard }}/4
-      - name: Retain unit inventory and timings
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: verification-unit-node-${{ matrix.node }}-shard-${{ matrix.shard }}
-          path: ${{ env.MOKLY_VERIFICATION_REPORT }}
-          if-no-files-found: error
-          include-hidden-files: true
-          overwrite: true
-          retention-days: 14
-
-  browser:
-    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
-    needs: [repository]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
-        shard: [1, 2, 3, 4]
-    env:
-      MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
-    steps:
-      - name: Check out repository
-        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
-        with:
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
-        with:
-          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
-          package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Set up npm
-        run: npm install --global npm@11.21.0
-      - name: Set up Rust
-        run: rustup toolchain install
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Run browser shard
-        run: cargo xtask check --suite browser --shard ${{ matrix.shard }}/4
-      - name: Retain browser inventory and timings
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: verification-browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}
-          path: ${{ env.MOKLY_VERIFICATION_REPORT }}
-          if-no-files-found: error
-          include-hidden-files: true
-          overwrite: true
-          retention-days: 14
-      - name: Retain browser failure evidence
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: browser-failures-node-${{ matrix.node }}-shard-${{ matrix.shard }}-attempt-${{ github.run_attempt }}
-          path: test-results/
-          retention-days: 14
-
-  hydration:
-    name: Hydration (Node ${{ matrix.node }})
-    needs: [repository]
+  viewer:
+    name: Viewer (Node ${{ matrix.node }})
+    needs:
+      - repository
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
     strategy:
@@ -218,7 +87,7 @@ jobs:
         node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/hydration-node-${{ matrix.node }}-full.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-full.json
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -237,37 +106,30 @@ jobs:
         run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Run hydration verification
-        run: cargo xtask check --suite hydration
-      - name: Retain hydration inventory and timings
+      - name: Run viewer verification
+        run: cargo xtask check --suite viewer
+      - name: Retain viewer inventory and timings
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: verification-hydration-node-${{ matrix.node }}
+          name: verification-viewer-node-${{ matrix.node }}
           path: ${{ env.MOKLY_VERIFICATION_REPORT }}
           if-no-files-found: error
           include-hidden-files: true
           overwrite: true
           retention-days: 14
-      - name: Retain hydration failure evidence
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: hydration-failures-node-${{ matrix.node }}-attempt-${{ github.run_attempt }}
-          path: test-results/
-          retention-days: 14
-
   native:
-    name: Native filesystem (${{ matrix.os }})
-    needs: [repository]
-    runs-on: ${{ matrix.os }}
+    name: Native (${{ matrix.runner }})
+    needs:
+      - repository
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: [blacksmith-6vcpu-macos-15, blacksmith-2vcpu-windows-2025]
+        runner:
+          - blacksmith-6vcpu-macos-26
+          - blacksmith-2vcpu-windows-2025
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -282,32 +144,32 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
-      - name: Build package
-        run: npm run build
-      - name: Verify exclusive directory transactions
-        run: node --import tsx --test tests/export_rename.test.ts tests/export_destination_races.test.ts tests/generated_output_lock.test.ts tests/cache_ignore.test.ts tests/path_transaction_regressions.test.ts
-      - name: Verify native CSS rule parsing and diffing
-        run: node --import tsx --test tests/review_css_rules.test.ts tests/review_css_diff.test.ts
-      - name: Verify native baseline commands
-        run: node --import tsx --test tests/baseline_platform.test.ts tests/baseline_process_tree.test.ts
-
+      - name: Run native verification
+        run: cargo xtask check --suite native
   required:
     name: Required CI
     if: always()
-    needs: [repository, package, unit, browser, hydration, native]
+    needs:
+      - repository
+      - viewer
+      - native
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
     steps:
       - name: Check out report validator
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ needs.repository.outputs.node-24-version }}
           package-manager-cache: false
-      - name: Download shard evidence
+      - name: Download viewer evidence
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: verification-*
@@ -315,19 +177,13 @@ jobs:
       - name: Require every verification job
         env:
           REPOSITORY_RESULT: ${{ needs.repository.result }}
-          PACKAGE_RESULT: ${{ needs.package.result }}
-          UNIT_RESULT: ${{ needs.unit.result }}
-          BROWSER_RESULT: ${{ needs.browser.result }}
-          HYDRATION_RESULT: ${{ needs.hydration.result }}
+          VIEWER_RESULT: ${{ needs.viewer.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
         run: |
           test "$REPOSITORY_RESULT" = success
-          test "$PACKAGE_RESULT" = success
-          test "$UNIT_RESULT" = success
-          test "$BROWSER_RESULT" = success
-          test "$HYDRATION_RESULT" = success
+          test "$VIEWER_RESULT" = success
           test "$NATIVE_RESULT" = success
-      - name: Require complete shard evidence
+      - name: Require complete viewer evidence
         env:
           EXPECTED_RUNTIMES: ${{ needs.repository.outputs.verification-runtimes }}
         run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"

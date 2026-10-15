@@ -20,16 +20,14 @@
     "types": ["node"]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "packages/mokly/src/**/*.ts",
+    "packages/mokly/src/**/*.d.mts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    "examples/**/*.ts",
-    "examples/**/*.tsx",
     "packages/viewer/src/**/*.ts",
     "packages/viewer/src/**/*.tsx",
     "packages/viewer/tests/**/*.ts",
     "packages/viewer/tests/**/*.tsx"
   ],
-  "exclude": ["node_modules", "tests/fixtures/consumers/**/*.tsx"]
+  "exclude": ["node_modules", "**/dist"]
 }

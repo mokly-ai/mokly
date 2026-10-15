@@ -521,14 +521,14 @@ merges; the freeze applies to it from 2026-10-12.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
 - [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
-- [ ] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
+- [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
       captured scenario to the JSON table that the rebuild procedures define.
-- [ ] Capture reference outputs with the old CLI under
+- [x] Capture reference outputs with the old CLI under
       `.context/rust-rebuild/reference/`: the example catalogue, the large
       fixture's four scenarios, and the moved, removed, Markdown document,
       ignore-region, and renderer-change states; run the behaviour-table
       script over them.
-- [ ] Delete, with the recorded approval: `src/`; the backend tests under
+- [x] Delete, with the recorded approval: `src/`; the backend tests under
       `tests/` except the documentation, guide, and workflow policy tests that
       still apply; `scripts/package`, `scripts/preview`, `scripts/large`, and
       the verification runners that drive the old CLI; the
@@ -536,22 +536,30 @@ merges; the freeze applies to it from 2026-10-12.
       `files`, and publish configuration.
 - [x] Repoint or remove every live reference to the native engine contract
       before the teardown deletes `docs/protocol/mokly-native-engine.md`.
-- [ ] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
+- [x] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
       the length audits, Rust formatting, Clippy, tests, and the file-length
       audit; a viewer suite runs the viewer typecheck and tests and the tooling tests
       under `tests/`; the package,
       unit, browser, and hydration suites and their remote shards are removed
       until later milestones add new ones.
-- [ ] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
+- [x] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
       `.release-please-manifest.json` for the reduced tree; keep the viewer
       release path.
 - [x] Update `AGENTS.md` for the reduced tree: the commands, the repository
       rules, and the moment to read the `rust` skill, which then covers
       `crates/` as well as `xtask/`. Done on 2026-10-14 under Decision 38,
       ahead of the teardown.
-- [ ] Run `cargo xtask check` on the reduced tree until it passes.
-- [ ] Record the deleted top-level paths in the commit body.
-- [ ] Commit.
+- [x] Run `cargo xtask check` on the reduced tree until it passes.
+- [x] Record the deleted top-level paths in the commit body.
+- [x] Commit.
+
+- [x] Apply the first M2 review fixes: restore release and workflow checks,
+      make reference tables independent of legacy ids, and capture
+      `stylesheet-edit` with used and unused CSS rules.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/reference/README.md`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m2.md`.
+Review-fix evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m2/report-2.md`.
+Second review-fix evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m2/report-3.md`.
 
 ## Milestone 3: Workspace skeleton and native packaging
 
@@ -572,17 +580,35 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 - [x] Resolve native installation with optional file links from the private root.
       The native packages stay outside npm's workspace list. The public CLI
       keeps exact registry versions. Approved in Milestone 3 change request 1.
-- [ ] Extend `xtask check`: Rust formatting, Clippy, tests, file length, the
-      generated-type byte-identity check and the Rust advisory audit once
-      approved, and the viewer suite. CI builds the native artifacts in every
-      job and on the Testbox through `rust-toolchain.toml`.
+- [x] Extend `xtask check`: Rust formatting, Clippy, tests, file length, and
+      the viewer suite. CI builds the native artifacts in every job and on
+      the Testbox through `rust-toolchain.toml`. The Native suite runs on
+      hosted macOS and Windows runners.
+- [x] Add `cargo xtask check-generated-types` as a standalone byte-identity
+      check. Keep it outside every gate and CI job.
 - [ ] Record the gate approvals from the Status section before adding the gates.
-- [ ] Commit.
+      The generated-TypeScript byte-identity and Rust advisory audit gates
+      wait for the user.
+- [ ] After user approval, add `cargo xtask check-generated-types` and the
+      Rust advisory audit to the Repository suite and CI.
+- [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
+      cover generated sidecar types and Native commands, align the Testbox
+      docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
+- [x] Commit.
+
+Round 3 decision: Required CI only aggregates results and reports. Every job
+that runs checks, and the Testbox, builds the host native artifact.
 
 Evidence: `.context/rust-rebuild/delegation/m3/report-1.md` and
 `.context/rust-rebuild/sweeps/m3-phase-a.md`. Round 1 fixes and evidence:
 `.context/rust-rebuild/delegation/m3/report-2.md` and
 `.context/rust-rebuild/sweeps/m3-r2-git.md`.
+Phase B evidence: `.context/rust-rebuild/delegation/m3/report-3.md`,
+`.context/rust-rebuild/delegation/m3/merge-decisions.md`, and
+`.context/rust-rebuild/m3-phase-b-complete-gate.log`.
+Round 3 evidence: `.context/rust-rebuild/delegation/m3/report-4.md`,
+`.context/rust-rebuild/m3-r3-renormalize.log`, and
+`.context/rust-rebuild/m3-r3-complete-gate.log`.
 
 ## Milestone 4: Catalogue model and discovery
 
@@ -609,14 +635,14 @@ milestones.
 - [x] Wire the discovery-only build command, warning reports, and strict mode.
 - [x] Run the repository gate, Rust checks, type regeneration, package build,
       and the built shim smoke fixture.
-- [ ] Settle the lossless-number rule for prop values that cannot round-trip
-      through JavaScript number spelling. See the Milestone 4 report.
-- [ ] Complete the full gate after integration with the Milestone 2 teardown.
+- [x] Complete the full gate after integration with the Milestone 2 teardown.
       Recheck the example documentation links after its port.
 - [x] Commit the implementation checkpoint. The number-policy decision remains open.
 
 Evidence: `.context/rust-rebuild/sweeps/m4.md` and
 `.context/rust-rebuild/delegation/m4/report-1.md`.
+Integration evidence: `.context/rust-rebuild/delegation/m4/report-2.md` and
+`.context/rust-rebuild/delegation/m4/merge-decisions.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 
@@ -654,6 +680,9 @@ shell route, the catalogue index v7, one entry detail per entry, the
 documents, the live descriptor, the update event stream, and shutdown; the
 viewer renders it after Milestone 7. No sidecar starts for a catalogue
 without JavaScript.
+
+- [ ] Restore `npm run dev` to serve `examples/basic/mokly.config.json` with
+      argument forwarding.
 
 - [ ] Implement the server in `mokly-server`: the stub, the index and entry
       detail routes with `Cache-Control: no-store`, the document and asset
@@ -716,6 +745,10 @@ renders again.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
+- [ ] Update commands and test names in `examples/basic/README.md` and
+      `examples/basic/specs/design/library/README.md` for the restored CLI.
+- [ ] Restore the example typecheck; validate or replace the viewer browser
+      fixtures, including their component paths and cross-origin setup.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -752,6 +785,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+- [ ] Close the large-fixture Changes reference gap: the old captures have
+      no Changes result or rule evidence, and all four catalogue captures
+      are byte-identical. Use the stylesheet-edit reference for CSS evidence;
+      prove large-scale Changes with the Rust implementation.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -799,9 +836,14 @@ Tags: ui
       publish order.
 - [ ] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
+- [ ] Make Release Please update the exact `@mokly/viewer` pin in
+      `packages/mokly/package.json` with the viewer release. Test the manifest
+      and lockfile updates together.
 - [ ] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
+- [ ] Reconnect the Node agreement and profile-selector tests to the shim's
+      gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
 - [ ] Commit.
 
@@ -829,6 +871,7 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
@@ -837,13 +880,13 @@ Tags: ui
   - B: settled by Decision 32 on 2026-10-14.
   - C: settled by Decision 31 on 2026-10-14.
   - D: settled by Decision 38 on 2026-10-14.
-  - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38. The guides are blocked: the root tests `guides_cli`, `guides_ci`, and
-    `guides_upload_validation` compare them with the current CLI,
-    `guides_authoring` compares the authoring guides with the current exports
-    and `MoklyConfig` fields, and the guides contract requires shipped
-    behaviour; decide whether to rewrite the
-    guides now and reduce those tests to structure, links, and versions, or
-    to rewrite them at Milestone 12 (recommended).
+  - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38.
+    The teardown deleted `guides_cli`, `guides_ci`,
+    `guides_upload_validation`, and `guides_authoring`, which compared the
+    guides with the old CLI and authoring API. `guides_copy`,
+    `guides_structure`, and `guides_versions` remain. The guides contract
+    requires shipped behaviour. Decide whether to rewrite the guides before
+    the replacement CLI is complete, or at Milestone 12 (recommended).
   - F: settled by Decision 36 on 2026-10-14.
   - G: settled on 2026-10-14; the release management page follows the
     seven packages of the release contract.

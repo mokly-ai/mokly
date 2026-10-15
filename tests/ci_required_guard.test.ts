@@ -12,10 +12,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const execute = promisify(execFile);
 const resultVariables = [
   "REPOSITORY_RESULT",
-  "PACKAGE_RESULT",
-  "UNIT_RESULT",
-  "BROWSER_RESULT",
-  "HYDRATION_RESULT",
+  "VIEWER_RESULT",
   "NATIVE_RESULT",
 ] as const;
 

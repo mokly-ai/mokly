@@ -11,7 +11,6 @@ test("every failed preparation command stops before cargo and stamp updates", as
     "git rev-parse --is-shallow-repository",
     "git fetch --unshallow --tags origin",
     "npm ci",
-    "npx playwright install chromium",
   ]) {
     const harness = testboxHarness();
     harness.files.delete(harness.stamp);
@@ -92,28 +91,22 @@ test("signals and interrupted commands cannot turn into success", async () => {
     ["SIGTERM", 143],
   ] as const) {
     const harness = testboxHarness();
-    harness.outcomes.set(
-      "cargo xtask check --executor local --suite unit --shard 1/4",
-      {
-        exitCode: null,
-        signal,
-        stdout: "",
-        stderr: "",
-      },
-    );
+    harness.outcomes.set("cargo xtask check --executor local --suite viewer", {
+      exitCode: null,
+      signal,
+      stdout: "",
+      stderr: "",
+    });
     assert.equal(
       await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
       code,
     );
-    harness.outcomes.set(
-      "cargo xtask check --executor local --suite unit --shard 1/4",
-      {
-        exitCode: 0,
-        interrupted: signal,
-        stdout: "",
-        stderr: "",
-      },
-    );
+    harness.outcomes.set("cargo xtask check --executor local --suite viewer", {
+      exitCode: 0,
+      interrupted: signal,
+      stdout: "",
+      stderr: "",
+    });
     assert.equal(
       await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies),
       code,

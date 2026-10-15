@@ -75,7 +75,7 @@ impl CheckRunner for DefaultCheckRunner {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard, request.dependency_audit);
         }
-        for suite in VerificationSuite::ALL {
+        for suite in VerificationSuite::LOCAL {
             self.run_suite(suite, None, request.dependency_audit)?;
         }
         Ok(())

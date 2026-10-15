@@ -41,39 +41,27 @@ impl fmt::Display for DependencyAudit {
 pub(crate) enum VerificationSuite {
     /// Audit, formatting, lint, and Rust verification.
     Repository,
-    /// Declarations, example, package inspection, and packed consumers.
-    Package,
-    /// Node unit and integration tests.
-    Unit,
-    /// Playwright browser tests.
-    Browser,
-    /// Unsharded Playwright hydration tests.
-    Hydration,
+    /// Viewer typecheck and Node tooling and viewer tests.
+    Viewer,
+    /// Host native artifact and Rust tests for hosted macOS and Windows jobs.
+    Native,
 }
 
 impl VerificationSuite {
-    /// Suites in authoritative complete-gate order.
-    pub(crate) const ALL: [Self; 5] = [
-        Self::Repository,
-        Self::Package,
-        Self::Unit,
-        Self::Browser,
-        Self::Hydration,
-    ];
+    /// Local coverage without repeating the native build and workspace tests.
+    pub(crate) const LOCAL: [Self; 2] = [Self::Repository, Self::Viewer];
 
     /// Stable CLI name for the suite.
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::Repository => "repository",
-            Self::Package => "package",
-            Self::Unit => "unit",
-            Self::Browser => "browser",
-            Self::Hydration => "hydration",
+            Self::Viewer => "viewer",
+            Self::Native => "native",
         }
     }
 
     fn supports_shards(self) -> bool {
-        matches!(self, Self::Unit | Self::Browser)
+        false
     }
 }
 
@@ -129,7 +117,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Validated whole-file shard for a unit or browser suite.
+    /// Reserved shard option; every reduced suite rejects it.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,

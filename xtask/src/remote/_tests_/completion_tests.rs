@@ -37,16 +37,16 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 })
             }),
         BlacksmithDownloadMock
-            .each_call(matching!("tbx_unit", _, _))
+            .each_call(matching!("tbx_viewer", _, _))
             .answers_arc(Arc::new(move |_, id, source, target| {
                 assert_eq!(
                     source,
-                    ".context/verification-reports/remote/unit-1-of-4.json"
+                    ".context/verification-reports/remote/viewer.json"
                 );
                 assert_eq!(
                     target,
                     &PathBuf::from(
-                        "/workspace/.context/verification-reports/remote/20261006T120000Z-42/unit-1-of-4.json"
+                        "/workspace/.context/verification-reports/remote/20261006T120000Z-42/viewer.json"
                     )
                 );
                 downloads.lock().unwrap().push(format!("download:{id}"));
@@ -96,11 +96,7 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
             workspace: PathBuf::from("/workspace"),
         },
     };
-    let boxes: Vec<String> = vec![
-        "tbx_repository".into(),
-        "tbx_package".into(),
-        "tbx_unit".into(),
-    ];
+    let boxes: Vec<String> = vec!["tbx_repository".into(), "tbx_viewer".into()];
     let cleanup = CleanupGuard::new(&runner.dependencies);
     let head = CommitSha::read(&"b".repeat(40)).unwrap();
     let identity = RunIdentity::new(
@@ -126,11 +122,11 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 DependencyAudit::Baseline,
             )
             .len(),
-        3
+        2
     );
     assert!(cleanup.pending().is_empty());
     let events = events.lock().unwrap();
-    assert!(events.iter().any(|event| event == "download:tbx_unit"));
+    assert!(events.iter().any(|event| event == "download:tbx_viewer"));
     for id in boxes {
         let close = events
             .iter()

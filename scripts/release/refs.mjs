@@ -1,24 +1,19 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 
-import { runCommand } from "../package/command.mjs";
-import {
-  readPackageManifest,
-  validateVersionPair,
-} from "../package/manifest.mjs";
-
+import { runCommand } from "./command.mjs";
 import { remoteTagCommit, validateTagVersion } from "./context.mjs";
 
-/** Both protected tag streams must identify the same clean release tree. */
-export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
-  const cli = await readPackageManifest(repositoryRoot);
-  const viewer = await readPackageManifest(`${repositoryRoot}/packages/viewer`);
-  validateVersionPair(cli, viewer);
-  validateTagVersion(cliRef, cli.version);
+/** The protected viewer tag identifies the clean release tree. */
+export async function verifyReleaseRefs(repositoryRoot, viewerRef) {
+  const viewer = JSON.parse(
+    await fs.readFile(`${repositoryRoot}/packages/viewer/package.json`, "utf8"),
+  );
   validateTagVersion(viewerRef, viewer.version, "viewer-");
   const git = async (...args) =>
     (await runCommand("git", args, { cwd: repositoryRoot })).stdout.trim();
   const head = await git("rev-parse", "HEAD");
-  for (const ref of [viewerRef, cliRef]) {
+  for (const ref of [viewerRef]) {
     const local = await git("rev-parse", `${ref}^{commit}`);
     const remote = await git(
       "ls-remote",

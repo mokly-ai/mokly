@@ -6,6 +6,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 checkout directory and argument vector. It starts no shell. Standard output
 and standard error are captured concurrently, with a 64 MiB bound per stream.
 An output-limit failure terminates the owned process tree.
+Requests can select a smaller bound. A request above 64 MiB fails with
+`InvalidOutputLimit` before process configuration or command execution.
 
 ## Child Environment
 

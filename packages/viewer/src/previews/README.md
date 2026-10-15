@@ -83,8 +83,7 @@ Browse runtime.
 
 ```bash
 npm run build
-npx tsx --test tests/client_removed_previews.test.ts tests/removed_preview_shell.test.ts
-npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed_preview_views.spec.ts tests/browser/removed_previews_static.spec.ts tests/browser/removed_previews_viewer.spec.ts
+cargo xtask check --suite viewer
 ```
 
 The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
@@ -100,9 +99,3 @@ Related boundaries: [the Browse client](../client/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
 the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),
 and the [comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
-
-## Delivery Status
-
-The comparison pane scroll alignment plan
-delivered the shared loader and documented fetch set in Milestone 3 and the
-aligned panes in Milestone 4.

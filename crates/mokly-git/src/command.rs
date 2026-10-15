@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use crate::error::Result;
 
-/// Maximum retained bytes on each subprocess output stream.
+/// Default and maximum retained bytes on each subprocess output stream.
 pub const DEFAULT_OUTPUT_LIMIT: usize = 64 * 1024 * 1024;
 
 /// One Git invocation, always executed without a shell.
@@ -15,7 +15,7 @@ pub struct Request {
     pub directory: PathBuf,
     /// Exact argument vector.
     pub args: Vec<OsString>,
-    /// Per-stream capture bound.
+    /// Per-stream capture bound, at most `DEFAULT_OUTPUT_LIMIT`.
     pub output_limit: usize,
 }
 

@@ -7,7 +7,9 @@ use std::io::ErrorKind;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
+#[cfg(unix)]
 use std::thread;
+#[cfg(unix)]
 use std::time::{Duration, Instant};
 
 static NEXT_DIRECTORY: AtomicUsize = AtomicUsize::new(0);
@@ -50,6 +52,7 @@ impl Drop for TestDirectory {
 }
 
 /// The deadline only stops a hung expected-state wait. It is not a speed check.
+#[cfg(unix)]
 pub(super) fn wait_for(condition: impl Fn() -> bool) -> bool {
     let deadline = Instant::now() + Duration::from_secs(10);
     loop {

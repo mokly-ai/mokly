@@ -134,6 +134,9 @@ aggregate against the runtime profile emitted by the repository job: five
 viewer and browser reports for ordinary events and ten for a Release Please
 pull request.
 
+Required CI is a report aggregator. It checks out the validator and installs
+Node. It needs no npm dependencies or Rust build.
+
 A failed, skipped, cancelled, absent, duplicated, wrong-runtime, wrong-shard,
 wrong-commit, unsupported-profile, missing, or extra report fails the aggregate.
 The aggregate never infers success from a matrix job's presence alone.
@@ -161,7 +164,9 @@ One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout. It has
 `contents: read` permission and no secrets. It checks out full history with
 `persist-credentials: false`. It prepares Node 22.14.0, npm 11.21.0, Rust
 1.95.0 from `rust-toolchain.toml`, and Chromium. It records the installed
-lockfile digest and exposes the job environment to Testbox SSH sessions.
+lockfile digest after `npm ci` and `cargo xtask build-native` both succeed.
+The native build precedes the lockfile stamp. It exposes the job environment
+to Testbox SSH sessions.
 `run-testbox` keeps the job alive until the idle timeout.
 
 The workflow pins `useblacksmith/checkout` v1, `useblacksmith/begin-testbox` v2,

@@ -7,9 +7,9 @@ import { lintProbe, requireLintRule } from "./helpers/lint_config.js";
 
 const rule = "import/no-duplicates";
 const probes = [
-  "src/lint-coverage-probe.ts",
+  "packages/viewer/src/client/lint-coverage-probe.ts",
   "packages/viewer/src/lint-coverage-probe.tsx",
-  "scripts/preview/lint-coverage/nested/probe.mjs",
+  "scripts/rebuild/lint-coverage/nested/probe.mjs",
   "tests/lint-coverage-probe.ts",
 ];
 

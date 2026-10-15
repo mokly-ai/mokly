@@ -55,7 +55,7 @@ test(
     const child = spawn(
       process.execPath,
       [
-        path.join(harness.root, "scripts/verification/run-unit-dev.mjs"),
+        path.join(harness.root, "scripts/verification/run-viewer.mjs"),
         "tests/passing.test.ts",
       ],
       { cwd: harness.root, env, stdio: ["ignore", "pipe", "pipe"] },

@@ -3,7 +3,9 @@
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
+#[cfg(unix)]
+use crate::child_environment::GIT_REPOSITORY_VARIABLES;
+use crate::child_environment::SECRET_VARIABLES;
 use crate::remote::error::Operation;
 #[cfg(unix)]
 use crate::remote::process::kill_command;

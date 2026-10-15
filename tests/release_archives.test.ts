@@ -2,101 +2,96 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { pathToFileURL } from "node:url";
+
+import {
+  createPackageArchive,
+  inspectDryRun,
+} from "../scripts/release/archive.mjs";
+import { inspectPackedManifest } from "../scripts/release/packed_manifest.mjs";
+import {
+  packViewer,
+  inspectViewerArchive,
+} from "../scripts/release/viewer.mjs";
 
 import { bootstrapFixture } from "./helpers/bootstrap_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";
-import type { PackageReport } from "./helpers/release_fixture.js";
 
-interface Archive {
-  archivePath: string;
-  report: PackageReport;
-}
-
-async function archiveFixture(t: test.TestContext, viewerVersion?: string) {
+test("viewer packing uses its lifecycle build and returns the exact archive inventory", async (t) => {
   const fixture = await bootstrapFixture(t);
-  for (const relative of [".", "packages/viewer"]) {
-    const metadata = JSON.parse(
-      await fs.readFile(
-        path.join(repositoryRoot, relative, "package.json"),
-        "utf8",
-      ),
-    ) as {
-      version: string;
-      scripts: Record<string, string>;
-      dependencies: Record<string, string>;
-    };
-    if (viewerVersion) {
-      if (relative === ".")
-        metadata.dependencies["@mokly/viewer"] = viewerVersion;
-      else metadata.version = viewerVersion;
-    }
-    metadata.scripts = {
-      prepack: relative === "." ? "node build.mjs" : "node ../../build.mjs",
-    };
-    await fs.writeFile(
-      path.join(fixture.root, relative, "package.json"),
-      JSON.stringify(metadata),
-    );
-  }
-  const { createPackageArchive } = (await import(
-    pathToFileURL(path.join(repositoryRoot, "scripts/package/archive.mjs")).href
-  )) as {
-    createPackageArchive(
-      root: string,
-      output: string,
-      name?: string,
-    ): Promise<Archive>;
-  };
-  const { inspectPackagePair } = (await import(
-    pathToFileURL(path.join(repositoryRoot, "scripts/package/pair.mjs")).href
-  )) as {
-    inspectPackagePair(cli: Archive, viewer: Archive): Promise<void>;
-  };
-  const viewer = await createPackageArchive(
+  const packed = await createPackageArchive(
     path.join(fixture.root, "packages/viewer"),
-    path.join(fixture.destination, "viewer"),
-    "@mokly/viewer",
+    fixture.destination,
   );
-  const packCli = () =>
-    createPackageArchive(fixture.root, path.join(fixture.destination, "cli"));
-  return { ...fixture, viewer, packCli, inspectPackagePair };
-}
+  assert.equal(packed.report.name, "@mokly/viewer");
+  assert.equal(packed.report.version, "0.1.0");
+  assert.ok(packed.report.files.some((file) => file.path === "dist/index.js"));
+  assert.ok(packed.report.files.every((file) => !file.path.startsWith("src/")));
+  assert.ok((await fs.stat(packed.archivePath)).size > 0);
+  const dryRun = await inspectDryRun(
+    path.join(fixture.root, "packages/viewer"),
+  );
+  assert.deepEqual(dryRun.files, packed.report.files);
+});
 
-for (const version of [undefined, "0.1.0", "0.2.0", "1.4.7"]) {
-  test(`packed manifests reject stale pairs at viewer ${version ?? "checkout version"}`, async (t) => {
-    const fixture = await archiveFixture(t, version);
-    await fixture.inspectPackagePair(await fixture.packCli(), fixture.viewer);
-    const filename = path.join(fixture.root, "package.json");
-    const metadata = JSON.parse(await fs.readFile(filename, "utf8")) as {
-      dependencies: Record<string, string>;
-    };
-    const pairedVersion = fixture.viewer.report.version;
-    const [major, minor, patch] = pairedVersion.split(".").map(Number);
-    const mismatchedVersion = `${major}.${minor}.${patch! + 1}`;
-    for (const version of [
-      "workspace:*",
-      "file:packages/viewer",
-      `^${pairedVersion}`,
-      mismatchedVersion,
-    ]) {
-      metadata.dependencies["@mokly/viewer"] = version;
-      await fs.writeFile(filename, JSON.stringify(metadata));
-      const cli = await fixture.packCli();
-      await assert.rejects(
-        fixture.inspectPackagePair(cli, fixture.viewer),
-        /local dependency|exact viewer version/,
-      );
-    }
-  });
+async function archiveFixture(t: test.TestContext) {
+  const fixture = await bootstrapFixture(t);
+  const metadata = JSON.parse(
+    await fs.readFile(
+      path.join(repositoryRoot, "packages/viewer/package.json"),
+      "utf8",
+    ),
+  );
+  metadata.version = "0.1.0";
+  metadata.scripts = { prepack: "node ../../build.mjs" };
+  await fs.writeFile(
+    path.join(fixture.root, "packages/viewer/package.json"),
+    JSON.stringify(metadata),
+  );
+  return fixture;
 }
 
 test("exact archive verification rejects changed bytes after packing", async (t) => {
   const fixture = await archiveFixture(t);
-  const cli = await fixture.packCli();
-  await fs.appendFile(fixture.viewer.archivePath, "changed after checking");
+  const packed = await packViewer(fixture.root, fixture.destination);
+  const report = path.join(fixture.destination, "viewer/pack-report.json");
+  await fs.writeFile(report, JSON.stringify(packed.report));
+  await inspectViewerArchive(fixture.destination);
+  await fs.appendFile(packed.archivePath, "changed after checking");
+  await assert.rejects(inspectViewerArchive(fixture.destination), /sha512-/);
+});
+
+test("packing rejects wrong exports and local dependencies in the actual manifest", async (t) => {
+  const fixture = await archiveFixture(t);
+  const file = path.join(fixture.root, "packages/viewer/package.json");
+  const original = JSON.parse(await fs.readFile(file, "utf8"));
+  for (const mutation of [
+    { exports: { ".": "./dist/private.js" } },
+    { devDependencies: { other: "file:../other" } },
+  ]) {
+    await fs.writeFile(file, JSON.stringify({ ...original, ...mutation }));
+    const packed = await createPackageArchive(
+      path.dirname(file),
+      fixture.destination,
+    );
+    await assert.rejects(
+      inspectPackedManifest(packed.archivePath, packed.report),
+    );
+    await assert.rejects(packViewer(fixture.root, fixture.destination));
+  }
+});
+
+test("packing checks runtime licences before running the lifecycle", async (t) => {
+  const fixture = await archiveFixture(t);
+  const file = path.join(fixture.root, "package-lock.json");
+  const lock = JSON.parse(await fs.readFile(file, "utf8"));
+  delete lock.packages["packages/viewer"].license;
+  await fs.writeFile(file, JSON.stringify(lock));
   await assert.rejects(
-    fixture.inspectPackagePair(cli, fixture.viewer),
-    /sha512-/,
+    packViewer(fixture.root, fixture.destination),
+    /licenses must be declared/,
+  );
+  await assert.rejects(
+    fs.stat(path.join(fixture.root, "packages/viewer/dist")),
+    { code: "ENOENT" },
   );
 });

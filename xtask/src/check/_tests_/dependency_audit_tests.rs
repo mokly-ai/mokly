@@ -49,12 +49,7 @@ fn complete_and_repository_checks_propagate_default_and_explicit_audit_modes() {
 
 #[test]
 fn explicit_audit_modes_require_complete_or_repository_checks() {
-    for suite in [
-        VerificationSuite::Package,
-        VerificationSuite::Unit,
-        VerificationSuite::Browser,
-        VerificationSuite::Hydration,
-    ] {
+    for suite in [VerificationSuite::Viewer, VerificationSuite::Native] {
         assert!(CheckRequest::new(Some(suite), None, None).is_ok());
         for mode in [DependencyAudit::Baseline, DependencyAudit::Strict] {
             let error = CheckRequest::new(Some(suite), None, Some(mode))
