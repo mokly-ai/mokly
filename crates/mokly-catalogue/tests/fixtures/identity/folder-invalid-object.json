@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "invalid-folder",
-      "message": "specs/a/_folder.json: must be a JSON object"
+      "message": "specs/a/_folder.json: must be a JSON object",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 1
     }
   ]
 }

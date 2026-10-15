@@ -8,6 +8,7 @@
     {
       "code": "moved-from-current",
       "message": "specs/home.screen.html: movedFrom other names a current entry",
+      "path": "specs/home.screen.html",
       "line": 3,
       "column": 1
     }

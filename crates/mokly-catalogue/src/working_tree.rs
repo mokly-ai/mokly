@@ -7,6 +7,8 @@ use std::path::Path;
 use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
+use crate::working_tree_read;
+
 /// Source tree backed by the host filesystem.
 pub struct WorkingTree;
 
@@ -137,14 +139,7 @@ impl SourceTree for WorkingTree {
     }
 
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
-        match fs::read(path) {
-            Ok(bytes) => Ok(bytes),
-            Err(source) => Err(SourceError::Io {
-                operation: "read",
-                path: path.into(),
-                source,
-            }),
-        }
+        working_tree_read::read(path)
     }
 }
 

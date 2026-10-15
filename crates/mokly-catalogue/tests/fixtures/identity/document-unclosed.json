@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "document-front-matter",
-      "message": "specs/guide.md: front matter block is not closed"
+      "message": "specs/guide.md: front matter block is not closed",
+      "path": "specs/guide.md",
+      "line": 1,
+      "column": 1
     }
   ]
 }

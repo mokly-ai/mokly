@@ -335,6 +335,11 @@ more than re-deriving the behaviour from the requirements.
     now. The guides wait for the user's decision on the guide tests, recorded
     under the review TODO as item E.
 
+39. Template spacing (2026-10-15): substitution accepts optional ASCII
+    whitespace around the prop path inside `{{ }}`. `{{ name }}` equals
+    `{{name}}` in text and attributes. The catalogue checker and HTML renderer
+    use the same rule.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -643,6 +648,8 @@ Evidence: `.context/rust-rebuild/sweeps/m4.md` and
 `.context/rust-rebuild/delegation/m4/report-1.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m4/report-2.md` and
 `.context/rust-rebuild/delegation/m4/merge-decisions.md`.
+Review 1 fixes and evidence: `.context/rust-rebuild/delegation/m4/report-3.md`.
+Final fixes and evidence: `.context/rust-rebuild/delegation/m4/report-4.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 
@@ -662,7 +669,8 @@ from Milestone 12.
       their scopes resolved, and the ownership annotations the comparison
       relies on.
 - [ ] Implement the render cache: content keys, the byte bound, eviction, and
-      the source tree trait over the working tree and Git trees; the `build`
+      reads through the existing `mokly-source-interface` for working and Git
+      trees; the `build`
       validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
@@ -689,6 +697,10 @@ without JavaScript.
       routes, the live descriptor, the event stream with the revision as the
       message id and the deployment id as its data, shutdown ordering, and
       the terminal output contract in the CLI.
+- [ ] Complete context-aware usage readers: validate recorded props against
+      component schemas; recompute instance and slot keys and `propsKey` with
+      the shared material key; validate usage references, ownership cycles,
+      source locations, duplicate records, root ranges, and view ordering.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
@@ -743,6 +755,10 @@ renders again.
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Extend the definition-provider boundary for `describe` handles,
+      declared controls, story control hints, slot handles, excluded non-data
+      prop keys, and authoring diagnostics; emit `props-not-data` after path
+      derivation names the entry and key.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -844,15 +860,38 @@ Tags: ui
 
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
-      documents, the comparison generation, the ownership marker, the `--out`
-      option with its default `mokly-static/` output directory, and the
-      transaction with backup, exclusive rename, and rollback.
+      documents, the comparison generation, the shared `mokly-model` ownership
+      marker writer, the `--out` option with its default `mokly-static/` output
+      directory, and the transaction with backup, exclusive rename, and rollback.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
       changes rules, and the upload validation fixtures.
-- [ ] Add the `git-uncommitted` detail layout and avoid repeated detail and
+  - [x] Implement the `mokly-publish` exchange client with immutable output
+        snapshots, metadata v2, ownership v3, bounded HTTP, retries, expiry,
+        one re-plan, digest accounting, and public fixture tests.
+  - [x] Add clean-checkout checks, cancellable Git calls, the static-output
+        trait, and the pre-build private-directory line. Keep completed
+        output after upload failure.
+  - [ ] Connect `mokly-static` to the CLI-owned publish adapter and its rich
+        terminal phases. Both crates use the shared output shapes and marker
+        writer in `mokly-model`. Verify real rendering, transaction cancellation,
+        and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
+        transitions, source changes, and the deferred gap-sweep scenarios.
+    - [ ] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
+          `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
+          `mokly-publish` into the CLI publication error contract when the
+          static adapter lands.
+- [x] Add the `git-uncommitted` detail layout and avoid repeated detail and
       recovery-hint sentences in terminal errors.
+
+Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
+Publish client review fixes and TLS checks:
+`.context/rust-rebuild/delegation/m12-publish/report-2.md`.
+Publish client final review and merge decisions:
+`.context/rust-rebuild/delegation/m12-publish/report-3.md` and
+`.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
+
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
 - [ ] Commit.
@@ -870,6 +909,9 @@ Tags: ui
 - [ ] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
+- [ ] Verify native TLS on macOS and Windows CI. Build all five target
+      binaries with a target C toolchain and check `ldd`, `otool -L`, or
+      `dumpbin /dependents` for an unintended crypto shared-library dependency.
 - [ ] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
@@ -899,7 +941,12 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
+    keep the OS trust store until the user decides.
+  - Milestone 12 publish review 1, finding 13: decide private-directory retention
+    after success; keep the existing retention until the user decides.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
     `catalogue-v6.json` and their `.prettierignore` lines; it waits for the

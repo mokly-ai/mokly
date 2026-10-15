@@ -8,6 +8,18 @@ use crate::inference::infer;
 use crate::validation::PropValidator;
 
 #[test]
+fn empty_arrays_omit_items_and_changed_kinds_form_type_lists() {
+    let own: Props = serde_json::from_value(json!({"empty":[],"value":true})).unwrap();
+    let variant: Props = serde_json::from_value(json!({"empty":[],"value":"text"})).unwrap();
+    let schema = serde_json::to_value(infer(&own, &[variant])).unwrap();
+    assert!(schema["properties"]["empty"].get("items").is_none());
+    assert_eq!(
+        schema["properties"]["value"]["type"],
+        json!(["string", "boolean"])
+    );
+}
+
+#[test]
 fn inference_closes_objects_unions_types_and_requires_own_keys() {
     let own: Props = serde_json::from_value(
         json!({"user":{"name":"Ada","plan":"pro"},"items":[],"enabled":true}),

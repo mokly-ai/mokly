@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "duplicate-path",
-      "message": "path home/same is defined twice:\n  specs/home.screen.html\n  specs/home.screen.html"
+      "message": "path home/same is defined twice:\n  specs/home.screen.html\n  specs/home.screen.html",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

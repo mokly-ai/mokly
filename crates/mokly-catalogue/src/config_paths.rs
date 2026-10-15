@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
-use crate::config::{normalize, traversal};
+use crate::config::{invalid_path_text, normalize};
 use crate::config_types::ResolvedConfig;
 use crate::config_validation::invalid;
 use crate::error::Result;
@@ -114,7 +114,7 @@ fn confined(
     value: &str,
     directory: bool,
 ) -> Result<Vec<PathBuf>> {
-    if traversal(value) || value.contains(':') {
+    if invalid_path_text(value) || value.contains(':') {
         return Err(invalid(format!(
             "{setting}: path traversal or invalid path {value}"
         )));

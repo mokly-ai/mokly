@@ -50,14 +50,18 @@ pub(crate) fn resolve(target: &str, base: &str) -> Option<String> {
     is_entry_path(&resolved).then_some(resolved)
 }
 
-pub(crate) fn validate(entries: &mut [ModelEntry]) -> Vec<Issue> {
+pub(crate) fn validate(entries: &mut [ModelEntry], failed: &BTreeSet<String>) -> Vec<Issue> {
     let originals = entries.to_vec();
     let lookup: BTreeMap<_, _> = originals
         .iter()
         .map(|entry| (entry.metadata.path.to_ascii_lowercase(), entry))
         .collect();
     let mut issues = Vec::new();
-    for entry in entries.iter_mut() {
+    let mut invalid_entries = failed.clone();
+    for entry in entries
+        .iter_mut()
+        .filter(|entry| !failed.contains(&entry.metadata.path))
+    {
         let folder = base(&entry.metadata, &originals);
         let paths: Vec<(&mut String, EntryKind)> = match &mut entry.content {
             EntryContent::Screen { use_case_paths, .. } => use_case_paths
@@ -77,6 +81,7 @@ pub(crate) fn validate(entries: &mut [ModelEntry]) -> Vec<Issue> {
             if let Some(target) = target {
                 *path = target.metadata.path.clone();
             } else {
+                invalid_entries.insert(entry.metadata.path.clone());
                 issues.push(
                     Issue::new(
                         Code::InvalidMetadata,
@@ -120,18 +125,32 @@ pub(crate) fn validate(entries: &mut [ModelEntry]) -> Vec<Issue> {
         .collect();
     for (screen, flow_paths) in &memberships {
         for flow in flow_paths {
+            if invalid_entries.contains(*screen) || invalid_entries.contains(*flow) {
+                continue;
+            }
             if flows.get(flow).is_some_and(|steps| !steps.contains(screen)) {
-                issues.push(Issue::new(Code::InvalidMetadata,format!("screen {screen} lists use case {flow}, but its steps do not name the screen")));
+                let reason = "but its steps do not name the screen";
+                issues.push(Issue::new(
+                    Code::InvalidMetadata,
+                    format!("screen {screen} lists use case {flow}, {reason}"),
+                ));
             }
         }
     }
     for (flow, steps) in &flows {
         for screen in steps {
+            if invalid_entries.contains(*flow) || invalid_entries.contains(*screen) {
+                continue;
+            }
             if memberships
                 .get(screen)
                 .is_some_and(|paths| !paths.contains(flow))
             {
-                issues.push(Issue::new(Code::InvalidMetadata,format!("use case {flow} steps through screen {screen}, but the screen does not list the use case")));
+                let reason = "but the screen does not list the use case";
+                issues.push(Issue::new(
+                    Code::InvalidMetadata,
+                    format!("use case {flow} steps through screen {screen}, {reason}"),
+                ));
             }
         }
     }

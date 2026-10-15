@@ -4,9 +4,7 @@ use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{
     EntryContent, EntryMetadata, ModelEntry, SourceLocation, VisualEntry,
 };
-use mokly_model::controls;
 use mokly_model::data::merge_props;
-use mokly_model::inference::infer;
 use serde_json::Value;
 
 use crate::config_types::ResolvedRoot;
@@ -15,7 +13,13 @@ use crate::discovery::SourceFile;
 use crate::identity::{derive, segment};
 use crate::input::ParsedEntry;
 use crate::parsing::issue;
-use crate::{props, variants};
+use crate::{prepare_parent, props, variants};
+
+pub(crate) struct PreparedEntries {
+    pub(crate) entries: Vec<ModelEntry>,
+    pub(crate) issues: Vec<Issue>,
+    pub(crate) failed: bool,
+}
 
 pub(crate) fn prepare(
     parsed: &ParsedEntry,
@@ -24,7 +28,7 @@ pub(crate) fn prepare(
     kind: EntryKind,
     source: SourceLocation,
     configured_schemes: &[ColorScheme],
-) -> Result<(Vec<ModelEntry>, Vec<Issue>), Issue> {
+) -> Result<PreparedEntries, Issue> {
     let input = &parsed.input;
     let path_source = parsed.document.positions.get("/path").unwrap_or(&source);
     let (path, is_index) = derive(input, file, root, path_source)?;
@@ -53,42 +57,20 @@ pub(crate) fn prepare(
             },
             _ => EntryContent::Page,
         };
-        return Ok((vec![ModelEntry { metadata, content }], Vec::new()));
+        return Ok(PreparedEntries {
+            entries: vec![ModelEntry { metadata, content }],
+            issues: parsed.issues.clone(),
+            failed: !parsed.issues.is_empty(),
+        });
     }
-    let color_schemes =
-        props::schemes(input.color_schemes.as_deref(), configured_schemes, &source)?;
     let candidates = variants::parse(parsed, kind, &file.path, &path);
-    let merged: Vec<_> = candidates
-        .iter()
-        .filter_map(|candidate| candidate.as_ref().ok())
-        .map(|variant| merge_props(&input.props, &variant.props))
-        .collect();
-    let inferred;
-    let schema = if let Some(schema) = &input.prop_schema {
-        schema
-    } else {
-        inferred = match serde_json::to_value(infer(&input.props, &merged)) {
-            Ok(value) => value,
-            Err(error) => {
-                return Err(Issue::new(Code::HtmlFrontMatter, error.to_string()).at(source.clone()));
-            }
-        };
-        &inferred
-    };
-    let validator = props::compile(schema, parsed, &source)?;
-    props::declarations(
-        validator.schema(),
-        &input.slots,
-        input.element.as_deref(),
-        &source,
-    )?;
-    props::validate(&validator, &input.props, None, parsed, &source)?;
-    let visual = VisualEntry {
-        color_schemes,
-        prop_schema: validator.schema().clone(),
-        props: input.props.clone(),
-        controls: controls::derive(validator.schema()),
-    };
+    let prepared_parent =
+        prepare_parent::prepare(parsed, kind, &source, configured_schemes, &candidates);
+    let validator = prepared_parent.validator;
+    let failed = validator.is_none();
+    let schema = prepared_parent.visual.prop_schema.clone();
+    let controls = prepared_parent.visual.controls.clone();
+    let visual = prepared_parent.visual;
     let content = visual_content(
         kind,
         visual,
@@ -100,7 +82,7 @@ pub(crate) fn prepare(
     );
     let parent = ModelEntry { metadata, content };
     let mut entries = vec![parent.clone()];
-    let mut issues = Vec::new();
+    let mut issues = prepared_parent.issues;
     for (index, candidate) in candidates.into_iter().enumerate() {
         let variant = match candidate {
             Ok(variant) => variant,
@@ -120,13 +102,15 @@ pub(crate) fn prepare(
             continue;
         }
         let complete = merge_props(&input.props, &variant.props);
-        if let Err(issue) = props::validate(
-            &validator,
-            &complete,
-            Some((&variant.slug, index)),
-            parsed,
-            &source,
-        ) {
+        if let Some(validator) = &validator
+            && let Err(issue) = props::validate(
+                validator,
+                &complete,
+                Some((&variant.slug, index)),
+                parsed,
+                &source,
+            )
+        {
             issues.push(issue);
             continue;
         }
@@ -156,7 +140,11 @@ pub(crate) fn prepare(
             color_schemes: match props::schemes(
                 variant.color_schemes.as_deref(),
                 configured_schemes,
-                &entry.metadata.source,
+                parsed
+                    .document
+                    .positions
+                    .get(&format!("/variants/{index}/colorSchemes"))
+                    .unwrap_or(&entry.metadata.source),
             ) {
                 Ok(schemes) => {
                     if variant.color_schemes.is_none() {
@@ -176,11 +164,11 @@ pub(crate) fn prepare(
                     continue;
                 }
             },
-            prop_schema: validator.schema().clone(),
+            prop_schema: schema.clone(),
             props: complete,
-            controls: controls::derive(validator.schema()),
+            controls: controls.clone(),
         };
-        if variant.slots.keys().any(|name| !input.slots.contains(name)) {
+        if !failed && variant.slots.keys().any(|name| !input.slots.contains(name)) {
             issues.push(issue(
                 &parsed.document,
                 &file.path,
@@ -203,7 +191,11 @@ pub(crate) fn prepare(
         );
         entries.push(entry);
     }
-    Ok((entries, issues))
+    Ok(PreparedEntries {
+        entries,
+        issues,
+        failed,
+    })
 }
 
 fn visual_content(

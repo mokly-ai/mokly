@@ -72,7 +72,8 @@ or computed values. Controls for live editing derive from the schema under the
 
 The body is an HTML fragment in the
 [template language](./mokly-html-screens.md#screen-body) of the screen body,
-reading the component's own props: `{{name}}` substitution, `mokly-if`,
+reading the component's own props: `{{name}}` substitution, with optional
+ASCII whitespace around the path as in `{{ name }}`, `mokly-if`,
 `mokly-viewport`, and the
 [component element rules](./mokly-html-screens.md#component-elements) for the
 components it nests, with the same diagnostics. A component body adds:

@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nprops: {name: Ada, badge: {count: 3}}\n---\n<p title=\"{{\tname \r\n}}\">{{ name }} {{\n badge.count\t }}</p>"
+  },
+  "paths": ["home"]
+}

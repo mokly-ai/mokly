@@ -49,9 +49,9 @@ token padding and URL queries. Empty assigned values fail; boolean options such
 as `--no-changes` reject assignments. A separate value beginning with `-`
 is ambiguous and fails as a missing value; use the assigned form instead.
 
-`publish` has no `--out` option: it builds into its own private directory
-outside the repository, which the `Mokly publish build` line of the
-[terminal errors contract](./mokly-terminal-errors.md) names, under the
+`publish` has no `--out` option: it builds into an output directory inside
+its own private directory outside the repository. The `Mokly publish build` line of the
+[terminal errors contract](./mokly-terminal-errors.md) names that output, under the
 [static build contract](./mokly-export.md) and its ownership rules. `--config`
 uses normal discovery. Comparisons are included by default: `--base` overrides
 `review.base` (default `origin/main`). `--no-changes` skips base lookup and

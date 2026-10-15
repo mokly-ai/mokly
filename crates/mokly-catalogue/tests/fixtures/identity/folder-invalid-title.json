@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "invalid-folder",
-      "message": "specs/a/_folder.json: title must be a nonempty string without leading or trailing whitespace"
+      "message": "specs/a/_folder.json: title must be a nonempty string without leading or trailing whitespace",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 2
     }
   ]
 }

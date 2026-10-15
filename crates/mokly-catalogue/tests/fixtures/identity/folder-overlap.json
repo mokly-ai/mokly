@@ -6,8 +6,8 @@
         "files": ["**/*.screen.html"]
       },
       {
-        "dir": "./specs",
-        "files": ["**/*.md"]
+        "dir": ".",
+        "files": ["specs/**/*.md"]
       }
     ]
   },
@@ -19,7 +19,10 @@
   "errors": [
     {
       "code": "config-invalid",
-      "message": "file specs/_folder.json is matched by roots[0] and roots[1]"
+      "message": "file specs/_folder.json is matched by roots[0] and roots[1]",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

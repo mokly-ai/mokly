@@ -93,6 +93,7 @@ pub(crate) fn parse(text: String, path: &str) -> Result<ParsedEntry, Issue> {
     };
     Ok(ParsedEntry {
         input,
+        issues: Vec::new(),
         document: Document { value, positions },
         body,
         body_offset,

@@ -1,6 +1,6 @@
 //! Build warning, diagnostic, and discovery-summary presentation.
 
-use mokly_catalogue::diagnostic::{Issue, Warning};
+use mokly_catalogue::diagnostic::{self, Issue, Warning};
 use mokly_catalogue::error::CatalogueError;
 use mokly_model::axes::EntryKind;
 
@@ -78,13 +78,29 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
         } => {
             let mut text = warnings(style, records, redactor);
             for issue in issues {
-                text.push_str(&style.error(Code::BuildInvalid, &diagnostic(issue), redactor));
+                let detail = issue_text(issue, Code::BuildInvalid);
+                let diagnostic = if matches!(
+                    issue.code,
+                    diagnostic::Code::DuplicatePath
+                        | diagnostic::Code::CaseCollision
+                        | diagnostic::Code::DuplicateFolder
+                        | diagnostic::Code::DuplicateMovedFrom
+                ) {
+                    style.error_lines(Code::BuildInvalid, &detail, redactor)
+                } else {
+                    style.error(Code::BuildInvalid, &detail, redactor)
+                };
+                text.push_str(&diagnostic);
             }
             text
         }
         BuildError::Catalogue {
             source: CatalogueError::Config(issue),
-        } => style.error(Code::ConfigInvalid, &diagnostic(issue), redactor),
+        } => style.error(
+            Code::ConfigInvalid,
+            &issue_text(issue, Code::ConfigInvalid),
+            redactor,
+        ),
         BuildError::Catalogue {
             source: CatalogueError::ConfigMissing { searched },
         } => style.error(
@@ -101,9 +117,17 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
     }
 }
 
-fn diagnostic(issue: &Issue) -> String {
+fn issue_text(issue: &Issue, outer: Code) -> String {
     let prefix = issue.location.as_ref().map_or(String::new(), |location| {
         format!("{}:{}:{} ", location.path, location.line, location.column)
     });
-    format!("{prefix}[mokly/{}] {}", issue.code.as_str(), issue.message)
+    if issue.code.as_str() == outer.presentation().0 {
+        format!("{prefix}{}", issue.message)
+    } else {
+        format!("{prefix}[mokly/{}] {}", issue.code.as_str(), issue.message)
+    }
 }
+
+#[cfg(test)]
+#[path = "_tests_/build_output_tests.rs"]
+mod build_output_tests;

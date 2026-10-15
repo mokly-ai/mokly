@@ -6,6 +6,8 @@
   "errors": [
     {
       "code": "invalid-path",
+      "message": "specs/home.screen.html: movedFrom \"bad.name\" is not a valid path",
+      "path": "specs/home.screen.html",
       "line": 3,
       "column": 1
     }

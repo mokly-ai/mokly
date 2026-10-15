@@ -3,8 +3,9 @@
 use std::fs;
 use std::path::Path;
 
+use mokly_catalogue::diagnostic::{Issue, Warning};
 use mokly_catalogue::error::CatalogueError;
-use serde_json::Value;
+use serde_json::{Value, json};
 
 #[path = "memory.rs"]
 mod memory;
@@ -25,34 +26,17 @@ pub fn check(name: &str) {
     let fixture = fixture(name);
     let result = memory::prepare(&fixture);
     if let Some(expected) = fixture.get("errors") {
-        let issues = match result.unwrap_err() {
-            CatalogueError::Config(issue) => vec![issue],
-            CatalogueError::Invalid { issues, .. } => issues,
+        let (issues, warnings) = match result.unwrap_err() {
+            CatalogueError::Config(issue) => (vec![issue], Vec::new()),
+            CatalogueError::Invalid { issues, warnings } => (issues, warnings),
             error => panic!("unexpected error: {error:?}"),
         };
-        for expected in expected.as_array().unwrap() {
-            let issue = issues
-                .iter()
-                .find(|issue| issue.code.as_str() == expected["code"].as_str().unwrap())
-                .unwrap_or_else(|| panic!("{name}: expected {expected}; got {issues:?}"));
-            if let Some(message) = expected.get("message").and_then(Value::as_str) {
-                assert_eq!(issue.message, message, "{name}");
-            }
-            if let Some(line) = expected.get("line").and_then(Value::as_u64) {
-                assert_eq!(
-                    issue.location.as_ref().unwrap().line,
-                    line as usize,
-                    "{name}: {issue:?}"
-                );
-            }
-            if let Some(column) = expected.get("column").and_then(Value::as_u64) {
-                assert_eq!(
-                    issue.location.as_ref().unwrap().column,
-                    column as usize,
-                    "{name}: {issue:?}"
-                );
-            }
-        }
+        assert_eq!(
+            json!(issues.iter().map(issue_json).collect::<Vec<_>>()),
+            *expected,
+            "{name}: complete issue list"
+        );
+        check_warnings(name, &fixture, &warnings);
     } else {
         let prepared = result.unwrap_or_else(|error| panic!("{name}: {error:?}"));
         let paths: Vec<_> = prepared
@@ -66,21 +50,7 @@ pub fn check(name: &str) {
             fixture["paths"],
             "{name}"
         );
-        if let Some(warnings) = fixture.get("warnings") {
-            assert_eq!(
-                prepared
-                    .warnings
-                    .iter()
-                    .map(|warning| warning.code)
-                    .collect::<Vec<_>>(),
-                warnings
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .map(|v| v.as_str().unwrap())
-                    .collect::<Vec<_>>()
-            );
-        }
+        check_warnings(name, &fixture, &prepared.warnings);
         for source in fixture
             .get("protected")
             .and_then(Value::as_array)
@@ -96,4 +66,26 @@ pub fn check(name: &str) {
             );
         }
     }
+}
+
+fn issue_json(issue: &Issue) -> Value {
+    json!({"code":issue.code.as_str(),"message":issue.message,
+        "path":issue.location.as_ref().map(|location| &location.path),
+        "line":issue.location.as_ref().map(|location| location.line),
+        "column":issue.location.as_ref().map(|location| location.column)})
+}
+
+fn check_warnings(name: &str, fixture: &Value, warnings: &[Warning]) {
+    let actual = json!(
+        warnings
+            .iter()
+            .map(|warning| json!({"code":warning.code,
+        "subject":warning.printed_subject(),"message":warning.message}))
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(
+        actual,
+        fixture.get("warnings").unwrap_or(&json!([])).clone(),
+        "{name}: complete warning list"
+    );
 }

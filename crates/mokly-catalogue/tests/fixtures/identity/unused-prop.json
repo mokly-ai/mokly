@@ -3,6 +3,12 @@
   "files": {
     "specs/home.screen.html": "---\ntitle: Home\nprops: {label: Hello}\n---\n<h1>Home</h1>\n"
   },
-  "warnings": ["html-unused-props"],
+  "warnings": [
+    {
+      "code": "html-unused-props",
+      "subject": "entry \"home\"",
+      "message": "prop \"label\" is not read by the body"
+    }
+  ],
   "paths": ["home"]
 }

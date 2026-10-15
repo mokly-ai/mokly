@@ -7,7 +7,9 @@
     {
       "code": "invalid-variants",
       "message": "a variant cannot declare variants",
-      "line": 4
+      "path": "specs/home.screen.html",
+      "line": 4,
+      "column": 46
     }
   ]
 }

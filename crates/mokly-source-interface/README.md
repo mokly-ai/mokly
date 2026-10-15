@@ -18,11 +18,14 @@ no internal dependency and performs no IO itself.
 missing or replaced. A node keeps both its lexical kind and its target kind,
 so an entry replaced by a symlink is dropped while an explicit root alias
 remains valid. `children` returns lexical child kinds. `read` returns
-bytes. Paths are private source-tree paths; public catalogue JSON uses
+bytes from an inventoried regular file and rejects a replacement symlink.
+Callers project an explicit alias and read its target identity. Paths are private source-tree paths; public catalogue JSON uses
 repository-relative metadata instead.
 
 `SourceError` retains the source operation, path, and original IO error.
-Discovery treats `ENOENT` and `ENOTDIR` as benign races. Other failures keep
+Its `Internal` variant retains adapter-specific errors without converting
+those errors to IO errors. Discovery treats `ENOENT` and `ENOTDIR` as benign
+races. Unix `ELOOP` and `ENAMETOOLONG` retain their codes. Other failures keep
 an error code, with `unknown` as the fallback. A Git adapter never follows a
 symbolic-link blob as a regular source file.
 

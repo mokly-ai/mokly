@@ -12,3 +12,6 @@ unimock = { version = "0.6.8", optional = true }
 
 [features]
 mock = ["dep:unimock"]
+
+[target."cfg(unix)".dependencies]
+libc = "0.2.190"
