@@ -57,3 +57,34 @@ export function controlViewKey(
 ): string {
   return `${view.viewport}/${view.colorScheme}`;
 }
+
+/** Swap the shown entry's saved views for their accepted temporary previews. */
+export function withPreviews(
+  views: readonly GeneratedComponentView[],
+  previews: ReadonlyMap<string, ComponentRenderSuccess>,
+  target: ControlTarget | undefined,
+): readonly GeneratedComponentView[] {
+  if (!target) return views;
+  return views.map((view) => {
+    const preview = previews.get(controlViewKey(view));
+    const owned =
+      target.kind === "component"
+        ? view.variantPath === target.path
+        : view.variantPath === undefined;
+    return preview && owned
+      ? {
+          ...view,
+          path: decodeURIComponent(preview.previewUrl),
+          usage: {
+            viewport: view.viewport,
+            colorScheme: view.colorScheme,
+            instances: preview.usage.instances,
+            slots: preview.usage.slots,
+            ranges: preview.usage.ranges,
+            styles: [],
+            resources: [],
+          },
+        }
+      : view;
+  });
+}

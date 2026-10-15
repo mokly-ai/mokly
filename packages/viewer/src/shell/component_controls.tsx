@@ -11,10 +11,7 @@ import {
 } from "react";
 
 import type { ComponentWireProps } from "../components/prop_types.js";
-import type {
-  ComponentOverride,
-  ComponentRenderSuccess,
-} from "../components/render_types.js";
+import type { ComponentOverride } from "../components/render_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
 import { ComponentControlsPanel } from "./component_controls_panel.js";
@@ -22,6 +19,7 @@ import {
   controlsUnavailable,
   controlViewKey,
   initialComponentEditorState,
+  withPreviews,
 } from "./component_controls_state.js";
 import { useComponentPreviewExpiration } from "./component_preview_expiration.js";
 import {
@@ -268,34 +266,4 @@ export function useComponentControls({
     previewViews,
     ...(target ? { props: state.props } : {}),
   };
-}
-
-/** Swap the shown entry's saved views for their accepted temporary previews. */
-function withPreviews(
-  views: readonly GeneratedComponentView[],
-  previews: ReadonlyMap<string, ComponentRenderSuccess>,
-  target: ControlTarget | undefined,
-): readonly GeneratedComponentView[] {
-  return views.map((view) => {
-    const preview = previews.get(controlViewKey(view));
-    const owned =
-      target?.kind === "component"
-        ? view.variantPath === target.path
-        : view.variantPath === undefined;
-    return preview && owned
-      ? {
-          ...view,
-          path: decodeURIComponent(preview.previewUrl),
-          usage: {
-            viewport: view.viewport,
-            colorScheme: view.colorScheme,
-            instances: preview.usage.instances,
-            slots: preview.usage.slots,
-            ranges: preview.usage.ranges,
-            styles: [],
-            resources: [],
-          },
-        }
-      : view;
-  });
 }

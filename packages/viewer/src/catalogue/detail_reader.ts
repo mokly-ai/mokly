@@ -34,7 +34,7 @@ import {
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only entry detail number this viewer reads. */
-export const ENTRY_DETAIL_VERSION = 1;
+const ENTRY_DETAIL_VERSION = 1;
 
 const KINDS = ["component", "document", "page", "screen", "use-case"] as const;
 const VIEWPORTS = ["mobile", "desktop"] as const;
@@ -131,7 +131,7 @@ function readUsage(value: unknown): CatalogueUsage {
 }
 
 /** Read the review v8 rule and resource records of one view or page. */
-export function readViewEvidence(value: unknown): ViewEvidence {
+function readViewEvidence(value: unknown): ViewEvidence {
   exactKeys(value, ["rules", "resources"], "$detail.resourceEvidence");
   return {
     rules: array(value.rules).map((raw) => {

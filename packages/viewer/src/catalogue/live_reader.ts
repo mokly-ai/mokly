@@ -8,7 +8,7 @@ import { hash, object, string } from "./values.js";
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only live descriptor number this viewer reads. */
-export const LIVE_DESCRIPTOR_VERSION = 3;
+const LIVE_DESCRIPTOR_VERSION = 3;
 
 /** The one route that accepts a live render request. */
 export const RENDER_ROUTE = `/${VIEWER_DIRECTORY}/components/render` as const;

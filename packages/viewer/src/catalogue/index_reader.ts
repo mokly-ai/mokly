@@ -26,7 +26,7 @@ import {
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only catalogue index number this viewer reads. */
-export const CATALOGUE_INDEX_VERSION = 7;
+const CATALOGUE_INDEX_VERSION = 7;
 
 /** Gate the version, read every v7 field, and validate the relationships. */
 export function readCatalogueIndex(value: unknown): CatalogueReadModel {

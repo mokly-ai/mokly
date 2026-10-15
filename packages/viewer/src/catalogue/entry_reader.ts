@@ -104,7 +104,7 @@ export function readEntry(value: unknown): CatalogueRecord {
 }
 
 /** Read one view of a screen or component with its document key. */
-export function readView(value: unknown): CatalogueView {
+function readView(value: unknown): CatalogueView {
   const input = object(value);
   return {
     viewport: choice(input.viewport, ["mobile", "desktop"] as const),
@@ -115,7 +115,7 @@ export function readView(value: unknown): CatalogueView {
 }
 
 /** The axis list of a screen, component or document, light first. */
-export function schemes(value: unknown): CatalogueScreen["colorSchemes"] {
+function schemes(value: unknown): CatalogueScreen["colorSchemes"] {
   return array(value).map((scheme) => choice(scheme, SCHEMES));
 }
 

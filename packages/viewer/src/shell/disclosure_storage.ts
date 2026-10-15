@@ -9,7 +9,7 @@ import { isDisclosureKey } from "./disclosure_keys.js";
 export const disclosureStorageKey = "mokly:nav-disclosure:v4";
 
 /** Whether a decoded value has the required object shape (not an array). */
-export function isDisclosureMap(
+function isDisclosureMap(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

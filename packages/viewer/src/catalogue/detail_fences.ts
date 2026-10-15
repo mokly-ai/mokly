@@ -71,7 +71,7 @@ export function fenceDetail(
 }
 
 /** The current entry a path names in the installed index. */
-export function currentEntry(
+function currentEntry(
   index: CatalogueReadModel,
   path: string,
 ): CatalogueRecord | undefined {

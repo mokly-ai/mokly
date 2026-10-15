@@ -48,14 +48,3 @@ export function materialChangedEntries(
     context.changedEntries
   );
 }
-
-/** Create one context from a base ref and the entries Changes lists. */
-export function shellContext(
-  base: string,
-  changedEntries: readonly string[] | undefined,
-): ShellContext {
-  return {
-    base,
-    ...(changedEntries ? { changedEntries } : {}),
-  };
-}
