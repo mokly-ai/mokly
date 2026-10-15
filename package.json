@@ -24,6 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
+    "package:smoke": "npm run -s build && node scripts/release/smoke_example.mjs",
     "test": "npm run -s build && node scripts/verification/run-viewer.mjs",
     "test:prepared": "node scripts/verification/run-viewer.mjs --strict",
     "test:viewer:prepared": "node scripts/verification/run-viewer.mjs --strict",

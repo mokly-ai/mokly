@@ -2,6 +2,8 @@ import { useId } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
+import { useCurrentPage } from "../../parts/design_navigation.js";
+
 export type InspectionSelection = "off" | "outer" | "nested";
 
 /** Fixed geometry belongs to this synthetic artboard, not the runtime inspector. */
@@ -12,6 +14,7 @@ export function HighlightMask({
 }) {
   const nested = selection === "nested";
   const maskId = useId();
+  const current = useCurrentPage();
   return (
     <div className="ce-highlight-layer" data-selection={selection}>
       <svg className="ce-mask" aria-hidden="true" width="100%" height="100%">
@@ -70,6 +73,9 @@ export function HighlightMask({
         <MockLink
           className="ce-region ce-region--nested"
           to="design/components/inspection/inspection-nested"
+          aria-current={current(
+            "design/components/inspection/inspection-nested",
+          )}
           aria-label="Inspect Action, Toolbar action"
         >
           <span>Action · Toolbar</span>
@@ -79,6 +85,9 @@ export function HighlightMask({
           <MockLink
             className="ce-region ce-region--toolbar"
             to="design/components/inspection/inspection-nested"
+            aria-current={current(
+              "design/components/inspection/inspection-nested",
+            )}
             aria-label="Inspect Toolbar, Main"
           >
             <span>Toolbar · Main</span>
@@ -86,6 +95,9 @@ export function HighlightMask({
           <MockLink
             className="ce-region ce-region--footer"
             to="design/components/inspection/inspection-details"
+            aria-current={current(
+              "design/components/inspection/inspection-details",
+            )}
             aria-label="Inspect Action, Footer action"
           >
             <span>Action · Footer</span>

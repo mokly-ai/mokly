@@ -1,5 +1,6 @@
 import { MockLink } from "@mokly/mokly";
 
+import { useCurrentPage } from "../../parts/design_navigation.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 
@@ -67,6 +68,7 @@ export function ConsumerFrame({
   state: ScreenPageState;
   viewport: ArtboardViewport;
 }) {
+  const current = useCurrentPage();
   const content =
     state === "consumer" ? (
       <div className="ce-other-example">
@@ -77,6 +79,9 @@ export function ConsumerFrame({
           <MockLink
             className="ce-single-highlight ce-highlight-layer"
             to="design/components/inspection/inspection-consumer"
+            aria-current={current(
+              "design/components/inspection/inspection-consumer",
+            )}
             aria-label="Inspect Action, Continue"
           >
             <span>Action · Continue</span>

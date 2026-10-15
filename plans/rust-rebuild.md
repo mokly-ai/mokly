@@ -840,7 +840,7 @@ renders again.
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every
         page at both viewports and in both schemes.
-  - [ ] Add the packed consumer smoke.
+  - [x] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
 - [ ] Restore the example typecheck; validate or replace the viewer browser
@@ -863,6 +863,20 @@ renders again.
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+  - [x] Check one served example in `tests/design_catalogue.test.ts`: the
+        frozen inventory, the shared components and their consumers, family
+        adoption, owner chains, stylesheet links and scopes, scripts, link
+        targets and focus stops, control destinations, tag states, and
+        reachability; prove each check with one mutation.
+  - [ ] Add the browser checks with the restored browser suite: pointer and
+        Tab/Enter activation, history, active rows, highlighting, editable and
+        read-only controls, comparison bars, mobile sheets, and bounded
+        scrolling.
+  - [ ] Add the Changes checks after Milestone 9: the attribution matrix, one
+        classification of the nine shared sheets per scenario, the rule
+        records and the changed-entry union, and bounded base-side Git
+        batching.
+  - [ ] Exercise the same journeys in the static output after Milestone 12.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -898,6 +912,7 @@ fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
 Example and design catalogue render and visual check: `.context/rust-rebuild/example-visual/index.md`.
+Design catalogue checks, their mutation proofs, and the packed consumer smoke: `.context/rust-rebuild/m5-example/design-checks/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
