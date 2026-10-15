@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { designMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { DetailsPanel } from "../../parts/details.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
@@ -64,9 +65,11 @@ export const documentScreen = defineScreen({
   colorSchemes: ["light"],
   description:
     "A Markdown document in the catalogue, rendered in the shell's own typography with its breadcrumbs and Details.",
-  desktop: <DocumentView viewport="desktop" />,
+  ...artboards({
+    desktop: <DocumentView viewport="desktop" />,
+    mobile: <DocumentView viewport="mobile" />,
+  }),
   slug: "document",
-  mobile: <DocumentView viewport="mobile" />,
   rationale:
     "A written spec sits beside the screens it describes, so it reads in the catalogue's own type and keeps the same breadcrumbs, path, and Details as every other entry.",
   title: "Markdown document",

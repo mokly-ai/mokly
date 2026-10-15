@@ -3,6 +3,7 @@ import { defineScreen } from "@mokly/mokly";
 import { PreviewWorkspace } from "../../../components/parts/workspace.js";
 import { appearanceDesignMetadata } from "../../../metadata.js";
 import { useDarkPreview } from "../../../parts/appearance.js";
+import { artboards } from "../../../parts/artboards.js";
 import {
   DESTINATIONS,
   type DesignDestination,
@@ -161,22 +162,24 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /** Appearance on the routes that carry no preview, or none yet. */
-export const appearanceStatusScreens = [
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "The catalogue home guidance with nothing selected, in either appearance.",
+export const homeScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "The catalogue home guidance with nothing selected, in either appearance.",
+  ...artboards({
     desktop: <HomeAndEmpty viewport="desktop" />,
-    slug: "home",
     mobile: <HomeAndEmpty viewport="mobile" />,
-    rationale:
-      "Home is the first paint a reader sees, so each appearance has to be complete before any screen is chosen rather than arriving once a preview loads.",
-    title: "Home and empty",
   }),
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "The catalogue checking for changes while it stays usable, in either appearance.",
+  slug: "home",
+  rationale:
+    "Home is the first paint a reader sees, so each appearance has to be complete before any screen is chosen rather than arriving once a preview loads.",
+  title: "Home and empty",
+});
+export const loadingScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "The catalogue checking for changes while it stays usable, in either appearance.",
+  ...artboards({
     desktop: (
       <AvailabilityScreen
         design={DESTINATIONS.appearanceLoading}
@@ -184,7 +187,6 @@ export const appearanceStatusScreens = [
         viewport="desktop"
       />
     ),
-    slug: "loading",
     mobile: (
       <AvailabilityScreen
         design={DESTINATIONS.appearanceLoading}
@@ -192,25 +194,30 @@ export const appearanceStatusScreens = [
         viewport="mobile"
       />
     ),
-    rationale:
-      "The spinner, the reserved count slot and the waiting message are drawn from the catalogue palette, so a loading catalogue never falls back to the other appearance's chrome around a page.",
-    title: "Catalogue loading",
   }),
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "A screen that could not be shown, offering another attempt without leaving the catalogue.",
+  slug: "loading",
+  rationale:
+    "The spinner, the reserved count slot and the waiting message are drawn from the catalogue palette, so a loading catalogue never falls back to the other appearance's chrome around a page.",
+  title: "Catalogue loading",
+});
+export const errorScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "A screen that could not be shown, offering another attempt without leaving the catalogue.",
+  ...artboards({
     desktop: <ErrorAndRetry viewport="desktop" />,
-    slug: "error",
     mobile: <ErrorAndRetry viewport="mobile" />,
-    rationale:
-      "Recovery states are reached by readers who are already lost, so they keep the chosen appearance, the navigation and the details panel instead of resetting to a bare page.",
-    title: "Error and retry",
   }),
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "Changes selected after the comparison could not be made, in either appearance.",
+  slug: "error",
+  rationale:
+    "Recovery states are reached by readers who are already lost, so they keep the chosen appearance, the navigation and the details panel instead of resetting to a bare page.",
+  title: "Error and retry",
+});
+export const unavailableScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "Changes selected after the comparison could not be made, in either appearance.",
+  ...artboards({
     desktop: (
       <AvailabilityScreen
         design={DESTINATIONS.appearanceUnavailable}
@@ -218,7 +225,6 @@ export const appearanceStatusScreens = [
         viewport="desktop"
       />
     ),
-    slug: "unavailable",
     mobile: (
       <AvailabilityScreen
         design={DESTINATIONS.appearanceUnavailable}
@@ -226,19 +232,22 @@ export const appearanceStatusScreens = [
         viewport="mobile"
       />
     ),
-    rationale:
-      "The one unavailable message and the dash in the count slot have to read as ordinary secondary text in both appearances, not as an error colour only one of them uses.",
-    title: "Changes unavailable",
   }),
-  defineScreen({
-    ...appearanceDesignMetadata,
-    description:
-      "A use case's ordered steps around light screens, in either appearance.",
+  slug: "unavailable",
+  rationale:
+    "The one unavailable message and the dash in the count slot have to read as ordinary secondary text in both appearances, not as an error colour only one of them uses.",
+  title: "Changes unavailable",
+});
+export const flowScreen = defineScreen({
+  ...appearanceDesignMetadata,
+  description:
+    "A use case's ordered steps around light screens, in either appearance.",
+  ...artboards({
     desktop: <UseCaseFlow viewport="desktop" />,
-    slug: "flow",
     mobile: <UseCaseFlow viewport="mobile" />,
-    rationale:
-      "Flow steps carry their own numbered tiles, connector line and links, so they prove the catalogue palette reaches content that sits on the stage rather than in a panel.",
-    title: "Use-case flow",
   }),
-];
+  slug: "flow",
+  rationale:
+    "Flow steps carry their own numbered tiles, connector line and links, so they prove the catalogue palette reaches content that sits on the stage rather than in a panel.",
+  title: "Use-case flow",
+});

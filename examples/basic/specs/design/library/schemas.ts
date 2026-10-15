@@ -1,3 +1,5 @@
+import type { PropSchema, SchemaProps, SlotProps } from "@mokly/mokly";
+
 import {
   COMPONENT_PAGES,
   CONTROLS_PAGES,
@@ -5,54 +7,56 @@ import {
 } from "../components/parts/destinations.js";
 import { DESTINATIONS } from "../parts/destinations.js";
 
-export const text = { schema: { kind: "string" } } as const;
-export const optionalText = { ...text, optional: true } as const;
-export const flag = { schema: { kind: "boolean" } } as const;
-export const optionalFlag = { ...flag, optional: true } as const;
+/** The data and slot props that a library component's view receives. */
+export type LibraryProps<
+  S extends PropSchema,
+  Names extends readonly string[] = readonly [],
+> = SchemaProps<S> & SlotProps<Names>;
+
+/** The options of a select control for every value of an `enum` schema. */
+export function enumOptions<const V extends string>(schema: {
+  readonly enum: readonly V[];
+}) {
+  return schema.enum.map((value) => ({ label: value, value }));
+}
+
+export const text = { type: "string" } as const;
+export const flag = { type: "boolean" } as const;
 export const destination = {
-  schema: {
-    kind: "enum",
-    values: [
+  enum: [
+    ...new Set([
       ...Object.values(DESTINATIONS),
       ...Object.values(COMPONENT_PAGES),
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
-    ],
-  },
-  optional: true,
+    ]),
+  ],
 } as const;
 export const comparisonMode = {
-  schema: {
-    kind: "enum",
-    values: ["current", "side-by-side", "overlay", "difference"],
-  },
+  enum: ["current", "side-by-side", "overlay", "difference"],
 } as const;
 export const changeStatus = {
-  schema: {
-    kind: "enum",
-    values: ["unmodified", "added", "changed", "removed"],
-  },
+  enum: ["unmodified", "added", "changed", "removed"],
 } as const;
 export const previewViewport = {
-  schema: { kind: "enum", values: ["mobile", "desktop", "both"] },
+  enum: ["mobile", "desktop", "both"],
 } as const;
 export const comparisonDestinations = {
-  schema: {
-    kind: "object",
-    properties: {
-      current: destination,
-      "side-by-side": destination,
-      overlay: destination,
-      difference: destination,
-    },
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    current: destination,
+    "side-by-side": destination,
+    overlay: destination,
+    difference: destination,
   },
 } as const;
 export const tagRecords = {
-  schema: {
-    kind: "array",
-    items: {
-      kind: "object",
-      properties: { id: text, label: text, destination },
-    },
+  type: "array",
+  items: {
+    type: "object",
+    additionalProperties: false,
+    required: ["id", "label"],
+    properties: { id: text, label: text, destination },
   },
 } as const;

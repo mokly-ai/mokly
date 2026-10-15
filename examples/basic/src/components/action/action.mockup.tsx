@@ -1,3 +1,1 @@
-import { action } from "./action.mokly.js";
-
-export const mockups = action.entries;
+export { action } from "./action.mokly.js";

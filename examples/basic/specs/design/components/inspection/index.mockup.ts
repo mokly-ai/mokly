@@ -1,1 +1,7 @@
-export { inspectionScreens } from "./screens.js";
+export {
+  inspectionDetailsScreen,
+  inspectionHighlightScreen,
+  inspectionNestedScreen,
+  inspectionDirectChangeScreen,
+  inspectionConsumerScreen,
+} from "./screens.js";

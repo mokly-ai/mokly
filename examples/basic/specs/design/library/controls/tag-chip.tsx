@@ -1,16 +1,21 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
-import { destination, flag, text } from "../schemas.js";
+import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
 import { TagChipView } from "./tag-chip.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["id", "label", "selected"],
   properties: { id: text, label: text, selected: flag, destination },
 } as const;
-export type TagChipProps = ComponentProps<typeof propSchema, []>;
+export type TagChipProps = LibraryProps<typeof propSchema>;
+/** Own props omit the destination, which the inactive chip does not have. */
+const base = { id: "forms", label: "forms", selected: false } as const;
+const sample = { ...base, destination: DESTINATIONS.forms } as const;
 export const tagChip = defineComponent({
   ...libraryMetadata(
     "controls",
@@ -19,6 +24,7 @@ export const tagChip = defineComponent({
     "An individual catalogue tag with optional selection and navigation.",
   ),
   propSchema,
+  props: base,
   controls: {
     label: { kind: "text", label: "Label" },
     selected: { kind: "boolean", label: "Selected" },
@@ -28,12 +34,7 @@ export const tagChip = defineComponent({
     {
       slug: "default",
       title: "Default",
-      props: {
-        id: "forms",
-        label: "forms",
-        selected: false,
-        destination: DESTINATIONS.forms,
-      },
+      props: sample,
     },
     {
       slug: "selected",

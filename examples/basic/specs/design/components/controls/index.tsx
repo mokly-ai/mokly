@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { controlsDesignMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 
 import { ControlsPage } from "./parts/page.js";
 
@@ -12,15 +13,15 @@ export function ControlsOverviewMobile() {
 }
 
 /** Canonical controls design followed by bounded galleries of authored outcomes. */
-export const controlsDesign = [
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "controls",
-    title: "Component prop controls",
-    description:
-      "Default saved values with text, boolean, number, select, and optional controls beside the component preview.",
-    colorSchemes: ["light"],
+export const controlsScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "controls",
+  title: "Component prop controls",
+  description:
+    "Default saved values with text, boolean, number, select, and optional controls beside the component preview.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <ControlsOverviewDesktop />,
     mobile: <ControlsOverviewMobile />,
   }),
-];
+});

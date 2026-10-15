@@ -1,14 +1,12 @@
 // Example renderer adapter proving the consumer contract against the real
-// Firna stack: it wraps every screen in the shared @firna/ui theme, renders
-// one React tree to static HTML, collects react-native-web's atomic styles,
-// and injects them into <head> so @firna/ui controls arrive fully styled.
+// Firna stack: it wraps every React render in the shared @firna/ui theme for
+// the view's colour scheme. The sidecar collects react-native-web's atomic
+// styles and the style elements below, and the core assembles the document.
 
 import { createSharedUiTheme, SharedUiThemeProvider } from "@firna/ui/theme";
-import { createContext, type ReactNode, useContext } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { AppRegistry } from "react-native-web";
+import type { ReactNode } from "react";
 
-import type { RenderInput } from "@mokly/mokly";
+import type { ColorScheme, RenderInput } from "@mokly/mokly";
 
 import { LibraryHost } from "./specs/design/library/host.js";
 import { DesignRenderedScheme } from "./specs/design/parts/appearance.js";
@@ -19,49 +17,31 @@ const themes = {
   light: createSharedUiTheme(tokens),
 };
 
-const ViewportContext = createContext("unknown");
-
-function NullComponent(): null {
-  return null;
+/** Body text and link colours for plain HTML outside Firna components. */
+function documentStyles(colorScheme: ColorScheme): string {
+  const theme = themes[colorScheme];
+  return colorScheme === "dark"
+    ? `body{margin:0;background:${theme.colors.bg};color:${theme.colors.ink}}main a{color:${darkTokens.colors.accent}}`
+    : `body{margin:0;background:${theme.colors.bg}}`;
 }
 
-function RenderBody({ children }: { children: ReactNode }) {
-  const viewport = useContext(ViewportContext);
-  return <div data-example-renderer={viewport}>{children}</div>;
-}
-
-function collectNativeStyles(): string {
-  AppRegistry.registerComponent("__mokly_styles__", () => NullComponent);
-  return renderToStaticMarkup(
-    AppRegistry.getApplication("__mokly_styles__", {}).getStyleElement(),
-  );
-}
-
-export default function render(input: RenderInput): string {
-  const theme = themes[input.colorScheme];
-  const body = renderToStaticMarkup(
+export default function render(input: RenderInput): ReactNode {
+  return (
     <DesignRenderedScheme scheme={input.colorScheme}>
-      <SharedUiThemeProvider theme={theme}>
-        <ViewportContext.Provider value={input.viewport}>
-          <RenderBody>
-            {input.entry.kind === "component" &&
-            input.entry.path.startsWith("design/library/") ? (
-              <LibraryHost input={input}>{input.node}</LibraryHost>
-            ) : (
-              input.node
-            )}
-          </RenderBody>
-        </ViewportContext.Provider>
+      <SharedUiThemeProvider theme={themes[input.colorScheme]}>
+        <style>{documentStyles(input.colorScheme)}</style>
+        <div
+          data-color-scheme={input.colorScheme}
+          data-example-renderer={input.viewport}
+        >
+          {input.entry.kind === "component" &&
+          input.entry.path.startsWith("design/library/") ? (
+            <LibraryHost input={input}>{input.node}</LibraryHost>
+          ) : (
+            input.node
+          )}
+        </div>
       </SharedUiThemeProvider>
-    </DesignRenderedScheme>,
+    </DesignRenderedScheme>
   );
-  const nativeStyles = collectNativeStyles();
-  const links = input.stylesheets
-    .map((href) => `<link rel="stylesheet" href="${href}">`)
-    .join("");
-  const documentStyles =
-    input.colorScheme === "dark"
-      ? `html{color-scheme:dark}body{margin:0;background:${theme.colors.bg};color:${theme.colors.ink}}main a{color:${darkTokens.colors.accent}}`
-      : `html{color-scheme:light}body{margin:0;background:${theme.colors.bg}}`;
-  return `<!doctype html><html lang="en" data-color-scheme="${input.colorScheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${input.entry.title}</title>${links}${nativeStyles}<style>${documentStyles}</style></head><body>${body}</body></html>\n`;
 }

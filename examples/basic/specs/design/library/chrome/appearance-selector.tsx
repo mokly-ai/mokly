@@ -1,19 +1,21 @@
-import { defineComponent, type ComponentProps } from "@mokly/mokly";
+import { defineComponent } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import { flag, optionalFlag } from "../schemas.js";
+import { flag, type LibraryProps } from "../schemas.js";
 
 import { AppearanceSelectorView } from "./appearance-selector.view.js";
 
 const propSchema = {
-  kind: "object",
+  type: "object",
+  additionalProperties: false,
+  required: ["value", "compact"],
   properties: {
-    value: { schema: { kind: "enum", values: ["auto", "light", "dark"] } },
+    value: { enum: ["auto", "light", "dark"] },
     compact: flag,
-    otherSchemeChanged: optionalFlag,
+    otherSchemeChanged: flag,
   },
 } as const;
-export type AppearanceSelectorProps = ComponentProps<typeof propSchema, []>;
+export type AppearanceSelectorProps = LibraryProps<typeof propSchema>;
 export const appearanceSelector = defineComponent({
   ...libraryMetadata(
     "chrome",
@@ -22,6 +24,7 @@ export const appearanceSelector = defineComponent({
     "The standalone catalogue's Auto, Light and Dark interface setting.",
   ),
   propSchema,
+  props: { value: "auto", compact: false },
   controls: {
     value: {
       kind: "select",

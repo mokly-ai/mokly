@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { designMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { RemovedFieldGuide } from "../../../parts/removed_documents.js";
 import {
@@ -44,41 +45,45 @@ function Unavailable({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /** Previous-version states a removed document reaches before it can be read. */
-export const removedPageScreens = [
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A long previous document scrolls inside its pane, keeping its section headings addressable.",
+export const longScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A long previous document scrolls inside its pane, keeping its section headings addressable.",
+  ...artboards({
     desktop: <LongDocument viewport="desktop" />,
-    slug: "long",
     mobile: <LongDocument viewport="mobile" />,
-    rationale:
-      "Reading a removed document means moving through it, so the pane keeps the document's own scrolling and its headings stay reachable from the section list instead of being flattened into a preview image.",
-    title: "Long previous document",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Selecting a removed document shows a loading stage until its previous version arrives.",
+  slug: "long",
+  rationale:
+    "Reading a removed document means moving through it, so the pane keeps the document's own scrolling and its headings stay reachable from the section list instead of being flattened into a preview image.",
+  title: "Long previous document",
+});
+export const loadingScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Selecting a removed document shows a loading stage until its previous version arrives.",
+  ...artboards({
     desktop: <Loading viewport="desktop" />,
-    slug: "loading",
     mobile: <Loading viewport="mobile" />,
-    rationale:
-      "The previous version is retrieved only when the document is opened, so the stage names the wait while the navigation, badge, and details stay in place.",
-    title: "Loading previous document",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A previous version that could not be loaded offers Retry and keeps the catalogue usable.",
+  slug: "loading",
+  rationale:
+    "The previous version is retrieved only when the document is opened, so the stage names the wait while the navigation, badge, and details stay in place.",
+  title: "Loading previous document",
+});
+export const unavailableScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A previous version that could not be loaded offers Retry and keeps the catalogue usable.",
+  ...artboards({
     desktop: <Unavailable viewport="desktop" />,
-    slug: "unavailable",
     mobile: <Unavailable viewport="mobile" />,
-    rationale:
-      "Nothing current may stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
-    title: "Previous document unavailable",
   }),
-];
+  slug: "unavailable",
+  rationale:
+    "Nothing current may stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
+  title: "Previous document unavailable",
+});

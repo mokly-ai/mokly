@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { controlsDesignMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
 import { ControlsPage } from "../parts/page.js";
 
 export function PendingControlsDesktop() {
@@ -28,45 +29,51 @@ export function ComparisonControlsMobile() {
   return <ControlsPage state="comparison" viewport="mobile" />;
 }
 
-export const statesScreens = [
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "pending",
-    title: "Updating preview",
-    description:
-      "The last valid preview stays visible while a newer edit renders.",
-    colorSchemes: ["light"],
+export const pendingScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "pending",
+  title: "Updating preview",
+  description:
+    "The last valid preview stays visible while a newer edit renders.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <PendingControlsDesktop />,
     mobile: <PendingControlsMobile />,
   }),
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "invalid",
-    title: "Invalid prop value",
-    description:
-      "An inline number error keeps the last valid preview and preserves the entered value.",
-    colorSchemes: ["light"],
+});
+export const invalidScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "invalid",
+  title: "Invalid prop value",
+  description:
+    "An inline number error keeps the last valid preview and preserves the entered value.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <InvalidControlsDesktop />,
     mobile: <InvalidControlsMobile />,
   }),
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "error",
-    title: "Render failed",
-    description:
-      "A failed render keeps edits and the last working preview, with retry and reset available.",
-    colorSchemes: ["light"],
+});
+export const errorScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "error",
+  title: "Render failed",
+  description:
+    "A failed render keeps edits and the last working preview, with retry and reset available.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <ErrorControlsDesktop />,
     mobile: <ErrorControlsMobile />,
   }),
-  defineScreen({
-    ...controlsDesignMetadata,
-    slug: "comparison",
-    title: "Controls during comparison",
-    description:
-      "Saved props remain readable in comparison; Current is required before editing.",
-    colorSchemes: ["light"],
+});
+export const comparisonScreen = defineScreen({
+  ...controlsDesignMetadata,
+  slug: "comparison",
+  title: "Controls during comparison",
+  description:
+    "Saved props remain readable in comparison; Current is required before editing.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <ComparisonControlsDesktop />,
     mobile: <ComparisonControlsMobile />,
   }),
-];
+});

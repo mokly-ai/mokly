@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../../../components/parts/workspace.js";
 import { changesDesignMetadata } from "../../../../metadata.js";
+import { artboards } from "../../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../../parts/destinations.js";
 import { DetailsPanel } from "../../../../parts/details.js";
 import { NavTree } from "../../../../parts/nav.js";
@@ -107,41 +108,45 @@ function ExcludedStylesOnly({ viewport }: { viewport: ArtboardViewport }) {
  * One branch with two changed stylesheets: one keeps Welcome in Changes, and
  * the other applies to neither Welcome nor Details.
  */
-export const matchedExcludedDesigns = [
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A linked stylesheet changed and some of its changed styles apply here, so Welcome stays in Changes and opens its side-by-side comparison. Details name those styles, then list the other changed stylesheet as examined and excluded.",
+export const matchedScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A linked stylesheet changed and some of its changed styles apply here, so Welcome stays in Changes and opens its side-by-side comparison. Details name those styles, then list the other changed stylesheet as examined and excluded.",
+  ...artboards({
     desktop: <MatchedStyles viewport="desktop" />,
-    slug: "matched",
     mobile: <MatchedStyles viewport="mobile" />,
-    rationale:
-      "Details come from the same evidence in Changes and in All, so this screen and Excluded styles show one Details card.",
-    title: "Matched styles",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "The same changed Welcome opened from All, with Current selected. One changed stylesheet applies to Welcome and keeps it in Changes; the other applies nowhere on it, so Details list it as examined and excluded.",
+  slug: "matched",
+  rationale:
+    "Details come from the same evidence in Changes and in All, so this screen and Excluded styles show one Details card.",
+  title: "Matched styles",
+});
+export const excludedScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "The same changed Welcome opened from All, with Current selected. One changed stylesheet applies to Welcome and keeps it in Changes; the other applies nowhere on it, so Details list it as examined and excluded.",
+  ...artboards({
     desktop: <ExcludedStyles viewport="desktop" />,
-    slug: "excluded",
     mobile: <ExcludedStyles viewport="mobile" />,
-    rationale:
-      "An excluded stylesheet never removes the changes that another stylesheet causes, so Welcome keeps its status and its comparison controls. Its Details are the same as in Matched styles, and the Details row opens the screen that links only the excluded stylesheet.",
-    title: "Excluded styles",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Details opened from All in the same branch. It links only the stylesheet whose changed styles apply nowhere on it, so it stays out of Changes, shows Unmodified and offers no comparison. Details list that stylesheet as examined and excluded and end with “No changes to this screen.”",
+  slug: "excluded",
+  rationale:
+    "An excluded stylesheet never removes the changes that another stylesheet causes, so Welcome keeps its status and its comparison controls. Its Details are the same as in Matched styles, and the Details row opens the screen that links only the excluded stylesheet.",
+  title: "Excluded styles",
+});
+export const excludedOnlyScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Details opened from All in the same branch. It links only the stylesheet whose changed styles apply nowhere on it, so it stays out of Changes, shows Unmodified and offers no comparison. Details list that stylesheet as examined and excluded and end with “No changes to this screen.”",
+  ...artboards({
     desktop: <ExcludedStylesOnly viewport="desktop" />,
-    slug: "excluded-only",
     mobile: <ExcludedStylesOnly viewport="mobile" />,
-    rationale:
-      "A changed stylesheet with no changed styles that apply never adds a Changes row, a comparison or a stage heading. Details still name it, so a reader can see that the change was examined, and the last line confirms that the screen did not change.",
-    title: "Excluded styles only",
   }),
-];
+  slug: "excluded-only",
+  rationale:
+    "A changed stylesheet with no changed styles that apply never adds a Changes row, a comparison or a stage heading. Details still name it, so a reader can see that the change was examined, and the last line confirms that the screen did not change.",
+  title: "Excluded styles only",
+});

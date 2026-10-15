@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { componentDesignMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
 import { ComponentPage } from "../../parts/component_page.js";
 import { ScreenPage } from "../../parts/screen_page.js";
 
@@ -29,39 +30,43 @@ export function StyleOutsideMobile() {
 }
 
 /** Stylesheet changes that change a component, reach past it, or reach nothing. */
-export const sharedImpactDesigns = [
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "style-changed",
-    title: "Component with changed styles",
-    colorSchemes: ["light"],
-    description:
-      "A changed rule in Action's stylesheet styles only Action's own output, so Action and its saved variants are in Changes, and Welcome and Details appear under Affected screens without rows of their own.",
-    rationale:
-      "The rule matches Action on its own saved pages, so Action changes. On Welcome and Details it matches only inside Action, so those screens stay out of Changes. Details names the stylesheet once and, under it, the changed styles that apply to the component.",
+export const styleChangedScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "style-changed",
+  title: "Component with changed styles",
+  colorSchemes: ["light"],
+  description:
+    "A changed rule in Action's stylesheet styles only Action's own output, so Action and its saved variants are in Changes, and Welcome and Details appear under Affected screens without rows of their own.",
+  rationale:
+    "The rule matches Action on its own saved pages, so Action changes. On Welcome and Details it matches only inside Action, so those screens stay out of Changes. Details names the stylesheet once and, under it, the changed styles that apply to the component.",
+  ...artboards({
     desktop: <StyleChangedDesktop />,
     mobile: <StyleChangedMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "style-outside",
-    title: "Styles outside a changed component",
-    colorSchemes: ["light"],
-    description:
-      "The rule that changes Action also styles Welcome's own Not now link, which is not part of Action, so Welcome has its own Changes row beside Action.",
-    rationale:
-      "Details names the stylesheet once and, under it, only the styles that also apply outside the changed components. Changed components used here links to Action's own page.",
+});
+export const styleOutsideScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "style-outside",
+  title: "Styles outside a changed component",
+  colorSchemes: ["light"],
+  description:
+    "The rule that changes Action also styles Welcome's own Not now link, which is not part of Action, so Welcome has its own Changes row beside Action.",
+  rationale:
+    "Details names the stylesheet once and, under it, only the styles that also apply outside the changed components. Changed components used here links to Action's own page.",
+  ...artboards({
     desktop: <StyleOutsideDesktop />,
     mobile: <StyleOutsideMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "shared-impact",
-    title: "Component with excluded styles",
-    colorSchemes: ["light"],
-    description:
-      "An unchanged Action component opened from All shows an examined stylesheet whose changed rules do not apply to its selected variant.",
+});
+export const sharedImpactScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "shared-impact",
+  title: "Component with excluded styles",
+  colorSchemes: ["light"],
+  description:
+    "An unchanged Action component opened from All shows an examined stylesheet whose changed rules do not apply to its selected variant.",
+  ...artboards({
     desktop: <SharedImpactDesktop />,
     mobile: <SharedImpactMobile />,
   }),
-];
+});

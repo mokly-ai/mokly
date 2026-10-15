@@ -2,6 +2,7 @@ import { MockLink, defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { designMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { DetailsPanel } from "../../parts/details.js";
 import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
@@ -232,65 +233,73 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /** Browse states for a screen's variants and for per-view change evidence. */
-export const variantScreens = [
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A selected variant beside its parent screen, with the parent's variant list disclosed in the navigation.",
+export const variantSelectedScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A selected variant beside its parent screen, with the parent's variant list disclosed in the navigation.",
+  ...artboards({
     desktop: <SelectedVariant viewport="desktop" />,
-    slug: "variant-selected",
     mobile: <SelectedVariant viewport="mobile" />,
-    rationale:
-      "The parent row stays the link to the parent screen and carries a separate 16px chevron disclosure, because a row cannot be both a link and a disclosure summary. Variant rows sit one indent step deeper with the same guide painting and their own icon, a screen drawn over a second screen behind it, so a variant reads as a state of the screen above it rather than another screen. The breadcrumb ends in the parent's title as a link, and the variant supplies only its own title, description, and render. The navigation fixture is static here; no screen in this group uses an authored variant list yet.",
-    title: "Selected variant",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "The Changes filter showing one changed variant under a parent whose own render is unmodified.",
+  slug: "variant-selected",
+  rationale:
+    "The parent row stays the link to the parent screen and carries a separate 16px chevron disclosure, because a row cannot be both a link and a disclosure summary. Variant rows sit one indent step deeper with the same guide painting and their own icon, a screen drawn over a second screen behind it, so a variant reads as a state of the screen above it rather than another screen. The breadcrumb ends in the parent's title as a link, and the variant supplies only its own title, description, and render. The navigation fixture is static here; no screen in this group uses an authored variant list yet.",
+  title: "Selected variant",
+});
+export const variantChangesScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "The Changes filter showing one changed variant under a parent whose own render is unmodified.",
+  ...artboards({
     desktop: <ChangedVariant viewport="desktop" />,
-    slug: "variant-changes",
     mobile: <ChangedVariant viewport="mobile" />,
-    rationale:
-      "A variant is its own routed entry, so the count is one and the changed row is the variant, not the parent. The parent stays visible through its trailing changed dot and opens the first changed variant when activated, which keeps the group readable without claiming the parent itself changed. The comparison band opens in Current; the remaining modes are depictions until a matching comparison state is authored.",
-    title: "Changed variant",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A deleted variant retained as a Removed row under its surviving parent.",
+  slug: "variant-changes",
+  rationale:
+    "A variant is its own routed entry, so the count is one and the changed row is the variant, not the parent. The parent stays visible through its trailing changed dot and opens the first changed variant when activated, which keeps the group readable without claiming the parent itself changed. The comparison band opens in Current; the remaining modes are depictions until a matching comparison state is authored.",
+  title: "Changed variant",
+});
+export const variantRemovedScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A deleted variant retained as a Removed row under its surviving parent.",
+  ...artboards({
     desktop: <RemovedVariant viewport="desktop" />,
-    slug: "variant-removed",
     mobile: <RemovedVariant viewport="mobile" />,
-    rationale:
-      "A removed variant follows the removed-screen rules: it is hidden from All, shown in Changes under the parent it belonged to, and has no current preview. Its recorded details stay available so a reviewer can see what was deleted, and All returns to the parent rather than to catalogue home because the parent still exists.",
-    title: "Removed variant",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A removed variant kept as a flat Changes row because its former parent is now another screen's variant.",
+  slug: "variant-removed",
+  rationale:
+    "A removed variant follows the removed-screen rules: it is hidden from All, shown in Changes under the parent it belonged to, and has no current preview. Its recorded details stay available so a reviewer can see what was deleted, and All returns to the parent rather than to catalogue home because the parent still exists.",
+  title: "Removed variant",
+});
+export const variantReparentedScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A removed variant kept as a flat Changes row because its former parent is now another screen's variant.",
+  ...artboards({
     desktop: <ReparentedRemovedVariant viewport="desktop" />,
-    slug: "variant-reparented",
     mobile: <ReparentedRemovedVariant viewport="mobile" />,
-    rationale:
-      "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a flat Removed row.",
-    title: "Removed variant after reparenting",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "A screen opened from Changes whose change is confined to its dark views, with the shown view unmodified.",
+  slug: "variant-reparented",
+  rationale:
+    "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a flat Removed row.",
+  title: "Removed variant after reparenting",
+});
+export const changedViewsScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "A screen opened from Changes whose change is confined to its dark views, with the shown view unmodified.",
+  ...artboards({
     desktop: <ChangedViews viewport="desktop" />,
-    slug: "changed-views",
     mobile: <ChangedViews viewport="mobile" />,
-    rationale:
-      "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on top-bar Appearance and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. Appearance selects the scheme; the navigation and Details retain the links to the changed screen.",
-    title: "Changed views",
   }),
-];
+  slug: "changed-views",
+  rationale:
+    "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on top-bar Appearance and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. Appearance selects the scheme; the navigation and Details retain the links to the changed screen.",
+  title: "Changed views",
+});

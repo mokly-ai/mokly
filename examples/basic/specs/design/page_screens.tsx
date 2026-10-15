@@ -3,6 +3,7 @@ import { defineScreen } from "@mokly/mokly";
 import { ExampleDocument } from "../document.js";
 
 import { designMetadata } from "./metadata.js";
+import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import {
   HandbookStage,
@@ -95,45 +96,48 @@ function RemovedPageView({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /** Owning responsive page designs, shared before runtime presentation. */
-export const pageScreens = [
-  defineScreen({
-    ...designMetadata,
-    slug: "view",
-    title: "Document page",
-    description: "A whole document beside screens and flows in one hierarchy.",
-    colorSchemes: ["light"],
-    desktop: <PageDesktop />,
-    mobile: <PageMobile />,
-  }),
-  defineScreen({
-    ...designMetadata,
-    slug: "details",
-    title: "Document details",
-    description: "Page metadata and the narrow catalogue drawer.",
-    colorSchemes: ["light"],
+export const viewScreen = defineScreen({
+  ...designMetadata,
+  slug: "view",
+  title: "Document page",
+  description: "A whole document beside screens and flows in one hierarchy.",
+  colorSchemes: ["light"],
+  ...artboards({ desktop: <PageDesktop />, mobile: <PageMobile /> }),
+});
+export const detailsScreen = defineScreen({
+  ...designMetadata,
+  slug: "details",
+  title: "Document details",
+  description: "Page metadata and the narrow catalogue drawer.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <PageDetailsDesktop />,
     mobile: <PageDetailsMobile />,
   }),
-  defineScreen({
-    ...designMetadata,
-    slug: "navigation",
-    title: "Document navigation",
-    description:
-      "A document in its declared folder, with the narrow catalogue drawer.",
-    colorSchemes: ["light"],
+});
+export const navigationScreen = defineScreen({
+  ...designMetadata,
+  slug: "navigation",
+  title: "Document navigation",
+  description:
+    "A document in its declared folder, with the narrow catalogue drawer.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <PageNavigationDesktop />,
     mobile: <PageNavigationMobile />,
   }),
-  defineScreen({
-    ...designMetadata,
-    slug: "removed",
-    title: "Removed document",
-    description:
-      "A removed document opens its previous version, keeping its flat Changes row and baseline ancestry.",
-    rationale:
-      "Deleting a document should not hide what it said. The previous version is the only readable copy left, so the stage shows it read-only under a quiet label instead of an empty state, while the Removed badge and the ancestry of the deleted parent stay in place.",
-    colorSchemes: ["light"],
+});
+export const removedScreen = defineScreen({
+  ...designMetadata,
+  slug: "removed",
+  title: "Removed document",
+  description:
+    "A removed document opens its previous version, keeping its flat Changes row and baseline ancestry.",
+  rationale:
+    "Deleting a document should not hide what it said. The previous version is the only readable copy left, so the stage shows it read-only under a quiet label instead of an empty state, while the Removed badge and the ancestry of the deleted parent stay in place.",
+  colorSchemes: ["light"],
+  ...artboards({
     desktop: <RemovedPageView viewport="desktop" />,
     mobile: <RemovedPageView viewport="mobile" />,
   }),
-];
+});
