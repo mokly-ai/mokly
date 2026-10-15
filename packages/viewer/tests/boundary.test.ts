@@ -102,3 +102,11 @@ test("the removed server and runtime entries cannot be imported", async () => {
       specifier,
     );
 });
+
+test("only the standalone stylesheet gives the unmarked stub the system appearance", async () => {
+  const read = (name: string) =>
+    fs.readFile(path.join(root, "dist", name), "utf8");
+  const stub = /:root:not\(\[data-mokly-theme\]\)/;
+  assert.match(await read("shell.css"), stub);
+  assert.doesNotMatch(await read("styles.css"), /:not\(\[data-mokly-theme\]\)/);
+});

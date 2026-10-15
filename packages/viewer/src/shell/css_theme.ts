@@ -69,3 +69,15 @@ export const SHELL_THEME_CSS = `
 
 :root[data-mokly-theme="dark"] {${DARK_ROLES}}
 `;
+
+/**
+ * The stub before the bundle runs: its root states no appearance yet, so the
+ * standalone stylesheet gives it Auto through the system preference. Only the
+ * standalone stylesheet carries this rule; an embedded root always states its
+ * appearance, and the embedded stylesheet never receives the rule.
+ */
+export const STANDALONE_STUB_THEME_CSS = `
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mokly-theme]) {${DARK_ROLES}  }
+}
+`;

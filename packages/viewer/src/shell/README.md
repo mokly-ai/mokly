@@ -163,8 +163,10 @@ resolves, so a removed variant of a moved or case-renamed parent opens in its
 siblings' workspace and keeps their mode. The mode owner also includes the
 index revision, so a publication returns an active comparison to Current.
 
-`css.ts` concatenates the standalone stylesheet. Split string modules preserve
-its exact bytes. The package build scopes an embedded stylesheet separately and
+`css.ts` concatenates the shared stylesheet. Split string modules preserve
+its exact bytes. The standalone stylesheet adds one rule to it: a root without
+an appearance mark, the stub before the bundle runs, takes the Auto appearance
+from the system. The package build scopes an embedded stylesheet separately and
 uses packaged relative font URLs; its selector-aware transform maps document
 selectors and shell-root `.mbk` selectors to the embedding scope without
 rewriting class names. The standalone shell keeps the original CSS and font

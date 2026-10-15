@@ -33,11 +33,12 @@ await bundleInspector(
   path.join(browser, "inspector.js"),
 );
 await writeBrowserManifest(browser);
-const { SHELL_CSS } = await import("../dist/shell/css.js");
+const { SHELL_CSS, STANDALONE_SHELL_CSS } =
+  await import("../dist/shell/css.js");
 const { VIEWER_CSS } = await import("../dist/viewer/styles.js");
 // The standalone stylesheet that Serve and `build` deliver as
 // `mokly-viewer/shell.css`, and the scoped stylesheet of an embedded root.
-await fs.writeFile(path.join(target, "shell.css"), SHELL_CSS);
+await fs.writeFile(path.join(target, "shell.css"), STANDALONE_SHELL_CSS);
 await fs.writeFile(
   path.join(target, "styles.css"),
   embeddedStyles(SHELL_CSS, VIEWER_CSS),
