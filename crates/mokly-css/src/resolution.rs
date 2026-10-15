@@ -13,9 +13,7 @@ pub struct Resolution {
     pub conditions: Vec<String>,
     /// Package fields after style; main and module apply when empty.
     pub main_fields: Vec<String>,
-    /// Extra package roots, already repository-relative.
-    pub package_roots: Vec<String>,
-    /// Selected logical dependency directories that already name node_modules.
+    /// Configured package roots mapped to ordered logical node_modules directories.
     pub dependency_roots: Vec<String>,
     /// Extension lookup order, or the consumer bundler defaults.
     pub extensions: Vec<String>,

@@ -18,30 +18,36 @@ interface Shape {
   keys: string[];
 }
 
-test("style wrappers preserve esbuild default-import interop for CommonJS libraries", async (context) => {
+test("style wrappers match unwrapped CommonJS imports in the same Mokly bundle", async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-style-interop-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   const require = createRequire(import.meta.url);
-  for (const name of [
-    "styled-components",
-    "@emotion/react",
-    "react-native-web",
-  ]) {
+  const libraries = [
+    ["styled", "styled-components"],
+    ["emotion", "@emotion/react"],
+    ["native", "react-native-web"],
+  ] as const;
+  for (const [binding, name] of libraries) {
     const original = path.dirname(require.resolve(`${name}/package.json`));
-    const target = path.join(root, "node_modules", name);
-    await fs.cp(original, target, { recursive: true });
-    const manifest = JSON.parse(
-      await fs.readFile(path.join(target, "package.json"), "utf8"),
-    );
-    delete manifest.exports;
-    await fs.writeFile(
-      path.join(target, "package.json"),
-      JSON.stringify(manifest),
-    );
+    for (const targetName of [name, `fixture-${binding}`]) {
+      const target = path.join(root, "node_modules", targetName);
+      await fs.cp(original, target, { recursive: true });
+      const manifest = JSON.parse(
+        await fs.readFile(path.join(target, "package.json"), "utf8"),
+      );
+      delete manifest.exports;
+      manifest.name = targetName;
+      await fs.writeFile(
+        path.join(target, "package.json"),
+        JSON.stringify(manifest),
+      );
+    }
   }
   for (const [name, type, extension] of [
     ["commonjs", "commonjs", "js"],
     ["mjs", "commonjs", "mjs"],
+    ["mts", "module", "mts"],
+    ["tsx-module", "module", "tsx"],
     ["module", "module", "js"],
     ["require", "commonjs", "cjs"],
   ] as const) {
@@ -55,38 +61,21 @@ test("style wrappers preserve esbuild default-import interop for CommonJS librar
     await fs.writeFile(
       path.join(sourceRoot, file),
       [
-        ...[
-          ["styled", "styled-components"],
-          ["emotion", "@emotion/react"],
-          ["native", "react-native-web"],
-        ].map(([binding, library]) =>
-          name === "require"
-            ? `const ${binding} = require("${library}");`
-            : `import ${binding} from "${library}";`,
+        ...libraries.flatMap(([binding, library]) =>
+          [
+            [binding, library],
+            [`${binding}Plain`, `fixture-${binding}`],
+          ].map(([local, specifier]) =>
+            name === "require"
+              ? `const ${local} = require("${specifier}");`
+              : `import ${local} from "${specifier}";`,
+          ),
         ),
-        "export const info = [styled, emotion, native].map(value => ({type:typeof value,defaultType:typeof value?.default,keys:value ? Object.keys(value).sort() : []}));",
+        "const shape = value => ({type:typeof value,defaultType:typeof value?.default,keys:value ? Object.keys(value).sort() : []});",
+        "export const wrapped = [styled, emotion, native].map(shape);",
+        "export const unwrapped = [styledPlain, emotionPlain, nativePlain].map(shape);",
+        "export const styledType = typeof styled; export const styledDivType = typeof styled?.div;",
       ].join("\n"),
-    );
-    const plain = await build({
-      absWorkingDir: sourceRoot,
-      entryPoints: [file],
-      bundle: true,
-      write: false,
-      platform: "node",
-      format: "cjs",
-      mainFields: ["main"],
-      conditions: [],
-      nodePaths: [
-        path.join(root, "node_modules"),
-        path.resolve("node_modules"),
-      ],
-      external: ["react", "react-dom", "react-dom/*"],
-    });
-    const module = { exports: {} as { info: Shape[] } };
-    new Function("module", "exports", "require", plain.outputFiles[0]!.text)(
-      module,
-      module.exports,
-      require,
     );
     const { generation } = await bundle(
       bundleParams({
@@ -103,10 +92,29 @@ test("style wrappers preserve esbuild default-import interop for CommonJS librar
       build,
     );
     generation.maps = {};
-    const wrapped = evaluate(generation).entries[file]!.info;
-    assert.deepEqual(wrapped, module.exports.info, name);
+    const result = evaluate(generation).entries[file]!;
+    if (name === "tsx-module") {
+      assert.equal(
+        result.styledType,
+        "function",
+        "a TSX module must receive the styled function",
+      );
+      assert.equal(
+        result.styledDivType,
+        "function",
+        "styled.div must remain callable",
+      );
+    }
+    if (name === "mjs" || name === "mts")
+      assert.equal(
+        result.styledType,
+        "object",
+        `${name}: Node's default is module.exports`,
+      );
+    assert.deepEqual(result.wrapped, result.unwrapped, name);
+    const shapes = result.unwrapped as Shape[];
     context.diagnostic(
-      `${name}: ${JSON.stringify(module.exports.info.map((value) => ({ type: value.type, defaultType: value.defaultType, keys: value.keys.length })))}`,
+      `${name}: ${JSON.stringify(shapes.map((value) => ({ type: value.type, defaultType: value.defaultType, keys: value.keys.length })))}`,
     );
   }
 });

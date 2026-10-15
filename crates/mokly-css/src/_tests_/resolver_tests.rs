@@ -38,8 +38,10 @@ fn resolver(files: &[&str]) -> SourceResolver {
         settings: Resolution {
             config_directory: "apps/web".into(),
             aliases: BTreeMap::from([("theme-alias".into(), "theme".into())]),
-            package_roots: vec!["vendor".into()],
-            dependency_roots: vec!["node_modules/.mokly-roots/1".into()],
+            dependency_roots: vec![
+                "node_modules/.mokly-roots/1".into(),
+                "node_modules/.mokly-roots/2".into(),
+            ],
             ..Default::default()
         },
     }
@@ -51,7 +53,7 @@ fn aliases_use_the_configuration_package_and_plain_imports_use_the_importer() {
         "apps/web/theme/skin.css",
         "apps/web/node_modules/theme/skin.css",
         "styles/node_modules/theme/skin.css",
-        "vendor/node_modules/theme/skin.css",
+        "node_modules/.mokly-roots/1/theme/skin.css",
     ]);
     assert_eq!(
         resolver
@@ -68,18 +70,18 @@ fn aliases_use_the_configuration_package_and_plain_imports_use_the_importer() {
 }
 
 #[test]
-fn alias_fallback_uses_package_roots_before_selected_dependency_roots() {
+fn alias_fallback_uses_selected_dependency_roots_in_order() {
     for (files, expected) in [
         (
             vec![
-                "vendor/node_modules/theme/skin.css",
                 "node_modules/.mokly-roots/1/theme/skin.css",
+                "node_modules/.mokly-roots/2/theme/skin.css",
             ],
-            "vendor/node_modules/theme/skin.css",
+            "node_modules/.mokly-roots/1/theme/skin.css",
         ),
         (
-            vec!["node_modules/.mokly-roots/1/theme/skin.css"],
-            "node_modules/.mokly-roots/1/theme/skin.css",
+            vec!["node_modules/.mokly-roots/2/theme/skin.css"],
+            "node_modules/.mokly-roots/2/theme/skin.css",
         ),
     ] {
         assert_eq!(
@@ -89,4 +91,56 @@ fn alias_fallback_uses_package_roots_before_selected_dependency_roots() {
             expected
         );
     }
+}
+
+#[test]
+fn aliases_apply_one_substitution_instead_of_following_a_chain() {
+    let mut resolver = resolver(&[
+        "apps/web/node_modules/b/skin.css",
+        "apps/web/node_modules/c/skin.css",
+    ]);
+    resolver.settings.aliases =
+        BTreeMap::from([("a".into(), "b".into()), ("b".into(), "c".into())]);
+    assert_eq!(
+        resolver.resolve("styles/entry.css", "a/skin.css").unwrap(),
+        "apps/web/node_modules/b/skin.css"
+    );
+}
+
+#[test]
+fn a_self_extending_alias_uses_the_longest_key_once() {
+    let mut resolver = resolver(&["apps/web/node_modules/@acme/ui/design/src/tokens.css"]);
+    resolver.settings.aliases = BTreeMap::from([
+        ("@acme/ui".into(), "wrong".into()),
+        ("@acme/ui/design".into(), "@acme/ui/design/src".into()),
+    ]);
+    assert_eq!(
+        resolver
+            .resolve("styles/entry.css", "@acme/ui/design/tokens.css")
+            .unwrap(),
+        "apps/web/node_modules/@acme/ui/design/src/tokens.css"
+    );
+}
+
+#[test]
+fn plain_bare_imports_try_the_stylesheet_directory_before_packages() {
+    let resolver = SourceResolver {
+        tree: Arc::new(Unimock::new(
+            SourceTreeMock::project
+                .next_call(matching!(_))
+                .returns(Ok(Some(Node {
+                    identity: PathBuf::from("/repo").join("styles/theme/skin.css"),
+                    lexical_kind: FileKind::File,
+                    kind: FileKind::File,
+                }))),
+        )),
+        repo_root: "/repo".into(),
+        settings: Resolution::default(),
+    };
+    assert_eq!(
+        resolver
+            .resolve("styles/entry.css", "theme/skin.css")
+            .unwrap(),
+        "styles/theme/skin.css"
+    );
 }

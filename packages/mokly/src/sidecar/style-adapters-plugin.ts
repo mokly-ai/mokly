@@ -5,7 +5,7 @@ import type { Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
-import { nodeImportMode } from "./import-mode.js";
+import type { VirtualOrigin } from "./bundle-errors.js";
 
 interface Wrapper {
   file: string;
@@ -17,13 +17,12 @@ interface Wrapper {
 /** Capture the bundled registry while its consumer import evaluates. */
 export function styleAdaptersPlugin(
   params: BundleParams,
-  origins: Map<string, string>,
+  origins: Map<string, VirtualOrigin>,
 ): Plugin {
   const aliases = Object.entries(params.moduleResolution.aliases).sort(
     ([left], [right]) => right.length - left.length,
   );
   const wrappers = new Map<string, Wrapper>();
-  const packageModes = new Map<string, Promise<boolean>>();
   return {
     name: "mokly-style-adapters",
     setup(builder) {
@@ -74,8 +73,7 @@ export function styleAdaptersPlugin(
         if (registry.errors.length) return registry;
         const commonjs =
           args.kind === "require-call" || args.kind === "require-resolve";
-        const node =
-          !commonjs && (await nodeImportMode(args.importer, packageModes));
+        const node = !commonjs && /\.(mjs|mts)$/.test(args.importer);
         const key =
           createHash("sha256")
             .update(
@@ -98,7 +96,10 @@ export function styleAdaptersPlugin(
                 ? "native"
                 : "emotion",
         });
-        origins.set(`mokly-style:${key}`, args.importer);
+        origins.set(`mokly-style:${key}`, {
+          importer: args.importer,
+          wrapped: resolved.path,
+        });
         return {
           path: key,
           namespace: "mokly-style",

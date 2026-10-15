@@ -85,7 +85,8 @@ compiler. CSS import stubs read that table at evaluation. The default export
 is the complete map. Each valid, non-reserved identifier key is also a named
 export. Runtime style adapters capture the bundled consumer libraries in the
 same compilation. Subpath imports select their own package's registry, and
-wrappers preserve the importer's CommonJS default-import rule.
+wrappers preserve CommonJS default-import interop within the Mokly bundle:
+Node's rule for `.mjs` and `.mts`, the `__esModule` default otherwise.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed

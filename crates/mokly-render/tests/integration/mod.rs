@@ -7,6 +7,7 @@ mod declaration_alias_tests;
 mod declaration_tests;
 mod definition_tests;
 mod dependency_tests;
+mod invocation_paths_tests;
 mod lazy_tests;
 mod ownership_tests;
 mod postcss_contract_tests;

@@ -6,11 +6,17 @@ import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
 
+/** A synthetic wrapper's authored caller and wrapped library file. */
+export interface VirtualOrigin {
+  importer: string;
+  wrapped: string;
+}
+
 /** Present esbuild's structured messages without its count and plugin framing. */
 export function bundleDetail(
   error: unknown,
   root: string,
-  origins: Map<string, string> = new Map(),
+  origins: Map<string, VirtualOrigin> = new Map(),
   sources?: ModulePaths,
 ): string {
   if (
@@ -33,16 +39,16 @@ export function bundleDetail(
 function diagnostic(
   message: Pick<Message, "text" | "location">,
   root: string,
-  origins: Map<string, string>,
+  origins: Map<string, VirtualOrigin>,
   sources?: ModulePaths,
 ): string {
   let text = message.text;
-  for (const [virtual, importer] of origins)
-    text = text.replaceAll(virtual, sourceName(importer, root, sources));
+  for (const [virtual, origin] of origins)
+    text = text.replaceAll(virtual, sourceName(origin.wrapped, root, sources));
   if (!message.location) return text;
   const { file, line, column } = message.location;
-  const importer = origins.get(file);
-  if (importer) return `${sourceName(importer, root, sources)}: ${text}`;
+  const origin = origins.get(file);
+  if (origin) return `${sourceName(origin.importer, root, sources)}: ${text}`;
   const name = sourceName(file, root, sources);
   return `${name}:${line}:${column + 1}: ${text}`;
 }

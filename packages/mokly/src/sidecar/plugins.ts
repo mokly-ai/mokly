@@ -5,6 +5,7 @@ import type { Loader, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import type { VirtualOrigin } from "./bundle-errors.js";
 import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -15,7 +16,7 @@ import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
 export interface BundleInputs {
   files: Map<string, Uint8Array>;
   cssModules: Set<string>;
-  virtualOrigins: Map<string, string>;
+  virtualOrigins: Map<string, VirtualOrigin>;
 }
 
 export function consumerPlugins(

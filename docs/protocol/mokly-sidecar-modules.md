@@ -57,9 +57,11 @@ and supplies all maps with `cssModules` before `describe` evaluates the bundle.
 One esbuild compilation builds each generation, including its runtime style
 adapters. A root import supplies its own registry. A subpath import resolves
 the registry from the directory of its resolved file, so both use the same
-package copy. Wrappers keep esbuild's default-import interop for the authored
-importer, including CommonJS builds imported by `.mjs` or a `type: module`
-package. A wrapper diagnostic names that importer's logical source path.
+package copy. Wrappers keep the importer's CommonJS default-import interop:
+Node's rule for `.mjs` and `.mts` importers, the `__esModule` default otherwise.
+The rule matches unwrapped imports in the same Mokly bundle.
+A wrapper diagnostic names the importer's logical source path as its location
+and the wrapped file's logical name when it describes that module's exports.
 Peer resolution uses that compiler's resolver from the configuration
 directory. Virtual modules do not enter the source inventory. CSS Modules
 in dependencies use the same logical dependency names as their graph records.

@@ -219,7 +219,8 @@ the loader boundary; public files use the
 [sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
 directories containing `package.json`; their `node_modules` directories
 supplement consumer lookup. Alias keys and targets accept bare package
-specifiers only. For JavaScript and CSS, alias targets resolve from the
+specifiers only. JavaScript and CSS apply one longest-key alias substitution.
+Alias targets resolve from the
 configuration directory through Node's ancestor lookup, then the configured
 package roots.
 Conditions, package fields, and extensions are ordered,

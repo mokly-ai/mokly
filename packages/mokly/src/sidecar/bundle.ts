@@ -12,6 +12,7 @@ import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { bundleDetail } from "./bundle-errors.js";
+import type { VirtualOrigin } from "./bundle-errors.js";
 import { moduleGraph } from "./bundle-graph.js";
 import { SidecarError } from "./errors.js";
 import { ModulePaths } from "./module-paths.js";
@@ -52,7 +53,7 @@ export async function bundle(
   params: BundleParams,
   compile: typeof build,
 ): Promise<{ generation: Generation; result: BundleResult }> {
-  const virtualOrigins = new Map<string, string>();
+  const virtualOrigins = new Map<string, VirtualOrigin>();
   let sources: ModulePaths | undefined;
   try {
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;

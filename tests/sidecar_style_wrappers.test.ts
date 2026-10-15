@@ -115,3 +115,32 @@ test("adapter failures in selected dependencies use logical dependency names", a
     return true;
   });
 });
+
+test("missing style exports name the wrapped module and the authored importer separately", async (context) => {
+  const fixture = await styleFixture(context);
+  await fixture.write(
+    "apps/web/bad.mjs",
+    'import { cssx } from "@emotion/react"; export const value = cssx;',
+  );
+  await fixture.write(
+    "apps/web/node_modules/@emotion/react/package.json",
+    '{"name":"@emotion/react","main":"index.mjs"}',
+  );
+  await fixture.write(
+    "apps/web/node_modules/@emotion/react/index.mjs",
+    'export const css = () => "style";',
+  );
+  await assert.rejects(
+    bundle(fixture.params("bad.mjs"), build),
+    (error: Error) => {
+      assert.match(error.message, /apps\/web\/bad\.mjs:1:/);
+      assert.match(
+        error.message,
+        /No matching export in "apps\/web\/node_modules\/@emotion\/react\/index\.mjs" for import "cssx"/,
+      );
+      assert.ok(!error.message.includes("mokly-style:"), error.message);
+      assert.ok(!error.message.includes(fixture.root), error.message);
+      return true;
+    },
+  );
+});
