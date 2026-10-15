@@ -30,6 +30,13 @@ const propSchema = {
   },
 } as const;
 export type ComparisonToolbarProps = LibraryProps<typeof propSchema>;
+/** Each saved mode's title, as the shell's mode group names it. */
+const MODE_TITLES = {
+  current: "Current",
+  "side-by-side": "Side by side",
+  overlay: "Overlay",
+  difference: "Difference",
+} as const satisfies Record<(typeof comparisonMode.enum)[number], string>;
 const sample = {
   mode: "current",
   eligible: true,
@@ -59,12 +66,12 @@ export const comparisonToolbar = defineComponent({
   variants: [
     ...comparisonMode.enum.map((mode) => ({
       slug: mode,
-      title: mode,
+      title: MODE_TITLES[mode],
       props: { ...sample, mode },
     })),
     {
       slug: "side-by-side-apart",
-      title: "side-by-side-apart",
+      title: "Side by side, scrolled apart",
       props: { ...sample, mode: "side-by-side", scrollTogether: false },
     },
   ],
