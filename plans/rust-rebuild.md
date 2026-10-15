@@ -757,7 +757,21 @@ renders again.
       define.
 - [ ] Add browser specs for the client-rendered shell: the stub mount, history
       routing, detail loading and retry, live publications without a page
-      load, and the frame reload by `documentKey`.
+      load, and the frame reload by `documentKey`; and the live prop edits:
+      the 150 ms debounce, the rerender after a revision adoption or a
+      `live.generation` change, the retry after a 409, cancellation on
+      navigation, and read-only controls while no descriptor is installed.
+- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+      its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
+      the parent's own entry first in the variant bar, controls on screens,
+      the stage loading state, the index failure state, the version failure
+      state, the Props tab label against the mockups' "Controls", and the
+      controls copy "Choose an available entry to edit props.",
+      "Comparisons show the saved props. Return to Current to edit props.",
+      "Open this catalogue locally to edit props." (also shown in Serve while
+      the descriptor loads), "No editable props are declared for this
+      entry.", and "Check the highlighted values." for a whole-props error
+      that highlights no field.
 - [ ] Write the JavaScript authoring guides.
 - [ ] Commit.
 
@@ -886,6 +900,10 @@ Tags: ui
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - Milestone 7 review 1, finding 12: decide whether to delete the
+    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
+    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
+    user.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
