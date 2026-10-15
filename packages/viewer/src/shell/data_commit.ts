@@ -17,7 +17,7 @@ import {
   defaultDisclosures,
   navigationFiltering,
 } from "./nav_model.js";
-import type { ShellRoute } from "./routes.js";
+import { routeFromUrl, type ShellRoute } from "./routes.js";
 import type { ShellState } from "./store_state.js";
 import { toRouteTarget } from "./target.js";
 
@@ -90,7 +90,8 @@ export function withIndex(
 /**
  * Rebind the routed record and reconcile the disclosures after the catalogue
  * changed in place. A routed entry the catalogue no longer lists becomes the
- * missing state and keeps its URL; surviving disclosure choices stay.
+ * missing state and keeps its URL, and a missing route shows its entry again
+ * once the catalogue lists it; surviving disclosure choices stay.
  */
 export function shellStateWithCatalogue(
   state: ShellState,
@@ -120,6 +121,18 @@ export function shellStateWithCatalogue(
 }
 
 function reboundRoute(route: ShellRoute, catalogue: Catalogue): ShellRoute {
+  if (route.view.kind === "missing") {
+    // The kept URL resolves again under the page-load rules.
+    const url = new URL(
+      `/${route.view.requested}`,
+      "https://catalogue.invalid",
+    );
+    if (route.snapshot) url.searchParams.set("snapshot", route.snapshot);
+    const resolved = routeFromUrl(catalogue, url);
+    return resolved.view.kind === "target"
+      ? { ...route, view: resolved.view }
+      : route;
+  }
   if (route.view.kind !== "target") return route;
   const previous = route.view.target.entry;
   const entry = route.snapshot

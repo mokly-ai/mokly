@@ -42,7 +42,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"instances":[],"slots":[],"warnings":[]}}
+{"id":12,"result":{"html":"<!--mokly-output:start id=\"r-1\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"r-1\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"r-1","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
@@ -140,7 +140,9 @@ binary sends `enabled` for a component element outside every scope. The state
 seeds the React scope context, so nesting across the boundary follows the
 innermost scope, and the binary applies no outer scope to the fragment. A
 fragment never emits `mokly-root`; the core attaches the root region of a
-component page itself. The binary reads the markers into tree ownership, consumes the ignore and
+component page itself. Private `mokly-output` pairs locate adapter output
+inside renderer wrappers and are consumed before serialization. The binary
+reads markers into tree ownership, consumes the ignore and
 `mokly-link` pairs, and writes the instance and slot pairs around the composed
 regions under the [comparison contract](./mokly-comparison.md#markers).
 
@@ -189,7 +191,9 @@ excluded with the `props-not-data` warning of the
 
 `processCss` runs the consumer's PostCSS module in a worker inside the sidecar
 with the explicit core-chosen `context`, `sourceRoot`, `repositoryRoots`, and `moduleResolution`.
-Workers are keyed by context and module. Each context has fresh local and
+`sourcePath` is a logical repository or dependency path. The worker resolves
+it against `sourceRoot` or the selected dependency root before setting PostCSS
+`from`. Request labels keep the logical path. Workers are keyed by context and module. Each context has fresh local and
 package module state and fixed source and resolution inputs. `disposeContext`
 releases only that context; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
@@ -199,7 +203,9 @@ The fragment key includes the class-map table digest. When maps change, the
 core disposes and re-bundles the generation before installing the new maps.
 The pool assigns each loaded lifetime an epoch. Every process reloads a stale
 epoch, then replays maps, describe, and bindings before a render.
-Mokly's own CSS work stays in Rust.
+Mokly's own CSS work stays in Rust. Expected PostCSS errors carry a typed
+`postcss` failure in the error envelope. Rust selects its exact code and text
+from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
 
 ## Cancellation And Timeouts
 
@@ -210,7 +216,9 @@ seconds for a render, 60 seconds for `processCss`, each overridable by
 with the accepted range. When a deadline passes, the binary kills that
 sidecar, retries the request once on a fresh sidecar, and then fails with
 `render-timeout`. A cancelled command sends `shutdown` to every sidecar and
-kills any that survives the grace period.
+kills any that survives the grace period. Build follows the
+[terminal cancellation rule](./mokly-terminal-errors.md#plain-compatibility).
+Render labels split the last `#` as `{module} export {name}`.
 
 ## Fail-Closed Rules
 
@@ -224,8 +232,8 @@ kills any that survives the grace period.
 | `render-failed`       | a render throws or returns a non-string                              | `build-invalid` with the entry and, for a view render, the viewport and scheme |
 | `render-timeout`      | a deadline passed twice                                              | `build-invalid` with the entry and the deadline                                |
 
-There is no fallback render and no partial output. Commands that need no
-JavaScript never start a sidecar and never fail for these reasons.
+There is no fallback render and no partial output. Commands that need neither
+JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 
 ## Security
 

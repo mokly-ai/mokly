@@ -7,8 +7,10 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::StylesheetRoot;
 use mokly_model::axes::{ColorScheme, Viewport};
+use mokly_model::data::Props;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
@@ -54,18 +56,29 @@ pub struct RenderSummary {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Hash of every config, source, stylesheet, and bundle render input.
+    fn generation_key(&self) -> &str;
     /// All document keys, available without any document render.
     fn plans(&self) -> &BTreeMap<String, DocumentPlan>;
     /// Validated private catalogue, including its complete source inventory.
     fn catalogue(&self) -> &PreparedCatalogue;
     /// Obtain one document, using the cache or rendering an evicted node again.
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
+    /// Render complete validated transient props through the same document pipeline.
+    /// The caller applies control overrides. The result never changes catalogue state.
+    fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument>;
     /// Obtain the referenced authored files and evidence of one document.
     fn closure(&self, route: &str) -> Result<Closure>;
     /// Render and validate every view across the worker pool.
     fn render_all(&self) -> Result<RenderSummary>;
     /// All generated stylesheet and asset routes of this generation.
     fn resource_routes(&self) -> Vec<String>;
+    /// Consumer PostCSS directory watches, including empty matching sets.
+    fn stylesheet_directories(&self) -> &[DirectoryDependency];
+    /// All authored files reached by completed documents of this generation.
+    fn public_files(&self) -> BTreeSet<String>;
+    /// Check reached membership without copying the generation's complete set.
+    fn contains_public_file(&self, path: &str) -> bool;
 }
 
 /// Prepare graph nodes against one source-tree generation.
@@ -85,4 +98,13 @@ pub trait RenderGraph: Send + Sync {
 pub trait GraphFactory: Send + Sync {
     /// Construct a graph over the current source tree and injected services.
     fn create(&self, config: &ResolvedConfig) -> Result<Arc<dyn RenderGraph>>;
+}
+
+/// A transient preview and its checked closure, never inserted as a saved document.
+#[derive(Clone, Debug)]
+pub struct TemporaryDocument {
+    /// Serialized bytes and usage from the normal composition pipeline.
+    pub artifact: Arc<Artifact>,
+    /// Resources checked through the generation's public-file policy.
+    pub closure: Closure,
 }

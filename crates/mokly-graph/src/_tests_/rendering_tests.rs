@@ -29,6 +29,7 @@ fn injected_unsafe_markdown_output_keeps_its_file_and_exact_reason() {
     }))
     .unwrap();
     let catalogue = PreparedCatalogue {
+        javascript: Default::default(),
         model: CatalogueModel {
             entries: vec![entry.clone()],
             folders: Vec::new(),

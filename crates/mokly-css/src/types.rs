@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::dependencies::{DirectoryDependency, PluginInput};
 use crate::error::Result;
 
 /// One authored stylesheet or JavaScript module delivery root.
@@ -32,32 +33,56 @@ pub struct Bundle {
     pub inputs: BTreeMap<String, Vec<u8>>,
     /// Importing stylesheet for each protected source and asset.
     pub imported_by: BTreeMap<String, String>,
+    /// Logical aliases whose real source is repository-owned, rather than an installation.
+    pub repository_aliases: BTreeSet<String>,
+    /// Digests of plugin-reported dependencies, without retained file bytes.
+    pub dependency_digests: BTreeMap<String, String>,
+    /// Plugin provenance for protected inputs.
+    pub plugin_inputs: BTreeMap<String, PluginInput>,
+    /// Directory watches, including empty matching sets.
+    pub directories: Vec<DirectoryDependency>,
 }
 
 /// Sidecar processing result. Dependency scanning belongs to its adapter.
 #[derive(Clone, Debug)]
 pub struct ProcessedCss {
+    /// Reporter provenance for each protected file or alias.
+    pub plugin_inputs: BTreeMap<String, PluginInput>,
+    /// Validated directory watch recipes.
+    pub directories: Vec<DirectoryDependency>,
     /// Transformed CSS.
     pub text: String,
-    /// Validated explicit dependency bytes for graph keys and privacy.
-    pub inputs: BTreeMap<String, Vec<u8>>,
+    /// Validated dependency digests for graph keys and privacy.
+    pub inputs: BTreeMap<String, String>,
 }
 
 /// Consumer PostCSS seam; HTML-only catalogues use the identity implementation.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CssProcessorMock))]
 pub trait CssProcessor: Send + Sync {
     /// Process after import pruning and before CSS Modules scoping.
-    fn process(&self, path: &str, source: &str) -> Result<ProcessedCss>;
+    fn process(
+        &self,
+        path: &str,
+        source: &str,
+        excluded: &BTreeSet<String>,
+    ) -> Result<ProcessedCss>;
 }
 
 /// No consumer plugins configured.
 pub struct IdentityProcessor;
 
 impl CssProcessor for IdentityProcessor {
-    fn process(&self, _path: &str, source: &str) -> Result<ProcessedCss> {
+    fn process(
+        &self,
+        _path: &str,
+        source: &str,
+        _excluded: &BTreeSet<String>,
+    ) -> Result<ProcessedCss> {
         Ok(ProcessedCss {
             text: source.into(),
             inputs: BTreeMap::new(),
+            plugin_inputs: BTreeMap::new(),
+            directories: Vec::new(),
         })
     }
 }

@@ -17,10 +17,11 @@ pub(crate) fn attach(
     fragment: &Fragment,
     catalogue: &PreparedCatalogue,
     ignore_ids: &mut BTreeSet<String>,
+    output_root: Option<&str>,
 ) -> Result<Vec<Node>> {
     fragment_validation::records(fragment, catalogue)?;
     let mut ids = BTreeSet::new();
-    let nodes = siblings(nodes, fragment, &mut ids, ignore_ids, None)?;
+    let nodes = siblings(nodes, fragment, &mut ids, ignore_ids, None, output_root)?;
     fragment_validation::placements(&nodes, fragment)?;
     if ids.len() != fragment.markers.len() {
         return Err(invalid(
@@ -37,6 +38,7 @@ fn siblings(
     ids: &mut BTreeSet<String>,
     ignore_ids: &mut BTreeSet<String>,
     inherited: Option<&str>,
+    output_root: Option<&str>,
 ) -> Result<Vec<Node>> {
     let mut stack: Vec<(Marker, Vec<Node>)> = Vec::new();
     let mut output = Vec::new();
@@ -68,6 +70,7 @@ fn siblings(
                     ));
                 }
                 let kind = match start.kind.as_str() {
+                    "output" => output_root.map(|path| RegionKind::Root { path: path.into() }),
                     "instance" => {
                         let key = required(&start, "instance")?;
                         let instance = fragment
@@ -112,6 +115,7 @@ fn siblings(
                     }
                     "link" => {
                         let target = required(&start, "to")?;
+                        let target = target.strip_prefix("mock:").unwrap_or(target);
                         let (target, fragment) = target
                             .split_once('#')
                             .map_or((target, None), |(target, fragment)| {
@@ -152,6 +156,7 @@ fn siblings(
                 ids,
                 ignore_ids,
                 parent,
+                output_root,
             )?;
         }
         if let Some((_, children)) = stack.last_mut() {

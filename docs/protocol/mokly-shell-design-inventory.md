@@ -1,5 +1,7 @@
 # Shell Design Inventory
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Inventory
 
 The design screens are authored in `examples/basic/specs/design/` and
@@ -89,6 +91,10 @@ its feature contract.
 | `design/browse/appearance/status/error`                       | Browse shell › Appearance › Status and recovery                      | A screen that could not be shown, with another attempt        |
 | `design/browse/appearance/status/unavailable`                 | Browse shell › Appearance › Status and recovery                      | Changes unavailable                                           |
 | `design/browse/appearance/status/flow`                        | Browse shell › Appearance › Status and recovery                      | Use-case steps around light screens                           |
+| `design/browse/loading/catalogue-loading`                     | Browse shell › Loading and recovery                                  | One status line until the catalogue index arrives             |
+| `design/browse/loading/catalogue-failed`                      | Browse shell › Loading and recovery                                  | Catalogue index unavailable, with Try again                   |
+| `design/browse/loading/viewer-version`                        | Browse shell › Loading and recovery                                  | Catalogue from another Mokly version, with Reload             |
+| `design/browse/loading/preview-loading`                       | Browse shell › Loading and recovery                                  | Stage while the selected entry's detail loads                 |
 
 The six entries marked as variants are variants of `design/browse/views/screen` and
 stay under that entry in authored order rather than becoming folder members.
@@ -162,6 +168,14 @@ Additional owning groups keep each page at no more than five screens:
 - `design/changes/availability/preparing` and `design/changes/availability/unavailable` specify the two
   Changes states that carry no comparison data yet, keeping the impact group
   to its own two aggregate outcomes.
+- `design/browse/loading/catalogue-loading`, `design/browse/loading/catalogue-failed`,
+  `design/browse/loading/viewer-version`, and `design/browse/loading/preview-loading`
+  specify the shell before its catalogue index arrives, the index failure, the
+  version failure of the [viewer namespace](./mokly-viewer-namespace.md), and
+  the stage while an entry's detail loads, under
+  [shell delivery](./mokly-shell-delivery.md). The first is the group's
+  canonical screen. They render in both schemes, because the reader's
+  appearance applies before the catalogue arrives.
 - `design/browse/appearance/overview` is the canonical appearance screen; the
   `Appearance states` folder beneath it owns four screens and
   `Panels and comparisons` and `Status and recovery` own five each. Their previews follow the artboard. They specify the
@@ -169,6 +183,10 @@ Additional owning groups keep each page at no more than five screens:
   [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in
   both schemes, so the outer Appearance control moves between its two rendered
   views at the same entry. Existing light-interface entries keep their paths.
+
+Runtime transitions, not artboard links, reach the four `design/browse/loading`
+states. Catalogue navigation reaches each of them, and the two failure states
+link back to the loading state.
 
 `design/browse/views/screen`, `design/browse/views/details-screen` and the whole Welcome
 comparison family — `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,

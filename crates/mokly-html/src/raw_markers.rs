@@ -6,6 +6,9 @@ use crate::tree::Node;
 
 pub(crate) fn warnings(nodes: &[Node], route: &str, output: &mut Vec<Warning>) {
     for node in nodes {
+        if let Node::Region { children, .. } = node {
+            warnings(children, route, output);
+        }
         if let Node::Element(element) = node {
             if matches!(
                 element.name.as_str(),

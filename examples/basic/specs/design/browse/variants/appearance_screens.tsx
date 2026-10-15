@@ -1,5 +1,4 @@
-import type { ScreenVariantInput } from "@mokly/mokly";
-
+import type { ArtboardVariant } from "../../parts/artboards.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
@@ -61,4 +60,4 @@ export const browseSchemeVariants = [
       "This established variant route follows the shared Appearance selector. Details has no dark render, so its device frame stays light and names the fallback when the catalogue is Dark.",
     title: "Details light-only fallback",
   },
-] satisfies readonly ScreenVariantInput[];
+] satisfies readonly ArtboardVariant[];

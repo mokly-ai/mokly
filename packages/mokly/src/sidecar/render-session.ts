@@ -19,6 +19,7 @@ export function renderSession(
     sourceRoot: generation.params.sourceRoot,
     dependencyRoots: generation.dependencyRoots,
     location,
+    inputOrders: new Map(),
     instances: [],
     slots: [],
     registrations: generation.registrations,

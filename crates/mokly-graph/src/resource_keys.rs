@@ -10,6 +10,7 @@ use mokly_html::{parse, props};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::data::{DataValue, Props};
 use mokly_model::material::digest;
+use mokly_model::namespace;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use pulldown_cmark::{Event, Parser, Tag};
 
@@ -25,7 +26,7 @@ pub(crate) fn inputs(
     tree: &dyn SourceTree,
 ) -> BTreeMap<String, String> {
     let mut queue = VecDeque::new();
-    let source = format!("static/mokly-generated/{route}");
+    let source = namespace::generated(route);
     let parent = entry
         .metadata
         .variant_of
@@ -73,7 +74,7 @@ pub(crate) fn inputs(
         let Ok(Some(target)) = local_target(&source, &url) else {
             continue;
         };
-        if target.starts_with("static/mokly-generated/") || !seen.insert(target.clone()) {
+        if target.starts_with(&namespace::generated("")) || !seen.insert(target.clone()) {
             continue;
         }
         let Some(path) = target.strip_prefix("static/") else {

@@ -25,6 +25,7 @@ pub(crate) fn start(marker: &Marker, fragment: &Fragment, parent: Option<&str>) 
         ));
     }
     let valid = match &record.kind {
+        FragmentMarkerKind::Output => marker.kind == "output",
         FragmentMarkerKind::Instance { key } => {
             marker.kind == "instance" && required(marker, "instance")? == key
         }
@@ -32,6 +33,9 @@ pub(crate) fn start(marker: &Marker, fragment: &Fragment, parent: Option<&str>) 
             marker.kind == "slot"
                 && fragment.slots.iter().any(|slot| {
                     &slot.key == key && marker.attributes.get("name") == Some(&slot.name)
+                        && marker.attributes.get("instance").is_some_and(|receiver| fragment.markers.iter().any(|placement| {
+                            &placement.id == receiver && matches!(&placement.kind, FragmentMarkerKind::Instance { key } if key == &slot.instance_key)
+                        }))
                 })
         }
         FragmentMarkerKind::Ignore { material_key } => {

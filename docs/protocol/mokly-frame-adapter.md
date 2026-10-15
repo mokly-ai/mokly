@@ -176,8 +176,9 @@ redirect is accepted. The URL fragment is client-only positioning rather than
 resource identity, so the adapter authenticates the document first and then
 applies a missing or changed validated fragment. An authenticated document
 reload renews every document-scoped listener and observer without replacing the
-outer frame session. Preserve ownership and range authentication, clipping,
-highlighting, scroll restoration and logical-link classification unchanged.
+outer frame session. Range authentication, including a component page's markerless root region,
+follows the [range markers](./mokly-published-inspector.md#range-markers); ownership, clipping,
+highlighting, scroll restoration and logical-link classification match the inspector.
 Ready usage is required for instance inspection; absent usage does not disable
 valid navigation.
 
@@ -345,9 +346,8 @@ or inspector-bundle behavior.
 ## Published Inspector
 
 Static injection, inert document metadata, overlay isolation, and the script
-budget are defined by the
-[published inspector contract](./mokly-published-inspector.md). They do not
-change this adapter's handshake, wire messages, or same-origin behavior.
+budget are defined by the [published inspector contract](./mokly-published-inspector.md).
+They do not change this adapter's handshake, wire messages, or same-origin behavior.
 
 ## Acceptance
 

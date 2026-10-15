@@ -33,6 +33,7 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
     let children = files.clone();
     let reads = files;
     let definition = ProvidedDefinition {
+        rendering: Default::default(),
         exporting_file: "specs/shared.mockup.tsx".into(),
         source: SourceLocation {
             path: "specs/shared.mockup.tsx".into(),
@@ -102,7 +103,7 @@ pub(super) fn prepared(body: &str) -> PreparedCatalogue {
                     .to_vec())
             })),
         DefinitionProviderMock::describe
-            .next_call(matching!(_))
+            .next_call(matching!(_, _))
             .returns(Ok(Definitions {
                 entries: vec![definition],
                 ..Default::default()

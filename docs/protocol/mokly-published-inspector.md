@@ -21,7 +21,8 @@ inventory lists the injected package resource afterward.
 The inert `template[data-mokly-inspector]` contains JSON with `ranges` and
 `links`, plus optional `error: "limit" | "unavailable"`. Range index `n` denotes
 `r-n`; each tuple is `[instanceKey | null, parentIndex | null]`. Null keys denote
-slots; parents refer only to earlier indices and must match actual nesting.
+slots and a component page's root region under [range markers](#range-markers);
+parents refer only to earlier indices and must match actual nesting.
 Distinct keys derive from these authenticated ranges, including empty pairs.
 Links use `FrameNavigation` without `activation`, with at most 1,024 distinct
 identities. Overflow publishes an explicit error map, never a truncated map.
@@ -29,6 +30,26 @@ Each accepted native link receives `data-mokly-inspector-link="n"`, indexing the
 deduplicated `links` array. Consumer-authored inspector markers and link indices
 are rejected. Both publication nodes are inserted into the head so body child
 positions and authored selectors remain unchanged, including implicit heads.
+
+## Range Markers
+
+The inspector and the same-origin adapter authenticate ranges from the same
+markers. Range `r-n` is the region between a `mokly-instance` or `mokly-slot`
+start marker with `id="r-n"` and the end marker of the same kind and id. Start
+markers appear in range order, each inside the region of its parent tuple. An
+instance marker belongs to a tuple with a key and carries that key as its
+`instance` attribute; a slot marker belongs to a tuple without a key; an end
+marker carries only `id`. The other attributes (`path`, `props`, `name`, and a
+slot's `instance`) are not authenticated, and other comments are not markers.
+A malformed marker, or a marker that disagrees with the map, makes inspection
+fail with `invalid-boundary`.
+
+On a component entry's document the core writes no marker for the root region
+`r-0`. Its tuple is `[null, null]` at index 0, its range is the content of
+`body`, and its owner is the entry, the page's root component. Every marked
+region nests in it, so a top-level marked range names index 0 as its parent.
+A slot always has a parent, so no other tuple is `[null, null]`. A screen has
+no root region; content outside every region belongs to the screen.
 
 ## Overlay
 

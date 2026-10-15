@@ -27,7 +27,11 @@ messages and metadata always receive the full UTF-8 check before parsing.
 
 `metadata.ts` reads the bounded inert map authenticated by the Browse adapter.
 Its `ranges` array stores `[instanceKey | null, parentIndex | null]` tuples:
-index `n` names `r-n`, null keys identify slots, and null parents identify roots.
+index `n` names `r-n`, null keys identify slots, and null parents identify
+top-level ranges. The tuple `[null, null]` at index 0 is a component page's root
+region, which has no marker and spans the `body` content. `ranges.ts` reads the
+`mokly-instance` and `mokly-slot` markers of the comparison contract through the
+pattern in `markers.ts`, which the same-origin adapter shares.
 Keys are derived uniquely from the range map, including empty/null instances.
 `links` contains deduplicated logical navigation identities; native links carry
 `data-mokly-inspector-link` indices into that array. An optional `error`

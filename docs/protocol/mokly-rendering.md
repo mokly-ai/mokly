@@ -29,13 +29,17 @@ under the render graph of the
 returns a complete document instead, and the core applies the
 [page contract](./mokly-pages.md) to it.
 
-The in-memory fragment boundary also carries logical instance and slot
-records and authenticated marker placements. Each placement names its
+The [sidecar render records](./mokly-sidecar-render-records.md#results) define
+one fragment shape for the wire and the in-memory adapter. The fragment
+boundary carries logical instance and slot records and authenticated marker placements. Each placement names its
 payload and its physical enclosing marker. The provider captures these
 records from Mokly's API wrappers, independently of consumer HTML. The core
 checks them against the parsed comments, including parent relationships,
 before grafting. A consumer comment cannot create a placement record. These
 records are private rendering data and never enter served document bytes.
+The authenticated adapter-output placement lets the core put a component's
+root range inside consumer renderer wrappers. The core consumes that private
+placement and writes no root or output marker.
 
 Every screen and component is a render over props under the
 [entry props contract](./mokly-entry-props.md); a variant is a props set.
@@ -100,7 +104,9 @@ export default function render(input: RenderInput): ReactNode | RenderResult;
 - The renderer reads `colorScheme` and `viewport` to select its theme and
   layout. It cannot write the `html` element, the head, or the stylesheet
   links. Mokly owns no product theme state.
-- A renderer that throws or returns a value that is not a React node fails
+- A configured renderer must default-export a function. A missing or invalid
+  default export fails with `renderer default export must be a function`.
+  A renderer that throws or returns a value that is not a React node fails
   the render with `render-failed` under the sidecar contract.
 
 ## Renderer Stylesheets

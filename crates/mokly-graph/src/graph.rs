@@ -22,9 +22,9 @@ use crate::error::{GraphError, Result};
 use crate::key::{NodeKind, data_key, key};
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
-use crate::session::Session;
+use crate::session::{Session, SessionInput};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
-use crate::workers::RenderWorkers;
+use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{config_key, error, markdown_assets, markdown_sources, planning, styles};
 
 /// Render graph composition root, reused for working-tree and base-side generations.
@@ -46,18 +46,21 @@ pub struct Graph {
 }
 
 impl RenderGraph for Graph {
+    #[tracing::instrument(name = "graph.prepare", skip_all, err)]
     fn prepare(
         &self,
         config: ResolvedConfig,
         catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> Result<Arc<dyn RenderGeneration>> {
+        let parent = tracing::Span::current();
         std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-prepare".into())
                 .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || self.prepare_generation(config, catalogue, output))
-            {
+                .spawn_scoped(scope, || {
+                    parent.in_scope(|| self.prepare_generation(config, catalogue, output))
+                }) {
                 Ok(thread) => thread,
                 Err(source) => {
                     return Err(error::InternalError::PreparationThread { source }.into());
@@ -82,6 +85,7 @@ impl Graph {
         let matchers = styles::Matchers::new(&config)?;
         let markdown_assets = markdown_assets::collect(&config, &catalogue, self.tree.as_ref())?;
         for entry in &mut catalogue.model.entries {
+            check_cancelled(self.workers.as_ref())?;
             if let EntryContent::Document { resources, .. } = &mut entry.content {
                 *resources = markdown_assets
                     .documents
@@ -99,6 +103,8 @@ impl Graph {
         let mut module_names = ModuleNames::default();
         let mut resources: BTreeMap<String, ResourcePlan> = BTreeMap::new();
         let mut imported_by = BTreeMap::new();
+        let mut plugin_inputs = BTreeMap::new();
+        let mut directories = BTreeSet::new();
         let roots = styles::roots(&config, &self.inputs);
         let configured: Vec<_> = styles::roots(&config, &DeliveryInputs::default())
             .into_keys()
@@ -116,6 +122,7 @@ impl Graph {
             .map(|root| root.path.clone())
             .collect();
         for root in roots.into_values() {
+            check_cancelled(self.workers.as_ref())?;
             let bundle = match self.stylesheets.bundle(&root) {
                 Ok(bundle) => bundle,
                 Err(source) => return Err(GraphError::Css { source }),
@@ -128,6 +135,12 @@ impl Graph {
                 .inputs
                 .iter()
                 .map(|(path, bytes)| format!("{path}:{}", digest(bytes)))
+                .chain(
+                    bundle
+                        .dependency_digests
+                        .iter()
+                        .map(|(path, digest)| format!("{path}:{digest}")),
+                )
                 .collect();
             let recipe = data_key(
                 NodeKind::Stylesheet,
@@ -192,13 +205,22 @@ impl Graph {
                     },
                 );
             }
-            catalogue
-                .model
-                .sources
-                .extend(bundle.inputs.into_keys().filter(|path| {
-                    !markdown_assets.files.contains(path) || original_sources.contains(path)
-                }));
+            catalogue.model.sources.extend(
+                bundle
+                    .inputs
+                    .into_keys()
+                    .chain(bundle.dependency_digests.into_keys())
+                    .filter(|path| {
+                        (!path.split('/').any(|part| part == "node_modules")
+                            || bundle.repository_aliases.contains(path)
+                            || bundle.plugin_inputs.contains_key(path))
+                            && (!markdown_assets.files.contains(path)
+                                || original_sources.contains(path))
+                    }),
+            );
             imported_by.extend(bundle.imported_by);
+            plugin_inputs.extend(bundle.plugin_inputs);
+            directories.extend(bundle.directories);
         }
         catalogue
             .model
@@ -206,24 +228,24 @@ impl Graph {
             .sort_by(|left, right| compare_utf16(left, right));
         catalogue.model.sources.dedup();
         let plans = planning::documents(
+            self,
             &config,
             &catalogue,
-            self.tree.as_ref(),
             &config_key,
             &resources,
-            &self.inputs,
             &matchers,
         )?;
         for plan in plans.values() {
             names.insert(&plan.route, false)?;
         }
-        let policy = FilePolicy::new(
+        let mut policy = FilePolicy::new(
             self.tree.clone(),
             &config,
             &catalogue.model.sources,
             imported_by,
             output,
         )?;
+        policy.plugin_inputs = plugin_inputs;
         for path in local_roots {
             if let Err(reason) = policy.stylesheet_input(&path, !private_before.contains(&path)) {
                 return Err(error::invalid(
@@ -236,8 +258,29 @@ impl Graph {
             }
         }
         let policy: Arc<dyn PublicPolicy> = Arc::new(policy);
+        let mut generation_inputs = vec![config_key.0.as_bytes()];
+        for plan in plans.values() {
+            generation_inputs.push(plan.key.0.as_bytes());
+        }
+        for resource in resources.values() {
+            generation_inputs.push(resource.key.0.as_bytes());
+        }
+        if let Some(bundle) = self.inputs.fragment_generation.as_deref() {
+            generation_inputs.push(bundle.as_bytes());
+        }
+        let generation_key = key(NodeKind::Document, &generation_inputs).0;
         Ok(Arc::new(Session::new(
-            config, catalogue, plans, resources, self, policy, matchers,
+            self,
+            SessionInput {
+                config,
+                catalogue,
+                plans,
+                resources,
+                policy,
+                generation_key,
+                matchers,
+                directories: directories.into_iter().collect(),
+            },
         )))
     }
 }

@@ -12,8 +12,9 @@ import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
+import { bundleDetail } from "./bundle-errors.js";
 import { moduleGraph } from "./bundle-graph.js";
-import { SidecarError, detail } from "./errors.js";
+import { SidecarError } from "./errors.js";
 import { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
 import { confinedFile, consumerRequire } from "./paths.js";
@@ -237,6 +238,9 @@ export async function bundle(
       result: { generation: id, modules: graph, warnings: [] },
     };
   } catch (error) {
-    throw new SidecarError("bundle-failed", detail(error));
+    throw new SidecarError(
+      "bundle-failed",
+      bundleDetail(error, params.sourceRoot),
+    );
   }
 }

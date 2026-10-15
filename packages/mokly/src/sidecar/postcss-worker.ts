@@ -4,22 +4,30 @@ import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { detail } from "./errors.js";
+import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
 
 const configuration = configureResolution(workerData).then((paths) =>
-  loadPostcss(workerData.postcss, paths),
+  loadPostcss(workerData.postcss, paths).then((loaded) => ({
+    ...loaded,
+    paths,
+  })),
 );
 configuration.catch(() => {});
 parentPort?.on(
   "message",
   async ({ id, params }: { id: number; params: ProcessCssParams }) => {
     try {
-      const { processor, modules } = await configuration;
-      const result = await processor.process(params.text, {
-        from: params.sourcePath,
-        map: false,
-      });
+      const { processor, modules, paths } = await configuration;
+      const result = await processor
+        .process(params.text, {
+          from: params.sourcePath,
+          map: false,
+        })
+        .catch((error: unknown) => {
+          throw pluginFailure(error, paths.name(params.sourcePath));
+        });
       const dependencies: CssResult["dependencies"] = [
         ...new Set([
           ...modules,
@@ -38,9 +46,12 @@ parentPort?.on(
           !path ||
           (message.glob !== undefined && typeof message.glob !== "string")
         )
-          throw new Error(
-            `PostCSS plugin ${message.plugin ?? "unknown"} reported an invalid dependency for ${params.sourcePath}; report a file or directory path and optional glob`,
-          );
+          throw new PostcssError({
+            kind: "dependency",
+            plugin:
+              typeof message.plugin === "string" ? message.plugin : "unknown",
+            stylesheet: paths.name(params.sourcePath),
+          });
         dependencies.push({
           kind: message.type === "dependency" ? "file" : "directory",
           path,
@@ -55,7 +66,11 @@ parentPort?.on(
         result: { text: result.css, dependencies },
       });
     } catch (error) {
-      parentPort?.postMessage({ id, error: detail(error) });
+      parentPort?.postMessage({
+        id,
+        error: detail(error),
+        ...(error instanceof PostcssError ? { postcss: error.failure } : {}),
+      });
     }
   },
 );

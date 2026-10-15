@@ -156,6 +156,41 @@ test("an entry the publication drops shows the missing state and keeps its URL",
   });
 });
 
+test("a missing route shows its entry again once a later publication lists it", () => {
+  const before = initialSnapshot(indexFixture(), detailPairs());
+  const routed = state(before, "/view/guide/");
+  const dropped = withIndex(
+    before,
+    indexFixture((raw) => {
+      raw.revision = 1;
+      raw.pages = [];
+      raw.tree = raw.tree.filter((node) => node.path !== "guide");
+    }),
+    [],
+  );
+  const missing = shellStateWithCatalogue(routed, dropped.catalogue);
+  assert.equal(missing.route.view.kind, "missing");
+  const restored = withIndex(
+    dropped,
+    indexFixture((raw) => {
+      raw.revision = 2;
+    }),
+    [],
+  );
+  const returned = shellStateWithCatalogue(missing, restored.catalogue);
+  assert.equal(returned.route.view.kind, "target");
+  assert.equal(
+    returned.route.view.kind === "target" &&
+      returned.route.view.target.entry.path,
+    "guide",
+  );
+  const unknown = state(before, "/view/nope/");
+  assert.deepEqual(
+    shellStateWithCatalogue(unknown, restored.catalogue).route.view,
+    { kind: "missing", requested: "view/nope/" },
+  );
+});
+
 test("a removed route turns missing when its snapshot record goes", () => {
   const before = initialSnapshot(indexFixture(), detailPairs());
   const routed = state(

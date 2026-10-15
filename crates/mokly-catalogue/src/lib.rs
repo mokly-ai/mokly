@@ -3,8 +3,10 @@
 #![warn(unreachable_pub)]
 pub mod config;
 mod config_paths;
+mod config_postcss;
 pub mod config_types;
 pub mod config_validation;
+mod declared_controls;
 pub mod definition_provider;
 pub mod diagnostic;
 pub mod discovery;
@@ -29,9 +31,11 @@ mod prepare_parent;
 mod prepare_sources;
 mod props;
 pub mod protection;
+mod provided_entries;
 mod references;
 mod registry;
 mod relationships;
+pub mod render_sources;
 pub mod template_types;
 mod templates;
 mod validate_templates;

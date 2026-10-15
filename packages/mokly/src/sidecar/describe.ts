@@ -1,17 +1,11 @@
-import { copyData } from "../authoring/data.js";
 import { brand, definitionData } from "../authoring/runtime.js";
 import type { DefinitionData } from "../authoring/runtime.js";
-import type { Definition } from "../generated/sidecar/Definition.js";
 import type { Definitions } from "../generated/sidecar/Definitions.js";
-import type { EntryReference } from "../generated/sidecar/EntryReference.js";
-import type { Variant } from "../generated/sidecar/Variant.js";
 
 import type { Generation } from "./bundle.js";
-import {
-  dataProps,
-  metadataFields,
-  validateFields,
-} from "./definition-fields.js";
+import { containsDefinition } from "./definition-arrays.js";
+import { validateFields } from "./definition-fields.js";
+import { serialize } from "./describe-records.js";
 import { SidecarError, detail } from "./errors.js";
 import { evaluate } from "./evaluate.js";
 import { orderedExports } from "./export-order.js";
@@ -67,7 +61,7 @@ async function collect(generation: Generation): Promise<Definitions> {
       module,
     )) {
       const location = `${module} export ${exportName}`;
-      if (Array.isArray(value) && value.some((item) => definitionData(item))) {
+      if (containsDefinition(value)) {
         result.diagnostics.push({
           code: "array-export",
           module,
@@ -127,9 +121,19 @@ async function collect(generation: Generation): Promise<Definitions> {
   for (const { value, data, module, exportName } of collected) {
     const diagnostics = validateFields(data, module, exportName);
     result.diagnostics.push(...diagnostics);
-    if (diagnostics.length) continue;
+    if (
+      diagnostics.some(
+        (diagnostic) =>
+          diagnostic.code !== "invalid-field" &&
+          !(
+            diagnostic.code === "invalid-variants" &&
+            diagnostic.message === "a variant cannot declare variants"
+          ),
+      )
+    )
+      continue;
     try {
-      const record = serialize(generation, value, data);
+      const record = serialize(generation, value, data, diagnostics.length > 0);
       result[groups[data.kind as keyof typeof groups]].push(record);
     } catch (error) {
       result.diagnostics.push({
@@ -160,99 +164,4 @@ async function collect(generation: Generation): Promise<Definitions> {
   await describeStories(generation, exports, result);
   generation.sources.clear();
   return (generation.definitions = result);
-}
-
-function reference(
-  generation: Generation,
-  value: unknown,
-  location: string,
-): EntryReference {
-  if (typeof value === "string") return value;
-  const registered =
-    value && typeof value === "object"
-      ? generation.registrations.get(value)
-      : undefined;
-  if (!registered) {
-    const data = definitionData(value);
-    throw new SidecarError(
-      "unknown-link-definition",
-      `${location}: referenced definition ${data?.input.title ?? "unknown"} from ${data?.source ?? "unknown module"} is not exported by an entry module`,
-    );
-  }
-  return { handle: registered.handle };
-}
-
-function serialize(
-  generation: Generation,
-  value: object,
-  data: DefinitionData,
-): Definition {
-  const input = data.input;
-  const record: Definition = {
-    handle: generation.registrations.get(value)!.handle,
-    relatedDocs: [],
-    tags: [],
-    props: {},
-    variants: [],
-    slots: [],
-    stylesheets: [],
-    useCasePaths: [],
-    steps: [],
-  };
-  if (data.source) record.sourcePath = data.source;
-  for (const key of metadataFields)
-    if (input[key] !== undefined)
-      Object.assign(record, { [key]: copyData(input[key], true) });
-  if (Object.hasOwn(input, "propSchema"))
-    record.propSchema = copyData(input.propSchema, true) as NonNullable<
-      Definition["propSchema"]
-    >;
-  record.props = dataProps(
-    input.props,
-    Object.hasOwn(input, "propSchema"),
-    record.handle,
-    generation.warnings,
-  ) as Definition["props"];
-  record.useCasePaths = ((input.useCasePaths ?? []) as unknown[]).map((item) =>
-    reference(generation, item, record.handle.replace("#", " export ")),
-  );
-  record.steps = ((input.steps ?? []) as Record<string, unknown>[]).map(
-    (step) => ({
-      screenPath: reference(
-        generation,
-        step.screenPath,
-        record.handle.replace("#", " export "),
-      ),
-      ...(step.title !== undefined ? { title: step.title as string } : {}),
-      ...(step.description !== undefined
-        ? { description: step.description as string }
-        : {}),
-    }),
-  );
-  record.variants = (Array.isArray(input.variants) ? input.variants : []).map(
-    (variant, index) => {
-      const { slots, useCasePaths, ...metadata } = variant;
-      const output = {
-        ...metadata,
-        props: dataProps(
-          variant.props,
-          Object.hasOwn(input, "propSchema"),
-          `${record.handle}/${variant.slug}`,
-          generation.warnings,
-        ),
-        slots: {},
-      } as Variant;
-      if (useCasePaths)
-        output.useCasePaths = useCasePaths.map((item: unknown) =>
-          reference(generation, item, record.handle.replace("#", " export ")),
-        );
-      for (const [name, node] of Object.entries(slots ?? {})) {
-        const handle = `${record.handle}:slot:${index}:${name}`;
-        generation.savedSlots.set(handle, node);
-        output.slots[name] = handle;
-      }
-      return output;
-    },
-  );
-  return record;
 }

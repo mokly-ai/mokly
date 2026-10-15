@@ -68,10 +68,20 @@ impl ImportResolver for SourceResolver {
         } else {
             format!("./{}", parts[package_segments..].join("/"))
         };
-        for directory in directories {
-            let base = format!("{directory}/node_modules/{package}")
-                .trim_start_matches('/')
-                .to_owned();
+        let bases = directories
+            .iter()
+            .map(|directory| {
+                format!("{directory}/node_modules/{package}")
+                    .trim_start_matches('/')
+                    .to_owned()
+            })
+            .chain(
+                self.settings
+                    .dependency_roots
+                    .iter()
+                    .map(|root| format!("{root}/{package}")),
+            );
+        for base in bases {
             if let Ok(bytes) = self
                 .tree
                 .read(&self.repo_root.join(&base).join("package.json"))

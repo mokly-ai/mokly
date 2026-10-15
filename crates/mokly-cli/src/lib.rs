@@ -4,6 +4,8 @@
 
 pub mod build;
 pub mod build_output;
+pub mod cancellation;
+pub mod cancelled_work;
 pub mod codes;
 pub mod errors;
 pub mod grammar;
@@ -14,4 +16,7 @@ pub mod publication;
 pub mod publish_errors;
 pub mod redaction;
 mod render_errors;
+pub mod serve;
+pub mod serve_errors;
+pub mod serve_output;
 pub mod version;

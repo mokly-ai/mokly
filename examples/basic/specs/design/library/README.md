@@ -1,17 +1,11 @@
 # Shared Design Components
 
-## Delivery Status
-
-The uniform CSS rule policy below is implemented in Milestone 19 of the
-source-path removal plan.
-
-That plan delivered component stylesheet declarations in Milestone 3, removed
-source-path evidence in Milestone 4 and removed declarations in Milestone 6.
-The configured-anchor and shared-link fixes are planned for Milestone 28.
+Status: In progress under the
+[Rust rebuild plan](../../../../../plans/rust-rebuild.md).
 
 ## Scope
 
-These sixteen registered components render both Mokly's design artboards and
+These sixteen components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library; the actual Mokly browser shell remains in the package source.
@@ -81,13 +75,19 @@ views other than the shown one, so the details inspector names them.
 
 ## Authoring
 
-For each component, `{group}/{slug}.tsx` declares its typed schema, slots, saved
-variants and supported controls. `{slug}.view.tsx` implements its markup.
-Each `{slug}.mockup.ts` exports the registration from its group directory,
-deriving `design/library/{group}/{slug}`. Variant slugs append one segment.
-Folder records title the shared library and any named groups.
+For each component, `{group}/{slug}.tsx` calls `defineComponent` with a
+literal JSON prop schema, its own props, its slots, its saved variants and its
+supported controls; `schemas.ts` holds the shared schema fragments. A variant
+sets props and fills slots with React content. Its props replace the own
+props key by key, so the own props hold only the keys that every variant
+sets, with the first variant's values. The parent's own example renders
+without slot content; only its variants and the composing screens fill slots.
+`{slug}.view.tsx` implements its markup. Each `{slug}.mockup.ts` re-exports the
+definition from its group directory, deriving
+`design/library/{group}/{slug}`. Variant slugs append one segment. Folder
+records title the shared library and any named groups.
 
-Call the registered `.Component` from screen adapters. Never import a `.view`
+Call the definition's `.Component` from screen adapters. Never import a `.view`
 module into a screen or create a second standalone implementation. Leave whole
 screens, stage/workspace layouts and fixture selection as ordinary composition.
 
@@ -122,28 +122,24 @@ retain that caller's ownership.
 
 ## Styles And Hosts
 
-Component stylesheet declarations replace the per-render style collector.
-`metadata.ts` assigns each registered component its public
-`design-library/{group}/{slug}.css` relative to `mockupsDir` through
-`stylesheets`. Registered
-rendering supplies links and provenance. CSS Changes uses own-page matches
+`style_files.ts` names each component's public stylesheet,
+`design-library/{group}/{slug}.css`, relative to the configuration file, and
+`metadata.ts` declares it through `stylesheets`. CSS Changes uses own-page matches
 kept after nested-component filtering, not file ownership or source paths.
 Shared helpers and saved fixtures are metadata or rendered-output inputs, not
 independent comparison evidence.
 
-Actual rendered components link their declared files in first-render order.
-There is no `useDesignStyle` call or `style_files.ts` candidate pool.
+Rendered components link their declared files in first-render order.
 The shared preview layout reserves intrinsic mobile widths so full-size phones
 cannot overlap desktop frames when Both is selected.
 The phone notch and home pill are decorative and ignore pointer events, so
 they cannot intercept interactions with the caller-owned screen below them.
-The configuration orders shared base styles first, the `componentStylesheets`
+The configuration orders shared base styles first, the `$componentStylesheets`
 marker next, then context/layout overrides. Keep this explicit order: equal-specificity
 mobile rules must not override bounded workspace scrolling.
-Mokly inserts the links after the renderer returns for normal and transient
-renders. It uses the nearest present configured link, or the end of head content
-when none is present, and warns about missing configured hrefs when insertion
-is needed. A hidden picker does not link chip CSS merely because another
+The Rust core writes each document head. It links the declared files at the
+marker of the first matching rule, or after that rule's shared entries when
+the rule has no marker. A hidden picker does not link chip CSS merely because another
 variant uses chips.
 
 Keep component selectors in its declared stylesheet. Tokens, resets, mixed
@@ -170,47 +166,21 @@ From the repository root:
 
 ```sh
 npm run build
-npm run example:build
-npm run example:check
+npx mokly build --config examples/basic/mokly.config.json --strict --out .context/example
 npm run typecheck
-node --import tsx --test tests/design_library*.test.ts tests/design_library*.test.tsx tests/component_design_attribution.test.ts
-npx playwright test tests/browser/design_library*.spec.ts
+npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts
 cargo xtask check
 ```
 
-Open changed generated fragments directly from disk in both viewports. Check
-saved variants and local edit/unset/reset behavior in Serve, plus read-only
-inspection after export. Keep the generated HTML and manifest as ignored local
-artifacts; commit their authored source instead.
-
-The command runs all design-library tests and the four attribution files once.
-`tests/design_library_attribution.test.ts` classifies all sixteen declared component sheets
-once and keeps a single-change `tag-chip` control.
-`tests/component_design_attribution.test.ts` classifies all nine shared sheets
-once and checks exact scopes and per-entry dependency reasons.
-`tests/design_library_source_edits.test.ts` keeps impacting edits alone and
-same-file edits targeting different entries separate. Other edits may share a
-rebuild with distinct paths or disjoint reason kinds at the same path. The test
-checks the exact path/reason union and no affected consumers. An extra change
-within another member's expected path and reason kinds can be masked; this is a
-reviewed trade-off, not exact per-edit isolation.
-`tests/design_library_committed_baseline.test.ts` checks baseline reads and
-agreement between Serve and comparison. The three shared files use `fileFixture`,
-which starts setup on first use and registers teardown when the file loads. The
-committed-baseline file creates its fixture inside its single test. A filtered
-run with no matching test starts no fixture.
-
-The tests retain the established screen inventory with its file-derived paths,
-assert real consumers and
-owner chains, guard migrated composition points, and edit actual source files in
-isolated copies. They distinguish implementation changes, saved metadata changes,
-screen inputs/slots/order, exclusive CSS and conservative global rendered resources.
-Serve and comparison share the same classification and bounded baseline reads.
-Full-catalogue browser fixtures retain a 600-second fixture budget. Global setup
-currently prepares one rebuilt example baseline and shares its cache with the
-export fixtures; the approved fixture change will use committed output there.
-One cold-baseline test and the cold preview-preparation test keep real rebuilds. Browser interactions use the default
-one-minute limit, and server readiness keeps its own deadline.
+`build --strict` renders every library sample and every design screen, and
+fails on any error or warning. `tests/design_appearance.test.ts` checks that
+the light and dark palettes theme the same roles and meet their contrast
+pairs, and `tests/design_boundaries.test.ts` checks that marked boundaries
+and control edges stay visible and that only palette sources name colours.
+Open the changed pages through `npm run dev` in both viewports. Check
+saved variants and local edit, unset and reset in Serve, plus read-only
+inspection in the static build. Keep the output directory as an ignored local
+artifact; commit the authored source instead.
 
 See the [adoption contract](../../../../../docs/protocol/mokly-design-components.md)
 and [inventory](../../../../../docs/protocol/mokly-design-component-library.md).

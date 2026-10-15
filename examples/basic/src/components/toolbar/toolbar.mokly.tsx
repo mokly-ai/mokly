@@ -11,9 +11,12 @@ export const toolbar = defineComponent({
   stylesheets: ["example-components.css"],
   relatedDocs: ["examples/basic/README.md"],
   propSchema: {
-    kind: "object",
-    properties: { title: { schema: { kind: "string", minLength: 1 } } },
-  },
+    type: "object",
+    additionalProperties: false,
+    required: ["title"],
+    properties: { title: { type: "string", minLength: 1 } },
+  } as const,
+  props: { title: "Workspace actions" },
   controls: { title: { kind: "text", label: "Title", maxLength: 80 } },
   slots: ["children"],
   render: (props) => (
@@ -43,10 +46,8 @@ export const toolbar = defineComponent({
     {
       slug: "default",
       title: "Default",
-      props: {
-        title: "Workspace actions",
-        children: <p>Choose where to continue.</p>,
-      },
+      props: { title: "Workspace actions" },
+      slots: { children: <p>Choose where to continue.</p> },
     },
   ],
 });

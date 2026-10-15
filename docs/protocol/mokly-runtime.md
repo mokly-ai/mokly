@@ -27,7 +27,9 @@ public form of the model.
    path under the [path contract](./mokly-paths.md).
 3. Parse HTML, YAML, Markdown, and folder records in Rust. When the catalogue
    has JavaScript, bundle it through the [sidecar](./mokly-sidecar.md) and
-   take every definition from `describe`.
+   take every definition from `describe`. A configured renderer also requires
+   a bundle inventory when no JavaScript entry is present. Its imports are
+   private sources in both Serve and build.
 4. Build the catalogue model: paths, folders, variants, props and prop
    schemas under the [entry props contract](./mokly-entry-props.md), use
    cases, documents, and the component registry.
@@ -60,7 +62,7 @@ deleting it is safe. No cache is in the repository.
 
 `mokly serve` runs discovery and validation, builds the catalogue model, binds
 the port, and publishes its first state with `revision` `1`. The listening
-URL is reported only after validation passes. Before the first request, Serve
+URL is reported only after validation passes. Before readiness, Serve
 renders no document. Documents render on first request under the
 [on-demand contract](./mokly-on-demand.md); the other views, the usage of
 every entry detail, and Changes follow in background work, and each
@@ -99,8 +101,8 @@ is `build`.
 
 A sidecar starts only when the catalogue needs JavaScript: a `.mockup.tsx`
 entry, a registered JavaScript component, a Storybook stories file, or a
-consumer PostCSS module. A catalogue of HTML, YAML, and Markdown files starts
-none. The pool, its size, the request deadlines, the recycling thresholds,
+configured renderer, or consumer PostCSS module. A catalogue of HTML, YAML,
+and Markdown files with neither module starts none. The pool, its size, the request deadlines, the recycling thresholds,
 and the fail-closed codes belong to the
 [sidecar contract](./mokly-sidecar.md). The core owns every decision the
 sidecar does not make: which renders run, the cache keys, invalidation, and

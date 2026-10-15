@@ -117,7 +117,7 @@ fn nested_instance_and_slot_markers_rebase_under_the_core_invocation() {
             },
         ],
         html: format!(
-            "<!--mokly-instance:start id=\"r-0\" path=\"components/js\" instance=\"{original}\" props=\"{digest}\"--><article><!--mokly-slot:start id=\"r-1\" name=\"children\"--><b>Nested slot</b><!--mokly-slot:end id=\"r-1\"--></article><!--mokly-instance:end id=\"r-0\"-->"
+            "<!--mokly-instance:start id=\"r-0\" path=\"components/js\" instance=\"{original}\" props=\"{digest}\"--><article><!--mokly-slot:start id=\"r-1\" instance=\"r-0\" name=\"children\"--><b>Nested slot</b><!--mokly-slot:end id=\"r-1\"--></article><!--mokly-instance:end id=\"r-0\"-->"
         ),
         instances: vec![ComponentInstanceRecord {
             key: original.clone(),

@@ -10,8 +10,9 @@ import type { RenderResult } from "../generated/sidecar/RenderResult.js";
 import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.js";
 
 import type { Generation } from "./bundle.js";
+import { componentOutput } from "./component-output.js";
 import { describe } from "./describe.js";
-import { SidecarError, detail } from "./errors.js";
+import { SidecarError, detail, handleLocation } from "./errors.js";
 import { finishMarkup } from "./markup.js";
 import { renderSession } from "./render-session.js";
 import type { PortableStory } from "./stories.js";
@@ -40,11 +41,7 @@ export async function render(
       viewport: params.viewport as "mobile" | "desktop",
       colorScheme: params.colorScheme,
     };
-    const session = renderSession(
-      generation,
-      context,
-      name.replace("#", " export "),
-    );
+    const session = renderSession(generation, context, handleLocation(name));
     return generation.runtime.withSession(session, () => {
       const props = copyData(params.props) as Record<string, unknown>;
       let node: ReactNode;
@@ -99,8 +96,10 @@ export async function render(
           return adapter(props, context);
         }
         node = React.createElement(Adapter);
+        if (kind === "component")
+          node = componentOutput(generation.runtime, session, node);
         const renderer = generation.exports?.renderer?.default;
-        if (renderer !== undefined) {
+        if (generation.params.renderer) {
           if (typeof renderer !== "function")
             throw new Error("renderer default export must be a function");
           const entry = "entry" in params ? params.entry : undefined;
@@ -155,10 +154,37 @@ export async function render(
         server.renderToStaticMarkup,
         node,
       );
+      if (
+        kind === "component" &&
+        !generation.stories.has(name) &&
+        !session.componentOutput
+      )
+        collected.html =
+          server.renderToStaticMarkup(
+            componentOutput(generation.runtime, session, null),
+          ) + collected.html;
       const result = finishMarkup(collected.html, session);
+      const owners =
+        kind === "component" && "entry" in params
+          ? [generation.bindings![name]!.path]
+          : [];
       return {
         html: result.html,
-        styles: [...new Set([...collected.styles, ...result.styles])],
+        styles: [
+          ...collected.styles.map((css) => ({ css, owners })),
+          ...result.styles.map((style) => ({
+            ...style,
+            owners: style.owners.length ? style.owners : owners,
+          })),
+        ].filter(
+          (style, index, all) =>
+            all.findIndex(
+              (other) =>
+                other.css === style.css &&
+                JSON.stringify(other.owners) === JSON.stringify(style.owners),
+            ) === index,
+        ),
+        markers: result.markers,
         resources: [...resources],
         warnings: [],
         instances: session.instances,
@@ -169,7 +195,7 @@ export async function render(
     if (error instanceof SidecarError) throw error;
     throw new SidecarError(
       "render-failed",
-      `${name} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
+      `${handleLocation(name)} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
     );
   }
 }

@@ -5,6 +5,7 @@ use std::result;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::error::ModelError;
+use mokly_model::runtime_diagnostic::RuntimeDiagnostic;
 use thiserror::Error;
 
 use crate::diagnostic_code::Code;
@@ -15,6 +16,12 @@ pub type Result<T> = result::Result<T, HtmlError>;
 /// A failed document never enters the render cache.
 #[derive(Debug, Error)]
 pub enum HtmlError {
+    /// Expected consumer runtime failure with its terminal category intact.
+    #[error("[mokly-html/runtime] {source}")]
+    Runtime {
+        /// Typed consumer diagnostic, without internal display wrappers.
+        source: RuntimeDiagnostic,
+    },
     /// A document-scoped failure from final link or control validation.
     #[error("[mokly-html] {route}: {source}")]
     Route {
@@ -67,6 +74,17 @@ pub enum HtmlError {
 }
 
 impl HtmlError {
+    /// Expected runtime diagnostic beneath location and warning wrappers.
+    pub fn runtime_diagnostic(&self) -> Option<&RuntimeDiagnostic> {
+        match self {
+            Self::Runtime { source } => Some(source),
+            Self::Located { source, .. }
+            | Self::Attempt { source, .. }
+            | Self::Route { source, .. } => source.runtime_diagnostic(),
+            _ => None,
+        }
+    }
+
     /// The nearest known authored coordinate, independent of wrapper errors.
     pub fn location(&self) -> Option<&SourceLocation> {
         match self {
@@ -82,7 +100,7 @@ impl HtmlError {
 
     /// Attach one coordinate without adding duplicate source locations.
     pub fn at(self, location: SourceLocation) -> Self {
-        if self.location().is_some() {
+        if self.location().is_some() || self.runtime_diagnostic().is_some() {
             self
         } else {
             Self::Located {
@@ -105,6 +123,12 @@ impl HtmlError {
 /// Internal failures without stringified source wrappers.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// An injected runtime adapter failed.
+    #[error("runtime adapter failed: {source}")]
+    Provider {
+        /// Original typed provider failure.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
     /// Model data could not be encoded.
     #[error("JSON encoding failed: {source}")]
     Json {

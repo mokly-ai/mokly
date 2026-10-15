@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { changesDesignMetadata } from "./metadata.js";
+import { artboards } from "./parts/artboards.js";
 import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS } from "./parts/entry_paths.js";
@@ -68,12 +69,12 @@ function AvailabilityScreen({
 }
 
 /** Changes states that keep the catalogue usable before a comparison exists. */
-export const reviewAvailabilityScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Changes is selected while the comparison is still being prepared; the count slot spins and All stays usable.",
+export const preparingScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "Changes is selected while the comparison is still being prepared; the count slot spins and All stays usable.",
+  ...artboards({
     desktop: (
       <AvailabilityScreen
         design={DESTINATIONS.preparing}
@@ -81,7 +82,6 @@ export const reviewAvailabilityScreens = [
         viewport="desktop"
       />
     ),
-    slug: "preparing",
     mobile: (
       <AvailabilityScreen
         design={DESTINATIONS.preparing}
@@ -89,15 +89,18 @@ export const reviewAvailabilityScreens = [
         viewport="mobile"
       />
     ),
-    rationale:
-      "Reviewers approve a distinct preparing state before the comparison data exists, separate from the pending check that follows it.",
-    title: "Preparing comparison",
   }),
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "The comparison could not be prepared, so Changes keeps the unavailable message and a dash in the count slot.",
+  slug: "preparing",
+  rationale:
+    "Reviewers approve a distinct preparing state before the comparison data exists, separate from the pending check that follows it.",
+  title: "Preparing comparison",
+});
+export const unavailableScreen = defineScreen({
+  ...changesDesignMetadata,
+  colorSchemes: ["light"],
+  description:
+    "The comparison could not be prepared, so Changes keeps the unavailable message and a dash in the count slot.",
+  ...artboards({
     desktop: (
       <AvailabilityScreen
         design={DESTINATIONS.unavailable}
@@ -105,7 +108,6 @@ export const reviewAvailabilityScreens = [
         viewport="desktop"
       />
     ),
-    slug: "unavailable",
     mobile: (
       <AvailabilityScreen
         design={DESTINATIONS.unavailable}
@@ -113,8 +115,9 @@ export const reviewAvailabilityScreens = [
         viewport="mobile"
       />
     ),
-    rationale:
-      "A failed preparation must reuse the one unavailable presentation instead of naming why the comparison is missing.",
-    title: "Comparison unavailable",
   }),
-];
+  slug: "unavailable",
+  rationale:
+    "A failed preparation must reuse the one unavailable presentation instead of naming why the comparison is missing.",
+  title: "Comparison unavailable",
+});

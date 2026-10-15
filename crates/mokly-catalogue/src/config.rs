@@ -25,6 +25,7 @@ pub struct Loader {
 }
 
 impl ConfigLoader for Loader {
+    #[tracing::instrument(name = "config.load", skip_all, err)]
     fn load(&self, cwd: &Path, explicit: Option<&str>) -> Result<ResolvedConfig> {
         let file = if let Some(path) = explicit {
             normalize(&cwd.join(path))
@@ -218,7 +219,8 @@ pub(crate) fn traversal(path: &str) -> bool {
         || path.chars().any(char::is_control)
 }
 
-pub(crate) fn normalize(path: &Path) -> PathBuf {
+/// Normalize lexical dot segments before checking repository confinement.
+pub fn normalize(path: &Path) -> PathBuf {
     let mut result = PathBuf::new();
     for component in path.components() {
         match component {

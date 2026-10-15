@@ -139,10 +139,10 @@ unavailable with a retry control, and a different `deploymentId` emits one
 `onError` and leaves the installed state in place. A detail that arrives after
 the selection moved on is discarded. Sources are host-supplied transports, not
 permission for viewer telemetry. A fetch failure renders an explicit error and
-retry state and emits `onError`. The
-[version contract](./mokly-viewer-namespace.md) owns unsupported-format
-errors, their callback shape, and product message. Missing data is never
-replaced by examples or invented counts.
+retry state and emits `onError`. A version failure shows the headline of the
+[version contract](./mokly-viewer-namespace.md) without an action and emits
+`onError` with `code: "version"`, the headline, and the details. Missing data
+is never replaced by examples or invented counts.
 
 Omitted `frameAdapter` uses `sameOriginAdapter()`. Cross-origin hosts
 explicitly provide `postMessageAdapter({ frameOrigin })` under the

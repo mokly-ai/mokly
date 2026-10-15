@@ -1,0 +1,155 @@
+/* Tokens and screen layout for the example's HTML workspace screens. */
+:root {
+  --canvas: #f7f7f3;
+  --surface: #ffffff;
+  --ink: #1c1f1d;
+  --muted: #5f6762;
+  --line: #dfe3da;
+  --accent: #2f5945;
+  --accent-ink: #ffffff;
+  --tint: #e6efe8;
+  --pending: #7a5200;
+  --pending-tint: #fbefd5;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font:
+    15px/1.5 "Inter",
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 880px;
+  padding: 24px 16px;
+}
+
+.app-head h1 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.app-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.notice {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--tint);
+}
+
+.member-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.text-link {
+  text-decoration: none;
+}
+
+.columns {
+  display: grid;
+  gap: 20px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.aside {
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.aside h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.aside p {
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+
+.help {
+  margin: 0;
+}
+
+/* The desktop view renders the side navigation and the roles aside. */
+.app:has(> .side-nav) {
+  flex-direction: row;
+}
+
+.app:has(> .side-nav) .app-main {
+  padding: 40px 48px;
+}
+
+.columns:has(> .aside) {
+  grid-template-columns: minmax(0, 1fr) 240px;
+  align-items: start;
+}

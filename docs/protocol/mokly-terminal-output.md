@@ -126,6 +126,12 @@ then `<n> moved` and `<n> ignored-only` when those counts are not zero; a zero
 count omits its segment, and `0 changes` stays. Counted nouns use singular
 only for one, including `1 change` and `2 changes`.
 
+Accept resource failures keep Serve running. At the first failure of each
+backoff period, the reporter writes `! Serve cannot accept connections: {reason}. Retrying.`
+to stderr. Repeated failures in that period are silent. The first accepted
+connection writes `! Serve can accept connections again.` to stderr.
+Both modes use these lines. Rich mode applies its width and colour rules.
+
 Watched actions use one durable line after the action settles:
 
 ```text

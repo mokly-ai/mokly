@@ -6,7 +6,7 @@ import {
   readRange,
   readSlot,
 } from "../catalogue/component_values.js";
-import { RENDERS_PATH } from "../catalogue/delivery_paths.js";
+import { RENDER_ID, RENDERS_PATH } from "../catalogue/delivery_paths.js";
 import { array, counter, object, string } from "../catalogue/values.js";
 import {
   ComponentRenderError,
@@ -14,8 +14,6 @@ import {
   type ComponentRenderSuccess,
   type RenderErrorCode,
 } from "../components/render_types.js";
-
-const RENDER_ID = /^[A-Za-z0-9._~-]{1,256}$/;
 
 const FAILURES: Readonly<Record<number, readonly [RenderErrorCode, string]>> = {
   400: ["invalid-input", "Check the prop values and their allowed limits."],

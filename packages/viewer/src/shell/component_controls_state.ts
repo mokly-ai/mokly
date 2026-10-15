@@ -58,33 +58,76 @@ export function controlViewKey(
   return `${view.viewport}/${view.colorScheme}`;
 }
 
-/** Swap the shown entry's saved views for their accepted temporary previews. */
+/**
+ * Swap the shown entry's saved views for their accepted temporary previews.
+ * Without previews the saved array itself returns, and one set of previews
+ * gives one array per owner: the workspace keys its frame sessions and their
+ * presentation on this array, so a new array on every render would claim the
+ * inspection again on every commit.
+ */
 export function withPreviews(
   views: readonly GeneratedComponentView[],
   previews: ReadonlyMap<string, ComponentRenderSuccess>,
   target: ControlTarget | undefined,
 ): readonly GeneratedComponentView[] {
-  if (!target) return views;
-  return views.map((view) => {
-    const preview = previews.get(controlViewKey(view));
-    const owned =
-      target.kind === "component"
-        ? view.variantPath === target.path
-        : view.variantPath === undefined;
-    return preview && owned
-      ? {
-          ...view,
-          path: decodeURIComponent(preview.previewUrl),
-          usage: {
-            viewport: view.viewport,
-            colorScheme: view.colorScheme,
-            instances: preview.usage.instances,
-            slots: preview.usage.slots,
-            ranges: preview.usage.ranges,
-            styles: [],
-            resources: [],
-          },
-        }
-      : view;
-  });
+  if (!target || !previews.size) return views;
+  const byPreviews = projections.get(views) ?? new WeakMap();
+  projections.set(views, byPreviews);
+  const byOwner = byPreviews.get(previews) ?? new Map();
+  byPreviews.set(previews, byOwner);
+  const owner = `${target.kind}:${target.path}`;
+  const shown =
+    byOwner.get(owner) ??
+    views.map((view) => {
+      const preview = previews.get(controlViewKey(view));
+      const owned =
+        target.kind === "component"
+          ? view.variantPath === target.path
+          : view.variantPath === undefined;
+      return preview && owned ? previewedView(view, preview) : view;
+    });
+  byOwner.set(owner, shown);
+  return shown;
+}
+
+const projections = new WeakMap<
+  readonly GeneratedComponentView[],
+  WeakMap<
+    ReadonlyMap<string, ComponentRenderSuccess>,
+    Map<string, readonly GeneratedComponentView[]>
+  >
+>();
+
+/**
+ * One previewed view per saved view and accepted render. Every workspace
+ * render then hands its frames the same view and usage record; a new record
+ * each time would make each mounted frame adopt usage again, which renders
+ * the workspace again without end.
+ */
+const previewedViews = new WeakMap<
+  ComponentRenderSuccess,
+  WeakMap<GeneratedComponentView, GeneratedComponentView>
+>();
+
+function previewedView(
+  view: GeneratedComponentView,
+  preview: ComponentRenderSuccess,
+): GeneratedComponentView {
+  const known = previewedViews.get(preview) ?? new WeakMap();
+  previewedViews.set(preview, known);
+  const shown = known.get(view) ?? {
+    ...view,
+    path: decodeURIComponent(preview.previewUrl),
+    usage: {
+      viewport: view.viewport,
+      colorScheme: view.colorScheme,
+      instances: preview.usage.instances,
+      slots: preview.usage.slots,
+      ranges: preview.usage.ranges,
+      styles: [],
+      resources: [],
+    },
+  };
+  known.set(view, shown);
+  return shown;
 }

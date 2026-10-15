@@ -40,6 +40,7 @@ phase returned successfully, not that optional Git evidence was available.
 | `catalogue.discover`                             | the root walk, front matter and folder parsing, and path derivation                                                         |
 | `catalogue.describe`                             | the wait for the sidecar's `bundle` and `describe` results and their validation                                             |
 | `catalogue.validate`                             | registry, relationship, link, marker, and stylesheet validation                                                             |
+| `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                              |
 | `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`      |
 | `render.fragment`                                | the wait for one sidecar render, or an HTML component render in Rust                                                        |
 | `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module                              |

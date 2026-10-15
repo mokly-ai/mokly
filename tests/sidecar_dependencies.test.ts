@@ -99,7 +99,7 @@ for (const extension of ["mjs", "css"])
       {
         code: "bundle-failed",
         message: new RegExp(
-          `^Build failed with 1 error:\\nentry.mjs:1:7: ERROR: \\[plugin: mokly-consumer\\] module outside\\.${extension} is outside sourceRoot and selected dependency roots$`,
+          `^entry.mjs:1:8: module outside\\.${extension} is outside sourceRoot and selected dependency roots$`,
         ),
       },
     );
@@ -126,7 +126,7 @@ for (const extension of ["mjs", "css"])
       {
         code: "bundle-failed",
         message: new RegExp(
-          `^Build failed with 1 error:\\nentry.mjs:1:7: ERROR: \\[plugin: mokly-consumer\\] module packages/local/index\\.${extension} has no source in this side$`,
+          `^entry.mjs:1:8: module packages/local/index\\.${extension} has no source in this side$`,
         ),
       },
     );

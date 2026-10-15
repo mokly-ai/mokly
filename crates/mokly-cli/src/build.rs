@@ -13,6 +13,7 @@ use mokly_graph::types::GraphFactory;
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
+use crate::cancellation::Cancellation;
 use crate::grammar::Build;
 
 /// Validated catalogue counts and warnings for terminal presentation.
@@ -31,6 +32,9 @@ pub struct BuildSummary {
 /// Typed build failure; warning records survive both error paths.
 #[derive(Debug, Error)]
 pub enum BuildError {
+    /// The command was interrupted before successful completion.
+    #[error("[mokly-cli/build] build cancelled")]
+    Cancelled,
     /// The injected definition provider cannot evaluate discovered JavaScript.
     #[error("[mokly-cli/build] JavaScript rendering is unavailable for {}", .modules.join(", "))]
     Deferred {
@@ -70,6 +74,8 @@ pub trait BuildService: Send + Sync {
 
 /// Build coordinator with injected config and catalogue boundaries.
 pub struct CatalogueBuild {
+    /// Cancellation state checked at every build phase.
+    pub cancellation: Arc<dyn Cancellation>,
     /// Data-only configuration loader.
     pub config: Arc<dyn ConfigLoader>,
     /// Source discovery and validation.
@@ -80,7 +86,7 @@ pub struct CatalogueBuild {
 
 impl BuildService for CatalogueBuild {
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
-        std::thread::scope(|scope| {
+        let result = std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-build".into())
                 .stack_size(64 * 1024 * 1024)
@@ -93,7 +99,12 @@ impl BuildService for CatalogueBuild {
                 Ok(result) => result,
                 Err(_) => Err(runtime(InternalError::PreparationPanicked)),
             }
-        })
+        });
+        if self.cancellation.requested() {
+            Err(BuildError::Cancelled)
+        } else {
+            result
+        }
     }
 }
 
@@ -105,11 +116,21 @@ fn runtime(source: InternalError) -> BuildError {
 }
 
 impl CatalogueBuild {
+    fn checkpoint(&self) -> Result<(), BuildError> {
+        if self.cancellation.requested() {
+            Err(BuildError::Cancelled)
+        } else {
+            Ok(())
+        }
+    }
+
     fn attempt(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+        self.checkpoint()?;
         let config = match self.config.load(cwd, options.common.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
+        self.checkpoint()?;
         let output: PathBuf = options.out.as_ref().map_or_else(
             || config.repo_root.join("mokly-static"),
             |path| cwd.join(path),
@@ -118,6 +139,7 @@ impl CatalogueBuild {
             Ok(prepared) => prepared,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
+        self.checkpoint()?;
         if !prepared.deferred_modules.is_empty() {
             return Err(BuildError::Deferred {
                 modules: prepared.deferred_modules,
@@ -133,6 +155,7 @@ impl CatalogueBuild {
                 });
             }
         };
+        self.checkpoint()?;
         let generation = match graph.prepare(config, prepared.clone(), Some(&output)) {
             Ok(generation) => generation,
             Err(source) => {
@@ -142,6 +165,7 @@ impl CatalogueBuild {
                 });
             }
         };
+        self.checkpoint()?;
         let rendered = match generation.render_all() {
             Ok(summary) => summary,
             Err(source) => {
@@ -151,6 +175,7 @@ impl CatalogueBuild {
                 });
             }
         };
+        self.checkpoint()?;
         if options.strict && !rendered.warnings.is_empty() {
             return Err(BuildError::Strict {
                 warnings: rendered.warnings,

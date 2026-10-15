@@ -37,6 +37,39 @@ export const actionVariants: Record<
   },
 };
 
+/** The parent's own entry or one of its saved variants. */
+export type ActionEntry = "parent" | ActionVariant;
+
+/**
+ * Action's own entry holds the keys that every saved variant sets, with
+ * Default's values. Secondary sets no hint, so the parent has none.
+ */
+export const actionParent: { title: string; props: ActionProps } = {
+  title: "Action",
+  props: {
+    label: "Continue",
+    disabled: false,
+    cornerRadius: 8,
+    emphasis: "strong",
+  },
+};
+
+export const actionEntries: Record<
+  ActionEntry,
+  { title: string; props: ActionProps }
+> = { parent: actionParent, ...actionVariants };
+
+/** The removed Compact variant's saved props, readable but not editable. */
+export const actionCompact: { title: string; props: ActionProps } = {
+  title: "Compact",
+  props: {
+    label: "Continue",
+    disabled: false,
+    cornerRadius: 4,
+    emphasis: "strong",
+  },
+};
+
 const fieldIds: Record<keyof ActionProps, string> = {
   label: "label",
   disabled: "disabled",

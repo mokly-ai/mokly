@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::render_records::{CollectedStyle, MarkerDraft};
 use crate::usage::{InstanceDraft, SlotDraft};
 
 /// Package version reported during hello.
@@ -55,7 +56,9 @@ pub struct Render {
     /// Rendered HTML fragment.
     pub html: String,
     /// CSS rules in first-appearance order.
-    pub styles: Vec<String>,
+    pub styles: Vec<CollectedStyle>,
+    /// Authenticated operations and physical enclosing markers.
+    pub markers: Vec<MarkerDraft>,
     /// Repository-relative non-CSS public resource seeds.
     pub resources: Vec<String>,
     /// Instance placements for core validation and usage construction.

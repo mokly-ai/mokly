@@ -65,7 +65,11 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
     /<mokly-slot name="children" token="opaque" ignore-scope="disabled"><\/mokly-slot>/,
   );
   assert.match(component.html, /<!--mokly-ignore:start id="chrome"-->/);
-  assert.ok(component.styles.includes(".inline-control{color:red}"));
+  assert.ok(
+    component.styles.some(
+      (style) => style.css === ".inline-control{color:red}",
+    ),
+  );
   assert.deepEqual(component.resources, ["font.woff2"]);
   const screen = await sidecar.call<RenderResult>("renderScreen", {
     ...axes,

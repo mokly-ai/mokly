@@ -70,6 +70,10 @@ pub struct DefinitionDiagnostic {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub export_name: Option<String>,
+    /// Variant whose path the core derives after registering the parent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub variant_slug: Option<String>,
     /// Safe detail following the owning authoring contract.
     pub message: String,
 }

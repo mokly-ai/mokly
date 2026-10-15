@@ -1,5 +1,4 @@
-import type { ScreenVariantInput } from "@mokly/mokly";
-
+import type { ArtboardVariant } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
 
@@ -30,4 +29,4 @@ export const onboardingFilterVariant = {
   slug: "tag-onboarding",
   mobile: <OnboardingFilterMobile />,
   title: "Onboarding filter",
-} satisfies ScreenVariantInput;
+} satisfies ArtboardVariant;

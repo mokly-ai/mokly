@@ -8,10 +8,36 @@ This page defines resolved bindings, render inputs, and usage drafts for the
 
 ## Results
 
-A fragment result is `{ html, styles, resources, instances, slots, warnings }`.
+A fragment result is `{ html, styles, markers, resources, instances, slots, warnings }`.
 Styles keep first-appearance order. Resources are the non-CSS public seeds the
 consumer renderer declares. Instance and slot drafts describe actual usage.
 Warnings belong only to that render.
+
+Each style is `{ css, owners }`. Owners are registered component parent paths.
+An empty owner list uses selector attribution. Inline styles retain the
+component or slot supplier whose output produced them. Registry styles from
+a whole-screen render use the empty owner list.
+
+`markers` is the ordered list of authenticated API placements. Each record has
+`id`, optional `parentId`, and `payload`. The payload is one of
+`{ kind: "instance", key }`, `{ kind: "slot", key }`,
+`{ kind: "ignore", materialKey? }`, `{ kind: "link", to }`, or
+`{ kind: "output" }`.
+`parentId` names the nearest generated enclosing marker, including ignore
+and link markers. The sidecar captures these records only from its private
+API boundary tokens. It rejects consumer-authored reserved comments. The core
+checks payloads, physical parents, and complete consumption before grafting.
+The [rendering boundary](./mokly-rendering.md#rendering-boundary) uses this
+same shape.
+
+An output placement marks the adapter result before consumer renderer wrappers.
+Its private pair is `mokly-output:start id="…"` and `mokly-output:end id="…"`.
+The core consumes it on an HTML invocation. On the component's own view, the
+core uses it to attach the one root range around only the adapter output.
+A renderer that omits its input node supplies an empty output placement.
+No output marker reaches served bytes, and no sidecar emits `mokly-root`.
+Generated placement ids avoid collisions with authored ignore ids. Root output
+must satisfy the [root-range rules](./mokly-component-usage-records.md#root-output-boundary).
 
 `renderPage` runs a synchronous `definePage` callback. It returns
 `{ html, resources, warnings }`, with a complete document and no styles.
@@ -57,7 +83,9 @@ Each instance placement has these fields:
 
 Repeated placement of one input instance returns one draft per region. Each
 placement agrees on the logical inputs. Encounter order is zero-based within
-each input owner and original receiving slot. The component root of its own
+each input owner and original receiving slot. Nested slot providers share
+that scope's encounter counter, and repeated placement of the same input
+keeps its first order. The component root of its own
 entry is not a used instance and has no instance draft.
 
 ## Slot Drafts And Inputs

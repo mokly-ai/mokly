@@ -1,19 +1,19 @@
 //! Real environment and terminal composition for the mokly binary.
 
 use std::env;
-use std::io::{self, IsTerminal, Write};
+use std::io::{self, IsTerminal};
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use mokly_catalogue::config::Loader;
-use mokly_catalogue::definition_provider::DeferredDefinitions;
+use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::Builder;
 use mokly_catalogue::working_tree::WorkingTree;
-use mokly_cli::build::{BuildService, CatalogueBuild};
+use mokly_cli::build::{BuildError, BuildService, CatalogueBuild};
 use mokly_cli::build_output;
+use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::codes::Code;
-use mokly_cli::errors::Failure;
 use mokly_cli::grammar::Verb;
 use mokly_cli::options::{Environment, validate};
 use mokly_cli::output::{Style, select};
@@ -23,28 +23,13 @@ use mokly_cli::version::VERSION;
 use mokly_source_interface::tree::SourceTree;
 use terminal_size::{Width, terminal_size};
 
-use crate::entry_publish;
-
-use super::render_runtime::NativeGraphs;
-
-pub(super) trait Terminal {
-    fn stdout(&self, text: &str);
-    fn stderr(&self, text: &str);
-}
-
-pub(super) struct SystemTerminal;
-
-impl Terminal for SystemTerminal {
-    fn stdout(&self, text: &str) {
-        let _ = io::stdout().lock().write_all(text.as_bytes());
-    }
-    fn stderr(&self, text: &str) {
-        let _ = io::stderr().lock().write_all(text.as_bytes());
-    }
-}
+use crate::interrupts::Interrupts;
+use crate::render_runtime::Services;
+use crate::terminal::{SystemTerminal, Terminal};
+use crate::{entry_publish, entry_serve};
 
 pub(super) fn main() -> ExitCode {
-    let terminal: &dyn Terminal = &SystemTerminal;
+    let terminal: Arc<dyn Terminal> = Arc::new(SystemTerminal::default());
     let arguments: Vec<_> = env::args_os()
         .map(|value| value.to_string_lossy().into_owned())
         .collect();
@@ -99,7 +84,7 @@ pub(super) fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
     if let Some(Verb::Publish(publish)) = &cli.command {
-        return entry_publish::run(publish, &style, redactor, terminal);
+        return entry_publish::run(publish, &style, redactor, terminal.as_ref());
     }
     if let Some(Verb::Build(options)) = &cli.command {
         let cwd = match env::current_dir() {
@@ -113,17 +98,62 @@ pub(super) fn main() -> ExitCode {
                 return ExitCode::FAILURE;
             }
         };
-        let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+        let interrupts = match Interrupts::new() {
+            Ok(value) => value,
+            Err(error) => {
+                terminal.stderr(&style.error(Code::BuildInvalid, &error.to_string(), &redactor));
+                return ExitCode::FAILURE;
+            }
+        };
+        let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
+            inner: Arc::new(WorkingTree),
+            cancellation: interrupts.cancellation.clone(),
+        });
+        let config =
+            match (Loader { tree: tree.clone() }).load(&cwd, options.common.config.as_deref()) {
+                Ok(config) => config,
+                Err(source) => {
+                    let failure = if interrupts.cancellation.requested() {
+                        BuildError::Cancelled
+                    } else {
+                        BuildError::Catalogue { source }
+                    };
+                    terminal.stderr(&build_output::failure(&style, &failure, &redactor));
+                    return ExitCode::FAILURE;
+                }
+            };
+        let services = match Services::new(
+            tree.clone(),
+            &cwd,
+            &config.repo_root,
+            &options.common,
+            redactor.clone(),
+            interrupts.cancellation.clone(),
+        ) {
+            Ok(services) => services,
+            Err(error) => {
+                terminal.stderr(&style.error(Code::BuildInvalid, &error.to_string(), &redactor));
+                return ExitCode::FAILURE;
+            }
+        };
+        interrupts.attach(services.pool.clone());
         let service: &dyn BuildService = &CatalogueBuild {
-            graphs: Arc::new(NativeGraphs { tree: tree.clone() }),
-            config: Arc::new(Loader { tree: tree.clone() }),
+            cancellation: interrupts.cancellation.clone(),
+            graphs: services.runtime.clone(),
+            config: Arc::new(LoadedConfig(config)),
             catalogue: Arc::new(Builder {
                 tree: tree.clone(),
                 discovery: Arc::new(Discoverer { tree }),
-                definitions: Arc::new(DeferredDefinitions),
+                definitions: services.runtime.clone(),
             }),
         };
-        return match service.run(&cwd, options) {
+        let result = service.run(&cwd, options);
+        let shutdown = interrupts.shutdown();
+        if let Err(error) = shutdown {
+            terminal.stderr(&style.error(Code::BuildInvalid, &error.to_string(), &redactor));
+            return ExitCode::FAILURE;
+        }
+        return match result {
             Ok(summary) => {
                 terminal.stderr(&build_output::warnings(
                     &style,
@@ -139,8 +169,20 @@ pub(super) fn main() -> ExitCode {
             }
         };
     }
-    let command = cli.command.as_ref().map_or("serve", Verb::name);
-    let failure = Failure::Unavailable { command };
-    terminal.stderr(&style.failure(&failure, &redactor));
-    ExitCode::FAILURE
+    let (common, options) = match &cli.command {
+        Some(Verb::Serve(command)) => (&command.common, &command.options),
+        _ => (&cli.common, &cli.serve),
+    };
+    entry_serve::run(common, options, &style, redactor, terminal)
+}
+
+struct LoadedConfig(ResolvedConfig);
+impl ConfigLoader for LoadedConfig {
+    fn load(
+        &self,
+        _cwd: &std::path::Path,
+        _explicit: Option<&str>,
+    ) -> mokly_catalogue::error::Result<ResolvedConfig> {
+        Ok(self.0.clone())
+    }
 }

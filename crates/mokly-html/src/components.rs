@@ -17,6 +17,7 @@ use crate::tree::{Element, Node, Region, RegionKind};
 use crate::{conditions, control_roots, relative_links, source_locations};
 
 impl Engine<'_> {
+    #[tracing::instrument(name = "render.fragment", skip_all, err)]
     pub(crate) fn component(
         &mut self,
         mut element: Element,

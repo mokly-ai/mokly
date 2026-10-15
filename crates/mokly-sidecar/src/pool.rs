@@ -17,6 +17,8 @@ pub trait SidecarPool: Send + Sync {
     fn request(&self, call: Call) -> Result<MethodResult>;
     /// Cancel queued work, drain active requests, and bound shutdown to two seconds.
     fn shutdown(&self) -> Result<()>;
+    /// Kill every owned process without waiting for the graceful shutdown deadline.
+    fn abort(&self) -> Result<()>;
 }
 
 /// Process pool composed from explicit process and clock boundaries.
@@ -26,7 +28,7 @@ pub struct Pool {
     pub(super) launch: Launch,
     pub(super) options: PoolOptions,
     state: Mutex<State>,
-    ready: Condvar,
+    pub(super) ready: Condvar,
 }
 
 impl Pool {
@@ -168,7 +170,8 @@ impl SidecarPool for Pool {
                     &outcome,
                     Err(Error::UnknownGeneration { .. } | Error::GenerationChanged { .. })
                 )
-                || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable());
+                || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable())
+                || matches!(&outcome, Err(Error::Postcss { .. }));
             if !reusable {
                 let killed = current.control.kill();
                 if let Err(error) = killed {
@@ -223,28 +226,10 @@ impl SidecarPool for Pool {
     }
 
     fn shutdown(&self) -> Result<()> {
-        let controls = {
-            let mut state = self.lock()?;
-            state.stopped = true;
-            self.ready.notify_all();
-            state.controls.values().cloned().collect::<Vec<_>>()
-        };
-        let deadline = self.clock.now_ms().saturating_add(2_000);
-        let mut error = None;
-        for control in &controls {
-            if let Err(failure) = control.shutdown() {
-                error = Some(failure);
-            }
-        }
-        for control in controls {
-            if let Err(failure) = control.finish(deadline) {
-                error = Some(failure);
-            }
-        }
-        match error {
-            Some(error) => Err(error),
-            None => Ok(()),
-        }
+        self.stop(false)
+    }
+    fn abort(&self) -> Result<()> {
+        self.stop(true)
     }
 }
 
@@ -275,3 +260,7 @@ mod pool_edge_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_reload_tests.rs"]
 mod pool_reload_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_abort_tests.rs"]
+mod pool_abort_tests;

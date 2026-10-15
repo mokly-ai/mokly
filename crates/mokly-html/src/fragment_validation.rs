@@ -72,10 +72,10 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 "forged fragment instance metadata",
             ));
         }
-        if let (Some(schema), Some(props)) = (schema, &props) {
+        if let (Some(schema), Some(values)) = (schema, props.as_ref()) {
             props::validate_for(
                 schema,
-                props,
+                values,
                 &instance.component_id,
                 AuthoringKind::JavaScript,
             )?;

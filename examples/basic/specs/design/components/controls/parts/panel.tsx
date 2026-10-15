@@ -1,7 +1,8 @@
 import { MockLink } from "@mokly/mokly";
 
-import { ActionPropValues, actionVariants } from "../../parts/action_props.js";
+import { ActionPropValues, actionEntries } from "../../parts/action_props.js";
 
+import { CONTROLS_COPY } from "./copy.js";
 import { ControlFields } from "./fields.js";
 import {
   controlsFixtures,
@@ -11,19 +12,22 @@ import {
 
 export function ControlsPanel({ state }: { state: ControlsState }) {
   const fixture = controlsFixtures[state];
-  const variant = actionVariants[fixture.variant];
+  const variant = actionEntries[fixture.variant];
   const readonly = isPublished(state) || state === "comparison";
+  const preparing = state === "preparing" || state === "preparing-failed";
   return (
     <section className="ce-controls-content">
       <div className="ce-controls-heading">
         <div>
-          <h3>{readonly ? "Saved props" : "Controls"}</h3>
+          <h3>
+            {readonly ? CONTROLS_COPY.readonlyHeading : CONTROLS_COPY.heading}
+          </h3>
           <p>
             {variant.title}
             {fixture.edited ? (
-              <span className="ce-edited">Edited</span>
-            ) : (
-              " · Saved values"
+              <span className="ce-edited">{CONTROLS_COPY.edited}</span>
+            ) : readonly ? null : (
+              ` · ${CONTROLS_COPY.saved}`
             )}
           </p>
         </div>
@@ -33,11 +37,11 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
               className="ce-reset"
               to="design/components/controls/editing/reset"
             >
-              Reset to {variant.title}
+              {CONTROLS_COPY.reset(variant.title)}
             </MockLink>
           ) : (
             <button className="ce-reset" type="button" disabled>
-              Reset to {variant.title}
+              {CONTROLS_COPY.reset(variant.title)}
             </button>
           )
         ) : null}
@@ -46,15 +50,15 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
         <>
           <p className="ce-controls-notice">
             {state === "comparison"
-              ? "Switch to Current to edit props."
-              : "Open this catalogue locally to edit props."}
+              ? CONTROLS_COPY.comparison
+              : CONTROLS_COPY.published}
           </p>
           {state === "comparison" ? (
             <MockLink
               className="ce-detail-links"
-              to="design/components/controls/controls"
+              to="design/components/controls/controls/default"
             >
-              Switch to Current
+              {CONTROLS_COPY.switchToCurrent}
             </MockLink>
           ) : null}
           <ActionPropValues props={fixture.draft} />
@@ -63,27 +67,60 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
         <>
           {state === "error" ? (
             <div className="ce-control-alert" role="alert">
-              <strong>Couldn’t update this component</strong>
-              <p>
-                Your edits are kept. The last working preview is still shown.
-              </p>
+              <strong>{CONTROLS_COPY.failedTitle}</strong>
+              <p>{CONTROLS_COPY.failedBody}</p>
               <MockLink to="design/components/controls/states/pending">
-                Try again
+                {CONTROLS_COPY.retry}
               </MockLink>
             </div>
           ) : null}
           {state === "invalid" ? (
             <p className="ce-control-alert" role="alert">
-              Check the highlighted value. The preview keeps its last valid
-              values.
+              {CONTROLS_COPY.invalid}
             </p>
+          ) : null}
+          {state === "invalid-together" ? (
+            <p className="ce-control-alert" role="alert">
+              {CONTROLS_COPY.invalidTogether}
+            </p>
+          ) : null}
+          {state === "expired" ? (
+            <div className="ce-control-alert" role="alert">
+              <strong>{CONTROLS_COPY.expiredTitle}</strong>
+              <p>{CONTROLS_COPY.expiredBody}</p>
+              <MockLink to="design/components/controls/states/pending">
+                {CONTROLS_COPY.expiredAction}
+              </MockLink>
+            </div>
           ) : null}
           {state === "reset" ? (
             <p className="ce-reset-status" role="status">
-              Default values restored.
+              {CONTROLS_COPY.restored}
             </p>
           ) : null}
-          <ControlFields props={fixture.draft} invalid={state === "invalid"} />
+          {state === "preparing" ? (
+            <p className="ce-controls-notice" role="status">
+              {CONTROLS_COPY.preparing}
+            </p>
+          ) : null}
+          {state === "preparing-failed" ? (
+            <p className="ce-control-alert" role="alert">
+              {CONTROLS_COPY.preparingFailed}{" "}
+              <MockLink to="design/components/controls/states/preparing">
+                {CONTROLS_COPY.retry}
+              </MockLink>
+            </p>
+          ) : null}
+          {preparing ? (
+            <fieldset className="ce-control-fieldset" disabled>
+              <ControlFields props={fixture.draft} invalid={false} />
+            </fieldset>
+          ) : (
+            <ControlFields
+              props={fixture.draft}
+              invalid={state === "invalid"}
+            />
+          )}
         </>
       )}
     </section>

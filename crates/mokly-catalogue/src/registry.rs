@@ -27,7 +27,11 @@ pub(crate) fn register(entries: &[ModelEntry]) -> (ElementRegistry, Vec<Issue>) 
         if !valid_element(element) {
             issues.push(
                 Issue::new(
-                    Code::HtmlElement,
+                    if entry.metadata.source.export.is_some() {
+                        Code::ComponentElement
+                    } else {
+                        Code::HtmlElement
+                    },
                     format!("invalid or reserved component element {element}"),
                 )
                 .at(entry.metadata.source.clone()),
@@ -38,7 +42,11 @@ pub(crate) fn register(entries: &[ModelEntry]) -> (ElementRegistry, Vec<Issue>) 
             let earlier: &RegisteredElement = earlier;
             issues.push(
                 Issue::new(
-                    Code::HtmlElement,
+                    if entry.metadata.source.export.is_some() {
+                        Code::ComponentElement
+                    } else {
+                        Code::HtmlElement
+                    },
                     format!(
                         "component element {element} is registered by {} and {}",
                         earlier.source_path, entry.metadata.source.path

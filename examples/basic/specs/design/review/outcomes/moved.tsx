@@ -2,6 +2,7 @@ import { defineScreen } from "@mokly/mokly";
 
 import { changesDesignMetadata } from "../../metadata.js";
 import { useDarkPreview } from "../../parts/appearance.js";
+import { artboards } from "../../parts/artboards.js";
 import { ComparePage, type CompareViewport } from "../../parts/compare_page.js";
 import { ComparisonStack, deviceChrome } from "../../parts/compare_stack.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -59,9 +60,11 @@ export const movedScreen = defineScreen({
   colorSchemes: ["light"],
   description:
     "A screen that moved with edits keeps one Changes row labelled Moved and compares in Overlay with the version at its previous path.",
-  desktop: <MovedOverlay viewport="desktop" />,
+  ...artboards({
+    desktop: <MovedOverlay viewport="desktop" />,
+    mobile: <MovedOverlay viewport="mobile" />,
+  }),
   slug: "moved",
-  mobile: <MovedOverlay viewport="mobile" />,
   rationale:
     "Moving a folder should not read as deleting one screen and adding another. Each moved entry keeps a single row at its new place, its variant and the document beside it move with it, and the comparison still starts from what the screen looked like before.",
   title: "Moved screen",
