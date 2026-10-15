@@ -48,16 +48,7 @@ fn help_and_version_work_in_every_mode_and_subcommand() {
 
 #[test]
 fn absent_subsystems_fail_with_exactly_one_line_and_no_stack() {
-    for args in [
-        vec![],
-        vec!["serve"],
-        vec!["build"],
-        vec![
-            "publish",
-            "--endpoint=https://example.com/plan",
-            "--token=SECRET",
-        ],
-    ] {
+    for args in [vec![], vec!["serve"], vec!["build"]] {
         let output = run(&args, "rich");
         assert_eq!(output.status.code(), Some(1));
         assert!(output.stdout.is_empty());

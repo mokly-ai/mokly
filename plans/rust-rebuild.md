@@ -808,8 +808,19 @@ Tags: ui
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
       changes rules, and the upload validation fixtures.
-- [ ] Add the `git-uncommitted` detail layout and avoid repeated detail and
+  - [x] Implement the `mokly-publish` exchange client with immutable output
+        snapshots, metadata v2, ownership v3, bounded HTTP, retries, expiry,
+        one re-plan, digest accounting, and public fixture tests.
+  - [x] Add clean-checkout checks, cancellable Git calls, the static-output
+        trait, and the pre-build private-directory line. Keep completed
+        output after upload failure.
+  - [ ] Connect `mokly-static` to publish and its rich terminal phases. Verify
+        real rendering, transaction cancellation, and deployment identity.
+- [x] Add the `git-uncommitted` detail layout and avoid repeated detail and
       recovery-hint sentences in terminal errors.
+
+Publish client gap sweep: `.context/rust-rebuild/sweeps/m12-publish.md`.
+
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
 - [ ] Commit.

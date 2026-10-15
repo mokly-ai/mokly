@@ -11,6 +11,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Typed Git execution failures.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// This runner terminated Git in response to command cancellation.
+    #[error("[mokly-git/cancelled] Git was cancelled")]
+    Cancelled,
     /// A request exceeds the maximum capture budget before Git starts.
     #[error("[mokly-git/command] output limit {limit} exceeds {maximum} bytes per stream")]
     InvalidOutputLimit {

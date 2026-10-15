@@ -29,6 +29,13 @@ recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust core. The binary owns catalogue work and
 file writes.
 
+Publish validates credentials and the committed clean checkout before it calls
+the static builder. It reports its private build directory once, before the
+build starts. `mokly-publish` owns the upload exchange and its immutable byte
+snapshot. The static output adapter reports a single `build-invalid` line
+when its implementation is unavailable. Checkout failures list at most 20
+unique sorted paths and their recovery hint in both output modes.
+
 ## Quick Start
 
 ```bash

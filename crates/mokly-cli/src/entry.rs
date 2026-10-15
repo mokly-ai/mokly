@@ -3,6 +3,7 @@
 use std::env;
 use std::io::{self, IsTerminal, Write};
 use std::process::ExitCode;
+use std::sync::Arc;
 
 use mokly_cli::errors::Failure;
 use mokly_cli::grammar::Verb;
@@ -13,12 +14,14 @@ use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
 use terminal_size::{Width, terminal_size};
 
-trait Terminal {
+use crate::entry_publish;
+
+pub(super) trait Terminal {
     fn stdout(&self, text: &str);
     fn stderr(&self, text: &str);
 }
 
-struct SystemTerminal;
+pub(super) struct SystemTerminal;
 
 impl Terminal for SystemTerminal {
     fn stdout(&self, text: &str) {
@@ -35,7 +38,7 @@ pub(super) fn main() -> ExitCode {
         .map(|value| value.to_string_lossy().into_owned())
         .collect();
     let token = env::var("MOKLY_TOKEN").ok();
-    let redactor = Redactor::collect(&arguments, token.as_deref());
+    let redactor = Arc::new(Redactor::collect(&arguments, token.as_deref()));
     let style = Style {
         mode: select(
             arguments
@@ -82,6 +85,9 @@ pub(super) fn main() -> ExitCode {
     if let Err(failure) = validate(&mut cli, &environment) {
         terminal.stderr(&style.failure(&failure, &redactor));
         return ExitCode::FAILURE;
+    }
+    if let Some(Verb::Publish(publish)) = &cli.command {
+        return entry_publish::run(publish, &style, redactor, terminal);
     }
     let command = cli.command.as_ref().map_or("serve", Verb::name);
     let failure = Failure::Unavailable { command };
