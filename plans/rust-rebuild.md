@@ -760,11 +760,12 @@ Tags: ui
       index and detail sources, the `server` entry and `renderViewer` go,
       and the package README, rewritten under Decision 38, is checked
       against the package.
-- [ ] Run the viewer suite against the Milestone 6 routes.
+- [x] Run the viewer suite against the Milestone 6 routes.
 - [x] Commit.
 
 Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
 Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
+Serve run (log, results, screenshots): `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-serve-run/log.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -860,6 +861,12 @@ renders again.
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
       scrolls to the row's end, and a stage row that fits stays centred.
+- [ ] Port the viewer's frame inspector to the markers of the comparison
+      contract (Milestone 7 Serve run): `inspector/ranges.ts` reads
+      `mokly-component:start:r-N`, while Serve writes `mokly-instance` and
+      `mokly-slot` markers with an `id` and leaves a component page's root
+      region `r-0` without a marker. In Serve, hovering a screen frame turns
+      it to the error state and disables Highlight components.
 - [x] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,

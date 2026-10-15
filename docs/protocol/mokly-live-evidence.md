@@ -56,7 +56,7 @@ The shell reloads only the mounted frames whose `documentKey` in the
 refreshed index changed, whether the frame shows a screen or component view,
 a page, a document, or a use-case step; a frame whose key is unchanged keeps
 its document, scroll, and selection. When the refreshed index does not list the current entry, the route shows the
-missing state and keeps the URL. A removed entry's detail is fetched from the
+missing state and keeps the URL until an index lists the entry again. A removed entry's detail is fetched from the
 generation the refreshed index names; a record absent from the refreshed index shows the missing state. When a fetch fails or the pair disagrees after
 one more index fetch, the shell keeps its installed state and shows the entry
 as unavailable with retry, and the next message starts a fresh refresh.

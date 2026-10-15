@@ -214,11 +214,11 @@ Usage, and the details panel update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame
 shows a screen or component view, a page, a document, or a use-case step.
 When `live.generation` changed, the shell refetches the live descriptor and
-replaces the render capability; when the current entry is no longer in the
-index, it shows the missing state and keeps the URL; no other update reloads
-the page. When a fetch fails or the pair disagrees after one more index fetch,
-the shell keeps its state, shows the entry as unavailable with retry, and
-waits for the next message.
+replaces the render capability; a current entry the index no longer lists
+shows the missing state under the kept URL until an index lists it again; no
+other update reloads the page. When a fetch fails or the pair disagrees after
+one more index fetch, the shell keeps its state, shows the entry as
+unavailable with retry, and waits for the next message.
 
 ## Identity
 

@@ -8,6 +8,7 @@ import {
   withPreviews,
 } from "../src/shell/component_controls_state.js";
 import type { ControlTarget } from "../src/shell/control_values.js";
+import { generatedUsage } from "../src/shell/stage_sources.js";
 
 const view = (
   variantPath: string | undefined,
@@ -56,6 +57,36 @@ test("only the edited entry's views show the temporary preview", () => {
   );
   assert.deepEqual(shown[0]!.usage?.ranges, []);
   assert.equal(shown[1], views[1]);
+});
+
+test("one render keeps one previewed view, so frames see no new usage", () => {
+  const views = [view(undefined, "mobile"), view(undefined, "desktop")];
+  const key = controlViewKey(views[0]!);
+  const first = withPreviews(
+    views,
+    new Map([[key, preview]]),
+    target("home", "screen"),
+  );
+  // A later workspace render passes a new map and a new target object.
+  const again = withPreviews(
+    views,
+    new Map([[key, preview]]),
+    target("home", "screen"),
+  );
+  assert.equal(again[0], first[0]);
+  assert.equal(generatedUsage(again[0]!), generatedUsage(first[0]!));
+  const next: ComponentRenderSuccess = {
+    ...preview,
+    renderId: "r-2",
+    previewUrl: "/mokly-viewer/components/renders/r-2/index.html",
+  };
+  const replaced = withPreviews(
+    views,
+    new Map([[key, next]]),
+    target("home", "screen"),
+  );
+  assert.notEqual(replaced[0], first[0]);
+  assert.match(replaced[0]!.path, /renders\/r-2\//);
 });
 
 test("a screen swaps its own views and keeps saved views without a preview", () => {

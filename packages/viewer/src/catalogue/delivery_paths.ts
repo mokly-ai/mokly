@@ -49,6 +49,9 @@ export const EVENTS_PATH = `${VIEWER_DIRECTORY}/events` as const;
 /** The route prefix of every temporary live render preview. */
 export const RENDERS_PATH = `${VIEWER_DIRECTORY}/components/renders` as const;
 
+/** An opaque render id that Serve chooses: one URL-safe path segment. */
+export const RENDER_ID = /^[A-Za-z0-9._~-]{1,256}$/;
+
 /** A current entry's detail, relative to the artifact origin root. */
 export function entryDetailPath(path: string): string {
   return `${VIEWER_DIRECTORY}/entries/${encodeUrlPath(path)}.json`;

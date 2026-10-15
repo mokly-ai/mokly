@@ -71,20 +71,40 @@ export function withPreviews(
       target.kind === "component"
         ? view.variantPath === target.path
         : view.variantPath === undefined;
-    return preview && owned
-      ? {
-          ...view,
-          path: decodeURIComponent(preview.previewUrl),
-          usage: {
-            viewport: view.viewport,
-            colorScheme: view.colorScheme,
-            instances: preview.usage.instances,
-            slots: preview.usage.slots,
-            ranges: preview.usage.ranges,
-            styles: [],
-            resources: [],
-          },
-        }
-      : view;
+    return preview && owned ? previewedView(view, preview) : view;
   });
+}
+
+/**
+ * One previewed view per saved view and accepted render. Every workspace
+ * render then hands its frames the same view and usage record; a new record
+ * each time would make each mounted frame adopt usage again, which renders
+ * the workspace again without end.
+ */
+const previewedViews = new WeakMap<
+  ComponentRenderSuccess,
+  WeakMap<GeneratedComponentView, GeneratedComponentView>
+>();
+
+function previewedView(
+  view: GeneratedComponentView,
+  preview: ComponentRenderSuccess,
+): GeneratedComponentView {
+  const known = previewedViews.get(preview) ?? new WeakMap();
+  previewedViews.set(preview, known);
+  const shown = known.get(view) ?? {
+    ...view,
+    path: decodeURIComponent(preview.previewUrl),
+    usage: {
+      viewport: view.viewport,
+      colorScheme: view.colorScheme,
+      instances: preview.usage.instances,
+      slots: preview.usage.slots,
+      ranges: preview.usage.ranges,
+      styles: [],
+      resources: [],
+    },
+  };
+  known.set(view, shown);
+  return shown;
 }
