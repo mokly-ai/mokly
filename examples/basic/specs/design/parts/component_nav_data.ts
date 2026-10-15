@@ -23,10 +23,10 @@ interface ComponentNavigationDefinition {
 /**
  * Action and Toolbar mirror the real example registrations. Help hint and Badge
  * are synthetic component-explorer fixtures with the saved Default state their
- * mockups depict. A variant row links to the artboard that shows that variant
- * in the same scenario, as the variant bar does; Badge's Default appears only
- * in the separate Additions story, so its row here is a depiction. The parent
- * row opens the parent's own page.
+ * mockups depict. A variant row links to the artboard that shows that variant,
+ * as the variant bar does. Badge's Default appears only in the Additions
+ * story, a story of its own, so its row here is a depiction. The parent row
+ * opens the parent's own page.
  */
 export const COMPONENT_NAVIGATION = {
   action: {

@@ -26,8 +26,14 @@ the parent's own entry first, then each saved variant in authored order: Action,
 Default, Disabled, and Secondary. The shown entry uses a pale sage surface,
 border, and explicit current-link state. Default and Disabled are Action's
 variant entries, each its own catalogue entry and Changes row under the
-[variant contract](./mokly-variants.md). An option links to the artboard that
-shows its entry in the same scenario; an option without one is a depiction.
+[variant contract](./mokly-variants.md). A scenario, or story, is the depicted
+catalogue state that a group of artboards shares: which entries exist and which
+changed. An option links to the artboard that shows its entry, whether that
+artboard depicts the All or the Changes filter; an entry without an artboard is
+a depiction. The Additions story, the stylesheet stories, and the controls limit
+pages each depict a story of their own: on their pages every option except the
+shown entry is a depiction, and no option on another page links into them.
+Navigation variant rows follow the same rule.
 The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Canvases have a 10px radius, a light
 border, a small context caption, and a centered component, without device chrome.
 The same `ActionExample` and `ToolbarExample` are reused in consuming screens.

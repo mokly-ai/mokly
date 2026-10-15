@@ -1,5 +1,7 @@
 # Component Inspector Design
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## One Inspector
 
 Component pages and consuming-screen designs share one inspector: beneath the

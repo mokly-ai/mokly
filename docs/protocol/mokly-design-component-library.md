@@ -160,9 +160,9 @@ Controls below use text, boolean, number and primitive enum selections only.
     optional missing message and `children` slot. Controls: label, state and
     optional message. Missing state hides the content slot and uses the existing
     explicit missing pane; comparison-grid layout remains caller-owned.
-14. **Empty state:** optional title, body, and code, an action label and
-    destination, and a busy flag for a loading state, which sets `aria-busy`
-    and makes the body a status.
+14. **Empty state:** no required prop: an optional title, body, code, action
+    label, destination, and busy flag. The busy flag marks a loading state,
+    sets `aria-busy`, and makes the body a status.
     Controls: title, body, loading and action label. Keep the canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
 15. **Flow step:** positive step number, title, description, owning screen path

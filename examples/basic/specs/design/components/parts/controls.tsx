@@ -9,10 +9,9 @@ import {
 import { VariantBar } from "./variant_bar.js";
 
 /**
- * Stories whose other entries have no artboard in the same scenario: in
- * Component with changed styles the other saved variants changed too, and
- * Additions is a scenario of its own. Their options stay visible without a
- * link into another story.
+ * Stories of their own: Component with changed styles and Additions. On their
+ * pages every option except the shown entry is a depiction, so no option links
+ * into another story.
  */
 const UNLINKED_SIBLINGS: ReadonlySet<ComponentPageState> = new Set([
   "style-changed",

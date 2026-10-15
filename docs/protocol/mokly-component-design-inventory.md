@@ -1,5 +1,7 @@
 # Component Design Inventory
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [mokly-component-design](./mokly-component-design.md).
 
 ## Owning Catalogue

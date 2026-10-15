@@ -1,12 +1,13 @@
 # Mokly Design Mockup Links
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Scope And Ownership
 
-The catalogue under `examples/basic/specs/design/` is a navigable prototype
-under the [navigation](./mokly-navigation.md) and
-[control](./mokly-link-controls.md) contracts. The package API,
-server, trusted frame adapter, sandbox, and actual shell behavior stay governed
-by their existing contracts; the design links need no new runtime capability.
+The catalogue under `examples/basic/specs/design/` is a navigable prototype under the
+[navigation](./mokly-navigation.md) and [control](./mokly-link-controls.md) contracts.
+The package API, server, trusted frame adapter, sandbox, and actual shell behavior stay
+governed by their existing contracts; the design links need no new runtime capability.
 
 Design links open catalogue entries that depict the requested destination.
 They do not operate the depicted shell as a second running application. The
@@ -17,17 +18,17 @@ are not transported implicitly. Only the explicitly paired states below
 promise to retain their named subject or comparison mode. The actual Appearance
 setting stays with the outer viewer.
 
-Every design screen has mobile and desktop views. They are light-only rendered documents,
-including artboards depicting a dark product screen, except the appearance screens (the
-`design/browse/appearance/**` entries), the loading and recovery screens
+Every design screen has mobile and desktop views. They are light-only rendered
+documents, including artboards depicting a dark product screen, except the appearance
+screens (the `design/browse/appearance/**` entries), the loading and recovery screens
 (`design/browse/loading/**`), the canonical `design/browse/views/screen` and
-`design/browse/views/details-screen`, their two retained Welcome appearance variants, and
-the Welcome comparison family. These render in both schemes so the outer Appearance control
-switches the depicted catalogue. Link targets name design entry paths, not the example
-paths printed in the depicted shell's metadata. Existing entries, screens, and text links
-stay available. `example/screens/farewell` is an intentionally absent product entry. This
-depicted dark set is representative; the runtime's single Appearance preference, rather
-than per-screen dark renders, keeps a whole session dark.
+`design/browse/views/details-screen`, their two retained Welcome appearance variants,
+and the Welcome comparison family. These render in both schemes so the outer Appearance
+control switches the depicted catalogue. Link targets name design entry paths, not the
+example paths printed in the depicted shell's metadata. Existing entries, screens, and
+text links stay available. `example/screens/farewell` is an intentionally absent product
+entry. This depicted dark set is representative; the runtime's single Appearance
+preference, rather than per-screen dark renders, keeps a whole session dark.
 
 ## Authoring And Shared Components
 
@@ -65,8 +66,7 @@ Existing destinations and their stable names are listed in the
 document, Moved, and index entry transitions. They keep those names; file names
 derive from paths ([artifact paths](./mokly-artifact-paths.md)).
 
-The five entries below render in both viewports and belong to the canonical
-inventory.
+The five entries below render in both viewports and belong to the canonical inventory.
 
 | Entry                                              | Depicted state                                                    |
 | -------------------------------------------------- | ----------------------------------------------------------------- |
@@ -76,17 +76,19 @@ inventory.
 | `design/browse/views/screen/tag-onboarding`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
 | `design/browse/views/screen/tag-onboarding-picker` | The same onboarding filter with the picker open                   |
 
-`design/browse/states/details` means Welcome's expanded inspector and is reachable from its
-catalogue entry. Opening/closing the Details icon stays on the current screen and retains
-its query. It does not substitute for the normal Details view. The viewer reaches the
-loading and recovery screens, the editing preparation states, the Screen props state, and
-the Read-only and recovery gallery by runtime transitions, so catalogue navigation reaches them.
+`design/browse/states/details` means Welcome's expanded inspector and is reachable from
+its catalogue entry. Opening/closing the Details icon stays on the current screen and
+retains its query. It does not substitute for the normal Details view.
 `design/browse/states/tag-filter` keeps its name and depicts the forms filter with the
-picker open. The four listed tag states plus `design/browse/views/screen/dark-scheme` and
-`design/browse/views/screen/light-only` keep their names and are variants of
+picker open. The four listed tag states plus `design/browse/views/screen/dark-scheme`
+and `design/browse/views/screen/light-only` keep their names and are variants of
 `design/browse/views/screen`, each at its own path below the parent's like any variant.
-Those six entries are not folder members; the `design-browse-tags` (Tag states) folder has
-no descendants and is absent from navigation, while the variants stay under Welcome.
+Those six entries are not folder members; the `design-browse-tags` (Tag states) folder
+has no descendants and is absent from navigation, while the variants stay under Welcome.
+
+Runtime transitions, not artboard links, reach the loading and recovery screens,
+the editing preparation states, the Screen props state, and the Read-only and
+recovery gallery; catalogue navigation reaches each of them.
 
 ## Navigation Controls
 
@@ -122,12 +124,11 @@ The separately authored document drawer keeps its document as described below.
 An icon-only close control needs an accessible label. Do not imply a preserved
 origin screen or simulate closing a drawer by linking back to the open state.
 
-Inspector data and links must describe the depicted subject. Share typed
-Welcome/Details metadata rather than rendering Welcome's own path, tags,
-and description under every screen. Removed screens have no live product
-target or live-use-case link; their inspector names the previous version's
-base commit. Related-doc labels without a portable public
-document stay plain text; there is no document publishing pipeline.
+Inspector data and links must describe the depicted subject. Share typed Welcome/Details
+metadata rather than rendering Welcome's own path, tags, and description under every
+screen. Removed screens have no live product target or live-use-case link; their
+inspector names the previous version's base commit. Related-doc labels without a
+portable public document stay plain text; there is no document publishing pipeline.
 
 The page designs extend this contract with explicit document destinations.
 `design/browse/pages/view` and `design/browse/pages/details` pair the closed/open inspector;
@@ -139,16 +140,16 @@ while the real document links to `example/screens/welcome`. The removed-page
 state keeps a flat row and returns to catalogue home without inventing parents.
 
 `design/browse/publication/catalogue` omits filter and comparison controls.
-`design/browse/publication/changes` offers the existing Welcome comparison destinations;
-its Changes action opens `design/changes/diff-controls/current`. Unsupported combinations
-stay depictions. These six states keep their own typed navigation records;
-none borrows another subject's inspector or drawer identity.
+`design/browse/publication/changes` offers the existing Welcome comparison
+destinations; its Changes action opens `design/changes/diff-controls/current`.
+Unsupported combinations stay depictions. These six states keep their own typed
+navigation records; none borrows another subject's inspector or drawer identity.
 
 ## Screen Variants
 
 The five variant states, `design/browse/variants/variant-selected`, `-changes`,
-`-removed`, `-reparented`, and `design/browse/variants/changed-views`, depict a screen's
-variants as ordinary catalogue entries grouped under their parent. The
+`-removed`, `-reparented`, and `design/browse/variants/changed-views`, depict a
+screen's variants as ordinary catalogue entries grouped under their parent. The
 disclosure beside a parent row is a depiction with no destination, because the
 served shell toggles the list in place; the parent row itself keeps its own
 destination. A variant row without an authored destination stays a depiction.
@@ -169,22 +170,21 @@ destination. A variant row without an authored destination stays a depiction.
 The changed-variant and removed-variant states keep their Welcome breadcrumb as
 text, because no artboard depicts an unmodified parent inside Changes. On the
 removed state the parent row is a depiction too: the deletion is a later state
-of the same group, so it must not open the earlier changed-variant scenario.
-The removed variant has no live product destination and no comparison modes;
-its stage shows the variant's inert previous version.
-In the reparented state, only the removed child is a Changes row: it is a
-removed entry whose former parent now names a variant. The Changes
-filter therefore hides the unmodified current parent and its variant (the
-former parent), and shows the removed child as one flat screen row outside
-their former folder hierarchy. The historical breadcrumb stays visible on the
-screen itself with the former parent's title as plain text, but the Changes rail
-contains no parent or nested variant list.
-The depicted All control links to the canonical catalogue home artboard; the
-reparented hierarchy is the context for this Changes-state example.
-The changed-views state shows no comparison band. Its marks on Appearance
-and the viewport dropdown identify evidence about other views. The Details
-view list opens the canonical comparison; the outer Appearance control chooses
-its rendered scheme. The depicted Appearance selector has no authored transition.
+of the same group, so it must not open the earlier changed-variant scenario. The
+removed variant has no live product destination and no comparison modes; its
+stage shows the variant's inert previous version. In the reparented state, only
+the removed child is a Changes row: it is a removed entry whose former parent
+now names a variant. The Changes filter therefore hides the unmodified current
+parent and its variant (the former parent), and shows the removed child as one
+flat screen row outside their former folder hierarchy. The historical breadcrumb
+stays visible on the screen itself with the former parent's title as plain text,
+but the Changes rail contains no parent or nested variant list. The depicted All
+control links to the canonical catalogue home artboard; the reparented hierarchy
+is the context for this Changes-state example. The changed-views state shows no
+comparison band. Its marks on Appearance and the viewport dropdown identify
+evidence about other views. The Details view list opens the canonical
+comparison; the outer Appearance control chooses its rendered scheme. The
+depicted Appearance selector has no authored transition.
 
 ## Scheme, Comparison, And Tag States
 
@@ -220,14 +220,14 @@ The scrolling `design/changes/diff-controls/**` examples keep those destinations
 controls navigate nowhere and pane links are inert.
 
 Added Details shows its Current preview without comparison modes. Removed
-Farewell, Survey, Invite, Archive, and Timeline show their previous version,
-its loading wait, its unavailable state with Retry, or the note naming the
-viewport that still opens, without comparison modes and with
-no live product destination; links inside a previous version do nothing.
-Unsupported dark-comparison modes stay non-link depictions.
-Ignored-only and empty Changes keep a Current preview without comparison
-modes; factual evidence lives in Details. Their existing routes and All escape
-stay available. An interactive mode needs its own contract and owning screen first.
+Farewell, Survey, Invite, Archive, and Timeline show their previous version, its
+loading wait, its unavailable state with Retry, or the note naming the viewport
+that still opens, without comparison modes and with no live product destination;
+links inside a previous version do nothing. Unsupported dark-comparison modes
+stay non-link depictions. Ignored-only and empty Changes keep a Current preview
+without comparison modes; factual evidence lives in Details. Their existing
+routes and All escape stay available. An interactive mode needs its own contract
+and owning screen first.
 
 Excluded styles shows All with one changed Welcome: one changed sheet matches and another is excluded. The title and row show Changed; comparison controls start in Current. Changes opens Matched styles, whose All filter returns to Excluded. Its Details row opens Excluded styles only, the same branch in All with Details selected: Details links only the excluded sheet, so it shows Unmodified, has no comparison controls and its Details end with "No changes to this screen." Its Welcome row returns to Excluded; its Changes filter stays a depiction, because no design shows Details beside the Changes list. Ignored only and No changes pair a separate zero-change catalogue. Unresolved and Unnamed styles open from the tree. Document page styles, the canonical screen of the Stylesheet evidence page, shows the page designs' Getting started document in Changes beside Action and Action's three saved variants. The page designs show the same five changes and open it from their Changes filter. It has no comparison controls; its Action row opens `design/components/states/shared-impact/style-changed`, and its variant rows stay depictions.
 
@@ -279,11 +279,10 @@ The real outer shell provides the runtime controls.
 In `examples/basic/specs/catalogue.tsx`, the `View details` action targets
 `example/screens/details` with fragment `details`; `Return to welcome` targets
 `example/screens/welcome`. The registered Action component uses
-`MockLink asChild` for these props.
-Text links and renderer-required `onPress={noop}` stay; navigation comes from
-the rendered anchor. These labels promise navigation,
-not workspace creation or a synthetic business operation. Exercise both
-viewports and light/dark renders without changing fixture paths.
+`MockLink asChild` for these props. Text links and renderer-required
+`onPress={noop}` stay; navigation comes from the rendered anchor. These labels
+promise navigation, not workspace creation or a synthetic business operation.
+Exercise both viewports and light/dark renders without changing fixture paths.
 
 All design and example links must keep portable relative hrefs on disk and
 authenticated markers in served/deployed Browse. Standalone activation opens
@@ -303,7 +302,8 @@ normal enhanced navigation. Do not equate these two contexts.
 - Check the canonical existing-design inventory against the catalogue index's
   complete design-screen set, including exact paths. Keep destinations without
   an owning screen separate from that inventory so omissions and drift are visible.
-- Prove each new state is reachable from its owning screen/flow and has the
+- Prove each new state is reachable from its owning screen/flow, or from
+  catalogue navigation when only a runtime transition reaches it, and has the
   specified return destination. Test tag query/picker agreement and both-scheme
   renders of the dual-scheme screens.
 - In Browse, exercise pointer and Tab/Enter activation from mobile and desktop
@@ -316,6 +316,6 @@ normal enhanced navigation. Do not equate these two contexts.
 - Use a small semantic expectation set per control family plus catalogue-wide
   target validation. A positive total-link count alone does not prove adoption.
 - Run the relevant suites and complete `cargo xtask check`, then commit all
-  authored source and documentation changes and push. Keep the build output ignored. After the push, use the
-  `implementation-review` skill against `origin/main`; report findings
-  without automatically fixing them.
+  authored source and documentation changes and push. Keep the build output
+  ignored. After the push, use the `implementation-review` skill against
+  `origin/main`; report findings without automatically fixing them.

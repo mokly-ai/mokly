@@ -1,5 +1,7 @@
 # Component Controls Design
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Controls Panel
 
 Reuse the component page, saved-variant strip, canvas, comparison band, and
@@ -32,7 +34,8 @@ The canonical Controls page depicts the parent's own entry, and its variant bar
 opens Default and Disabled.
 
 An edited-state indicator and Reset action accompany temporary overrides. Reset
-restores the full saved variant. Navigating to a different variant entry
+restores the shown entry's saved props: the parent's own props on the parent,
+or the full saved variant on a variant. Navigating to a different variant entry
 replaces temporary edits with that entry's complete values. Controls do not
 create a saved variant or change source files. Viewport and theme selection
 keep edits in the target runtime; navigating to another entry or entering a
@@ -45,13 +48,15 @@ variant and read-only values, with a short secondary explanation. Published
 saved-variant designs keep values readable and variant links usable; their
 secondary guidance is Open this catalogue locally to edit props. Switching
 between the published Default and Disabled examples keeps both views read-only.
-While Serve prepares editing, the fields are read-only under `Preparing to edit
-props…`; when editing cannot start, `Editing could not start.` offers Try
-again, which fetches the live descriptor again. A removed entry, a component
-without declared controls, and an entry without props show read-only text, not
-fields. Merged props that fail as a whole highlight no field and offer Reset to
-the variant. An expired temporary preview keeps the edits, shows the saved
-props, and offers Update preview. The settled strings are in
+While no live descriptor is installed, the fields are read-only under
+`Preparing to edit props…`; a refetch keeps the installed capability, so the
+fields stay editable. When editing cannot start, `Editing could not start.`
+offers Try again, which fetches the live descriptor again. A removed entry, a
+component without declared controls, and an entry without props show read-only
+text, not fields. Merged props that fail as a whole highlight no field; the
+alert names the failure, and the heading's Reset is the one action. An expired
+temporary preview keeps the edits, shows the saved props, and offers Update
+preview. The settled strings are in
 `examples/basic/specs/design/components/controls/parts/copy.ts`.
 Do not add environment badges or implementation details to the rendered UI.
 
@@ -70,7 +75,9 @@ Every screen has distinct mobile and desktop components. The catalogue provides
 state navigation without adding a footer to the rendered product artboard.
 Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md); its folder owns gallery
-membership.
+membership. Component pages such as `design/components/states/removed` show a
+props summary in their Props tab, and this controls catalogue owns the states of
+the Props panel.
 
 | Entry                                                   | State                                                 |
 | ------------------------------------------------------- | ----------------------------------------------------- |

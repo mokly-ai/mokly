@@ -159,8 +159,8 @@ screen derives its states from real props instead.
 its failure and version states, and the stage while a preview loads.
 `specs/design/components/controls/parts/copy.ts` holds the settled copy of the
 Props tab's controls, and the Read-only and recovery gallery under
-`specs/design/components/controls/limits/` draws the states that offer no
-editing or one way back to valid props.
+`specs/design/components/controls/limits/` draws the states without editing
+and the recovery states that keep the edits.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),

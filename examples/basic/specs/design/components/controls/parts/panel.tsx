@@ -81,10 +81,7 @@ export function ControlsPanel({ state }: { state: ControlsState }) {
           ) : null}
           {state === "invalid-together" ? (
             <p className="ce-control-alert" role="alert">
-              {CONTROLS_COPY.invalidTogether}{" "}
-              <MockLink to="design/components/controls/editing/reset">
-                {CONTROLS_COPY.reset(variant.title)}
-              </MockLink>
+              {CONTROLS_COPY.invalidTogether}
             </p>
           ) : null}
           {state === "expired" ? (

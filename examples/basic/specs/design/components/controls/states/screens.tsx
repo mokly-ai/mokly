@@ -58,7 +58,7 @@ export const preparingScreen = defineScreen({
   slug: "preparing",
   title: "Preparing to edit",
   description:
-    "Local Serve shows the saved props while editing starts; the fields wait until they can update the preview.",
+    "Until the first live descriptor installs, local Serve shows the saved props in read-only fields; a later refetch keeps editing available.",
   colorSchemes: ["light"],
   ...artboardStates(
     {

@@ -39,7 +39,7 @@ function NoProps({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-/** Props-tab states that offer no editing, or one way back to valid props. */
+/** Props-tab states without editing, and recovery states that keep the edits. */
 export const removedScreen = defineScreen({
   ...controlsDesignMetadata,
   slug: "removed",

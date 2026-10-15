@@ -160,11 +160,13 @@ Serve answers `/mokly-viewer/live.json` with the render generation and the
 temporary-render capability of the component controls contract. The shell
 fetches it whenever the index carries `live`, at start and when
 `live.generation` changes; a catalogue without JavaScript has one too, because
-the Rust core renders an HTML entry with edited props itself. While it loads,
-the Props tab shows `Preparing to edit props…` with read-only fields. When the
-fetch fails, browsing works, the Props tab shows `Editing could not start.` with
-`Try again`, which fetches the descriptor again, and the shell also retries on
-the next publication message. A static build has none.
+the Rust core renders an HTML entry with edited props itself. While no
+descriptor is installed, the Props tab shows `Preparing to edit props…` with
+read-only fields; a refetch after a `live.generation` change keeps the installed
+capability until the new one installs. When the fetch fails, browsing works,
+the Props tab shows `Editing could not start.` with `Try again`, which fetches
+the descriptor again, and the shell also retries on the next publication
+message. A static build has none.
 
 ## Fetch And Fences
 

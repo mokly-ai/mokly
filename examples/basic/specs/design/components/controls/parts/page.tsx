@@ -26,8 +26,8 @@ import { ControlsPanel } from "./panel.js";
 
 /**
  * Action's own entry first, then its saved variants. Each option opens that
- * entry's controls in the same context. A published catalogue has no page for
- * the parent's own entry, so there its option is a depiction.
+ * entry's controls in the same context. No artboard depicts the parent's own
+ * entry in a published catalogue, so there its option is a depiction.
  */
 function ControlsVariants({ state }: { state: ControlsState }) {
   const fixture = controlsFixtures[state];

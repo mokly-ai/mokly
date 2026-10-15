@@ -1,5 +1,7 @@
 # Shell Design Inventory
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Inventory
 
 The design screens are authored in `examples/basic/specs/design/` and
@@ -173,9 +175,7 @@ Additional owning groups keep each page at no more than five screens:
   the stage while an entry's detail loads, under
   [shell delivery](./mokly-shell-delivery.md). The first is the group's
   canonical screen. They render in both schemes, because the reader's
-  appearance applies before the catalogue arrives. The viewer reaches them by
-  runtime transitions, so catalogue navigation reaches them, and only the two
-  failure states link back to the loading state.
+  appearance applies before the catalogue arrives.
 - `design/browse/appearance/overview` is the canonical appearance screen; the
   `Appearance states` folder beneath it owns four screens and
   `Panels and comparisons` and `Status and recovery` own five each. Their previews follow the artboard. They specify the
@@ -183,6 +183,10 @@ Additional owning groups keep each page at no more than five screens:
   [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in
   both schemes, so the outer Appearance control moves between its two rendered
   views at the same entry. Existing light-interface entries keep their paths.
+
+Runtime transitions, not artboard links, reach the four `design/browse/loading`
+states. Catalogue navigation reaches each of them, and the two failure states
+link back to the loading state.
 
 `design/browse/views/screen`, `design/browse/views/details-screen` and the whole Welcome
 comparison family — `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,
