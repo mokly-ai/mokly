@@ -1,0 +1,13 @@
+title: Invite a teammate
+description: An owner sends an invitation and sees it wait in the member list.
+tags: [team]
+steps:
+  - screenPath: example/team/members
+    title: Open the team
+    description: The owner sees who is in the workspace.
+  - screenPath: example/team/invite
+    title: Fill in the invitation
+    description: The owner enters a name, an email address, and a role.
+  - screenPath: example/team/members/invited
+    title: See the invitation
+    description: The new person waits in the member list until they accept.

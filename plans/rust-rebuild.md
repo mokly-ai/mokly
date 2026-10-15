@@ -670,8 +670,21 @@ from Milestone 12.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
+  - [x] Replace `examples/basic/mokly.config.ts` with `mokly.config.json`
+        under Decision 37.
+  - [x] Add the example's HTML Team area: two screens with a variant, three
+        HTML components with variants and slots, a page, a use case, a
+        folder record, and a Markdown document.
+  - [x] Rewrite `examples/basic/README.md` to the end state.
+  - [ ] Add HTML fixtures and run the gap sweep against the rendering
+        contracts.
+  - [ ] Render the example's HTML part and check it at both viewports and in
+        both schemes. Its stylesheets pass through the example's PostCSS
+        module, which runs in the Milestone 8 sidecar.
 - [ ] Write the HTML authoring guides under `docs/guides`.
 - [ ] Commit.
+
+Example port evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m5-example/README.md`.
 
 ## Milestone 6: Serve
 
@@ -872,6 +885,11 @@ Tags: ui
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - Milestone 5: decide whether `{{ name }}` with inner spaces is a
+    substitution. Prettier formats `*.component.html` files as Angular
+    templates and writes that form; `.prettierrc.json` formats them as HTML.
+  - Milestone 5: decide whether the example keeps its `watch.rules` reload
+    rule, which repeats the package-owned stylesheet classification.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

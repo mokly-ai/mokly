@@ -15,6 +15,7 @@ guidance that supports each experience.
 - [Open the welcome screen](mock:./screens/welcome).
 - [Read Getting started](mock:./getting-started#next-steps).
 - [Follow the example tour](mock:./tour).
+- [Manage your team](mock:./team/members).
 
 ## Explore the details
 

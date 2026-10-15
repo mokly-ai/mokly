@@ -1,0 +1,35 @@
+---
+element: workspace-panel
+title: Workspace panel
+description: A titled section with an optional count, its content, and a row of actions.
+propSchema:
+  type: object
+  additionalProperties: false
+  required: [heading]
+  properties:
+    heading: { type: string, minLength: 1 }
+    count: { type: integer, minimum: 0 }
+props:
+  heading: Pending invitations
+  count: 0
+slots: [children, actions]
+variants:
+  - slug: with-actions
+    title: Workspace panel with actions
+    description: A panel that shows its content and one action.
+    props: { count: 1 }
+    slots:
+      children: '<p class="panel-text">sam@fernhill.example is invited as a member.</p>'
+      actions: '<a class="button" href="mock:example/team/invite">Invite teammate</a>'
+---
+
+<section class="panel">
+  <header class="panel-header">
+    <h2 class="panel-heading">{{heading}}</h2>
+    <span class="panel-count">{{count}}</span>
+  </header>
+  <div class="panel-body">
+    <slot><p class="panel-text">New items appear here.</p></slot>
+  </div>
+  <div class="panel-actions"><slot name="actions"></slot></div>
+</section>
