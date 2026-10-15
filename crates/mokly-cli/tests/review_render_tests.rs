@@ -101,6 +101,14 @@ fn unsafe_url_schemes_name_the_attribute_url_and_source_once() {
             "<img src=\"data:image/png;base64,AA\">",
             "src on <img> is not an allowed URL: \"data:image/png;base64,AA\"",
         ),
+        (
+            "<a href=\"//example.com/a\">Go</a>",
+            "href on <a> is not an allowed URL: \"//example.com/a\"",
+        ),
+        (
+            "<img src=\"//example.com/a.png\">",
+            "src on <img> is not an allowed URL: \"//example.com/a.png\"",
+        ),
     ] {
         let root = fixture();
         write(

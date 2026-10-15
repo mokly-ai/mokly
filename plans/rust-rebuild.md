@@ -685,6 +685,8 @@ Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m5.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m5/report-2.md` and
 `.context/rust-rebuild/delegation/m5/merge-decisions.md`.
 Review fix evidence: `.context/rust-rebuild/delegation/m5/report-3.md`.
+Final fix and merge evidence: `.context/rust-rebuild/delegation/m5/report-4.md`
+and `.context/rust-rebuild/delegation/m5/round-3-merge-decisions.md`.
 
 The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
@@ -999,6 +1001,10 @@ Publish client final review and merge decisions:
       under `.context/rust-rebuild/`.
 - [ ] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
+      The M5 memory follow-up removes quadratic ancestor-list retention and
+      subtree copies in link controls; recursion remains. Evidence:
+      `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
+- [ ] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -1029,6 +1035,7 @@ Publish client final review and merge decisions:
     after success; keep the existing retention until the user decides.
   - Milestone 5 review 1, finding 5: decide the declared component stylesheet
     delivery model; keep the current bundled code and pages pending the user.
+  - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
@@ -1043,7 +1050,9 @@ Publish client final review and merge decisions:
   - B: settled by Decision 32 on 2026-10-14.
   - C: settled by Decision 31 on 2026-10-14.
   - D: settled by Decision 38 on 2026-10-14.
-  - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38.
+  - E: settled by the orchestrator's M5 brief and final change request on
+    2026-10-15: rewrite guides at their milestones. The viewer README, the
+    xtask README, and `AGENTS.md` follow Decision 38.
     The teardown deleted `guides_cli`, `guides_ci`,
     `guides_upload_validation`, and `guides_authoring`, which compared the
     guides with the old CLI and authoring API. `guides_copy`,

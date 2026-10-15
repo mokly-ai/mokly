@@ -85,7 +85,7 @@ fn config_errors_have_one_code_and_a_repository_relative_location() {
         if mode == "plain" {
             assert_eq!(
                 text,
-                "[mokly/config-invalid] tools/mokly.config.json:3:3 unknown configuration field: colourSchemes\n"
+                "[mokly/config-invalid] tools/mokly.config.json:3:3: unknown configuration field: colourSchemes\n"
             );
         }
     }
@@ -109,7 +109,7 @@ fn configurations_outside_their_repo_root_use_the_basename() {
             "{text}"
         );
         assert!(
-            text.contains("mokly.config.json:3:3 unknown configuration field: colourSchemes"),
+            text.contains("mokly.config.json:3:3: unknown configuration field: colourSchemes"),
             "{text}"
         );
     }
@@ -133,7 +133,7 @@ fn configurations_reached_through_a_directory_symlink_keep_relative_locations() 
                 "{text}"
             );
             assert!(
-                text.contains("mokly.config.json:3:3 unknown configuration field: colourSchemes"),
+                text.contains("mokly.config.json:3:3: unknown configuration field: colourSchemes"),
                 "{text}"
             );
         }

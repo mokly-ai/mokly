@@ -20,7 +20,7 @@ use crate::prepare_sources::{append, canonical_order, duplicate_indices};
 use crate::render_sources::JavaScriptCatalogue;
 use crate::template_types::{ElementRegistry, Template};
 use crate::validate_templates;
-use crate::{documents, folders, identity, moves, parsing, registry, relationships};
+use crate::{documents, folders, identity, links, moves, parsing, registry, relationships};
 
 /// Prepared private catalogue, with render sources kept out of every public shape.
 #[derive(Clone, Debug)]
@@ -91,6 +91,7 @@ impl CatalogueBuilder for Builder {
             warnings: Vec::new(),
         };
         let mut failed = BTreeSet::new();
+        let mut markdown_targets = BTreeMap::new();
         let mut issues = duplicate_indices(&prepared.inventory.files);
         for file in &prepared.inventory.files.clone() {
             if file.excluded {
@@ -140,14 +141,22 @@ impl CatalogueBuilder for Builder {
                 parsing::parse(text, &file.path, file.kind)
             };
             match parsed {
-                Ok(parsed) => append(
-                    &mut prepared,
-                    parsed,
-                    file,
-                    config,
-                    &mut issues,
-                    &mut failed,
-                ),
+                Ok(parsed) => {
+                    if file.kind == SourceKind::Document {
+                        markdown_targets.insert(
+                            file.path.clone(),
+                            links::markdown(&parsed.text, parsed.body_offset, &file.path),
+                        );
+                    }
+                    append(
+                        &mut prepared,
+                        parsed,
+                        file,
+                        config,
+                        &mut issues,
+                        &mut failed,
+                    );
+                }
                 Err(issue) => issues.push(issue),
             }
         }
@@ -179,7 +188,11 @@ impl CatalogueBuilder for Builder {
         let (elements, registration_issues) = registry::register(&prepared.model.entries);
         prepared.elements = elements;
         issues.extend(registration_issues);
-        issues.extend(validate_templates::validate(&mut prepared, &failed));
+        issues.extend(validate_templates::validate(
+            &mut prepared,
+            &failed,
+            &markdown_targets,
+        ));
         normalize_warnings(&mut prepared.warnings);
         if !issues.is_empty() {
             return Err(CatalogueError::Invalid {

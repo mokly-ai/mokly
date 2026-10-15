@@ -139,7 +139,7 @@ fn html_errors_report_the_exact_one_based_source_location() {
     assert!(output.stdout.is_empty());
     assert_eq!(
         String::from_utf8(output.stderr).unwrap(),
-        "[mokly/build-invalid] specs/home.screen.html:4:7 [mokly/html-element] unknown element ui-missing\n"
+        "[mokly/build-invalid] specs/home.screen.html:4:7: [mokly/html-element] unknown element ui-missing\n"
     );
 }
 

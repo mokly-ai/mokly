@@ -27,6 +27,11 @@ complete transient props map and uses the same composition and closure path.
 Its document does not replace the saved plan or catalogue props. The generation
 also exposes validated PostCSS directory watches, including empty glob matches.
 
+Document keys include component paths and element names. Logical links depend
+on their destination routes, including use-case first steps. An unresolved link
+substitution inside a component depends on the routing inventory, including
+when a prop reaches it through another component.
+
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
