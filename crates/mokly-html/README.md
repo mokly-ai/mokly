@@ -38,7 +38,8 @@ ancestor lists or child subtrees while it walks the document.
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core
-checks exact payloads, parent relationships, and complete consumption. A private
+checks exact payloads, parent relationships, complete consumption, and returned
+instance props against each component schema in Rust. A private
 adapter-output placement lets the core attach the component root inside
 consumer renderer wrappers. Only instance and slot markers reach served bytes.
 

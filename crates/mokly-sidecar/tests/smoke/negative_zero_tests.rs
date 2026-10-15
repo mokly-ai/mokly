@@ -15,7 +15,7 @@ use super::super::pool;
 
 #[test]
 fn negative_zero_survives_definitions_and_render_requests() {
-    let pool = pool(env!("CARGO_PKG_VERSION"));
+    let pool = pool(&super::super::package_version::read());
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/fixtures/sidecar")
         .canonicalize()

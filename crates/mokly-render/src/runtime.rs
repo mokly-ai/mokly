@@ -19,7 +19,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::bundle::BundleState;
 use crate::error::Result;
 use crate::graph::JavaScriptGraph;
-use crate::postcss::CssRecord;
+use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::{definitions, side};
 
@@ -28,6 +28,7 @@ use crate::{definitions, side};
 pub struct Runtime {
     /// Working or historical source reader.
     pub tree: Arc<dyn SourceTree>,
+    pub(crate) inventory_tree: Arc<dyn SourceTree>,
     /// Physical reader for the selected installed third-party dependencies.
     pub dependency_tree: Arc<dyn SourceTree>,
     /// Lazily started Node processes.
@@ -41,7 +42,7 @@ pub struct Runtime {
     /// Base-side leases, absent for a working-tree generation.
     pub base: Option<Arc<BaseSide>>,
     pub(crate) sequence: Arc<AtomicU64>,
-    pub(crate) css: Arc<Mutex<BTreeMap<String, CssRecord>>>,
+    pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, BundleState>>>,
 }
 
@@ -69,6 +70,7 @@ impl Runtime {
         base: Option<Arc<BaseSide>>,
     ) -> Self {
         Self {
+            inventory_tree: tree.clone(),
             tree,
             dependency_tree,
             pool,
@@ -77,7 +79,7 @@ impl Runtime {
             version,
             base,
             sequence: Arc::new(AtomicU64::new(0)),
-            css: Arc::new(Mutex::new(BTreeMap::new())),
+            css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
         }
     }
@@ -111,9 +113,12 @@ impl DefinitionProvider for Runtime {
     ) -> mokly_catalogue::error::Result<Definitions> {
         match definitions::describe(self, config, files) {
             Ok(definitions) => Ok(definitions),
-            Err(source) => Err(CatalogueError::Internal(InternalError::Provider {
-                source: Box::new(source),
-            })),
+            Err(source) => match source.diagnostic() {
+                Some(source) => Err(CatalogueError::Runtime { source }),
+                None => Err(CatalogueError::Internal(InternalError::Provider {
+                    source: Box::new(source),
+                })),
+            },
         }
     }
 }

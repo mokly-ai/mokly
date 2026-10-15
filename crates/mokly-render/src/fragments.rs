@@ -30,9 +30,12 @@ impl FragmentRenderer for Fragments {
     fn render(&self, request: &FragmentRequest) -> mokly_html::error::Result<Fragment> {
         match self.render_fragment(request) {
             Ok(fragment) => Ok(fragment),
-            Err(source) => Err(HtmlError::Internal(InternalError::Provider {
-                source: Box::new(source),
-            })),
+            Err(source) => match source.diagnostic() {
+                Some(source) => Err(HtmlError::Runtime { source }),
+                None => Err(HtmlError::Internal(InternalError::Provider {
+                    source: Box::new(source),
+                })),
+            },
         }
     }
 }

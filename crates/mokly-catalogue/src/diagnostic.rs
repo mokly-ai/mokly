@@ -132,6 +132,10 @@ pub struct Issue {
     pub message: String,
     /// One-based source coordinate, when available.
     pub location: Option<SourceLocation>,
+    /// Final entry identity, separate from the exact diagnostic text.
+    pub entry_path: Option<String>,
+    /// The owning contract includes source attribution in the exact text.
+    pub message_has_location: bool,
 }
 
 impl Issue {
@@ -141,6 +145,8 @@ impl Issue {
             code,
             message: message.into(),
             location: None,
+            entry_path: None,
+            message_has_location: false,
         }
     }
 

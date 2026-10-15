@@ -57,6 +57,7 @@ impl StylesheetBundler for Compiler {
                 inputs: BTreeMap::new(),
                 imported_by: BTreeMap::new(),
                 repository_aliases: Default::default(),
+                dependency_digests: BTreeMap::new(),
                 plugin_inputs: BTreeMap::new(),
                 directories: Vec::new(),
             },
@@ -142,7 +143,7 @@ impl Preparation<'_> {
             .process(path, &pruned, &self.root.excluded)?;
         self.result.plugin_inputs.extend(processed.plugin_inputs);
         self.result.directories.extend(processed.directories);
-        self.result.inputs.extend(processed.inputs);
+        self.result.dependency_digests.extend(processed.inputs);
         let mut edits = Vec::new();
         for reference in syntax::references(&processed.text) {
             if reference.image_set_string && !paths::external(&reference.value) {

@@ -49,6 +49,7 @@ pub(crate) fn compiler(
         Some(module) => Arc::new(PostCss {
             pool: runtime.pool.clone(),
             tree: tree.clone(),
+            inventory_tree: runtime.inventory_tree.clone(),
             resolver: resolver.clone(),
             root: config.repo_root.clone(),
             side: side.clone(),

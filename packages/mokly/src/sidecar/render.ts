@@ -199,7 +199,7 @@ export async function render(
     if (error instanceof SidecarError) throw error;
     throw new SidecarError(
       "render-failed",
-      `${name} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
+      `${name.replace("#", " export ")} (${params.viewport}, ${params.colorScheme}): ${detail(error)}`,
     );
   }
 }

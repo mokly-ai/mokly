@@ -6,6 +6,7 @@ use mokly_catalogue::diagnostic::Warning;
 use mokly_css::error::CssError;
 use mokly_html::diagnostic_code::Code;
 use mokly_html::error::HtmlError;
+use mokly_model::runtime_diagnostic::RuntimeDiagnostic;
 use thiserror::Error;
 
 /// Render graph result.
@@ -14,6 +15,12 @@ pub type Result<T> = result::Result<T, GraphError>;
 /// A failed candidate cannot be published or written.
 #[derive(Debug, Error)]
 pub enum GraphError {
+    /// Expected consumer runtime failure with its terminal category intact.
+    #[error("[mokly-graph/runtime] {source}")]
+    Runtime {
+        /// Typed consumer diagnostic, without internal display wrappers.
+        source: RuntimeDiagnostic,
+    },
     /// A document failure retains its entry identity across viewport and scheme jobs.
     #[error("[mokly-graph/build-invalid] {source}")]
     Document {

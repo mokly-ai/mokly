@@ -1,5 +1,6 @@
 //! Catalogue error categories. Expected source diagnostics are structured data.
 
+use mokly_model::runtime_diagnostic::RuntimeDiagnostic;
 use thiserror::Error;
 
 use crate::diagnostic::{Issue, Warning};
@@ -10,6 +11,12 @@ pub type Result<T> = std::result::Result<T, CatalogueError>;
 /// Errors callers classify before choosing their terminal presentation.
 #[derive(Debug, Error)]
 pub enum CatalogueError {
+    /// Expected consumer runtime failure with its terminal category intact.
+    #[error("[mokly-catalogue/runtime] {source}")]
+    Runtime {
+        /// Typed consumer diagnostic, without internal display wrappers.
+        source: RuntimeDiagnostic,
+    },
     /// No default configuration exists in any searched directory.
     #[error("[mokly-catalogue/config-missing] no mokly.config.json found; searched: {}", .searched.join(", "))]
     ConfigMissing {

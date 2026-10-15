@@ -117,10 +117,11 @@ pub(crate) fn documents(
                 entry.metadata.path.clone(),
                 format!("{viewport:?}/{scheme:?}"),
             ];
-            if (!catalogue.templates.contains_key(parent)
-                || components
-                    .iter()
-                    .any(|component| !catalogue.templates.contains_key(component)))
+            if !matches!(entry.content, EntryContent::Document { .. })
+                && (!catalogue.templates.contains_key(parent)
+                    || components
+                        .iter()
+                        .any(|component| !catalogue.templates.contains_key(component)))
                 && let Some(generation) = &delivery.fragment_generation
             {
                 inputs.push(generation.clone());

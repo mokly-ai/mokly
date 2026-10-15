@@ -24,6 +24,9 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 use tempfile::TempDir;
 
+#[path = "../../../../tests/rust/package_version.rs"]
+pub(super) mod package_version;
+
 #[derive(Default)]
 struct Reporter(Mutex<Vec<String>>);
 impl Diagnostics for Reporter {
@@ -42,6 +45,9 @@ impl SidecarPool for CapturedPool {
     fn request(&self, call: Call) -> mokly_sidecar::error::Result<MethodResult> {
         self.calls.lock().unwrap().push(call.clone());
         self.inner.request(call)
+    }
+    fn abort(&self) -> mokly_sidecar::error::Result<()> {
+        self.inner.abort()
     }
     fn shutdown(&self) -> mokly_sidecar::error::Result<()> {
         self.inner.shutdown()
@@ -92,7 +98,7 @@ impl Consumer {
                     node: "node".into(),
                     entry: workspace.join("packages/mokly/dist/sidecar.js"),
                     repository: directory.path().into(),
-                    version: env!("CARGO_PKG_VERSION").into(),
+                    version: package_version::read(),
                 },
                 PoolOptions {
                     size: 2.try_into().unwrap(),
@@ -106,7 +112,7 @@ impl Consumer {
             pool.clone(),
             Arc::new(MemoryCache::new(16 * 1024 * 1024)),
             Arc::new(ThreadWorkers::new(2).unwrap()),
-            env!("CARGO_PKG_VERSION").into(),
+            package_version::read(),
             None,
         ));
         Self {

@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_html::error::HtmlError;
 use mokly_model::catalogue::EntryContent;
+use mokly_model::controls;
 use mokly_model::data::Props;
 use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::validation::PropValidator;
@@ -70,6 +71,26 @@ impl ArtifactWorker for PropsJob<'_> {
             Err(source) => return Err(InternalError::Json { source }.into()),
         };
         let props = match serde_json::to_value(self.props) {
+            Ok(value) => value,
+            Err(source) => return Err(InternalError::Json { source }.into()),
+        };
+        let validator = match PropValidator::compile(&schema, &context) {
+            Ok(validator) => validator,
+            Err(source) => {
+                return Err(GraphError::Html {
+                    source: HtmlError::Props { source },
+                });
+            }
+        };
+        if let Err(source) = validator.validate(&props, &context) {
+            return Err(GraphError::Html {
+                source: HtmlError::Props { source },
+            });
+        }
+        let schema = match serde_json::to_value(controls::with_bounds(
+            &visual.prop_schema,
+            &visual.controls,
+        )) {
             Ok(value) => value,
             Err(source) => return Err(InternalError::Json { source }.into()),
         };

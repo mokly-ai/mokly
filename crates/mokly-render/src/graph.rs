@@ -47,9 +47,12 @@ impl RenderGraph for JavaScriptGraph {
             Ok(graph) => graph,
             Err(source) => {
                 return Err(GraphError::Attempt {
-                    failures: vec![GraphError::Internal(InternalError::Provider {
-                        source: Box::new(source),
-                    })],
+                    failures: vec![match source.diagnostic() {
+                        Some(source) => GraphError::Runtime { source },
+                        None => GraphError::Internal(InternalError::Provider {
+                            source: Box::new(source),
+                        }),
+                    }],
                     warnings: catalogue.warnings,
                 });
             }

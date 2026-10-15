@@ -3,23 +3,24 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use globset::GlobBuilder;
 use mokly_catalogue::config::relative;
 use mokly_css::dependencies::{DirectoryDependency, PluginInput};
 use mokly_model::canonical::compare_utf16;
 use mokly_sidecar::results::{Dependency, DependencyKind};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
-use crate::error::{DependencyFailure, InternalError, RenderError, Result};
+use crate::error::{DependencyFailure, RenderError, Result};
+use crate::postcss_scan::Scan;
 
 pub(crate) struct Inventory {
-    pub(crate) inputs: BTreeMap<String, Vec<u8>>,
+    pub(crate) inputs: BTreeMap<String, String>,
     pub(crate) plugin_inputs: BTreeMap<String, PluginInput>,
     pub(crate) directories: Vec<DirectoryDependency>,
 }
 
 pub(crate) fn collect(
     tree: &dyn SourceTree,
+    scan: &mut Scan,
     root: &Path,
     physical_root: &Path,
     stylesheet: &str,
@@ -61,10 +62,7 @@ pub(crate) fn collect(
                 .unwrap_or_else(|| "unknown".into()),
             stylesheet: stylesheet.into(),
         };
-        let projected = match tree.project(&path) {
-            Ok(node) => node,
-            Err(source) => return Err(InternalError::Source { source }.into()),
-        };
+        let projected = scan.project(tree, &path)?;
         let Some(node) = projected else {
             return Err(failure(
                 &dependency,
@@ -95,7 +93,15 @@ pub(crate) fn collect(
                         DependencyFailure::File,
                     ));
                 }
-                read(tree, root, &path, &node.identity, &origin, &mut inputs)?;
+                read(
+                    tree,
+                    scan,
+                    root,
+                    &path,
+                    &node.identity,
+                    &origin,
+                    &mut inputs,
+                )?;
             }
             DependencyKind::Directory => {
                 if node.kind != FileKind::Directory {
@@ -106,21 +112,6 @@ pub(crate) fn collect(
                         DependencyFailure::Directory,
                     ));
                 }
-                let glob = match GlobBuilder::new(dependency.glob.as_deref().unwrap_or("**/*"))
-                    .literal_separator(true)
-                    .backslash_escape(false)
-                    .build()
-                {
-                    Ok(glob) => glob.compile_matcher(),
-                    Err(_) => {
-                        return Err(failure(
-                            &dependency,
-                            stylesheet,
-                            &relative(&path, root),
-                            DependencyFailure::Glob,
-                        ));
-                    }
-                };
                 for watch in [&path, &node.identity] {
                     let record = DirectoryDependency {
                         path: relative(watch, root),
@@ -131,21 +122,29 @@ pub(crate) fn collect(
                         inputs.directories.push(record);
                     }
                 }
-                let mut pending = vec![(node.identity.clone(), PathBuf::new())];
-                while let Some((directory, suffix)) = pending.pop() {
-                    let children = match tree.children(&directory) {
-                        Ok(children) => children,
-                        Err(source) => return Err(InternalError::Source { source }.into()),
-                    };
-                    for child in children {
-                        let suffix = suffix.join(&child.name);
-                        let file = node.identity.join(&suffix);
-                        if child.kind == FileKind::Directory && !denied(&child.name) {
-                            pending.push((file, suffix));
-                        } else if child.kind == FileKind::File && glob.is_match(&suffix) {
-                            read(tree, root, &path.join(&suffix), &file, &origin, &mut inputs)?;
-                        }
-                    }
+                let files = scan.matching_files(
+                    tree,
+                    &node.identity,
+                    dependency.glob.as_deref().unwrap_or("**/*"),
+                    &|| {
+                        failure(
+                            &dependency,
+                            stylesheet,
+                            &relative(&path, root),
+                            DependencyFailure::Glob,
+                        )
+                    },
+                )?;
+                for suffix in files.iter() {
+                    read(
+                        tree,
+                        scan,
+                        root,
+                        &path.join(suffix),
+                        &node.identity.join(suffix),
+                        &origin,
+                        &mut inputs,
+                    )?;
                 }
             }
         }
@@ -155,6 +154,7 @@ pub(crate) fn collect(
 
 fn read(
     tree: &dyn SourceTree,
+    scan: &mut Scan,
     root: &Path,
     path: &Path,
     identity: &Path,
@@ -165,16 +165,13 @@ fn read(
     if inputs.inputs.contains_key(&name) {
         return Ok(());
     }
-    let bytes = match tree.read(identity) {
-        Ok(bytes) => bytes,
-        Err(source) => return Err(InternalError::Source { source }.into()),
-    };
+    let digest = scan.digest(tree, identity)?;
     inputs.plugin_inputs.insert(name.clone(), origin.clone());
     inputs
         .plugin_inputs
         .insert(relative(identity, root), origin.clone());
-    inputs.inputs.insert(name, bytes.clone());
-    inputs.inputs.insert(relative(identity, root), bytes);
+    inputs.inputs.insert(name, digest.clone());
+    inputs.inputs.insert(relative(identity, root), digest);
     Ok(())
 }
 
@@ -205,18 +202,4 @@ pub(crate) fn normalize(path: &Path) -> PathBuf {
         }
     }
     result
-}
-
-fn denied(name: &str) -> bool {
-    matches!(
-        name,
-        ".git"
-            | "node_modules"
-            | "dist"
-            | "coverage"
-            | "target"
-            | "test-results"
-            | "playwright-report"
-            | ".context"
-    )
 }

@@ -138,3 +138,51 @@ fn label(value: &Primitive) -> String {
         Primitive::Boolean(value) => value.to_string(),
     }
 }
+
+/// Apply validated control bounds to a schema for a temporary props check.
+/// Callers also validate against the original schema so every original constraint remains active.
+pub fn with_bounds(
+    schema: &PropSchema,
+    controls: &BTreeMap<String, ComponentControl>,
+) -> PropSchema {
+    let mut narrowed = schema.clone();
+    if let Some(properties) = &mut narrowed.properties {
+        for (name, control) in controls {
+            let Some(property) = properties.get_mut(name) else {
+                continue;
+            };
+            match &control.input {
+                ControlInput::Text { max_length } => {
+                    if let Some(limit) = max_length {
+                        property.max_length = Some(limit.clone());
+                    }
+                }
+                ControlInput::Number {
+                    minimum,
+                    maximum,
+                    step,
+                } => {
+                    if let Some(limit) = minimum {
+                        property.minimum = Some(limit.clone());
+                    }
+                    if let Some(limit) = maximum {
+                        property.maximum = Some(limit.clone());
+                    }
+                    if let Some(step) = step {
+                        property.multiple_of = Some(step.clone());
+                    }
+                }
+                ControlInput::Select { options } => {
+                    property.enumeration =
+                        Some(options.iter().map(|option| option.value.clone()).collect());
+                }
+                ControlInput::Boolean => {}
+            }
+        }
+    }
+    narrowed
+}
+
+#[cfg(test)]
+#[path = "_tests_/control_bounds_tests.rs"]
+mod control_bounds_tests;

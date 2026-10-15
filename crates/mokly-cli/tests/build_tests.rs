@@ -18,6 +18,10 @@ fn run(directory: &Path, args: &[&str], mode: &str) -> Output {
         .current_dir(directory)
         .env("MOKLY_OUTPUT", mode)
         .env("PATH", "")
+        .env(
+            "MOKLY_PACKAGE_ROOT",
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
+        )
         .env_remove("MOKLY_NODE_EXECUTABLE")
         .env_remove("MOKLY_SIDECARS")
         .env_remove("CI")

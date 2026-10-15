@@ -32,7 +32,8 @@ and [entry props](./mokly-entry-props.md#validation) contracts own the codes.
 An export name is present when the diagnostic concerns one export. The message
 follows the owning authoring contract and keeps its source detail. A variant
 slug lets the core attribute unknown fields after deriving the final parent
-path. A definition with valid identity metadata stays in the inventory when
+path. The source and final entry path stay separate from the exact message.
+JavaScript diagnostics name the module and export without invented coordinates. A definition with valid identity metadata stays in the inventory when
 an unknown field makes it invalid. Its data validation waits until its metadata
 is valid, so dependent props do not add secondary errors.
 

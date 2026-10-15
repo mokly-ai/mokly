@@ -844,6 +844,7 @@ fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
 `.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
+Core review fixes: `.context/rust-rebuild/delegation/m8-core/report-2.md`.
 
 - [ ] Commit.
 
@@ -924,6 +925,11 @@ Tags: ui
       replay for HTML-only edits, and live updates to the viewer through the
       index and entry detail routes under one revision, with frames reloaded
       by document key and no page reload.
+- [ ] Release PostCSS contexts and replaced sidecar generations when the last
+      graph that uses them drops. Design ownership with Serve revision fences,
+      cancelled requests, and watch replacement; prevent an old graph from
+      using new bindings or class maps under an old fragment key (M8 review 1,
+      finding 8).
 - [ ] Behaviour tests that count rebuilds and renders per change.
 - [ ] Commit.
 

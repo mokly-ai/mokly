@@ -2,6 +2,7 @@ import path from "node:path";
 import { Worker } from "node:worker_threads";
 
 import type { CssResult } from "../generated/sidecar/CssResult.js";
+import type { PostcssFailure } from "../generated/sidecar/PostcssFailure.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { SidecarError, detail } from "./errors.js";
@@ -23,6 +24,9 @@ export class PostcssWorkers {
       throw new SidecarError(
         "bundle-failed",
         `${params.postcss}: ${detail(error)}`,
+        error instanceof SidecarError
+          ? error.postcss
+          : { kind: "load", module: params.postcss, detail: detail(error) },
       );
     }
   }
@@ -87,11 +91,14 @@ export class PostcssWorkers {
         id: number;
         result?: CssResult;
         error?: string;
+        postcss?: PostcssFailure;
       }) {
         if (message.id !== id) return;
         cleanup();
         if (message.error)
-          reject(new SidecarError("bundle-failed", message.error));
+          reject(
+            new SidecarError("bundle-failed", message.error, message.postcss),
+          );
         else resolve(message.result!);
       }
       worker!.on("message", receive).once("error", fail).once("exit", exit);

@@ -118,10 +118,16 @@ impl FilePolicy {
             ProtectedBy::ReservedBasename => PublicDenial::Reserved,
             ProtectedBy::ListedInput => {
                 if let Some(origin) = self.plugin_inputs.get(path) {
+                    let relative = mokly_model::routes::relative(&origin.stylesheet, path);
+                    let relative_file = if relative.starts_with('.') {
+                        relative
+                    } else {
+                        format!("./{relative}")
+                    };
                     return PublicDenial::Postcss {
                         plugin: origin.plugin.clone(),
                         stylesheet: origin.stylesheet.clone(),
-                        relative_file: mokly_model::routes::relative(&origin.stylesheet, path),
+                        relative_file,
                     };
                 }
                 let direct = self.imported_by.get(path).cloned();

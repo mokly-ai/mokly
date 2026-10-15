@@ -4,13 +4,16 @@ use std::env;
 use std::io::{self, Write};
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
+use mokly_cli::cancellation::Cancellation;
+use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::grammar::Common;
 use mokly_cli::redaction::Redactor;
+use mokly_cli::version::VERSION;
 use mokly_graph::cache::MemoryCache;
-use mokly_graph::error::{InternalError, Result};
-use mokly_graph::workers::ThreadWorkers;
+use mokly_graph::error::Result;
+use mokly_graph::workers::{RenderWorkers, ThreadWorkers};
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::{Pool, SidecarPool};
@@ -23,16 +26,17 @@ use mokly_source_interface::tree::SourceTree;
 
 pub(super) struct Services {
     pub(super) runtime: Arc<Runtime>,
-    pool: Arc<dyn SidecarPool>,
-    stopped: Arc<Mutex<bool>>,
+    pub(super) pool: Arc<dyn SidecarPool>,
 }
 
 impl Services {
     pub(super) fn new(
         tree: Arc<dyn SourceTree>,
         cwd: &Path,
+        repository: &Path,
         common: &Common,
         redactor: Arc<Redactor>,
+        cancellation: Arc<dyn Cancellation>,
     ) -> Result<Self> {
         let clock = Arc::new(SystemClock::new());
         let size = common
@@ -52,58 +56,44 @@ impl Services {
                 node: env::var_os("MOKLY_NODE_EXECUTABLE")
                     .map_or_else(|| PathBuf::from("node"), PathBuf::from),
                 entry: sidecar_entry(cwd),
-                repository: cwd.to_owned(),
-                version: env!("CARGO_PKG_VERSION").into(),
+                repository: repository.to_owned(),
+                version: VERSION.into(),
             },
             PoolOptions {
                 size,
                 timeout_ms: common.sidecar_timeout_ms,
             },
         ));
-        let runtime = Arc::new(Runtime::new(
-            tree.clone(),
+        let runtime = runtime(
             tree,
             pool.clone(),
-            Arc::new(MemoryCache::new(256 * 1024 * 1024)),
             Arc::new(ThreadWorkers::new(
                 std::thread::available_parallelism().map_or(1, usize::from),
             )?),
-            env!("CARGO_PKG_VERSION").into(),
-            None,
-        ));
-        let stopped = Arc::new(Mutex::new(false));
-        let signal_pool = pool.clone();
-        let signal_stopped = stopped.clone();
-        if let Err(source) = ctrlc::set_handler(move || {
-            if let Err(error) = stop(signal_pool.as_ref(), &signal_stopped) {
-                diagnostics.emit(&error.to_string());
-            }
-        }) {
-            return Err(InternalError::Provider {
-                source: Box::new(source),
-            }
-            .into());
-        }
-        Ok(Self {
-            runtime,
-            pool,
-            stopped,
-        })
-    }
-
-    pub(super) fn shutdown(&self) -> mokly_sidecar::error::Result<()> {
-        stop(self.pool.as_ref(), &self.stopped)
+            cancellation,
+        );
+        Ok(Self { runtime, pool })
     }
 }
 
-/// The exit path waits for signal-driven shutdown to finish before the binary exits.
-fn stop(pool: &dyn SidecarPool, stopped: &Mutex<bool>) -> mokly_sidecar::error::Result<()> {
-    let mut stopped = stopped.lock().unwrap_or_else(|error| error.into_inner());
-    if *stopped {
-        return Ok(());
-    }
-    *stopped = true;
-    pool.shutdown()
+fn runtime(
+    tree: Arc<dyn SourceTree>,
+    pool: Arc<dyn SidecarPool>,
+    workers: Arc<dyn RenderWorkers>,
+    cancellation: Arc<dyn Cancellation>,
+) -> Arc<Runtime> {
+    Arc::new(Runtime::new(
+        tree.clone(),
+        tree,
+        pool,
+        Arc::new(MemoryCache::new(256 * 1024 * 1024)),
+        Arc::new(CancellableWorkers {
+            inner: workers,
+            cancellation,
+        }),
+        VERSION.into(),
+        None,
+    ))
 }
 
 struct Reporter {
@@ -145,3 +135,7 @@ fn sidecar_entry(cwd: &Path) -> PathBuf {
     }
     PathBuf::from("@mokly/mokly/dist/sidecar.js")
 }
+
+#[cfg(test)]
+#[path = "_tests_/runtime_version_tests.rs"]
+mod runtime_version_tests;

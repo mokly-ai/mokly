@@ -105,7 +105,7 @@ impl Builder {
                                     &definition.source,
                                 )
                             {
-                                issue.message = format!("{path}/{slug}: {}", issue.message);
+                                issue.entry_path = Some(format!("{path}/{slug}"));
                             }
                             issue
                         })

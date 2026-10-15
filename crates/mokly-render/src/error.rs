@@ -135,7 +135,7 @@ pub(crate) fn convert<T: serde::Serialize, U: serde::de::DeserializeOwned>(value
 }
 
 impl DependencyFailure {
-    fn message(&self, plugin: &str, stylesheet: &str, path: &str) -> String {
+    pub(crate) fn message(&self, plugin: &str, stylesheet: &str, path: &str) -> String {
         match self {
             Self::File => format!(
                 "PostCSS plugin {plugin} reported a missing dependency for {stylesheet}: {path}; make it a regular file or correct the plugin"

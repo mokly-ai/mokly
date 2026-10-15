@@ -61,7 +61,7 @@ export function serialize(
     : (dataProps(
         input.props,
         Object.hasOwn(input, "propSchema"),
-        record.handle,
+        record.handle.replace("#", " export "),
         generation.warnings,
         record.excludedProps,
       ) as Definition["props"]);
@@ -106,7 +106,7 @@ export function serialize(
           : dataProps(
               variant.props,
               Object.hasOwn(input, "propSchema"),
-              `${record.handle}/${variant.slug}`,
+              `${record.handle.replace("#", " export ")}/${variant.slug}`,
               generation.warnings,
               excludedProps,
             ),

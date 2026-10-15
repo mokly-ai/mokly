@@ -24,12 +24,22 @@ pub(crate) fn issue(diagnostic: &DefinitionDiagnostic) -> Issue {
         DefinitionCode::ComponentControls => Code::ComponentControls,
         DefinitionCode::ComponentSlots => Code::ComponentSlots,
     };
-    Issue::new(code, diagnostic.message.clone()).at(SourceLocation {
+    let mut issue = Issue::new(code, diagnostic.message.clone()).at(SourceLocation {
         path: diagnostic.module.clone(),
-        line: 1,
-        column: 1,
+        line: 0,
+        column: 0,
         export: diagnostic.export_name.clone(),
-    })
+    });
+    issue.message_has_location = matches!(
+        diagnostic.code,
+        DefinitionCode::ArrayExport
+            | DefinitionCode::DuplicateExport
+            | DefinitionCode::EmptyModule
+            | DefinitionCode::InvalidDefinition
+            | DefinitionCode::UnknownLinkDefinition
+            | DefinitionCode::ComponentProps
+    );
+    issue
 }
 
 pub(crate) fn warnings(values: &[results::Warning], route: &str) -> Vec<Warning> {

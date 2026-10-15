@@ -1,6 +1,6 @@
 //! Consumer PostCSS runs in an explicit side-specific context, before scoping.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
@@ -16,22 +16,18 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::error::{RenderError, Result};
+use crate::postcss_cache::{CssCache, CssRecord};
 use crate::side::SideInputs;
 use crate::{postcss_inventory, postcss_nested};
-
-#[derive(Clone)]
-pub(crate) struct CssRecord {
-    result: Css,
-    processed: Option<ProcessedCss>,
-}
 
 pub(crate) struct PostCss {
     pub(crate) pool: Arc<dyn SidecarPool>,
     pub(crate) tree: Arc<dyn SourceTree>,
+    pub(crate) inventory_tree: Arc<dyn SourceTree>,
     pub(crate) root: PathBuf,
     pub(crate) side: SideInputs,
     pub(crate) module: PathBuf,
-    pub(crate) cache: Arc<Mutex<BTreeMap<String, CssRecord>>>,
+    pub(crate) cache: Arc<Mutex<CssCache>>,
     pub(crate) resolver: Arc<dyn ImportResolver>,
 }
 
@@ -44,9 +40,12 @@ impl CssProcessor for PostCss {
     ) -> mokly_css::error::Result<ProcessedCss> {
         match self.process_input(path, source, excluded) {
             Ok(processed) => Ok(processed),
-            Err(source) => Err(CssError::Internal(InternalError::Provider {
-                source: Box::new(source),
-            })),
+            Err(source) => match source.diagnostic() {
+                Some(source) => Err(CssError::Runtime { source }),
+                None => Err(CssError::Internal(InternalError::Provider {
+                    source: Box::new(source),
+                })),
+            },
         }
     }
 }
@@ -60,28 +59,12 @@ impl PostCss {
     ) -> Result<ProcessedCss> {
         let key = format!("{}:{path}:{}", self.side.context, digest(source.as_bytes()));
         let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
-        if !cache.contains_key(&key) {
-            let result = self.process_css(path, source)?;
-            if cache
-                .values()
-                .map(|entry| entry.result.text.len())
-                .sum::<usize>()
-                > 64 * 1024 * 1024
-            {
-                cache.clear();
-            }
-            cache.insert(
-                key.clone(),
-                CssRecord {
-                    result,
-                    processed: None,
-                },
-            );
-        }
-        let Some(record) = cache.get_mut(&key) else {
-            return Err(RenderError::ResultKind {
-                method: "processCss cache",
-            });
+        let mut record = match cache.records.get(&key) {
+            Some(record) => record.clone(),
+            None => CssRecord {
+                result: self.process_css(path, source)?,
+                processed: None,
+            },
         };
         postcss_nested::validate(&postcss_nested::Input {
             tree: self.tree.as_ref(),
@@ -97,12 +80,15 @@ impl PostCss {
             return Ok(processed.clone());
         }
         let inventory = postcss_inventory::collect(
-            self.tree.as_ref(),
+            self.inventory_tree.as_ref(),
+            cache.scans.entry(self.side.context.clone()).or_default(),
             &self.root,
             &self.side.source_root,
             path,
             record.result.dependencies.clone(),
-        )?;
+        );
+        cache.trim();
+        let inventory = inventory?;
         let processed = ProcessedCss {
             text: record.result.text.clone(),
             inputs: inventory.inputs,
@@ -110,6 +96,7 @@ impl PostCss {
             directories: inventory.directories,
         };
         record.processed = Some(processed.clone());
+        cache.insert(key, record);
         Ok(processed)
     }
 

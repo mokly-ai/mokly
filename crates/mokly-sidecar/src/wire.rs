@@ -7,6 +7,7 @@ use ts_rs::TS;
 use crate::definitions::Definitions;
 use crate::error::{Error, ProtocolError, RemoteCode, Result};
 use crate::methods::Call;
+use crate::postcss_failure::PostcssFailure;
 use crate::results;
 
 /// A client request; params are present even for no-argument methods.
@@ -27,6 +28,10 @@ pub struct RemoteError {
     pub code: RemoteCode,
     /// Safe detail, with entry or module attribution.
     pub message: String,
+    /// Structured consumer PostCSS failure, only for processCss.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub postcss: Option<PostcssFailure>,
 }
 
 /// Exactly one response outcome; raw JSON is decoded using the pending method.
@@ -108,6 +113,14 @@ impl Response {
             }));
         }
         match self {
+            Self::Failure {
+                error:
+                    RemoteError {
+                        postcss: Some(source),
+                        ..
+                    },
+                ..
+            } => Err(Error::Postcss { source }),
             Self::Failure { error, .. } => Err(Error::Remote {
                 code: error.code,
                 message: error.message,

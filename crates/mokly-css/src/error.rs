@@ -2,6 +2,7 @@
 
 use std::result;
 
+use mokly_model::runtime_diagnostic::RuntimeDiagnostic;
 use thiserror::Error;
 
 /// CSS operation result.
@@ -10,6 +11,12 @@ pub type Result<T> = result::Result<T, CssError>;
 /// Failures distinguish policy, transform, import, and asset errors.
 #[derive(Debug, Error)]
 pub enum CssError {
+    /// Expected consumer runtime failure with its terminal category intact.
+    #[error("[mokly-css/runtime] {source}")]
+    Runtime {
+        /// Typed consumer diagnostic, without internal display wrappers.
+        source: RuntimeDiagnostic,
+    },
     /// An injected consumer processor failed.
     #[error("[mokly-css/internal] {0}")]
     Internal(#[from] InternalError),

@@ -102,5 +102,10 @@ pub(crate) fn describe(
     result
         .issues
         .extend(diagnostics.iter().map(diagnostics::issue));
+    tracing::debug!(
+        entries = result.entries.len(),
+        warnings = result.warnings.len(),
+        "JavaScript catalogue definitions prepared"
+    );
     Ok(result)
 }

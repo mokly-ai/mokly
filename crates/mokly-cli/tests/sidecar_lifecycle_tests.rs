@@ -31,6 +31,12 @@ impl Drop for Cleanup {
 
 #[test]
 fn interrupt_drains_and_stops_a_hung_sidecar() {
+    for signal in ["-INT", "-TERM", "-HUP"] {
+        interrupt(signal);
+    }
+}
+
+fn interrupt(signal: &str) {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -52,6 +58,7 @@ fn interrupt_drains_and_stops_a_hung_sidecar() {
         .args(["build", "--no-changes", "--sidecars", "1"])
         .current_dir(directory.path())
         .env("MOKLY_PACKAGE_ROOT", workspace.join("packages/mokly"))
+        .env("MOKLY_OUTPUT", "plain")
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
@@ -63,11 +70,14 @@ fn interrupt_drains_and_stops_a_hung_sidecar() {
     };
     let (sender, receiver) = mpsc::channel();
     let reader = thread::spawn(move || {
+        let mut lines = Vec::new();
         for line in BufReader::new(stderr).lines().map_while(Result::ok) {
             if let Some((_, pid)) = line.split_once("fixture-render-ready:") {
                 let _ = sender.send(pid.trim().to_owned());
             }
+            lines.push(line);
         }
+        lines
     });
     let pid = receiver
         .recv_timeout(Duration::from_secs(30))
@@ -76,13 +86,19 @@ fn interrupt_drains_and_stops_a_hung_sidecar() {
     cleanup.sidecar = Some(pid.clone());
     assert!(
         Command::new("kill")
-            .args(["-INT", &cleanup.child.id().to_string()])
+            .args([signal, &cleanup.child.id().to_string()])
             .status()
             .unwrap()
             .success()
     );
     assert_eq!(cleanup.child.wait().unwrap().code(), Some(1));
-    reader.join().unwrap();
+    let lines = reader.join().unwrap();
+    assert!(
+        lines
+            .iter()
+            .any(|line| line == "[mokly/build-invalid] build cancelled"),
+        "{lines:?}"
+    );
     let deadline = Instant::now() + Duration::from_secs(30);
     while Command::new("kill")
         .args(["-0", &pid])

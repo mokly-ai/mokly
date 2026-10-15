@@ -130,6 +130,12 @@ impl Graph {
                 .inputs
                 .iter()
                 .map(|(path, bytes)| format!("{path}:{}", digest(bytes)))
+                .chain(
+                    bundle
+                        .dependency_digests
+                        .iter()
+                        .map(|(path, digest)| format!("{path}:{digest}")),
+                )
                 .collect();
             let recipe = data_key(
                 NodeKind::Stylesheet,
@@ -194,16 +200,19 @@ impl Graph {
                     },
                 );
             }
-            catalogue
-                .model
-                .sources
-                .extend(bundle.inputs.into_keys().filter(|path| {
-                    (!path.split('/').any(|part| part == "node_modules")
-                        || bundle.repository_aliases.contains(path)
-                        || bundle.plugin_inputs.contains_key(path))
-                        && (!markdown_assets.files.contains(path)
-                            || original_sources.contains(path))
-                }));
+            catalogue.model.sources.extend(
+                bundle
+                    .inputs
+                    .into_keys()
+                    .chain(bundle.dependency_digests.into_keys())
+                    .filter(|path| {
+                        (!path.split('/').any(|part| part == "node_modules")
+                            || bundle.repository_aliases.contains(path)
+                            || bundle.plugin_inputs.contains_key(path))
+                            && (!markdown_assets.files.contains(path)
+                                || original_sources.contains(path))
+                    }),
+            );
             imported_by.extend(bundle.imported_by);
             plugin_inputs.extend(bundle.plugin_inputs);
             directories.extend(bundle.directories);

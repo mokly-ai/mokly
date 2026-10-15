@@ -42,7 +42,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<!--mokly-output:start id=\"p-0\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"p-0\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"p-0","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[],"warnings":[]}}
+{"id":12,"result":{"html":"<!--mokly-output:start id=\"r-1\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"r-1\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"r-1","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
@@ -140,7 +140,9 @@ binary sends `enabled` for a component element outside every scope. The state
 seeds the React scope context, so nesting across the boundary follows the
 innermost scope, and the binary applies no outer scope to the fragment. A
 fragment never emits `mokly-root`; the core attaches the root region of a
-component page itself. The binary reads the markers into tree ownership, consumes the ignore and
+component page itself. Private `mokly-output` pairs locate adapter output
+inside renderer wrappers and are consumed before serialization. The binary
+reads markers into tree ownership, consumes the ignore and
 `mokly-link` pairs, and writes the instance and slot pairs around the composed
 regions under the [comparison contract](./mokly-comparison.md#markers).
 
@@ -199,7 +201,9 @@ The fragment key includes the class-map table digest. When maps change, the
 core disposes and re-bundles the generation before installing the new maps.
 The pool assigns each loaded lifetime an epoch. Every process reloads a stale
 epoch, then replays maps, describe, and bindings before a render.
-Mokly's own CSS work stays in Rust.
+Mokly's own CSS work stays in Rust. Expected PostCSS errors carry a typed
+`postcss` failure in the error envelope. Rust selects its exact code and text
+from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
 
 ## Cancellation And Timeouts
 

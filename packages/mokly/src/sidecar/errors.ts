@@ -1,9 +1,11 @@
+import type { PostcssFailure } from "../generated/sidecar/PostcssFailure.js";
 import type { RemoteCode } from "../generated/sidecar/RemoteCode.js";
 
 export class SidecarError extends Error {
   constructor(
     readonly code: RemoteCode,
     message: string,
+    readonly postcss?: PostcssFailure,
   ) {
     super(message);
   }

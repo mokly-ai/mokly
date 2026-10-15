@@ -78,9 +78,10 @@ fn invalid_variant_fields_use_the_final_path_and_skip_dependent_prop_checks() {
     };
     assert_eq!(issues.len(), 1, "{issues:?}");
     assert_eq!(issues[0].code, Code::InvalidField);
+    assert_eq!(issues[0].message, "unknown field path");
     assert_eq!(
-        issues[0].message,
-        "components/final/emphasis: unknown field path"
+        issues[0].entry_path.as_deref(),
+        Some("components/final/emphasis")
     );
 }
 

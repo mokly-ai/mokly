@@ -79,7 +79,7 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         consumer.pool.clone(),
         Arc::new(MemoryCache::new(16 * 1024 * 1024)),
         Arc::new(ThreadWorkers::new(2).unwrap()),
-        env!("CARGO_PKG_VERSION").into(),
+        super::support::package_version::read(),
         Some(base),
     ));
     let builder: &dyn CatalogueBuilder = &Builder {

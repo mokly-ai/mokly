@@ -233,10 +233,7 @@ impl Engine<'_> {
                     match self.element(element, context) {
                         Ok(nodes) => output.extend(nodes),
                         Err(source) => {
-                            return Err(error::HtmlError::Located {
-                                location,
-                                source: Box::new(source),
-                            });
+                            return Err(source.at(location));
                         }
                     }
                 }

@@ -40,7 +40,9 @@ adapter supplies definitions through that boundary. Private JavaScript
 recipes retain handles separately from source attribution, saved React slots,
 module edges, class-map identity, and the resolved handle table. Declared
 controls pass the Rust validator. Story control hints do not change schemas.
-Inference exclusions become warnings only after final path derivation. `DeferredDefinitions`
+Inference exclusions become warnings only after final path derivation. Runtime
+failures retain typed terminal categories across provider boundaries. JavaScript
+diagnostics retain module and export attribution without invented coordinates. `DeferredDefinitions`
 marks its result as deferred and leaves those files in `deferred_modules`
 without evaluating them. A successful provider clears that deferred set, so a
 build cannot report success after skipping JavaScript inputs.

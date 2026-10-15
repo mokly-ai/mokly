@@ -27,6 +27,10 @@ An HTML-only catalogue starts no sidecar and needs no package lookup result.
 Catalogue and graph factories share the same runtime, cache, and pool.
 Build installs interrupt and termination handling before command work. Both
 the signal path and normal exit drain the pool through one shutdown guard.
+Cancellation stops source reads and queued native documents even with no sidecar.
+A second signal kills owned sidecars and exits immediately. The pool starts in
+the resolved repository root and uses the embedded npm version for hello and
+graph keys.
 The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option
 validation accepts a positive 64-bit integer and retains it for PoolOptions.
 Invalid values fail `cli-invalid` with the accepted range.

@@ -34,6 +34,9 @@ sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
 retain their values. An independent token check rejects scoping that changes
 anything beyond local names and the module scope/composition syntax.
 
+Plugin dependency inputs use digests, separate from CSS and asset bytes.
+They keep source protection and graph invalidation without retaining file bodies.
+
 ## Quick Start
 
 ```rust

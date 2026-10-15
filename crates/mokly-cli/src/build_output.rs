@@ -57,6 +57,7 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
 /// Report retained warnings first, then the command's typed failure.
 pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
+        BuildError::Cancelled => style.error(Code::BuildInvalid, "build cancelled", redactor),
         BuildError::Deferred {
             modules,
             warnings: records,
@@ -80,7 +81,7 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
             mokly_catalogue::diagnostic::normalize_warnings(&mut records);
             let mut output = warnings(style, &records, redactor);
             for diagnostic in crate::render_errors::diagnostics(source) {
-                output.push_str(&style.error(Code::BuildInvalid, &diagnostic, redactor));
+                output.push_str(&style.error(diagnostic.code, &diagnostic.message, redactor));
             }
             output
         }
@@ -108,7 +109,8 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
                 let detail = issue_text(issue, Code::BuildInvalid);
                 let diagnostic = if matches!(
                     issue.code,
-                    diagnostic::Code::DuplicatePath
+                    diagnostic::Code::DuplicateExport
+                        | diagnostic::Code::DuplicatePath
                         | diagnostic::Code::CaseCollision
                         | diagnostic::Code::DuplicateFolder
                         | diagnostic::Code::DuplicateMovedFrom
@@ -120,6 +122,12 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
                 text.push_str(&diagnostic);
             }
             text
+        }
+        BuildError::Catalogue {
+            source: CatalogueError::Runtime { source },
+        } => {
+            let diagnostic = crate::render_errors::runtime(source);
+            style.error(diagnostic.code, &diagnostic.message, redactor)
         }
         BuildError::Catalogue {
             source: CatalogueError::Config(issue),
@@ -145,9 +153,19 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
 }
 
 fn issue_text(issue: &Issue, outer: Code) -> String {
-    let prefix = issue.location.as_ref().map_or(String::new(), |location| {
-        format!("{}:{}:{}: ", location.path, location.line, location.column)
-    });
+    if issue.message_has_location {
+        return format!("[mokly/{}] {}", issue.code.as_str(), issue.message);
+    }
+    let mut prefix = issue
+        .location
+        .as_ref()
+        .map_or(String::new(), crate::render_errors::location);
+    if let Some(path) = &issue.entry_path {
+        prefix.push_str(&format!(" ({path})"));
+    }
+    if !prefix.is_empty() {
+        prefix.push_str(": ");
+    }
     if issue.code.as_str() == outer.presentation().0 {
         format!("{prefix}{}", issue.message)
     } else {

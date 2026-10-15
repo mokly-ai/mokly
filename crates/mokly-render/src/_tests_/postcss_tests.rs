@@ -78,6 +78,7 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
     };
     let inventory = postcss_inventory::collect(
         &mock,
+        &mut crate::postcss_scan::Scan::default(),
         Path::new("/repo"),
         Path::new("/repo"),
         "sheet.css",

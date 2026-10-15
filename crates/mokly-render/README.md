@@ -35,7 +35,8 @@ props, saved slots, view axes, and ignore scope. HTML slot content stays in the
 core and enters authenticated placeholders with their reported scope. A private
 adapter-output placement keeps renderer wrappers outside a component's root.
 The graph's `render_props` method serves temporary previews through this path.
-It validates complete props before rendering and leaves saved documents intact.
+It validates complete props and control bounds before rendering and leaves saved
+documents intact. Returned instance props pass the Rust schema validator.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet resources rebuild from that generation's captured bytes.
 

@@ -35,6 +35,8 @@ pub struct Bundle {
     pub imported_by: BTreeMap<String, String>,
     /// Logical aliases whose real source is repository-owned, rather than an installation.
     pub repository_aliases: BTreeSet<String>,
+    /// Digests of plugin-reported dependencies, without retained file bytes.
+    pub dependency_digests: BTreeMap<String, String>,
     /// Plugin provenance for protected inputs.
     pub plugin_inputs: BTreeMap<String, PluginInput>,
     /// Directory watches, including empty matching sets.
@@ -50,8 +52,8 @@ pub struct ProcessedCss {
     pub directories: Vec<DirectoryDependency>,
     /// Transformed CSS.
     pub text: String,
-    /// Validated explicit dependency bytes for graph keys and privacy.
-    pub inputs: BTreeMap<String, Vec<u8>>,
+    /// Validated dependency digests for graph keys and privacy.
+    pub inputs: BTreeMap<String, String>,
 }
 
 /// Consumer PostCSS seam; HTML-only catalogues use the identity implementation.

@@ -1,6 +1,7 @@
 //! Public component stylesheets are checked before any document render.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
@@ -55,7 +56,7 @@ pub(crate) fn validate(
         let Some(render) = catalogue.javascript.entries.get(&entry.metadata.path) else {
             continue;
         };
-        let mut seen = BTreeSet::new();
+        let mut seen: BTreeMap<PathBuf, String> = BTreeMap::new();
         let mut paths = Vec::new();
         for path in &render.stylesheets {
             if path.is_empty()
@@ -87,16 +88,17 @@ pub(crate) fn validate(
                 }
                 Err(source) => return Err(InternalError::Source { source }.into()),
             };
-            if !seen.insert(node.identity) {
+            if let Some(first) = seen.get(&node.identity) {
                 catalogue.warnings.push(Warning {
                     code: "duplicate-component-stylesheet",
                     subject: WarningSubject::Component(entry.metadata.path.clone()),
                     message: format!(
                         "duplicate component stylesheet {} is ignored; it is linked once.",
-                        serde_json::Value::String(path.clone())
+                        serde_json::Value::String(first.clone())
                     ),
                 });
             } else {
+                seen.insert(node.identity, path.clone());
                 paths.push(path.clone());
             }
         }

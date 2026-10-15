@@ -230,11 +230,8 @@ fn postcss_runs_only_for_styles_and_reports_each_failure_once() {
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
     let error = String::from_utf8(output.stderr).unwrap();
-    assert!(error.starts_with("[mokly/build-invalid]"), "{error}");
-    assert!(error.contains("postcss.mjs"), "{error}");
     assert_eq!(
-        error.matches("fixture-postcss-failure").count(),
-        1,
-        "{error}"
+        error,
+        "[mokly/config-invalid] could not load postcss module postcss.mjs: fixture-postcss-failure; default-export an object with plugins\n"
     );
 }

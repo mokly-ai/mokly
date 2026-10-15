@@ -56,7 +56,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
         base.pool.clone(),
         Arc::new(MemoryCache::new(16 * 1024 * 1024)),
         Arc::new(ThreadWorkers::new(2).unwrap()),
-        env!("CARGO_PKG_VERSION").into(),
+        super::support::package_version::read(),
         Some(leased.clone()),
     ));
     let prepared = {
