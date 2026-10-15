@@ -1,0 +1,184 @@
+//! Public kind fixtures and structural rules for historical records and details.
+
+use serde_json::{Value, json};
+
+use crate::readers::public_reader_tests::{empty_index, metadata, screen};
+use crate::readers::{detail, index};
+
+fn page(path: &str) -> Value {
+    let mut value = metadata(path);
+    value["kind"] = json!("page");
+    value["documentKey"] = json!("a".repeat(64));
+    value
+}
+
+fn removed() -> Value {
+    let mut entry = page("old");
+    entry["changes"] = json!({"status":"ready","kind":"removed","included":true});
+    json!({"entry":entry,"folderTitles":[],"snapshotId":"d".repeat(64)})
+}
+
+fn generation_url() -> String {
+    format!(
+        "mokly-viewer/diffs/generations/{}/review.json",
+        "c".repeat(64)
+    )
+}
+
+#[test]
+fn every_entry_kind_and_a_removed_record_round_trip() {
+    let mut value = empty_index();
+    let mut home = screen("home", None);
+    home["useCasePaths"] = json!(["tour"]);
+    let mut component = screen("button", None);
+    component.as_object_mut().unwrap().remove("useCasePaths");
+    component["kind"] = json!("component");
+    component["slots"] = json!([]);
+    component["suppliedSlots"] = json!([]);
+    component["comparison"] = json!({"status":"disabled"});
+    let mut document = metadata("guide");
+    document["kind"] = json!("document");
+    document["colorSchemes"] = json!(["light"]);
+    document["documentKeys"] = json!([{"colorScheme":"light","documentKey":"e".repeat(64)}]);
+    let mut flow = metadata("tour");
+    flow["kind"] = json!("use-case");
+    flow["steps"] = json!([{"screenPath":"home"}]);
+    value["screens"] = json!([home]);
+    value["components"] = json!([component]);
+    value["pages"] = json!([page("about")]);
+    value["documents"] = json!([document]);
+    value["useCases"] = json!([flow]);
+    value["tree"] = json!([{"kind":"entry","path":"about"},{"kind":"entry","path":"button"},
+        {"kind":"entry","path":"guide"},{"kind":"entry","path":"home"},{"kind":"entry","path":"tour"}]);
+    value["removedEntries"] = json!([removed()]);
+    value["comparisonUrl"] = json!(generation_url());
+    assert_eq!(
+        serde_json::to_value(index(&value.to_string()).unwrap()).unwrap(),
+        value
+    );
+}
+
+#[test]
+fn invalid_removed_records_and_generation_urls_are_rejected() {
+    let mut good = empty_index();
+    good["removedEntries"] = json!([removed()]);
+    good["comparisonUrl"] = json!(generation_url());
+    assert!(index(&good.to_string()).is_ok());
+    let mut cases = Vec::new();
+    for (pointer, replacement) in [
+        ("/comparisonUrl", json!("not/a/generation/url")),
+        ("/removedEntries/0/entry/previousPath", json!("earlier")),
+        ("/removedEntries/0/parentTitle", json!("Parent")),
+        ("/removedEntries/0/snapshotId", json!("not-a-hash")),
+        ("/removedEntries/0/entry/changes/kind", json!("changed")),
+    ] {
+        let mut value = good.clone();
+        if pointer.ends_with("previousPath") {
+            value["removedEntries"][0]["entry"]["previousPath"] = replacement;
+        } else if pointer.ends_with("parentTitle") {
+            value["removedEntries"][0]["parentTitle"] = replacement;
+        } else {
+            *value.pointer_mut(pointer).unwrap() = replacement;
+        }
+        cases.push(value);
+    }
+    let mut value = good.clone();
+    value["removedEntries"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("snapshotId");
+    cases.push(value);
+    let mut value = good.clone();
+    value["removedEntries"]
+        .as_array_mut()
+        .unwrap()
+        .push(removed());
+    cases.push(value);
+    let mut value = good.clone();
+    let mut other = removed();
+    other["entry"]["path"] = json!("other");
+    value["removedEntries"].as_array_mut().unwrap().push(other);
+    cases.push(value);
+    for value in cases {
+        assert!(index(&value.to_string()).is_err(), "accepted {value}");
+    }
+}
+
+#[test]
+fn current_entries_cannot_have_removed_aggregate_changes() {
+    let mut value = empty_index();
+    let mut current = page("about");
+    current["changes"] = json!({"status":"ready","kind":"removed","included":true});
+    value["pages"] = json!([current]);
+    value["tree"] = json!([{"kind":"entry","path":"about"}]);
+    assert!(index(&value.to_string()).is_err());
+}
+
+#[test]
+fn historical_variants_require_a_nonempty_parent_title() {
+    let mut value = empty_index();
+    let mut variant = screen("old/one", Some("old"));
+    variant["changes"] = json!({"status":"ready","kind":"removed","included":true});
+    value["comparisonUrl"] = json!(generation_url());
+    value["removedEntries"] = json!([{"entry":variant,"parentTitle":"Former parent","folderTitles":[],"snapshotId":"d".repeat(64)}]);
+    assert!(index(&value.to_string()).is_ok());
+    for title in [json!(""), json!("   "), json!(42)] {
+        value["removedEntries"][0]["parentTitle"] = title;
+        assert!(index(&value.to_string()).is_err());
+    }
+    value["removedEntries"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("parentTitle");
+    assert!(index(&value.to_string()).is_err());
+    value["removedEntries"] = json!([removed()]);
+    value["comparisonUrl"] = Value::Null;
+    value["removedEntries"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("snapshotId");
+    assert!(index(&value.to_string()).is_ok());
+}
+
+fn screen_detail() -> Value {
+    json!({"schemaVersion":1,"identity":{"id":"a".repeat(64),"title":"Mokly"},
+        "deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},
+        "views":[{"viewport":"mobile","colorScheme":"light","usage":{"status":"ready","instances":[],"slots":[],"ranges":[]},
+            "resourceEvidence":{"rules":[],"resources":[]}}],
+        "workspace":{"comparisonEligible":false,"usedBy":[],"affected":[],"relatedComponents":[],"inputChanges":[]}})
+}
+
+#[test]
+fn detail_views_usage_evidence_and_workspace_round_trip() {
+    let value = screen_detail();
+    assert_eq!(
+        serde_json::to_value(detail(&value.to_string()).unwrap()).unwrap(),
+        value
+    );
+    let mut page = value.clone();
+    page["entry"]["kind"] = json!("page");
+    page["views"] = json!([]);
+    page.as_object_mut().unwrap().remove("workspace");
+    page["resourceEvidence"] = json!({"rules":[],"resources":[]});
+    assert!(detail(&page.to_string()).is_ok());
+    for kind in ["page", "document", "use-case"] {
+        let mut invalid = value.clone();
+        invalid["entry"]["kind"] = json!(kind);
+        assert!(detail(&invalid.to_string()).is_err(), "accepted {invalid}");
+        invalid["views"] = json!([]);
+        assert!(detail(&invalid.to_string()).is_err(), "accepted {invalid}");
+    }
+    let mut invalid = value.clone();
+    invalid["resourceEvidence"] = json!({"rules":[],"resources":[]});
+    assert!(detail(&invalid.to_string()).is_err());
+}
+
+#[test]
+fn usage_props_must_decode_as_canonical_plain_data() {
+    let mut value = screen_detail();
+    value["views"][0]["usage"]["instances"] = json!([{"key":"a".repeat(64),"id":"button", "componentId":"button",
+        "owner":{"kind":"entry"},"order":0,"props":{"value":["number","1.0"]},"propsKey":"b".repeat(64)}]);
+    assert!(detail(&value.to_string()).is_err());
+    value["views"][0]["usage"]["instances"][0]["props"]["value"] = json!(["number", "1"]);
+    assert!(detail(&value.to_string()).is_ok());
+}

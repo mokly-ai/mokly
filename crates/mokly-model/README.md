@@ -37,8 +37,18 @@ catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
 per file. `catalogue::CatalogueModel` is private in-memory state. The public
 roots are `CatalogueReadModel` v7, `EntryDetailV1`, and `LiveDescriptorV3`.
 Their readers gate the version before decoding payload fields. Index validation
-checks private fields, paths, variants, trees, schemas, tagged props, and flow
-membership. Detail validation checks the current or historical fence.
+checks private fields, paths, variants, trees, schemas, tagged props, flow
+membership, removed metadata, snapshot identities, and generation URLs.
+Detail validation checks the current or historical fence, field placement
+by kind, and canonical tagged props in usage and input-change records.
+`ReadError::Contract` carries a typed `ContractViolation`. Version failures
+print the supplied integer or explain its absence.
+
+Instance, slot, and props digest recomputation needs the shared material
+key implementation. Schema checks for recorded usage props and validation of
+usage references, ownership graphs, source locations, and view ordering
+need the index and composition context. These reader checks are in progress;
+the structural detail reader does not substitute guessed context.
 
 `inference::infer` builds closed schemas from own and merged variant props.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`

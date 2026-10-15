@@ -7,6 +7,7 @@
     {
       "code": "html-element",
       "message": "forbidden element script",
+      "path": "specs/home.screen.html",
       "line": 4,
       "column": 7
     }

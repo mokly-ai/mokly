@@ -71,7 +71,14 @@ pub(crate) fn validate(records: &[FolderRecord], entries: &[ModelEntry]) -> Vec<
                 )
             })
         {
-            issues.push(Issue::new(Code::InvalidFolder,format!("{at}: title cannot be set for a folder whose own page is a screen or component; set the entry's title")).at(record.source.clone()));
+            let rule = "title cannot be set for a folder whose own page is a screen or component";
+            issues.push(
+                Issue::new(
+                    Code::InvalidFolder,
+                    format!("{at}: {rule}; set the entry's title"),
+                )
+                .at(record.source.clone()),
+            );
         }
         for slug in record
             .order

@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-element",
-      "message": "invalid or reserved component element mokly-button"
+      "message": "invalid or reserved component element mokly-button",
+      "path": "specs/components/button.component.html",
+      "line": 1,
+      "column": 1
     }
   ]
 }

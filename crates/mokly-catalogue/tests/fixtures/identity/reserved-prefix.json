@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "invalid-path",
-      "message": "specs/mokly-generated.screen.html: path \"mokly-generated\" is not a valid path"
+      "message": "specs/mokly-generated.screen.html: path \"mokly-generated\" is not a valid path",
+      "path": "specs/mokly-generated.screen.html",
+      "line": 1,
+      "column": 1
     }
   ]
 }

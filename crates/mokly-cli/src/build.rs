@@ -42,6 +42,7 @@ pub enum BuildError {
 }
 
 /// Build command service, consumed through `dyn BuildService` at the CLI root.
+#[cfg_attr(test, unimock::unimock(api = BuildServiceMock))]
 pub trait BuildService: Send + Sync {
     /// Discover and validate the catalogue in memory, with no file writes.
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError>;
@@ -85,3 +86,7 @@ impl BuildService for CatalogueBuild {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/build_tests.rs"]
+mod build_tests;

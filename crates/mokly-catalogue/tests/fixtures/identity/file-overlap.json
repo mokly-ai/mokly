@@ -5,7 +5,8 @@
         "dir": "specs"
       },
       {
-        "dir": "./specs"
+        "dir": ".",
+        "files": ["specs/**/*.screen.html"]
       }
     ]
   },
@@ -15,7 +16,10 @@
   "errors": [
     {
       "code": "config-invalid",
-      "message": "file specs/home.screen.html is matched by roots[0] and roots[1]"
+      "message": "file specs/home.screen.html is matched by roots[0] and roots[1]",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

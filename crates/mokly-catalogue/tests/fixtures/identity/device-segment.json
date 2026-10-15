@@ -5,7 +5,11 @@
   },
   "errors": [
     {
-      "code": "invalid-segment"
+      "code": "invalid-segment",
+      "message": "specs/LPT1.screen.html: file name \"LPT1\" is not a valid path segment; use letters, digits, hyphens and underscores",
+      "path": "specs/LPT1.screen.html",
+      "line": 1,
+      "column": 1
     }
   ]
 }

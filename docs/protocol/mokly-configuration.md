@@ -143,8 +143,9 @@ Configuration accepts only the declared fields. An undeclared field fails with
 has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
-- path traversal, and a `dir`, `renderer`, `postcss`, package root, or local
-  stylesheet outside `repoRoot`, including through symlinks;
+- path traversal: a `dir`, `renderer`, `postcss`, package root, or local
+  stylesheet that resolves outside `repoRoot`, including through symlinks;
+  `..` segments that resolve inside `repoRoot` are accepted;
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
@@ -212,9 +213,10 @@ the loader boundary; public files use the
 `moduleResolution` has no defaults beyond esbuild's platform behaviour in the
 [sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
 directories containing `package.json`; their `node_modules` directories
-supplement consumer lookup. Aliases accept bare package specifiers only.
-Conditions, package fields, and extensions are ordered, deduplicated lists,
-while loader keys are extensions and values are supported JavaScript-safe
+supplement consumer lookup. Alias keys and targets accept bare package
+specifiers only. Conditions, package fields, and extensions are ordered,
+deduplicated lists: duplicate values are removed and the first occurrence
+keeps its position. Loader keys are extensions and values are supported JavaScript-safe
 esbuild loader names. The `css` loader is rejected for every extension because
 it would emit an undelivered sibling stylesheet. React and React DOM resolve
 from the consumer through the sidecar's bundle, so these options cannot

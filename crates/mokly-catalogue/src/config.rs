@@ -1,6 +1,6 @@
 //! Upward config lookup and confined source-tree path resolution.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
@@ -31,35 +31,59 @@ impl ConfigLoader for Loader {
         } else {
             find(self.tree.as_ref(), cwd)?
         };
+        let lexical_file = file.clone();
+        let file = match self.tree.project(&file) {
+            Ok(Some(node)) if node.kind == FileKind::File => node.identity,
+            Ok(None) => return Err(invalid(format!("{}: ENOENT", relative(&file, cwd)))),
+            Ok(Some(_)) => {
+                return Err(invalid(format!(
+                    "{} must be a regular JSON file",
+                    relative(&file, cwd)
+                )));
+            }
+            Err(error) => {
+                return Err(invalid(format!(
+                    "{}: {}",
+                    relative(&file, cwd),
+                    error.code()
+                )));
+            }
+        };
         let bytes = match self.tree.read(&file) {
             Ok(bytes) => bytes,
-            Err(error) => return Err(invalid(format!("{}: {}", file.display(), error.code()))),
+            Err(error) => {
+                return Err(invalid(format!(
+                    "{}: {}",
+                    relative(&file, cwd),
+                    error.code()
+                )));
+            }
         };
         let text = match String::from_utf8(bytes) {
             Ok(text) => text,
             Err(_) => {
                 return Err(invalid(format!(
                     "{}: configuration must be UTF-8 JSON",
-                    file.display()
+                    relative(&lexical_file, cwd)
                 )));
             }
         };
-        let display = file
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("mokly.config.json");
-        let input = parse(&text, display)?;
-        let lexical_file = file.clone();
-        let file = match self.tree.project(&file) {
-            Ok(Some(node)) if node.kind == FileKind::File => node.identity,
-            Ok(_) => {
-                return Err(invalid(format!(
-                    "{} must be a regular JSON file",
-                    file.display()
-                )));
-            }
-            Err(error) => return Err(invalid(format!("{}: {}", file.display(), error.code()))),
-        };
+        let declared_root = serde_json::from_str::<serde_json::Value>(&text)
+            .ok()
+            .and_then(|value| {
+                value
+                    .get("repoRoot")
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::to_owned)
+            });
+        let lexical_root = normalize(
+            &file
+                .parent()
+                .unwrap_or(cwd)
+                .join(declared_root.as_deref().unwrap_or(".")),
+        );
+        let display = relative(&lexical_file, &lexical_root);
+        let input = parse(&text, &display)?;
         let directory = file.parent().unwrap_or(cwd);
         let repository = normalize(&directory.join(input.repo_root.as_deref().unwrap_or(".")));
         let mut identities = BTreeMap::new();
@@ -76,8 +100,9 @@ impl ConfigLoader for Loader {
             }]
         });
         let mut projected = Vec::new();
+        let mut directories = BTreeSet::new();
         for root in configured {
-            if traversal(&root.dir) {
+            if invalid_path_text(&root.dir) {
                 return Err(invalid(format!(
                     "roots[{}].dir: path traversal {}",
                     projected.len(),
@@ -85,6 +110,13 @@ impl ConfigLoader for Loader {
                 )));
             }
             let path = normalize(&directory.join(&root.dir));
+            if !directories.insert(path.clone()) {
+                return Err(invalid(format!(
+                    "roots[{}].dir: duplicate directory {}",
+                    projected.len(),
+                    root.dir
+                )));
+            }
             let node = project(
                 self.tree.as_ref(),
                 &path,
@@ -137,7 +169,13 @@ fn find(tree: &dyn SourceTree, cwd: &Path) -> Result<PathBuf> {
         match tree.project(&file) {
             Ok(Some(node)) if node.kind == FileKind::File => return Ok(file),
             Ok(_) => {}
-            Err(error) => return Err(invalid(format!("{}: {}", file.display(), error.code()))),
+            Err(error) => {
+                return Err(invalid(format!(
+                    "{}: {}",
+                    relative(&file, cwd),
+                    error.code()
+                )));
+            }
         }
         if !directory.pop() {
             return Err(CatalogueError::ConfigMissing { searched });
@@ -161,6 +199,10 @@ fn project(
         }
         Err(error) => Err(invalid(format!("{display}: {}", error.code()))),
     }
+}
+
+pub(crate) fn invalid_path_text(path: &str) -> bool {
+    path.contains('\\') || path.chars().any(char::is_control)
 }
 
 pub(crate) fn traversal(path: &str) -> bool {

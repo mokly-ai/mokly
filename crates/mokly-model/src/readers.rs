@@ -5,8 +5,10 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use thiserror::Error;
 
+use crate::detail_validation;
 use crate::public_detail::{EntryDetailV1, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
+use crate::read_contract::ContractViolation;
 use crate::{public_validation, versions};
 
 /// Typed public read failure.
@@ -14,7 +16,7 @@ use crate::{public_validation, versions};
 pub enum ReadError {
     /// Unsupported or missing format number, checked before payload fields.
     #[error(
-        "[mokly-model/version] {boundary} requires schemaVersion {expected}; received {received:?}"
+        "[mokly-model/version] {boundary} requires schemaVersion {expected}; received {received}", received = version_text(.received)
     )]
     Version {
         /// Versioned boundary name.
@@ -38,7 +40,7 @@ pub enum ReadError {
         /// Versioned boundary name.
         boundary: &'static str,
         /// Validation detail.
-        message: &'static str,
+        message: ContractViolation,
     },
 }
 
@@ -52,20 +54,7 @@ pub fn index(text: &str) -> Result<CatalogueReadModel, ReadError> {
 /// Decode an entry detail after its v1 gate.
 pub fn detail(text: &str) -> Result<EntryDetailV1, ReadError> {
     let detail: EntryDetailV1 = decode(text, "entry detail", versions::ENTRY_DETAIL)?;
-    let current = detail.deployment_id.is_some()
-        && detail.revision.is_some()
-        && detail.generation.is_none()
-        && detail.entry.snapshot_id.is_none();
-    let removed = detail.deployment_id.is_none()
-        && detail.revision.is_none()
-        && detail.generation.is_some()
-        && detail.entry.snapshot_id.is_some();
-    if !current && !removed {
-        return Err(ReadError::Contract {
-            boundary: "entry detail",
-            message: "current and removed fences are exclusive",
-        });
-    }
+    detail_validation::validate(&detail)?;
     Ok(detail)
 }
 
@@ -75,7 +64,7 @@ pub fn live(text: &str) -> Result<LiveDescriptorV3, ReadError> {
     if live.render.url != "/mokly-viewer/components/render" || live.render.token.is_empty() {
         return Err(ReadError::Contract {
             boundary: "live descriptor",
-            message: "invalid render capability",
+            message: ContractViolation::RenderCapability,
         });
     }
     Ok(live)
@@ -109,7 +98,7 @@ fn decode<T: DeserializeOwned + Serialize>(
     if !known_fields(&value, &encoded) {
         return Err(ReadError::Contract {
             boundary,
-            message: "unknown or misplaced payload field",
+            message: ContractViolation::UnknownField,
         });
     }
     Ok(decoded)
@@ -140,3 +129,14 @@ fn known_fields(input: &Value, encoded: &Value) -> bool {
 #[cfg(test)]
 #[path = "_tests_/public_reader_tests.rs"]
 mod public_reader_tests;
+
+#[cfg(test)]
+#[path = "_tests_/public_contract_tests.rs"]
+mod public_contract_tests;
+
+fn version_text(received: &Option<u64>) -> String {
+    received.map_or_else(
+        || "missing or not an integer".into(),
+        |number| number.to_string(),
+    )
+}

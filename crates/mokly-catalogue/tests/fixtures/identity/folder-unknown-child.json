@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "unknown-folder-child",
-      "message": "specs/a/_folder.json: order names missing, which is not a child of a"
+      "message": "specs/a/_folder.json: order names missing, which is not a child of a",
+      "path": "specs/a/_folder.json",
+      "line": 1,
+      "column": 1
     }
   ]
 }

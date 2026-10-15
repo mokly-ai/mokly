@@ -790,6 +790,7 @@ dependencies = [
  "html5gum",
  "insta",
  "jsonschema",
+ "libc",
  "mokly-model",
  "mokly-source-interface",
  "pulldown-cmark",
@@ -816,6 +817,7 @@ dependencies = [
  "terminal_size",
  "thiserror",
  "unicode-width",
+ "unimock",
  "url",
 ]
 
@@ -839,7 +841,6 @@ dependencies = [
  "ryu-js",
  "serde",
  "serde_json",
- "sha2",
  "thiserror",
  "ts-rs",
 ]
@@ -874,6 +875,7 @@ dependencies = [
 name = "mokly-source-interface"
 version = "0.14.0"
 dependencies = [
+ "libc",
  "thiserror",
  "unimock",
 ]

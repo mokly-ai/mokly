@@ -7,6 +7,7 @@
     {
       "code": "html-front-matter",
       "message": "missing front matter block",
+      "path": "specs/home.screen.html",
       "line": 1,
       "column": 1
     }

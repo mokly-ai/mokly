@@ -6,7 +6,10 @@
   "errors": [
     {
       "code": "html-front-matter",
-      "message": "unknown field props"
+      "message": "unknown field props",
+      "path": "specs/statement.page.html",
+      "line": 3,
+      "column": 1
     }
   ]
 }

@@ -1,6 +1,7 @@
 //! Stable source-attributed catalogue diagnostics.
 
 use mokly_model::catalogue::SourceLocation;
+use serde_json::Value;
 
 /// Stable catalogue diagnostic code. Automation can branch on this enum.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -149,10 +150,12 @@ impl Warning {
     pub fn printed_subject(&self) -> String {
         match &self.subject {
             WarningSubject::Route(path) => path.clone(),
-            WarningSubject::Entry(path) => format!("entry {path:?}"),
-            WarningSubject::Component(path) => format!("component {path:?}"),
-            WarningSubject::Folder(path) => format!("folder {path:?}"),
-            WarningSubject::Configuration(path) => format!("configuration {path:?}"),
+            WarningSubject::Entry(path) => format!("entry {}", Value::String(path.clone())),
+            WarningSubject::Component(path) => format!("component {}", Value::String(path.clone())),
+            WarningSubject::Folder(path) => format!("folder {}", Value::String(path.clone())),
+            WarningSubject::Configuration(path) => {
+                format!("configuration {}", Value::String(path.clone()))
+            }
         }
     }
 }
@@ -168,3 +171,7 @@ pub fn normalize_warnings(warnings: &mut Vec<Warning>) {
     });
     warnings.dedup();
 }
+
+#[cfg(test)]
+#[path = "_tests_/diagnostic_tests.rs"]
+mod diagnostic_tests;

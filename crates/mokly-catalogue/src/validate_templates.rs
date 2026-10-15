@@ -1,6 +1,6 @@
 //! Validate shared HTML templates and statically known logical links.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::catalogue::EntryContent;
 use mokly_model::prop_schema::PropSchema;
@@ -9,10 +9,13 @@ use crate::diagnostic::Issue;
 use crate::preparation::PreparedCatalogue;
 use crate::{links, registry, templates};
 
-pub(crate) fn validate(prepared: &mut PreparedCatalogue) -> Vec<Issue> {
+pub(crate) fn validate(prepared: &mut PreparedCatalogue, failed: &BTreeSet<String>) -> Vec<Issue> {
     let mut issues = Vec::new();
     let mut edges = BTreeMap::new();
     for entry in &prepared.model.entries {
+        if entry.metadata.variant_of.is_some() || failed.contains(&entry.metadata.path) {
+            continue;
+        }
         let parent = entry
             .metadata
             .variant_of
@@ -41,7 +44,12 @@ pub(crate) fn validate(prepared: &mut PreparedCatalogue) -> Vec<Issue> {
             {
                 edges.insert(entry.metadata.path.clone(), result.components);
             }
-            issues.extend(links::html(template, entry, &prepared.model.entries));
+            issues.extend(links::html(
+                template,
+                entry,
+                &prepared.model.entries,
+                &prepared.elements,
+            ));
         }
         if let Some(body) = prepared.documents.get(&entry.metadata.path) {
             issues.extend(links::markdown(body, entry, &prepared.model.entries));

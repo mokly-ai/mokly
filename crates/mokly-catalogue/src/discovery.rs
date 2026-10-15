@@ -76,7 +76,7 @@ pub struct SourceFile {
 }
 
 /// Resolved inventory, reused by every later stage of one pass.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Inventory {
     /// Sorted root-glob matches, including excluded files.
     pub files: Vec<SourceFile>,

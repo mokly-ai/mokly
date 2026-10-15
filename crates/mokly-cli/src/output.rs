@@ -107,10 +107,21 @@ impl Style {
 
     /// Render a typed command category with safe variable detail.
     pub fn error(&self, code: Code, message: &str, redactor: &Redactor) -> String {
+        self.error_text(code, message, redactor, false)
+    }
+
+    /// Present the structural continuation lines of a catalogue identity diagnostic.
+    pub(crate) fn error_lines(&self, code: Code, message: &str, redactor: &Redactor) -> String {
+        self.error_text(code, message, redactor, true)
+    }
+
+    fn error_text(&self, code: Code, message: &str, redactor: &Redactor, lines: bool) -> String {
         let fixed_upload = matches!(code, Code::UploadCancelled | Code::UploadTransport);
         let (code, headline, hint) = code.presentation();
         let message = if fixed_upload {
             format!("{headline} {hint}")
+        } else if lines {
+            redactor.safe_lines(message)
         } else {
             redactor.safe(message)
         };
@@ -134,7 +145,7 @@ impl Style {
         };
         let mut lines = vec![format!("{glyph} {headline}  {tag}")];
         if let Some(detail) = detail {
-            lines.push(format!("  {detail}"));
+            lines.extend(detail.split('\n').map(|line| format!("  {line}")));
         }
         lines.push(format!("  {hint}"));
         lines

@@ -195,7 +195,11 @@ impl Checker<'_> {
             }) {
                 self.result.warnings.push(Warning {
                     code: "html-foster-parented",
-                    subject: WarningSubject::Entry(self.path.into()),
+                    subject: if self.slots.is_some() {
+                        WarningSubject::Component(self.path.into())
+                    } else {
+                        WarningSubject::Entry(self.path.into())
+                    },
                     message: format!("component element {name} is moved out of a table"),
                 });
             }

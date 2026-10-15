@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use serde_json::{Number, Value};
+use serde_json::Number;
 use thiserror::Error;
 
 use crate::canonical::compare_utf16;
@@ -30,37 +30,47 @@ pub enum WireError {
     Data {
         /// Exact JSON Pointer.
         path: String,
-        /// Plain-data validation detail.
-        message: String,
+        /// Typed plain-data validation failure.
+        message: DataViolation,
     },
+}
+
+/// Plain-data rule violated by a tagged value.
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
+pub enum DataViolation {
+    /// Nested data exceeds the profile's depth.
+    #[error("exceeds 64 nesting levels")]
+    Depth,
+    /// Data exceeds the profile's traversal budget.
+    #[error("exceeds 10000 visited nodes")]
+    Nodes,
+    /// An object declares a forbidden property name.
+    #[error("reserved property name")]
+    ReservedKey,
 }
 
 /// Decode wire props, enforcing canonical number and object spellings.
 pub fn decode(props: &ComponentWireProps) -> Result<Props, WireError> {
-    let mut visited = 0;
-    let props: Props = props
+    let mut visited = 1;
+    props
         .iter()
         .map(|(key, value)| {
             let path = limits::pointer("", key);
-            decode_value(value, &path, 0, &mut visited).map(|value| (key.clone(), value))
+            key_allowed(key, &path)?;
+            decode_value(value, &path, 1, &mut visited).map(|value| (key.clone(), value))
         })
-        .collect::<Result<_, _>>()?;
-    let value: Value = match serde_json::to_value(&props) {
-        Ok(value) => value,
-        Err(error) => {
-            return Err(WireError::Data {
-                path: String::new(),
-                message: error.to_string(),
-            });
-        }
-    };
-    if let Err((path, message)) = limits::check(&value, true) {
-        return Err(WireError::Data {
-            path,
-            message: message.into(),
-        });
+        .collect()
+}
+
+fn key_allowed(key: &str, path: &str) -> Result<(), WireError> {
+    if matches!(key, "__proto__" | "constructor" | "prototype") {
+        Err(WireError::Data {
+            path: path.into(),
+            message: DataViolation::ReservedKey,
+        })
+    } else {
+        Ok(())
     }
-    Ok(props)
 }
 
 fn decode_value(
@@ -69,13 +79,19 @@ fn decode_value(
     depth: usize,
     visited: &mut usize,
 ) -> Result<DataValue, WireError> {
-    *visited += 1;
-    if depth > 64 || *visited > 10_000 {
+    if depth > limits::MAX_DEPTH {
         return Err(WireError::Data {
             path: path.into(),
-            message: "plain data exceeds the depth or visit limit".into(),
+            message: DataViolation::Depth,
         });
     }
+    if *visited == limits::MAX_NODES {
+        return Err(WireError::Data {
+            path: path.into(),
+            message: DataViolation::Nodes,
+        });
+    }
+    *visited += 1;
     match value {
         ComponentWireValue::Null(_) => Ok(DataValue::Null),
         ComponentWireValue::Boolean(_, value) => Ok(DataValue::Boolean(*value)),
@@ -92,6 +108,12 @@ fn decode_value(
             };
             if text != &canonical {
                 return Err(WireError::Number { path: path.into() });
+            }
+            if text != "-0"
+                && number.abs() <= 9_007_199_254_740_991.0
+                && let Ok(integer) = text.parse::<i64>()
+            {
+                return Ok(DataValue::Number(Number::from(integer)));
             }
             match Number::from_f64(number) {
                 Some(number) => Ok(DataValue::Number(number)),
@@ -115,6 +137,7 @@ fn decode_value(
             let mut previous: Option<&str> = None;
             let mut result = BTreeMap::new();
             for (key, value) in values {
+                key_allowed(key, &limits::pointer(path, key))?;
                 if previous.is_some_and(|previous| !compare_utf16(previous, key).is_lt()) {
                     return Err(WireError::Keys {
                         path: limits::pointer(path, key),

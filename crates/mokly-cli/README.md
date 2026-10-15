@@ -28,7 +28,10 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust core. The binary owns catalogue work and
-file writes.
+file writes. Catalogue counts include variants. Shared-body warnings name
+the parent once. Identity diagnostics keep their location continuation
+lines in both plain and rich output. Configuration errors use one code tag
+and repository-relative source locations.
 
 ## Quick Start
 

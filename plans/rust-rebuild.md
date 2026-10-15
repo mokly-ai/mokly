@@ -643,6 +643,7 @@ Evidence: `.context/rust-rebuild/sweeps/m4.md` and
 `.context/rust-rebuild/delegation/m4/report-1.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m4/report-2.md` and
 `.context/rust-rebuild/delegation/m4/merge-decisions.md`.
+Review 1 fixes and evidence: `.context/rust-rebuild/delegation/m4/report-3.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 
@@ -662,7 +663,8 @@ from Milestone 12.
       their scopes resolved, and the ownership annotations the comparison
       relies on.
 - [ ] Implement the render cache: content keys, the byte bound, eviction, and
-      the source tree trait over the working tree and Git trees; the `build`
+      reads through the existing `mokly-source-interface` for working and Git
+      trees; the `build`
       validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
@@ -689,6 +691,10 @@ without JavaScript.
       routes, the live descriptor, the event stream with the revision as the
       message id and the deployment id as its data, shutdown ordering, and
       the terminal output contract in the CLI.
+- [ ] Complete context-aware usage readers: validate recorded props against
+      component schemas; recompute instance and slot keys and `propsKey` with
+      the shared material key; validate usage references, ownership cycles,
+      source locations, duplicate records, root ranges, and view ordering.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
@@ -741,6 +747,10 @@ renders again.
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Extend the definition-provider boundary for `describe` handles,
+      declared controls, story control hints, slot handles, excluded non-data
+      prop keys, and authoring diagnostics; emit `props-not-data` after path
+      derivation names the entry and key.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -872,6 +882,7 @@ Tags: ui
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

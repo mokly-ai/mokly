@@ -7,6 +7,15 @@ use crate::wire_decode::decode;
 use crate::wire_props::{ComponentWireProps, encode};
 
 #[test]
+fn integer_props_keep_their_json_kind_on_a_wire_round_trip() {
+    let props: Props = serde_json::from_value(
+        json!({"n":3,"negative":-7,"f":1.5,"zero":0,"edge":9_007_199_254_740_991_i64}),
+    )
+    .unwrap();
+    assert_eq!(decode(&encode(&props)).unwrap(), props);
+}
+
+#[test]
 fn tagged_props_round_trip_negative_zero_and_utf16_tuple_keys() {
     let props: Props = serde_json::from_value(
         json!({"negative":-0.0,"nested":{"10":2,"2":1,"array":[null,true,"text"]}}),

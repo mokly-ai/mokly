@@ -7,7 +7,10 @@
   "errors": [
     {
       "code": "duplicate-index",
-      "message": "directory specs/a has two index documents: README.md and index.md"
+      "message": "directory specs/a has two index documents: README.md and index.md",
+      "path": null,
+      "line": null,
+      "column": null
     }
   ]
 }

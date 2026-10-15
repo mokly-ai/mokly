@@ -22,16 +22,14 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
         Ok(value) => value,
         Err(error) => {
             return Err(CatalogueError::Config(
-                Issue::new(
-                    Code::ConfigInvalid,
-                    format!("{path}: invalid JSON: {error}"),
-                )
-                .at(mokly_model::catalogue::SourceLocation {
-                    path: path.into(),
-                    line: error.line(),
-                    column: error.column(),
-                    export: None,
-                }),
+                Issue::new(Code::ConfigInvalid, format!("invalid JSON: {error}")).at(
+                    mokly_model::catalogue::SourceLocation {
+                        path: path.into(),
+                        line: error.line(),
+                        column: error.column(),
+                        export: None,
+                    },
+                ),
             ));
         }
     };

@@ -5,16 +5,16 @@ use serde_json::{Value, json};
 use crate::canonical;
 use crate::readers::{ReadError, detail, index};
 
-fn empty_index() -> Value {
+pub(super) fn empty_index() -> Value {
     json!({"schemaVersion":7,"identity":{"id":"a".repeat(64),"title":"Mokly"},"deploymentId":"b".repeat(64),"revision":0,
         "changesStatus":"disabled","comparisonUrl":null,"tree":[],"screens":[],"pages":[],"documents":[],"useCases":[],"components":[],"removedEntries":[]})
 }
 
-fn metadata(path: &str) -> Value {
+pub(super) fn metadata(path: &str) -> Value {
     json!({"path":path,"title":"Home","tags":[],"details":{"description":"","relatedDocs":[],"sourcePath":"specs/home.screen.html"},"changes":{"status":"disabled"}})
 }
 
-fn screen(path: &str, parent: Option<&str>) -> Value {
+pub(super) fn screen(path: &str, parent: Option<&str>) -> Value {
     let mut value = metadata(path);
     value["kind"] = json!("screen");
     value["colorSchemes"] = json!(["light"]);

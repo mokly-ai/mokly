@@ -14,9 +14,6 @@ use crate::error::CatalogueError;
 #[test]
 fn root_projection_errors_name_the_repository_relative_path_and_code() {
     let tree = Arc::new(Unimock::new((
-        SourceTreeMock::read
-            .next_call(matching!(_))
-            .returns(Ok(b"{}".to_vec())),
         SourceTreeMock::project
             .next_call(matching!((path) if *path==Path::new("/repo/mokly.config.json")))
             .returns(Ok(Some(Node {
@@ -24,6 +21,9 @@ fn root_projection_errors_name_the_repository_relative_path_and_code() {
                 kind: FileKind::File,
                 lexical_kind: FileKind::File,
             }))),
+        SourceTreeMock::read
+            .next_call(matching!((path) if *path == Path::new("/repo/mokly.config.json")))
+            .returns(Ok(b"{}".to_vec())),
         SourceTreeMock::project
             .next_call(matching!((path) if *path==Path::new("/repo")))
             .returns(Ok(Some(Node {
