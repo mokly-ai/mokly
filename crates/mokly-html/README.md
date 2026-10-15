@@ -25,8 +25,10 @@ has the root range `r-0` and no root marker.
 
 The parser uses a package-owned arena and disables scripting. Composition
 re-parses its output with the same HTML5 algorithm. Usage and comparison use
-that browser tree. Displaced instance regions lose their ownership and report
-`html-foster-parented` with the component element and parent.
+that browser tree. Split instance, slot, and ignore regions lose their regions.
+A re-owned instance with a colliding identity also loses its region. The
+`html-foster-parented` warning names the component element and parent; shared
+body warnings use the parent entry once across its variants.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 `serialize::html` writes instance and slot comments for the inspector.

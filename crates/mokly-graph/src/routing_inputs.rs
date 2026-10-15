@@ -120,6 +120,12 @@ fn scan(
     while let Some(node) = nodes.pop() {
         if let Node::Element(element) = node {
             for attribute in &element.attributes {
+                if matches!(attribute.name.as_str(), "href" | "data-nav-href" | "to")
+                    && attribute.value.contains("{{")
+                {
+                    *opaque = true;
+                    continue;
+                }
                 let logical = if attribute.name == "to" {
                     Some(attribute.value.as_str())
                 } else if matches!(attribute.name.as_str(), "href" | "data-nav-href") {
@@ -128,11 +134,7 @@ fn scan(
                     None
                 };
                 if let Some(logical) = logical {
-                    if logical.contains("{{") {
-                        *opaque = true;
-                    } else {
-                        target(logical, source, catalogue, targets);
-                    }
+                    target(logical, source, catalogue, targets);
                 }
             }
             nodes.extend(element.children);

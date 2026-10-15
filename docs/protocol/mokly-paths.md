@@ -163,7 +163,10 @@ duplicate check runs after collapse and declared paths, so two slug-less
 entries in one module, a file beside a same-named directory, and two roots
 mapping onto one place all report it. `moved-link-target` is emitted instead
 of `unknown-link-target` when the [move pairing](./mokly-moves.md) knows the
-new path. Folder record diagnostics live in the
+new path. HTML and Markdown link diagnostics use the link's one-based line
+and column. The CLI inserts the source code after that location under the
+[terminal error format](./mokly-terminal-errors.md#plain-compatibility).
+Folder record diagnostics live in the
 [folder contract](./mokly-folders.md#diagnostics); export collection
 diagnostics live in the [entry module contract](./mokly-entry-modules.md).
 

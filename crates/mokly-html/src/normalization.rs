@@ -102,12 +102,18 @@ fn reparse(
                 .iter()
                 .find(|(_, element)| &element.path == path)
                 .map_or(path.as_str(), |(name, _)| name.as_str());
+            let subject = entry
+                .metadata
+                .variant_of
+                .as_ref()
+                .unwrap_or(&entry.metadata.path)
+                .clone();
             Some(Warning {
                 code: "html-foster-parented",
                 subject: if matches!(entry.content, EntryContent::Component { .. }) {
-                    WarningSubject::Component(entry.metadata.path.clone())
+                    WarningSubject::Component(subject)
                 } else {
-                    WarningSubject::Entry(entry.metadata.path.clone())
+                    WarningSubject::Entry(subject)
                 },
                 message: format!(
                     "component element {name} is moved out of <{}> by HTML parsing",

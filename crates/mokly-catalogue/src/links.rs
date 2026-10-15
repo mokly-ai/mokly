@@ -1,13 +1,19 @@
 //! Validate static logical targets before rendering resolves document fragments.
 
 use html5gum::{DefaultEmitter, Token, Tokenizer};
-use mokly_model::catalogue::{EntryContent, ModelEntry};
+use mokly_model::catalogue::{ModelEntry, SourceLocation};
 use pulldown_cmark::{Event, Parser, Tag};
 
 use crate::diagnostic::Issue;
 use crate::locations::at;
 use crate::relationships;
 use crate::template_types::{ElementRegistry, Template};
+
+/// A logical destination retains its coordinate before the full source is released.
+pub(crate) struct MarkdownTarget {
+    value: String,
+    location: SourceLocation,
+}
 
 pub(crate) fn html(
     template: &Template,
@@ -51,18 +57,33 @@ pub(crate) fn html(
     issues
 }
 
-pub(crate) fn markdown(body: &str, entry: &ModelEntry, entries: &[ModelEntry]) -> Vec<Issue> {
-    if !matches!(entry.content, EntryContent::Document { .. }) {
-        return Vec::new();
-    }
-    let mut issues = Vec::new();
-    for event in Parser::new(body) {
+/// Capture link offsets while the original Markdown source is available.
+pub(crate) fn markdown(source: &str, body_offset: usize, path: &str) -> Vec<MarkdownTarget> {
+    let mut targets = Vec::new();
+    for (event, range) in Parser::new(&source[body_offset..]).into_offset_iter() {
         if let Event::Start(Tag::Link { dest_url, .. } | Tag::Image { dest_url, .. }) = event
             && let Some(target) = dest_url.strip_prefix("mock:")
-            && let Some(issue) = relationships::link(target, &entry.metadata, entries)
         {
-            issues.push(issue);
+            targets.push(MarkdownTarget {
+                value: target.into(),
+                location: at(path, source, body_offset + range.start),
+            });
         }
     }
-    issues
+    targets
+}
+
+/// Resolve captured targets after the complete entry inventory is prepared.
+pub(crate) fn markdown_issues(
+    targets: &[MarkdownTarget],
+    entry: &ModelEntry,
+    entries: &[ModelEntry],
+) -> Vec<Issue> {
+    targets
+        .iter()
+        .filter_map(|target| {
+            relationships::link(&target.value, &entry.metadata, entries)
+                .map(|issue| issue.at(target.location.clone()))
+        })
+        .collect()
 }

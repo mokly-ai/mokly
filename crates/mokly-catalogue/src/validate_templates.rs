@@ -9,7 +9,11 @@ use crate::diagnostic::Issue;
 use crate::preparation::PreparedCatalogue;
 use crate::{links, registry, templates};
 
-pub(crate) fn validate(prepared: &mut PreparedCatalogue, failed: &BTreeSet<String>) -> Vec<Issue> {
+pub(crate) fn validate(
+    prepared: &mut PreparedCatalogue,
+    failed: &BTreeSet<String>,
+    markdown_targets: &BTreeMap<String, Vec<links::MarkdownTarget>>,
+) -> Vec<Issue> {
     let mut issues = Vec::new();
     let mut edges = BTreeMap::new();
     for entry in &prepared.model.entries {
@@ -52,8 +56,12 @@ pub(crate) fn validate(prepared: &mut PreparedCatalogue, failed: &BTreeSet<Strin
                 &prepared.elements,
             ));
         }
-        if let Some(body) = prepared.documents.get(&entry.metadata.path) {
-            issues.extend(links::markdown(body, entry, &prepared.model.entries));
+        if let Some(targets) = markdown_targets.get(&entry.metadata.source.path) {
+            issues.extend(links::markdown_issues(
+                targets,
+                entry,
+                &prepared.model.entries,
+            ));
         }
     }
     issues.extend(registry::cycles(&edges, &prepared.model.entries));
