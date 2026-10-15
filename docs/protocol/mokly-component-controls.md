@@ -217,14 +217,15 @@ response uses `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and
 a fixed validated MIME type.
 
 A publication with a new revision invalidates the old revision's requests: a
-request that carries an older revision returns 409, queued work of the old state
-is discarded, and the shell keeps the preview pending and retries with the
-installed revision after it adopts the new state; it shows the failure only when
-that retry fails. The shell checks each field and the props as a whole before it
-renders, so a 400 after those checks pass shows `These values are not valid
-together.` Shutdown stops admission, rejects queued work, cancels active
-renders, and releases the memory store. Controls cannot delay a watched rebuild,
-a publication, or a comparison generation.
+request that carries an older revision returns 409, and queued work of the old
+state is discarded. On a 409 the shell keeps the preview pending, refreshes the
+index once unless a refresh is loading, and retries with the installed revision
+after it adopts the new state, also while the event stream is down; it shows the
+failure only when that retry fails. The shell checks each field and the props as
+a whole before it renders, so a 400 after those checks pass shows `These values
+are not valid together.` Shutdown stops admission, rejects queued work, cancels
+active renders, and releases the memory store. Controls cannot delay a watched
+rebuild, a publication, or a comparison generation.
 
 ## Verification
 

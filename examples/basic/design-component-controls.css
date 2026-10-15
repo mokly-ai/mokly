@@ -91,6 +91,23 @@
   position: absolute;
   right: 0;
 }
+/*
+ * On mobile the inspector sheet covers the bottom of the preview, so the status
+ * is a pill at the top of the preview stage, above the open sheet.
+ */
+.mbk-shell--mobile .ce-controls-preview {
+  position: static;
+}
+.mbk-shell--mobile .ce-preview-status {
+  background: var(--chrome-surface);
+  border-radius: 999px;
+  bottom: auto;
+  box-shadow: var(--chrome-shadow-sheet);
+  margin: 0 auto;
+  padding: 3px 9px;
+  top: 8px;
+  width: max-content;
+}
 .ce-pending-dot {
   background: var(--mbk-sage-deep);
   border-radius: 50%;
