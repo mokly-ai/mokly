@@ -95,3 +95,5 @@ mod impact_validation;
 mod use_case_impact;
 
 pub mod source_failures;
+
+mod git_prefetch;

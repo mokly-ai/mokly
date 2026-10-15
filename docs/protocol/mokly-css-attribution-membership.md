@@ -55,13 +55,14 @@ analysis fills it.
   parse failure, or an analysis failure, and `excluded` on the one record of
   a stylesheet whose changed rules all match nothing. For one selector of one
   rule on one view, `unresolved` takes precedence over `matched`.
-- For linked CSS, each match belongs to the innermost containing component
+- Each linked-CSS match belongs to the innermost containing component
   changed by that rule. Emit one `{ kind: "component", path }` record for
   each such owner. Emit `{ kind: "entry" }` only for matches outside every
   changed component. A selector can have component and entry records on the
   same view. Unresolved rules, parse failures, and excluded records have
-  only the entry owner. Inline rules instead use the single-component
-  containment rule of [style ownership](./mokly-comparison.md#style-ownership).
+  only the entry owner. Ownerless head rules use the same own-page proof,
+  with matches restricted to their input owner under
+  [style ownership](./mokly-comparison.md#style-ownership).
 - Records of equal rules in different stylesheets stay separate records,
   because `stylesheet` differs; the rule identity joins their proof, not their
   records.
@@ -109,9 +110,9 @@ changed-component set from the selected entry alone.
 - Records are sorted and unique as stated above. A stylesheet with a
   `matched` or `unresolved` record on a view has no `excluded` record on that
   view.
-- A linked-rule component owner names a registered component whose own pages
-  keep at least one match after nested filtering. An inline-rule owner
-  instead requires the recorded single-component containment proof. The producer checks
+- A component owner names a registered component whose own pages keep a
+  match for the same rule identity after nested filtering. Inline slot
+  matches follow their input owner. The producer checks
   each owner against the recorded own-page match sets, never against the
   result's own rows and never against consumer-instance matches.
 - An `unresolved` record is owned by the entry.
@@ -126,7 +127,9 @@ changed-component set from the selected entry alone.
 
 Both sides' composed documents come from the render cache. A comparison-scoped
 route map reuses resource digests, byte proofs, and changed-byte state. Public
-asset reads do not enter the unbounded private source snapshot. Resource bytes
+asset reads and planning digests do not enter the private source snapshot.
+Planning batches the generation's known read set before digest reads. Opaque
+resources use streamed digests when they exceed the blob read budget. Resource bytes
 and content-keyed stylesheet diffs have byte-bounded caches; eviction changes
 work only. The analysis renders no document. Parsed stylesheets are cached by content hash with a byte bound, so a
 stylesheet shared across paths and sides parses once, and eviction changes

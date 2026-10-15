@@ -40,6 +40,9 @@ impl SourceTree for SourceSnapshot {
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
         self.source.read_public(path)
     }
+    fn public_digest(&self, path: &Path) -> Result<String> {
+        self.source.public_digest(path)
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(node) = nodes.get(path) {

@@ -29,6 +29,10 @@ pub trait Repository: Send + Sync {
         root: Option<&RepoPath>,
         limits: Limits,
     ) -> Result<Vec<Entry>>;
+    /// Look up exact paths without enumerating their descendants.
+    fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>>;
+    /// Hash an immutable blob through a bounded streaming reader.
+    fn digest(&self, entry: &Entry) -> Result<String>;
     /// Read an exact regular blob by path, without filters or symlink traversal.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
     /// Read regular entries in bounded batches using their already-proved object ids.
@@ -191,6 +195,14 @@ impl Repository for GitRepository {
             args.push(root.as_str());
         }
         tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits)
+    }
+
+    fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>> {
+        self.lookup_paths(commit, paths, limits)
+    }
+
+    fn digest(&self, entry: &Entry) -> Result<String> {
+        self.digest_blob(entry)
     }
 
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {

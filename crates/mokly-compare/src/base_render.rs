@@ -130,7 +130,10 @@ impl ChangesService for Changes {
             sources,
         });
         if let Some(source) = failures.failure() {
-            return Err(Error::SourceFailure { source });
+            return Err(Error::Base {
+                commit: commit.to_string(),
+                source: Box::new(Error::SourceFailure { source }),
+            });
         }
         let before = match prepared {
             Ok(before) => before,
@@ -143,7 +146,10 @@ impl ChangesService for Changes {
         };
         if let Err(source) = before.render_all() {
             if let Some(source) = failures.failure() {
-                return Err(Error::SourceFailure { source });
+                return Err(Error::Base {
+                    commit: commit.to_string(),
+                    source: Box::new(Error::SourceFailure { source }),
+                });
             }
             return Err(Error::Base {
                 commit: commit.to_string(),
@@ -161,7 +167,10 @@ impl ChangesService for Changes {
             head,
         );
         if let Some(source) = failures.failure() {
-            return Err(Error::SourceFailure { source });
+            return Err(Error::Base {
+                commit: commit.to_string(),
+                source: Box::new(Error::SourceFailure { source }),
+            });
         }
         result
     }

@@ -3,10 +3,11 @@
 use std::collections::BTreeMap;
 use std::io;
 use std::path::{Component, Path, PathBuf};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::{Limits, Mode};
+use mokly_model::material::digest;
 use mokly_source_interface::error::{InternalError, Result, SourceError};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
@@ -17,12 +18,20 @@ use crate::sources::{Sources, TreeIndex};
 
 /// Git files share the working tree's private absolute namespace without reading it.
 pub struct GitTree {
-    root: PathBuf,
-    sources: Arc<dyn Sources>,
-    bound: usize,
-    cache: Mutex<SourceCache>,
+    pub(crate) root: PathBuf,
+    pub(crate) sources: Arc<dyn Sources>,
+    pub(crate) bound: usize,
+    pub(crate) cache: Mutex<SourceCache>,
     failure: Mutex<Option<Arc<Error>>>,
-    children: OnceLock<BTreeMap<String, Vec<Child>>>,
+    children: Mutex<DirectoryIndex>,
+    digests: Mutex<BTreeMap<RepoPath, String>>,
+}
+
+/// Metadata only grows within a commit; rebuild child lists once per index expansion.
+#[derive(Default)]
+struct DirectoryIndex {
+    entries: usize,
+    children: BTreeMap<String, Vec<Child>>,
 }
 
 impl GitTree {
@@ -34,11 +43,12 @@ impl GitTree {
             bound: bytes,
             cache: Mutex::new(SourceCache::new(bytes)),
             failure: Mutex::new(None),
-            children: OnceLock::new(),
+            children: Mutex::new(DirectoryIndex::default()),
+            digests: Mutex::new(BTreeMap::new()),
         }
     }
 
-    fn relative(&self, path: &Path) -> Result<Option<RepoPath>> {
+    pub(crate) fn relative(&self, path: &Path) -> Result<Option<RepoPath>> {
         let Ok(relative) = path.strip_prefix(&self.root) else {
             return Err(failure("project", path, io::ErrorKind::PermissionDenied));
         };
@@ -60,18 +70,29 @@ impl GitTree {
         }
     }
 
-    fn index(&self, path: &Path) -> Result<Arc<TreeIndex>> {
+    pub(crate) fn index(&self, path: &Path) -> Result<Arc<TreeIndex>> {
         match self.sources.index() {
             Ok(index) => Ok(index),
             Err(source) => Err(self.failed("index", path, source)),
         }
     }
-    fn failed(&self, operation: &'static str, path: &Path, source: Error) -> SourceError {
+    pub(crate) fn failed(
+        &self,
+        operation: &'static str,
+        path: &Path,
+        source: Error,
+    ) -> SourceError {
         let source = Arc::new(source);
-        self.failure
+        let mut failure = self
+            .failure
             .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get_or_insert_with(|| source.clone());
+            .unwrap_or_else(|error| error.into_inner());
+        if failure.as_deref().is_none_or(|previous| {
+            matches!(previous, Error::Limit { .. })
+                && !matches!(source.as_ref(), Error::Limit { .. })
+        }) {
+            *failure = Some(source.clone());
+        }
         adapter(operation, path, source)
     }
 }
@@ -80,6 +101,9 @@ impl SourceTree for GitTree {
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let relative = self.relative(path)?;
         let kind = if let Some(relative) = relative {
+            if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
+                return Err(self.failed("project", path, source));
+            }
             let index = self.index(path)?;
             let Some(entry) = index.entries.get(&relative) else {
                 return Ok(None);
@@ -97,6 +121,9 @@ impl SourceTree for GitTree {
 
     fn children(&self, path: &Path) -> Result<Vec<Child>> {
         let relative = self.relative(path)?;
+        if let Err(source) = self.sources.expand(relative.as_ref()) {
+            return Err(self.failed("children", path, source));
+        }
         let index = self.index(path)?;
         if let Some(relative) = &relative {
             match index.entries.get(relative) {
@@ -107,31 +134,40 @@ impl SourceTree for GitTree {
                 _ => {}
             }
         }
-        let children = self.children.get_or_init(|| {
-            let mut children: BTreeMap<String, Vec<Child>> = BTreeMap::new();
+        let key = relative.as_ref().map_or("", RepoPath::as_str);
+        let mut directories = self
+            .children
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if directories.entries != index.entries.len() {
+            directories.children.clear();
             for entry in index.entries.values() {
                 let (parent, name) = entry
                     .path
                     .as_str()
                     .rsplit_once('/')
                     .unwrap_or(("", entry.path.as_str()));
-                children.entry(parent.into()).or_default().push(Child {
-                    name: name.into(),
-                    kind: kind(entry.mode),
-                });
+                directories
+                    .children
+                    .entry(parent.into())
+                    .or_default()
+                    .push(Child {
+                        name: name.into(),
+                        kind: kind(entry.mode),
+                    });
             }
-            children
-        });
-        Ok(children
-            .get(relative.as_ref().map_or("", RepoPath::as_str))
-            .cloned()
-            .unwrap_or_default())
+            directories.entries = index.entries.len();
+        }
+        Ok(directories.children.get(key).cloned().unwrap_or_default())
     }
 
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
         let Some(relative) = self.relative(path)? else {
             return Err(failure("read", path, io::ErrorKind::IsADirectory));
         };
+        if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
+            return Err(self.failed("read", path, source));
+        }
         let index = self.index(path)?;
         let Some(entry) = index.entries.get(&relative) else {
             return Err(failure("read", path, io::ErrorKind::NotFound));
@@ -164,59 +200,43 @@ impl SourceTree for GitTree {
         Ok(bytes)
     }
 
+    fn public_digest(&self, path: &Path) -> Result<String> {
+        let Some(relative) = self.relative(path)? else {
+            return Err(failure("digest", path, io::ErrorKind::IsADirectory));
+        };
+        if let Some(hash) = self
+            .digests
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(&relative)
+            .cloned()
+        {
+            return Ok(hash);
+        }
+        if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
+            return Err(self.failed("digest", path, source));
+        }
+        let index = self.index(path)?;
+        let Some(entry) = index.entries.get(&relative) else {
+            return Err(failure("digest", path, io::ErrorKind::NotFound));
+        };
+        let hash = if entry.size > 16 * 1024 * 1024 {
+            match self.sources.digest(&relative) {
+                Ok(hash) => hash,
+                Err(source) => return Err(self.failed("digest", path, source)),
+            }
+        } else {
+            digest(&self.read_public(path)?)
+        };
+        self.digests
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .insert(relative, hash.clone());
+        Ok(hash)
+    }
+
     fn prefetch(&self, requested: &[PathBuf]) -> Result<()> {
-        let index = self.index(&self.root)?;
-        let mut batches = Vec::new();
-        let mut paths = Vec::new();
-        let mut total = 0usize;
-        for path in requested {
-            let Some(relative) = self.relative(path)? else {
-                continue;
-            };
-            let Some(entry) = index
-                .entries
-                .get(&relative)
-                .filter(|entry| entry.mode.regular())
-            else {
-                continue;
-            };
-            if self
-                .cache
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .contains(&relative)
-            {
-                continue;
-            }
-            let cost = entry
-                .size
-                .saturating_add(relative.as_str().len())
-                .saturating_add(128);
-            if cost > self.bound.min(48 * 1024 * 1024) {
-                continue;
-            }
-            if paths.len() == 4096 || total.saturating_add(cost) > self.bound.min(48 * 1024 * 1024)
-            {
-                batches.push(std::mem::take(&mut paths));
-                total = 0;
-            }
-            total += cost;
-            paths.push(relative);
-        }
-        if !paths.is_empty() {
-            batches.push(paths);
-        }
-        for paths in batches {
-            let bytes = match self.sources.read_many(&paths, Limits::default()) {
-                Ok(bytes) => bytes,
-                Err(source) => return Err(self.failed("prefetch", &self.root, source)),
-            };
-            let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
-            for (path, bytes) in paths.into_iter().zip(bytes) {
-                cache.insert(path, bytes);
-            }
-        }
-        Ok(())
+        self.prefetch_sources(requested)
     }
 }
 

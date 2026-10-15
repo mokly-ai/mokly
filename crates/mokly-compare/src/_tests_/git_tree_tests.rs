@@ -9,7 +9,9 @@ use mokly_git::tree::{Entry, Mode};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use unimock::{MockFn, Unimock, matching};
 
+use crate::error::Error;
 use crate::git_tree::GitTree;
+use crate::source_failures::SourceFailures;
 use crate::sources::{SourcesMock, TreeIndex};
 
 #[test]
@@ -77,4 +79,35 @@ fn projections_children_and_reads_share_an_index_and_one_blob_batch() {
     );
     assert!(tree.project(Path::new("/repo/../other")).is_err());
     assert!(tree.project(Path::new("/other")).is_err());
+}
+
+#[test]
+fn a_genuine_git_failure_cannot_be_hidden_by_an_earlier_source_limit() {
+    let tree = GitTree::new("/repo".into(), Arc::new(Unimock::new(())), 4096);
+    let path = Path::new("/repo/movie.mp4");
+    let limit = || Error::Limit {
+        path: "movie.mp4".into(),
+        source: mokly_git::error::Error::ByteLimit { limit: 64 },
+    };
+    let _ = tree.failed("read", path, limit());
+    let _ = tree.failed(
+        "read",
+        path,
+        Error::Git {
+            source: mokly_git::error::Error::CommandFailed {
+                status: Some(128),
+                stderr: b"missing object".to_vec(),
+            },
+        },
+    );
+    let _ = tree.failed("read", path, limit());
+    assert!(matches!(
+        tree.failure().as_deref(),
+        Some(Error::Git {
+            source: mokly_git::error::Error::CommandFailed {
+                status: Some(128),
+                ..
+            }
+        })
+    ));
 }

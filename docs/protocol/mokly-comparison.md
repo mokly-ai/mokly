@@ -104,21 +104,21 @@ list per owner set, deduplicated by rule identity. Every rule inside such an
 element belongs to those components. Linked stylesheets keep the
 [CSS attribution](./mokly-css-attribution.md) rules.
 
-Head `<style>` elements without owners, which a whole-screen render or a
-renderer wrote, follow the inline rule: diff their rules between the sides
-with the stylesheet rule diff, match each changed rule's selectors against
-both trees, and attribute it to the one component whose regions contain every
-matched element, to the entry when a matched element lies outside every
-region or the matches span several components, and to the entry as `unresolved` when the keep list applies. A rule that matches no element on either side produces no record of its own;
-a stylesheet whose changed rules all match nothing on a view produces one
-record with status `excluded`, an empty `selector`, and the entry as owner, so
-the shell can say that the stylesheet changed without applying. An excluded
-record never makes a view material; a rule attributed to a
-component is that component's change and keeps the screen listed as affected.
-The rule's `stylesheet` address is the containing public document route.
-Containment uses physical component regions, including caller-supplied slot
-nodes, and selects the innermost region common to every match. Input owners
-do not replace this containment test.
+Head `<style>` elements without owners use the same rule identities and
+catalogue-wide own-page proof as linked CSS. Diff their rules between the
+sides and match changed selectors against both trees. A component owns a
+match only when its own pages keep a match for that rule after nested
+filtering. Inline matches follow input ownership: caller-supplied slot
+content cannot prove the receiving component. Other matches belong to the
+entry. Unresolved rules belong to the entry.
+
+Collect only ownerless head styles. Body styles and styles with
+`data-mokly-owners` do not enter this analysis. A rule with no match on either
+side produces no record. A document whose changed inline rules all match
+nothing has one `excluded` record with an empty selector and the entry owner.
+An excluded record never makes a view material. The `stylesheet` address is
+the containing public document route. Equal rule identities join own-page
+proof across document routes; consumer routes add no reasons to a component.
 
 ## Resources
 

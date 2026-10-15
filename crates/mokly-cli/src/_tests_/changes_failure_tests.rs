@@ -13,7 +13,7 @@ use mokly_model::read_contract::ContractViolation;
 use mokly_model::readers::ReadError;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::build::{BuildError, BuildService, CatalogueBuild};
+use crate::build::{BuildChanges, BuildError, BuildService, CatalogueBuild};
 use crate::changes_diagnostics;
 use crate::codes::Code;
 
@@ -109,4 +109,40 @@ fn an_invalid_internal_review_is_a_fatal_build_error() {
         changes_diagnostics::failure_code(&source),
         Code::ReviewInvalid
     ));
+}
+
+#[test]
+fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
+    for source in [
+        mokly_git::error::Error::FileCount { limit: 3 },
+        mokly_git::error::Error::ByteLimit { limit: 64 },
+        mokly_git::error::Error::NodeCount { limit: 7 },
+        mokly_git::error::Error::OutputLimit { limit: 128 },
+    ] {
+        let error = Error::Base {
+            commit: "a".repeat(40),
+            source: Box::new(Error::SourceFailure {
+                source: Arc::new(Error::Limit {
+                    path: "specs/large.html".into(),
+                    source,
+                }),
+            }),
+        };
+        let Some(BuildChanges::Unavailable {
+            reason,
+            diagnostics,
+            ..
+        }) = changes_diagnostics::unavailable(&error)
+        else {
+            panic!("limit must be unavailable")
+        };
+        assert_eq!(reason, "comparison limit reached");
+        assert!(diagnostics[0].starts_with("specs/large.html: "));
+        assert!(
+            diagnostics[0].contains("3")
+                || diagnostics[0].contains("64")
+                || diagnostics[0].contains("7")
+                || diagnostics[0].contains("128")
+        );
+    }
 }

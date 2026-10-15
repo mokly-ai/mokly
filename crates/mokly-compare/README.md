@@ -26,9 +26,10 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 ## What This Crate Does
 
 `GitSources::new` pins a commit and explicit file and metadata-node bounds.
-It indexes every tree mode once. `GitTree` implements `dyn SourceTree` over
-that index. Projection and direct-child queries start no per-file Git command.
-Catalogue inventories and known closure targets request exact prefetch sets.
+It indexes configured roots and exact requested paths, retaining every tree
+mode. `GitTree` implements `dyn SourceTree` over that index. Exact projections
+use cached metadata and bounded path queries. Catalogue inventories and
+planning inputs request generation-wide prefetch sets before reading bytes.
 Reads retain a byte-bounded file LRU. A miss reads only its requested path;
 Git IO holds no cache lock. Unrelated adjacent blobs are not prefetched.
 Links and submodules supply no regular source bytes. It lists
@@ -77,7 +78,9 @@ It releases parsed documents after collecting canonical and containment proof.
 The retained result holds graph handles, view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs
 are reused per route; public resource bytes and stylesheet diffs have explicit
-cache bounds. Actual-instance implementation reasons preserve own view states. Removed previews read the same
+cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and
+working files are streamed without retaining their bytes. Remaining source
+budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
 

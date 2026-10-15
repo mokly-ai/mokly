@@ -85,26 +85,10 @@ pub(crate) fn validate(input: &SourceValidation<'_>) -> Result<()> {
             _ => return Err(invalid()),
         }
     }
-    for proof in input.inline_proofs {
-        if !matches!(&proof.rule.owner, EvidenceOwner::Component { path } if path == &proof.component)
-            || !documents
-                .get(&(proof.context.as_str(), proof.view))
-                .is_some_and(|view| view.evidence.rules.contains(&proof.rule))
-        {
-            return Err(invalid());
-        }
-    }
     let mut external = BTreeSet::new();
     for proof in input.instance_proofs {
         let (kind, path) = reason_key(&proof.reason);
         external.insert((proof.component.as_str(), kind, path));
-    }
-    for proof in input.inline_proofs {
-        external.insert((
-            proof.component.as_str(),
-            "dependency",
-            proof.rule.stylesheet.as_str(),
-        ));
     }
     let owners: BTreeMap<_, _> = input
         .before

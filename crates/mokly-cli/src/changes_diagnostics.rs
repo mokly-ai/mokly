@@ -3,6 +3,7 @@
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_compare::error::Error;
+use mokly_git::error;
 use mokly_graph::error::GraphError;
 use mokly_html::error::HtmlError;
 
@@ -46,6 +47,13 @@ pub(crate) fn unavailable(error: &Error) -> Option<BuildChanges> {
     let Error::Base { commit, source } = error else {
         return None;
     };
+    if let Some(detail) = limit_detail(source) {
+        return Some(BuildChanges::Unavailable {
+            base_commit: commit.clone(),
+            reason: "comparison limit reached".into(),
+            diagnostics: vec![detail],
+        });
+    }
     let validation = match source.as_ref() {
         Error::Catalogue { source } => !matches!(source, CatalogueError::Internal(_)),
         Error::Graph { source } => validation_graph(source),
@@ -97,13 +105,38 @@ fn validation_html(error: &HtmlError) -> bool {
     }
 }
 
+fn limit_detail(error: &Error) -> Option<String> {
+    match error {
+        Error::Limit { path, source } => Some(format!("{path}: {}", plain(&source.to_string()))),
+        Error::Base { source, .. } => limit_detail(source),
+        Error::SourceFailure { source } => limit_detail(source),
+        _ => None,
+    }
+}
+
+fn plain(message: &str) -> &str {
+    message
+        .strip_prefix('[')
+        .and_then(|message| message.split_once("] ").map(|(_, body)| body))
+        .unwrap_or(message)
+}
+
 pub(crate) fn failure_detail(error: &Error) -> String {
     match error {
         Error::Git {
-            source: mokly_git::error::Error::CommandFailed { stderr, .. },
-        } if !stderr.is_empty() => {
-            format!("{error}: {}", String::from_utf8_lossy(stderr).trim())
+            source: error::Error::CommandFailed { status, stderr },
+        } => {
+            let status = status.map_or_else(
+                || "Git ended without an exit status".into(),
+                |status| format!("Git exited with status {status}"),
+            );
+            if stderr.is_empty() {
+                status
+            } else {
+                format!("{status}: {}", String::from_utf8_lossy(stderr).trim())
+            }
         }
+        Error::Git { source } => plain(&source.to_string()).into(),
         Error::Base { commit, source } => format!("base {commit}: {}", failure_detail(source)),
         Error::SourceFailure { source } => failure_detail(source),
         _ => error.to_string(),

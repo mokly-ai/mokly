@@ -3,7 +3,7 @@
 // prettier-ignore
 export type EntryChangeReason = { "kind": "added" } | { "kind": "removed" } | { "kind": "metadata" } | { "kind": "material" } | { "kind": "implementation" } | { "kind": "inputs" } | { "kind": "structure" } | { "kind": "dependency",
 /**
- * Public resource or stylesheet route.
+ * Public resource, stylesheet, or containing document route for ownerless head rules.
  */
 path: string, } | { "kind": "screen",
 /**

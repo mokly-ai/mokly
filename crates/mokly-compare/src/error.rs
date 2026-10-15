@@ -13,6 +13,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Recoverable preparation failures.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// A bounded source operation cannot classify this path.
+    #[error("[mokly-compare/limit] {path}: {source}")]
+    Limit {
+        /// Requested source path or root.
+        path: String,
+        /// Typed budget failure.
+        source: error::Error,
+    },
     /// Original Git IO failure retained while the authoring layer emits its diagnostics.
     #[error("[mokly-compare/source] {source}")]
     SourceFailure {
@@ -111,6 +119,12 @@ pub enum Error {
 /// Internal adapter source errors.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// A resource read did not retain its comparison fact.
+    #[error("resource fact is missing for {route}")]
+    MissingResourceFact {
+        /// Requested public route.
+        route: String,
+    },
     /// Pairing must retain at least one side of every identity.
     #[error("entry pairing has neither side")]
     EmptyPair,
@@ -163,9 +177,19 @@ impl<T> IoResult<T> for io::Result<T> {
 
 pub(crate) trait GitResult<T> {
     fn base(self) -> Result<T>;
+    fn at_path(self, path: &str) -> Result<T>;
 }
 
 impl<T> GitResult<T> for error::Result<T> {
+    fn at_path(self, path: &str) -> Result<T> {
+        match self {
+            Err(source) if source.is_limit() => Err(Error::Limit {
+                path: path.into(),
+                source,
+            }),
+            result => result.base(),
+        }
+    }
     #[track_caller]
     fn base(self) -> Result<T> {
         match self {

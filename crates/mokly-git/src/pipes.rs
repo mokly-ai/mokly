@@ -3,8 +3,9 @@
 use std::io::Read;
 
 use mokly_platform::processes::ProcessGroup;
+use sha2::{Digest, Sha256};
 
-use crate::error::{Error, IoResult, Result};
+use crate::error::{Error, InternalError, IoResult, Result};
 
 pub(crate) fn capture(
     reader: impl Read,
@@ -21,4 +22,29 @@ pub(crate) fn capture(
         return Err(Error::OutputLimit { limit });
     }
     Ok(bytes)
+}
+
+/// Keep only one chunk and the hash state, regardless of blob size.
+pub(crate) fn digest(mut reader: impl Read, group: &dyn ProcessGroup) -> Result<Vec<u8>> {
+    let mut hash = Sha256::new();
+    let mut chunk = [0u8; 64 * 1024];
+    loop {
+        let count = match reader.read(&mut chunk) {
+            Ok(count) => count,
+            Err(source) => {
+                let _ = group.kill();
+                return Err(InternalError::Io { source }.into());
+            }
+        };
+        if count == 0 {
+            break;
+        }
+        hash.update(&chunk[..count]);
+    }
+    Ok(hash
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>()
+        .into_bytes())
 }

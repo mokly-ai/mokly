@@ -148,3 +148,18 @@ impl<T> IoResult<T> for io::Result<T> {
         }
     }
 }
+
+impl Error {
+    /// Whether a bounded operation ran out of its configured capacity.
+    pub fn is_limit(&self) -> bool {
+        matches!(
+            self,
+            Self::FileCount { .. }
+                | Self::NodeCount { .. }
+                | Self::ByteLimit { .. }
+                | Self::InputLimit { .. }
+                | Self::OutputLimit { .. }
+                | Self::ArgumentLimit { .. }
+        )
+    }
+}

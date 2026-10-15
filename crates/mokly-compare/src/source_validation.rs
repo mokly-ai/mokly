@@ -16,7 +16,6 @@ use crate::comparison_types::EntryClassification;
 use crate::comparison_views::{UsageView, address};
 use crate::error::{Error, Result};
 use crate::impact_validation;
-use crate::implementation::InlineProof;
 use crate::instance_proof::InstanceProof;
 use crate::move_types::Pairing;
 
@@ -28,7 +27,6 @@ pub(crate) struct SourceValidation<'a> {
     pub(crate) usage: &'a [UsageView],
     pub(crate) impact: &'a BTreeSet<String>,
     pub(crate) instance_proofs: &'a [InstanceProof],
-    pub(crate) inline_proofs: &'a [InlineProof],
 }
 
 /// Validate the complete result before any host can project or capture it.

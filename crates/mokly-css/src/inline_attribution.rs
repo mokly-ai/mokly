@@ -1,80 +1,26 @@
-//! Unowned head-style seam for whole-screen sidecar renders and authored page styles.
+//! Ownerless head rules share catalogue-wide rule identity and use input ownership.
 
-use std::collections::BTreeSet;
+use mokly_model::evidence::EvidenceOwner;
 
-use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
-
-use crate::attribution::observe;
+use crate::attribution::{self, RuleObservation};
 use crate::match_tree::MatchTree;
 use crate::rule_matching::DocumentMatching;
 
-/// Inline rules use all-match ownership rather than linked-CSS own-page membership.
-#[derive(Clone, Debug, Default)]
-pub struct InlineAttribution {
-    /// One owner-attributed record per retained selector, or one excluded sheet.
-    pub rules: Vec<RuleEvidence>,
-    /// Component implementation impact proved by one-component containment.
-    pub components: BTreeSet<String>,
-}
-
-/// Attribute a head style diff using the single owner containing every match.
-pub fn attribute(
+/// Retain inline matches for the same own-page proof used by linked stylesheets.
+/// A supplied slot can prove only its input owner, never its receiving component.
+pub fn observe(
     stylesheet: &str,
     matching: &DocumentMatching,
     before: Option<&MatchTree>,
     after: Option<&MatchTree>,
-) -> InlineAttribution {
-    let observations = observe(stylesheet, matching, before, after);
-    let mut rules = Vec::new();
-    let mut components = BTreeSet::new();
-    for rule in &observations {
-        for selector in &rule.selectors {
-            if !selector.unresolved && selector.matches.is_empty() {
-                continue;
-            }
-            let owner = if !selector.unresolved {
-                selector
-                    .matches
-                    .first()
-                    .and_then(|first| {
-                        first.regions.iter().rev().find(|region| {
-                            selector.matches.iter().all(|matched| {
-                                matched
-                                    .regions
-                                    .iter()
-                                    .any(|other| other.path == region.path)
-                            })
-                        })
-                    })
-                    .map(|region| EvidenceOwner::Component {
-                        path: region.path.clone(),
-                    })
-                    .unwrap_or(EvidenceOwner::Entry)
-            } else {
-                EvidenceOwner::Entry
-            };
-            if let EvidenceOwner::Component { path } = &owner {
-                components.insert(path.clone());
-            }
-            rules.push(RuleEvidence {
-                stylesheet: stylesheet.into(),
-                selector: selector.selector.clone(),
-                status: if selector.unresolved {
-                    RuleStatus::Unresolved
-                } else {
-                    RuleStatus::Matched
-                },
-                owner,
-            });
-        }
+) -> Vec<RuleObservation> {
+    let mut rules = attribution::observe(stylesheet, matching, before, after);
+    for matched in rules
+        .iter_mut()
+        .flat_map(|rule| &mut rule.selectors)
+        .flat_map(|selector| &mut selector.matches)
+    {
+        matched.regions.retain(|region| matches!(&matched.owner, EvidenceOwner::Component { path } if path == &region.path));
     }
-    if rules.is_empty() && !observations.is_empty() {
-        rules.push(RuleEvidence {
-            stylesheet: stylesheet.into(),
-            selector: String::new(),
-            status: RuleStatus::Excluded,
-            owner: EvidenceOwner::Entry,
-        });
-    }
-    InlineAttribution { rules, components }
+    rules
 }

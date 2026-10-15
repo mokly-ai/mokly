@@ -29,7 +29,7 @@ fn resource_reads_scale_with_routes_and_not_views_while_retention_stays_bounded(
             &Memo::new(side(1), side(2), Arc::new(MemoryParsedCss::new(4096)), 4096);
         for _ in 0..10 {
             for index in 0..size {
-                let path = format!("static/{index}.svg");
+                let path = format!("static/{index}.css");
                 assert!(!memo.equal(&path, &path, &BTreeMap::new()).unwrap());
             }
         }
@@ -45,4 +45,26 @@ fn resource_reads_scale_with_routes_and_not_views_while_retention_stays_bounded(
     assert_eq!(small.reads, 16);
     assert_eq!(large.reads, 4 * small.reads);
     assert_eq!(large.comparisons, 4 * small.comparisons);
+}
+
+#[test]
+fn opaque_resources_compare_digest_facts_without_reading_or_retaining_bytes() {
+    let side = || {
+        Arc::new(Unimock::new(
+            RenderGenerationMock::resource_digest
+                .next_call(matching!("static/movie.mp4"))
+                .returns(Ok(Some("same".into()))),
+        )) as Arc<dyn RenderGeneration>
+    };
+    let memo: &dyn ResourceMemo =
+        &Memo::new(side(), side(), Arc::new(MemoryParsedCss::new(4096)), 4096);
+    for _ in 0..2 {
+        assert!(
+            memo.equal("static/movie.mp4", "static/movie.mp4", &BTreeMap::new())
+                .unwrap()
+        );
+    }
+    assert_eq!(memo.work().reads, 2);
+    assert_eq!(memo.work().read_bytes, 0);
+    assert_eq!(memo.work().retained_bytes, 0);
 }

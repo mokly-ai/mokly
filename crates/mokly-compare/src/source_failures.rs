@@ -7,6 +7,6 @@ use crate::error::Error;
 /// Historical IO failure channel, independent of source validation diagnostics.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = SourceFailuresMock))]
 pub trait SourceFailures: Send + Sync {
-    /// First typed failure observed by this immutable adapter.
+    /// First fatal source failure, or the first limit when no fatal failure occurred.
     fn failure(&self) -> Option<Arc<Error>>;
 }

@@ -111,7 +111,7 @@ pub enum EntryChangeReason {
     Structure,
     /// Changed rendered resource attributed to this entry.
     Dependency {
-        /// Public resource or stylesheet route.
+        /// Public resource, stylesheet, or containing document route for ownerless head rules.
         path: String,
     },
     /// A directly changed screen in a use case's steps.

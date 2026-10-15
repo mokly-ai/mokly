@@ -38,6 +38,8 @@ and bounded blob batches for these operations. It never follows link blobs.
 `prefetch` accepts an exact confined read set for batched adapters. Its default
 is a no-op. `read_public` bypasses private source-snapshot retention; the caller
 must first apply the same public-path policy as resource delivery.
+`public_digest` returns a SHA-256 digest without private snapshot retention.
+Working and Git adapters stream oversized inputs with bounded memory.
 
 ## Quick Start
 

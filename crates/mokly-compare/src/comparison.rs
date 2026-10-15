@@ -14,7 +14,7 @@ use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonCounts, ComparisonRequest, ComparisonResult};
 use crate::comparison_views;
 use crate::error::Result;
-use crate::implementation::{self, InlineProof, OwnImpact};
+use crate::implementation::{self, OwnImpact};
 use crate::move_context::RenderedMoves;
 use crate::move_inventory;
 use crate::move_types::MoveDetector;
@@ -83,14 +83,12 @@ impl Comparison for Engine {
                 &before_plans,
                 &after_plans,
             )?;
-            warnings.extend(views.warnings.iter().cloned());
             observations.extend(views.views.iter().map(|view| view.observation.clone()));
             pairs.push(views);
         }
         let attributed = attribution::attribute(&observations);
         let mut impact = attributed.changed_components;
         let mut instance_proofs = Vec::new();
-        let mut inline_proofs = Vec::new();
         let mut own_impact = OwnImpact::default();
         let mut index = 0;
         let mut usages = Vec::new();
@@ -122,22 +120,6 @@ impl Comparison for Engine {
                     .rules
                     .extend(attributed.pages[index].clone());
                 instance_proofs.append(&mut view.proofs);
-                for component in &view.inline_components {
-                    impact.insert(component.clone());
-                    for rule in &view.document.evidence.rules {
-                        if matches!(&rule.owner, EvidenceOwner::Component { path } if path == component)
-                        {
-                            inline_proofs.push(InlineProof {
-                                component: component.clone(),
-                                context: entry
-                                    .map_or("", |entry| entry.metadata.path.as_str())
-                                    .into(),
-                                view: view.document.key,
-                                rule: rule.clone(),
-                            });
-                        }
-                    }
-                }
                 if let Some(component) = &component
                     && view.root_changed
                     && same_inputs
@@ -188,7 +170,7 @@ impl Comparison for Engine {
             )?);
         }
         impact.extend(instance_proofs.iter().map(|proof| proof.component.clone()));
-        implementation::include(&mut entries, &instance_proofs, &inline_proofs, &own_impact);
+        implementation::include(&mut entries, &instance_proofs, &own_impact);
         use_case_impact::propagate(
             &mut entries,
             &pairing.entries,
@@ -222,7 +204,6 @@ impl Comparison for Engine {
                 usage: &usages,
                 impact: &impact,
                 instance_proofs: &instance_proofs,
-                inline_proofs: &inline_proofs,
             },
         )?;
         let snapshot = snapshots::create(

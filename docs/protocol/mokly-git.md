@@ -74,13 +74,20 @@ the command limit and independent regular-file and total-node bounds. Defaults
 are 100,000 regular files and 1,000,000 metadata nodes. Composition selects both. The commit index retains
 directories, links and submodule modes as well as regular leaves. An empty
 root request starts no source query. A whole-tree query is explicit.
+The comparison source index loads configured roots and requested paths only.
+Exact path lookups use bounded nonrecursive batches and cache missing paths.
 
 A blob read first proves exact regular-file mode and size from the pinned
 commit's tree. A missing path and a nonregular path have distinct errors.
 Symbolic links are not followed. Cat-file batches receive full object ids on
 stdin. Each batch has at most 4,096 objects and 48 MiB of framed output.
 Headers, object ids, sizes, delimiters and trailing bytes are checked.
-An object that cannot fit one batch fails before any blob command starts.
+An object that cannot fit one byte-read batch fails before a blob read starts.
+Opaque public resources instead use a streamed SHA-256 digest: stdout feeds
+the hash through a 64 KiB buffer, and stderr keeps its capture bound. The
+stream keeps process-tree ownership, cancellation, and exit validation.
+A comparison budget failure makes Changes unavailable with its limit and
+requested path; it does not fail the current build.
 
 A source archive contains regular blobs from the commit. Extraction checks
 leaf count, each blob size, and total uncompressed bytes before file writes.

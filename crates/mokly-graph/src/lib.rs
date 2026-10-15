@@ -50,3 +50,5 @@ pub mod resource_reach;
 #[cfg(test)]
 #[path = "_tests_/snapshot_tests.rs"]
 mod snapshot_tests;
+
+mod planning_resources;

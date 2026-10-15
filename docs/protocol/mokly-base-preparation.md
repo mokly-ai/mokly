@@ -9,15 +9,16 @@ This page defines the `mokly-compare` preparation APIs. The
 ## Sources
 
 A source reader pins one commit and one cancellation generation. It loads
-one tree index, with directories, regular files, symbolic links and submodule
-modes. Composition selects separate regular-file and total-node bounds.
+a commit index for configured roots and explicitly requested paths, with
+directories, regular files, symbolic links and submodule modes. Exact path
+queries do not enumerate descendants or unrelated repository files. Composition selects separate regular-file and total-node bounds.
 Repeated root queries use that index. Regular-file listings retain
 actual POSIX spelling, return each file once and apply the selected count
 bound. An empty root list starts no query; an explicit whole-tree root lists
 all regular files. The catalogue applies its root ownership, globs and
 source diagnostics. `GitTree` implements `SourceTree` over that index. Projection and direct-child
-queries use cached metadata. Exact catalogue inventories and discovered closure
-targets use bounded blob batches. A byte-bounded file LRU serves repeated reads;
+queries reuse cached metadata. Exact catalogue inventories, generation-wide
+planning inputs, and discovered closure targets use bounded blob batches. A byte-bounded file LRU serves repeated reads;
 a miss reads only its requested path, without holding the cache mutex during IO.
 
 Reads by entry use the proved object id and run in bounded cat-file batches.
@@ -28,6 +29,16 @@ archive copies exact regular blobs, including files that export attributes
 would omit or substitute. It writes and releases each batch before reading
 the next. Its total disk bound follows the source cache capacity; memory
 stays bounded by the blob batch, independently of total repository size.
+
+Opaque public resources use SHA-256 digests. Oversized Git blobs and working
+files are hashed as streams with bounded memory. They need no full byte read
+for planning or comparison. Resource closure checks their confined regular
+file identity; only HTML and CSS files need reference parsing.
+
+If a remaining tree, file, or command budget prevents comparison, Changes is
+unavailable. The diagnostic names the requested path or root and the limit.
+The current build remains valid. Genuine Git command and object failures
+remain fatal `git-failed` errors.
 
 ## Cache Location And Ownership
 

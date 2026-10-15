@@ -62,8 +62,8 @@ impl Memo {
     ) -> Result<bool> {
         let left = self.fact(ReviewSide::Before, before)?;
         let right = self.fact(ReviewSide::After, after)?;
-        if !after.ends_with(".css") && left.digest != right.digest {
-            return Ok(false);
+        if !after.ends_with(".css") {
+            return Ok(left.digest == right.digest);
         }
         let left = self.read(ReviewSide::Before, before)?;
         let right = self.read(ReviewSide::After, after)?;

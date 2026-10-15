@@ -64,6 +64,8 @@ pub trait RenderGeneration: GeneratedResources {
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>>;
     /// Read a confined resource by its public route. Missing regular targets return None.
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>>;
+    /// Hash a resource with bounded memory; absent resources return None.
+    fn resource_digest(&self, route: &str) -> Result<Option<String>>;
     /// Obtain the referenced authored files and evidence of one document.
     fn closure(&self, route: &str) -> Result<Closure>;
     /// Render and validate every view across the worker pool.

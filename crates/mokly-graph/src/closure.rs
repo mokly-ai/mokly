@@ -183,6 +183,17 @@ impl ClosureBuilder for Walker {
                         }
                         continue;
                     }
+                    if !target.ends_with(".css")
+                        && !target.ends_with(".html")
+                        && !target.ends_with(".htm")
+                    {
+                        if self.tree.public_digest(&file.absolute).is_err() {
+                            return Err(missing(route, &reference.url));
+                        }
+                        self.index.parse(&target, &[])?;
+                        edges.insert(target.clone(), Vec::new());
+                        continue;
+                    }
                     match self.tree.read_public(&file.absolute) {
                         Ok(bytes) => bytes.into(),
                         Err(_) => return Err(missing(route, &reference.url)),

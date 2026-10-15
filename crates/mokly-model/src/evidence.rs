@@ -31,7 +31,7 @@ pub enum RuleStatus {
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RuleEvidence {
-    /// Rendered stylesheet route.
+    /// Public stylesheet route, or containing document route for ownerless head rules.
     pub stylesheet: String,
     /// Selector, empty for an unmatched whole-sheet record.
     pub selector: String,

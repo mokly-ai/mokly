@@ -21,6 +21,7 @@ use mokly_css::compiler::Compiler;
 use mokly_css::parsed_cache::{MemoryParsedCss, ParsedCssCache};
 use mokly_css::resolver::SourceResolver;
 use mokly_css::types::IdentityProcessor;
+use mokly_git::command::Runner;
 use mokly_git::control::{SystemClock, Token};
 use mokly_git::disk::SystemDisk;
 use mokly_git::identity::ObjectId;
@@ -41,7 +42,7 @@ use tempfile::TempDir;
 
 pub struct Fixture {
     pub directory: TempDir,
-    commit: ObjectId,
+    pub commit: ObjectId,
     cache: Arc<dyn RenderCache>,
 }
 
@@ -103,12 +104,18 @@ impl Fixture {
         moves: Arc<dyn MoveDetector>,
         css: Arc<dyn ParsedCssCache>,
     ) -> Result<ComparisonResult> {
+        self.compare_io(moves, css, runner(), 48 * 1024 * 1024)
+    }
+
+    pub fn compare_io(
+        &self,
+        moves: Arc<dyn MoveDetector>,
+        css: Arc<dyn ParsedCssCache>,
+        runner: Arc<dyn Runner>,
+        source_bytes: usize,
+    ) -> Result<ComparisonResult> {
         let repositories: &dyn Repositories = &GitRepositories {
-            runner: Arc::new(SystemRunner {
-                groups: Arc::new(SystemProcessGroups),
-                clock: Arc::new(SystemClock::default()),
-                cancellation: Arc::new(Token::default()),
-            }),
+            runner,
             disk: Arc::new(SystemDisk),
         };
         let repository = repositories.open(self.directory.path()).unwrap();
@@ -119,7 +126,7 @@ impl Fixture {
                 self.commit.clone(),
                 Limits::default(),
             )),
-            48 * 1024 * 1024,
+            source_bytes,
         ));
         let before = prepare(self.directory.path(), base_tree, self.cache.clone())?;
         let after = prepare(
@@ -220,4 +227,12 @@ fn git(root: &Path, args: &[&str]) -> Vec<u8> {
         String::from_utf8_lossy(&output.stderr)
     );
     output.stdout
+}
+
+pub fn runner() -> Arc<dyn Runner> {
+    Arc::new(SystemRunner {
+        groups: Arc::new(SystemProcessGroups),
+        clock: Arc::new(SystemClock::default()),
+        cancellation: Arc::new(Token::default()),
+    })
 }

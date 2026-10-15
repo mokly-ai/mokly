@@ -2,6 +2,12 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
+A base commit without the selected configuration file has an empty catalogue.
+Every current entry is added. A malformed configuration or a failed Git read
+keeps its validation or Git failure. A comparison size or command budget
+makes Changes unavailable with a diagnostic naming the path and limit. The
+current build remains usable.
+
 ## Shared Metadata Contract
 
 The catalogue change snapshot v4 pairs the review result v8 of one comparison

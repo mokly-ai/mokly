@@ -28,7 +28,10 @@ pub(crate) fn urls(walker: &Walker, source: &str, urls: &[String]) -> Result<()>
         let Ok(Some(route)) = local_target(source, url) else {
             continue;
         };
-        if route.starts_with("static/mokly-generated/") || walker.index.get(&route).is_some() {
+        if route.starts_with("static/mokly-generated/")
+            || walker.index.get(&route).is_some()
+            || !(route.ends_with(".css") || route.ends_with(".html") || route.ends_with(".htm"))
+        {
             continue;
         }
         if let Some(path) = route.strip_prefix("static/")

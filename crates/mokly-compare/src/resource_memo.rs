@@ -12,15 +12,15 @@ use mokly_model::material::digest;
 use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_error::CompareResult;
-use crate::error::Result;
+use crate::error::{InternalError, Result};
 use crate::resource_memo_state::{MemoState, PairKey};
 
 /// Operation counts and retained-byte charges, independent of elapsed time.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct ResourceWork {
-    /// Actual generation resource reads.
+    /// Generation resource byte reads and digest requests.
     pub reads: usize,
-    /// Bytes obtained by those reads.
+    /// Returned resource bytes; streamed digest input is not retained or counted here.
     pub read_bytes: usize,
     /// Actual byte comparisons of a route pair.
     pub comparisons: usize,
@@ -94,13 +94,35 @@ impl ResourceMemo for Memo {
         {
             return Ok(fact);
         }
+        if !route.ends_with(".css") {
+            let generation = if side == ReviewSide::Before {
+                &self.before
+            } else {
+                &self.after
+            };
+            let fact = ResourceFact {
+                digest: generation.resource_digest(route).compare()?,
+                imports: Vec::new(),
+                references: Vec::new(),
+            };
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            state.work.reads += 1;
+            state.facts.insert((side, route.into()), fact.clone());
+            return Ok(fact);
+        }
         self.read(side, route)?;
-        Ok(self
-            .state
+        self.state
             .lock()
             .unwrap_or_else(|error| error.into_inner())
-            .facts[&(side, route.into())]
-            .clone())
+            .facts
+            .get(&(side, route.into()))
+            .cloned()
+            .ok_or_else(|| {
+                InternalError::MissingResourceFact {
+                    route: route.into(),
+                }
+                .into()
+            })
     }
 
     fn read(&self, side: ReviewSide, route: &str) -> Result<Option<Arc<[u8]>>> {

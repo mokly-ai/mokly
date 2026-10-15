@@ -179,6 +179,9 @@ impl RenderGeneration for Session {
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>> {
         self.read_resource(route)
     }
+    fn resource_digest(&self, route: &str) -> Result<Option<String>> {
+        self.digest_resource(route)
+    }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
         self.state.workers.document(route, self)
     }

@@ -45,7 +45,10 @@ Untracked additions never infer a rename.
 Tree queries use literal pathspecs and NUL records. Blob batches use stdin,
 at most 4,096 objects, and at most 48 MiB including framing. Tree listings retain directory and link modes. Regular files and all metadata
 nodes have independent count bounds.
-The commit source reader indexes that metadata once. Working inputs compare
+The commit source reader indexes requested roots and exact paths. Nonrecursive
+path lookups avoid enumerating unrelated directories. `digest` streams blob
+stdout through SHA-256 with bounded memory and the same cancellation and exit
+checks; stderr retains its capture limit. Working inputs compare
 bytes first and hash changed confined paths in one stdin-paths command. `read_many` accepts
 proved entries and reads their blobs through bounded batches. Extraction also has total and per-file byte bounds.
 It writes one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links

@@ -48,7 +48,9 @@ The build service computes Changes unless `--no-changes` is set. `--base`
 overrides `review.base`; the default ref is `origin/main`. It retains review v8,
 snapshot v4, and the two graph generations in memory for static output.
 A base source validation failure reports the historical commit and makes
-Changes unavailable while the current catalogue remains valid. A Git failure
+Changes unavailable while the current catalogue remains valid. A missing base configuration means an empty base catalogue, so every current
+entry is added. A remaining comparison budget makes Changes unavailable with
+the path and limit. A Git failure
 aborts the build with `git-failed` and the selected ref. An internal comparison
 failure aborts with `review-invalid`. Strict mode counts current-build and
 base preparation warnings after comparison; it omits base authoring warnings. Rich output reports

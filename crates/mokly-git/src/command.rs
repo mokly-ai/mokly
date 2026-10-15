@@ -41,6 +41,8 @@ pub struct Output {
 pub trait Runner: Send + Sync {
     /// Execute one bounded Git invocation and require a successful exit.
     fn run(&self, request: &Request) -> Result<Output>;
+    /// Stream standard output into SHA-256 without retaining the blob bytes.
+    fn digest(&self, request: &Request) -> Result<String>;
     /// Execute with explicit command cancellation and process-tree cleanup.
     fn run_cancellable(&self, request: &Request, cancellation: &dyn Cancellation)
     -> Result<Output>;

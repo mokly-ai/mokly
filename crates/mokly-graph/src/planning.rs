@@ -14,7 +14,7 @@ use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{Result, invalid};
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
-use crate::{error, resource_keys, routing_inputs, styles};
+use crate::{error, planning_resources, routing_inputs, styles};
 
 pub(crate) fn documents(
     config: &ResolvedConfig,
@@ -25,6 +25,7 @@ pub(crate) fn documents(
     delivery: &DeliveryInputs,
     matchers: &styles::Matchers,
 ) -> Result<BTreeMap<String, DocumentPlan>> {
+    let public = planning_resources::Resources::prepare(config, catalogue, tree);
     let mut sources = BTreeMap::new();
     for entry in &catalogue.model.entries {
         let path = &entry.metadata.source.path;
@@ -130,9 +131,7 @@ pub(crate) fn documents(
                     .iter()
                     .filter_map(|path| component_keys.get(path).map(|key| key.0.clone())),
             );
-            for (path, digest) in
-                resource_keys::inputs(config, catalogue, entry, &route, &components, tree)
-            {
+            for (path, digest) in public.inputs(catalogue, entry, &route, &components) {
                 inputs.push(format!("{path}:{digest}"));
             }
             for link in &links {
@@ -165,7 +164,7 @@ pub(crate) fn documents(
     Ok(output)
 }
 
-fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
+pub(crate) fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
     let mut found = BTreeSet::new();
     let mut stack = vec![path.to_owned()];
     while let Some(path) = stack.pop() {

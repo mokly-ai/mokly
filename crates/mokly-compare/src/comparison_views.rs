@@ -3,7 +3,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use mokly_catalogue::diagnostic::Warning;
 use mokly_css::attribution::PageObservation;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
@@ -41,11 +40,9 @@ pub(crate) struct PendingView {
     pub(crate) structure: bool,
     pub(crate) root_changed: bool,
     pub(crate) proofs: Vec<InstanceProof>,
-    pub(crate) inline_components: BTreeSet<String>,
 }
 
 pub(crate) struct PairViews {
-    pub(crate) warnings: Vec<Warning>,
     pub(crate) views: Vec<PendingView>,
     pub(crate) usage: Vec<UsageView>,
 }
@@ -85,7 +82,6 @@ pub(crate) fn collect(
         })
     });
     let mut result = PairViews {
-        warnings: Vec::new(),
         views: Vec::new(),
         usage: Vec::new(),
     };
@@ -185,6 +181,7 @@ pub(crate) fn collect(
             ),
             memo,
         )?;
+        observation.rules.extend(inline);
         let proofs = match (&comparison, previous, current) {
             (Some(comparison), Some(before), Some(after)) => instance_proof::collect(ProofInput {
                 comparison,
@@ -215,7 +212,7 @@ pub(crate) fn collect(
                 state,
                 ignored_ids,
                 evidence: ViewEvidence {
-                    rules: inline.rules,
+                    rules: Vec::new(),
                     resources: evidence,
                 },
             },
@@ -230,7 +227,6 @@ pub(crate) fn collect(
                 .as_ref()
                 .is_some_and(|comparison| comparison.structure),
             proofs,
-            inline_components: inline.components,
             root_changed: comparison
                 .as_ref()
                 .is_none_or(|comparison| comparison.root_changed),

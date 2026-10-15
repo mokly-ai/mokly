@@ -10,7 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::sources::{GitSources, Sources};
 
 #[test]
-fn source_index_preserves_all_modes_and_reuses_the_tree_for_batched_reads() {
+fn source_index_expands_only_requested_roots_and_reuses_metadata() {
     let commit = ObjectId::parse(&"a".repeat(40)).unwrap();
     let entry = Entry {
         path: RepoPath::parse("specs/A.html").unwrap(),
@@ -29,7 +29,7 @@ fn source_index_preserves_all_modes_and_reuses_the_tree_for_batched_reads() {
         ..entry.clone()
     };
     let repository = Unimock::new((
-        RepositoryMock::list.next_call(matching!((_, None, limits) if limits.files == 2 && limits.nodes == 8)).returns(Ok(vec![link, directory, entry.clone()])),
+        RepositoryMock::list.next_call(matching!((_, Some(root), limits) if root.as_str() == "specs" && limits.files == 2 && limits.nodes == 8)).returns(Ok(vec![link, directory, entry.clone()])),
         RepositoryMock::read_many.next_call(matching!((entries, limits) if entries.len() == 1 && entries[0].path.as_str() == "specs/A.html" && limits.blob == 1)).returns(Ok(vec![vec![255]])),
     ));
     let reader = GitSources::new(
@@ -46,7 +46,7 @@ fn source_index_preserves_all_modes_and_reuses_the_tree_for_batched_reads() {
     assert_eq!(
         sources
             .list(
-                &[Some(RepoPath::parse("specs").unwrap()), None],
+                &[Some(RepoPath::parse("specs").unwrap())],
                 Limits::default()
             )
             .unwrap(),
@@ -54,7 +54,12 @@ fn source_index_preserves_all_modes_and_reuses_the_tree_for_batched_reads() {
     );
     assert_eq!(sources.index().unwrap().entries.len(), 3);
     assert_eq!(
-        sources.list(&[None], Limits::default()).unwrap(),
+        sources
+            .list(
+                &[Some(RepoPath::parse("specs").unwrap())],
+                Limits::default()
+            )
+            .unwrap(),
         std::slice::from_ref(&entry)
     );
     assert_eq!(sources.read(&entry.path, 1).unwrap(), [255]);

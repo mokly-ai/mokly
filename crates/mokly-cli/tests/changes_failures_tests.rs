@@ -63,6 +63,11 @@ fn failure(root: &Path, reference: &str, code: &str) -> String {
     assert!(result.stdout.is_empty());
     let stderr = String::from_utf8(result.stderr).unwrap();
     assert!(stderr.contains(code), "{stderr}");
+    assert!(!stderr.contains("Some(128)"), "{stderr}");
+    assert!(
+        !stderr.contains("[mokly-compare/") && !stderr.contains("[mokly-git/"),
+        "{stderr}"
+    );
     assert!(!root.join("mokly-static").exists());
     stderr
 }

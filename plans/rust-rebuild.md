@@ -901,6 +901,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Merge the renderer, viewer, and sidecar integration into the comparison
       branch after the first comparison review fixes.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [x] Apply final comparison review requests: inline own-page proof, input-owned
+      slots, scoped Git metadata, streamed large-resource digests, planning
+      batches, empty-base catalogues, and named limit diagnostics.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-3.md`.
 - [ ] Add the Comparing phase spinner and measured durations to build Changes.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
@@ -935,6 +939,9 @@ Tags: ui
       package README describe (the path functions, the directory names, the
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
+- [ ] Add user-facing wording for the review v8 `implementation` reason under
+      the `product-ui` rules. Explain actual-instance component impact while
+      preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 

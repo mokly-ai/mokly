@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
@@ -56,9 +57,18 @@ impl BaseProvider for NativeBase {
         let tree = request.sources.tree.clone();
         let loader: &dyn ConfigLoader = &Loader { tree: tree.clone() };
         let file = request.working_config.file.to_string_lossy();
-        let config = match loader.load(&request.working_config.repo_root, Some(&file)) {
-            Ok(config) => config,
-            Err(source) => return Err(Error::Catalogue { source }),
+        let config = if matches!(tree.project(&request.working_config.file), Ok(None)) {
+            ResolvedConfig {
+                input: Config::default(),
+                roots: Vec::new(),
+                authored_inputs: Vec::new(),
+                ..request.working_config.clone()
+            }
+        } else {
+            match loader.load(&request.working_config.repo_root, Some(&file)) {
+                Ok(config) => config,
+                Err(source) => return Err(Error::Catalogue { source }),
+            }
         };
         let builder: &dyn CatalogueBuilder = &Builder {
             tree: tree.clone(),
