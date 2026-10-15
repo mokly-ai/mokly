@@ -906,6 +906,7 @@ Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
 Serve integration: `.context/rust-rebuild/delegation/m8-core/report-4.md`;
 smoke artifacts: `.context/rust-rebuild/m8-serve-smoke/`.
 Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-5.md`.
+CSS integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-7.md`.
 
 - [ ] Commit.
 

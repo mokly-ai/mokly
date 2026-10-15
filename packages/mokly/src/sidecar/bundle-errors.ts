@@ -3,10 +3,16 @@ import path from "node:path";
 import type { Message } from "esbuild";
 
 import { detail } from "./errors.js";
+import type { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
 
 /** Present esbuild's structured messages without its count and plugin framing. */
-export function bundleDetail(error: unknown, root: string): string {
+export function bundleDetail(
+  error: unknown,
+  root: string,
+  origins: Map<string, string> = new Map(),
+  sources?: ModulePaths,
+): string {
   if (
     !error ||
     typeof error !== "object" ||
@@ -18,8 +24,8 @@ export function bundleDetail(error: unknown, root: string): string {
   if (!messages.length) return detail(error);
   return messages
     .flatMap((message) => [
-      diagnostic(message, root),
-      ...message.notes.map((note) => diagnostic(note, root)),
+      diagnostic(message, root, origins, sources),
+      ...message.notes.map((note) => diagnostic(note, root, origins, sources)),
     ])
     .join("\n");
 }
@@ -27,9 +33,26 @@ export function bundleDetail(error: unknown, root: string): string {
 function diagnostic(
   message: Pick<Message, "text" | "location">,
   root: string,
+  origins: Map<string, string>,
+  sources?: ModulePaths,
 ): string {
-  if (!message.location) return message.text;
+  let text = message.text;
+  for (const [virtual, importer] of origins)
+    text = text.replaceAll(virtual, sourceName(importer, root, sources));
+  if (!message.location) return text;
   const { file, line, column } = message.location;
-  const name = path.isAbsolute(file) ? logical(root, file) : file;
-  return `${name}:${line}:${column + 1}: ${message.text}`;
+  const importer = origins.get(file);
+  if (importer) return `${sourceName(importer, root, sources)}: ${text}`;
+  const name = sourceName(file, root, sources);
+  return `${name}:${line}:${column + 1}: ${text}`;
+}
+
+function sourceName(file: string, root: string, sources?: ModulePaths): string {
+  if (!path.isAbsolute(file)) return file;
+  if (!sources) return logical(root, file);
+  try {
+    return sources.name(file);
+  } catch {
+    return path.basename(file);
+  }
 }

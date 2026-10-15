@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 pub struct Resolution {
     /// Configuration directory, relative to the repository; empty for its root.
     pub config_directory: String,
-    /// Bare aliases, applied before resolving from the importer.
+    /// Bare aliases, resolved from the configuration directory before package roots.
     pub aliases: BTreeMap<String, String>,
     /// Consumer export conditions, with style and Node defaults added by CSS.
     pub conditions: Vec<String>,

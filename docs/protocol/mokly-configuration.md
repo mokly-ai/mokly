@@ -219,7 +219,10 @@ the loader boundary; public files use the
 [sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
 directories containing `package.json`; their `node_modules` directories
 supplement consumer lookup. Alias keys and targets accept bare package
-specifiers only. Conditions, package fields, and extensions are ordered,
+specifiers only. For JavaScript and CSS, alias targets resolve from the
+configuration directory through Node's ancestor lookup, then the configured
+package roots.
+Conditions, package fields, and extensions are ordered,
 deduplicated lists: duplicate values are removed and the first occurrence
 keeps its position. Loader keys are extensions and values are supported JavaScript-safe
 esbuild loader names. The `css` loader is rejected for every extension because

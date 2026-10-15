@@ -1,5 +1,6 @@
 //! Integration scenarios share isolated consumers and one real process pool per test.
 
+mod alias_tests;
 mod base_tests;
 mod cache_tests;
 mod declaration_alias_tests;

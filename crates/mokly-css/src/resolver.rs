@@ -42,7 +42,8 @@ impl ImportResolver for SourceResolver {
         } else {
             importer.into()
         };
-        if let Some(relative) = paths::resolve(&relative_source, &specifier)
+        if !aliased
+            && let Some(relative) = paths::resolve(&relative_source, &specifier)
             && let Some(path) = self.file(&relative)
         {
             return Ok(path);
@@ -51,7 +52,7 @@ impl ImportResolver for SourceResolver {
             return Err(failure());
         }
         let mut directories = Vec::new();
-        let mut directory = Path::new(importer).parent();
+        let mut directory = Path::new(&relative_source).parent();
         while let Some(base) = directory {
             directories.push(base.to_string_lossy().into_owned());
             directory = base.parent();

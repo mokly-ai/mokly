@@ -81,9 +81,11 @@ byte limit. Requests run in order. Consumer logs go to standard error.
 graph with stable names for selected installation files. Repository-owned
 workspace packages and PostCSS presets use the side's own source copy.
 `cssModules` installs the core's class maps before evaluation and runs no
-compiler. CSS import stubs read that table at evaluation, including named
-exports supplied by PostCSS. Runtime style adapters capture the bundled
-consumer libraries in the same compilation.
+compiler. CSS import stubs read that table at evaluation. The default export
+is the complete map. Each valid, non-reserved identifier key is also a named
+export. Runtime style adapters capture the bundled consumer libraries in the
+same compilation. Subpath imports select their own package's registry, and
+wrappers preserve the importer's CommonJS default-import rule.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed
