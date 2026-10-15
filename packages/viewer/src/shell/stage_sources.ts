@@ -33,7 +33,7 @@ export function frameSource(
   );
 }
 
-/** Normalize bootstrap-only omission to the frame's existing pending state. */
+/** A view whose entry detail is not held yet has pending usage in its frame. */
 export function shellFrameUsage(
   usage: ShellCatalogueUsage | undefined,
 ): CatalogueUsage {
@@ -73,11 +73,11 @@ export function generatedUsage(view: GeneratedComponentView): CatalogueUsage {
   if (!record) return unavailableUsage;
   const current = generatedUsages.get(record);
   if (current) return current;
-  const usage = {
-    status: "ready" as const,
-    instances: record.instances,
-    slots: record.slots,
-    ranges: record.ranges,
+  const usage: CatalogueUsage = {
+    status: "ready",
+    instances: [...record.instances],
+    slots: [...record.slots],
+    ranges: [...record.ranges],
   };
   generatedUsages.set(record, usage);
   return usage;

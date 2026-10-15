@@ -8,7 +8,7 @@ const light = new URL("https://app.test/static/screen.mobile.html");
 const dark = new URL("https://app.test/static/screen.mobile.dark.html");
 
 for (const readyState of ["loading", "interactive", "complete"] as const) {
-  test(`first hydration reuses its matching ${readyState} document`, () => {
+  test(`the first mount reuses its matching ${readyState} document`, () => {
     const frame = fakeFrame(light);
     const current = fakeDocument(frame, light, readyState);
     const authentication = createMountAuthentication(frame, current, light);
@@ -75,7 +75,7 @@ for (const readyState of ["loading", "interactive", "complete"] as const) {
     );
   });
 
-  test(`first hydration waits for a startup swap from a ${readyState} recorded document`, () => {
+  test(`the first mount waits for a startup swap from a ${readyState} recorded document`, () => {
     const frame = fakeFrame(dark);
     const current = fakeDocument(frame, light, readyState);
     const authentication = createMountAuthentication(frame, current, dark);
@@ -87,7 +87,7 @@ for (const readyState of ["loading", "interactive", "complete"] as const) {
   });
 }
 
-test("first hydration waits for an assigned frame before its document arrives", () => {
+test("the first mount waits for an assigned frame before its document arrives", () => {
   for (const blank of [null, new URL("about:blank")]) {
     const frame = fakeFrame(light);
     const current = blank ? fakeDocument(frame, blank, "complete") : null;
@@ -100,7 +100,7 @@ test("first hydration waits for an assigned frame before its document arrives", 
   }
 });
 
-test("first hydration starts a requested navigation when src names another resource", () => {
+test("the first mount starts a requested navigation when src names another resource", () => {
   const frame = fakeFrame(dark);
   const current = fakeDocument(frame, light, "complete");
   const authentication = createMountAuthentication(frame, current, light);

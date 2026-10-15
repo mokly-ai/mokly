@@ -207,6 +207,8 @@ export function useRemovedPreview({
         ? owned.selection === selection
           ? owned.value
           : { status: "loading" }
-        : { status: "unavailable" },
+        : interactive && environment
+          ? { status: "loading" }
+          : { status: "unavailable" },
   };
 }

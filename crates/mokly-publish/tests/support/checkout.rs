@@ -5,6 +5,7 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 
+use mokly_git::control;
 use mokly_git::system::SystemRunner;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_publish::checkout::{Checkout, GitCheckout};
@@ -49,6 +50,8 @@ pub fn checkout() -> Arc<dyn Checkout> {
     Arc::new(GitCheckout {
         hints: Arc::new(SystemOutputHints),
         runner: Arc::new(SystemRunner {
+            clock: Arc::new(control::SystemClock::default()),
+            cancellation: Arc::new(control::Token::default()),
             groups: Arc::new(SystemProcessGroups),
         }),
     })

@@ -2,8 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import type { ShellContext } from "../src/shell/context.js";
-import { renderHydratedShellPage } from "../src/shell/document.js";
 import { workspaceData } from "../src/shell/workspace_data.js";
 import {
   viewerCatalogue,
@@ -12,19 +10,20 @@ import {
 } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+import { indexFixture, shellModelFixture } from "./catalogue_v7_fixture.js";
+import { standaloneMarkup } from "./shell_markup.js";
 
 /** The branch name that the export recorded from its comparison. */
 const BASE = "origin/main";
-const DEPLOYMENT = "d".repeat(64);
 const HEADING =
   "<h3>Comparison details</h3>" +
   `<p>Compared with the branch point on ${BASE}.</p>`;
 
-const model: CatalogueReadModel = {
-  ...componentWorkspaceFixture().model,
-  deploymentId: DEPLOYMENT,
-};
+/** The exported index, which carries the base ref of its comparison. */
+const named = (): CatalogueReadModel =>
+  indexFixture((index) => {
+    index.base = BASE;
+  });
 
 /** The published fixture's screen, saved component view and document page. */
 const ENTRIES = [
@@ -33,38 +32,17 @@ const ENTRIES = [
   ["document page", "guide", "page"],
 ] as const;
 
-/** The context that an export renders one route with, once Changes are ready. */
-function exportContext(screenPath: string): ShellContext {
-  return {
-    activeId: screenPath,
-    base: BASE,
-    changedEntries: [],
-    changesStatus: "ready",
-    delivery: {
-      schemaVersion: 5,
-      deploymentId: DEPLOYMENT,
-      canonicalPath: `/view/${screenPath}/`,
-      comparisonUrl: null,
-    },
-    readModel: model,
-    updateVersion: 0,
-  };
-}
-
 /**
- * One exported route. Without the private catalogue the route has no inert
- * workspace, so the shell shows the temporary view built from public data,
- * as it does after client navigation until the destination's data loads.
+ * One exported route. Before the entry's detail arrives, the shell shows the
+ * temporary view built from the index, as it does after client navigation
+ * until the destination's detail loads.
  */
 function exported(screenPath: string, loaded: boolean): string {
-  const display = viewerCatalogue(model);
-  const { publicModel: _public, ...privateCatalogue } = display;
-  const view = viewerView(display, { ...defaultSelection, screenPath });
-  return renderHydratedShellPage(
-    view,
-    exportContext(screenPath),
-    loaded ? privateCatalogue : undefined,
-  ).replaceAll("<!-- -->", "");
+  return standaloneMarkup({
+    index: named(),
+    ...(loaded ? {} : { details: [] }),
+    path: `/view/${screenPath}/`,
+  });
 }
 
 /** The comparison details in Details, or undefined when none render. */
@@ -86,21 +64,29 @@ for (const [kind, screenPath, evidence] of ENTRIES)
     assert.ok(loaded.startsWith(opening), loaded);
   });
 
-test("the public-data fallback keeps the name an export or Serve knows, and an embedded one stays nameless", () => {
-  const catalogue = viewerCatalogue(model);
-  const served: ShellContext = { base: BASE, updateVersion: 1 };
-  for (const [, screenPath, evidence] of ENTRIES) {
-    if (evidence !== "workspace") continue;
-    const view = viewerView(catalogue, { ...defaultSelection, screenPath });
-    if (view.kind !== "target" || view.target.kind !== "entry")
-      throw new Error(`Missing fixture route ${screenPath}`);
-    const entry = view.target.entry;
-    if (entry.kind !== "screen" && entry.kind !== "component")
-      throw new Error(`Unexpected fixture entry ${screenPath}`);
-    for (const context of [exportContext(screenPath), served])
-      assert.equal(workspaceData(catalogue, context, entry).base, BASE);
-    const embedded = viewerContext(model, { ...defaultSelection, screenPath });
-    assert.equal(embedded.base, "");
-    assert.equal(workspaceData(catalogue, embedded, entry).base, "");
+test("the index fallback keeps the index's base in every delivery, and an index without one stays nameless", () => {
+  const nameless = indexFixture((index) => {
+    delete index.base;
+  });
+  for (const [index, base] of [
+    [named(), BASE],
+    [nameless, ""],
+  ] as const) {
+    // The temporary workspace of a route whose detail has not arrived.
+    const model = shellModelFixture(index, new Map());
+    const catalogue = viewerCatalogue(model);
+    for (const [, screenPath, evidence] of ENTRIES) {
+      if (evidence !== "workspace") continue;
+      const selection = { ...defaultSelection, screenPath };
+      const view = viewerView(catalogue, selection);
+      if (view.kind !== "target" || view.target.kind !== "entry")
+        throw new Error(`Missing fixture route ${screenPath}`);
+      const entry = view.target.entry;
+      if (entry.kind !== "screen" && entry.kind !== "component")
+        throw new Error(`Unexpected fixture entry ${screenPath}`);
+      const embedded = viewerContext(model, selection);
+      for (const context of [embedded, { ...embedded, embedded: false }])
+        assert.equal(workspaceData(catalogue, context, entry).base, base);
+    }
   }
 });

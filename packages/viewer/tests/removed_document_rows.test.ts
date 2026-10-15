@@ -57,7 +57,6 @@ const context: ShellContext = {
   base: "main",
   changedEntries: removed.map(({ path }) => path),
   changesStatus: "ready",
-  updateVersion: 1,
 };
 
 test("removed documents are Changes-only rows, like removed pages", () => {

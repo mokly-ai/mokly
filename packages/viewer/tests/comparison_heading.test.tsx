@@ -4,21 +4,17 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
-import { renderHydratedShellPage } from "../src/shell/document.js";
 import { ComparisonHeading } from "../src/shell/evidence_details.js";
-import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
-import { renderViewer } from "../src/viewer/server.js";
 
-import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
+import { indexFixture, rawIndexFixture } from "./catalogue_v7_fixture.js";
 import {
-  BASE,
   CHANGED,
   CHANGED_SECTION,
-  published,
+  publishedDetails,
+  publishedIndex,
 } from "./page_evidence_fixture.js";
-
-const { model } = componentWorkspaceFixture();
+import { embeddedMarkup } from "./presentation_v7_helpers.js";
+import { standaloneMarkup } from "./shell_markup.js";
 
 const HEADING = "<h3>Comparison details</h3>";
 
@@ -57,31 +53,19 @@ const ENTRIES = [
   },
 ] as const;
 
-/** Render one entry as an embedding host does, from the public catalogue alone. */
-function embedded(catalogue: CatalogueReadModel, screenPath: string): string {
-  return renderViewer({
-    viewerId: "embedded",
-    catalogue,
-    baseUrl: "https://host.example/catalogue/",
-    defaultSelection: { screenPath },
-  }).replaceAll("<!-- -->", "");
+/** The fixture index without a base ref: no delivery knows a branch name. */
+function nameless(): CatalogueReadModel {
+  const index = rawIndexFixture();
+  delete index.base;
+  return index;
 }
 
-/** Render one entry as Serve and export do, with a known name and private data. */
-function served(screenPath: string): string {
-  const { publicModel: _public, ...catalogue } = viewerCatalogue(model);
-  return renderHydratedShellPage(
-    viewerView(viewerCatalogue(model), { ...defaultSelection, screenPath }),
-    {
-      activeId: screenPath,
-      base: "main",
-      changedEntries: [],
-      changesStatus: "ready",
-      readModel: model,
-      updateVersion: 1,
-    },
-    catalogue,
-  ).replaceAll("<!-- -->", "");
+/** Render one entry as an embedding host does, from the index alone. */
+function embedded(index: CatalogueReadModel, screenPath: string): string {
+  return embeddedMarkup({ index, defaultSelection: { screenPath } }).replaceAll(
+    "<!-- -->",
+    "",
+  );
 }
 
 /** The comparison details in Details, or undefined when none render. */
@@ -91,30 +75,34 @@ const section = (markup: string) =>
   )?.[0];
 
 for (const entry of ENTRIES)
-  test(`an embedded ${entry.kind} keeps its Details without the branch-point sentence`, () => {
+  test(`a ${entry.kind} of an index without a base keeps its Details without the branch-point sentence`, () => {
+    const index = indexFixture((model) => {
+      delete model.base;
+    });
     assert.equal(
-      section(embedded(model, entry.id)),
+      section(standaloneMarkup({ index, path: `/view/${entry.id}/` })),
       `<section class="mbk-comparison-evidence" ${entry.evidence}="">` +
         `${HEADING}${entry.rest}</section>`,
     );
   });
 
-test("an embedded changed page keeps each file and style without the sentence", () => {
-  const sentence = `<p>Compared with the branch point on ${BASE}.</p>`;
+test("a changed page of an index without a base keeps each file and style without the sentence", () => {
+  const sentence = "<p>Compared with the branch point on origin/main.</p>";
   assert.ok(CHANGED_SECTION.includes(sentence));
-  const catalogue = published({
-    changes: { status: "ready", kind: "changed", included: true },
-    resourceEvidence: CHANGED,
+  const html = standaloneMarkup({
+    index: publishedIndex(
+      { changes: { status: "ready", kind: "changed", included: true } },
+      null,
+    ),
+    details: publishedDetails(CHANGED),
+    path: "/view/guide/",
   });
-  assert.equal(
-    section(embedded(catalogue, "guide")),
-    CHANGED_SECTION.replace(sentence, ""),
-  );
+  assert.equal(section(html), CHANGED_SECTION.replace(sentence, ""));
 });
 
 for (const entry of ENTRIES)
-  test(`a served ${entry.kind} names the known branch point after the heading`, () => {
-    const details = section(served(entry.id));
+  test(`a standalone ${entry.kind} names the index's branch point after the heading`, () => {
+    const details = section(standaloneMarkup({ path: `/view/${entry.id}/` }));
     assert.ok(details);
     assert.ok(
       details.startsWith(
@@ -124,6 +112,23 @@ for (const entry of ENTRIES)
       details,
     );
   });
+
+test("an embedded entry names the branch point exactly when its index has a base", () => {
+  for (const entry of ENTRIES) {
+    const opening = `<section class="mbk-comparison-evidence" ${entry.evidence}="">${HEADING}`;
+    const named = section(embedded(rawIndexFixture(), entry.id));
+    const unnamed = section(embedded(nameless(), entry.id));
+    assert.ok(named && unnamed);
+    assert.ok(
+      named.startsWith(
+        `${opening}<p>Compared with the branch point on main.</p>`,
+      ),
+      named,
+    );
+    assert.ok(unnamed.startsWith(opening), unnamed);
+    assert.doesNotMatch(unnamed, /Compared with the branch point/);
+  }
+});
 
 test("the shared heading names only a known branch point", () => {
   for (const base of ["", " "])

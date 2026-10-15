@@ -1,7 +1,7 @@
 # Previous versions of removed entries
 
 These modules turn a removed page, Markdown document or screen into the version from the pinned
-Changes baseline, for the served shell, a static export and an embedded
+Changes baseline, for the shell of Serve, of a static build and of an embedded
 `@mokly/viewer` alike. They implement the
 [removed previews contract](../../../../docs/protocol/mokly-removed-previews.md).
 
@@ -52,8 +52,8 @@ serializes the preserved doctype and other nodes for `srcdoc`. These edits
 affect only the in-memory presentation; snapshot and comparison bytes do not
 change.
 
-[`copy.ts`](./copy.ts) owns the unavailable copy and Retry hook shared by the
-server render and hydrated shell. [`shell/previews.tsx`](../shell/previews.tsx)
+[`copy.ts`](./copy.ts) owns the unavailable copy and Retry hook of the shell.
+[`shell/previews.tsx`](../shell/previews.tsx)
 owns loading, retry and loaded states,
 using the same device chrome components as current screens. A selected viewport
 with no captured view keeps a note where its frame would be rather than an empty
@@ -70,16 +70,16 @@ through the caller's `reveal` hook, which comparison panes use to reveal inner
 regions and then their page viewport), preserves Space for scrolling, and
 reapplies the accepted `srcdoc` if the frame navigates away.
 [`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
-route-owned controller: its first effect replaces the honest server-rendered
-unavailable state with loading, requests on selection, fetches every document
+route-owned controller: it starts in the loading state, requests on selection,
+fetches every document
 needed for that viewport and scheme before reporting ready, renews before
 reusing a live presentation, and discards work after route replacement or
 unmount.
 
-The controller and typed review validators are bundled once into the shared
-`react-shell.js` hydration entry. Serve, static export and application-owned
-`@mokly/viewer` roots therefore use the same React lifecycle without a second
-Browse runtime.
+The controller and typed review validators are bundled once into the
+standalone shell, `dist/browser/shell.js`. Serve, `build` and
+application-owned `@mokly/viewer` roots therefore use the same React lifecycle
+without a second Browse runtime.
 
 ```bash
 npm run build

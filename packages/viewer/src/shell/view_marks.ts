@@ -1,9 +1,9 @@
 // Per-view change evidence for the workspace view controls: the two axes that
 // name a generated view, the order those views are read in, and the rule that
 // decides whether the viewport and theme controls carry a mark. The shell
-// renders the controls from this rule and the Browse client re-applies it
-// whenever the shown viewport or scheme changes, so the served markup and
-// every client update agree without a second state channel.
+// renders the controls from this rule and re-applies it whenever the shown
+// viewport or scheme changes, so every render agrees without a second state
+// channel.
 
 import type { ColorScheme, Viewport } from "../data/axes.js";
 

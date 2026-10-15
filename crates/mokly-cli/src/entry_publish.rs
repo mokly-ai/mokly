@@ -13,6 +13,7 @@ use mokly_cli::publication::command::{BuildReporter, Command, Options, Publish};
 use mokly_cli::publish_errors::render;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
+use mokly_git::control;
 use mokly_git::system::SystemRunner;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_publish::checkout::GitCheckout;
@@ -94,6 +95,8 @@ pub(super) fn run(
         checkout: Arc::new(GitCheckout {
             hints: Arc::new(SystemOutputHints),
             runner: Arc::new(SystemRunner {
+                clock: Arc::new(control::SystemClock::default()),
+                cancellation: Arc::new(control::Token::default()),
                 groups: Arc::new(SystemProcessGroups),
             }),
         }),

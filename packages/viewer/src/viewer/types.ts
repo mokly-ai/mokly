@@ -7,6 +7,10 @@ import type {
   FrameNavigation,
 } from "../client/frame_adapter.js";
 
+import type { DetailSource, IndexSource } from "./sources.js";
+
+export type { DetailResult, DetailSource, IndexSource } from "./sources.js";
+
 export interface ViewerSelection {
   screenPath: string | null;
   /** Exact removed record; absent selects current or uniquely identified history. */
@@ -17,11 +21,6 @@ export interface ViewerSelection {
   search: string;
   tags: readonly string[];
 }
-export type CatalogueFetcher = (context: {
-  signal: AbortSignal;
-}) => Promise<{ catalogue: CatalogueReadModel; url: URL }>;
-export type CatalogueSource =
-  CatalogueReadModel | string | URL | CatalogueFetcher;
 export interface InstanceRef {
   screenPath: string;
   /** Required for a flow occurrence; absent for a standalone screen or component. */
@@ -108,12 +107,14 @@ export type SelectionProps =
       defaultSelection?: Partial<ViewerSelection>;
       onSelectionChange?: (selection: ViewerSelection) => void;
     };
-export type SourceProps =
-  | { catalogue: CatalogueReadModel; baseUrl: string | URL }
-  | {
-      catalogue: Exclude<CatalogueSource, CatalogueReadModel>;
-      baseUrl?: never;
-    };
+/**
+ * The catalogue index v7 as an object with its artifact origin, or its
+ * absolute HTTP(S) URL; and the detail source of every entry.
+ */
+export type SourceProps = { detail: DetailSource } & (
+  | { index: CatalogueReadModel; baseUrl: string | URL }
+  | { index: Exclude<IndexSource, CatalogueReadModel>; baseUrl?: never }
+);
 
 /**
  * Appearance of the interface around previews. `auto` follows the reader's
@@ -124,8 +125,6 @@ export type ViewerTheme = "auto" | "dark" | "light";
 export type MoklyViewerProps = SourceProps &
   SelectionProps &
   ViewerEvents & {
-    /** Stable identifier unique among viewer roots in the host document. */
-    viewerId: string;
     /** Interface appearance; omission means `auto`. */
     theme?: ViewerTheme;
     frameAdapter?: FrameAdapter;

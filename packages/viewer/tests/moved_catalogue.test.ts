@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
 import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+
+import { catalogueFixture, indexFixture } from "./catalogue_v7_fixture.js";
 
 const screen = (path: string) =>
   ({
@@ -46,20 +45,15 @@ test("a catalogue keeps the previous path of each current entry a move paired", 
 });
 
 test("the public viewer reads each paired entry's previous path from the read model", () => {
-  const model = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
+  const catalogue = catalogueFixture(
+    indexFixture((model) => {
+      const details = model.screens.find(
+        (entry) => entry.path === "product/browse/details",
+      );
+      assert.ok(details);
+      details.previousPath = "product/details";
+    }),
   );
-  const details = model.screens.find(
-    (entry: { path: string }) => entry.path === "product/browse/details",
-  );
-  details.previousPath = "product/details";
-  const catalogue = viewerCatalogue(readCatalogue(model));
   assert.deepEqual(
     [...catalogue.previousPaths],
     [["product/browse/details", "product/details"]],

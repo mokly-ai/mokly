@@ -1,139 +1,52 @@
 /** Declarative prop controls with explicit optional supply and field errors. */
 
-import { decodeProps, encodeValue } from "../components/codec.js";
-import { validateControlledValues } from "../components/controls.js";
-import type { ManifestComponent } from "../components/manifest_types.js";
-import type {
-  ComponentWirePrimitive,
-  PropPrimitive,
-} from "../components/prop_types.js";
-import { validateValue } from "../components/props.js";
-import type { ComponentOverride } from "../components/render_types.js";
+import type { ComponentControl } from "../components/control_types.js";
+import { optionalProperty } from "../components/props.js";
 
+import {
+  controlEntries,
+  numberInputBounds,
+  type ControlDraft,
+  type ControlDraftField,
+  type ControlTarget,
+} from "./control_values.js";
 import { useShellIdentifierScope } from "./identifier_context.js";
-import type { WorkspaceVariant } from "./workspace_data.js";
 
-/** Input representation that preserves partial numeric and text edits. */
-export interface ControlDraftField {
-  supplied: boolean;
-  value: boolean | string;
-}
+export {
+  controlDraft,
+  validateControlDraft,
+  type ControlDraft,
+  type ControlDraftField,
+  type ControlTarget,
+  type ValidatedControlDraft,
+} from "./control_values.js";
 
-/** Draft values keyed by declared controlled prop. */
-export type ControlDraft = Readonly<Record<string, ControlDraftField>>;
-
-/** Validated overrides and field-specific product errors. */
-export interface ValidatedControlDraft {
-  errors: Readonly<Record<string, string>>;
-  overrides?: Readonly<Record<string, ComponentOverride>>;
-}
-
-/** Build a fresh form state from one saved variant. */
-export function controlDraft(
-  component: ManifestComponent,
-  variant: WorkspaceVariant,
-): ControlDraft {
-  const values = decodeProps(variant.value.props);
-  return Object.fromEntries(
-    controlEntries(component).map(([key, control]) => {
-      const value = values[key];
-      const field: ControlDraftField = {
-        supplied: value !== undefined,
-        value:
-          control.kind === "boolean"
-            ? value === true
-            : control.kind === "select"
-              ? (() => {
-                  const selected = control.options.findIndex((option) =>
-                    Object.is(option.value, value),
-                  );
-                  return selected < 0 ? "" : String(selected);
-                })()
-              : value === undefined
-                ? ""
-                : Object.is(value, -0)
-                  ? "-0"
-                  : String(value),
-      };
-      return [key, field];
-    }),
-  );
-}
-
-/** Validate the complete draft without replacing the last valid preview. */
-export function validateControlDraft(
-  component: ManifestComponent,
-  variant: WorkspaceVariant,
-  draft: ControlDraft,
-): ValidatedControlDraft {
-  const saved = decodeProps(variant.value.props);
-  const overrides: Record<string, ComponentOverride> = {};
-  const errors: Record<string, string> = {};
-  for (const [key, control] of controlEntries(component)) {
-    const field = draft[key]!;
-    if (!field.supplied) {
-      if (saved[key] !== undefined) overrides[key] = { kind: "unset" };
-      continue;
-    }
-    try {
-      let value: PropPrimitive;
-      if (control.kind === "boolean") value = field.value === true;
-      else if (control.kind === "select") {
-        if (field.value === "") throw new Error("Choose an available value.");
-        const option = control.options[Number(field.value)];
-        if (!option) throw new Error("Choose an available value.");
-        value = option.value;
-      } else if (control.kind === "number") {
-        value = Number(field.value);
-        if (!String(field.value).trim() || !Number.isFinite(value))
-          throw new Error("Enter a finite number.");
-      } else value = String(field.value);
-      validateValue(component.propSchema.properties[key]!.schema, value, key);
-      validateControlledValues({ [key]: control }, { [key]: value }, key);
-      if (!Object.is(value, saved[key]))
-        overrides[key] = {
-          kind: "set",
-          value: encodeValue(value) as ComponentWirePrimitive,
-        };
-    } catch {
-      errors[key] =
-        control.kind === "number"
-          ? "Enter a number within the allowed range."
-          : control.kind === "select"
-            ? "Choose an available value."
-            : "Check this value and its allowed limits.";
-    }
-  }
-  return {
-    errors,
-    ...(Object.keys(errors).length ? {} : { overrides }),
-  };
-}
-
-/** Native form fields for all author-declared controls. */
+/** Native form fields for every control of the shown entry. */
 export function ComponentControlFields({
-  component,
   disabled,
   draft,
   errors,
   onChange,
+  target,
 }: {
-  component: ManifestComponent;
   disabled: boolean;
   draft: ControlDraft;
   errors: Readonly<Record<string, string>>;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
+  target: ControlTarget;
 }) {
   const identifier = useShellIdentifierScope();
   return (
     <div className="mbk-control-grid">
-      {controlEntries(component).map(([key, control]) => {
+      {controlEntries(target).map(([key, control]) => {
         const field = draft[key]!;
-        const label = control.label ?? key;
-        const optional = component.propSchema.properties[key]?.optional;
-        const id = identifier(`mb-prop-${component.path}-${key}`);
+        const label =
+          control.label ?? target.propSchema.properties?.[key]?.title ?? key;
+        const optional = optionalProperty(target.propSchema, key);
+        const id = identifier(`mb-prop-${target.path}-${key}`);
         const help =
           control.description ??
+          target.propSchema.properties?.[key]?.description ??
           (control.kind === "number" &&
           (control.minimum !== undefined || control.maximum !== undefined)
             ? `Allowed range: ${control.minimum ?? "no minimum"} to ${control.maximum ?? "no maximum"}.`
@@ -185,12 +98,6 @@ export function ComponentControlFields({
   );
 }
 
-function controlEntries(component: ManifestComponent) {
-  return Object.entries(component.controls).sort(([left], [right]) =>
-    left < right ? -1 : left > right ? 1 : 0,
-  );
-}
-
 function ControlInput({
   control,
   disabled,
@@ -200,7 +107,7 @@ function ControlInput({
   name,
   onChange,
 }: {
-  control: ManifestComponent["controls"][string];
+  control: ComponentControl;
   disabled: boolean;
   field: ControlDraftField;
   id: string;
@@ -245,12 +152,10 @@ function ControlInput({
       {...(control.kind === "number"
         ? {
             inputMode: "decimal" as const,
-            max: control.maximum,
-            min: control.minimum,
-            step: control.step ?? "any",
+            ...numberInputBounds(control),
             type: "number",
           }
-        : { maxLength: control.maxLength, type: "text" })}
+        : { type: "text" })}
       onChange={(event) => onChange(event.currentTarget.value, false)}
       value={String(field.value)}
     />

@@ -40,7 +40,13 @@ const manifest: ManifestV10 = currentManifest({
       colorSchemes: ["light"],
       path: "component",
       kind: "component",
-      propSchema: { kind: "object", properties: {} },
+      propSchema: {
+        type: "object",
+        properties: {},
+        additionalProperties: false,
+      },
+      props: {},
+      suppliedSlots: [],
 
       slots: [],
     },

@@ -1,21 +1,14 @@
 /** One route-owned workspace supplies preview rendering and shell indicators. */
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { useShellStore } from "./store_context.js";
-import type { WorkspaceHydrationState } from "./store_state.js";
 import {
   useWorkspaceData,
   type WorkspaceDataState,
 } from "./use_workspace_data.js";
 import { viewMarks, type ViewMarks } from "./view_marks.js";
+import type { EntryStatus } from "./view_status.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import {
   selectedVariant,
@@ -27,9 +20,16 @@ import {
 } from "./workspace_views.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
+/** The status, eligibility and change marks the routed workspace shows. */
+export interface WorkspacePresentation {
+  status: EntryStatus | undefined;
+  comparisonEligible: boolean;
+  marks: ViewMarks;
+}
+
 interface ActiveWorkspace extends WorkspaceDataState {
   marks: ViewMarks;
-  presentation: WorkspaceHydrationState;
+  presentation: WorkspacePresentation;
   selection: WorkspaceVariantSelection;
   resolvedView: ResolvedWorkspaceView;
 }
@@ -37,15 +37,7 @@ interface ActiveWorkspace extends WorkspaceDataState {
 const WorkspaceContext = createContext<ActiveWorkspace | undefined>(undefined);
 
 /** Share evidence loading and effective-view resolution across the shell. */
-export function WorkspaceProvider({
-  children,
-  initial,
-}: {
-  children: ReactNode;
-  initial?: WorkspaceHydrationState | undefined;
-}) {
-  const [hydration, setHydration] = useState(initial);
-  useEffect(() => setHydration(undefined), []);
+export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const store = useShellStore();
   const route = store.state.route;
   const target = route.view.kind === "target" ? route.view.target : undefined;
@@ -76,9 +68,9 @@ export function WorkspaceProvider({
       viewport,
     ],
   );
-  const presentation =
+  const presentation: WorkspacePresentation | undefined =
     workspace && resolvedView
-      ? (hydration ?? {
+      ? {
           status: resolvedView.status,
           comparisonEligible: resolvedView.comparisonEligible,
           marks: viewMarks(
@@ -90,7 +82,7 @@ export function WorkspaceProvider({
             viewport,
             resolvedView.colorScheme,
           ),
-        })
+        }
       : undefined;
   const value =
     workspace && selection && resolvedView && presentation

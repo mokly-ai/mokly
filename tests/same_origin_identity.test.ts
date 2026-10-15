@@ -158,11 +158,11 @@ test("a later mount excludes its exact unrecorded starting document", () => {
   const fixture = fakeFrame();
   const firstUrl = new URL("https://app.test/static/first.html");
   const nextUrl = new URL("https://app.test/static/next.html?revision=2");
-  const hydrated = fakeDocument(fixture.frame, firstUrl.href);
-  const first = createMountAuthentication(fixture.frame, hydrated, firstUrl);
+  const starting = fakeDocument(fixture.frame, firstUrl.href);
+  const first = createMountAuthentication(fixture.frame, starting, firstUrl);
   assert.equal(
-    first.authenticateAssignedDocument(hydrated, firstUrl),
-    hydrated,
+    first.authenticateAssignedDocument(starting, firstUrl),
+    starting,
   );
 
   const unowned = fakeDocument(fixture.frame, nextUrl.href);

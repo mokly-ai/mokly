@@ -1,4 +1,4 @@
-/** URL-derived route state for the standalone hydrated shell. */
+/** URL-derived route state for the standalone shell. */
 
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import { isLogicalFragment } from "../navigation/logical.js";

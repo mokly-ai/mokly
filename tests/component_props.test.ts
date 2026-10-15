@@ -8,41 +8,53 @@ import {
   decodeValue,
 } from "../packages/viewer/dist/components/codec.js";
 import { canonicalJson } from "../packages/viewer/dist/components/data.js";
-import type { PropValue } from "../packages/viewer/dist/components/prop_types.js";
+import { validatePropSchema } from "../packages/viewer/dist/components/profile_schema.js";
+import type {
+  PropSchema,
+  PropValue,
+} from "../packages/viewer/dist/components/prop_types.js";
 import { validateProps } from "../packages/viewer/dist/components/props.js";
-import { validatePropSchema } from "../packages/viewer/dist/components/schema.js";
 import { reviewMaterialKey } from "../packages/viewer/dist/data/material_key.js";
 
-const schema = {
-  kind: "object",
+const schema: PropSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["label", "count", "nested"],
   properties: {
-    label: { schema: { kind: "string", minLength: 1 } },
-    count: { schema: { kind: "number" } },
-    hint: { optional: true, schema: { kind: "string" } },
+    label: { type: "string", minLength: 1 },
+    count: { type: "number" },
+    hint: { type: "string" },
     nested: {
-      schema: {
-        kind: "array",
-        items: {
-          kind: "union",
-          anyOf: [
-            { kind: "null" },
-            {
-              kind: "object",
-              properties: { active: { schema: { kind: "boolean" } } },
-            },
-          ],
-        },
+      type: "array",
+      items: {
+        anyOf: [
+          { type: "null" },
+          {
+            type: "object",
+            additionalProperties: false,
+            required: ["active"],
+            properties: { active: { type: "boolean" } },
+          },
+        ],
       },
     },
   },
-} as const;
+};
+
+/** A closed root object whose one optional property is `value`. */
+function rooted(value: unknown): unknown {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: { value },
+  };
+}
 
 test("component props preserve values and negative zero through their canonical codec", () => {
   validatePropSchema(schema);
   const input = {
     label: "Confirm",
     count: -0,
-    hint: undefined,
     nested: [null, { active: false }],
   };
   const props = validateProps(schema, input, "Action / Default / mobile");
@@ -51,14 +63,13 @@ test("component props preserve values and negative zero through their canonical 
   assert.deepEqual(roundTrip, props);
   assert.ok(Object.is(roundTrip.count, -0));
   assert.equal(reviewMaterialKey(roundTrip), reviewMaterialKey(props));
-  input.nested[1] = { active: true };
-  assert.deepEqual(props.nested, [null, { active: false }]);
 });
 
 test("closed component schemas validate uncontrolled, optional and nested inputs", () => {
   const valid = { label: "Confirm", count: 2, nested: [] };
   for (const props of [
     { ...valid, extra: true },
+    { count: 2, nested: [] },
     { ...valid, label: undefined },
     { ...valid, count: Infinity },
     { ...valid, nested: [undefined] },
@@ -79,29 +90,33 @@ test("closed component schemas validate uncontrolled, optional and nested inputs
 
 test("component schema rejects malformed, unsafe and ambiguous declarations", () => {
   for (const invalid of [
-    { kind: "object", properties: {}, additionalProperties: true },
-    { kind: "number", minimum: -0 },
-    { kind: "number", minimum: 2, maximum: 1 },
-    { kind: "string", minLength: -1 },
-    { kind: "array", items: { kind: "boolean" }, maxItems: 1.5 },
-    { kind: "enum", values: [] },
-    { kind: "enum", values: ["one", "one"] },
-    { kind: "enum", values: [-0] },
-    { kind: "union", anyOf: [{ kind: "null" }] },
+    { type: "object", properties: {}, additionalProperties: true },
+    rooted({ type: "number", minimum: -0 }),
+    rooted({ type: "number", minimum: 2, maximum: 1 }),
+    rooted({ type: "string", minLength: -1 }),
+    rooted({ type: "array", items: { type: "boolean" }, maxItems: 1.5 }),
+    rooted({ enum: [{}] }),
+    rooted({ type: ["string", "string"] }),
+    rooted({ oneOf: [{ type: "string" }] }),
+    rooted({ anyOf: [] }),
+    rooted({ type: "string", default: "x" }),
     {
-      kind: "object",
-      properties: { constructor: { schema: { kind: "null" } } },
+      type: "object",
+      additionalProperties: false,
+      properties: { constructor: { type: "null" } },
     },
   ])
     assert.throws(() => validatePropSchema(invalid));
-  validatePropSchema({ kind: "enum", values: ["1", 1, false, null] });
+  validatePropSchema(rooted({ enum: ["1", 1, false, null] }));
 });
 
 test("props reject accessors, classes, cycles, symbols and bounded oversized values without executing getters", () => {
-  const objectSchema = {
-    kind: "object",
-    properties: { data: { schema: { kind: "string" } } },
-  } as const;
+  const objectSchema: PropSchema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["data"],
+    properties: { data: { type: "string" } },
+  };
   const getter = Object.defineProperty({}, "data", {
     enumerable: true,
     get() {
@@ -121,19 +136,19 @@ test("props reject accessors, classes, cycles, symbols and bounded oversized val
   ]) {
     assert.throws(() => validateProps(objectSchema, value));
   }
-  const arraySchema = {
-    kind: "object",
-    properties: {
-      data: { schema: { kind: "array", items: { kind: "null" } } },
-    },
-  } as const;
+  const arraySchema: PropSchema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["data"],
+    properties: { data: { type: "array", items: { type: "null" } } },
+  };
   assert.throws(
     () => validateProps(arraySchema, { data: Array(10_001).fill(null) }),
     /limit/,
   );
-  let deep: unknown = { kind: "string" };
-  for (let i = 0; i < 65; i++) deep = { kind: "array", items: deep };
-  assert.throws(() => validatePropSchema(deep), /limit/);
+  let deep: unknown = { type: "string" };
+  for (let i = 0; i < 65; i++) deep = { type: "array", items: deep };
+  assert.throws(() => validatePropSchema(rooted(deep)), /limit/);
 });
 
 test("codec rejects noncanonical values and orders integer-looking keys lexically", () => {

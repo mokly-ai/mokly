@@ -4,7 +4,7 @@ import type { CatalogueNode } from "../src/catalogue/types.js";
 export function withoutTreeEntries(
   nodes: readonly CatalogueNode[],
   paths: readonly string[],
-): readonly CatalogueNode[] {
+): CatalogueNode[] {
   return nodes.flatMap((node): CatalogueNode[] => {
     if (paths.includes(node.path)) return [];
     if (!node.children) return [node];

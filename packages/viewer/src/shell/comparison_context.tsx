@@ -1,16 +1,11 @@
 /** Explicit comparison I/O boundary for standalone and embedded shells. */
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 
 import type { SnapshotPresentationEnvironment } from "../previews/presentation.js";
 
-import {
-  storedScrollTogether,
-  type ScrollTogetherPreference,
-} from "./comparison_scroll_preference.js";
-import type { ShellContext } from "./context.js";
-import { readShellDelivery } from "./delivery.js";
+import type { ScrollTogetherPreference } from "./comparison_scroll_preference.js";
 
 /** A live Serve route or one catalogue-pinned immutable metadata file. */
 export type ComparisonDelivery =
@@ -34,24 +29,16 @@ const ComparisonEnvironmentContext = createContext<
   ComparisonEnvironment | undefined
 >(undefined);
 
-/** Supply an explicit environment or the standalone document integration. */
+/** Supply the comparison environment of one shell root, when it has one. */
 export function ComparisonEnvironmentProvider({
   children,
-  context,
   environment,
-  interactive,
 }: {
   children: ReactNode;
-  context: ShellContext;
   environment?: ComparisonEnvironment;
-  interactive: boolean;
 }) {
-  const standalone = useMemo(
-    () => standaloneEnvironment(context, interactive),
-    [context.delivery, interactive],
-  );
   return (
-    <ComparisonEnvironmentContext.Provider value={environment ?? standalone}>
+    <ComparisonEnvironmentContext.Provider value={environment}>
       {children}
     </ComparisonEnvironmentContext.Provider>
   );
@@ -70,32 +57,5 @@ export function snapshotPresentationEnvironment(
     baseUrl: environment.baseUrl,
     fetch: (input, init) => environment.fetch(input, init),
     parse: (source) => new DOMParser().parseFromString(source, "text/html"),
-  };
-}
-
-function standaloneEnvironment(
-  context: ShellContext,
-  interactive: boolean,
-): ComparisonEnvironment | undefined {
-  if (
-    !interactive ||
-    typeof document === "undefined" ||
-    typeof window === "undefined"
-  )
-    return;
-  return {
-    baseUrl: window.location.origin,
-    delivery: context.delivery
-      ? () => ({
-          kind: "pinned",
-          comparisonUrl: readShellDelivery(document)?.comparisonUrl ?? null,
-        })
-      : () => ({ kind: "live" }),
-    fetch: (input, init) => window.fetch(input, init),
-    initialMode: () =>
-      new URL(window.location.href).searchParams.get("comparison") === "side"
-        ? "side"
-        : undefined,
-    scrollTogether: storedScrollTogether(() => window.localStorage),
   };
 }

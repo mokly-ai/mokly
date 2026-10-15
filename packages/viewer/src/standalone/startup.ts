@@ -1,12 +1,8 @@
 /**
  * Restores the standalone catalogue's Appearance on the document root and keeps
- * every frame showing the matching fragment. It is deliberately outside the
- * React entry's execution path: a classic asset can run before the shell
- * stylesheet paints, so a dark reader never sees a light first frame.
- *
- * The package-owned `appearance-startup.js` classic entry calls this. The asset
- * is delivered ahead of the standalone control, so production markup does not
- * reference it until that control opts the document in.
+ * every frame showing the matching fragment. The browser entry installs it
+ * before the shell's first render, so a dark reader never sees a light first
+ * frame; the React bridge then follows it through `appearance_host.ts`.
  */
 
 import { normalizeTheme, THEME_ATTRIBUTE } from "../viewer/theme.js";
@@ -66,7 +62,7 @@ export interface AppearanceWindow {
     removeEventListener(type: "change", handler: () => void): void;
   };
   localStorage?: AppearanceStorage | undefined;
-  /** Hydrated owner of preview navigation, notified after each application. */
+  /** The shell's owner of preview navigation, notified after each application. */
   onAppearance?:
     ((theme: ViewerTheme, scheme: "dark" | "light") => void) | undefined;
 }

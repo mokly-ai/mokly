@@ -1,36 +1,36 @@
-/** Lifetime checks for live temporary component preview documents. */
+/** Lifetime checks for live temporary preview documents. */
 
 import { useEffect, type RefObject } from "react";
 
-import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
-import type { ViewerCapabilityRequest } from "../client/host_capability_descriptor.js";
+import { localFramePath } from "../client/same_origin_adapter.js";
 import type { ComponentRenderSuccess } from "../components/render_types.js";
 
-/** Report when a mounted temporary preview has been evicted by the host. */
+import type { TemporaryPreviews } from "./data_context.js";
+
+/** Report when a mounted temporary preview has been evicted by Serve. */
 export function useComponentPreviewExpiration({
-  capabilities,
   onExpired,
   previews,
-  request,
+  temporaryPreviews,
   workspaceRef,
 }: {
-  capabilities: ViewerHostCapabilities | undefined;
   onExpired(): void;
   previews: ReadonlyMap<string, ComponentRenderSuccess>;
-  request: ViewerCapabilityRequest | undefined;
+  temporaryPreviews: TemporaryPreviews | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
 }): void {
   useEffect(() => {
     const root = workspaceRef.current;
-    if (!root || !request || !previews.size || !capabilities?.temporaryPreviews)
-      return;
+    if (!root || !previews.size || !temporaryPreviews) return;
     const controller = new AbortController();
     const check = async (frame: HTMLIFrameElement) => {
+      const preview = [...previews.values()].find(
+        (result) => localFramePath(frame) === result.previewUrl,
+      );
+      if (!preview) return;
       try {
-        const expired = await capabilities.temporaryPreviews!.expired(
-          request,
-          frame,
-          previews.values(),
+        const expired = await temporaryPreviews.expired(
+          preview.previewUrl,
           controller.signal,
         );
         if (!controller.signal.aborted && expired) onExpired();
@@ -53,5 +53,5 @@ export function useComponentPreviewExpiration({
       for (const { frame, listener } of listeners)
         frame.removeEventListener("load", listener);
     };
-  }, [capabilities, onExpired, previews, request, workspaceRef]);
+  }, [onExpired, previews, temporaryPreviews, workspaceRef]);
 }

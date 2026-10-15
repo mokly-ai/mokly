@@ -711,14 +711,14 @@ without JavaScript.
 
 Tags: ui
 
-- [ ] Update the viewer's data readers and validators to the generated read
+- [x] Update the viewer's data readers and validators to the generated read
       model v7 types.
-- [ ] Show a component's own props before its variants, offer the derived
+- [x] Show a component's own props before its variants, offer the derived
       controls on screens with the zero-based step and the title-or-value
       select labels, and validate control input with a profile validator
       that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Replace server rendering and hydration in the viewer package with the
+- [x] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
@@ -726,7 +726,10 @@ Tags: ui
       and the package README, rewritten under Decision 38, is checked
       against the package.
 - [ ] Run the viewer suite against the Milestone 6 routes.
-- [ ] Commit.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m7-checks/`; sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m7.md`.
+Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m7/merge-decisions.md`.
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
@@ -789,6 +792,23 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
+- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+      routing, detail loading and retry, live publications without a page
+      load, and the frame reload by `documentKey`; and the live prop edits:
+      the 150 ms debounce, the rerender after a revision adoption or a
+      `live.generation` change, the retry after a 409, cancellation on
+      navigation, and read-only controls while no descriptor is installed.
+- [ ] Port the Milestone 7 presentation into the design catalogue and settle
+      its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
+      the parent's own entry first in the variant bar, controls on screens,
+      the stage loading state, the index failure state, the version failure
+      state, the Props tab label against the mockups' "Controls", and the
+      controls copy "Choose an available entry to edit props.",
+      "Comparisons show the saved props. Return to Current to edit props.",
+      "Open this catalogue locally to edit props." (also shown in Serve while
+      the descriptor loads), "No editable props are declared for this
+      entry.", and "Check the highlighted values." for a whole-props error
+      that highlights no field.
 - [x] Write the JavaScript authoring guides.
 
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
@@ -805,16 +825,31 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
+- [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
-- [ ] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
+- [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
       one second, and drain process pipes before settling.
+- [x] Add the part 1 base source reader, leased extraction cache, dependency
+      input readers, three dependency tiers, and bounded install cache in
+      `mokly-compare`, ready for the render graph connection.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, the
       `base-dependencies` warning, and the terminal line that names the cache
       directory.
+      Part 1 gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-git.md`.
+- [x] Apply final part 1 review fixes: sidecar repository roots, cache flush
+      and trash handling, batched working hashes, independent tree bounds,
+      rename encoding, warning locations, and concurrent cache misses.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/logs/m9-git/round3-targeted-tests.log`.
+      Integration choices: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-git/merge-decisions.md`.
+- [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
+      the commit-pinned Git index and batched blob reader. Cover projection,
+      direct children, every mode, and typed IO errors.
+- [ ] Implement branch-point entry lookup and its shared verification cases:
+      kind/case identity, accepted-pair precedence, removed destinations,
+      counterparts, variant parents, stored titles, and generation isolation.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
@@ -840,6 +875,15 @@ Tags: ui
 
 - [ ] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
+- [ ] Check the shell's projection of the entry detail's review v8 rule and
+      resource records (`packages/viewer/src/review/view_evidence.ts`)
+      against Milestone 9 output.
+- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+      the serialization contract: `sourceKind` is the literal `base`.
+- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+      package README describe (the path functions, the directory names, the
+      path grammar, and the prop schema validators) when review v8 replaces
+      the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 
@@ -944,12 +988,20 @@ Publish client final review and merge decisions:
       re-review once, and report the rest.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
+  - Milestone 9 part 1 review 1, finding 11: user decision pending on support
+    for package managers other than npm; retain the npm-only fallback policy.
+  - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
+    conversion for base render/resource bytes; retain raw Git blob bytes.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention
     after success; keep the existing retention until the user decides.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
+  - Milestone 7 review 1, finding 12: decide whether to delete the
+    former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
+    `catalogue-v6.json` and their `.prettierignore` lines; it waits for the
+    user.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

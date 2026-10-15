@@ -50,7 +50,6 @@ function opened(
     base: "main",
     changedEntries: changed,
     changesStatus: "ready",
-    updateVersion: 1,
   };
   const entry = catalogue.byPath.get(requested);
   assert.ok(entry);
