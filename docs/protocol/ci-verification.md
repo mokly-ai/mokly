@@ -5,7 +5,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate. The local
-executor runs every suite sequentially in one checkout. It starts with the live
+executor runs the local suites sequentially in one checkout. Native runs only
+when selected. The local gate starts with the live
 baseline workspace audit, which fails on new issues and reports inherited ones
 as notices. `--dependency-audit strict` selects strict mode for the complete
 gate or the repository suite;
@@ -47,8 +48,9 @@ viewer suite fail before any subprocess starts.
 | Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting and workspace Clippy with warnings denied, and run the Rust tests of every crate.                                                                                                                                                                                                                                                                                      |
 | Required CI      | Evaluate the result and evidence from the repository job, the viewer job and every browser shard on each runtime selected for the event, and both native platforms.                                                                                                                                                                                                                                                                               |
 
-Complete and selected suites share gate definitions; adding a suite command
-adds it to the complete gate. In-process auditors fail like subprocesses.
+Complete and selected local suites share gate definitions. Every Native
+command has local coverage; `npm run build` covers `cargo xtask build-native`.
+In-process auditors fail like subprocesses.
 The local Repository and Viewer suites cover the native build and Rust checks
 once. The selected Native suite repeats those checks on the hosted macOS and
 Windows runners. Required CI requires both native jobs.

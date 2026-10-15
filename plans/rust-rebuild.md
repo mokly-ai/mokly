@@ -589,7 +589,15 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 - [ ] Record the gate approvals from the Status section before adding the gates.
       The generated-TypeScript byte-identity and Rust advisory audit gates
       wait for the user.
+- [ ] After user approval, add `cargo xtask check-generated-types` and the
+      Rust advisory audit to the Repository suite and CI.
+- [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
+      cover generated sidecar types and Native commands, align the Testbox
+      docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
 - [x] Commit.
+
+Round 3 decision: Required CI only aggregates results and reports. Every job
+that runs checks, and the Testbox, builds the host native artifact.
 
 Evidence: `.context/rust-rebuild/delegation/m3/report-1.md` and
 `.context/rust-rebuild/sweeps/m3-phase-a.md`. Round 1 fixes and evidence:
@@ -598,6 +606,9 @@ Evidence: `.context/rust-rebuild/delegation/m3/report-1.md` and
 Phase B evidence: `.context/rust-rebuild/delegation/m3/report-3.md`,
 `.context/rust-rebuild/delegation/m3/merge-decisions.md`, and
 `.context/rust-rebuild/m3-phase-b-complete-gate.log`.
+Round 3 evidence: `.context/rust-rebuild/delegation/m3/report-4.md`,
+`.context/rust-rebuild/m3-r3-renormalize.log`, and
+`.context/rust-rebuild/m3-r3-complete-gate.log`.
 
 ## Milestone 4: Catalogue model and discovery
 
@@ -810,6 +821,9 @@ Tags: ui
       publish order.
 - [ ] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
+- [ ] Make Release Please update the exact `@mokly/viewer` pin in
+      `packages/mokly/package.json` with the viewer release. Test the manifest
+      and lockfile updates together.
 - [ ] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.

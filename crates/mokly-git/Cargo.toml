@@ -19,3 +19,7 @@ mock = ["dep:unimock"]
 
 [dependencies.mokly-platform]
 workspace = true
+
+[dev-dependencies.mokly-platform]
+workspace = true
+features = ["mock"]

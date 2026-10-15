@@ -23,8 +23,8 @@ internal binary and is not published to npm or crates.io.
 - Ratchet file length, protocol caps, internal exports, and class members
   against the branch point. Ratchet public package exports against release
   tags. Check the committed public API reports.
-- Keep the complete local gate equal to the CI suites. A suite command added
-  to one is added to the other.
+- Keep local gate coverage equal to CI checks on the host platform. Every
+  Native command has local coverage; `npm run build` covers the host build.
 - Run explicit and automatic remote checks on six Testboxes with complete
   shard evidence.
 - Stop warmed boxes on success, failure, SIGINT, SIGTERM, and SIGHUP.
@@ -35,7 +35,7 @@ internal binary and is not published to npm or crates.io.
 
 | Command                               | Effect                                                                                                                            |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `cargo xtask check`                   | Runs the complete gate: every suite in sequence, in one checkout. `--suite <name>` runs one suite.                                |
+| `cargo xtask check`                   | Runs the local suites in sequence, in one checkout. Native runs only when selected. `--suite <name>` runs one suite.              |
 | `cargo xtask executor`                | Prints the executor that `check` selects, without warming boxes or running suites.                                                |
 | `cargo xtask build-native`            | Builds the `mokly` binary for the host target.                                                                                    |
 | `cargo xtask generate-types`          | Writes the TypeScript types that the model and sidecar crates generate.                                                           |
@@ -255,6 +255,11 @@ login. For targeted test runs during development, use the
 
 ## Development
 
+`cargo xtask` builds its executable in `target/xtask/`. Inner workspace Cargo
+commands use `target/`, and native artifact builds use `target/native/`.
+These separate directories prevent workspace tests from replacing the running
+xtask executable on Windows.
+
 Run the crate tests directly when you change command orchestration:
 
 ```bash
@@ -278,6 +283,8 @@ code.
 
 ### Key Code
 
+- [`src/artifacts.rs`](./src/artifacts.rs) owns native package builds,
+  generated TypeScript, and the standalone generated-byte check.
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
   [`src/application.rs`](./src/application.rs) selects the effective
   executor, and [`src/executor.rs`](./src/executor.rs) parses executor modes

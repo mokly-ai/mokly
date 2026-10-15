@@ -7,7 +7,7 @@ use std::thread;
 
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
-use crate::command::{Output, Request, Runner};
+use crate::command::{DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
 use crate::error::{Error, InternalError, IoResult, Result};
 
 /// Git process adapter composed with process-tree ownership.
@@ -18,6 +18,12 @@ pub struct SystemRunner {
 
 impl Runner for SystemRunner {
     fn run(&self, request: &Request) -> Result<Output> {
+        if request.output_limit > DEFAULT_OUTPUT_LIMIT {
+            return Err(Error::InvalidOutputLimit {
+                limit: request.output_limit,
+                maximum: DEFAULT_OUTPUT_LIMIT,
+            });
+        }
         tracing::debug!(
             arguments = request.args.len(),
             "starting bounded Git command"
@@ -106,3 +112,7 @@ fn capture(reader: impl Read, limit: usize, group: &dyn ProcessGroup) -> Result<
     }
     Ok(bytes)
 }
+
+#[cfg(test)]
+#[path = "_tests_/system_tests.rs"]
+mod system_tests;
