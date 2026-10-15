@@ -52,12 +52,14 @@ impl RenderGraph for Graph {
         catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> Result<Arc<dyn RenderGeneration>> {
+        let parent = tracing::Span::current();
         std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-prepare".into())
                 .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || self.prepare_generation(config, catalogue, output))
-            {
+                .spawn_scoped(scope, || {
+                    parent.in_scope(|| self.prepare_generation(config, catalogue, output))
+                }) {
                 Ok(thread) => thread,
                 Err(source) => {
                     return Err(error::InternalError::PreparationThread { source }.into());

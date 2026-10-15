@@ -4,6 +4,9 @@ use axum::body::Body;
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::Response;
 use serde::Serialize;
+use tokio::io::AsyncReadExt;
+
+use crate::public_read::OpenedFile;
 
 #[derive(Serialize)]
 struct PublicError {
@@ -42,4 +45,24 @@ pub(crate) fn missing() -> Response {
         "not-found",
         "The requested file was not found.",
     )
+}
+
+pub(crate) fn stream(opened: OpenedFile) -> Response {
+    let mut response = bytes(StatusCode::OK, &opened.content_type, Vec::new());
+    if let Ok(value) = HeaderValue::from_str(&opened.length.to_string()) {
+        response.headers_mut().insert("content-length", value);
+    }
+    let mut file = tokio::fs::File::from_std(opened.file).take(opened.length);
+    let chunks = async_stream::stream! {
+        let mut buffer = vec![0; 64 * 1024];
+        loop {
+            match file.read(&mut buffer).await {
+                Ok(0) => break,
+                Ok(length) => yield Ok::<_, std::io::Error>(axum::body::Bytes::copy_from_slice(&buffer[..length])),
+                Err(error) => { yield Err(error); break; }
+            }
+        }
+    };
+    *response.body_mut() = Body::from_stream(chunks);
+    response
 }

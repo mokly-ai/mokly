@@ -56,6 +56,7 @@ async fn html_screen_component_and_variant_edits_are_isolated() {
         support::headers(&preview);
         let html = preview.text().await.unwrap();
         assert!(html.contains("Edited label"));
+        assert!(!html.contains("inspector.js"));
         assert!(!html.contains(&harness.snapshot.render_token));
         let head = harness
             .client

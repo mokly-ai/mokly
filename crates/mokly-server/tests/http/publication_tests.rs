@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use mokly_server::publication::{PublicationWriter, Publications, SharedPublication};
+use mokly_server::publication::{PublicationWriter, Publications};
 use mokly_server::snapshot::{Projector, SnapshotFactory, SnapshotInput};
 
 use super::support;
@@ -10,7 +10,14 @@ use super::support;
 #[tokio::test]
 async fn subscriptions_keep_each_revision_and_reject_invalid_replacements() {
     let harness = support::Harness::new().await;
-    let shared = SharedPublication::new(harness.snapshot.clone());
+    let shared = &harness.publications;
+    let mut stream = harness
+        .client
+        .get(format!("{}/mokly-viewer/events", harness.url))
+        .send()
+        .await
+        .unwrap();
+    assert!(String::from_utf8_lossy(&stream.chunk().await.unwrap().unwrap()).contains("id: 1\n"));
     let projector: &dyn SnapshotFactory = &Projector {
         deployment_id: harness.snapshot.index.deployment_id.clone(),
         render_token: harness.snapshot.render_token.clone(),
@@ -35,6 +42,7 @@ async fn subscriptions_keep_each_revision_and_reject_invalid_replacements() {
     assert!(!shared.replace(make(3)));
     let second = make(2);
     assert!(shared.replace(second.clone()));
+    assert!(String::from_utf8_lossy(&stream.chunk().await.unwrap().unwrap()).contains("id: 2\n"));
     assert!(!harness.snapshot.lease.valid());
     assert!(second.lease.valid());
     assert!(shared.replace(make(3)));
@@ -59,6 +67,18 @@ async fn subscriptions_keep_each_revision_and_reject_invalid_replacements() {
         )
         .unwrap();
     assert!(!shared.replace(invalid));
+    assert_eq!(shared.current().index.revision, 3);
+    shared.close();
+    assert!(!shared.current().lease.valid());
+    assert!(!shared.replace(make(4)));
+    harness
+        .snapshot
+        .documents
+        .background("home/index.mobile.html")
+        .unwrap();
+    shared
+        .completed(&harness.snapshot, "home/index.mobile.html")
+        .unwrap();
     assert_eq!(shared.current().index.revision, 3);
     harness.close().await;
 }

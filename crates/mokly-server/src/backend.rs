@@ -3,14 +3,16 @@
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
+use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
-use mokly_model::namespace::{GENERATED_DIRECTORY, VIEWER_DIRECTORY, generated};
+use mokly_model::namespace::{GENERATED_DIRECTORY, generated};
 use mokly_model::usage::CatalogueUsage;
 
 use crate::assets::{File, content_type};
 use crate::error::{Result, ServerError};
-use crate::public_read::PublicReader;
+use crate::preview::MAX_BYTES;
+use crate::public_read::{OpenedFile, PublicReader};
 
 /// Encoded preview data before bounded memory admission.
 pub struct PreviewDocument {
@@ -27,8 +29,12 @@ pub struct PreviewDocument {
 pub trait Documents: Send + Sync {
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
+    /// Render one background document without copying its response bytes.
+    fn background(&self, route: &str) -> Result<()>;
+    /// Completed usage, retained separately from evictable document trees.
+    fn usage(&self, route: &str) -> Option<CatalogueUsage>;
     /// Read an already reached authored file through the live confinement boundary.
-    fn authored(&self, path: &str) -> Option<File>;
+    fn authored(&self, path: &str) -> Option<OpenedFile>;
     /// Render complete edited props through the same graph in isolation.
     fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument>;
 }
@@ -39,7 +45,7 @@ pub struct GraphDocuments {
     pub generation: Arc<dyn RenderGeneration>,
     /// Confined working-tree reads, separate from captured source bytes.
     pub public: Arc<dyn PublicReader>,
-    locks: BTreeMap<String, Mutex<()>>,
+    locks: BTreeMap<String, Mutex<Option<CatalogueUsage>>>,
 }
 
 impl GraphDocuments {
@@ -48,7 +54,7 @@ impl GraphDocuments {
         let locks = generation
             .plans()
             .keys()
-            .map(|route| (route.clone(), Mutex::new(())))
+            .map(|route| (route.clone(), Mutex::new(None)))
             .collect();
         Self {
             generation,
@@ -56,19 +62,38 @@ impl GraphDocuments {
             locks,
         }
     }
+    fn render(&self, route: &str) -> Result<Option<Arc<Artifact>>> {
+        let Some(lock) = self.locks.get(route) else {
+            return Ok(None);
+        };
+        let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
+        match self.generation.render(route) {
+            Ok(artifact) => {
+                *usage = Some(
+                    artifact
+                        .document
+                        .as_ref()
+                        .map_or(CatalogueUsage::Unavailable, |document| {
+                            document.usage.clone()
+                        }),
+                );
+                Ok(Some(artifact))
+            }
+            Err(source) => {
+                *usage = Some(CatalogueUsage::Unavailable);
+                Err(ServerError::Render { source })
+            }
+        }
+    }
 }
 
 impl Documents for GraphDocuments {
     fn generated(&self, route: &str) -> Result<Option<File>> {
-        if let Some(lock) = self.locks.get(route) {
-            let _guard = lock.lock().unwrap_or_else(|error| error.into_inner());
-            return match self.generation.render(route) {
-                Ok(artifact) => Ok(Some(File {
-                    bytes: instrument(&artifact.bytes),
-                    content_type: artifact.content_type.clone(),
-                })),
-                Err(source) => Err(ServerError::Render { source }),
-            };
+        if self.locks.contains_key(route) {
+            return Ok(self.render(route)?.map(|artifact| File {
+                bytes: artifact.bytes.clone(),
+                content_type: artifact.content_type.clone(),
+            }));
         }
         if !self
             .generation
@@ -86,11 +111,25 @@ impl Documents for GraphDocuments {
             Err(source) => Err(ServerError::Render { source }),
         }
     }
-    fn authored(&self, path: &str) -> Option<File> {
-        if !self.generation.public_files().contains(path) {
+    fn background(&self, route: &str) -> Result<()> {
+        if self.usage(route).is_some() {
+            return Ok(());
+        }
+        self.render(route)?;
+        Ok(())
+    }
+    fn usage(&self, route: &str) -> Option<CatalogueUsage> {
+        self.locks
+            .get(route)?
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
+    }
+    fn authored(&self, path: &str) -> Option<OpenedFile> {
+        if !self.generation.contains_public_file(path) {
             return None;
         }
-        self.public.read(path)
+        self.public.open(path)
     }
     fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument> {
         let rendered = match self.generation.render_props(route, props) {
@@ -102,7 +141,7 @@ impl Documents for GraphDocuments {
         files.insert(
             document.clone(),
             File {
-                bytes: instrument(&rendered.artifact.bytes),
+                bytes: rendered.artifact.bytes.clone(),
                 content_type: rendered.artifact.content_type.clone(),
             },
         );
@@ -126,10 +165,16 @@ impl Documents for GraphDocuments {
                 Err(source) => return Err(ServerError::Render { source }),
             }
         }
+        let mut remaining = MAX_BYTES
+            .checked_sub(files.values().map(|file| file.bytes.len()).sum())
+            .ok_or(ServerError::PreviewCapacity)?;
         for path in rendered.closure.files {
-            let Some(file) = self.public.read(&path) else {
-                return Err(ServerError::InvalidAssets);
+            let Some(file) = self.public.read(&path, remaining)? else {
+                return Err(ServerError::PreviewResource);
             };
+            remaining = remaining
+                .checked_sub(file.bytes.len())
+                .ok_or(ServerError::PreviewCapacity)?;
             files.insert(format!("static/{path}"), file);
         }
         let usage = rendered
@@ -146,13 +191,6 @@ impl Documents for GraphDocuments {
         })
     }
 }
-
-fn instrument(bytes: &[u8]) -> Vec<u8> {
-    let text = String::from_utf8_lossy(bytes);
-    let script = format!(r#"<script src="/{VIEWER_DIRECTORY}/client/inspector.js"></script>"#);
-    if let Some(index) = text.rfind("</body>") {
-        format!("{}{script}{}", &text[..index], &text[index..]).into_bytes()
-    } else {
-        bytes.to_vec()
-    }
-}
+#[cfg(test)]
+#[path = "_tests_/backend_tests.rs"]
+mod backend_tests;

@@ -166,4 +166,11 @@ impl RenderGeneration for Session {
             .unwrap_or_else(|error| error.into_inner())
             .clone()
     }
+    fn contains_public_file(&self, path: &str) -> bool {
+        self.state
+            .public_files
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .contains(path)
+    }
 }

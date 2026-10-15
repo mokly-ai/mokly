@@ -5,21 +5,32 @@ use std::sync::Arc;
 
 use mokly_graph::types::RenderGeneration;
 use mokly_model::canonical;
+use mokly_model::catalogue::CatalogueModel;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication, ViewKey};
+use mokly_model::public_detail::EntryDetailV1;
 use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
+use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
 use crate::backend::Documents;
 use crate::error::{InternalError, Result};
+use crate::evidence::{Completion, RenderRoute};
 use crate::revision::{RenderLease, RevisionLease};
 use crate::stub;
 
 /// One immutable publication; replacement swaps this whole value.
+#[derive(Clone)]
 pub struct Snapshot {
+    /// Current parsed details for atomic evidence publications.
+    pub details: BTreeMap<String, EntryDetailV1>,
+    /// Work in catalogue and view order, independent of request order.
+    pub routes: Vec<RenderRoute>,
+    /// Completed usage without retaining document trees or bytes.
+    pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
     pub lease: Arc<dyn RenderLease>,
     /// Matching immutable render and public-file backend for this publication.
@@ -61,7 +72,7 @@ pub trait SnapshotFactory: Send + Sync {
     ) -> Result<Arc<Snapshot>>;
 }
 
-/// Current fixed Serve publication factory.
+/// Initial Serve publication factory, reused for source replacements.
 pub struct Projector {
     /// Deployment identity chosen once at the process composition root.
     pub deployment_id: String,
@@ -97,25 +108,13 @@ impl SnapshotFactory for Projector {
             changes_status: ChangesStatus::Unavailable,
             live_generation: Some(live_generation.clone()),
         };
-        let index = match projection::index(&generation.catalogue().model, &keys, &state) {
-            Ok(index) => index,
-            Err(source) => return Err(InternalError::Model { source }.into()),
-        };
+        let (index, encoded) = build_index(&generation.catalogue().model, &keys, &state)?;
         let mut files = input.assets;
-        let encoded = encode(&index)?;
-        if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {
-            return Err(InternalError::Read { source }.into());
-        }
         files.insert(viewer("index.json"), encoded);
-        for (path, detail) in
-            projection::pending_details(&generation.catalogue().model, &index, &keys)
-        {
-            let encoded = encode(&detail)?;
-            if let Err(source) =
-                mokly_model::detail_context::read(&String::from_utf8_lossy(&encoded.bytes), &index)
-            {
-                return Err(InternalError::Read { source }.into());
-            }
+        let details = projection::pending_details(&generation.catalogue().model, &index, &keys);
+        let mut schemas = UsageSchemas::new(&index.components);
+        for (path, detail) in &details {
+            let encoded = encode_detail(detail, &index, &mut schemas)?;
             files.insert(viewer(&format!("entries/{path}.json")), encoded);
         }
         let render_token = self.render_token.clone();
@@ -128,7 +127,24 @@ impl SnapshotFactory for Projector {
             },
         };
         files.insert(viewer("live.json"), encode(&descriptor)?);
+        let mut plans: Vec<_> = generation.plans().values().collect();
+        plans.sort_by_key(|plan| (plan.entry, plan.viewport, plan.color_scheme));
+        let routes = plans
+            .into_iter()
+            .map(|plan| RenderRoute {
+                route: plan.route.clone(),
+                path: generation.catalogue().model.entries[plan.entry]
+                    .metadata
+                    .path
+                    .clone(),
+                viewport: plan.viewport,
+                color_scheme: plan.color_scheme,
+            })
+            .collect();
         Ok(Arc::new(Snapshot {
+            details,
+            routes,
+            completed: BTreeMap::new(),
             documents: input.documents,
             lease: Arc::new(RevisionLease::default()),
             entries: generation
@@ -154,4 +170,43 @@ pub(crate) fn encode(value: &impl serde::Serialize) -> Result<File> {
         }),
         Err(source) => Err(InternalError::Model { source }.into()),
     }
+}
+
+#[tracing::instrument(name = "index.build", skip_all, err)]
+fn build_index(
+    model: &CatalogueModel,
+    keys: &[ViewKey],
+    state: &Publication,
+) -> Result<(CatalogueReadModel, File)> {
+    let index = match projection::index(model, keys, state) {
+        Ok(index) => index,
+        Err(source) => return Err(InternalError::Model { source }.into()),
+    };
+    let file = checked_index(&index)?;
+    Ok((index, file))
+}
+
+#[tracing::instrument(name = "index.build", skip_all, err)]
+pub(crate) fn revision_index(index: &CatalogueReadModel) -> Result<File> {
+    checked_index(index)
+}
+
+fn checked_index(index: &CatalogueReadModel) -> Result<File> {
+    let encoded = encode(index)?;
+    if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {
+        return Err(InternalError::Read { source }.into());
+    }
+    Ok(encoded)
+}
+
+#[tracing::instrument(name = "detail.build", skip_all, err)]
+pub(crate) fn encode_detail(
+    detail: &EntryDetailV1,
+    index: &CatalogueReadModel,
+    schemas: &mut UsageSchemas<'_>,
+) -> Result<File> {
+    if let Err(source) = mokly_model::detail_context::validate_with(detail, index, schemas) {
+        return Err(InternalError::Read { source }.into());
+    }
+    encode(detail)
 }

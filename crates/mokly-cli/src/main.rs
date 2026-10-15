@@ -11,6 +11,8 @@ mod serve_reporter;
 mod serve_signals;
 mod serve_state;
 mod serve_timing;
+mod serve_trace;
+mod terminal;
 
 fn main() -> std::process::ExitCode {
     entry::main()

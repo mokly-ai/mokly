@@ -87,6 +87,11 @@ commits.
 
 ## Workspace evidence
 
+Screen and component details omit `workspace` until every input of its lists
+is proven. Pending or unavailable consumer usage cannot prove a complete
+Used by list. An absent workspace shows "Usage is unavailable until the
+catalogue has been checked." and never shows a zero-consumer result.
+
 The detail's `workspace` updates comparison eligibility,
 Details evidence, and the complete Used by and Affected lists in place. While
 the detail is in flight the Usage panel shows the loading copy of the

@@ -21,11 +21,18 @@ Help describes configuration discovery through `mokly.config.json`.
 Serve validates an HTML catalogue before it reserves a loopback port. It
 serves its initial state through `mokly-server`, with lazy document rendering,
 canonical public JSON, authenticated live prop previews, and clean signal
-shutdown. In rich watched mode, `r` enqueues a complete manual rebuild. A
+shutdown. A background pass fills usage after readiness and yields to foreground
+renders. A completed pass publishes complete consumer lists. In rich watched
+mode, `r` enqueues a complete manual rebuild and restarts that pass. A
 valid candidate replaces the public state and backend with the next revision;
 a failed candidate keeps the last good state. Port 0 requests a free port. An occupied concrete port advances to
 the next available port through 65535. Repeated SIGINT requests coalesce.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
+
+One injected terminal writer handles startup, shortcuts, rebuilds, and render
+diagnostics. It preserves carriage returns in raw mode and ignores shortcut
+release events. `--debug-timings` emits structured stage spans and background
+counts without source text, props, or error payloads.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
 The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option

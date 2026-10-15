@@ -1,5 +1,6 @@
 ---
 source: crates/mokly-server/tests/http/routes_tests.rs
+assertion_line: 106
 expression: "canonical::to_string(&details).unwrap()"
 ---
 {
@@ -44,14 +45,7 @@ expression: "canonical::to_string(&details).unwrap()"
         },
         "viewport": "desktop"
       }
-    ],
-    "workspace": {
-      "affected": [],
-      "comparisonEligible": false,
-      "inputChanges": [],
-      "relatedComponents": [],
-      "usedBy": []
-    }
+    ]
   },
   "components/button/disabled": {
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -94,14 +88,7 @@ expression: "canonical::to_string(&details).unwrap()"
         },
         "viewport": "desktop"
       }
-    ],
-    "workspace": {
-      "affected": [],
-      "comparisonEligible": false,
-      "inputChanges": [],
-      "relatedComponents": [],
-      "usedBy": []
-    }
+    ]
   },
   "components/card": {
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -144,14 +131,7 @@ expression: "canonical::to_string(&details).unwrap()"
         },
         "viewport": "desktop"
       }
-    ],
-    "workspace": {
-      "affected": [],
-      "comparisonEligible": false,
-      "inputChanges": [],
-      "relatedComponents": [],
-      "usedBy": []
-    }
+    ]
   },
   "guide": {
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -208,14 +188,7 @@ expression: "canonical::to_string(&details).unwrap()"
         },
         "viewport": "desktop"
       }
-    ],
-    "workspace": {
-      "affected": [],
-      "comparisonEligible": false,
-      "inputChanges": [],
-      "relatedComponents": [],
-      "usedBy": []
-    }
+    ]
   },
   "home/hidden": {
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -258,14 +231,7 @@ expression: "canonical::to_string(&details).unwrap()"
         },
         "viewport": "desktop"
       }
-    ],
-    "workspace": {
-      "affected": [],
-      "comparisonEligible": false,
-      "inputChanges": [],
-      "relatedComponents": [],
-      "usedBy": []
-    }
+    ]
   },
   "page": {
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",

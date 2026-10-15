@@ -27,7 +27,7 @@ use mokly_server::backend::GraphDocuments;
 use mokly_server::clock::MonotonicClock;
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::public_read::ConfinedReader;
-use mokly_server::publication::FixedPublication;
+use mokly_server::publication::SharedPublication;
 use mokly_server::runtime::{ServerRuntime, TokioServer};
 use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::{Projector, Snapshot, SnapshotFactory, SnapshotInput};
@@ -40,6 +40,7 @@ pub struct Harness {
     pub root: TempDir,
     pub generation: Arc<dyn RenderGeneration>,
     pub snapshot: Arc<Snapshot>,
+    pub publications: Arc<SharedPublication>,
     pub url: String,
     pub client: reqwest::Client,
     stop: watch::Sender<bool>,
@@ -63,11 +64,21 @@ impl Harness {
         Self::with_lifecycle(Arc::new(FixedLifecycle)).await
     }
     pub async fn with_lifecycle(lifecycle: Arc<dyn mokly_server::shutdown::Lifecycle>) -> Self {
+        Self::with_fixture(lifecycle, |_| {}).await
+    }
+    pub async fn with_edit(edit: fn(&Path)) -> Self {
+        Self::with_fixture(Arc::new(FixedLifecycle), edit).await
+    }
+    async fn with_fixture(
+        lifecycle: Arc<dyn mokly_server::shutdown::Lifecycle>,
+        edit: fn(&Path),
+    ) -> Self {
         let root = TempDir::new().unwrap();
         copy(
             &Path::new(env!("CARGO_MANIFEST_DIR")).join("../mokly-graph/tests/fixtures/catalogue"),
             root.path(),
         );
+        edit(root.path());
         let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
         let config = Loader { tree: tree.clone() }
             .load(root.path(), None)
@@ -147,8 +158,9 @@ impl Harness {
                 },
             )
             .unwrap();
+        let publications = Arc::new(SharedPublication::new(snapshot.clone()));
         let app = Arc::new(Application::new(
-            Arc::new(FixedPublication::new(snapshot.clone())),
+            publications.clone(),
             Arc::new(MemoryPreviews::new(
                 Arc::new(MonotonicClock::default()),
                 "test-secret".into(),
@@ -168,6 +180,7 @@ impl Harness {
             root,
             generation,
             snapshot,
+            publications,
             url,
             client: reqwest::Client::new(),
             stop,

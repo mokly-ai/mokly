@@ -16,13 +16,35 @@ use crate::workers::ArtifactWorker;
 use crate::{markdown_links, rendering, styles, validation};
 
 impl Session {
+    #[tracing::instrument(
+        name = "render.document",
+        skip_all,
+        fields(viewport, scheme, cache_hit = false),
+        err
+    )]
     pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
         let plan = self
             .state
             .plans
             .get(route)
             .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
+        tracing::Span::current().record(
+            "viewport",
+            match plan.viewport {
+                Some(Viewport::Mobile) => "mobile",
+                Some(Viewport::Desktop) => "desktop",
+                None => "none",
+            },
+        );
+        tracing::Span::current().record(
+            "scheme",
+            match plan.color_scheme {
+                mokly_model::axes::ColorScheme::Light => "light",
+                mokly_model::axes::ColorScheme::Dark => "dark",
+            },
+        );
         if let Some(artifact) = self.state.cache.get(&plan.key) {
+            tracing::Span::current().record("cache_hit", true);
             return Ok(artifact);
         }
         let saved = &self.state.catalogue.model.entries[plan.entry];

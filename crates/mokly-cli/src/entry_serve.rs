@@ -17,10 +17,11 @@ use mokly_cli::grammar::{Common, Serve};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::{CatalogueServe, ServePreparation};
-use mokly_cli::serve_output;
+use mokly_cli::{serve_errors, serve_output};
 use mokly_graph::cache::MemoryCache;
 use mokly_server::application::Application;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
+use mokly_server::background::{Background, UsagePass};
 use mokly_server::clock::MonotonicClock;
 use mokly_server::entropy::{Entropy, RandomEntropy};
 use mokly_server::error::{InternalError, ServerError};
@@ -29,28 +30,36 @@ use mokly_server::publication::SharedPublication;
 use mokly_server::runtime::{ServerRuntime, TokioServer};
 use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::Projector;
-use mokly_server::work::Workers;
+use mokly_server::work::{Workers, parallelism};
 use mokly_source_interface::tree::SourceTree;
 use tokio::sync::{mpsc, watch};
 
-use crate::entry::Terminal;
 use crate::render_runtime::NativeGraphs;
 use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
 use crate::serve_state::{NativeServeState, ServeStateFactory};
 use crate::serve_timing::ServeTiming;
-use crate::{serve_controls, serve_signals};
+use crate::terminal::Terminal;
+use crate::{serve_controls, serve_signals, serve_trace};
 
 pub(super) fn run(
     common: &Common,
     options: &Serve,
     style: &Style,
     redactor: Arc<Redactor>,
-    terminal: &dyn Terminal,
+    terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
     let entropy: Arc<dyn Entropy> = Arc::new(RandomEntropy);
-    let mut timing = ServeTiming::new(terminal, common.debug_timings.then(|| entropy.secret()));
+    if common.debug_timings && !serve_trace::install(terminal.clone(), entropy.secret()) {
+        terminal.stderr(&style.error(
+            Code::ServerFailed,
+            "Timing diagnostics could not start.",
+            &redactor,
+        ));
+        return ExitCode::FAILURE;
+    }
+    let mut timing = ServeTiming::new();
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(error) => {
@@ -78,8 +87,9 @@ pub(super) fn run(
             return ExitCode::FAILURE;
         }
     };
+    let workers = parallelism(std::thread::available_parallelism().map_or(1, usize::from));
     let runtime = match tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(4)
+        .worker_threads(workers as usize)
         .enable_all()
         .build()
     {
@@ -111,8 +121,15 @@ pub(super) fn run(
             let base = snapshot.index.base.clone().unwrap_or_default();
             let publications = Arc::new(SharedPublication::new(snapshot));
             let reporter = Arc::new(ServeLines {
+                terminal: terminal.clone(),
                 style: style.clone(),
                 redactor: redactor.clone(),
+            });
+            let work = Arc::new(Workers::new(workers, reporter.clone()));
+            let background: Arc<dyn Background> = Arc::new(UsagePass {
+                publications: publications.clone(),
+                work: work.clone(),
+                diagnostics: reporter.clone(),
             });
             let app = Arc::new(Application::new(
                 publications.clone(),
@@ -120,7 +137,7 @@ pub(super) fn run(
                     Arc::new(MonotonicClock::default()),
                     entropy.secret(),
                 )),
-                Arc::new(Workers::new(4, reporter.clone())),
+                work,
                 reporter.clone(),
             ));
             let transport: &dyn ServerRuntime = &TokioServer;
@@ -143,24 +160,33 @@ pub(super) fn run(
                 &prepared.summary.warnings,
                 &redactor,
             ));
-            terminal.stdout(&build_output::summary(style, &prepared.summary));
-            if style.mode == Mode::Rich {
-                terminal.stdout("  ! Changes unavailable · Comparison is unavailable.\n");
-            }
+            terminal.stdout(&serve_output::catalogue(
+                style,
+                &prepared.summary,
+                timing.elapsed(),
+            ));
+            terminal.stdout(&serve_output::changes_unavailable(
+                style,
+                "Git comparison is unavailable in this build.",
+                &redactor,
+            ));
             timing.ready();
             if options.open {
-                serve_controls::open(&url, style, &redactor);
+                serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }
             let candidates = Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle)));
             let (rebuild, requests) = mpsc::channel(1);
             let controls = serve_controls::start(
                 interactive,
-                stop.clone(),
-                rebuild,
-                url,
-                layout,
-                style.clone(),
-                redactor.clone(),
+                serve_controls::Controls {
+                    stop: stop.clone(),
+                    rebuild,
+                    url,
+                    layout,
+                    style: style.clone(),
+                    redactor: redactor.clone(),
+                    terminal: terminal.clone(),
+                },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
                 candidates: candidates.clone(),
@@ -172,10 +198,15 @@ pub(super) fn run(
                 cwd: cwd.clone(),
                 options: common.clone(),
             };
+            let background_stop = receiver.clone();
+            let background = tokio::spawn(async move {
+                background.run(background_stop).await;
+            });
             let result = actions
                 .run(Box::pin(server.run(app, receiver, candidates)), requests)
                 .await;
             stop.send_replace(true);
+            let _ = background.await;
             if let Some(controls) = controls {
                 let _ = controls.await;
             }
@@ -188,7 +219,7 @@ pub(super) fn run(
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            terminal.stderr(&style.error(Code::ServerFailed, &error.to_string(), &redactor));
+            terminal.stderr(&serve_errors::failure(style, &error, &redactor));
             ExitCode::FAILURE
         }
     }

@@ -24,7 +24,7 @@ The transport owns each HTTP connection. Shutdown closes incomplete requests
 and event streams before it runs watcher, render, Git, sidecar, and lock hooks.
 An error in one hook does not skip later hooks.
 
-`Projector` implements `dyn SnapshotFactory`. It projects one fixed revision
+`Projector` implements `dyn SnapshotFactory`. It projects the initial revision
 from graph plans without rendering a document. Every JSON response has canonical
 bytes. `Publications` supplies one complete snapshot per read and update, including its
 matching document backend. `FixedPublication` retains revision 1.
@@ -33,11 +33,25 @@ in order. Its subscription captures the initial state and receiver under one
 lock. A superseded revision admits no queued live render. Watch and Changes
 use these same boundaries.
 
+`UsagePass` renders every view in catalogue order after readiness. It yields
+between documents and waits while foreground requests need the worker pool.
+On-demand completions publish their usage immediately. A completed background
+pass publishes its evidence in one batch. A replacement starts a new pass;
+`--no-watch` computes it once. Old backends cannot publish into a replacement.
+Workspace lists stay absent until all consumer usage is proven. Failed views
+publish unavailable usage without inventing empty consumers.
+
 `GraphDocuments` implements `dyn Documents`. It coalesces requests for the same
 document. Public authored reads require both reached closure membership and a
 fresh policy check. `ConfinedReader` opens each directory and the final regular
 file without following symlinks. Routes never fall back to repository files.
 The built viewer's browser manifest lists the only client modules served.
+
+Authored GET responses stream from the confined handle without a file-size
+limit. HEAD opens the same handle and sends no bytes. Preview asset copies use
+the existing preview-store byte budget. Serve delivers document and preview
+HTML without inspector injection. Reached-file checks test membership without
+copying the complete set.
 
 All routes require an exact loopback Host with an explicit decimal port.
 Render POST also requires the exact HTTP Origin and the process render token.

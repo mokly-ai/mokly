@@ -47,6 +47,7 @@ impl Application {
 }
 
 /// HTTP application boundary consumed by the socket runtime.
+#[cfg_attr(test, unimock::unimock(api = HttpApplicationMock))]
 #[async_trait]
 pub trait HttpApplication: Send + Sync {
     /// Build request dispatch over this application's injected services.
@@ -63,6 +64,7 @@ impl HttpApplication for Application {
             .with_state((self, stop))
     }
     async fn stop_renders(&self) {
+        self.close_publications().await;
         self.work.stop().await;
         self.previews.clear();
     }
@@ -187,22 +189,19 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             Lookup::Missing => response::missing(),
         };
     }
-    if path.is_empty() || path == "404.html" || shell(&path, &snapshot) {
-        return response::bytes(
-            StatusCode::OK,
-            "text/html; charset=utf-8",
-            snapshot.stub.clone(),
-        );
+    if let Some(status) = shell(&path, &snapshot) {
+        return response::bytes(status, "text/html; charset=utf-8", snapshot.stub.clone());
     }
     if let Some(file) = snapshot.files.get(&path) {
         return response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone());
     }
     if let Some(route) = path.strip_prefix(&generated("")) {
-        return match app
+        let result = app
             .work
             .generated(snapshot.documents.clone(), route.into())
-            .await
-        {
+            .await;
+        app.completed(snapshot.clone(), route.into()).await;
+        return match result {
             Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
             Ok(None) => response::missing(),
             Err(error) => {
@@ -221,20 +220,27 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             .authored(snapshot.documents.clone(), path.into())
             .await
     {
-        return response::bytes(StatusCode::OK, &file.content_type, file.bytes);
+        return response::stream(file);
     }
     response::missing()
 }
 
-fn shell(path: &str, snapshot: &Snapshot) -> bool {
-    let Some(path) = path.strip_prefix("view/") else {
-        return false;
-    };
+fn shell(path: &str, snapshot: &Snapshot) -> Option<StatusCode> {
+    if path.is_empty() || path == "404.html" {
+        return Some(StatusCode::OK);
+    }
+    let path = path.strip_prefix("view/")?;
     let path = path
         .strip_suffix("/index.html")
         .or_else(|| path.strip_suffix('/'))
         .unwrap_or(path);
-    is_entry_path(path) && snapshot.entries.contains(path)
+    is_entry_path(path).then(|| {
+        if snapshot.entries.contains(path) {
+            StatusCode::OK
+        } else {
+            StatusCode::NOT_FOUND
+        }
+    })
 }
 fn method(allow: &'static str) -> Response {
     let mut response = response::error(

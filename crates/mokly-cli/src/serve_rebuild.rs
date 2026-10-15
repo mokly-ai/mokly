@@ -4,6 +4,7 @@ use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use mokly_cli::build::{BuildError, BuildSummary};
@@ -17,7 +18,7 @@ use crate::serve_candidates::CandidateWork;
 use crate::serve_state::ServeStateFactory;
 
 pub(super) trait RebuildReporter: Send + Sync {
-    fn completed(&self, summary: &BuildSummary);
+    fn completed(&self, summary: &BuildSummary, elapsed: Duration);
     fn catalogue_failure(&self, error: &BuildError);
     fn server_failure(&self, error: &ServerError);
 }
@@ -51,6 +52,7 @@ impl ServeActions for ManualRebuilds {
             let Some(permit) = self.candidates.enter() else {
                 continue;
             };
+            let started = Instant::now();
             let preparation = self.preparation.clone();
             let cwd = self.cwd.clone();
             let options = self.options.clone();
@@ -77,16 +79,24 @@ impl ServeActions for ManualRebuilds {
             if !self.candidates.active() {
                 continue;
             }
-            let Some(revision) = self.publications.current().index.revision.checked_add(1) else {
-                continue;
-            };
-            match self.states.create(&prepared, revision) {
-                Ok(snapshot) => {
-                    if self.writer.replace(snapshot) {
-                        self.reporter.completed(&prepared.summary);
+            while self.candidates.active() {
+                let Some(revision) = self.publications.current().index.revision.checked_add(1)
+                else {
+                    break;
+                };
+                match self.states.create(&prepared, revision) {
+                    Ok(snapshot) => {
+                        if self.writer.replace(snapshot) {
+                            self.reporter
+                                .completed(&prepared.summary, started.elapsed());
+                            break;
+                        }
+                    }
+                    Err(error) => {
+                        self.reporter.server_failure(&error);
+                        break;
                     }
                 }
-                Err(error) => self.reporter.server_failure(&error),
             }
         }
     }

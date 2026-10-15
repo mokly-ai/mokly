@@ -722,6 +722,7 @@ Gap sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m6.md`.
 Smoke and screenshots: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m6-smoke/`.
 Verification and report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-1.md`.
 Integration report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-2.md`.
+Review fixes and smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-3.md`.
 
 ## Milestone 7: Viewer reads read model v7
 
@@ -753,6 +754,8 @@ At completion React components, React screens, JavaScript pages, and
 Storybook stories render through the sidecar, and the example catalogue
 renders again.
 
+- [ ] Replace the configured-renderer refusal in both Serve and `build` with
+      the sidecar bundle's complete source inventory (Milestone 6 review, finding 13).
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
@@ -912,6 +915,8 @@ Tags: ui
 
 ## Milestone 11: Watch and incremental rendering
 
+- [ ] Tie Serve's watching copy to the active watcher and cover its terminal
+      output (Milestone 6 review, finding 10).
 - [ ] Implement the content-addressed render graph: inputs hashed per entry,
       invalidation from the sidecar's module graph, HTML component
       dependencies, stylesheet dependencies, and PostCSS reports.

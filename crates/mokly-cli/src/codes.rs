@@ -23,6 +23,8 @@ pub enum Code {
     ReviewInvalid,
     /// Server startup failure.
     ServerFailed,
+    /// Missing or mismatched viewer package output.
+    ViewerUnavailable,
     /// Upload failure.
     UploadFailed,
     /// Publication was cancelled by its owner.
@@ -92,6 +94,11 @@ impl Code {
                 "server-failed",
                 "The catalogue server could not start.",
                 "Check the reported port or process and retry.",
+            ),
+            Self::ViewerUnavailable => (
+                "server-failed",
+                "The catalogue server could not start.",
+                "Build or reinstall the matching @mokly/viewer package and retry.",
             ),
             Self::UploadFailed => (
                 "upload-failed",

@@ -40,14 +40,14 @@ fn edit_unknown_prop_unset_view_and_revision_contracts() {
     );
     edit = request();
     edit.overrides
-        .insert("missing".into(), super::Override::Unset);
+        .insert("missing".into(), super::Override::Unset {});
     assert_eq!(
         validate(&edit, &index).unwrap_err(),
         Rejection::InvalidInput
     );
     edit = request();
     edit.overrides
-        .insert("label".into(), super::Override::Unset);
+        .insert("label".into(), super::Override::Unset {});
     assert_eq!(
         validate(&edit, &index).unwrap_err(),
         Rejection::InvalidInput
@@ -72,6 +72,15 @@ fn the_wire_boundary_rejects_unknown_fields_and_invalid_enums() {
     ] {
         assert!(serde_json::from_value::<RenderRequest>(body).is_err());
     }
+}
+
+#[test]
+fn unset_rejects_value_and_unknown_fields() {
+    for extra in ["value", "unexpected"] {
+        let edit = json!({"kind":"unset",extra:3});
+        assert!(serde_json::from_value::<super::Override>(edit).is_err());
+    }
+    assert!(serde_json::from_value::<super::Override>(json!({"kind":"unset"})).is_ok());
 }
 
 #[test]

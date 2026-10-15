@@ -12,6 +12,7 @@ use tokio::net::TcpListener;
 use tokio::sync::watch;
 use tokio::task::JoinSet;
 
+use crate::accept::{AcceptBackoff, Acceptor, Backoff, TcpAcceptor, connection_error};
 use crate::application::HttpApplication;
 use crate::error::{InternalError, Result, ServerError};
 use crate::shutdown::Lifecycle;
@@ -40,7 +41,8 @@ pub trait BoundServer: Send + Sync {
 /// Tokio socket composition root.
 pub struct TokioServer;
 struct Listener {
-    socket: TcpListener,
+    socket: Arc<dyn Acceptor>,
+    backoff: Arc<dyn Backoff>,
     address: SocketAddr,
 }
 
@@ -55,7 +57,11 @@ impl ServerRuntime for TokioServer {
                         Ok(address) => address,
                         Err(source) => return Err(InternalError::Io { source }.into()),
                     };
-                    return Ok(Box::new(Listener { socket, address }));
+                    return Ok(Box::new(Listener {
+                        socket: Arc::new(TcpAcceptor(socket)),
+                        backoff: Arc::new(AcceptBackoff),
+                        address,
+                    }));
                 }
                 Err(source)
                     if source.kind() == io::ErrorKind::AddrInUse
@@ -97,13 +103,17 @@ impl BoundServer for Listener {
                 _ = stop.changed() => break,
                 client = self.socket.accept() => {
                     match client {
-                        Ok((stream,_)) => {
+                        Ok(stream) => {
                             let service = TowerToHyperService::new(router.clone());
                             clients.spawn(async move {
                                 if let Err(error) = http1::Builder::new().serve_connection(TokioIo::new(stream), service).await { tracing::debug!(%error, "client closed"); }
                             });
                         },
-                        Err(source) => { failure = Some(ServerError::Internal(InternalError::Io { source })); break; },
+                        Err(source) if connection_error(&source) => { tracing::debug!(%source, "connection could not be accepted"); },
+                        Err(source) => {
+                            tracing::warn!(%source, "listener will retry after an accept failure");
+                            tokio::select! { _ = stop.changed() => break, _ = self.backoff.wait() => {} }
+                        },
                     }
                 },
                 _ = clients.join_next(), if !clients.is_empty() => {},
@@ -130,3 +140,7 @@ impl BoundServer for Listener {
         failure.map_or(Ok(()), Err)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/runtime_tests.rs"]
+mod runtime_tests;

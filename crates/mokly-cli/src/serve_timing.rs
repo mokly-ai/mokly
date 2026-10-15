@@ -1,43 +1,26 @@
-//! The startup timing span writes only process identity and monotonic measurements.
+//! Readiness measures command setup and closes its span before background work.
 
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-use crate::entry::Terminal;
+use tracing::span::EnteredSpan;
 
-pub(super) struct ServeTiming<'a> {
-    terminal: &'a dyn Terminal,
-    session: Option<String>,
+pub(super) struct ServeTiming {
     started: Instant,
-    ended: bool,
+    span: Option<EnteredSpan>,
 }
-impl<'a> ServeTiming<'a> {
-    pub(super) fn new(terminal: &'a dyn Terminal, session: Option<String>) -> Self {
-        if let Some(session) = &session {
-            terminal.stderr(&format!("[mokly:timing] {{\"schemaVersion\":1,\"session\":\"{session}\",\"pid\":{},\"role\":\"core\",\"stage\":\"serve.ready\",\"id\":1,\"event\":\"start\",\"elapsedMs\":0}}\n", std::process::id()));
-        }
+impl ServeTiming {
+    pub(super) fn new() -> Self {
         Self {
-            terminal,
-            session,
             started: Instant::now(),
-            ended: false,
+            span: Some(tracing::info_span!("serve.ready", status = "error").entered()),
         }
+    }
+    pub(super) fn elapsed(&self) -> Duration {
+        self.started.elapsed()
     }
     pub(super) fn ready(&mut self) {
-        self.end("ok");
-    }
-    fn end(&mut self, status: &str) {
-        if self.ended {
-            return;
+        if let Some(span) = self.span.take() {
+            span.record("status", "ok");
         }
-        self.ended = true;
-        if let Some(session) = &self.session {
-            let elapsed = self.started.elapsed().as_millis();
-            self.terminal.stderr(&format!("[mokly:timing] {{\"schemaVersion\":1,\"session\":\"{session}\",\"pid\":{},\"role\":\"core\",\"stage\":\"serve.ready\",\"id\":1,\"event\":\"end\",\"elapsedMs\":{elapsed},\"durationMs\":{elapsed},\"status\":\"{status}\"}}\n", std::process::id()));
-        }
-    }
-}
-impl Drop for ServeTiming<'_> {
-    fn drop(&mut self) {
-        self.end("error");
     }
 }

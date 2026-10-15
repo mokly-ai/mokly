@@ -33,6 +33,12 @@ pub enum ServerError {
     /// A built viewer inventory or public state is invalid.
     #[error("[mokly-server/assets] viewer assets or catalogue state are invalid")]
     InvalidAssets,
+    /// A previously reached preview resource no longer passes its live read check.
+    #[error("[mokly-server/render] preview resource is unavailable")]
+    PreviewResource,
+    /// A temporary bundle exceeds the existing preview-store byte budget.
+    #[error("[mokly-server/render] preview capacity is full")]
+    PreviewCapacity,
     /// Internal IO, task, and serialization failures.
     #[error("[mokly-server/internal] {0}")]
     Internal(#[from] InternalError),

@@ -90,16 +90,21 @@ impl ThreadWorkers {
 
 impl RenderWorkers for ThreadWorkers {
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
-        self.pool.install(|| worker.closure_job(route))
+        let parent = tracing::Span::current();
+        self.pool
+            .install(|| parent.in_scope(|| worker.closure_job(route)))
     }
     fn document(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Arc<Artifact>> {
-        self.pool.install(|| worker.artifact(route))
+        let parent = tracing::Span::current();
+        self.pool
+            .install(|| parent.in_scope(|| worker.artifact(route)))
     }
     fn run(&self, routes: &[String], worker: &dyn DocumentWorker) -> Vec<Result<ValidatedView>> {
+        let parent = tracing::Span::current();
         self.pool.install(|| {
             routes
                 .par_iter()
-                .map(|route| worker.validate(route))
+                .map(|route| parent.in_scope(|| worker.validate(route)))
                 .collect()
         })
     }

@@ -6,7 +6,7 @@ use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
 use crate::error::{InternalError, Result};
 use crate::material::digest;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV1, Workspace};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV1};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
 use crate::public_records::*;
@@ -175,10 +175,6 @@ pub fn pending_details(
                 })
                 .collect();
             views.sort_by_key(|view| (view.viewport, view.color_scheme));
-            let visual = matches!(
-                entry.content,
-                EntryContent::Screen { .. } | EntryContent::Component { .. }
-            );
             (
                 entry.metadata.path.clone(),
                 EntryDetailV1 {
@@ -194,13 +190,7 @@ pub fn pending_details(
                     },
                     views,
                     resource_evidence: None,
-                    workspace: visual.then(|| Workspace {
-                        comparison_eligible: false,
-                        used_by: Vec::new(),
-                        affected: Vec::new(),
-                        related_components: Vec::new(),
-                        input_changes: Vec::new(),
-                    }),
+                    workspace: None,
                 },
             )
         })

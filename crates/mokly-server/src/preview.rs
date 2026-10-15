@@ -138,7 +138,7 @@ impl PreviewStore for MemoryPreviews {
                 .saturating_add(file.bytes.len())
                 .saturating_add(file.content_type.len())
         });
-        if bytes > 32 * 1024 * 1024 {
+        if bytes > MAX_BYTES {
             return Err(Rejection::Capacity);
         }
         let now = self.clock.milliseconds();
@@ -147,7 +147,7 @@ impl PreviewStore for MemoryPreviews {
             .front()
             .is_some_and(|bundle| now.saturating_sub(bundle.created) >= 300_000)
             || state.bundles.len() >= 16
-            || state.bytes > 32 * 1024 * 1024 - bytes
+            || state.bytes > MAX_BYTES - bytes
         {
             let Some(bundle) = state.bundles.pop_front() else {
                 break;
@@ -197,3 +197,5 @@ impl PreviewStore for MemoryPreviews {
 #[cfg(test)]
 #[path = "_tests_/preview_tests.rs"]
 mod preview_tests;
+/// Existing total byte budget for temporary preview bundles and their metadata.
+pub(crate) const MAX_BYTES: usize = 32 * 1024 * 1024;

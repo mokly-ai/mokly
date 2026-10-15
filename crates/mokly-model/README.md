@@ -60,8 +60,13 @@ cycles, input order, locations, and physical ranges. Historical callers supply
 the component schemas of the base catalogue. A structural detail read alone
 cannot validate relationships that need this context.
 
+`UsageSchemas` compiles each used component schema once per publication.
+`detail_context::validate_with` shares that cache across its details and views.
+
 `projection` selects current public fields explicitly. It builds the tree,
 index, and pending details from a validated model and the graph's input keys.
+`projection_usage` derives complete workspace consumers from ready usage. It
+omits workspace lists while their inputs are pending or unavailable.
 `namespace` owns the fixed deployed directory names and their generated
 TypeScript constants.
 

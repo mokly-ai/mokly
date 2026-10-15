@@ -47,5 +47,5 @@ fn a_root_replaced_after_policy_validation_cannot_expose_outside_bytes() {
             moved: arena.path().join("moved"),
         }),
     };
-    assert!(reader.read("asset.txt").is_none());
+    assert!(reader.open("asset.txt").is_none());
 }

@@ -31,3 +31,6 @@ pub(crate) fn events(mut subscription: Subscription, mut stop: watch::Receiver<b
     *response.body_mut() = Body::from_stream(stream);
     response
 }
+#[cfg(test)]
+#[path = "_tests_/live_tests.rs"]
+mod live_tests;

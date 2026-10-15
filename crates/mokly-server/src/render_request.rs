@@ -42,7 +42,7 @@ pub enum Override {
         value: DataValue,
     },
     /// Remove an optional controlled prop.
-    Unset,
+    Unset {},
 }
 
 /// Stable render HTTP failure categories.
@@ -120,7 +120,7 @@ pub fn validate(
                 }
                 props.insert(name.clone(), value.clone());
             }
-            Override::Unset => {
+            Override::Unset {} => {
                 if visual
                     .prop_schema
                     .required

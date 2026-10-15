@@ -13,6 +13,8 @@ use crate::assets::File;
 use crate::backend::{Documents, PreviewDocument};
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
+use crate::priority::Priority;
+use crate::public_read::OpenedFile;
 use crate::render_request::Rejection;
 use crate::revision::RenderLease;
 
@@ -21,6 +23,11 @@ struct Page {
     next: AtomicU64,
     changed: Notify,
     queued: Mutex<Weak<OwnedSemaphorePermit>>,
+}
+
+/// Bound native HTTP and render scheduling to available machine parallelism.
+pub fn parallelism(available: usize) -> u32 {
+    available.clamp(1, 8) as u32
 }
 impl Default for Page {
     fn default() -> Self {
@@ -34,13 +41,16 @@ impl Default for Page {
 }
 
 /// Injectable HTTP worker scheduler.
+#[cfg_attr(test, unimock::unimock(api = WorkMock))]
 #[async_trait]
 pub trait Work: Send + Sync {
+    /// Render one background document only when foreground admission is idle.
+    async fn background(&self, documents: Arc<dyn Documents>, route: String) -> Result<()>;
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
     -> Result<Option<File>>;
     /// Recheck and read a reached public asset off the HTTP event loop.
-    async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<File>;
+    async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile>;
     /// Coalesce a page's work and bound admission and duration.
     async fn preview(
         &self,
@@ -54,8 +64,9 @@ pub trait Work: Send + Sync {
     async fn stop(&self);
 }
 
-/// One bounded worker scheduler for the fixed catalogue generation.
+/// One bounded scheduler shared by foreground jobs and background generations.
 pub struct Workers {
+    priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
     workers: Arc<Semaphore>,
     queued: Arc<Semaphore>,
@@ -69,6 +80,7 @@ impl Workers {
     pub fn new(parallelism: u32, diagnostics: Arc<dyn Diagnostics>) -> Self {
         let parallelism = parallelism.max(1);
         Self {
+            priority: Arc::new(Priority::default()),
             diagnostics,
             parallelism,
             workers: Arc::new(Semaphore::new(parallelism as usize)),
@@ -81,11 +93,42 @@ impl Workers {
 
 #[async_trait]
 impl Work for Workers {
+    async fn background(&self, documents: Arc<dyn Documents>, route: String) -> Result<()> {
+        let permit = loop {
+            let changed = self.priority.changed.notified();
+            tokio::pin!(changed);
+            changed.as_mut().enable();
+            if self.closed.load(Ordering::SeqCst) {
+                return Ok(());
+            }
+            if self.priority.idle()
+                && let Ok(permit) = self.workers.clone().try_acquire_owned()
+            {
+                break permit;
+            }
+            changed.await;
+        };
+        let guard = self.priority.enter(false);
+        let parent = tracing::Span::current();
+        match tokio::task::spawn_blocking(move || {
+            parent.in_scope(|| {
+                let _guard = guard;
+                let _permit = permit;
+                documents.background(&route)
+            })
+        })
+        .await
+        {
+            Ok(result) => result,
+            Err(source) => Err(InternalError::Task { source }.into()),
+        }
+    }
     async fn generated(
         &self,
         documents: Arc<dyn Documents>,
         route: String,
     ) -> Result<Option<File>> {
+        let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
             return Ok(None);
         }
@@ -95,10 +138,14 @@ impl Work for Workers {
         if self.closed.load(Ordering::SeqCst) {
             return Ok(None);
         }
+        let parent = tracing::Span::current();
         match tokio::task::spawn_blocking(move || {
-            let _permit = permit;
-            let documents = documents;
-            documents.generated(&route)
+            parent.in_scope(|| {
+                let _guard = guard;
+                let _permit = permit;
+                let documents = documents;
+                documents.generated(&route)
+            })
         })
         .await
         {
@@ -106,7 +153,8 @@ impl Work for Workers {
             Err(source) => Err(InternalError::Task { source }.into()),
         }
     }
-    async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<File> {
+    async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile> {
+        let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
             return None;
         }
@@ -115,6 +163,7 @@ impl Work for Workers {
             return None;
         }
         tokio::task::spawn_blocking(move || {
+            let _guard = guard;
             let _permit = permit;
             let documents = documents;
             documents.authored(&path)
@@ -154,6 +203,7 @@ impl Work for Workers {
         tokio::pin!(notified);
         notified.as_mut().enable();
         let job = async {
+            let guard = self.priority.enter(true);
             let (page_permit, permit) = {
                 let _queued = {
                     let mut pending = page
@@ -188,16 +238,21 @@ impl Work for Workers {
                 return Err(Rejection::StaleRevision);
             }
             let page_guard = page.clone();
+            let parent = tracing::Span::current();
             let output = tokio::task::spawn_blocking(move || {
-                let _page = page_guard;
-                let _permit = permit;
-                let _page_permit = page_permit;
-                let documents = documents;
-                documents.preview(&route, &props)
+                parent.in_scope(|| {
+                    let _guard = guard;
+                    let _page = page_guard;
+                    let _permit = permit;
+                    let _page_permit = page_permit;
+                    let documents = documents;
+                    documents.preview(&route, &props)
+                })
             })
             .await;
             match output {
                 Ok(Ok(result)) => Ok(result),
+                Ok(Err(ServerError::PreviewCapacity)) => Err(Rejection::Capacity),
                 Ok(Err(error)) => {
                     self.diagnostics.failed(&error);
                     Err(Rejection::RenderFailed)
@@ -221,6 +276,7 @@ impl Work for Workers {
     }
     async fn stop(&self) {
         self.closed.store(true, Ordering::SeqCst);
+        self.priority.changed.notify_waiters();
         let _permits = self
             .workers
             .clone()

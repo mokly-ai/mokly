@@ -10,12 +10,25 @@ use cap_std::fs::{Dir, OpenOptions};
 use mokly_graph::policy::PublicPolicy;
 
 use crate::assets::{File, content_type};
+use crate::error::{Result, ServerError};
 
 /// Read-time public eligibility and confinement boundary.
 #[cfg_attr(test, unimock::unimock(api = PublicReaderMock))]
 pub trait PublicReader: Send + Sync {
-    /// Return only a confined regular file; every denial is not found.
-    fn read(&self, path: &str) -> Option<File>;
+    /// Open a confined regular file without reading its contents.
+    fn open(&self, path: &str) -> Option<OpenedFile>;
+    /// Copy a confined preview asset only within the remaining store budget.
+    fn read(&self, path: &str, remaining: usize) -> Result<Option<File>>;
+}
+
+/// An already confined handle streamed without reopening the authored path.
+pub struct OpenedFile {
+    /// Open file, owned by the response.
+    pub file: std::fs::File,
+    /// Byte length from the open handle.
+    pub length: u64,
+    /// MIME type derived from the public path.
+    pub content_type: String,
 }
 
 /// Handle-relative reads recheck every directory and the final open file.
@@ -27,7 +40,7 @@ pub struct ConfinedReader {
 }
 
 impl PublicReader for ConfinedReader {
-    fn read(&self, path: &str) -> Option<File> {
+    fn open(&self, path: &str) -> Option<OpenedFile> {
         self.policy.recheck(path).ok()?;
         let mut directory = open_root(&self.repo_root)?;
         let mut parts = path.split('/').peekable();
@@ -41,18 +54,42 @@ impl PublicReader for ConfinedReader {
             }
             let mut options = OpenOptions::new();
             options.read(true).follow(FollowSymlinks::No);
-            let mut file = directory.open_with(part, &options).ok()?;
-            if !file.metadata().ok()?.is_file() {
+            let file = directory.open_with(part, &options).ok()?;
+            let metadata = file.metadata().ok()?;
+            if !metadata.is_file() {
                 return None;
             }
-            let mut bytes = Vec::new();
-            file.read_to_end(&mut bytes).ok()?;
-            return Some(File {
-                bytes,
+            return Some(OpenedFile {
+                file: file.into_std(),
+                length: metadata.len(),
                 content_type: content_type(path),
             });
         }
         None
+    }
+    fn read(&self, path: &str, remaining: usize) -> Result<Option<File>> {
+        let Some(opened) = self.open(path) else {
+            return Ok(None);
+        };
+        if opened.length > remaining as u64 {
+            return Err(ServerError::PreviewCapacity);
+        }
+        let mut bytes = Vec::new();
+        if opened
+            .file
+            .take(remaining as u64 + 1)
+            .read_to_end(&mut bytes)
+            .is_err()
+        {
+            return Ok(None);
+        }
+        if bytes.len() > remaining {
+            return Err(ServerError::PreviewCapacity);
+        }
+        Ok(Some(File {
+            bytes,
+            content_type: opened.content_type,
+        }))
     }
 }
 

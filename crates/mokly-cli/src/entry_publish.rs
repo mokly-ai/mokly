@@ -24,7 +24,7 @@ use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::{CommandCancellation, SilentReporter, SystemClock};
 use mokly_publish::settings::Settings;
 
-use crate::entry::{SystemTerminal, Terminal};
+use crate::terminal::{SystemTerminal, Terminal};
 
 struct BuildLines {
     redactor: Arc<Redactor>,
@@ -32,7 +32,7 @@ struct BuildLines {
 
 impl BuildReporter for BuildLines {
     fn build_directory(&self, directory: &std::path::Path) {
-        SystemTerminal.stdout(&format!(
+        SystemTerminal::default().stdout(&format!(
             "Mokly publish build: {}\n",
             self.redactor.safe(&directory.to_string_lossy())
         ));

@@ -59,7 +59,7 @@ failure.
 ## Script Policy
 
 The document template contains no script. It does not add a
-`script-src 'none'` CSP meta: Serve and the static output add Mokly's bounded
+`script-src 'none'` CSP meta: the static build adds Mokly's bounded
 inspector script for authenticated link and frame behavior. That CSP would block
 the package's instrumentation too. Raw Markdown is literal text, and the
 independent final allowlist prevents a renderer error from introducing executable

@@ -4,7 +4,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::axes::EntryKind;
 use crate::detail_context::invalid;
-use crate::diagnostic::{AuthoringKind, Context};
 use crate::material;
 use crate::paths::is_path_segment;
 use crate::public_records::CatalogueComponent;
@@ -12,7 +11,7 @@ use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 use crate::usage::{CatalogueUsage, ComponentInputOwner};
-use crate::validation::PropValidator;
+use crate::usage_schemas::UsageSchemas;
 use crate::{usage_references, wire_decode};
 
 /// Validate usage against the component parents of the same source side.
@@ -21,6 +20,15 @@ pub fn validate(
     usage: &CatalogueUsage,
     kind: EntryKind,
     components: &[CatalogueComponent],
+) -> Result<(), ReadError> {
+    validate_with(usage, kind, &mut UsageSchemas::new(components))
+}
+
+/// Reuse component validators across every detail in one publication.
+pub fn validate_with(
+    usage: &CatalogueUsage,
+    kind: EntryKind,
+    schemas: &mut UsageSchemas<'_>,
 ) -> Result<(), ReadError> {
     let CatalogueUsage::Ready {
         instances,
@@ -39,11 +47,8 @@ pub fn validate(
             return Err(invalid(ContractViolation::UsageOrder));
         }
         previous = Some(instance.key.as_str());
-        let component = components
-            .iter()
-            .find(|component| {
-                component.entry.path == instance.component_id && component.variant_of.is_none()
-            })
+        let component = schemas
+            .component(&instance.component_id)
             .ok_or_else(|| invalid(ContractViolation::UsageReference))?;
         let default_id = component.entry.path.rsplit('/').next().unwrap_or("");
         if !is_path_segment(&instance.id)
@@ -71,26 +76,7 @@ pub fn validate(
         if material::props_key(&props).ok().as_deref() != Some(&instance.props_key) {
             return Err(invalid(ContractViolation::UsageKey));
         }
-        let context = Context {
-            entry: component.entry.path.clone(),
-            variant: None,
-            kind: AuthoringKind::Html,
-        };
-        let schema = match serde_json::to_value(&component.visual.prop_schema) {
-            Ok(schema) => schema,
-            Err(_) => return Err(invalid(ContractViolation::UsageProps)),
-        };
-        let validator = match PropValidator::compile(&schema, &context) {
-            Ok(validator) => validator,
-            Err(_) => return Err(invalid(ContractViolation::UsageProps)),
-        };
-        let props = match serde_json::to_value(props) {
-            Ok(props) => props,
-            Err(_) => return Err(invalid(ContractViolation::UsageProps)),
-        };
-        if validator.validate(&props, &context).is_err() {
-            return Err(invalid(ContractViolation::UsageProps));
-        }
+        schemas.validate(&instance.component_id, &props)?;
         if instance.source.as_ref().is_some_and(|source| {
             !safe_path(&source.path)
                 || source.line == 0
@@ -130,7 +116,7 @@ pub fn validate(
         }
         previous = Some(slot.key.as_str());
     }
-    usage_references::validate(instances, slots, ranges, kind, components)
+    usage_references::validate(instances, slots, ranges, kind, schemas.components)
 }
 
 fn safe_path(path: &str) -> bool {

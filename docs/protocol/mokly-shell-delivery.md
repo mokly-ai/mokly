@@ -88,7 +88,7 @@ interface EntryDetailV1 {
   entry: { path: string; kind: CatalogueRecord["kind"]; snapshotId?: string };
   views: readonly DetailView[]; // empty for pages, documents, and use cases
   resourceEvidence?: ViewEvidence; // pages only; present when ready
-  workspace?: Workspace; // screens and components only
+  workspace?: Workspace; // screens and components, when all list inputs are proven
 }
 interface DetailView {
   viewport: Viewport;
@@ -145,6 +145,9 @@ generated TypeScript types are normative, and a detail is canonical JSON. In
 Serve a view's usage is `pending` until its first render completes and the
 next publication replaces the detail; `build` renders every view before it
 writes, so a built detail carries no `pending` view.
+
+A screen or component detail omits `workspace` until every input of its lists
+is proven. Pending or unavailable consumer usage cannot prove a complete list.
 
 ## Live Descriptor
 

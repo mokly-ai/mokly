@@ -9,7 +9,7 @@ use std::time::Duration;
 
 use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
-use tokio::process::{Child, Command};
+use tokio::process::{Child, ChildStderr, Command};
 
 fn write(root: &Path, path: &str, text: &str) {
     let path = root.join(path);
@@ -21,15 +21,27 @@ struct Running {
     child: Child,
     root: TempDir,
     url: String,
+    errors: BufReader<ChildStderr>,
+    prefix: String,
 }
 
 async fn start(extra: &[&str]) -> Running {
     let root = TempDir::new().unwrap();
-    write(root.path(), "mokly.config.json", "{}");
+    write(
+        root.path(),
+        "mokly.config.json",
+        r#"{"stylesheets":[{"match":"**","stylesheets":["styles.css"]}]}"#,
+    );
+    write(root.path(), "styles.css", "button { color: blue; }");
+    write(
+        root.path(),
+        "specs/button.component.html",
+        "---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}, required: [label]}\nprops: {label: Saved}\n---\n<button>{{label}}</button>",
+    );
     write(
         root.path(),
         "specs/home.screen.html",
-        "---\ntitle: Home\n---\n<h1>Home</h1>",
+        "---\ntitle: Home\n---\n<h1>Home</h1><ui-button label=\"Home\"></ui-button>",
     );
     write(
         root.path(),
@@ -63,12 +75,25 @@ async fn start(extra: &[&str]) -> Running {
     let line = tokio::time::timeout(Duration::from_secs(15), stdout.next_line())
         .await
         .unwrap()
-        .unwrap()
         .unwrap();
+    let Some(line) = line else {
+        let output = child.wait_with_output().await.unwrap();
+        panic!(
+            "Serve exited before readiness: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    };
     let url = line.strip_prefix("Mokly listening at ").unwrap().to_owned();
     assert!(url.starts_with("http://127.0.0.1:"));
     assert!(!url.ends_with(":0"));
-    Running { child, root, url }
+    let errors = BufReader::new(child.stderr.take().unwrap());
+    Running {
+        child,
+        root,
+        url,
+        errors,
+        prefix: String::new(),
+    }
 }
 
 async fn close(mut running: Running, signal: &str) -> (String, String) {
@@ -83,15 +108,8 @@ async fn close(mut running: Running, signal: &str) -> (String, String) {
         .await
         .unwrap()
         .unwrap();
-    let mut stderr = String::new();
-    running
-        .child
-        .stderr
-        .take()
-        .unwrap()
-        .read_to_string(&mut stderr)
-        .await
-        .unwrap();
+    let mut stderr = running.prefix;
+    running.errors.read_to_string(&mut stderr).await.unwrap();
     assert_eq!(status.code(), Some(0), "{stderr}");
     assert!(!running.root.path().join("mokly-static").exists());
     assert!(!running.root.path().join("mokly-generated").exists());
@@ -110,7 +128,21 @@ async fn repeated_sigint_and_sigterm_exit_zero_and_release_the_port() {
 
 #[tokio::test]
 async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
-    let running = start(&["--debug-timings"]).await;
+    let mut running = start(&["--debug-timings"]).await;
+    tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let mut line = String::new();
+            assert!(running.errors.read_line(&mut line).await.unwrap() > 0);
+            let value: serde_json::Value =
+                serde_json::from_str(line.trim().strip_prefix("[mokly:timing] ").unwrap()).unwrap();
+            running.prefix.push_str(&line);
+            if value["stage"] == "serve.background" && value["event"] == "end" {
+                break;
+            }
+        }
+    })
+    .await
+    .unwrap();
     let (_, stderr) = close(running, "-TERM").await;
     let records: Vec<_> = stderr
         .lines()
@@ -119,14 +151,60 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
                 .unwrap()
         })
         .collect();
-    assert_eq!(records.len(), 2);
-    assert_eq!(records[0]["event"], "start");
-    assert_eq!(records[1]["event"], "end");
-    assert_eq!(records[0]["session"], records[1]["session"]);
-    for record in records {
+    let starts: std::collections::BTreeMap<_, _> = records
+        .iter()
+        .filter(|record| record["event"] == "start")
+        .map(|record| {
+            (
+                record["id"].as_u64().unwrap(),
+                record["stage"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    for stage in [
+        "serve.ready",
+        "config.load",
+        "catalogue.discover",
+        "catalogue.validate",
+        "css.bundle",
+        "index.build",
+        "detail.build",
+        "render.document",
+        "render.fragment",
+        "serve.background",
+    ] {
+        assert!(
+            starts.values().any(|actual| *actual == stage),
+            "missing {stage}"
+        );
+    }
+    let counts = records
+        .iter()
+        .find(|record| record["stage"] == "serve.background" && record["event"] == "counts")
+        .unwrap();
+    assert_eq!(counts["documents"], 4);
+    assert!(counts["fragments"].as_u64().unwrap() > 0);
+    assert!(counts["cacheHits"].is_u64());
+    for record in &records {
         assert_eq!(record["schemaVersion"], 1);
         assert_eq!(record["role"], "core");
-        assert!(record.get("props").is_none());
+        assert_eq!(record["session"], records[0]["session"]);
+        assert!(record["elapsedMs"].is_number());
+        if record["event"] == "end" {
+            assert_eq!(starts[&record["id"].as_u64().unwrap()], record["stage"]);
+            assert_eq!(record["status"], "ok");
+            assert!(record["durationMs"].is_number());
+        }
+        if record["stage"] == "render.document" && record["event"] == "end" {
+            assert!(matches!(
+                record["viewport"].as_str(),
+                Some("mobile" | "desktop")
+            ));
+            assert_eq!(record["scheme"], "light");
+        }
+    }
+    for source_text in ["Home", "styles.css", "label", "<button>"] {
+        assert!(!stderr.contains(source_text));
     }
 }
 

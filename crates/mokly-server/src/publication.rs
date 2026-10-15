@@ -4,6 +4,8 @@ use std::sync::{Arc, Mutex};
 
 use tokio::sync::broadcast;
 
+use crate::error::Result;
+use crate::evidence;
 use crate::snapshot::Snapshot;
 
 /// The only data retained by an update stream; it holds no render generation.
@@ -31,11 +33,22 @@ pub struct Subscription {
 }
 
 /// Atomic state source for watch and Changes publications.
+#[cfg_attr(test, unimock::unimock(api = PublicationsMock))]
 pub trait Publications: Send + Sync {
     /// Get matching index, details, routes, backend, and capability.
     fn current(&self) -> Arc<Snapshot>;
     /// Install an update receiver and capture its handshake in one step.
     fn subscribe(&self) -> Subscription;
+    /// Publish completed usage only if its immutable backend is still current.
+    fn completed(&self, origin: &Snapshot, route: &str) -> Result<()> {
+        self.completed_many(origin, &[route.into()])
+    }
+    /// Publish one completed background stage without rebuilding the index per view.
+    fn completed_many(&self, _origin: &Snapshot, _routes: &[String]) -> Result<()> {
+        Ok(())
+    }
+    /// Fence late evidence before shutdown releases its generation.
+    fn close(&self) {}
 }
 
 /// An immutable Serve publication for hosts without rebuild actions.
@@ -71,6 +84,7 @@ pub trait PublicationWriter: Send + Sync {
 }
 
 struct State {
+    closed: bool,
     snapshot: Arc<Snapshot>,
     updates: broadcast::Sender<PublicationEvent>,
 }
@@ -78,12 +92,15 @@ struct State {
 /// A lock fences state replacement and the event subscription handshake.
 pub struct SharedPublication {
     state: Mutex<State>,
+    build: Mutex<()>,
 }
 impl SharedPublication {
     /// Install the already validated first publication.
     pub fn new(snapshot: Arc<Snapshot>) -> Self {
         Self {
+            build: Mutex::new(()),
             state: Mutex::new(State {
+                closed: false,
                 snapshot,
                 updates: broadcast::channel(64).0,
             }),
@@ -91,6 +108,55 @@ impl SharedPublication {
     }
 }
 impl Publications for SharedPublication {
+    fn completed_many(&self, origin: &Snapshot, routes: &[String]) -> Result<()> {
+        let _build = self.build.lock().unwrap_or_else(|error| error.into_inner());
+        {
+            let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            if state.closed || !Arc::ptr_eq(&state.snapshot.documents, &origin.documents) {
+                return Ok(());
+            }
+        }
+        let updates: Vec<_> = routes
+            .iter()
+            .filter_map(|route| {
+                origin
+                    .documents
+                    .usage(route)
+                    .map(|usage| (route.clone(), usage))
+            })
+            .collect();
+        loop {
+            let current = {
+                let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+                if state.closed || !Arc::ptr_eq(&state.snapshot.documents, &origin.documents) {
+                    return Ok(());
+                }
+                state.snapshot.clone()
+            };
+            let Some(next) = evidence::complete(&current, &updates)? else {
+                return Ok(());
+            };
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            if state.closed {
+                return Ok(());
+            }
+            if !Arc::ptr_eq(&state.snapshot, &current) {
+                continue;
+            }
+            state.snapshot.lease.expire();
+            state.snapshot = next;
+            let _ = state.updates.send(event(&state.snapshot));
+            return Ok(());
+        }
+    }
+    fn close(&self) {
+        {
+            let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+            state.closed = true;
+            state.snapshot.lease.expire();
+        }
+        let _build = self.build.lock().unwrap_or_else(|error| error.into_inner());
+    }
     fn current(&self) -> Arc<Snapshot> {
         self.state
             .lock()
@@ -110,7 +176,8 @@ impl PublicationWriter for SharedPublication {
     fn replace(&self, snapshot: Arc<Snapshot>) -> bool {
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         let current = &state.snapshot;
-        if current.index.deployment_id != snapshot.index.deployment_id
+        if state.closed
+            || current.index.deployment_id != snapshot.index.deployment_id
             || current.render_token != snapshot.render_token
             || current.index.revision.checked_add(1) != Some(snapshot.index.revision)
         {

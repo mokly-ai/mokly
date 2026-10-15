@@ -7,6 +7,7 @@ use crate::public_metadata::ComparisonSelection;
 use crate::read_contract::ContractViolation;
 use crate::readers::{self, ReadError};
 use crate::usage_context;
+use crate::usage_schemas::UsageSchemas;
 
 /// Decode and validate a current entry detail against the installed index.
 /// Historical callers supply their base-side component schemas to `usage_context`.
@@ -18,6 +19,15 @@ pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV1, Rea
 
 /// Validate the current fence, kind, view order, evidence readiness, and usage.
 pub fn validate(detail: &EntryDetailV1, index: &CatalogueReadModel) -> Result<(), ReadError> {
+    validate_with(detail, index, &mut UsageSchemas::new(&index.components))
+}
+
+/// Validate all usage against publication-local compiled schemas.
+pub fn validate_with(
+    detail: &EntryDetailV1,
+    index: &CatalogueReadModel,
+    schemas: &mut UsageSchemas<'_>,
+) -> Result<(), ReadError> {
     if detail.identity.id != index.identity.id
         || detail.identity.title != index.identity.title
         || detail.deployment_id.as_ref() != Some(&index.deployment_id)
@@ -74,7 +84,7 @@ pub fn validate(detail: &EntryDetailV1, index: &CatalogueReadModel) -> Result<()
             {
                 return Err(invalid(ContractViolation::DetailEvidence));
             }
-            usage_context::validate(&view.usage, detail.entry.kind, &index.components)?;
+            usage_context::validate_with(&view.usage, detail.entry.kind, schemas)?;
         }
     }
     Ok(())

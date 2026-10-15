@@ -5,6 +5,56 @@ use mokly_model::{canonical, detail_context, readers};
 use super::support;
 
 #[tokio::test]
+async fn missing_shell_routes_keep_the_stub_and_documents_keep_the_graph_bytes() {
+    let harness = support::Harness::new().await;
+    for route in ["view/missing", "view/missing/", "view/missing/index.html"] {
+        for head in [false, true] {
+            let url = format!("{}/{route}", harness.url);
+            let response = if head {
+                harness.client.head(url)
+            } else {
+                harness.client.get(url)
+            }
+            .send()
+            .await
+            .unwrap();
+            assert_eq!(response.status(), 404);
+            support::headers(&response);
+            assert_eq!(
+                response.headers()["content-type"],
+                "text/html; charset=utf-8"
+            );
+            assert_eq!(
+                response.headers()["content-length"],
+                harness.snapshot.stub.len().to_string()
+            );
+            let body = response.bytes().await.unwrap();
+            assert_eq!(
+                body.as_ref(),
+                if head {
+                    &[]
+                } else {
+                    harness.snapshot.stub.as_slice()
+                }
+            );
+        }
+    }
+    let route = "home/index.mobile.html";
+    let expected = harness.generation.render(route).unwrap();
+    let actual = harness
+        .client
+        .get(format!("{}/static/mokly-generated/{route}", harness.url))
+        .send()
+        .await
+        .unwrap()
+        .bytes()
+        .await
+        .unwrap();
+    assert_eq!(actual.as_ref(), expected.bytes);
+    harness.close().await;
+}
+
+#[tokio::test]
 async fn every_route_has_exact_bytes_headers_and_head_parity() {
     let harness = support::Harness::new().await;
     let index = harness

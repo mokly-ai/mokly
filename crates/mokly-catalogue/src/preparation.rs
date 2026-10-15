@@ -60,6 +60,7 @@ pub struct Builder {
 }
 
 impl CatalogueBuilder for Builder {
+    #[tracing::instrument(name = "catalogue.validate", skip_all, err)]
     fn prepare(&self, config: &ResolvedConfig, output: Option<&Path>) -> Result<PreparedCatalogue> {
         let inventory = self.discovery.discover(config, output)?;
         let schemes = config

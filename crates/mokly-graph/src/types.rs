@@ -73,6 +73,8 @@ pub trait RenderGeneration: GeneratedResources {
     fn render_props(&self, route: &str, props: &Props) -> Result<TransientDocument>;
     /// All authored files reached by completed documents of this generation.
     fn public_files(&self) -> BTreeSet<String>;
+    /// Check reached membership without copying the generation's complete set.
+    fn contains_public_file(&self, path: &str) -> bool;
 }
 
 /// A complete isolated preview with its validated public closure.
