@@ -30,6 +30,9 @@ A re-owned instance with a colliding identity also loses its region. The
 `html-foster-parented` warning names the component element and parent; shared
 body warnings use the parent entry once across its variants.
 
+Link-control adaptation keeps one stack of ancestor features. It copies no
+ancestor lists or child subtrees while it walks the document.
+
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 `serialize::html` writes instance and slot comments for the inspector.
 Ignore scopes resolve during composition. Ignore and link comments do not

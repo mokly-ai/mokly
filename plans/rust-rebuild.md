@@ -990,6 +990,9 @@ Publish client final review and merge decisions:
       under `.context/rust-rebuild/`.
 - [ ] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
+      The M5 memory follow-up removes quadratic ancestor-list retention and
+      subtree copies in link controls; recursion remains. Evidence:
+      `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
 - [ ] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
