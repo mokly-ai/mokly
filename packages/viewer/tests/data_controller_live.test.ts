@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import { routeKey } from "../src/shell/data_requests.js";
 
 import { detailFixture, indexFixture } from "./catalogue_v7_fixture.js";
@@ -68,6 +69,16 @@ test("a failed descriptor warns, keeps browsing, and retries on the next message
   fixture.live.listener!.message(1, fixture.deployment);
   assert.equal(fixture.live.descriptors.length, 2);
   assert.equal(fixture.source.indexes.length, 0);
+});
+
+test("a descriptor of another version shows the version error state", async () => {
+  const fixture = connected();
+  const error = new MoklyVersionError("live", 2, 3);
+  fixture.live.descriptor().reject(error);
+  await flush();
+  assert.deepEqual(fixture.versionErrors, [error]);
+  assert.deepEqual(fixture.warnings, []);
+  assert.equal(fixture.controller.live, undefined);
 });
 
 test("a message from another deployment is a full page load", () => {

@@ -6,7 +6,7 @@
 
 import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
 import type { LiveDescriptorV3 } from "../catalogue/types.js";
-import type { MoklyVersionError } from "../catalogue/version_error.js";
+import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import {
   withDetails,
@@ -261,6 +261,10 @@ export class ShellDataController {
       (error: unknown) => {
         if (controller.signal.aborted) return;
         this.#descriptorLoad = undefined;
+        if (error instanceof MoklyVersionError) {
+          this.#host.versionError(error);
+          return;
+        }
         this.#descriptorFailed = true;
         this.#host.warn("Live prop editing is unavailable.", error);
       },

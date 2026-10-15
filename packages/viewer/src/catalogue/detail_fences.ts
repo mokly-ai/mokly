@@ -32,28 +32,32 @@ export function detailKey(request: DetailRequest): string {
 }
 
 /**
- * Accept a current entry's detail only when identity, deployment and revision
+ * Accept a current entry's detail only when deployment, identity and revision
  * equal the index, and a removed entry's detail only when identity,
- * generation and snapshot id equal the index's record.
+ * generation and snapshot id equal the index's record. Another deployment
+ * wins over every other difference, and a revision mismatch is reported
+ * before the content is compared, so the content is matched against the
+ * index of the detail's own revision.
  */
 export function fenceDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
   detail: EntryDetailV1,
 ): DetailFence {
-  if (canonicalJson(detail.identity) !== canonicalJson(index.identity))
-    return { kind: "rejected" };
   if (request.snapshotId === undefined) {
     if (detail.deploymentId === undefined) return { kind: "rejected" };
     if (detail.deploymentId !== index.deploymentId)
       return { kind: "deployment" };
-    const entry = currentEntry(index, request.path);
-    if (!entry || !matches(index, entry, detail, false))
+    if (canonicalJson(detail.identity) !== canonicalJson(index.identity))
       return { kind: "rejected" };
-    return detail.revision === index.revision
+    if (detail.revision !== index.revision) return { kind: "revision", detail };
+    const entry = currentEntry(index, request.path);
+    return entry && matches(index, entry, detail, false)
       ? { kind: "accepted", detail }
-      : { kind: "revision", detail };
+      : { kind: "rejected" };
   }
+  if (canonicalJson(detail.identity) !== canonicalJson(index.identity))
+    return { kind: "rejected" };
   const record = index.removedEntries.find(
     (candidate) =>
       candidate.entry.path === request.path &&
