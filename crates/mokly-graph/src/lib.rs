@@ -1,0 +1,40 @@
+//! Content-addressed catalogue rendering and bounded process caches.
+#![warn(unreachable_pub)]
+
+pub mod cache;
+pub mod closure;
+pub mod delivery_inputs;
+pub mod error;
+pub mod fragments;
+pub mod graph;
+pub mod key;
+pub mod policy;
+pub mod public_denial;
+pub mod reference_index;
+pub mod references;
+pub mod route_inventory;
+pub mod source_snapshot;
+pub mod types;
+pub mod urls;
+pub mod workers;
+
+mod config_key;
+mod evaluation;
+mod markdown_assets;
+mod markdown_links;
+mod markdown_sources;
+mod planning;
+mod rendering;
+mod resource_edges;
+mod resource_keys;
+mod session;
+mod styles;
+mod validation;
+mod weight;
+
+#[cfg(test)]
+#[path = "_tests_/boundaries_tests.rs"]
+mod boundaries_tests;
+#[cfg(test)]
+#[path = "_tests_/cache_tests.rs"]
+mod cache_tests;

@@ -11,4 +11,5 @@ pub mod options;
 pub mod output;
 pub mod parsing;
 pub mod redaction;
+mod render_errors;
 pub mod version;

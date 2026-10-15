@@ -1,101 +1,42 @@
 ---
 title: "Configure"
-description: "Tell Mokly where your specs live and where the catalogue is written."
+description: "Tell Mokly which authored files belong to the catalogue."
 section: "start"
 order: 2
 ---
 
-## Add the config file
+## Point Mokly at your files
 
-Create `mokly.config.ts` at the root of the repository and export the result
-of `defineConfig`. One field is required: `mockupsDir`, the folder that
-holds the generated catalogue in its `mokly-generated/` child. Everything Mokly reads comes from a `specs`
-folder beside the config file unless you say otherwise.
+Create `mokly.config.json` in the repository root. An empty configuration
+uses `specs` as its source root.
 
-```ts
-import { defineConfig } from "@mokly/mokly";
-
-export default defineConfig({
-  mockupsDir: "specs/generated",
-});
+```json
+{}
 ```
 
-Mokly scans `specs` for two kinds of file: entry modules named
-`*.mockup.ts` or `*.mockup.tsx`, which define screens, pages, flows and
-components in TypeScript, and Markdown files, which become documents.
-The folder you put a file in is its catalogue folder:
-`specs/account/billing/invoice.mockup.tsx` produces `account/billing/invoice`,
-and `specs/account/README.md` is the page of the `account` folder.
+Mokly searches upward from the current directory for this file. Use
+`--config path/to/mokly.config.json` to select another JSON file.
+Filesystem paths in the configuration are relative to that file.
 
-## Choose your own roots
+## Add another root
 
-`roots` replaces the default when your files live elsewhere or in several
-places. Each root names a directory, relative to the config file, and may
-narrow the files it reads, prefix the paths it produces, or hide directory
-names from them.
+Each root selects authored files and supplies their catalogue path prefix.
 
-```ts
-import { defineConfig } from "@mokly/mokly";
-
-export default defineConfig({
-  mockupsDir: "specs/generated",
-  roots: [{ dir: "specs" }, { dir: "packages/ui/src", path: "components" }],
-});
+```json
+{
+  "$schema": "./node_modules/@mokly/mokly/config.schema.json",
+  "roots": [
+    { "dir": "specs" },
+    { "dir": "packages/ui/src", "path": "components" }
+  ],
+  "colorSchemes": ["light", "dark"]
+}
 ```
 
-The second root puts a component library in the catalogue under
-`components`, so `packages/ui/src/button/index.mockup.tsx` becomes
-`components/button` while its registration stays beside the component code.
-To keep mockups next to product code without a prefix, name the directory
-that holds them as transparent: with
-`{ dir: "src/features", transparent: ["__mockups__"] }`, the file
-`src/features/checkout/__mockups__/summary.mockup.tsx` becomes
-`checkout/summary`.
+The default file set includes HTML screens, components, and pages, Markdown
+documents, YAML use cases, JavaScript entry modules, and Storybook files.
+Each matched file belongs to one root. A path override in its metadata can
+replace its file-derived catalogue path.
 
-A root must exist and must match at least one file, so a typo cannot quietly
-produce an empty catalogue, and a root cannot be `mockupsDir` itself. Every
-path in the config is relative to the config file and stays inside the
-repository.
-
-## Add your theme
-
-Screens usually need your product's CSS and your own React providers. Keep
-both in the repository: list stylesheets per entry, and point `renderer` at a
-module that wraps a screen in your theme.
-
-```ts
-import { defineConfig } from "@mokly/mokly";
-
-export default defineConfig({
-  colorSchemes: ["light", "dark"],
-  mockupsDir: "specs/generated",
-  renderer: "specs/renderer.tsx",
-  stylesheets: [{ match: "**/index.html", stylesheets: ["app.css"] }],
-});
-```
-
-A stylesheet rule matches an entry's route, `<path>/index.html`, so
-`account/**/index.html` reaches everything under `account`. Keep referenced authored assets
-such as `app.css` inside `mockupsDir` but outside `mokly-generated/` so the catalogue can serve them.
-Unreferenced files stay private. Entry
-modules, documents and the helpers they import are never served, even when a
-root reaches into a folder below `mockupsDir`.
-To place registered components' declared public CSS among configured links,
-add `componentStylesheets` from `@mokly/mokly` once to the rule's shared
-`stylesheets` list. Without it, component CSS follows the shared list and
-precedes light/dark CSS.
-
-## Where the config is found
-
-Mokly walks up from the current directory looking for `mokly.config.ts`,
-`.mts`, `.js` or `.mjs`. Pass `--config` after the command to name one
-explicitly:
-
-```shell
-npx mokly build --config tools/mokly.config.ts
-```
-
-## Next
-
-Author a screen, then build the catalogue. Every field of the configuration
-is described under Authoring.
+Read [Config](/docs/authoring/config/) for every field.
+Continue with [Your first screen](/docs/start/your-first-screen/).

@@ -42,7 +42,8 @@ public form of the model.
 Every output is a node of the content-addressed render graph that the
 [architecture page](../architecture/rust-core.md#render-graph) defines, keyed
 by the hash of its inputs. A screen or component renders once per view, that
-is per viewport and colour scheme; a page or Markdown document renders once.
+is per viewport and colour scheme. A page renders once. A Markdown document renders once per enabled
+colour scheme.
 A node recomputes only when its key moves. Fragments are memoized across
 screens, so a component rendered with the same props on many screens renders
 once.

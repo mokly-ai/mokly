@@ -5,119 +5,75 @@ section: "authoring"
 order: 7
 ---
 
-## When to use a page
+## Add a complete HTML page
 
-Use a page for a document that already exists as one complete HTML file, such
-as a handbook or a generated report, where mobile and desktop variants would
-be invented rather than real.
+Use a `.page.html` file for a printable statement, reference page, or other
+complete document whose markup you own.
 
-## Define a page
+```html
+---
+title: Account statement
+description: The printable account statement.
+tags: [account]
+---
 
-`definePage` takes a synchronous `render` callback that runs once and returns
-one complete document.
-
-```tsx
-// specs/documents/account-statement.mockup.tsx
-import { definePage } from "@mokly/mokly";
-import { source } from "./statement.source.js";
-
-export default definePage({
-  title: "Account statement",
-  description: "The printable account statement.",
-  relatedDocs: [],
-  tags: ["documents"],
-  render: source,
-});
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Account statement</title>
+  </head>
+  <body>
+    <main><h1 id="summary">Statement</h1></main>
+    <a href="mock:account/billing">Back to billing</a>
+  </body>
+</html>
 ```
 
-The page is `documents/account-statement`, written at
-`documents/account-statement/index.html` under `mockupsDir/mokly-generated/` and opened at
-`/view/documents/account-statement/`. Name the file `index.mockup.tsx`, or
-declare `slug: "index"`, to make the page the folder's own page. Pages are one
-light document regardless of the catalogue's color schemes.
+The page has one document. It has no props, variants, viewport views, or
+color-scheme views. It links its own CSS and receives no configured screen
+styles. It can use registered component elements, catalogue link controls,
+and ignore regions. A page-to-screen link opens the desktop light document.
 
-## What a page shares with a screen
+A JavaScript `definePage` callback returns the same complete-document form as
+one synchronous string. Mokly applies the same page checks to both forms.
 
-Paths, `slug`, `path` and `movedFrom`, links, tags, Changes, the source guards
-and the safe output transaction are the same. A title or folder title never
-changes a path; only the file's place or a declared path does. Pages take part
-in Changes but have no visual comparison, because there is no second view to
-compare. Changes can pair a moved page even when its content changes: the
-visible body text lines must be at least half alike and be each other's
-unique best match. Set `movedFrom` to declare the complete previous path when
-the content cannot identify the move.
+## Add a Markdown document
 
-## Markdown documents
-
-Every `.md` file a root matches is a document. Its path derives from its file
-like any entry, the leaf being the file name up to its first dot, so
-`specs/account/billing/refunds.md` is `account/billing/refunds`. A file named
-`README.md` or `index.md` is the page of its folder. File names follow the
-same grammar as every path segment, so Mokly reports `Getting Started.md`
-rather than renaming it.
-
-A document may begin with a front matter block of `key: value` lines between
-two `---` lines:
+Save a `.md` file inside a root. `README.md` and `index.md` are the folder's
+own document. Other file names supply a leaf path.
 
 ```markdown
 ---
-title: "Refund policy"
-description: "How refunds reach the original payment method."
-tags: ["billing", "policy"]
+title: "Billing guide"
+description: "How billing works."
+tags: ["billing"]
 ---
 
-# Refund policy
+# Billing
 
-Refunds return to the original payment method within five business days.
+Read the [invoice](mock:account/invoice#summary).
 ```
 
-The recognised keys are `title`, `description`, `tags`, `path` and
-`movedFrom`. One leading UTF-8 BOM is ignored. Without a `title`, the first nonempty heading is the title, and without a
-heading the file name is. The description is empty unless you set it.
+Front matter is optional. It accepts `title`, `description`, `tags`, `path`,
+and `movedFrom`. A document's title otherwise comes from its first nonempty
+heading, then its file name.
 
-Mokly renders CommonMark with tables, strikethrough, task lists and automatic
-links, gives every heading an id built from its text, keeps the language of a
-code fence as a class, and shows raw HTML as literal text. The result is one
-document in the shell's typography at `<path>/index.html` under `mockupsDir/mokly-generated/`, with a dark
-rendering beside it when the catalogue enables dark. A document has no
-viewport, no variants and no helper to call; the file is the definition.
-Empty headings keep their place but have no anchor. Mokly checks the final body
-against its supported Markdown elements, attributes and URL schemes. It rejects
-scripts, event handlers and inline body styles.
+Mokly renders headings, lists, tables, task lists, links, code fences, and
+strikethrough. Raw HTML is literal text. Headings receive stable ids for
+fragment links. The document uses Mokly's typography and color palette.
 
-A relative link to another Markdown file becomes a catalogue link to that
-document, and `mock:<path>` names any entry. A relative link or image with a
-`png`, `jpg`, `jpeg`, `gif`, `svg`, `webp`, `avif` or `pdf` destination copies
-that file beside the document's folder. For a folder README at `account/billing`,
-`../shared/flow.png` is served at `static/mokly-generated/account/shared/flow.png`.
-The file must live inside the same root.
-Copied resources cannot use hidden path segments or private directory names such
-as `node_modules`, `dist` or `target`; use an ordinary folder such as `assets`.
-File links resolve from the Markdown source directory. Logical `mock:./...`
-links resolve from the catalogue folder, including a declared README path.
-Resource copies join `mokly-generated/` and follow the tracking choice for that whole tree.
-A relative link to any other repository file renders as plain text, a link to
-a file that does not exist fails the build, and `http:`, `https:` and
-`mailto:` links are kept as they are.
-Links to existing ordinary files under `mockupsDir` render as plain text and
-do not add those files to the public closure. Other rendered resource references
-can make those files public.
-Links to Mokly-generated output or metadata fail; link to the source Markdown
-file or use a lower-case `mock:` destination instead. Character references in
-explicit link/image destinations and titles, such as `&amp;`, decode once.
-Autolinks keep their URI text literal.
+## Link files and resources
 
-Documents join Changes like pages: the rendered document, its resources
-and its metadata are compared with the branch point, a removed document shows
-its previous version, and a moved document pairs with its earlier version by
-content or its front-matter `movedFrom` declaration. A paired document produces
-no removed entry. Similarity compares the Markdown body after front matter;
-the shared document template cannot make unrelated notes look like a move.
-Serve and export report uncertain matches in the terminal. Use `movedFrom`
-when the content cannot establish one unique pair.
+A relative Markdown link to another discovered `.md` file becomes a
+catalogue link. File destinations resolve from the source Markdown file,
+even when its catalogue path is overridden. `mock:` destinations use the
+entry's catalogue base.
 
-## Exported types
+Images and PDF attachments must be regular files inside the document's
+source root. They use the checked public asset closure. Hidden paths,
+private build directories, protected sources, and symlink aliases fail the
+build. Links to private source files display their text without a file URL.
 
-| Type                          | Use                                 |
-| ----------------------------- | ----------------------------------- |
-| `PageInput`, `PageDefinition` | What `definePage` takes and returns |
+Read [Links](/docs/authoring/links/) for fragments and catalogue navigation.
+Read the [page contract](/docs/reference/pages/) for the full page rules.

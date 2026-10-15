@@ -1,0 +1,5 @@
+---
+source: crates/mokly-html/src/_tests_/control_tests.rs
+expression: "serialize::html(&nodes)"
+---
+<!doctype html><html><head><style>:where(a[data-mokly-link-control]){color:inherit;text-decoration:inherit;cursor:pointer}:where(a[data-mokly-link-control=button]){display:inline-block;width:fit-content}:where(a[data-mokly-link-control=div]){display:block}:where(a[data-mokly-link-control=span],a[data-mokly-link-control=a]){display:inline}a[data-mokly-link-control]:focus-visible{outline:2px solid currentColor!important;outline-offset:2px!important}</style></head><body><label><a href="mock:home" data-mokly-link-control="div"><span tabindex="-1">Go</span></a></label></body></html>

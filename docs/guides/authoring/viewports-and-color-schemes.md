@@ -5,91 +5,55 @@ section: "authoring"
 order: 4
 ---
 
-## Two viewports
+## Render both viewports
 
-Every screen owns one mobile node and one desktop node, and the build writes a
-document for each, `index.mobile.html` and `index.desktop.html` inside the
-screen's directory. The catalogue's viewport control switches between them,
-and a link keeps the viewport you are in. Pages and Markdown documents have no
-viewport: each is one document.
+A screen or component has mobile and desktop views. Its body is shared.
+Use `mokly-viewport` to keep an element in one view.
 
-## Turn on dark
-
-Dark is off until you ask for it. Enable it once in the config, then select
-your own theme from the color scheme in your renderer.
-
-```ts
-import { defineConfig } from "@mokly/mokly";
-
-export default defineConfig({
-  colorSchemes: ["light", "dark"],
-  mockupsDir: "specs/generated",
-  renderer: "specs/renderer.tsx",
-});
+```html
+<nav mokly-viewport="mobile">Compact navigation</nav>
+<nav mokly-viewport="desktop">Full navigation</nav>
 ```
 
-```tsx
-import type { RenderInput } from "@mokly/mokly";
-import { renderToStaticMarkup } from "react-dom/server";
+Use CSS media queries for responsive layout inside each frame. A viewport
+is a view axis. It does not create another catalogue entry.
 
-export default function render(input: RenderInput): string {
-  return (
-    "<!doctype html>" +
-    renderToStaticMarkup(
-      <html lang="en">
-        <head>
-          <title>{input.entry.title}</title>
-          {input.stylesheets.map((href) => (
-            <link key={href} rel="stylesheet" href={href} />
-          ))}
-        </head>
-        <body data-theme={input.colorScheme}>{input.node}</body>
-      </html>,
-    )
-  );
+## Enable dark views
+
+Set the catalogue's color schemes in `mokly.config.json`.
+
+```json
+{ "colorSchemes": ["light", "dark"] }
+```
+
+An entry inherits that set. Set `colorSchemes: [light]` in a screen or
+component's front matter to keep it light only. Every set includes light.
+
+Mokly writes the effective `color-scheme` on the document's `html` element.
+Use scheme-specific stylesheet rules or CSS that reads this value.
+
+```css
+html[style*="dark"] .surface {
+  background: #202420;
+  color: #f4f4ef;
 }
 ```
 
-Mokly re-renders the same mobile and desktop nodes for dark output, so a
-screen is never written twice, and the dark views sit beside the light ones as
-`index.mobile.dark.html` and `index.desktop.dark.html`. Markdown documents also have `index.dark.html`, rendered with Mokly's
-dark palette. Pages from `definePage` have one complete light document.
-Serve and export offer one Auto/Light/Dark Appearance selector for the interface
-and previews. An embedded viewer has a separate Light/Dark preview control;
-its host chooses the interface theme. Select your product palette from
-`input.colorScheme`, for example with CSS selectors on `data-theme` above.
+A React renderer receives `viewport` and `colorScheme` with the render props.
+It can select the product's providers from that context. It does not own the
+outer document.
 
-## One screen that stays light
+## Keep saved states separate
 
-A screen that is deliberately light-only says so. The list must contain
-`"light"`, must not repeat a scheme and must be a subset of the catalogue's
-own set.
+Use props-driven variants for empty, loading, error, or other saved states.
+Each variant has its own path. Each of its enabled viewports and schemes
+still uses the parent's render body.
 
-```tsx
-import { defineScreen } from "@mokly/mokly";
+Read [Props and variants](/docs/authoring/props-and-variants/) for inheritance.
+Read [Styles](/docs/authoring/styles/) for shared and scheme-specific CSS.
 
-export default defineScreen({
-  title: "Printed receipt",
-  description: "A receipt that keeps its paper appearance.",
-  mobile: <main>Receipt</main>,
-  desktop: <main>Receipt</main>,
+## Pages and documents
 
-  relatedDocs: [],
-  colorSchemes: ["light"],
-});
-```
-
-A variant inherits the parent's list unless it declares its own, which then
-replaces it.
-
-## Stylesheets per scheme
-
-A stylesheet rule appends `lightStylesheets` or `darkStylesheets` after its
-shared list, so one rule can add the sheet a scheme needs.
-
-## Exported types
-
-| Type          | Value                     |
-| ------------- | ------------------------- |
-| `ColorScheme` | `"dark"` or `"light"`     |
-| `Viewport`    | `"desktop"` or `"mobile"` |
+A page renders one complete light document and supplies its own responsive
+layout. A Markdown document has no viewport axis and has one document per
+enabled color scheme. A light-only document keeps its light view under Dark.

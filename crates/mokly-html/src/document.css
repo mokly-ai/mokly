@@ -1,0 +1,148 @@
+/* Package-owned Markdown typography matches the Browse document design. */
+html {
+  --document-bg: #f4f4f1;
+  --document-surface: #ffffff;
+  --document-ink: #1a1d1c;
+  --document-border: #e3e5e0;
+  --document-accent: #2a4733;
+  background: var(--document-surface);
+  color: var(--document-ink);
+  font-family:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+html[style*="dark"] {
+  --document-bg: #161512;
+  --document-surface: #221f1b;
+  --document-ink: #f0ece4;
+  --document-border: #302d28;
+  --document-accent: #a5cdb6;
+}
+
+body {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  padding: 36px 44px 44px;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+h1 {
+  font-size: 26px;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin: 0 0 12px;
+}
+
+h2 {
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  margin: 28px 0 8px;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+p,
+ul,
+ol,
+table {
+  margin: 0 0 14px;
+}
+
+ul,
+ol {
+  padding-left: 22px;
+}
+
+li + li {
+  margin-top: 4px;
+}
+
+a {
+  color: var(--document-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+code {
+  background: var(--document-bg);
+  border: 1px solid var(--document-border);
+  border-radius: 5px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12.5px;
+  padding: 1px 5px;
+}
+
+pre {
+  background: var(--document-bg);
+  border: 1px solid var(--document-border);
+  border-radius: 5px;
+  overflow: auto;
+  padding: 16px;
+}
+
+pre code {
+  border: 0;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 13.5px;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid var(--document-border);
+  padding: 7px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--document-bg);
+  font-weight: 650;
+}
+
+blockquote {
+  background: var(--document-bg);
+  border: 1px solid var(--document-border);
+  border-radius: 5px;
+  margin: 14px 0;
+  padding: 12px 16px;
+}
+
+img {
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+    padding: 22px 18px 28px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+}

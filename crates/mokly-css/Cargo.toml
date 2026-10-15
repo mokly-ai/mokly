@@ -1,0 +1,24 @@
+[package]
+name = "mokly-css"
+version = "0.14.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[features]
+mock = []
+
+[dependencies]
+cssparser = "0.37.0"
+lightningcss = { version = "1.0.0-alpha.72", default-features = false, features = ["bundler"] }
+mokly-model = { workspace = true }
+mokly-source-interface = { workspace = true }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+unimock = "0.6.8"
+
+[dev-dependencies]
+insta = "1.49.0"
+mokly-source-interface = { workspace = true, features = ["mock"] }

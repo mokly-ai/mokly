@@ -1,0 +1,34 @@
+---
+element: ui-button
+title: Button
+propSchema:
+  type: object
+  additionalProperties: false
+  properties:
+    label: { type: string }
+    count: { type: integer }
+    disabled: { type: boolean }
+    badge:
+      type: object
+      additionalProperties: false
+      properties: { text: { type: string } }
+      required: [text]
+  required: [label]
+props: { label: Save, count: 2, disabled: false, badge: { text: New } }
+slots: [children, trailing]
+variants:
+  - slug: disabled
+    title: Disabled
+    props: { disabled: true }
+    slots: { children: "<em>Wait</em>" }
+---
+
+<button
+  class="button"
+  disabled="{{disabled}}"
+  aria-label="{{label}}"
+  title="{{badge.text}}"
+>
+  {{label}} <b mokly-if="$disabled">Busy</b><i>{{count}}</i> <slot></slot
+  ><slot name="trailing"><small>Default</small></slot>
+</button>

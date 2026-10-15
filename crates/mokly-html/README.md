@@ -1,0 +1,69 @@
+# mokly-html
+
+`mokly-html` composes HTML screens, components, and pages for the Mokly Rust
+core. Depend on it for HTML5 trees, template rendering, Markdown documents,
+and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
+`mokly-graph` schedules renders and validates their asset closures.
+
+## Responsibilities
+
+- Parse HTML with the HTML5 tree builder and keep owned, thread-safe trees.
+- Coerce component attributes with the shared prop schemas.
+- Apply substitutions, conditions, viewports, slots, and ignore scopes.
+- Attach instance, slot, root, and ignore regions as tree nodes.
+- Adapt catalogue controls and rewrite logical links to portable URLs.
+- Render Markdown and apply its independent final safety allowlist.
+
+## What This Crate Does
+
+`HtmlComposer` implements `dyn Composer` over a prepared catalogue and an
+injected `dyn FragmentRenderer`. Screen and component bodies use one render
+path. Named slots retain their supplier's props and owner. A repeated slot
+has one logical input and multiple physical ranges. A component's own page
+has the root range `r-0` and no root marker.
+
+`tree::Node` has explicit region nodes. Comparison consumes those nodes.
+`serialize::html` writes instance and slot comments for the inspector.
+Ignore scopes resolve during composition. Ignore and link comments do not
+reach the output. Fragment markers require authenticated input and placement records. The
+provider returns those records separately from consumer HTML. The core
+checks exact payloads, parent relationships, and complete consumption.
+
+`markdown::LinkResolver` classifies source-relative links before rendering.
+`links::rewrite` returns logical references for cross-view anchor validation
+by the graph. The crate performs no direct filesystem access or writes.
+
+## Quick Start
+
+```rust
+use mokly_html::{parse, serialize};
+
+let tree = parse::fragment("<main><p>Hello &amp; welcome</p></main>");
+assert_eq!(serialize::html(&tree), "<main><p>Hello &amp; welcome</p></main>");
+```
+
+## Development
+
+```bash
+cargo test -p mokly-html
+cargo test -p mokly-graph --test render_tests
+cargo clippy -p mokly-html --all-targets -- -D warnings
+```
+
+Enable `mock` for the unimock fragment and composer boundaries. Unit tests
+mock impure boundaries. Graph integration fixtures exercise complete rendered
+document snapshots, assets, and eviction.
+
+### Key Code
+
+- [Annotated tree](./src/tree.rs) and [HTML5 parser](./src/parse.rs).
+- [Composition](./src/composition.rs), [props](./src/props.rs), and [slots](./src/slots.rs).
+- [Fragment boundary](./src/fragment.rs) and [marker validation](./src/markers.rs).
+- [Links](./src/links.rs), [controls](./src/controls.rs), and [Markdown safety](./src/safety.rs).
+
+### Related Docs
+
+- [HTML screens](../../docs/protocol/mokly-html-screens.md).
+- [HTML components](../../docs/protocol/mokly-html-components.md).
+- [Comparison tree](../../docs/protocol/mokly-comparison.md).
+- [Document safety](../../docs/protocol/mokly-document-safety.md).

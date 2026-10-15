@@ -104,7 +104,9 @@ rendered instance is an ownership region of the composed tree under the
 [comparison contract](./mokly-comparison.md), carrying the component path, the
 instance id, and the props key, so usage derives from the output rather than
 from recorded offsets. Slot content keeps
-its supplier as owner. A JavaScript component used from an HTML screen renders
+its supplier as owner and keeps the supplier's relative-link base. Relative
+links in the component body use the component entry's base, including when
+another entry renders it. A JavaScript component used from an HTML screen renders
 through the [sidecar](./mokly-sidecar.md); the binary reads the fragment's
 markers into the same regions.
 

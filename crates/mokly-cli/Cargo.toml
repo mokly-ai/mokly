@@ -7,6 +7,9 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+mokly-html = { workspace = true }
+mokly-css = { workspace = true }
+mokly-graph = { workspace = true }
 mokly-catalogue = { workspace = true }
 mokly-source-interface = { workspace = true }
 mokly-model = { workspace = true }

@@ -29,6 +29,14 @@ under the render graph of the
 returns a complete document instead, and the core applies the
 [page contract](./mokly-pages.md) to it.
 
+The in-memory fragment boundary also carries logical instance and slot
+records and authenticated marker placements. Each placement names its
+payload and its physical enclosing marker. The provider captures these
+records from Mokly's API wrappers, independently of consumer HTML. The core
+checks them against the parsed comments, including parent relationships,
+before grafting. A consumer comment cannot create a placement record. These
+records are private rendering data and never enter served document bytes.
+
 Every screen and component is a render over props under the
 [entry props contract](./mokly-entry-props.md); a variant is a props set.
 The core renders one document per view, that is per viewport and colour

@@ -5,59 +5,53 @@ section: "start"
 order: 3
 ---
 
-## Add an entry module
+## Add one HTML file
 
-An entry module is a `.mockup.ts` or `.mockup.tsx` file inside a root, and
-every definition it exports becomes part of the catalogue. Put the file in the
-folder the screen belongs to. With the default `specs` root, the account
-landing screen lives at `specs/account/account-home.mockup.tsx`:
+Create `specs/welcome.screen.html`. Its file name gives it the catalogue
+path `welcome`.
 
-```tsx
-import { defineScreen } from "@mokly/mokly";
-
-export default defineScreen({
-  title: "Account home",
-  description: "The account landing screen.",
-  mobile: <main>Account</main>,
-  desktop: <main>Account</main>,
-  relatedDocs: ["docs/account.md"],
-});
+<!-- prettier-ignore -->
+```html
+---
+title: Welcome
+description: The first screen after sign-in.
+props: {name: Ada, returning: true}
+variants:
+  - slug: first-visit
+    title: First visit
+    props: {returning: false}
+---
+<main>
+  <h1>Welcome, {{name}}</h1>
+  <p mokly-if="$returning">Your workspace is ready.</p>
+  <p mokly-viewport="mobile">Compact navigation</p>
+  <p mokly-viewport="desktop">Full navigation</p>
+</main>
 ```
 
-Export the definition however you like: as the default export, as a named
-export, or inside an exported array. Helper functions and React components in
-the same file are left alone.
+The YAML block supplies the title, data, and one saved state. The HTML body
+renders at mobile and desktop. Substituted values are escaped. The variant
+uses the same body with its own prop overrides.
 
-## Use your own components
+## Validate the catalogue
 
-`mobile` and `desktop` take any React node, so a screen composes the same
-components your product ships. Each view is generated as its own standalone
-page, so wrap the content in a landmark such as `main`.
+```bash
+npx mokly build --strict --no-changes
+```
 
-## Where it lives
+The build renders every view and checks links and resources. Strict mode
+also fails on warnings. It writes the static catalogue to `mokly-static` by
+default. Keep that directory ignored by Git.
 
-The screen's path is `account/account-home`: the directories below the root,
-then the file name up to its first dot. The path is the screen's identity,
-the name you use when another entry links to it, and its address in the
-catalogue, `/view/account/account-home/`. The `account` directory is a folder
-in the navigation tree, titled Account until you give it a title of its own.
+## Open the catalogue
 
-Mokly never renames a file for you. Each segment of a path uses letters,
-digits, hyphens and underscores, so `Account Home.mockup.tsx` is reported as
-an error rather than quietly rewritten. Set `slug` when the last segment
-should differ from the file name, and name a file `index.mockup.tsx` when the
-screen is the page of its folder.
+```bash
+npx mokly serve
+```
 
-## Where it is written
+Open the listening URL printed in the terminal. Select Welcome in the tree.
+Switch between its viewports and its First visit variant. Save an edit to
+the HTML file to refresh the visible view.
 
-Each screen owns one directory under `mockupsDir/mokly-generated/` named by its path. This one
-is written as `account/account-home/index.mobile.html` and
-`account/account-home/index.desktop.html` under `mockupsDir/mokly-generated/`, with `.dark` before `.html`
-once the catalogue renders a dark scheme. Moving the file to another folder
-moves the screen, its files and its address together. Changes pairs a moved
-screen with its earlier version when it finds one unique match. Declare
-`movedFrom` with the complete previous path when the match needs help.
-
-## Next
-
-Build the catalogue and look at what was written.
+Read [Screens](/docs/authoring/screens/) for metadata and body rules.
+Read [Components](/docs/authoring/components/) to reuse shared markup.

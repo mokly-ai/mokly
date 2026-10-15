@@ -129,8 +129,10 @@ links keep repository spelling when catalogue placement differs:
 - A relative destination that names any other existing repository file, such
   as a source file or an authored HTML file, renders as plain text showing the
   link text; Mokly never serves sources through a document link. These
-  referenced files join the private source inventory; edits and removals
-  re-render the document without importing or executing those files.
+  source targets join the private source inventory; edits and removals
+  re-render the document without importing or executing them. A target that
+  the source policy classifies as a public file stays outside that inventory
+  and still renders as plain text.
 - A relative destination that names no file fails with
   `<location>: link target <destination> does not exist`.
   Unreadable components, overlong names and dangling symlinks use that same text;

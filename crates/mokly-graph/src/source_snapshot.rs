@@ -1,0 +1,62 @@
+//! Generation-scoped source inputs keep eviction reconstruction deterministic.
+
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+
+use mokly_source_interface::error::Result;
+use mokly_source_interface::tree::{Child, Node, SourceTree};
+
+/// Read-once source view for graph inputs, consumed as `dyn SourceTree`.
+/// Public HTTP reads must use the live tree and recheck confinement separately.
+pub struct SourceSnapshot {
+    source: Arc<dyn SourceTree>,
+    reads: Mutex<BTreeMap<PathBuf, Vec<u8>>>,
+    nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
+    directories: Mutex<BTreeMap<PathBuf, Vec<Child>>>,
+}
+
+impl SourceSnapshot {
+    /// Start a fresh generation; no state survives into another snapshot.
+    pub fn new(source: Arc<dyn SourceTree>) -> Self {
+        Self {
+            source,
+            reads: Mutex::new(BTreeMap::new()),
+            nodes: Mutex::new(BTreeMap::new()),
+            directories: Mutex::new(BTreeMap::new()),
+        }
+    }
+}
+
+impl SourceTree for SourceSnapshot {
+    fn project(&self, path: &Path) -> Result<Option<Node>> {
+        let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(node) = nodes.get(path) {
+            return Ok(node.clone());
+        }
+        let node = self.source.project(path)?;
+        nodes.insert(path.into(), node.clone());
+        Ok(node)
+    }
+    fn children(&self, path: &Path) -> Result<Vec<Child>> {
+        let mut directories = self
+            .directories
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if let Some(children) = directories.get(path) {
+            return Ok(children.clone());
+        }
+        let children = self.source.children(path)?;
+        directories.insert(path.into(), children.clone());
+        Ok(children)
+    }
+    fn read(&self, path: &Path) -> Result<Vec<u8>> {
+        let mut reads = self.reads.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(bytes) = reads.get(path) {
+            return Ok(bytes.clone());
+        }
+        let bytes = self.source.read(path)?;
+        reads.insert(path.into(), bytes.clone());
+        Ok(bytes)
+    }
+}

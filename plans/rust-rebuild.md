@@ -650,28 +650,33 @@ At completion `mokly build` validates, renders HTML screens and components
 into the bounded render cache, and reports diagnostics; it writes its output
 from Milestone 12.
 
-- [ ] Implement HTML components and the entry props model in `mokly-html`:
+- [x] Implement HTML components and the entry props model in `mokly-html`:
       prop schemas under the JSON Schema profile with closed objects and
       their inference from merged props, props-driven variants, scalar
       coercion, one template language for screen and component bodies
       (`$name` prop references, `{{name}}` substitution, `mokly-if`,
       `mokly-viewport`, named slots), `mokly-instance`, and the component
       registry with the reserved `mokly-` prefix.
-- [ ] Implement screen composition: viewports, colour schemes, stylesheet
+- [x] Implement screen composition: viewports, colour schemes, stylesheet
       rules, document assembly, `mock:` link rewriting, ignore regions with
       their scopes resolved, and the ownership annotations the comparison
       relies on.
-- [ ] Implement the render cache: content keys, the byte bound, eviction, and
+- [x] Implement the render cache: content keys, the byte bound, eviction, and
       the source tree trait over the working tree and Git trees; the `build`
       validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
-- [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
+- [x] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
-- [ ] Write the HTML authoring guides under `docs/guides`.
-- [ ] Commit.
+- [x] Write the HTML authoring guides under `docs/guides`.
+- [x] Commit.
+
+Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m5.md`.
+
+The Git source-tree adapter is part of Milestone 9. The example port remains
+assigned to its separate task.
 
 ## Milestone 6: Serve
 
@@ -741,6 +746,10 @@ renders again.
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
+      input and marker-placement metadata in the sidecar, resolve definition
+      handles to catalogue identities, and supply the bundle generation,
+      delivery roots, and component stylesheet lists to the native graph.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -856,6 +865,9 @@ Tags: ui
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+- [ ] Measure generation source-snapshot retention and per-root CSS asset
+      preparation with large asset inputs; keep total working memory within
+      the approved acceptance budgets, in addition to the artifact-cache bound.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
