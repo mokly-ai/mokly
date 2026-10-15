@@ -21,6 +21,12 @@ import {
   initialComponentEditorState,
   withPreviews,
 } from "./component_controls_state.js";
+import {
+  acceptedRender,
+  editContextKey,
+  EditLifecycle,
+  shouldRerender,
+} from "./component_edit_lifecycle.js";
 import { useComponentPreviewExpiration } from "./component_preview_expiration.js";
 import {
   controlDraft,
@@ -72,21 +78,11 @@ export function useComponentControls({
     stored.scope === scope && (stored.dirty || stored === initial)
       ? stored
       : initial;
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const active = useRef<AbortController | undefined>(undefined);
-  const sequence = useRef(0);
+  const [lifecycle] = useState(() => new EditLifecycle());
   const pageIds = useRef(new Map<string, string>());
   const unavailable = controlsUnavailable(target, comparing, Boolean(previews));
-  const contextKey = contexts.map(controlViewKey).join("|");
-  const capabilityKey = `${previews?.generation ?? ""}/${previews?.revision ?? ""}`;
-
-  const cancel = useCallback(() => {
-    sequence.current += 1;
-    clearTimeout(timer.current);
-    timer.current = undefined;
-    active.current?.abort();
-    active.current = undefined;
-  }, []);
+  const contextKey = editContextKey(contexts, previews);
+  const cancel = useCallback(() => lifecycle.cancel(), [lifecycle]);
 
   const render = useCallback(
     async (
@@ -95,9 +91,7 @@ export function useComponentControls({
     ) => {
       const live = latestPreviews.current;
       if (!target || !live || unavailable) return;
-      const operation = sequence.current;
-      const controller = new AbortController();
-      active.current = controller;
+      const operation = lifecycle.begin();
       setStored((current) =>
         current.scope === scope
           ? { ...current, failure: undefined, status: "Updating preview…" }
@@ -119,18 +113,14 @@ export function useComponentControls({
                 pageId,
                 overrides,
               },
-              controller.signal,
+              operation.signal,
             );
             return [key, result] as const;
           }),
         );
         if (
-          controller.signal.aborted ||
-          operation !== sequence.current ||
-          results.some(
-            ([, result]) =>
-              result.revision !== latestPreviews.current?.revision,
-          )
+          !operation.current() ||
+          !acceptedRender(results, latestPreviews.current)
         )
           return;
         setStored((current) => {
@@ -148,7 +138,7 @@ export function useComponentControls({
           };
         });
       } catch (error) {
-        if (controller.signal.aborted || operation !== sequence.current) return;
+        if (!operation.current()) return;
         setStored((current) =>
           current.scope === scope
             ? {
@@ -163,7 +153,7 @@ export function useComponentControls({
         );
       }
     },
-    [contexts, scope, target, unavailable],
+    [contexts, lifecycle, scope, target, unavailable],
   );
 
   const edit = useCallback(
@@ -194,11 +184,10 @@ export function useComponentControls({
         errors: {},
         failure: undefined,
       }));
-      const submit = () => void render(draft, validated.overrides!);
-      if (immediate) submit();
-      else timer.current = setTimeout(submit, 150);
+      const overrides = validated.overrides;
+      lifecycle.schedule(immediate, () => void render(draft, overrides));
     },
-    [cancel, initial, render, scope, target, unavailable],
+    [cancel, initial, lifecycle, render, scope, target, unavailable],
   );
 
   useEffect(() => {
@@ -226,13 +215,13 @@ export function useComponentControls({
     temporaryPreviews: previews,
     workspaceRef,
   });
-  const previousContext = useRef(`${contextKey}\u0000${capabilityKey}`);
+  const previousContext = useRef(contextKey);
   useEffect(() => {
-    const key = `${contextKey}\u0000${capabilityKey}`;
-    if (previousContext.current === key) return;
-    previousContext.current = key;
-    if (state.dirty && !unavailable) edit(state.draft, true);
-  }, [capabilityKey, contextKey, edit, state.dirty, state.draft, unavailable]);
+    const previous = previousContext.current;
+    previousContext.current = contextKey;
+    if (shouldRerender(previous, contextKey, state.dirty, unavailable))
+      edit(state.draft, true);
+  }, [contextKey, edit, state.dirty, state.draft, unavailable]);
 
   const change = (key: string, field: ControlDraftField, immediate: boolean) =>
     edit({ ...state.draft, [key]: field }, immediate);
