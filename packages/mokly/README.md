@@ -95,7 +95,8 @@ Bundle diagnostics use the compiler's source coordinates and reason without
 its framing text. Runtime style adapters follow consumer package aliases,
 including `react-native` mapped to `react-native-web`. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
-worker with consumer plugin packages kept unbundled. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
+child process in the side's source root, with consumer plugins unbundled.
+The child appends selected dependency directories to inherited `NODE_PATH`. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 
 ## Development
@@ -111,7 +112,7 @@ cargo test -p mokly-sidecar
 The package `prepack` builds the viewer before the authoring declarations.
 Release packing creates the viewer archive before the CLI archive.
 The package build emits ESM JavaScript and declarations, the sidecar entry and
-worker, the shim, and packaged Markdown. Each build clears stale package
+PostCSS child entry, the shim, and packaged Markdown. Each build clears stale package
 output and copied docs first. The package includes the complete guide and
 protocol trees, their public receiver fixtures, and the root changelog history.
 Release Please writes the root `CHANGELOG.md`; the build copies it into the

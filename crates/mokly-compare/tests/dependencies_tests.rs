@@ -128,7 +128,6 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         repository,
         cache: Arc::clone(&cache),
         files: Limits::default().files,
-        blob_bytes: Limits::default().blob,
     };
     let source = extraction.acquire(&commit).unwrap();
     assert_eq!(

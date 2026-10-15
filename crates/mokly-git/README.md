@@ -50,8 +50,8 @@ path lookups avoid enumerating unrelated directories. `digest` streams blob
 stdout through SHA-256 with bounded memory and the same cancellation and exit
 checks; stderr retains its capture limit. Working inputs compare
 bytes first and hash changed confined paths in one stdin-paths command. `read_many` accepts
-proved entries and reads their blobs through bounded batches. Extraction also has total and per-file byte bounds.
-It writes one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
+proved entries and reads their blobs through bounded batches. Extraction has a total disk byte bound.
+It streams oversized files to disk and writes smaller files one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
 and submodules. Unsupported host names and non-UTF-8 candidates are traced
 and skipped. Ordinary colons and backslashes remain in Git path identities. Export attributes never change source bytes. A destination
 must be fresh; a failed extraction removes its partial directory.

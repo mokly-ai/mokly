@@ -160,7 +160,8 @@ Missing history, including a shallow clone without the merge base, fails the
 build before any output is written. A base whose sources fail current
 validation completes the build with Changes unavailable,
 `comparisonUrl: null`, no removed entries, and those diagnostics. A render or
-comparison failure fails the build and keeps the installed output under the
+comparison failure on the current side fails the build. It keeps the installed
+output under the
 [static build contract](./mokly-export.md). Both options apply the
 [source protection](./mokly-source-protection.md) rules and the output safety
 rules of the static build contract.

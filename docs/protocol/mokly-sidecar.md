@@ -25,9 +25,9 @@ output belong to the binary.
 - The binary's first request is `hello`. The sidecar's first frame is the
   matching hello response with its package version. The binary rejects a
   version other than its own with `sidecar-version` before other traffic.
-- A sidecar is recycled after 500 renders or when its resident set passes
-  1 GiB, whichever comes first. Recycling waits for in-flight requests, then
-  replaces the process. Loaded generations are reloaded on demand.
+- Recycle after 500 renders or over 1 GiB of resident memory across the
+  sidecar and its Node descendants, including PostCSS children. Native helpers
+  are excluded. Wait for in-flight requests, then reload generations on demand.
 - On `shutdown` the sidecar finishes in-flight requests, then exits. The binary
   terminates a sidecar that has not exited two seconds later.
 
@@ -190,10 +190,10 @@ excluded with the `props-not-data` warning of the
 ## Consumer PostCSS
 
 `processCss` runs consumer PostCSS in an owned child process with `sourceRoot` as its working directory.
-The core selects its `context`, `repositoryRoots`, and `moduleResolution`.
-`sourcePath` is a logical repository or dependency path. The worker resolves
+The core uses a process-wide context sequence and selects `repositoryRoots` and `moduleResolution`.
+`sourcePath` is a logical repository or dependency path. The child resolves
 it against `sourceRoot` or the selected dependency root before setting PostCSS
-`from`. Request labels keep the logical path. Workers are keyed by context and module. Each context has fresh local and
+`from`. Request labels keep the logical path. Children are keyed by context and module. Each context has fresh local and
 package module state and fixed source and resolution inputs. `disposeContext`
 kills and reaps only that context's process; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
@@ -238,9 +238,9 @@ JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 ## Security
 
 The sidecar runs consumer code with the same trust as the consumer's own build.
-It receives the environment unchanged. Installing a base commit's dependencies for the comparison contract's second
-tier runs the package manager with lifecycle scripts disabled and a time limit,
-so no consumer script executes at install time.
+The sidecar inherits the environment. Each PostCSS child appends its selected
+dependency directories to inherited `NODE_PATH`. Base dependency installation
+disables lifecycle scripts and has a time limit, so no consumer script runs at install time.
 
 ## Related Docs
 

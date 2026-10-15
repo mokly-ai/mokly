@@ -83,7 +83,6 @@ impl NativeDependencies {
             repository: request.repository.clone(),
             cache: cache.clone(),
             files: Limits::default().files,
-            blob_bytes: Limits::default().blob,
         };
         let sources = extraction.acquire(&request.commit)?;
         let reader: &dyn InputReader = &SourceInputs;

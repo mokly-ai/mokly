@@ -90,11 +90,12 @@ A comparison budget failure makes Changes unavailable with its limit and
 requested path; it does not fail the current build.
 
 A source archive contains regular blobs from the commit. Extraction checks
-leaf count, each blob size, and total uncompressed bytes before file writes.
+leaf count and total uncompressed bytes before file writes.
 The aggregate is a disk bound; base extraction sets it from the source cache
 capacity. Files are written one batch at a time, so a commit larger than one
-batch does not require its full contents in memory. Every command retains
-its own output bound.
+batch does not require its full contents in memory. Blobs larger than one
+batch stream directly to disk through a 64 KiB buffer. The stream checks the
+proved blob size, exit status, and cancellation; stderr keeps its capture bound.
 Extraction preserves executable files and omits links and submodules. It
 never applies `export-ignore`, `export-subst`, textconv or checkout filters.
 The destination must not exist. A partial extraction is removed on failure.

@@ -27,8 +27,9 @@ no extraction. JavaScript, a renderer module and consumer PostCSS acquire an
 extraction lease. Keep that lease while a sidecar uses its root. A source
 archive copies exact regular blobs, including files that export attributes
 would omit or substitute. It writes and releases each batch before reading
-the next. Its total disk bound follows the source cache capacity; memory
-stays bounded by the blob batch, independently of total repository size.
+the next. A blob larger than one batch streams directly to disk. The total
+disk bound follows the source cache capacity; memory stays bounded by the
+blob batch or stream buffer, independently of total repository size.
 
 Opaque public resources use SHA-256 digests. Oversized Git blobs and working
 files are hashed as streams with bounded memory. They need no full byte read
@@ -50,8 +51,8 @@ lease, dependency `Resolved` value, repository mappings, and commit identity.
 The graph holds these leases while it can request a render. HTML without a
 renderer or PostCSS uses Git sources without extraction or a Node process.
 
-The CLI uses 2 GiB for each disk cache namespace and a 120-second shared
-allowance for dependency preparation. Extraction and installation use the
+The CLI sets separate disk cache bounds and one shared allowance for
+dependency preparation. Extraction and installation use the
 same cancellation token as Git. Cancellation checkpoints also surround
 comparison and public resource planning. All source wrappers forward exact
 prefetch sets, public reads, and streamed digests.
@@ -60,8 +61,9 @@ Each PostCSS context runs in a child process whose working directory is its
 side's source root. This confines relative file reads and automatic Tailwind
 source discovery to that side. The head and base can use the same installed
 third-party dependencies while reading separate repository sources. The child
-receives the selected dependency directories in `NODE_PATH`, so CSS package
-imports use those dependencies without writing links into the source lease.
+appends the selected dependency directories to inherited `NODE_PATH`. CSS
+package resolvers that read `NODE_PATH` can use those directories without
+links in the source lease. Node's ESM resolver does not read `NODE_PATH`.
 
 Historical runtime failures keep typed diagnostic codes through catalogue,
 HTML, CSS, and graph wrappers. The following policy applies only to Changes;
@@ -74,7 +76,7 @@ current-side failures retain the sidecar's fail-closed command policy.
 | Version                              | Changes unavailable: base runtime version mismatch |
 | Cancelled                            | Fail the interrupted build                         |
 | Protocol                             | Fail the build with the protocol diagnostic        |
-| Timeout                              | Fail the build after the sidecar's one retry       |
+| Timeout                              | Changes unavailable: base runtime timed out        |
 
 A fatal failure inside a grouped attempt takes precedence over recoverable
 historical validation. Internal failures remain comparison failures. A
@@ -86,7 +88,8 @@ failures use error blocks and fail the command.
 ## Cache Location And Ownership
 
 Both cache kinds live in a SHA-256 namespace under the operating system's
-cache directory. The key hashes the canonical repository path's OS encoding.
+cache directory. Windows honors an absolute `LOCALAPPDATA` value. The key
+hashes the canonical repository path's OS encoding.
 Resolve the complete namespace path once at composition, including links at
 or above it. A cache location inside the repository is invalid. Below that
 canonical root, directory links are rejected before writes. Dependency links

@@ -100,8 +100,8 @@ entry is added. A remaining comparison budget makes Changes unavailable with
 the path and limit. A Git failure
 aborts the build with `git-failed` and the selected ref. Historical runtime
 unavailability and version mismatch make Changes unavailable with typed
-diagnostics. Cancellation, protocol failures, and repeated timeouts fail the
-build. An internal comparison
+diagnostics. A historical runtime timeout makes Changes unavailable with
+`base runtime timed out`. Cancellation and protocol failures fail the build. An internal comparison
 failure aborts with `review-invalid`. Strict mode counts current-build and
 base preparation warnings after comparison; it omits base authoring warnings. Rich output reports
 Changes, moved, and ignored-only counts from the classifier. Plain output
@@ -128,6 +128,10 @@ cargo run -p mokly-cli --bin mokly -- build --help
 ```
 
 ## Development
+
+Changes integration tests isolate cache directories for each child process.
+They check exact entry names through the native build composition, including
+HTML, React, and stylesheet edits.
 
 ```bash
 cargo test -p mokly-cli

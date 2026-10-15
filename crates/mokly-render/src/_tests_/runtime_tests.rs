@@ -1,0 +1,45 @@
+//! Separate preparations cannot reuse a PostCSS context identifier.
+
+use std::collections::BTreeSet;
+use std::sync::Arc;
+
+use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_source_interface::tree::SourceTreeMock;
+use unimock::{MockFn, Unimock, matching};
+
+use crate::runtime::Runtime;
+
+fn runtime() -> Runtime {
+    Runtime::new(
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(
+            SourceTreeMock::project
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok(None)),
+        )),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        Arc::new(Unimock::new(())),
+        "version".into(),
+        None,
+    )
+}
+
+#[test]
+fn contexts_are_unique_across_runtime_instances_and_clones() {
+    let config = ResolvedConfig {
+        input: Config::default(),
+        file: "/repo/mokly.config.json".into(),
+        repo_root: "/repo".into(),
+        authored_inputs: Vec::new(),
+        roots: Vec::new(),
+    };
+    let one = runtime();
+    let two = runtime();
+    let contexts = [
+        one.side(&config).unwrap().context,
+        one.clone().side(&config).unwrap().context,
+        two.side(&config).unwrap().context,
+    ];
+    assert_eq!(contexts.into_iter().collect::<BTreeSet<_>>().len(), 3);
+}

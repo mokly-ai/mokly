@@ -1,5 +1,6 @@
 //! Real base planning batches public inputs before rendering and survives cache eviction.
 
+use std::io::Write;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -23,6 +24,9 @@ impl Runner for Counted {
             self.blobs.fetch_add(1, Ordering::SeqCst);
         }
         self.inner.run(request)
+    }
+    fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()> {
+        self.inner.copy(request, output, bytes)
     }
     fn digest(&self, request: &Request) -> Result<String> {
         if request.args.iter().any(|arg| arg == "cat-file") {

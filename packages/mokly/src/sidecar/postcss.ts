@@ -11,7 +11,7 @@ import { SidecarError, detail } from "./errors.js";
 import { jsonText } from "./json.js";
 import { ModulePaths } from "./module-paths.js";
 
-/** Workers retain one module instance until their explicit context is disposed. */
+/** Children retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
   private workers = new Map<string, ChildProcess>();
   private contexts = new Map<string, string>();
@@ -61,7 +61,9 @@ export class PostcssWorkers {
         cwd: root,
         env: {
           ...process.env,
-          NODE_PATH: paths.dependencyRoots.join(path.delimiter),
+          NODE_PATH: [process.env.NODE_PATH, ...paths.dependencyRoots]
+            .filter(Boolean)
+            .join(path.delimiter),
         },
         stdio: ["ignore", "pipe", "pipe", "ipc"],
       });

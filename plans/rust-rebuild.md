@@ -923,7 +923,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Add the part 1 base source reader, leased extraction cache, dependency
       input readers, three dependency tiers, and bounded install cache in
       `mokly-compare`, ready for the render graph connection.
-- [ ] Implement base-side rendering: the base commit's Git tree as a source
+- [x] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, the
@@ -976,6 +976,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and PostCSS source-directory isolation.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-4.md`.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [ ] Isolate base JavaScript working-directory reads: sidecars run in the head
+      repository, so `process.cwd()` reads in base code can read head files.
+- [x] Apply shared-runtime review fixes: PostCSS child memory accounting, unique
+      PostCSS contexts, base timeout recovery, streamed extraction, isolated
+      test caches, and direct runtime regression tests.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-5.md`.
 - [ ] Add the Comparing phase spinner and measured durations to build Changes.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
@@ -1145,6 +1151,10 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 
 ## Milestone 14: Large-project acceptance
 
+- [ ] Obtain user approval for the current 2 GiB per repository cache namespace
+      and the shared 120-second dependency preparation allowance before adding
+      these values to the timings contract.
+
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
       dependency install time limit, and the render and install cache bounds
@@ -1194,6 +1204,9 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
     until the next generation while the user decision is pending.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
+  - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
+    HTML-only catalogues that import package CSS; retain working dependencies
+    until the user decides.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout

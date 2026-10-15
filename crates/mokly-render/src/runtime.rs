@@ -23,6 +23,8 @@ use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::{definitions, side};
 
+static CONTEXT_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+
 /// Definition and graph factories share one sidecar pool and one fragment cache.
 #[derive(Clone)]
 pub struct Runtime {
@@ -41,7 +43,6 @@ pub struct Runtime {
     pub version: String,
     /// Base-side leases, absent for a working-tree generation.
     pub base: Option<Arc<BaseSide>>,
-    pub(crate) sequence: Arc<AtomicU64>,
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, BundleState>>>,
 }
@@ -78,7 +79,6 @@ impl Runtime {
             workers,
             version,
             base,
-            sequence: Arc::new(AtomicU64::new(0)),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
         }
@@ -88,7 +88,7 @@ impl Runtime {
         let mut side = side::inputs(
             config,
             self.base.as_ref(),
-            self.sequence.fetch_add(1, Ordering::Relaxed),
+            CONTEXT_SEQUENCE.fetch_add(1, Ordering::Relaxed),
         )?;
         let mut roots = Vec::new();
         for root in side.dependency_roots {
@@ -131,3 +131,7 @@ impl GraphFactory for Runtime {
         Ok(Arc::new(JavaScriptGraph { runtime }))
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/runtime_tests.rs"]
+mod runtime_tests;

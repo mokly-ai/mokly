@@ -131,7 +131,6 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
             repository,
             cache: cache.clone(),
             files: 10000,
-            blob_bytes: 1024 * 1024,
         };
         let sources = mokly_compare::extraction::Extraction::acquire(&extraction, &commit).unwrap();
         let tiers: &dyn Dependencies = &DependencyTiers {

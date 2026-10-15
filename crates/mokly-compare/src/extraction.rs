@@ -25,8 +25,6 @@ pub struct CachedExtraction {
     pub cache: Arc<dyn Cache>,
     /// Maximum source tree nodes.
     pub files: usize,
-    /// Maximum size of one source blob.
-    pub blob_bytes: usize,
 }
 
 struct Extract<'a> {
@@ -49,7 +47,7 @@ impl Extraction for CachedExtraction {
             bytes: self.cache.capacity(Kind::Sources).saturating_sub(1024) as usize,
             files: self.files,
             nodes: Limits::default().nodes,
-            blob: self.blob_bytes,
+            ..Limits::default()
         };
         self.cache.get(
             Kind::Sources,

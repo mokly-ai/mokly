@@ -31,17 +31,44 @@ pub fn git(root: &Path, arguments: &[&str]) {
 }
 
 pub fn run(root: &Path, arguments: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_mokly"))
+    run_with_node(root, arguments, None)
+}
+
+/// Run the CLI with a temporary cache and an optional Node executable.
+pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Output {
+    let cache = TempDir::new().unwrap();
+    let cache_root = cache.path().canonicalize().unwrap();
+    let mut command = Command::new(env!("CARGO_BIN_EXE_mokly"));
+    command
         .current_dir(root)
         .args(arguments)
         .env("MOKLY_OUTPUT", "rich")
+        .env("XDG_CACHE_HOME", &cache_root)
+        .env("HOME", &cache_root)
+        .env("LOCALAPPDATA", &cache_root)
         .env(
             "MOKLY_PACKAGE_ROOT",
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
         )
-        .env_remove("CI")
-        .output()
-        .unwrap()
+        .env_remove("CI");
+    if let Some(node) = node {
+        command.env("MOKLY_NODE_EXECUTABLE", node);
+    }
+    let output = command.output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    for line in stdout.lines().filter(|line| line.starts_with("  cache ")) {
+        let prefix = format!("  cache {}", cache_root.display());
+        let visible = line.trim_end_matches('…');
+        assert!(
+            visible.starts_with(&prefix) || prefix.starts_with(visible),
+            "{line}"
+        );
+        assert!(
+            cache_root.read_dir().unwrap().next().is_some(),
+            "cache must be inside the temporary root"
+        );
+    }
+    output
 }
 
 pub fn base(files: &[(&str, &str)]) -> TempDir {

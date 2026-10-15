@@ -2,10 +2,9 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 mod changes_support;
-use changes_support::{base, run, write};
+use changes_support::{base, run, run_with_node, write};
 
 const CARD: &str = "import {defineComponent} from '@mokly/mokly'; export const card=defineComponent({title:'Card',description:'',relatedDocs:[],props:{},element:'ui-card',propSchema:{type:'object',additionalProperties:false,properties:{}},render:()=> <p className='card'>Before</p>});";
 const HOME: &str = "---\ntitle: Home\n---\n<h1 class=\"html-title\">Before</h1><ui-card></ui-card>";
@@ -142,18 +141,11 @@ fn a_missing_node_for_base_only_javascript_makes_changes_unavailable() {
         ),
     ]);
     fs::remove_file(root.path().join("specs/card.mockup.tsx")).unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
-        .current_dir(root.path())
-        .arg("build")
-        .env("MOKLY_OUTPUT", "rich")
-        .env_remove("CI")
-        .env("MOKLY_NODE_EXECUTABLE", root.path().join("missing-node"))
-        .env(
-            "MOKLY_PACKAGE_ROOT",
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
-        )
-        .output()
-        .unwrap();
+    let output = run_with_node(
+        root.path(),
+        &["build"],
+        Some(&root.path().join("missing-node")),
+    );
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -165,4 +157,46 @@ fn a_missing_node_for_base_only_javascript_makes_changes_unavailable() {
             .contains("Changes unavailable · base runtime unavailable")
     );
     assert!(String::from_utf8_lossy(&output.stderr).contains("[mokly/build-invalid]"));
+}
+
+#[test]
+fn a_base_with_only_a_configured_renderer_uses_extracted_sources() {
+    let root = base(&[
+        (
+            "mokly.config.json",
+            r#"{"renderer":"renderer.mjs","review":{"base":"fixture-base"}}"#,
+        ),
+        ("renderer.mjs", "export default ({children}) => children;"),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<p>Before</p>",
+        ),
+    ]);
+    dependencies(root.path());
+    fs::remove_file(root.path().join("renderer.mjs")).unwrap();
+    write(
+        root.path(),
+        "mokly.config.json",
+        r#"{"review":{"base":"fixture-base"}}"#,
+    );
+    write(
+        root.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<p>After</p>",
+    );
+    let output = run(root.path(), &["build"]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
+    assert_eq!(stdout.matches("  cache ").count(), 1);
+    assert!(
+        output.stderr.is_empty(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }

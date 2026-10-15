@@ -4,7 +4,7 @@ use std::fs;
 use std::process::Command;
 
 mod changes_support;
-use changes_support::{base, run, write};
+use changes_support::{base, run, run_with_node, write};
 
 #[test]
 fn ready_counts_use_entry_membership_and_base_override_and_no_changes_stays_git_free() {
@@ -163,4 +163,32 @@ fn a_configured_renderer_is_bundled_even_for_an_html_catalogue() {
     let output = run(directory.path(), &["build", "--no-changes"]);
     assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr).contains("renderer.tsx"));
+}
+
+#[test]
+fn html_only_changes_need_neither_node_nor_an_extraction_cache() {
+    let root = base(&[(
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<p>Before</p>",
+    )]);
+    write(
+        root.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<p>After</p>",
+    );
+    let output = run_with_node(
+        root.path(),
+        &["build"],
+        Some(&root.path().join("missing-node")),
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
+    assert!(!stdout.contains("  cache "), "{stdout}");
+    assert!(output.stderr.is_empty());
 }

@@ -16,7 +16,7 @@ pub struct Limits {
     pub nodes: usize,
     /// Maximum total regular-file bytes for extraction.
     pub bytes: usize,
-    /// Maximum bytes in one regular file.
+    /// Maximum bytes in one regular byte read; extraction uses the total disk bound.
     pub blob: usize,
 }
 

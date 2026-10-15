@@ -15,7 +15,7 @@ fn every_runtime_category_has_an_explicit_historical_outcome() {
     for (code, reason) in [
         (RuntimeCode::Cancelled, None),
         (RuntimeCode::Protocol, None),
-        (RuntimeCode::Timeout, None),
+        (RuntimeCode::Timeout, Some("base runtime timed out")),
         (RuntimeCode::Unavailable, Some("base runtime unavailable")),
         (RuntimeCode::Version, Some("base runtime version mismatch")),
         (RuntimeCode::Configuration, Some("base validation failed")),

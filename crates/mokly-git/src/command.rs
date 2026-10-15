@@ -2,6 +2,7 @@
 
 use std::ffi::OsString;
 use std::fmt;
+use std::io::Write;
 use std::path::PathBuf;
 
 use crate::error::Result;
@@ -43,6 +44,8 @@ pub trait Runner: Send + Sync {
     fn run(&self, request: &Request) -> Result<Output>;
     /// Stream standard output into SHA-256 without retaining the blob bytes.
     fn digest(&self, request: &Request) -> Result<String>;
+    /// Stream exactly the proved blob size to a writer without retaining stdout.
+    fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()>;
     /// Execute with explicit command cancellation and process-tree cleanup.
     fn run_cancellable(&self, request: &Request, cancellation: &dyn Cancellation)
     -> Result<Output>;

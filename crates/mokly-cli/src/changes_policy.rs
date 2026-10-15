@@ -21,14 +21,14 @@ pub(crate) fn unavailable(error: &Error) -> Option<&'static str> {
             | CatalogueError::Invalid { .. } => Some(VALIDATION),
         },
         Error::Graph { source } => graph(source),
-        Error::Deferred { .. } => Some("base renderer unavailable"),
         _ => None,
     }
 }
 
 fn runtime(code: RuntimeCode) -> Option<&'static str> {
     match code {
-        RuntimeCode::Cancelled | RuntimeCode::Protocol | RuntimeCode::Timeout => None,
+        RuntimeCode::Cancelled | RuntimeCode::Protocol => None,
+        RuntimeCode::Timeout => Some("base runtime timed out"),
         RuntimeCode::Unavailable => Some("base runtime unavailable"),
         RuntimeCode::Version => Some("base runtime version mismatch"),
         RuntimeCode::Configuration

@@ -236,16 +236,24 @@ fn tree_count_and_archive_total_are_bounded_before_io() {
 }
 
 #[test]
-fn source_archive_file_limits_name_the_file_before_extraction() {
-    let listing = format!("100644 blob {} 3\tasset.bin\0", id());
-    let repo = repository(Unimock::new(
-        RunnerMock::run
-            .next_call(matching!(_))
-            .returns(output(listing.as_bytes())),
+fn source_byte_reads_keep_their_per_file_limit() {
+    let repo = repository(Unimock::new(()));
+    let entry = Entry {
+        path: RepoPath::parse("asset.bin").unwrap(),
+        object: id(),
+        mode: Mode::File,
+        size: 3,
+    };
+    assert!(matches!(
+        repo.read_many(
+            &[entry],
+            Limits {
+                blob: 2,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::ByteLimit { limit: 2 })
     ));
-    assert!(
-        matches!(repo.extract(&id(), Path::new("/dest"), Limits { blob: 2, ..Limits::default() }), Err(Error::BlobLimit { path, limit: 2 }) if path == "asset.bin")
-    );
 }
 
 #[test]

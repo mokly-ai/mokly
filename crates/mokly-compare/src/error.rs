@@ -47,12 +47,6 @@ pub enum Error {
         /// Original graph diagnostics.
         source: mokly_graph::error::GraphError,
     },
-    /// The injected provider cannot render discovered JavaScript yet.
-    #[error("[mokly-compare/base] JavaScript rendering is unavailable for {}", .modules.join(", "))]
-    Deferred {
-        /// Historical module paths awaiting a sidecar adapter.
-        modules: Vec<String>,
-    },
     /// A complete result failed its strict model contract.
     #[error("[mokly-compare/review-invalid] {source}")]
     Review {

@@ -34,7 +34,8 @@ PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback
 render. A process recycles after 500 render calls or above 1 GiB resident
-memory. Recycling starts after the in-flight result returns.
+memory across the sidecar and its Node descendants, including PostCSS
+children. Native helper memory is excluded from this recycle sum. Recycling starts after the in-flight result returns.
 
 `NodeFactory` inherits the environment and repository working directory. It
 uses `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for

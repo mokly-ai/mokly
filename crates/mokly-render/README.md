@@ -34,7 +34,7 @@ stylesheet paths; the worker resolves their physical input on the chosen side.
 Each PostCSS context uses an owned child process in that side's source root.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
-directories for CSS package imports. Disposal kills and reaps only that context.
+directories after inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
 
 The graph installs every definition binding and uses `MemoFragments` for
 screens, components, stories, and pages. Its fingerprint includes the bundle,
