@@ -5,8 +5,8 @@ import { onboardingPickerVariant } from "./browse/states/tags/onboarding-picker.
 import { onboardingFilterVariant } from "./browse/states/tags/onboarding.js";
 import { tagPickerVariant } from "./browse/states/tags/picker.js";
 import { browseSchemeVariants } from "./browse/variants/appearance_screens.js";
-import { useCaseScreen } from "./browse/views/use-case.js";
 import { designMetadata } from "./metadata.js";
+import { artboardStates, artboards } from "./parts/artboards.js";
 import { DesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import {
@@ -146,64 +146,69 @@ function NarrowNavigationMobile() {
 }
 
 /** Browse shell design screens grouped by catalogue views and shell states. */
-export const browseViewScreens = [
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "The catalogue home with the navigation tree, search, and filter.",
-    desktop: <HomeDesktop />,
-    slug: "home",
-    mobile: <HomeMobile />,
-    title: "Home",
-  }),
-  ...defineScreen({
-    ...designMetadata,
-    description:
-      "A selected screen with viewport switching and framed fragments, in either catalogue scheme.",
-    desktop: <SelectedScreenDesktop />,
-    slug: "screen",
-    mobile: <SelectedScreenMobile />,
-    title: "Selected screen",
-    variants: [
+export const homeScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description:
+    "The catalogue home with the navigation tree, search, and filter.",
+  ...artboards({ desktop: <HomeDesktop />, mobile: <HomeMobile /> }),
+  slug: "home",
+  title: "Home",
+});
+export const selectedScreen = defineScreen({
+  ...designMetadata,
+  description:
+    "A selected screen with viewport switching and framed fragments, in either catalogue scheme.",
+  slug: "screen",
+  title: "Selected screen",
+  ...artboardStates(
+    {
+      state: "selected",
+      title: "Selected screen",
+      desktop: <SelectedScreenDesktop />,
+      mobile: <SelectedScreenMobile />,
+    },
+    [
       ...browseSchemeVariants,
       tagPickerVariant,
       formsFilterVariant,
       onboardingFilterVariant,
       onboardingPickerVariant,
     ],
-  }),
-  useCaseScreen,
-];
+  ),
+});
 
 /** Browse shell design screens for secondary shell states. */
-export const browseStateScreens = [
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description: "The details panel expanded under a selected screen.",
+export const detailsScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description: "The details panel expanded under a selected screen.",
+  ...artboards({
     desktop: <DetailsOpenDesktop />,
-    slug: "details",
     mobile: <DetailsOpenMobile />,
-    title: "Details panel",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description: "The not-found view keeping catalogue navigation available.",
+  slug: "details",
+  title: "Details panel",
+});
+export const missingRouteScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description: "The not-found view keeping catalogue navigation available.",
+  ...artboards({
     desktop: <MissingRouteDesktop />,
-    slug: "missing-route",
     mobile: <MissingRouteMobile />,
-    title: "Missing route",
   }),
-  defineScreen({
-    ...designMetadata,
-    colorSchemes: ["light"],
-    description:
-      "Collapsed navigation opening as a drawer on narrow viewports.",
+  slug: "missing-route",
+  title: "Missing route",
+});
+export const navigationScreen = defineScreen({
+  ...designMetadata,
+  colorSchemes: ["light"],
+  description: "Collapsed navigation opening as a drawer on narrow viewports.",
+  ...artboards({
     desktop: <NarrowNavigationDesktop />,
-    slug: "navigation",
     mobile: <NarrowNavigationMobile />,
-    title: "Narrow navigation",
   }),
-];
+  slug: "navigation",
+  title: "Narrow navigation",
+});

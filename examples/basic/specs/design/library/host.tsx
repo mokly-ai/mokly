@@ -12,11 +12,8 @@ export function LibraryHost({
   input: RenderInput;
   children: ReactNode;
 }) {
-  const slug =
-    input.entry.kind === "component"
-      ? input.entry.variantOf.split("/").at(-1)!
-      : input.entry.path.split("/").at(-1)!;
-  const props = input.componentProps;
+  // Library paths are design/library/{group}/{slug}, then a variant's slug.
+  const slug = input.entry.path.split("/")[3] ?? "";
   const content =
     slug === "inspector" ? (
       <PreviewWorkspace
@@ -24,7 +21,7 @@ export function LibraryHost({
         render={() => null}
         viewport={input.viewport}
       />
-    ) : slug === "metadata-row" && props?.presentation === "props" ? (
+    ) : slug === "metadata-row" && input.props.presentation === "props" ? (
       <dl className="ce-props">{children}</dl>
     ) : (
       children

@@ -24,6 +24,8 @@
     "packages/mokly/src/**/*.d.mts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
+    "examples/**/*.ts",
+    "examples/**/*.tsx",
     "packages/viewer/src/**/*.ts",
     "packages/viewer/src/**/*.tsx",
     "packages/viewer/tests/**/*.ts",

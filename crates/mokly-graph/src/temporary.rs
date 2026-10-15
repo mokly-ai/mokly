@@ -107,6 +107,11 @@ impl ArtifactWorker for PropsJob<'_> {
                 source: HtmlError::Props { source },
             });
         }
+        if &visual.props == self.props
+            && let Some(artifact) = self.session.state.cache.get(&plan.key)
+        {
+            return Ok(artifact);
+        }
         visual.props = self.props.clone();
         document_composition::document(self.session, plan, &entry)
     }

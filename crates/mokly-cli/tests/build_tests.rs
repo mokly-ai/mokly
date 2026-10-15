@@ -190,3 +190,32 @@ fn render_warnings_survive_a_later_failure_and_hide_internal_error_prefixes() {
     assert!(!error.contains("[mokly-html"));
     assert!(error.find("[mokly/warning]").unwrap() < error.find("[mokly/build-invalid]").unwrap());
 }
+
+#[test]
+fn a_renderer_only_catalogue_cannot_skip_its_javascript_source_inventory() {
+    let directory = TempDir::new().unwrap();
+    write(
+        directory.path(),
+        "mokly.config.json",
+        r#"{"renderer":"./renderer.source.tsx"}"#,
+    );
+    write(
+        directory.path(),
+        "renderer.source.tsx",
+        "import './helper.js'; export default {};",
+    );
+    write(
+        directory.path(),
+        "helper.js",
+        "export const secret = 'private source';",
+    );
+    write(
+        directory.path(),
+        "specs/home.screen.html",
+        "---\ntitle: Home\n---\n<a href=\"../../helper.js\">Helper</a>",
+    );
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("JavaScript renderer is unavailable"));
+    assert!(output.stdout.is_empty());
+}

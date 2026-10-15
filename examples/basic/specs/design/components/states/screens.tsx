@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { componentDesignMetadata } from "../../metadata.js";
+import { artboards } from "../../parts/artboards.js";
 import { ComponentPage } from "../parts/component_page.js";
 import { ScreenPage } from "../parts/screen_page.js";
 
@@ -35,55 +36,63 @@ export function RemovedConsumerMobile() {
   return <ScreenPage state="removed-consumer" viewport="mobile" />;
 }
 
-export const stateScreens = [
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "empty",
-    title: "No components in this view",
-    colorSchemes: ["light"],
-    description:
-      "A validated empty usage list, with highlighting disabled and a clear zero count.",
+export const emptyScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "empty",
+  title: "No components in this view",
+  colorSchemes: ["light"],
+  description:
+    "A validated empty usage list, with highlighting disabled and a clear zero count.",
+  ...artboards({
     desktop: <EmptyUsageDesktop />,
     mobile: <EmptyUsageMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "unavailable",
-    title: "Inspection unavailable",
-    colorSchemes: ["light"],
-    description:
-      "Missing inspection metadata is not presented as an empty component list.",
+});
+export const unavailableScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "unavailable",
+  title: "Inspection unavailable",
+  colorSchemes: ["light"],
+  description:
+    "Missing inspection metadata is not presented as an empty component list.",
+  ...artboards({
     desktop: <UnavailableDesktop />,
     mobile: <UnavailableMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "unused",
-    title: "Component with no consumers",
-    colorSchemes: ["light"],
-    description:
-      "A component with a saved preview and an explicit empty Used by list.",
+});
+export const unusedScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "unused",
+  title: "Component with no consumers",
+  colorSchemes: ["light"],
+  description:
+    "A component with a saved preview and an explicit empty Used by list.",
+  ...artboards({
     desktop: <UnusedComponentDesktop />,
     mobile: <UnusedComponentMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "removed",
-    title: "Removed variant and former consumer",
-    colorSchemes: ["light"],
-    description:
-      "The removed Compact variant retains its Before canvas and links a removed affected screen to its previous version.",
+});
+export const removedScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "removed",
+  title: "Removed variant and former consumer",
+  colorSchemes: ["light"],
+  description:
+    "The removed Compact variant retains its Before canvas and links a removed affected screen to its previous version.",
+  ...artboards({
     desktop: <RemovedVariantDesktop />,
     mobile: <RemovedVariantMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "removed-consumer",
-    title: "Retained removed screen",
-    colorSchemes: ["light"],
-    description:
-      "The former Farewell consumer remains reachable from Action's affected list and opens its previous version.",
+});
+export const removedConsumerScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "removed-consumer",
+  title: "Retained removed screen",
+  colorSchemes: ["light"],
+  description:
+    "The former Farewell consumer remains reachable from Action's affected list and opens its previous version.",
+  ...artboards({
     desktop: <RemovedConsumerDesktop />,
     mobile: <RemovedConsumerMobile />,
   }),
-];
+});

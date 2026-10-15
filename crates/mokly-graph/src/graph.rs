@@ -22,7 +22,7 @@ use crate::error::{GraphError, Result};
 use crate::key::{NodeKind, data_key, key};
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
-use crate::session::{Session, StyleInputs};
+use crate::session::{Session, SessionInput};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{config_key, error, markdown_assets, markdown_sources, planning, styles};
@@ -46,18 +46,21 @@ pub struct Graph {
 }
 
 impl RenderGraph for Graph {
+    #[tracing::instrument(name = "graph.prepare", skip_all, err)]
     fn prepare(
         &self,
         config: ResolvedConfig,
         catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> Result<Arc<dyn RenderGeneration>> {
+        let parent = tracing::Span::current();
         std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-prepare".into())
                 .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || self.prepare_generation(config, catalogue, output))
-            {
+                .spawn_scoped(scope, || {
+                    parent.in_scope(|| self.prepare_generation(config, catalogue, output))
+                }) {
                 Ok(thread) => thread,
                 Err(source) => {
                     return Err(error::InternalError::PreparationThread { source }.into());
@@ -255,14 +258,26 @@ impl Graph {
             }
         }
         let policy: Arc<dyn PublicPolicy> = Arc::new(policy);
+        let mut generation_inputs = vec![config_key.0.as_bytes()];
+        for plan in plans.values() {
+            generation_inputs.push(plan.key.0.as_bytes());
+        }
+        for resource in resources.values() {
+            generation_inputs.push(resource.key.0.as_bytes());
+        }
+        if let Some(bundle) = self.inputs.fragment_generation.as_deref() {
+            generation_inputs.push(bundle.as_bytes());
+        }
+        let generation_key = key(NodeKind::Document, &generation_inputs).0;
         Ok(Arc::new(Session::new(
-            config,
-            catalogue,
-            plans,
-            resources,
             self,
-            policy,
-            StyleInputs {
+            SessionInput {
+                config,
+                catalogue,
+                plans,
+                resources,
+                policy,
+                generation_key,
                 matchers,
                 directories: directories.into_iter().collect(),
             },

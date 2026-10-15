@@ -44,6 +44,9 @@ export function systemRuntime() {
                 new URL("../", import.meta.url),
               ),
               MOKLY_NODE_EXECUTABLE: process.execPath,
+              MOKLY_VIEWER_DIST: path.dirname(
+                fileURLToPath(import.meta.resolve("@mokly/viewer/browser")),
+              ),
             },
           }),
         subscribe: (signal, handler) => process.on(signal, handler),

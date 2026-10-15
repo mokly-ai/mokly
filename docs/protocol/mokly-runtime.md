@@ -60,7 +60,7 @@ deleting it is safe. No cache is in the repository.
 
 `mokly serve` runs discovery and validation, builds the catalogue model, binds
 the port, and publishes its first state with `revision` `1`. The listening
-URL is reported only after validation passes. Before the first request, Serve
+URL is reported only after validation passes. Before readiness, Serve
 renders no document. Documents render on first request under the
 [on-demand contract](./mokly-on-demand.md); the other views, the usage of
 every entry detail, and Changes follow in background work, and each

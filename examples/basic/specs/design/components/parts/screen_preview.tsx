@@ -21,7 +21,8 @@ export type ScreenPageState =
   | "unavailable"
   | "inspection-loading"
   | "removed-consumer"
-  | "style-outside";
+  | "style-outside"
+  | "screen-props";
 
 /** A single consumer screen reused by Current, inspection, and comparison mockups. */
 export function WelcomeExample({

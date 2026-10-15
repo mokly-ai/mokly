@@ -1,1 +1,1 @@
-export { additionDesigns } from "./screens.js";
+export { addedScreen } from "./screens.js";

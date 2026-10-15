@@ -129,19 +129,29 @@ export const welcome = defineScreen({
 
   address: "example.test/welcome",
   description: "A linked landing screen for the neutral fixture.",
-  desktop: <Welcome compact={false} />,
   slug: "welcome",
-  mobile: <Welcome compact />,
   tags: ["forms", "onboarding"],
   title: "Welcome",
   useCasePaths: ["example/tour"],
+  propSchema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["empty"],
+    properties: { empty: { type: "boolean", title: "Empty workspace" } },
+  } as const,
+  props: { empty: false },
+  render: (props, { viewport }) =>
+    props.empty ? (
+      <EmptyWorkspace compact={viewport === "mobile"} />
+    ) : (
+      <Welcome compact={viewport === "mobile"} />
+    ),
   variants: [
     {
       description: "The welcome screen before a workspace has a name.",
-      desktop: <EmptyWorkspace compact={false} />,
       slug: "empty",
-      mobile: <EmptyWorkspace compact />,
       title: "Welcome, empty workspace",
+      props: { empty: true },
     },
   ],
 });
@@ -150,12 +160,11 @@ export const details = defineScreen({
 
   address: "example.test/details",
   description: "A second synthetic screen proving cross-screen links.",
-  desktop: <Details compact={false} />,
   slug: "details",
-  mobile: <Details compact />,
   tags: ["forms"],
   title: "Details",
   useCasePaths: ["example/tour"],
+  render: (_props, { viewport }) => <Details compact={viewport === "mobile"} />,
 });
 export const handbook = definePage({
   ...metadata,

@@ -1,1 +1,1 @@
-export { selectionScreens } from "./screens.js";
+export { inspectionToolbarScreen, inspectionHelpScreen } from "./screens.js";

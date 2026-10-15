@@ -56,6 +56,8 @@ pub struct RenderSummary {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Hash of every config, source, stylesheet, and bundle render input.
+    fn generation_key(&self) -> &str;
     /// All document keys, available without any document render.
     fn plans(&self) -> &BTreeMap<String, DocumentPlan>;
     /// Validated private catalogue, including its complete source inventory.
@@ -73,6 +75,10 @@ pub trait RenderGeneration: GeneratedResources {
     fn resource_routes(&self) -> Vec<String>;
     /// Consumer PostCSS directory watches, including empty matching sets.
     fn stylesheet_directories(&self) -> &[DirectoryDependency];
+    /// All authored files reached by completed documents of this generation.
+    fn public_files(&self) -> BTreeSet<String>;
+    /// Check reached membership without copying the generation's complete set.
+    fn contains_public_file(&self, path: &str) -> bool;
 }
 
 /// Prepare graph nodes against one source-tree generation.

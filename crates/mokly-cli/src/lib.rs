@@ -16,4 +16,7 @@ pub mod publication;
 pub mod publish_errors;
 pub mod redaction;
 mod render_errors;
+pub mod serve;
+pub mod serve_errors;
+pub mod serve_output;
 pub mod version;

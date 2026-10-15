@@ -18,6 +18,25 @@ presentation. The npm shim starts this binary with inherited streams.
 Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
 
+Serve validates an HTML catalogue before it reserves a loopback port. It
+serves its initial state through `mokly-server`, with lazy document rendering,
+canonical public JSON, authenticated live prop previews, and clean signal
+shutdown. A background pass fills usage after readiness and yields to foreground
+renders. A completed pass publishes complete consumer lists. In rich watched
+mode, `r` enqueues a complete manual rebuild and restarts that pass. A
+valid candidate replaces the public state and backend with the next revision;
+a failed candidate keeps the last good state. Preparation and projection run
+outside the serving task. A revision race stamps the same candidate again
+without repeating projection. Port 0 requests a free port. An occupied concrete port advances to
+the next available port through 65535. Repeated SIGINT requests coalesce.
+The browser bundle comes from the matching installed `@mokly/viewer` package.
+
+One injected terminal writer handles startup, shortcuts, rebuilds, and render
+diagnostics. It reports listener backoff and recovery in both output modes.
+It preserves carriage returns in raw mode and ignores shortcut
+release events. `--debug-timings` emits structured stage spans and background
+counts without source text, props, or error payloads.
+
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
 The composition root constructs a
 lazy sidecar pool with the normalized `--sidecars` or environment count.
@@ -93,6 +112,7 @@ cargo clippy -p mokly-cli --all-targets -- -D warnings
   [redaction](./src/redaction.rs).
 - [Composition root](./src/entry.rs), [native rendering services](./src/render_runtime.rs),
   and [static output adapter](./src/publication/mod.rs).
+- [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

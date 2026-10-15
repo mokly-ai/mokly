@@ -115,6 +115,9 @@ the repository and uploads.
 
 ## Shell Delivery
 
+`mokly-server` uses Axum on Tokio and Hyper. The transport owns the client
+connections so shutdown can close incomplete requests before subsystem cleanup.
+
 The Browse shell is a browser application. Serve and `build` deliver one
 identical stub page per shell route, the catalogue index at
 `mokly-viewer/index.json`, and one entry detail per entry under

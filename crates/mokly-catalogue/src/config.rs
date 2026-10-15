@@ -25,6 +25,7 @@ pub struct Loader {
 }
 
 impl ConfigLoader for Loader {
+    #[tracing::instrument(name = "config.load", skip_all, err)]
     fn load(&self, cwd: &Path, explicit: Option<&str>) -> Result<ResolvedConfig> {
         let file = if let Some(path) = explicit {
             normalize(&cwd.join(path))

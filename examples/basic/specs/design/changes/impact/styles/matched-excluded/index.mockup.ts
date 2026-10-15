@@ -1,1 +1,5 @@
-export { matchedExcludedDesigns } from "./screens.js";
+export {
+  matchedScreen,
+  excludedScreen,
+  excludedOnlyScreen,
+} from "./screens.js";

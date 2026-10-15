@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { componentDesignMetadata } from "../../../metadata.js";
+import { artboards } from "../../../parts/artboards.js";
 import { ScreenPage } from "../../parts/screen_page.js";
 
 export function ToolbarSelectionDesktop() {
@@ -16,25 +17,27 @@ export function HelpSelectionMobile() {
   return <ScreenPage state="help-selection" viewport="mobile" />;
 }
 
-export const selectionScreens = [
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "inspection-toolbar",
-    title: "Select a container instance",
-    colorSchemes: ["light"],
-    description:
-      "Toolbar's usage link opens Welcome with the Main toolbar selected and its supplied prompt visible.",
+export const inspectionToolbarScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "inspection-toolbar",
+  title: "Select a container instance",
+  colorSchemes: ["light"],
+  description:
+    "Toolbar's usage link opens Welcome with the Main toolbar selected and its supplied prompt visible.",
+  ...artboards({
     desktop: <ToolbarSelectionDesktop />,
     mobile: <ToolbarSelectionMobile />,
   }),
-  defineScreen({
-    ...componentDesignMetadata,
-    slug: "inspection-help",
-    title: "Select an invisible instance",
-    colorSchemes: ["light"],
-    description:
-      "Help hint's usage link opens its actual instance, with visibility false and no invented bounds.",
+});
+export const inspectionHelpScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "inspection-help",
+  title: "Select an invisible instance",
+  colorSchemes: ["light"],
+  description:
+    "Help hint's usage link opens its actual instance, with visibility false and no invented bounds.",
+  ...artboards({
     desktop: <HelpSelectionDesktop />,
     mobile: <HelpSelectionMobile />,
   }),
-];
+});

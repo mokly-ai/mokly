@@ -1,7 +1,7 @@
 //! On-demand document evaluation and eviction-safe resource reconstruction.
 
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::normalize_warnings;
@@ -13,37 +13,35 @@ use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
-use crate::closure::{Closure, ClosureBuilder, Walker};
+use crate::closure::{Closure, Walker};
 use crate::delivery_inputs::DeliveryInputs;
-use crate::error::{GraphError, Result, invalid};
+use crate::error::{GraphError, Result};
 use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::types::{
     DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TemporaryDocument,
 };
-use crate::workers::{ArtifactWorker, RenderWorkers};
-use crate::{document_composition, route_inventory, styles, temporary, validation};
+use crate::workers::RenderWorkers;
+use crate::{route_inventory, styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
     pub(crate) state: Arc<State>,
 }
 
-pub(crate) struct StyleInputs {
-    pub(crate) matchers: styles::Matchers,
-    pub(crate) directories: Vec<DirectoryDependency>,
-}
-
+#[derive(Clone)]
 pub(crate) struct State {
     pub(crate) directories: Vec<DirectoryDependency>,
-    pub(crate) matchers: styles::Matchers,
+    pub(crate) generation_key: String,
+    pub(crate) public_files: Arc<Mutex<BTreeSet<String>>>,
+    pub(crate) matchers: Arc<styles::Matchers>,
     pub(crate) reference_index: Arc<dyn ReferenceIndex>,
     pub(crate) inputs: DeliveryInputs,
-    pub(crate) config: ResolvedConfig,
-    pub(crate) catalogue: PreparedCatalogue,
-    pub(crate) plans: BTreeMap<String, DocumentPlan>,
-    pub(crate) resources: BTreeMap<String, ResourcePlan>,
+    pub(crate) config: Arc<ResolvedConfig>,
+    pub(crate) catalogue: Arc<PreparedCatalogue>,
+    pub(crate) plans: Arc<BTreeMap<String, DocumentPlan>>,
+    pub(crate) resources: Arc<BTreeMap<String, ResourcePlan>>,
     pub(crate) tree: Arc<dyn SourceTree>,
     pub(crate) composer: Arc<dyn Composer>,
     pub(crate) stylesheets: Arc<dyn StylesheetBundler>,
@@ -52,52 +50,37 @@ pub(crate) struct State {
     pub(crate) policy: Arc<dyn PublicPolicy>,
 }
 
+pub(crate) struct SessionInput {
+    pub(crate) directories: Vec<DirectoryDependency>,
+    pub(crate) config: ResolvedConfig,
+    pub(crate) catalogue: PreparedCatalogue,
+    pub(crate) plans: BTreeMap<String, DocumentPlan>,
+    pub(crate) resources: BTreeMap<String, ResourcePlan>,
+    pub(crate) policy: Arc<dyn PublicPolicy>,
+    pub(crate) generation_key: String,
+    pub(crate) matchers: styles::Matchers,
+}
+
 impl Session {
-    pub(crate) fn new(
-        config: ResolvedConfig,
-        catalogue: PreparedCatalogue,
-        plans: BTreeMap<String, DocumentPlan>,
-        resources: BTreeMap<String, ResourcePlan>,
-        graph: &Graph,
-        policy: Arc<dyn PublicPolicy>,
-        styles: StyleInputs,
-    ) -> Self {
+    pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
         Self {
             state: Arc::new(State {
-                matchers: styles.matchers,
-                directories: styles.directories,
+                generation_key: input.generation_key,
+                directories: input.directories,
+                public_files: Arc::new(Mutex::new(BTreeSet::new())),
+                matchers: Arc::new(input.matchers),
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
                 inputs: graph.inputs.clone(),
-                config,
-                catalogue,
-                plans,
-                resources,
+                config: Arc::new(input.config),
+                catalogue: Arc::new(input.catalogue),
+                plans: Arc::new(input.plans),
+                resources: Arc::new(input.resources),
                 tree: graph.tree.clone(),
                 composer: graph.composer.clone(),
                 stylesheets: graph.stylesheets.clone(),
                 cache: graph.cache.clone(),
                 workers: graph.workers.clone(),
-                policy,
-            }),
-        }
-    }
-
-    pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
-        let plan = self
-            .state
-            .plans
-            .get(route)
-            .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
-        if let Some(artifact) = self.state.cache.get(&plan.key) {
-            return Ok(artifact);
-        }
-        let entry = &self.state.catalogue.model.entries[plan.entry];
-        let result = document_composition::document(self, plan, entry);
-        match result {
-            Ok(artifact) => Ok(artifact),
-            Err(source) => Err(GraphError::Document {
-                entry: entry.metadata.path.clone(),
-                source: Box::new(source),
+                policy: input.policy,
             }),
         }
     }
@@ -113,6 +96,9 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn generation_key(&self) -> &str {
+        &self.state.generation_key
+    }
     fn plans(&self) -> &BTreeMap<String, DocumentPlan> {
         &self.state.plans
     }
@@ -121,9 +107,6 @@ impl RenderGeneration for Session {
     }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
         self.state.workers.document(route, self)
-    }
-    fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument> {
-        temporary::render(self, route, props)
     }
     fn closure(&self, route: &str) -> Result<Closure> {
         self.state.workers.closure(route, self)
@@ -178,42 +161,21 @@ impl RenderGeneration for Session {
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()
     }
-}
-
-impl ArtifactWorker for Session {
-    fn closure_job(&self, route: &str) -> Result<Closure> {
-        let artifact = self.artifact(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        self.walker()
-            .collect(route, &document.tree, &document.resources)
+    fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument> {
+        temporary::render(self, route, props)
     }
-    fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
-        let artifact = self.raw(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        if let Err(source) = self
-            .walker()
-            .collect(route, &document.tree, &document.resources)
-        {
-            return Err(GraphError::Attempt {
-                failures: vec![source],
-                warnings: document.warnings.clone(),
-            });
-        }
-        if let Err(source) = validation::links(self, &document.links) {
-            return Err(GraphError::Attempt {
-                failures: vec![source],
-                warnings: document.warnings.clone(),
-            });
-        }
+    fn public_files(&self) -> BTreeSet<String> {
         self.state
-            .cache
-            .insert(self.state.plans[route].key.clone(), artifact.clone());
-        Ok(artifact)
+            .public_files
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
+    }
+    fn contains_public_file(&self, path: &str) -> bool {
+        self.state
+            .public_files
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .contains(path)
     }
 }

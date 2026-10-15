@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use crate::namespace;
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ChangeKind};
 use crate::public_records::CatalogueRecord;
@@ -11,7 +12,7 @@ use crate::readers::ReadError;
 
 pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
     if index.comparison_url.as_deref().is_some_and(|url| {
-        !url.strip_prefix("mokly-viewer/diffs/generations/")
+        !url.strip_prefix(&namespace::viewer("diffs/generations/"))
             .and_then(|tail| tail.strip_suffix("/review.json"))
             .is_some_and(hash)
     }) {

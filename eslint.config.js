@@ -106,7 +106,10 @@ export default tseslint.config(
   },
   {
     files: ["packages/viewer/src/**/*.{ts,tsx}"],
-    ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
+    ignores: [
+      "packages/viewer/src/catalogue/delivery_paths.ts",
+      "packages/viewer/src/generated/catalogue/Namespace.ts",
+    ],
     rules: {
       "mokly/no-directory-literals": "error",
     },

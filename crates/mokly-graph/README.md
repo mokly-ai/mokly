@@ -28,6 +28,10 @@ build pass, resource reads, and closure queries. `render_props` validates a
 complete transient props map and uses the same composition and closure path.
 Its document does not replace the saved plan or catalogue props. The generation
 also exposes validated PostCSS directory watches, including empty glob matches.
+`generation_key` hashes the complete render input set for the live descriptor.
+`public_files` lists authored files reached by completed renders. Serve
+rechecks their live eligibility at read time. Temporary closure membership
+stays separate from the catalogue's reached public files.
 
 Markdown document keys exclude the JavaScript generation fingerprint.
 Document keys include component paths and element names. Logical links depend

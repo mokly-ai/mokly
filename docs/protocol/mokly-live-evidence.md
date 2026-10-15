@@ -24,6 +24,12 @@ publication whose refreshed detail carries that view's usage as `ready`. A
 temporary prop preview of the component controls contract uses the usage
 records of its own render response and never enters a detail.
 
+Document responses do not wait for evidence publication. One application-owned
+publisher coalesces completed routes, skips recorded routes and routes with no
+detail views, and publishes ready or unavailable usage. Closing Serve fences
+new publications and drains that task. A page or Markdown render does not
+raise the revision only because its document completed.
+
 The event stream at `/mokly-viewer/events` writes one message per
 publication whose `id` is the new revision and whose `data` is the server's
 `deploymentId`, and one message with the current values on every new
@@ -86,6 +92,13 @@ requests and releases a refresh waiting on them. Only the current navigation
 commits.
 
 ## Workspace evidence
+
+Screen and component details omit `workspace` until every input of their lists
+is proven. Pending or unavailable consumer usage cannot prove a complete
+Used by list. An absent workspace shows "Usage is unavailable until the
+catalogue has been checked." and never shows a zero-consumer result.
+One unavailable view keeps every Used by list unavailable until the next
+render generation.
 
 The detail's `workspace` updates comparison eligibility,
 Details evidence, and the complete Used by and Affected lists in place. While

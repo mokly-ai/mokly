@@ -29,6 +29,7 @@ mod resource_edges;
 mod resource_keys;
 mod routing_inputs;
 mod session;
+mod session_render;
 mod styles;
 mod validation;
 mod weight;

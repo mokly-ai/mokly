@@ -5,9 +5,9 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Paths And Single Ownership
 
 `mokly-viewer/` is the root of every package-owned public and Serve route.
-The model crate defines the directory names once, beside the
+The model crate defines the directory names once in `namespace`, beside the
 `mokly-generated` document prefix, and the generated TypeScript of
-`@mokly/viewer/data` carries them; every path builder of the binary and of
+`@mokly/viewer/data` carries them in its generated `Namespace` module; every path builder of the binary and of
 the viewer uses that one definition. Identifiers, DOM attributes, and
 protocol names that contain `mokly` are fixed.
 
@@ -136,13 +136,14 @@ Current available; a malformed current result is invalid data, not a version
 failure. No reader infers a version from file existence or falls back to
 another URL.
 
-The standalone shell presents a version failure in its mount element as
-`This catalogue needs a compatible Mokly viewer. Update the viewer and reload.`
-and logs the diagnostic separately; it renders no navigation and no frame
-after a rejected index or detail. The embedded viewer reports `onError` with
-`code: "version"`, the same product message, and optional `details` with the
-typed diagnostic. Other error codes and messages are unchanged. `ViewerError`
-is:
+Every host shows one headline for a version failure:
+`This catalogue needs a compatible viewer`. The standalone shell shows it in its
+mount element with one `Reload` action, because Serve and the static build ship
+the viewer that matches their catalogue; it logs the diagnostic separately and
+renders no navigation and no frame after a rejected index or detail. The
+embedded viewer shows the headline without an action, because only its host can
+update the viewer, and reports `onError` with `code: "version"`, the headline as
+`message`, and `details` with the typed diagnostic. `ViewerError` is:
 
 ```ts
 interface ViewerError {

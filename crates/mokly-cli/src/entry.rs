@@ -1,7 +1,7 @@
 //! Real environment and terminal composition for the mokly binary.
 
 use std::env;
-use std::io::{self, IsTerminal, Write};
+use std::io::{self, IsTerminal};
 use std::process::ExitCode;
 use std::sync::Arc;
 
@@ -14,7 +14,6 @@ use mokly_cli::build::{BuildError, BuildService, CatalogueBuild};
 use mokly_cli::build_output;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::codes::Code;
-use mokly_cli::errors::Failure;
 use mokly_cli::grammar::Verb;
 use mokly_cli::options::{Environment, validate};
 use mokly_cli::output::{Style, select};
@@ -24,29 +23,13 @@ use mokly_cli::version::VERSION;
 use mokly_source_interface::tree::SourceTree;
 use terminal_size::{Width, terminal_size};
 
-use crate::entry_publish;
 use crate::interrupts::Interrupts;
-
-use super::render_runtime::Services;
-
-pub(super) trait Terminal {
-    fn stdout(&self, text: &str);
-    fn stderr(&self, text: &str);
-}
-
-pub(super) struct SystemTerminal;
-
-impl Terminal for SystemTerminal {
-    fn stdout(&self, text: &str) {
-        let _ = io::stdout().lock().write_all(text.as_bytes());
-    }
-    fn stderr(&self, text: &str) {
-        let _ = io::stderr().lock().write_all(text.as_bytes());
-    }
-}
+use crate::render_runtime::Services;
+use crate::terminal::{SystemTerminal, Terminal};
+use crate::{entry_publish, entry_serve};
 
 pub(super) fn main() -> ExitCode {
-    let terminal: &dyn Terminal = &SystemTerminal;
+    let terminal: Arc<dyn Terminal> = Arc::new(SystemTerminal::default());
     let arguments: Vec<_> = env::args_os()
         .map(|value| value.to_string_lossy().into_owned())
         .collect();
@@ -101,7 +84,7 @@ pub(super) fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
     if let Some(Verb::Publish(publish)) = &cli.command {
-        return entry_publish::run(publish, &style, redactor, terminal);
+        return entry_publish::run(publish, &style, redactor, terminal.as_ref());
     }
     if let Some(Verb::Build(options)) = &cli.command {
         let cwd = match env::current_dir() {
@@ -186,10 +169,11 @@ pub(super) fn main() -> ExitCode {
             }
         };
     }
-    let command = cli.command.as_ref().map_or("serve", Verb::name);
-    let failure = Failure::Unavailable { command };
-    terminal.stderr(&style.failure(&failure, &redactor));
-    ExitCode::FAILURE
+    let (common, options) = match &cli.command {
+        Some(Verb::Serve(command)) => (&command.common, &command.options),
+        _ => (&cli.common, &cli.serve),
+    };
+    entry_serve::run(common, options, &style, redactor, terminal)
 }
 
 struct LoadedConfig(ResolvedConfig);

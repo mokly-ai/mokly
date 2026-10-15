@@ -105,8 +105,8 @@ and any other `mokly-` name fails with `html-element`.
   `element` whose schema declares `to`, `fragment`, `slot`, `moklyViewport`, or
   `moklyIf` fails.
 - Element children fill the `children` slot; a child with `slot="name"` fills
-  that named slot. Content for a slot the component does not declare fails
-  with `html-slot`.
+  that named slot. Several children can fill one slot, in document order.
+  Content for a slot the component does not declare fails with `html-slot`.
 - `mokly-instance` names the instance for comparison and inspection, under
   the [instance contract](./mokly-instances.md); it defaults to the slug rule.
 - HTML5 parsing can move a component or its output, including direct table

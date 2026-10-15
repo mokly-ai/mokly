@@ -86,7 +86,7 @@ comparison query; an eligible removed component variant may request its
 comparison with the missing current side. The destination validates its view
 before activating a comparison query.
 
-The shared inspector has Details, Props/Controls, and Usage icons. Composed
+The shared inspector has Details, Props, and Usage icons. Composed
 components also have Nested components, listing their rendered registered
 children and excluding themselves; leaves omit that tab. Screens keep the
 Components tab, including empty and unavailable states. Clicking an icon opens

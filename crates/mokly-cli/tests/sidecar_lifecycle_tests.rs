@@ -137,6 +137,8 @@ fn interrupt(signal: &str, shim: bool) {
 
 fn install_shim(root: &Path, workspace: &Path) -> PathBuf {
     let scope = root.join("installation/node_modules/@mokly");
+    fs::create_dir_all(&scope).unwrap();
+    std::os::unix::fs::symlink(workspace.join("packages/viewer"), scope.join("viewer")).unwrap();
     let package = scope.join("mokly");
     fs::create_dir_all(package.join("bin")).unwrap();
     fs::create_dir(package.join("dist")).unwrap();

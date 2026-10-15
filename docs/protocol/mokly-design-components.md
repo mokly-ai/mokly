@@ -174,8 +174,8 @@ Each registered component declares its exclusive public sheet through
 place `$componentStylesheets` between shared base CSS and context/layout
 overrides. Mokly inserts actual rendered component links in first-render,
 authored-file order; there is no per-render React style collector, candidate
-pool, `useDesignStyle` call, or renderer-side link synthesis. The renderer emits
-`input.stylesheets` directly. This applies equally to transient prop renders;
+pool, `useDesignStyle` call, or renderer-side link synthesis. The Rust core
+writes the links into each document head. This applies equally to transient prop renders;
 see [component stylesheets](./mokly-component-stylesheets.md).
 
 An unused child's stylesheet must not be linked merely because another saved

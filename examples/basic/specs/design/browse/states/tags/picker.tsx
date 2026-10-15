@@ -1,5 +1,4 @@
-import type { ScreenVariantInput } from "@mokly/mokly";
-
+import type { ArtboardVariant } from "../../../parts/artboards.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
 
@@ -20,4 +19,4 @@ export const tagPickerVariant = {
   slug: "tag-picker",
   mobile: <TagPickerMobile />,
   title: "Tag picker",
-} satisfies ScreenVariantInput;
+} satisfies ArtboardVariant;

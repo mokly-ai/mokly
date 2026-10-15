@@ -99,6 +99,7 @@ pub struct Discoverer {
 }
 
 impl Discovery for Discoverer {
+    #[tracing::instrument(name = "catalogue.discover", skip_all, err)]
     fn discover(&self, config: &ResolvedConfig, output: Option<&Path>) -> Result<Inventory> {
         let mut inventory = Inventory {
             files: Vec::new(),
