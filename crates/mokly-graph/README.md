@@ -24,6 +24,11 @@ a route and the document node's input hash, which is the public
 `documentKey`. `dyn RenderGeneration` supports on-demand rendering, a full
 build pass, resource reads, and closure queries.
 
+Document keys include component paths and element names. Logical links depend
+on their destination routes, including use-case first steps. An unresolved link
+substitution inside a component depends on the routing inventory, including
+when a prop reaches it through another component.
+
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete

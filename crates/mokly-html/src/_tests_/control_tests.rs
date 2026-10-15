@@ -74,3 +74,35 @@ fn duplicate_and_reserved_navigation_attributes_survive_token_validation() {
     assert!(source_checks::validate("<p title=\"a\" title=\"b\">Text</p>", false).is_ok());
     assert!(source_checks::validate("<!--mokly-instance:start id=\"r-0\"-->", false).is_ok());
 }
+
+#[test]
+fn ancestor_features_leave_the_stack_before_the_next_sibling() {
+    let mut nodes = parse::fragment(
+        "<label><div role=\"button\"><span to=\"home\">A</span></div><span to=\"home\">B</span></label><span to=\"home\">C</span>",
+    );
+    let warnings = adapt(&mut nodes, "route").unwrap();
+    assert_eq!(warnings.len(), 2);
+    assert_eq!(
+        warnings[0].message,
+        "MockLink child control is inside <div role=\"button\">; one click or key press has two targets"
+    );
+    assert_eq!(
+        warnings[1].message,
+        "MockLink child control is inside <label>; one click or key press has two targets"
+    );
+    assert_eq!(
+        serialize::html(&nodes)
+            .matches("data-mokly-link-control")
+            .count(),
+        3
+    );
+}
+
+#[test]
+fn nearest_error_ancestor_takes_precedence_over_a_closer_warning() {
+    let mut nodes = parse::fragment(
+        "<section contenteditable=\"true\"><div contenteditable=\"plaintext-only\"><label><span to=\"home\">Go</span></label></div></section>",
+    );
+    let error = adapt(&mut nodes, "route").unwrap_err();
+    assert!(error.to_string().contains("MockLink child control is inside <div contenteditable=\"plaintext-only\">; move the control outside it"));
+}

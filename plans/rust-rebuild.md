@@ -685,6 +685,8 @@ Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m5.md`.
 Integration evidence: `.context/rust-rebuild/delegation/m5/report-2.md` and
 `.context/rust-rebuild/delegation/m5/merge-decisions.md`.
 Review fix evidence: `.context/rust-rebuild/delegation/m5/report-3.md`.
+Final fix and merge evidence: `.context/rust-rebuild/delegation/m5/report-4.md`
+and `.context/rust-rebuild/delegation/m5/round-3-merge-decisions.md`.
 
 The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
@@ -813,6 +815,10 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
+      finding 7): at a narrow width, for example 1000 x 800, the component
+      stage with both viewports starts its row at the stage's left edge and
+      scrolls to the row's end, and a stage row that fits stays centred.
 - [ ] Port the Milestone 7 presentation into the design catalogue and settle
       its copy there (Milestone 7 review 1, finding 10 and the mockup gaps):
       the parent's own entry first in the variant bar, controls on screens,
@@ -824,6 +830,10 @@ renders again.
       the descriptor loads), "No editable props are declared for this
       entry.", and "Check the highlighted values." for a whole-props error
       that highlights no field.
+- [ ] Settle the component stage layout in the design port: with Both, the
+      shell places the 390px mobile and 1024px desktop canvases side by side
+      (below 760px, stacked at the stage's left edge), while the component
+      mockups stack the two views and centre the mobile canvas.
 - [x] Write the JavaScript authoring guides.
 
 Evidence: `.context/rust-rebuild/delegation/m8-sidecar/report-1.md`
@@ -1000,6 +1010,10 @@ and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
       under `.context/rust-rebuild/`.
 - [ ] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
+      The M5 memory follow-up removes quadratic ancestor-list retention and
+      subtree copies in link controls; recursion remains. Evidence:
+      `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
+- [ ] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -1036,6 +1050,7 @@ and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
     after success; keep the existing retention until the user decides.
   - Milestone 5 review 1, finding 5: decide the declared component stylesheet
     delivery model; keep the current bundled code and pages pending the user.
+  - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
@@ -1050,7 +1065,9 @@ and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
   - B: settled by Decision 32 on 2026-10-14.
   - C: settled by Decision 31 on 2026-10-14.
   - D: settled by Decision 38 on 2026-10-14.
-  - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38.
+  - E: settled by the orchestrator's M5 brief and final change request on
+    2026-10-15: rewrite guides at their milestones. The viewer README, the
+    xtask README, and `AGENTS.md` follow Decision 38.
     The teardown deleted `guides_cli`, `guides_ci`,
     `guides_upload_validation`, and `guides_authoring`, which compared the
     guides with the old CLI and authoring API. `guides_copy`,
