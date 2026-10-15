@@ -1,0 +1,22 @@
+{
+  "config": {
+    "roots": [
+      {
+        "dir": "specs",
+        "files": ["**/*.md", "**/*.md"]
+      }
+    ]
+  },
+  "files": {
+    "specs/a.md": "# A"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "roots[0].files: [\"**/*.md\",\"**/*.md\"] has non-unique elements",
+      "path": "mokly.config.json",
+      "line": 1,
+      "column": 26
+    }
+  ]
+}

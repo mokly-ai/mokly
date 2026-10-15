@@ -1,0 +1,153 @@
+---
+source: crates/mokly-model/src/_tests_/public_reader_tests.rs
+expression: "canonical::to_string(&decoded).unwrap()"
+---
+{
+  "changesStatus": "disabled",
+  "comparisonUrl": null,
+  "components": [],
+  "deploymentId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "documents": [],
+  "identity": {
+    "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "title": "Mokly"
+  },
+  "pages": [],
+  "removedEntries": [],
+  "revision": 0,
+  "schemaVersion": 7,
+  "screens": [
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {
+        "value": {
+          "kind": "number"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/home.screen.html"
+      },
+      "kind": "screen",
+      "path": "home",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "value": [
+          "number",
+          "-0"
+        ]
+      },
+      "tags": [],
+      "title": "Home",
+      "useCasePaths": [],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "status": "disabled"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {
+        "value": {
+          "kind": "number"
+        }
+      },
+      "details": {
+        "description": "",
+        "relatedDocs": [],
+        "sourcePath": "specs/home.screen.html"
+      },
+      "kind": "screen",
+      "path": "home/one",
+      "propSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "type": "object"
+      },
+      "props": {
+        "value": [
+          "number",
+          "-0"
+        ]
+      },
+      "tags": [],
+      "title": "Home",
+      "useCasePaths": [],
+      "variantOf": "home",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "disabled"
+          },
+          "documentKey": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": [
+    {
+      "children": [
+        {
+          "kind": "entry",
+          "path": "home/one"
+        }
+      ],
+      "kind": "entry",
+      "path": "home"
+    }
+  ],
+  "useCases": []
+}

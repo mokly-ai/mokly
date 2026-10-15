@@ -1,0 +1,25 @@
+{
+  "config": {
+    "roots": [
+      {
+        "dir": "specs"
+      },
+      {
+        "dir": ".",
+        "files": ["specs/**/*.screen.html"]
+      }
+    ]
+  },
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "file specs/home.screen.html is matched by roots[0] and roots[1]",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

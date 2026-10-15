@@ -1,0 +1,22 @@
+{
+  "config": {
+    "roots": [
+      {
+        "dir": "specs",
+        "files": ["{safe,..}/**/*.md"]
+      }
+    ]
+  },
+  "files": {
+    "specs/a.md": "# A"
+  },
+  "errors": [
+    {
+      "code": "config-invalid",
+      "message": "roots[0].files: not a safe relative POSIX glob: \"../**/*.md\"",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

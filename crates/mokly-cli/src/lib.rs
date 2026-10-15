@@ -2,6 +2,8 @@
 
 #![warn(unreachable_pub)]
 
+pub mod build;
+pub mod build_output;
 pub mod codes;
 pub mod errors;
 pub mod grammar;

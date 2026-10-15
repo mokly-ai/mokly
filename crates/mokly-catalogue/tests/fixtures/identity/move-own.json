@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nmovedFrom: home\n---\n<h1>Home</h1>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-moved-from",
+      "message": "specs/home.screen.html: movedFrom home equals the entry's own path",
+      "path": "specs/home.screen.html",
+      "line": 3,
+      "column": 1
+    }
+  ]
+}

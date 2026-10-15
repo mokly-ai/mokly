@@ -184,6 +184,13 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 | `html-unused-props`    | warning: a prop no reference in the body reads                                                                                                                                          |
 | `html-foster-parented` | warning: a component element moved out of a table                                                                                                                                       |
 
+The discovery warning messages are exactly
+`prop "<name>" is not read by the body` for `html-unused-props` and
+`component element <element> is moved out of a table` for `html-foster-parented`.
+Each shared body is checked once. The warning subject is the parent's
+complete entry path; both warnings use a component subject in a component
+body and an entry subject in a screen body. Source coordinates are one-based.
+
 Errors are `build-invalid` failures with the repository-relative file, line,
 and column. Warnings use the [build warning record](./mokly-build-warnings.md).
 

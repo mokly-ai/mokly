@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/a/README.md": "# A",
+    "specs/a/index.md": "# A"
+  },
+  "errors": [
+    {
+      "code": "duplicate-index",
+      "message": "directory specs/a has two index documents: README.md and index.md",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

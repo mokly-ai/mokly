@@ -617,17 +617,33 @@ components, Markdown documents, pages, and use cases, validates it, builds the
 catalogue model, and reports diagnostics; rendering and output follow in later
 milestones.
 
-- [ ] Implement roots, default globs, folder records, path identity, variants,
+- [x] Implement roots, default globs, folder records, path identity, variants,
       moves hints, and the diagnostics of the identity contracts in
       `mokly-catalogue`.
-- [ ] Implement the front matter parser and the file kinds decided in
+- [x] Implement the front matter parser and the file kinds decided in
       Milestone 1, with exact diagnostics and line and column reporting.
-- [ ] Implement the catalogue model in `mokly-model` with canonical JSON and
+- [x] Implement the catalogue model in `mokly-model` with canonical JSON and
       the generated TypeScript types; it lives in memory, with no file on
       disk.
-- [ ] Behaviour tests from fixtures: one catalogue per identity rule, every
+- [x] Behaviour tests from fixtures: one catalogue per identity rule, every
       diagnostic, and the reference catalogue's entry set.
-- [ ] Commit.
+- [x] Add the data-only configuration loader and editor JSON Schema, the
+      source-tree interface and working-tree adapter, and the definition-provider
+      boundary for the sidecar.
+- [x] Define public index v7, detail v1, and live descriptor v3 shapes, generate
+      their TypeScript modules, and gate reader versions before payload fields.
+- [x] Wire the discovery-only build command, warning reports, and strict mode.
+- [x] Run the repository gate, Rust checks, type regeneration, package build,
+      and the built shim smoke fixture.
+- [x] Complete the full gate after integration with the Milestone 2 teardown.
+      Recheck the example documentation links after its port.
+- [x] Commit the implementation checkpoint. The number-policy decision remains open.
+
+Evidence: `.context/rust-rebuild/sweeps/m4.md` and
+`.context/rust-rebuild/delegation/m4/report-1.md`.
+Integration evidence: `.context/rust-rebuild/delegation/m4/report-2.md` and
+`.context/rust-rebuild/delegation/m4/merge-decisions.md`.
+Review 1 fixes and evidence: `.context/rust-rebuild/delegation/m4/report-3.md`.
 
 ## Milestone 5: HTML rendering and the render cache
 
@@ -647,7 +663,8 @@ from Milestone 12.
       their scopes resolved, and the ownership annotations the comparison
       relies on.
 - [ ] Implement the render cache: content keys, the byte bound, eviction, and
-      the source tree trait over the working tree and Git trees; the `build`
+      reads through the existing `mokly-source-interface` for working and Git
+      trees; the `build`
       validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
@@ -674,6 +691,10 @@ without JavaScript.
       routes, the live descriptor, the event stream with the revision as the
       message id and the deployment id as its data, shutdown ordering, and
       the terminal output contract in the CLI.
+- [ ] Complete context-aware usage readers: validate recorded props against
+      component schemas; recompute instance and slot keys and `propsKey` with
+      the shared material key; validate usage references, ownership cycles,
+      source locations, duplicate records, root ranges, and view ordering.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
@@ -726,6 +747,10 @@ renders again.
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
+- [ ] Extend the definition-provider boundary for `describe` handles,
+      declared controls, story control hints, slot handles, excluded non-data
+      prop keys, and authoring diagnostics; emit `props-not-data` after path
+      derivation names the entry and key.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -886,6 +911,8 @@ Publish client final review and merge decisions:
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention
     after success; keep the existing retention until the user decides.
+  - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

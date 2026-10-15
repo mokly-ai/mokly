@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/statement.page.html": "---\ntitle: Home\n---\n<main>Statement</main>\n"
+  },
+  "errors": [
+    {
+      "code": "html-element",
+      "message": "page must start with <!doctype html> and contain one html, head and body element",
+      "path": "specs/statement.page.html",
+      "line": 4,
+      "column": 1
+    }
+  ]
+}

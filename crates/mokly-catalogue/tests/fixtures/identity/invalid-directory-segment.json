@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/bad.dir/a.md": "# Doc"
+  },
+  "errors": [
+    {
+      "code": "invalid-segment",
+      "message": "specs/bad.dir/a.md: directory name \"bad.dir\" is not a valid path segment; use letters, digits, hyphens and underscores",
+      "path": "specs/bad.dir/a.md",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}

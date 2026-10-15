@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/README.md": "# Doc"
+  },
+  "errors": [
+    {
+      "code": "root-index",
+      "message": "specs/README.md has no folder to be the index of; give it a path",
+      "path": "specs/README.md",
+      "line": 1,
+      "column": 1
+    }
+  ]
+}
