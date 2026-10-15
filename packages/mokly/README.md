@@ -15,6 +15,15 @@ npx --no-install mokly --help
 npx --no-install mokly --version
 ```
 
+The package ships `config.schema.json` for editor validation and completion.
+Set `"$schema": "./node_modules/@mokly/mokly/config.schema.json"` in a
+`mokly.config.json` at the consumer root. The native binary reads the same
+schema and resolves paths from that configuration file.
+
+The native binary owns commands and file writes. The render sidecar and the
+authoring API share this package under the
+[package contract](../../docs/protocol/mokly-package.md).
+
 The supported Node range is `>=22.14.0 <24.14.0 || >=24.19.0`. The shim checks
 it before package lookup. Supported hosts are Linux x64 and arm64 with glibc,
 macOS x64 and arm64, and Windows x64 with MSVC. Exact optional platform

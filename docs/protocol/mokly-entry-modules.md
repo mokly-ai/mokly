@@ -148,6 +148,22 @@ export; Mokly resolves the reference to that entry's path when it renders.
 The [authoring contract](./mokly-authoring.md#links) defines the complete
 link surface.
 
+## Shared Metadata Diagnostics
+
+Flow relationship failures use `invalid-metadata` with these exact texts:
+
+- `<location>: <entryPath> target <target> does not name a current <kind>`,
+  where the kind is `screen` or `use-case`;
+- `screen <screenPath> lists use case <flowPath>, but its steps do not name the screen`;
+- `use case <flowPath> steps through screen <screenPath>, but the screen does not list the use case`.
+
+Attribution failures from the definition provider use the same code with
+`definition is not exported by a resolved entry module` or
+`definition source is not inventoried`. Invalid definitions stay present as
+relationship targets after their metadata and paths are resolved. Their own
+body, link, and flow-target checks run once the definitions are valid. A
+failed flow or screen does not cause a reciprocal-membership error in its peers.
+
 ## Diagnostics
 
 | Code                      | Exact text                                                                                                             |

@@ -30,14 +30,17 @@ Run the steps in this order:
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.95.0 with
    rustfmt and Clippy from `rust-toolchain.toml`. That file also selects the
    toolchain for every command in the checkout.
-5. Run `npm ci`. Write the lowercase SHA-256 digest of `package-lock.json`
+5. Run `npm ci`.
+6. Run `cargo xtask build-native` to build the host native artifact.
+7. Write the lowercase SHA-256 digest of `package-lock.json`
    plus a newline to `$HOME/.mokly-testbox/package-lock.sha256`.
-   Create the stamp directory if needed. Write the stamp only after success.
-6. Run `npx playwright install --with-deps chromium`.
-7. Write the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` to `/etc/environment`.
+   Create the stamp directory if needed. Write the stamp only after both
+   installation and the native build succeed.
+8. Run `npx playwright install --with-deps chromium`.
+9. Write the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` to `/etc/environment`.
    Replace previous entries for those two names. Preserve other entries.
    New Testbox SSH sessions must use Node 22.14.0 and Chromium.
-8. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
+10. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
 
 Warmup selects a 30-minute idle timeout. Readiness still uses `10m`.
 The pinned action does not detect the SSH session in this environment.

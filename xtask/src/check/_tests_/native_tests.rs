@@ -5,12 +5,30 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::CommandRunnerRunMock;
+use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 
 use super::commands::commands_for;
 use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
+
+#[test]
+fn every_native_command_stays_covered_by_the_local_gate() {
+    let mut local: Vec<_> = VerificationSuite::LOCAL
+        .into_iter()
+        .flat_map(|suite| commands_for(suite, None, DependencyAudit::Baseline))
+        .collect();
+    if local.contains(&CommandSpec::new("npm").args(["run", "build"])) {
+        local.push(CommandSpec::new("cargo").args(["xtask", "build-native"]));
+    }
+    for command in commands_for(VerificationSuite::Native, None, DependencyAudit::Baseline) {
+        assert!(
+            local.contains(&command),
+            "Native command has no local coverage: {}",
+            command.display()
+        );
+    }
+}
 
 #[test]
 fn selected_native_builds_once_then_runs_workspace_tests() {

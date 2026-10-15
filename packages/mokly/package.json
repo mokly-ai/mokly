@@ -23,6 +23,7 @@
   "files": [
     "bin",
     "dist",
+    "config.schema.json",
     "LICENSE",
     "README.md",
     "docs/guides",

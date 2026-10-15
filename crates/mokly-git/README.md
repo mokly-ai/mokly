@@ -17,8 +17,14 @@ process groups and Windows job objects.
 
 `SystemRunner` starts Git without a shell. It removes repository-redirection
 environment variables and captures stdout and stderr concurrently. Each
-stream is limited to 64 MiB by default. Exceeding a bound kills the process
-tree before returning `OutputLimit`.
+stream is limited to at most 64 MiB. A request can set a smaller bound.
+An excessive request fails with `InvalidOutputLimit` before process setup.
+Exceeding the selected bound kills the process tree before returning
+`OutputLimit`. `run_cancellable` accepts an explicit cancellation boundary.
+The runner sends termination to the process tree, escalates to a forceful kill
+after one second, reaps the child, and drains both pipes. Only an operation
+that acted on cancellation returns `Cancelled`. Other typed failures keep
+their own category.
 
 `BoundedRunner` consumes `dyn Runner`. The default budgets are 128 path
 arguments and 16 KiB of conservative encoded argument cost. A path too large

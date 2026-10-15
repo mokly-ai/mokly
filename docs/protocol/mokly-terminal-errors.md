@@ -28,8 +28,8 @@ Mokly catalogue already published for this commit.
 The counted lines show the exact plural rule for any counted summary:
 singular only for one. `<outDir>` is the output directory relative to the
 repository. `Mokly publish build: <directory>` appears once per `publish` process, before
-its build starts, and names the private directory that `publish` keeps after
-a failed upload. `Mokly cache: <directory>` appears at most once per process, when the command first opens the base-side
+its build starts, and names the output inside the private directory that
+`publish` keeps after a failed upload. `Mokly cache: <directory>` appears at most once per process, when the command first opens the base-side
 extraction cache or the dependency install cache, and names the directory
 under the operating system's cache directory. `<uploaded>` and `<unchanged>`
 use the same decimal counts as rich mode. A publish prints one counted line
@@ -40,9 +40,13 @@ Plain commands add no phase or watch-event lines.
 [Build warnings](./mokly-build-warnings.md) use stderr. A warning-free
 successful plain command writes nothing to stderr except requested timing
 JSON; errors use stderr. Expected plain errors are exactly
-`[mokly/<code>] <message>\n`, where `<message>` is one line; a diagnostic with
+`[mokly/<code>] <message>\n`, where `<message>` is one line unless its exact
+text lists locations; a diagnostic with
 a source location starts it with `<file>:<line>:<column>`,
-repository-relative. Timing mode keeps the same stdout and adds its JSON
+repository-relative. A diagnostic whose exact text lists locations prints
+those locations as following lines, as `git-uncommitted` does. Each line
+escapes its control characters and has its own width bound in rich mode.
+Timing mode keeps the same stdout and adds its JSON
 lines to stderr beside warnings and failures.
 
 The
@@ -130,3 +134,10 @@ when its edit distance is unambiguous; otherwise it uses the standard help
 hint. Unknown options likewise quote the option in the headline. Argument
 values and the original typed error are unchanged outside this presentation
 layer.
+
+Private publication-directory allocation failures use `export-invalid`. The
+plain line names the temporary root and says to set `TMPDIR`, or `TMP` on
+Windows, to a writable directory outside the checkout. Rich output uses headline
+`The publish build directory could not be prepared.`, the temporary-root
+detail, and that same hint once. A missing Git checkout or committed HEAD
+uses `git-failed` with `Publish requires a Git checkout with a committed HEAD.`

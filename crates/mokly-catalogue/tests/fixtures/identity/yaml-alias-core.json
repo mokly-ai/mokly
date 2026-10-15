@@ -1,0 +1,7 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\ndescription: &value no\nprops: {label: *value}\n---\n<p>{{label}}</p>\n"
+  },
+  "paths": ["home"]
+}

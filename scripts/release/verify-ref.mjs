@@ -1,7 +1,6 @@
 import path from "node:path";
 
 import { verifyReleaseRefs } from "./refs.mjs";
-import { inspectViewerArchive } from "./viewer.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const viewerRef = process.argv[2];
@@ -15,5 +14,8 @@ if (
     "usage: verify-ref.mjs {viewer-vX.Y.Z} [--artifacts {directory}]",
   );
 const head = await verifyReleaseRefs(repositoryRoot, viewerRef);
-if (artifacts) await inspectViewerArchive(artifacts);
+if (artifacts) {
+  const { inspectViewerArchive } = await import("./viewer.mjs");
+  await inspectViewerArchive(artifacts);
+}
 process.stdout.write(`Verified ${viewerRef} at ${head}.\n`);

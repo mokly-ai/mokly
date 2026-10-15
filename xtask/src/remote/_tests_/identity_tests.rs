@@ -19,7 +19,9 @@ fn identity_json_matches_exact_fixture_bytes() {
     .unwrap();
     assert_eq!(
         identity.json().as_bytes(),
-        include_bytes!("fixtures/identity.json")
+        include_str!("fixtures/identity.json")
+            .replace("\r\n", "\n")
+            .as_bytes()
     );
 }
 

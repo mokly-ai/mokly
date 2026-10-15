@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/Folder/a.md": "# A",
+    "specs/folder/b.md": "# B"
+  },
+  "errors": [
+    {
+      "code": "case-collision",
+      "message": "paths Folder and folder differ only by letter case:\n  specs/Folder/a.md\n  specs/folder/b.md",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

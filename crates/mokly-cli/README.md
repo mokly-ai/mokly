@@ -11,6 +11,7 @@ presentation. The npm shim starts this binary with inherited streams.
 - Use watched Serve when the command is omitted.
 - Select plain or rich output and protect terminal diagnostics.
 - Keep success and failure exit statuses at 0 and 1.
+- Load JSON configuration and prepare the validated catalogue through injected services.
 
 ## What This Crate Does
 
@@ -27,7 +28,24 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust core. The binary owns catalogue work and
-file writes.
+file writes. Catalogue counts include variants. Shared-body warnings name
+the parent once. Identity diagnostics keep their location continuation
+lines in both plain and rich output. A diagnostic omits its inner code tag
+only when it equals the command's outer code. Configuration locations are
+repository-relative, or use the basename when the root does not contain
+the configuration file.
+
+Publish validates credentials and the committed clean checkout before it calls
+the CLI-owned `StaticOutput` adapter. It passes the invocation directory for
+configuration discovery. It reports a child output path inside a private
+external directory before the build starts. That parent also confines the
+output reservation. `mokly-publish` owns the exchange and cached preparation;
+`mokly-model` owns output formats and the marker writer. The static output adapter reports a single `build-invalid` line
+when its implementation is unavailable. Checkout failures list at most 20
+unique sorted paths and their recovery hint in both output modes. Completed
+output stays in the private directory after an upload failure. The warning
+policy waits for a user decision. The isolated `warnings_are_fatal` function
+makes publish warnings fatal with either value of `--strict`.
 
 ## Quick Start
 
@@ -49,7 +67,8 @@ cargo clippy -p mokly-cli --all-targets -- -D warnings
 - [Grammar](./src/grammar.rs) and [option validation](./src/options.rs).
 - [Output](./src/output.rs), [error copy](./src/errors.rs), and
   [redaction](./src/redaction.rs).
-- [Composition root](./src/entry.rs).
+- [Composition root](./src/entry.rs) and [static output adapter](./src/publication/mod.rs).
+- [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs
 

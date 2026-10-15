@@ -13,3 +13,6 @@ mokly-platform = { path = "crates/mokly-platform" }
 
 mokly-sidecar = { path = "crates/mokly-sidecar" }
 mokly-git = { path = "crates/mokly-git" }
+mokly-publish = { path = "crates/mokly-publish" }
+mokly-source-interface = { path = "crates/mokly-source-interface" }
+mokly-catalogue = { path = "crates/mokly-catalogue" }

@@ -1,0 +1,15 @@
+{
+  "config": {},
+  "files": {
+    "specs/guide.md": "---\n title: Bad\n---\n"
+  },
+  "errors": [
+    {
+      "code": "document-front-matter",
+      "message": "specs/guide.md: front matter line 2 is not \"key: value\"",
+      "path": "specs/guide.md",
+      "line": 2,
+      "column": 1
+    }
+  ]
+}

@@ -189,3 +189,19 @@ complete gate. Only the complete `cargo xtask check`, or the validated CI
 aggregate defined in
 [CI verification](./ci-verification.md#verification-boundary), provides
 complete verification.
+
+## Native TLS Build Tools
+
+The publish client uses reqwest with rustls and the AWS-LC provider. Its
+non-FIPS build compiles bundled C and assembly for the target. Install a
+supported C compiler and archiver for each target. The normal Linux build
+uses the cc builder; CMake is a fallback. Windows x64 uses the provider's
+prebuilt NASM objects when that feature is enabled by rustls. Cross builds
+need target headers, libraries, and a linker as well as the Rust target.
+
+The workspace forces `AWS_LC_SYS_USE_SYSTEM=0` in `.cargo/config.toml`.
+This disables automatic host AWS-LC discovery through `OPENSSL_DIR` and
+pkg-config. Release checks inspect all five binaries for unintended crypto
+shared-library dependencies. Run the native CI on macOS and Windows before
+release acceptance. The [AWS-LC requirements](https://aws.github.io/aws-lc-rs/requirements/index.html)
+list the supported native toolchains.

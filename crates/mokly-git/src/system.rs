@@ -1,13 +1,15 @@
 //! Host Git adapter with bounded concurrent pipe reads.
 
 use std::io::Read;
-use std::process::{Command, Stdio};
-use std::sync::Arc;
+use std::process::{Child, Command, ExitStatus, Stdio};
+use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
-use crate::command::{Output, Request, Runner};
+use crate::cancellation::{ChildShutdown, graceful};
+use crate::command::{Cancellation, DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
 use crate::error::{Error, InternalError, IoResult, Result};
 
 /// Git process adapter composed with process-tree ownership.
@@ -18,6 +20,33 @@ pub struct SystemRunner {
 
 impl Runner for SystemRunner {
     fn run(&self, request: &Request) -> Result<Output> {
+        self.execute(request, None)
+    }
+
+    fn run_cancellable(
+        &self,
+        request: &Request,
+        cancellation: &dyn Cancellation,
+    ) -> Result<Output> {
+        self.execute(request, Some(cancellation))
+    }
+}
+
+impl SystemRunner {
+    fn execute(
+        &self,
+        request: &Request,
+        cancellation: Option<&dyn Cancellation>,
+    ) -> Result<Output> {
+        if cancellation.is_some_and(Cancellation::is_cancelled) {
+            return Err(Error::Cancelled);
+        }
+        if request.output_limit > DEFAULT_OUTPUT_LIMIT {
+            return Err(Error::InvalidOutputLimit {
+                limit: request.output_limit,
+                maximum: DEFAULT_OUTPUT_LIMIT,
+            });
+        }
         tracing::debug!(
             arguments = request.args.len(),
             "starting bounded Git command"
@@ -68,8 +97,10 @@ impl Runner for SystemRunner {
         let error_group = Arc::clone(&group);
         let output = thread::spawn(move || capture(stdout, limit, output_group.as_ref()));
         let errors = thread::spawn(move || capture(stderr, limit, error_group.as_ref()));
-        let status = child.wait().git();
-        if status.is_err() {
+        let status = wait(&mut child, group.as_ref(), cancellation, &|| {
+            output.is_finished() && errors.is_finished()
+        });
+        if status.is_err() && !matches!(status, Err(Error::Cancelled)) {
             let _ = group.kill();
             let _ = child.wait();
         }
@@ -94,6 +125,40 @@ impl Runner for SystemRunner {
     }
 }
 
+fn wait(
+    child: &mut Child,
+    group: &dyn ProcessGroup,
+    cancellation: Option<&dyn Cancellation>,
+    drained: &dyn Fn() -> bool,
+) -> Result<ExitStatus> {
+    let Some(cancellation) = cancellation else {
+        return child.wait().git();
+    };
+    let mut status = None;
+    loop {
+        if status.is_none() {
+            status = child.try_wait().git()?;
+        }
+        if let Some(status) = status.filter(|_| drained()) {
+            return Ok(status);
+        }
+        if cancellation.is_cancelled() {
+            let complete = graceful(
+                group,
+                &ChildShutdown {
+                    child: Mutex::new(child),
+                    drained,
+                },
+            )?;
+            if !complete {
+                child.wait().git()?;
+            }
+            return Err(Error::Cancelled);
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+}
+
 fn capture(reader: impl Read, limit: usize, group: &dyn ProcessGroup) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
     let result = reader
@@ -106,3 +171,7 @@ fn capture(reader: impl Read, limit: usize, group: &dyn ProcessGroup) -> Result<
     }
     Ok(bytes)
 }
+
+#[cfg(test)]
+#[path = "_tests_/system_tests.rs"]
+mod system_tests;

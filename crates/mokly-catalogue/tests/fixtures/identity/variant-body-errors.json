@@ -1,0 +1,22 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nvariants:\n  - {slug: a, title: A}\n  - {slug: b, title: B}\n---\n<ui-unknown></ui-unknown><a href=\"mock:missing\">Link</a>"
+  },
+  "errors": [
+    {
+      "code": "html-element",
+      "message": "unknown element ui-unknown",
+      "path": "specs/home.screen.html",
+      "line": 7,
+      "column": 1
+    },
+    {
+      "code": "unknown-link-target",
+      "message": "specs/home.screen.html: link target missing does not exist",
+      "path": "specs/home.screen.html",
+      "line": 7,
+      "column": 29
+    }
+  ]
+}

@@ -20,6 +20,8 @@
     "types": ["node"]
   },
   "include": [
+    "packages/mokly/src/**/*.ts",
+    "packages/mokly/src/**/*.d.mts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "packages/viewer/src/**/*.ts",

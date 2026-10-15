@@ -1,5 +1,7 @@
 # Catalogue Upload Validation v2
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This document supplements the
 [Catalogue Upload Exchange](./mokly-upload-exchange.md) with rejection
 categories, upload limits, and receiver validation.
