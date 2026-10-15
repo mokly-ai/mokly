@@ -8,6 +8,10 @@ import { createInterface } from "node:readline";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { fenceDetail } from "../packages/viewer/src/catalogue/detail_fences.js";
+import { readEntryDetail } from "../packages/viewer/src/catalogue/detail_reader.js";
+import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
+
 const shim = fileURLToPath(
   new URL("../packages/mokly/bin/mokly.mjs", import.meta.url),
 );
@@ -41,8 +45,12 @@ test(
       "---\ntitle: Button\nelement: ui-button\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}, required: [label]}\nprops: {label: Saved}\n---\n<button>{{label}}</button>",
     );
     await fs.writeFile(
+      path.join(directory, "specs/panel.component.html"),
+      "---\ntitle: Panel\nelement: ui-panel\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\n---\n<section><slot></slot></section>",
+    );
+    await fs.writeFile(
       path.join(directory, "specs/home.screen.html"),
-      '---\ntitle: Home\n---\n<ui-button label="Used"></ui-button>',
+      '---\ntitle: Home\n---\n<ui-panel><ui-button label="Used"></ui-button></ui-panel>',
     );
     const environment: NodeJS.ProcessEnv = {
       ...process.env,
@@ -111,6 +119,36 @@ test(
               view.usage.status === "ready",
           ),
         );
+        const model = readCatalogueIndex(index);
+        assert.equal(
+          fenceDetail(model, { path: "button" }, readEntryDetail(detail)).kind,
+          "accepted",
+        );
+        const home = readEntryDetail(
+          await (
+            await fetch(`${url}/mokly-viewer/entries/home.json`, { signal })
+          ).json(),
+        );
+        assert.equal(
+          fenceDetail(model, { path: "home" }, home).kind,
+          "accepted",
+        );
+        for (const { usage } of home.views) {
+          assert.equal(usage.status, "ready");
+          if (usage.status !== "ready") assert.fail("Home usage is not ready");
+          assert.equal(usage.instances.length, 2);
+          assert.equal(usage.slots.length, 1);
+          const button = usage.instances.find(
+            (use) => use.componentId === "button",
+          );
+          assert.equal(button?.slotKey, usage.slots[0]!.key);
+          assert.ok(
+            detail.workspace.usedBy.some(
+              (use: { entryPath: string; instanceKey: string }) =>
+                use.entryPath === "home" && use.instanceKey === button?.key,
+            ),
+          );
+        }
         break;
       }
       await stream.read();

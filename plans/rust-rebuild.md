@@ -723,6 +723,7 @@ Smoke and screenshots: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m6-smok
 Verification and report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-1.md`.
 Integration report: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-2.md`.
 Review fixes and smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-3.md`.
+Viewer key domains and complete smoke: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m6/report-4.md`.
 
 ## Milestone 7: Viewer reads read model v7
 
