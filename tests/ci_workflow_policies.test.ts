@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
 import { parse } from "yaml";
+
+import {
+  assertNodeVersion,
+  SUPPORTED_NODE_RANGE,
+  TESTED_NODE_VERSIONS,
+} from "../packages/mokly/src/version.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -132,7 +135,11 @@ test("Node version files agree with the package engines and README", async () =>
   const lock = JSON.parse(lockSource) as {
     packages: { "": { engines: { node: string } } };
   };
-  assert.match(nvmrc.trim(), /^\d+\.\d+\.\d+$/u);
+  assert.equal(nvmrc.trim(), TESTED_NODE_VERSIONS.at(-1));
+  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
+  const cli = JSON.parse(await readText("packages/mokly/package.json"));
+  assert.equal(cli.engines.node, SUPPORTED_NODE_RANGE);
+  for (const version of TESTED_NODE_VERSIONS) assertNodeVersion(version);
   const { satisfies } = await import("semver");
   assert.ok(
     satisfies(nvmrc.trim(), manifest.engines.node),
@@ -153,52 +160,32 @@ test("Node version files agree with the package engines and README", async () =>
   );
 });
 
-test("the Testbox toolchain matches the CI toolchain", async (context) => {
+test("the Testbox toolchain matches the CI toolchain", async () => {
   const ci = (await readDocument(CI_WORKFLOW)).document;
   const testbox = (await readDocument(TESTBOX_WORKFLOW)).document;
   const testboxSteps = stepsOf(testbox);
-  const ciSteps = stepsOf(ci);
   const repository =
     Object.values(ci.jobs ?? {}).find((job) =>
       job.steps?.some((step) => step.name === "Run repository verification"),
     )?.steps ?? [];
-  const selector = namedStep(
-    ciSteps,
-    "Select Node verification profile",
-    CI_WORKFLOW,
-  );
-  assert.ok(selector.run);
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-policy-"));
-  context.after(() => fs.rm(root, { recursive: true, force: true }));
-  const output = path.join(root, "output");
-  await promisify(execFile)(
-    "bash",
-    ["-e", "-o", "pipefail", "-c", selector.run],
-    {
-      env: {
-        ...process.env,
-        RELEASE_PULL_REQUEST: "false",
-        GITHUB_OUTPUT: output,
-      },
-    },
-  );
-  const line = (await fs.readFile(output, "utf8"))
-    .split("\n")
-    .find((line) => line.startsWith("node-matrix="));
-  assert.ok(line);
-  const nodeVersions: (string | number)[] = JSON.parse(
-    line.slice("node-matrix=".length),
-  );
+  const nativeSteps =
+    Object.values(ci.jobs ?? {}).find((job) =>
+      job.steps?.some((step) =>
+        /cargo xtask check --suite native/.test(step.run ?? ""),
+      ),
+    )?.steps ?? [];
   const nodeVersion = namedStep(
     testboxSteps,
     "Set up Node.js",
     TESTBOX_WORKFLOW,
   ).with?.["node-version"];
-  assert.ok(typeof nodeVersion === "string" || typeof nodeVersion === "number");
-  assert.ok(
-    nodeVersions.includes(nodeVersion),
-    "the Testbox must use a CI Node runtime",
+  assert.equal(
+    nodeVersion,
+    namedStep(nativeSteps, "Set up Node.js", CI_WORKFLOW).with?.[
+      "node-version"
+    ],
   );
+  assert.equal(nodeVersion, TESTED_NODE_VERSIONS[0]);
   for (const name of ["Set up npm", "Set up Rust"]) {
     const expected = namedStep(repository, name, "ci.yml repository job").run;
     assert.ok(expected, `the CI repository job's "${name}" step runs a script`);

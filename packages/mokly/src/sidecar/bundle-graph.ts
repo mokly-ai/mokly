@@ -17,20 +17,30 @@ export function moduleGraph(
   const own = (file: string) =>
     file.startsWith("mokly-authoring:") ||
     file.startsWith("mokly-jsx:") ||
-    file === "mokly-entry";
+    file.startsWith("mokly-style:") ||
+    file === "mokly-entry" ||
+    path.normalize(file) === path.join(paths.sourceRoot, "mokly-entry");
   const name = (file: string) => {
     const absolute = path.resolve(paths.sourceRoot, clean(file));
     const logical = paths.name(absolute);
     physical.set(logical, absolute);
     return logical;
   };
+  const imports = (file: string): string[] =>
+    (metafile.inputs[file]?.imports ?? []).flatMap((edge) =>
+      edge.external
+        ? []
+        : edge.path.startsWith("mokly-style:")
+          ? imports(edge.path)
+          : own(edge.path)
+            ? []
+            : [name(edge.path)],
+    );
   const modules = Object.entries(metafile.inputs)
     .filter(([file]) => !own(file))
-    .map(([file, value]) => ({
+    .map(([file]) => ({
       path: name(file),
-      imports: value.imports
-        .filter((edge) => !edge.external && !own(edge.path))
-        .map((edge) => name(edge.path)),
+      imports: imports(file),
     }))
     .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return { modules, physical };

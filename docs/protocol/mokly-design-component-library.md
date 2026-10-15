@@ -165,10 +165,12 @@ Controls below use text, boolean, number and primitive enum selections only.
     sets `aria-busy`, and makes the body a status.
     Controls: title, body, loading and action label. Keep the canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
-15. **Flow step:** positive step number, title, description, owning screen path
-    and `children` slot containing the reused screen preview. Controls: number,
-    title and description. References still point to the standalone owning
-    screen, and flows never become the original home of screen markup.
+15. **Flow step:** positive step number, title, description, the owning
+    screen's title and path, and `children` slot containing the reused screen
+    preview. The reference reads `This screen in the catalogue: <title> →`.
+    Controls: number, title, description and screen title. References still
+    point to the standalone owning screen, and flows never become the original
+    home of screen markup.
 16. **Appearance selector:** the catalogue's `auto/light/dark` setting and a
     compact flag for narrow bars. Controls: setting and compact. It is a native
     selection control named Appearance, holding one value; it is the catalogue's

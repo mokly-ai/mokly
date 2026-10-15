@@ -90,7 +90,7 @@ export function shouldRerender(
   previousKey: string,
   key: string,
   dirty: boolean,
-  unavailable: string | undefined,
+  editable: boolean,
 ): boolean {
-  return previousKey !== key && dirty && unavailable === undefined;
+  return previousKey !== key && dirty && editable;
 }

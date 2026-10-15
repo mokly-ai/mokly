@@ -1,12 +1,13 @@
 // Example renderer adapter proving the consumer contract against the real
 // Firna stack: it wraps every React render in the shared @firna/ui theme for
 // the view's colour scheme. The sidecar collects react-native-web's atomic
-// styles and the style elements below, and the core assembles the document.
+// styles, and the core assembles the document. The configured stylesheets
+// colour the plain HTML around the components in each scheme.
 
 import { createSharedUiTheme, SharedUiThemeProvider } from "@firna/ui/theme";
 import type { ReactNode } from "react";
 
-import type { ColorScheme, RenderInput } from "@mokly/mokly";
+import type { RenderInput } from "@mokly/mokly";
 
 import { LibraryHost } from "./specs/design/library/host.js";
 import { DesignRenderedScheme } from "./specs/design/parts/appearance.js";
@@ -17,19 +18,10 @@ const themes = {
   light: createSharedUiTheme(tokens),
 };
 
-/** Body text and link colours for plain HTML outside Firna components. */
-function documentStyles(colorScheme: ColorScheme): string {
-  const theme = themes[colorScheme];
-  return colorScheme === "dark"
-    ? `body{margin:0;background:${theme.colors.bg};color:${theme.colors.ink}}main a{color:${darkTokens.colors.accent}}`
-    : `body{margin:0;background:${theme.colors.bg}}`;
-}
-
 export default function render(input: RenderInput): ReactNode {
   return (
     <DesignRenderedScheme scheme={input.colorScheme}>
       <SharedUiThemeProvider theme={themes[input.colorScheme]}>
-        <style>{documentStyles(input.colorScheme)}</style>
         <div
           data-color-scheme={input.colorScheme}
           data-example-renderer={input.viewport}

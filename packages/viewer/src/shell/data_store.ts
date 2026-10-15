@@ -19,6 +19,7 @@ import {
   type ShellDataSnapshot,
 } from "./data_commit.js";
 import { ShellDataController } from "./data_controller.js";
+import type { LiveEditingStatus } from "./data_descriptor.js";
 import {
   routeDetailRequests,
   routeKey,
@@ -28,9 +29,13 @@ import {
 import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellState } from "./store_state.js";
 
-/** The installed render capability of Serve. */
+/** The installed render capability of Serve and how live editing stands. */
 export interface ShellLiveState {
   descriptor: LiveDescriptorV3 | undefined;
+  /** Ready, preparing, or failed while the index is live; absent elsewhere. */
+  editing: LiveEditingStatus | undefined;
+  /** Load the descriptor again after its load failed. */
+  retry(): void;
   source: ShellLiveSource | undefined;
 }
 
@@ -113,9 +118,15 @@ export function useShellDataStore(input: {
     snapshot.details,
   ]);
   const descriptor = controller.descriptor;
+  const editing = controller.editing;
   const live = useMemo<ShellLiveState>(
-    () => ({ descriptor, source: controller.live }),
-    [controller, descriptor, version],
+    () => ({
+      descriptor,
+      editing,
+      retry: controller.retryDescriptor,
+      source: controller.live,
+    }),
+    [controller, descriptor, editing, version],
   );
   return { snapshot, routeDelivery, live };
 }

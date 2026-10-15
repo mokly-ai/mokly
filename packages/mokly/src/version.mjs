@@ -1,3 +1,7 @@
+/** The declared Node support range and the local verification representatives. */
+export const SUPPORTED_NODE_RANGE = ">=22.14.0 <24.14.0 || >=24.19.0";
+export const TESTED_NODE_VERSIONS = ["22.14.0", "24.21.0"];
+
 /** Enforce the package's Node engine range before resolving a native binary. */
 export function assertNodeVersion(version) {
   const match = /^v?(\d+)\.(\d+)\.(\d+)$/.exec(version);

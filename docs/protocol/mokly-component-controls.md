@@ -58,24 +58,22 @@ or above `minimum`. A number control offers only values the schema accepts.
 Select options are non-empty, have non-empty labels, and unique values the
 schema accepts.
 
-A control starts from the shown entry's props, that is the entry's own props
-or a variant's merged props, updates the preview after validation, and has a
-label from the control's `label`, else the schema `title`, else the prop
-name. No invented sample value replaces a missing value; an optional prop
-exposes its unset state, and `unset` removes only an optional prop. Empty
-text stays a string. Reset restores the shown entry's complete props.
-Navigating to another entry discards temporary edits, as does a reload.
-Viewport and scheme changes keep validated edits and render them in the new
-context. Temporary state is never written to a source, never encoded in a
-URL, local storage, a comparison, or a Changes count, and never enters the
-catalogue model.
+A control starts from the shown entry's props, that is the entry's own props or
+a variant's merged props, updates the preview after validation, and has a label
+from the control's `label`, else the schema `title`, else the prop name. No
+invented sample value replaces a missing value; an optional prop exposes its
+unset state, and `unset` removes only an optional prop. Empty text stays a
+string. Reset restores the shown entry's complete props. Navigating to another
+entry discards temporary edits, as does a reload. Viewport and scheme changes
+keep validated edits and render them in the new context. Temporary state is
+never written to a source, never encoded in a URL, local storage, a comparison,
+or a Changes count, and never enters the catalogue model.
 
 Temporary edits operate in Current. Selecting a comparison restores the saved
-props and compares the base render with the current render of the saved
-props; the controls are unavailable while comparing, and the product explains
-that the comparison shows the saved props. A render response cannot
-overwrite a comparison, another entry, another viewport or scheme, or a
-different page.
+props and compares the base render with the current render of the saved props;
+the controls are unavailable while comparing, and the product explains that the
+comparison shows the saved props. A render response cannot overwrite a
+comparison, another entry, another viewport or scheme, or a different page.
 
 ## Rendering Boundary
 
@@ -173,19 +171,18 @@ not equal the listening port, so forwarded local ports work. Serve binds only
 nothing and never repair `Host`, `Origin`, or authorization.
 
 On a render POST, `Origin` must equal `http://` plus the accepted `Host`
-exactly, including its explicit port, and `X-Mokly-Render-Token` must equal
-the render token. No case folding, default-port removal, trailing slash, or
-scheme substitution is allowed. Preview GET and HEAD require `Host`
-validation and the authenticated render id, without `Origin` or the token.
-The token is a random value chosen once per server process, delivered only
-in the render capability of the live descriptor v3 as
-`render: { url: "/mokly-viewer/components/render", token }`, and never
-present in the index, a detail, a document, or consumer frames; a new
-server process means a new token. There is no permissive cross-origin
-access: Serve sends no CORS header on any route, so a foreign page cannot
-read the descriptor or call the route, and missing or invalid authorization
-returns 403. Loading a foreign web page cannot cause consumer render code to
-execute through this route.
+exactly, including its explicit port, and `X-Mokly-Render-Token` must equal the
+render token. No case folding, default-port removal, trailing slash, or scheme
+substitution is allowed. Preview GET and HEAD require `Host` validation and the
+authenticated render id, without `Origin` or the token. The token is a random
+value chosen once per server process, delivered only in the render capability of
+the live descriptor v3 as `render: { url: "/mokly-viewer/components/render",
+token }`, and never present in the index, a detail, a document, or consumer
+frames; a new server process means a new token. There is no permissive
+cross-origin access: Serve sends no CORS header on any route, so a foreign page
+cannot read the descriptor or call the route, and missing or invalid
+authorization returns 403. Loading a foreign web page cannot cause consumer
+render code to execute through this route.
 
 Text and number edits are debounced by 150 ms; boolean and select edits
 submit immediately. The shell creates one random 32-hex `pageId` per mounted
@@ -204,28 +201,30 @@ fails with a render failure; a sidecar render that passes its own deadline
 follows the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts),
 so a hanging consumer render cannot hang Browse or shutdown.
 
-Preview document bundles, with usage, props, and resource bytes, live
-in a process-local memory store behind opaque render ids; nothing is
-spilled to disk, not to the cache directory, the OS temporary directory, or
-any root. Temporary documents never enter the saved document cache, Git
-changed-path calculation, the watch set, or a publication. Content-addressed
-fragments may use the bounded fragment cache. Reading public assets is allowed;
-generated asset bytes stay in the same memory bundle as their document and
-are served through its render id. At most sixteen bundles and 32 MiB of
-encoded document, metadata, and resource bytes are kept; a result over the
-budget is rejected, and a bundle expires after five minutes. A valid but
-expired id returns 410 without an unbounded expired-id table; a malformed or
-foreign id returns 404. Eviction never reuses an id, and a page may re-render
-its current validated props after expiry. Every memory response uses
-`Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and a fixed
-validated MIME type.
+Preview document bundles, with usage, props, and resource bytes, live in a
+process-local memory store behind opaque render ids; nothing is spilled to disk,
+not to the cache directory, the OS temporary directory, or any root. Temporary
+documents never enter the saved document cache, Git changed-path calculation,
+the watch set, or a publication. Content-addressed fragments may use the bounded
+fragment cache. Reading public assets is allowed; generated asset bytes stay in
+the same memory bundle as their document and are served through its render id.
+At most sixteen bundles and 32 MiB of encoded document, metadata, and resource
+bytes are kept; a result over the budget is rejected, and a bundle expires after
+five minutes. A valid but expired id returns 410 without an unbounded expired-id
+table; a malformed or foreign id returns 404. Eviction never reuses an id, and a
+page may re-render its current validated props after expiry. Every memory
+response uses `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and
+a fixed validated MIME type.
 
 A publication with a new revision invalidates the old revision's requests: a
-request that carries an older revision returns 409, queued work of the old
-state is discarded, and the shell retries with the installed revision after
-it adopts the new state. Server shutdown stops admission, rejects queued
-work, cancels active renders, and releases the memory store. Controls cannot
-delay a watched rebuild, a publication, or a comparison generation.
+request that carries an older revision returns 409, queued work of the old state
+is discarded, and the shell keeps the preview pending and retries with the
+installed revision after it adopts the new state; it shows the failure only when
+that retry fails. The shell checks each field and the props as a whole before it
+renders, so a 400 after those checks pass shows `These values are not valid
+together.` Shutdown stops admission, rejects queued work, cancels active
+renders, and releases the memory store. Controls cannot delay a watched rebuild,
+a publication, or a comparison generation.
 
 ## Verification
 

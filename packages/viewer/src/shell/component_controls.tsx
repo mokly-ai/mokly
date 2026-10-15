@@ -14,12 +14,20 @@ import type { ComponentWireProps } from "../components/prop_types.js";
 import type { ComponentOverride } from "../components/render_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
-import { ComponentControlsPanel } from "./component_controls_panel.js";
 import {
-  controlsUnavailable,
+  ComponentControlsPanel,
+  EditStatus,
+  type ControlsFocus,
+} from "./component_controls_panel.js";
+import {
+  controlsMode,
   controlViewKey,
+  draftNotice,
   initialComponentEditorState,
+  shownEditorState,
+  withExpiredPreview,
   withPreviews,
+  withRenderFailure,
 } from "./component_controls_state.js";
 import {
   acceptedRender,
@@ -35,12 +43,17 @@ import {
   type ControlDraftField,
   type ControlTarget,
 } from "./control_values.js";
-import { useViewerCapabilities } from "./data_context.js";
+import { useLiveEditingStart, useViewerCapabilities } from "./data_context.js";
+import { useFocusAfter } from "./focus_after.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** Control output consumed by both the stage and the Props panel. */
 export interface ComponentControlsResult {
   panel: ReactNode;
+  /** A render of the edits is in flight; the preview says so. */
+  pending: boolean;
+  /** The status region of an edit's render, outside the busy preview. */
+  previewStatus: ReactNode;
   previewViews: readonly GeneratedComponentView[];
   props?: ComponentWireProps;
 }
@@ -50,16 +63,20 @@ export function useComponentControls({
   comparing,
   contexts,
   data,
+  onCurrent,
   target,
   workspaceRef,
 }: {
   comparing: boolean;
   contexts: readonly GeneratedComponentView[];
   data: WorkspaceData;
+  /** Show Current instead of the comparison. */
+  onCurrent(): void;
   target: ControlTarget | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
 }): ComponentControlsResult {
   const capabilities = useViewerCapabilities();
+  const start = useLiveEditingStart();
   const previews = capabilities?.temporaryPreviews;
   const latestPreviews = useRef(previews);
   latestPreviews.current = previews;
@@ -74,13 +91,14 @@ export function useComponentControls({
     [scope, target],
   );
   const [stored, setStored] = useState(initial);
-  const state =
-    stored.scope === scope && (stored.dirty || stored === initial)
-      ? stored
-      : initial;
+  const state = shownEditorState(stored, initial);
   const [lifecycle] = useState(() => new EditLifecycle());
+  const focus = useFocusAfter<ControlsFocus>("heading");
   const pageIds = useRef(new Map<string, string>());
-  const unavailable = controlsUnavailable(target, comparing, Boolean(previews));
+  const mode = target
+    ? controlsMode(target, comparing, previews ? "ready" : start?.status)
+    : undefined;
+  const editable = mode === "editable";
   const contextKey = editContextKey(contexts, previews);
   const cancel = useCallback(() => lifecycle.cancel(), [lifecycle]);
 
@@ -90,12 +108,10 @@ export function useComponentControls({
       overrides: Readonly<Record<string, ComponentOverride>>,
     ) => {
       const live = latestPreviews.current;
-      if (!target || !live || unavailable) return;
+      if (!target || !live || !editable) return;
       const operation = lifecycle.begin();
       setStored((current) =>
-        current.scope === scope
-          ? { ...current, failure: undefined, status: "Updating preview…" }
-          : current,
+        current.scope === scope ? { ...current, notice: "pending" } : current,
       );
       try {
         const results = await Promise.all(
@@ -131,34 +147,24 @@ export function useComponentControls({
             ...current,
             draft,
             dirty: true,
-            failure: undefined,
+            notice: undefined,
             previews: next,
             props: results[0]?.[1].props ?? current.props,
-            status: "Edited props",
           };
         });
       } catch (error) {
         if (!operation.current()) return;
         setStored((current) =>
-          current.scope === scope
-            ? {
-                ...current,
-                failure:
-                  error instanceof Error
-                    ? error.message
-                    : "The preview could not be updated. Try again.",
-                status: "The preview shows the last valid props.",
-              }
-            : current,
+          current.scope === scope ? withRenderFailure(current, error) : current,
         );
       }
     },
-    [contexts, lifecycle, scope, target, unavailable],
+    [contexts, editable, lifecycle, scope, target],
   );
 
   const edit = useCallback(
     (draft: ControlDraft, immediate: boolean) => {
-      if (!target || unavailable) return;
+      if (!target || !editable) return;
       cancel();
       const validated = validateControlDraft(target, draft);
       if (!validated.overrides) {
@@ -167,9 +173,7 @@ export function useComponentControls({
           draft,
           dirty: true,
           errors: validated.errors,
-          failure: undefined,
-          status:
-            "Check the highlighted values. The preview shows the last valid props.",
+          notice: draftNotice(validated.errors),
         }));
         return;
       }
@@ -182,12 +186,12 @@ export function useComponentControls({
         draft,
         dirty: true,
         errors: {},
-        failure: undefined,
+        notice: undefined,
       }));
       const overrides = validated.overrides;
       lifecycle.schedule(immediate, () => void render(draft, overrides));
     },
-    [cancel, initial, lifecycle, render, scope, target, unavailable],
+    [cancel, editable, initial, lifecycle, render, scope, target],
   );
 
   useEffect(() => {
@@ -199,13 +203,7 @@ export function useComponentControls({
   const expire = useCallback(
     () =>
       setStored((current) =>
-        current.scope === scope
-          ? {
-              ...current,
-              failure: "Render it again to continue with these props.",
-              status: "The temporary preview expired.",
-            }
-          : current,
+        current.scope === scope ? withExpiredPreview(current) : current,
       ),
     [scope],
   );
@@ -219,39 +217,61 @@ export function useComponentControls({
   useEffect(() => {
     const previous = previousContext.current;
     previousContext.current = contextKey;
-    if (shouldRerender(previous, contextKey, state.dirty, unavailable))
+    if (shouldRerender(previous, contextKey, state.dirty, editable))
       edit(state.draft, true);
-  }, [contextKey, edit, state.dirty, state.draft, unavailable]);
+  }, [contextKey, edit, editable, state.dirty, state.draft]);
 
   const change = (key: string, field: ControlDraftField, immediate: boolean) =>
     edit({ ...state.draft, [key]: field }, immediate);
+  // Each recovery action removes or disables its own button, so focus moves
+  // to the panel heading, the first field, or the status that replaces it.
   const reset = () => {
     cancel();
-    setStored(initial);
+    setStored({ ...initial, notice: "restored" });
+    focus.request("heading");
   };
   const retry = () => {
     if (!target) return;
     cancel();
     const validated = validateControlDraft(target, state.draft);
-    if (validated.overrides) void render(state.draft, validated.overrides);
+    if (!validated.overrides) return;
+    focus.request("heading");
+    void render(state.draft, validated.overrides);
   };
+  const current = () => {
+    focus.request("fields");
+    onCurrent();
+  };
+  const restart =
+    start?.status === "failed"
+      ? () => {
+          focus.request("notice");
+          start.retry();
+        }
+      : undefined;
+  const pending = state.notice === "pending";
   const previewViews = useMemo(
     () => withPreviews(data.views, state.previews, target),
     [data.views, state.previews, target],
   );
   return {
-    panel: (
-      <ComponentControlsPanel
-        data={data}
-        disabled={Boolean(unavailable)}
-        onChange={change}
-        onReset={reset}
-        onRetry={retry}
-        state={state}
-        status={unavailable ?? state.status}
-        target={target}
-      />
-    ),
+    panel:
+      target && mode ? (
+        <ComponentControlsPanel
+          data={data}
+          focus={focus.ref}
+          mode={mode}
+          onChange={change}
+          onCurrent={current}
+          onReset={reset}
+          onRetry={retry}
+          onStart={restart}
+          state={state}
+          target={target}
+        />
+      ) : null,
+    pending,
+    previewStatus: <EditStatus pending={pending} />,
     previewViews,
     ...(target ? { props: state.props } : {}),
   };

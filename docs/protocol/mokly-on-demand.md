@@ -54,9 +54,10 @@ accepts a route whose node has not rendered yet. A document carries its
 state's warnings once, before `Catalogue ready`, never per request.
 
 Live prop edits of the [controls contract](./mokly-component-controls.md)
-render through this same path with the edited props and keep their results
-in a separate memory store; they never enter the render cache or the
-catalogue model.
+render through this same path with the edited props. Their temporary documents
+and resources stay in a separate memory store. Temporary documents never enter
+the saved document cache or catalogue model. Their content-addressed fragments
+may enter the bounded fragment cache.
 
 ## Background Work And Replacement
 

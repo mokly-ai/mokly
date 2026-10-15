@@ -2,6 +2,8 @@ import { optional, useDesignInstance } from "../../../library/composition.js";
 import { propField } from "../../../library/inspector/prop-field.js";
 import type { ActionProps } from "../../parts/action_props.js";
 
+import { CONTROLS_COPY } from "./copy.js";
+
 /** The screen supplies actual inputs and values; the component owns field framing. */
 export function ControlFields({
   props,
@@ -48,10 +50,13 @@ export function ControlFields({
         inputId={id("radius")}
         optional={false}
         supplied
-        {...optional("description", invalid ? undefined : "0–24")}
+        {...optional(
+          "description",
+          invalid ? undefined : CONTROLS_COPY.range(0, 24, 1),
+        )}
         {...optional(
           "error",
-          invalid ? "Enter a number from 0 to 24." : undefined,
+          invalid ? CONTROLS_COPY.numberError(0, 24, 1) : undefined,
         )}
         control={
           <input
@@ -94,7 +99,7 @@ export function ControlFields({
                 type="checkbox"
                 defaultChecked={props.hint !== undefined}
               />
-              <span>Set hint</span>
+              <span>{CONTROLS_COPY.set("hint")}</span>
             </label>
             <input
               className="ce-hint-value"
@@ -102,7 +107,7 @@ export function ControlFields({
               type="text"
               defaultValue={props.hint ?? ""}
             />
-            <p className="ce-unset-value">Not set</p>
+            <p className="ce-unset-value">{CONTROLS_COPY.notSet}</p>
           </div>
         }
       />

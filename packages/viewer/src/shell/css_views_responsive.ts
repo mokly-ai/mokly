@@ -113,6 +113,15 @@ body[data-mokly-color-scheme="dark"]
   font-weight: 600;
 }
 
+button.mbk-empty-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .mbk-frag {
   display: block;
   width: 100%;

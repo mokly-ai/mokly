@@ -77,9 +77,9 @@ proving only the test files present in another tree.
 Evidence selection produces one of three outcomes:
 
 - `applicable`: a candidate passes the job, artifact, identity, aggregate, and
-  live Node test and Playwright inventory checks. The publish job skips Rust,
-  Chromium, and `cargo xtask check --dependency-audit strict` and continues with
-  exact-artifact checks.
+  live Node test and Playwright inventory checks. The publish job skips Rust and `cargo xtask check --dependency-audit strict`
+  and continues with
+  exact-artifact checks. It installs Chromium for the packed viewer smoke.
 - `absent`: no candidate exists, a listing or download has a transport failure,
   the required job is unavailable, artifacts are missing or expired, the
   evidence commit cannot be resolved, or its tree differs from the tag. The

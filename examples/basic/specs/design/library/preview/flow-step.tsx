@@ -11,11 +11,12 @@ import { FlowStepView } from "./flow-step.view.js";
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["number", "title", "description", "screenPath"],
+  required: ["number", "title", "description", "screenTitle", "screenPath"],
   properties: {
     number: { type: "integer", minimum: 1 },
     title: text,
     description: text,
+    screenTitle: text,
     screenPath: destination,
   },
 } as const;
@@ -25,6 +26,7 @@ const first = {
   number: 1,
   title: "Welcome",
   description: "The tour starts on the landing screen.",
+  screenTitle: "Welcome",
   screenPath: DESTINATIONS.welcome,
 } as const;
 export const flowStep = defineComponent({
@@ -41,6 +43,7 @@ export const flowStep = defineComponent({
     number: { kind: "number", label: "Step", minimum: 1, step: 1 },
     title: { kind: "text", label: "Title" },
     description: { kind: "text", label: "Description" },
+    screenTitle: { kind: "text", label: "Screen title" },
   },
   render: FlowStepView,
   variants: [
@@ -70,6 +73,7 @@ export const flowStep = defineComponent({
         number: 2,
         title: "Details",
         description: "The tour ends on the details screen.",
+        screenTitle: "Details",
         screenPath: DESTINATIONS.details,
       },
       slots: {

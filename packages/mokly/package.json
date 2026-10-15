@@ -24,6 +24,7 @@
     "bin",
     "dist",
     "config.schema.json",
+    "CHANGELOG.md",
     "LICENSE",
     "README.md",
     "docs/guides",
@@ -63,7 +64,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "prepack": "npm run build"
+    "prepack": "node scripts/prepack.mjs"
   },
   "exports": {
     ".": {

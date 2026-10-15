@@ -3,9 +3,13 @@
 import type { ComponentControl } from "../components/control_types.js";
 import { optionalProperty } from "../components/props.js";
 
+import { CONTROLS_COPY } from "./component_controls_copy.js";
+import {
+  effectiveNumberControl,
+  numberInputBounds,
+} from "./control_numbers.js";
 import {
   controlEntries,
-  numberInputBounds,
   type ControlDraft,
   type ControlDraftField,
   type ControlTarget,
@@ -44,19 +48,44 @@ export function ComponentControlFields({
           control.label ?? target.propSchema.properties?.[key]?.title ?? key;
         const optional = optionalProperty(target.propSchema, key);
         const id = identifier(`mb-prop-${target.path}-${key}`);
+        const shown =
+          control.kind === "number"
+            ? effectiveNumberControl(target, key, control)
+            : control;
+        const bounds =
+          shown.kind === "number" ? numberInputBounds(shown) : undefined;
         const help =
           control.description ??
           target.propSchema.properties?.[key]?.description ??
-          (control.kind === "number" &&
-          (control.minimum !== undefined || control.maximum !== undefined)
-            ? `Allowed range: ${control.minimum ?? "no minimum"} to ${control.maximum ?? "no maximum"}.`
+          (shown.kind === "number"
+            ? CONTROLS_COPY.range(bounds?.min, bounds?.max, shown.step)
             : "");
+        const error = errors[key];
+        // An optional toggle's value check box carries the field's name.
+        const named = control.kind === "boolean" && optional;
+        const name = (
+          <>
+            {label}
+            {optional ? (
+              <>
+                {" "}
+                <span aria-hidden="true" className="mbk-control-optional">
+                  {CONTROLS_COPY.optional}
+                </span>
+              </>
+            ) : null}
+          </>
+        );
         return (
           <div className="mbk-control-field" key={key}>
+            {named ? (
+              <span className="mbk-control-name">{name}</span>
+            ) : (
+              <label htmlFor={id}>{name}</label>
+            )}
             {optional ? (
-              <label className="mbk-control-supplied">
+              <label className="mbk-control-set">
                 <input
-                  aria-label={`Supply ${label}`}
                   checked={field.supplied}
                   disabled={disabled}
                   onChange={(event) =>
@@ -68,28 +97,40 @@ export function ComponentControlFields({
                   }
                   type="checkbox"
                 />
-                <span>Supplied</span>
+                <span>{CONTROLS_COPY.set(label)}</span>
               </label>
             ) : null}
-            <label htmlFor={id}>{label}</label>
             <ControlInput
-              control={control}
-              disabled={disabled || !field.supplied}
+              control={shown}
+              describedBy={
+                error !== undefined
+                  ? `${id}-error`
+                  : help
+                    ? `${id}-help`
+                    : undefined
+              }
+              disabled={disabled}
               field={field}
               id={id}
-              invalid={errors[key] !== undefined}
+              invalid={error !== undefined}
+              {...(named ? { label } : {})}
               name={key}
               onChange={(value, immediate) =>
                 onChange(key, { ...field, value }, immediate)
               }
             />
-            <small id={`${id}-help`}>{help}</small>
+            {field.supplied ? null : (
+              <p className="mbk-control-unset">{CONTROLS_COPY.notSet}</p>
+            )}
+            <small hidden={!help || error !== undefined} id={`${id}-help`}>
+              {help}
+            </small>
             <small
               className="mbk-control-error"
-              hidden={errors[key] === undefined}
+              hidden={error === undefined}
               id={`${id}-error`}
             >
-              {errors[key]}
+              {error}
             </small>
           </div>
         );
@@ -100,26 +141,33 @@ export function ComponentControlFields({
 
 function ControlInput({
   control,
+  describedBy,
   disabled,
   field,
   id,
   invalid,
+  label,
   name,
   onChange,
 }: {
   control: ComponentControl;
+  /** The visible help or error that describes the field. */
+  describedBy: string | undefined;
   disabled: boolean;
   field: ControlDraftField;
   id: string;
   invalid: boolean;
+  /** The visible name of a check box that the field's heading does not label. */
+  label?: string;
   name: string;
   onChange(value: boolean | string, immediate: boolean): void;
 }) {
   const accessibility = {
-    "aria-describedby": `${id}-help ${id}-error`,
+    "aria-describedby": describedBy,
     "aria-invalid": invalid || undefined,
     "data-prop-control": name,
     disabled,
+    hidden: !field.supplied,
     id,
   };
   if (control.kind === "select")
@@ -129,7 +177,7 @@ function ControlInput({
         onChange={(event) => onChange(event.currentTarget.value, true)}
         value={String(field.value)}
       >
-        <option value="">Choose a value</option>
+        <option value="">{CONTROLS_COPY.chooseValue}</option>
         {control.options.map((option, index) => (
           <option key={index} value={index}>
             {option.label}
@@ -137,8 +185,8 @@ function ControlInput({
         ))}
       </select>
     );
-  if (control.kind === "boolean")
-    return (
+  if (control.kind === "boolean") {
+    const box = (
       <input
         {...accessibility}
         checked={field.value === true}
@@ -146,6 +194,15 @@ function ControlInput({
         type="checkbox"
       />
     );
+    return label === undefined ? (
+      box
+    ) : (
+      <label className="mbk-control-check" hidden={!field.supplied}>
+        {box}
+        <span>{label}</span>
+      </label>
+    );
+  }
   return (
     <input
       {...accessibility}

@@ -82,7 +82,9 @@ cargo clippy -p mokly-render --all-targets -- -D warnings
 
 Unit tests mock runtime boundaries with unimock. Integration tests copy the
 fixture consumer to an isolated directory and start the real sidecar. They
-check call order and outputs without elapsed-time assertions.
+check call order and outputs without elapsed-time assertions. The JavaScript
+rebuild test retains both generations on one pool. It renders an uncached old
+view after the edit and counts real process starts and hello calls.
 
 ### Key Code
 

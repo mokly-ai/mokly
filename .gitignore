@@ -17,3 +17,4 @@ playwright-report/
 # Host and release binaries are build output.
 packages/native-*/bin/
 packages/mokly/docs/
+packages/mokly/CHANGELOG.md
