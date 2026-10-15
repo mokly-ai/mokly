@@ -14,7 +14,7 @@ fn write(root: &Path, path: &str, text: &str) {
 
 fn failure(root: &Path, config: &str, mode: &str) -> String {
     let output = Command::new(env!("CARGO_BIN_EXE_mokly"))
-        .args(["build", "--config", config])
+        .args(["build", "--no-changes", "--config", config])
         .current_dir(root)
         .env("MOKLY_OUTPUT", mode)
         .env("NO_COLOR", "1")
@@ -22,7 +22,13 @@ fn failure(root: &Path, config: &str, mode: &str) -> String {
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
-    assert!(output.stdout.is_empty());
+    if mode == "plain" {
+        assert!(output.stdout.is_empty());
+    } else {
+        let text = String::from_utf8_lossy(&output.stdout);
+        assert!(text.contains("Loading configuration"));
+        assert!(!text.contains("Built Mokly to"));
+    }
     String::from_utf8(output.stderr).unwrap()
 }
 

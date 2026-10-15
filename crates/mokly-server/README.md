@@ -107,7 +107,7 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 - [HTTP application](./src/application.rs) and [atomic state](./src/snapshot.rs).
 - [Graph adapter](./src/backend.rs) and [public reads](./src/public_read.rs).
 - [Request validation](./src/render_request.rs) and [preview memory](./src/preview.rs).
-- [Viewer inventory](./src/assets.rs) and [shell stub](./src/stub.rs).
+- [Viewer inventory](./src/assets.rs) and [shell stub](../mokly-model/src/shell.rs).
 
 ### Related Docs
 

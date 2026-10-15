@@ -77,7 +77,10 @@ width bounds that preserve ANSI sequences. Command subsystems share the Rust
 core. The binary owns catalogue work and file writes. `build` renders HTML and React
 screens, components, stories, pages, and Markdown
 documents into the bounded process cache. It reports all render warnings
-before strict-mode failure. Static output belongs to `mokly-static`.
+before strict-mode failure. `mokly-static` writes the shell, canonical index and details, documents,
+referenced resources, and matching viewer bundle. Relative `--out` paths resolve
+beside the configuration. Output replacement uses exclusive moves and retains
+recovery paths on cleanup failure.
 Catalogue counts include variants. Shared-body warnings name
 the parent once. Identity diagnostics keep their location continuation
 lines in both plain and rich output. A diagnostic omits its inner code tag
@@ -90,8 +93,8 @@ the CLI-owned `StaticOutput` adapter. It passes the invocation directory for
 configuration discovery. It reports a child output path inside a private
 external directory before the build starts. That parent also confines the
 output reservation. `mokly-publish` owns the exchange and cached preparation;
-`mokly-model` owns output formats and the marker writer. The static output adapter reports a single `build-invalid` line
-when its implementation is unavailable. Checkout failures list at most 20
+`mokly-model` owns output formats and the marker writer. The static adapter calls the same safe output transaction as `build`. It returns
+the installed bytes directly to one cached upload preparation. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
 output stays in the private directory after an upload failure. The warning
 policy waits for a user decision. The isolated `warnings_are_fatal` function

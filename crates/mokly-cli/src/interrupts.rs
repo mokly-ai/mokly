@@ -10,7 +10,7 @@ use mokly_sidecar::process_clock::SystemClock;
 
 pub(super) struct Interrupts {
     pub(super) cancellation: Arc<dyn Cancellation>,
-    pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
+    pub(super) pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
     stopped: Arc<Mutex<bool>>,
 }
 
@@ -57,10 +57,6 @@ impl Interrupts {
             pool,
             stopped,
         })
-    }
-
-    pub(super) fn attach(&self, pool: Arc<dyn SidecarPool>) {
-        *self.pool.lock().unwrap_or_else(|error| error.into_inner()) = Some(pool);
     }
 
     pub(super) fn shutdown(&self) -> mokly_sidecar::error::Result<()> {

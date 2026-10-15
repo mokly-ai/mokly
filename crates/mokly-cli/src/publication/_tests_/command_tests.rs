@@ -3,10 +3,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::publication::error::Error;
 use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::{CheckoutMock, Inspection};
 use mokly_publish::completion::{Completion, Outcome};
-use mokly_publish::error::Error;
+use mokly_publish::error;
 use mokly_publish::exchange::ExchangeMock;
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot, OutputSnapshotMock};
@@ -132,8 +133,12 @@ async fn a_build_failure_keeps_its_own_error_and_stops_before_recheck_or_network
     for error in [
         Error::StaticUnavailable,
         Error::BuildWarnings,
-        Error::Cancelled,
-        Error::InvalidBundle,
+        Error::Exchange {
+            source: error::Error::Cancelled,
+        },
+        Error::Exchange {
+            source: error::Error::InvalidBundle,
+        },
     ] {
         let expected = std::mem::discriminant(&error);
         let mock = Arc::new(Unimock::new((

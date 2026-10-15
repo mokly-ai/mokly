@@ -1,15 +1,16 @@
 //! Catalogue validation and complete in-memory rendering before static output.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config::ConfigLoader;
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
 use mokly_graph::error::{GraphError, InternalError};
-use mokly_graph::types::GraphFactory;
+use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
@@ -32,6 +33,29 @@ pub struct BuildSummary {
 /// Typed build failure; warning records survive both error paths.
 #[derive(Debug, Error)]
 pub enum BuildError {
+    /// A signal stopped work before installation; the original diagnostic remains.
+    #[error("[mokly-cli/build] {source}")]
+    Interrupted {
+        /// Primary failure before any earlier output moved.
+        source: Box<BuildError>,
+    },
+    /// The matching viewer package is unavailable.
+    #[error("[mokly-cli/build] Build or reinstall the matching @mokly/viewer package.")]
+    Viewer,
+    /// Static output or its recovery failed.
+    #[error("[mokly-cli/build] {source}")]
+    Static {
+        /// Typed output failure, including both recovery causes.
+        source: mokly_static::error::Error,
+    },
+    /// Comparison history could not be resolved.
+    #[error("[mokly-cli/build] Git information could not be read for {base:?}: {source}")]
+    Git {
+        /// Selected reference.
+        base: String,
+        /// Bounded Git failure.
+        source: mokly_git::error::Error,
+    },
     /// The command was interrupted before successful completion.
     #[error("[mokly-cli/build] build cancelled")]
     Cancelled,
@@ -65,15 +89,29 @@ pub enum BuildError {
     },
 }
 
+/// Complete render retained for output assembly without reloading the catalogue.
+pub struct PreparedBuild {
+    /// Resolved configuration used by the generation.
+    pub config: ResolvedConfig,
+    /// Render graph with complete documents and authored closure.
+    pub generation: Arc<dyn RenderGeneration>,
+    /// Validation counts and warnings.
+    pub summary: BuildSummary,
+}
+
 /// Build command service, consumed through `dyn BuildService` at the CLI root.
 #[cfg_attr(test, unimock::unimock(api = BuildServiceMock))]
 pub trait BuildService: Send + Sync {
+    /// Keep the validated generation for static output assembly.
+    fn prepare(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError>;
     /// Discover and validate the catalogue in memory, with no file writes.
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError>;
 }
 
 /// Build coordinator with injected config and catalogue boundaries.
 pub struct CatalogueBuild {
+    /// Static builds capture all explicit inputs before document callbacks run.
+    pub inputs: Option<Arc<dyn mokly_static::fingerprint::InputTree>>,
     /// Cancellation state checked at every build phase.
     pub cancellation: Arc<dyn Cancellation>,
     /// Data-only configuration loader.
@@ -86,6 +124,10 @@ pub struct CatalogueBuild {
 
 impl BuildService for CatalogueBuild {
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+        Ok(self.prepare(cwd, options)?.summary)
+    }
+
+    fn prepare(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError> {
         let result = std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-build".into())
@@ -124,17 +166,14 @@ impl CatalogueBuild {
         }
     }
 
-    fn attempt(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+    fn attempt(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError> {
         self.checkpoint()?;
         let config = match self.config.load(cwd, options.common.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
         self.checkpoint()?;
-        let output: PathBuf = options.out.as_ref().map_or_else(
-            || config.repo_root.join("mokly-static"),
-            |path| cwd.join(path),
-        );
+        let output = mokly_static::location::output(&config, options.out.as_deref());
         let prepared = match self.catalogue.prepare(&config, Some(&output)) {
             Ok(prepared) => prepared,
             Err(source) => return Err(BuildError::Catalogue { source }),
@@ -156,7 +195,7 @@ impl CatalogueBuild {
             }
         };
         self.checkpoint()?;
-        let generation = match graph.prepare(config, prepared.clone(), Some(&output)) {
+        let generation = match graph.prepare(config.clone(), prepared.clone(), Some(&output)) {
             Ok(generation) => generation,
             Err(source) => {
                 return Err(BuildError::Rendering {
@@ -166,6 +205,12 @@ impl CatalogueBuild {
             }
         };
         self.checkpoint()?;
+        if let Some(inputs) = &self.inputs
+            && let Err(source) =
+                inputs.capture(&config.repo_root, &generation.catalogue().model.sources)
+        {
+            return Err(BuildError::Static { source });
+        }
         let rendered = match generation.render_all() {
             Ok(summary) => summary,
             Err(source) => {
@@ -185,11 +230,15 @@ impl CatalogueBuild {
         for entry in &prepared.model.entries {
             *counts.entry(entry.content.kind()).or_default() += 1;
         }
-        Ok(BuildSummary {
-            documents: rendered.documents,
-            counts,
-            warnings: rendered.warnings,
-            deferred_modules: prepared.deferred_modules,
+        Ok(PreparedBuild {
+            config,
+            generation,
+            summary: BuildSummary {
+                documents: rendered.documents,
+                counts,
+                warnings: rendered.warnings,
+                deferred_modules: prepared.deferred_modules,
+            },
         })
     }
 }

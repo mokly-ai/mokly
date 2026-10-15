@@ -1020,6 +1020,13 @@ Tags: ui
       documents, the comparison generation, the shared `mokly-model` ownership
       marker writer, the `--out` option with its default `mokly-static/` output
       directory, and the transaction with backup, exclusive rename, and rollback.
+  - [x] Write deterministic current output, head-only inspector metadata,
+        canonical index and details, exact package assets, and shared ownership.
+        Implement reservations, exclusive installation, rollback, bounded cleanup,
+        input rechecks, and config-relative output selection.
+  - [ ] Join the Milestone 9 comparison generation, removed records, and detail
+        evidence before identity finalization. Repeat the comparison-specific
+        reference scenarios after that integration.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
@@ -1030,12 +1037,12 @@ Tags: ui
   - [x] Add clean-checkout checks, cancellable Git calls, the static-output
         trait, and the pre-build private-directory line. Keep completed
         output after upload failure.
-  - [ ] Connect `mokly-static` to the CLI-owned publish adapter and its rich
+  - [x] Connect `mokly-static` to the CLI-owned publish adapter and its rich
         terminal phases. Both crates use the shared output shapes and marker
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
         transitions, source changes, and the deferred gap-sweep scenarios.
-    - [ ] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
+    - [x] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
           `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
           `mokly-publish` into the CLI publication error contract when the
           static adapter lands.
@@ -1049,9 +1056,12 @@ Publish client final review and merge decisions:
 `.context/rust-rebuild/delegation/m12-publish/report-3.md` and
 `.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
 
-- [ ] Restore the preview deployment workflow on the new CLI.
-- [ ] Write the build and publish guides.
-- [ ] Commit.
+- [x] Restore the preview deployment workflow on the new CLI.
+- [x] Write the build and publish guides.
+      Static output evidence: `.context/rust-rebuild/delegation/m12-static/report-1.md`,
+      `.context/rust-rebuild/m12-smoke/`, and `.context/rust-rebuild/sweeps/m12-static.md`.
+
+- [x] Commit.
 
 ## Milestone 13: Release packaging
 

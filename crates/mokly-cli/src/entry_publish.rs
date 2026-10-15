@@ -1,50 +1,55 @@
 //! Publication composition root with signal handling installed before Git work.
 
 use std::env;
-use std::path::PathBuf;
 use std::process::ExitCode;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
+use async_trait::async_trait;
 use mokly_cli::codes::Code;
 use mokly_cli::grammar;
 use mokly_cli::output::Style;
-use mokly_cli::publication::build::{SystemDirectories, UnavailableOutput};
-use mokly_cli::publication::command::{BuildReporter, Command, Options, Publish};
+use mokly_cli::publication::build::SystemDirectories;
+use mokly_cli::publication::command::{Command, Options, Publish};
+use mokly_cli::publication::error::Error;
 use mokly_cli::publish_errors::render;
 use mokly_cli::redaction::Redactor;
+use mokly_cli::static_build::{Phase, Phases};
 use mokly_cli::version::VERSION;
 use mokly_git::control;
 use mokly_git::system::SystemRunner;
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::GitCheckout;
-use mokly_publish::exchange::Client;
+use mokly_publish::error;
+use mokly_publish::exchange::{Client, Exchange};
 use mokly_publish::hints::SystemOutputHints;
 use mokly_publish::http::ReqwestHttp;
 use mokly_publish::identity::ActionsContext;
-use mokly_publish::runtime::{CommandCancellation, SilentReporter, SystemClock};
+use mokly_publish::runtime::Cancellation;
+use mokly_publish::runtime::{CommandCancellation, SystemClock};
 use mokly_publish::settings::Settings;
+use mokly_publish::snapshot::Prepared;
+use mokly_sidecar::pool::SidecarPool;
 
-use crate::terminal::{SystemTerminal, Terminal};
-
-struct BuildLines {
-    redactor: Arc<Redactor>,
-}
-
-impl BuildReporter for BuildLines {
-    fn build_directory(&self, directory: &std::path::Path) {
-        SystemTerminal::default().stdout(&format!(
-            "Mokly publish build: {}\n",
-            self.redactor.safe(&directory.to_string_lossy())
-        ));
-    }
-}
+use crate::one_shot::Lines;
+use crate::publication_runtime;
+use crate::terminal::Terminal;
 
 pub(super) fn run(
     publish: &grammar::Publish,
     style: &Style,
     redactor: Arc<Redactor>,
-    terminal: &dyn Terminal,
+    terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
+    let started = Instant::now();
+    let lines = Arc::new(Lines::new(
+        style.clone(),
+        redactor.clone(),
+        terminal.clone(),
+    ));
+    let cancellation = CommandCancellation::default();
+    let pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>> = Arc::new(Mutex::new(None));
     let settings = match Settings::new(
         publish.endpoint.as_deref().unwrap_or_default(),
         publish.token.clone().unwrap_or_default(),
@@ -78,7 +83,7 @@ pub(super) fn run(
             ref_name: env::var("GITHUB_REF_NAME").ok(),
             git_ref: env::var("GITHUB_REF").ok(),
         },
-        config: publish.common.config.as_ref().map(PathBuf::from),
+        config: publication_runtime::config(&publish.common.config),
         base: publish.common.base.clone(),
         no_changes: publish.no_changes,
         strict: publish.strict,
@@ -101,14 +106,20 @@ pub(super) fn run(
             }),
         }),
         directories: Arc::new(SystemDirectories),
-        output: Arc::new(UnavailableOutput),
-        reporter: Arc::new(BuildLines {
-            redactor: Arc::clone(&redactor),
+        output: Arc::new(publication_runtime::Output {
+            common: publish.common.clone(),
+            cancellation: cancellation.clone(),
+            pool: pool.clone(),
+            phases: lines.clone(),
         }),
-        exchange: Arc::new(Client {
-            http: Arc::new(http),
-            clock: Arc::new(SystemClock),
-            reporter: Arc::new(SilentReporter),
+        reporter: lines.clone(),
+        exchange: Arc::new(Uploading {
+            phases: lines.clone(),
+            exchange: Arc::new(Client {
+                http: Arc::new(http),
+                clock: Arc::new(SystemClock),
+                reporter: lines.clone(),
+            }),
         }),
     };
     let runtime = match tokio::runtime::Builder::new_multi_thread()
@@ -127,32 +138,38 @@ pub(super) fn run(
         }
     };
     let result = runtime.block_on(async {
-        let cancellation = CommandCancellation::default();
-        let signals = signals(cancellation.clone());
+        let signals = signals(cancellation.clone(), pool.clone());
         let handle = match signals {
             Ok(handle) => handle,
-            Err(_) => return Err(mokly_publish::error::Error::Failed),
+            Err(_) => {
+                return Err(Error::Exchange {
+                    source: error::Error::Failed,
+                });
+            }
         };
         let result = command.run(&options, &settings, &cancellation).await;
         handle.abort();
         result
     });
+    lines.clear();
     match result {
         Ok(receipt) => {
-            terminal.stdout(&format!("{}\n", receipt.summary()));
-            if let Some(url) = receipt.completion.viewer_url {
-                terminal.stdout(&format!("{}\n", redactor.safe(&url)));
-            }
+            lines.published(&receipt, started.elapsed());
             ExitCode::SUCCESS
         }
         Err(error) => {
-            terminal.stderr(&render(&error, style, &redactor));
+            terminal.stderr(&mokly_cli::publish_errors::command(
+                &error, style, &redactor,
+            ));
             ExitCode::FAILURE
         }
     }
 }
 
-fn signals(cancellation: CommandCancellation) -> std::io::Result<tokio::task::JoinHandle<()>> {
+fn signals(
+    cancellation: CommandCancellation,
+    pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
+) -> std::io::Result<tokio::task::JoinHandle<()>> {
     #[cfg(unix)]
     {
         let mut interrupt =
@@ -162,6 +179,7 @@ fn signals(cancellation: CommandCancellation) -> std::io::Result<tokio::task::Jo
         Ok(tokio::spawn(async move {
             tokio::select! { _ = interrupt.recv() => {}, _ = terminate.recv() => {} }
             cancellation.token.cancel();
+            stop_pool(pool).await;
         }))
     }
     #[cfg(not(unix))]
@@ -169,7 +187,40 @@ fn signals(cancellation: CommandCancellation) -> std::io::Result<tokio::task::Jo
         Ok(tokio::spawn(async move {
             if tokio::signal::ctrl_c().await.is_ok() {
                 cancellation.token.cancel();
+                stop_pool(pool).await;
             }
         }))
+    }
+}
+
+async fn stop_pool(pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>) {
+    let _ = tokio::task::spawn_blocking(move || {
+        let pool = pool
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone();
+        if let Some(pool) = pool {
+            let _ = pool.shutdown();
+        }
+    })
+    .await;
+}
+
+struct Uploading {
+    phases: Arc<dyn Phases>,
+    exchange: Arc<dyn Exchange>,
+}
+#[async_trait]
+impl Exchange for Uploading {
+    async fn publish(
+        &self,
+        prepared: &Prepared,
+        settings: &Settings,
+        cancellation: &dyn Cancellation,
+    ) -> error::Result<Receipt> {
+        self.phases.start(Phase::Uploading);
+        self.exchange
+            .publish(prepared, settings, cancellation)
+            .await
     }
 }

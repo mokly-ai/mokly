@@ -1,12 +1,12 @@
 //! Exact built viewer inventory, loaded once before listening.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Bytes;
 use mokly_model::namespace::viewer;
-use mokly_source_interface::tree::SourceTree;
+use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
 
 use crate::error::{InternalError, Result, ServerError};
@@ -53,6 +53,19 @@ impl ViewerAssets for PackageAssets {
         if manifest.schema_version != 1
             || !manifest.modules.iter().any(|name| name == "shell.js")
             || !manifest.modules.iter().any(|name| name == "inspector.js")
+        {
+            return Err(ServerError::InvalidAssets);
+        }
+        let children = match self.tree.children(&dist.join("browser")) {
+            Ok(children) => children,
+            Err(_) => return Err(ServerError::InvalidAssets),
+        };
+        if children.iter().any(|child| child.kind != FileKind::File)
+            || children
+                .iter()
+                .map(|child| &child.name)
+                .collect::<BTreeSet<_>>()
+                != manifest.modules.iter().collect::<BTreeSet<_>>()
         {
             return Err(ServerError::InvalidAssets);
         }

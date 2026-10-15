@@ -1,116 +1,74 @@
 ---
 title: "Options and exit status"
-description: "The options every command shares, and what an exit code means."
+description: "Choose command options and interpret command results."
 section: "cli"
 order: 6
 ---
 
-## Shape of a command
-
-The command comes first and its options follow it:
+## Command shape
 
 ```shell
-npx mokly build --config tools/mokly.config.ts
+npx mokly build --config tools/mokly.config.json --no-changes
 ```
 
-A value option also accepts the assigned form `--name=value`, which is how you
-pass a value beginning with `-`, such as `--token=-TOKEN` or
-`--config=-catalogue.config.ts`. Empty values are rejected, and a boolean flag
-takes no value. There are no silent positional arguments.
+Use `serve`, `build`, or `publish`. With no command, Mokly starts watched Serve.
+Value options accept `--name=value`. Use that form when a value begins with a
+hyphen, such as `--token=-TOKEN`. Boolean options take no value.
 
 ## Options
 
-| Option                               | Commands                              | Meaning                                                        |
-| ------------------------------------ | ------------------------------------- | -------------------------------------------------------------- |
-| `--config <path>`                    | every command                         | Use an explicit `mokly.config` file                            |
-| `--debug-timings`                    | every command                         | Report phase timings and catalogue counts on standard error    |
-| `--port <port>`                      | `serve`                               | Starting port; advances if occupied, `0` selects any free port |
-| `--watch`                            | `serve`, `build`                      | Watch inputs; default for Serve                                |
-| `--no-watch`                         | `serve`                               | Serve one deterministic snapshot                               |
-| `--build`                            | `serve`                               | Write `mokly-generated/` after successful compilation          |
-| `--open`                             | `serve`                               | Open the catalogue in your default browser                     |
-| `--base <ref>`                       | `serve`, `export`, `publish`          | Git base ref used to find the branch point                     |
-| `--out <path>`                       | `export`, `publish`                   | Config-relative output directory                               |
-| `--endpoint <url>`                   | `publish`                             | The service's plan URL, or `MOKLY_ENDPOINT`                    |
-| `--token <token>`                    | `publish`                             | Bearer token, or `MOKLY_TOKEN`                                 |
-| `--repository <host>/<owner>/<name>` | `publish`                             | Override the detected repository identity                      |
-| `--no-changes`                       | `publish`                             | Publish with no comparison baseline                            |
-| `--upload-concurrency <n>`           | `publish`                             | Upload 1 to 32 missing files at once; defaults to 8            |
-| `--strict`                           | `build`, `check`, `export`, `publish` | Fail when the build reports warnings                           |
-| `--help`                             | every command                         | Show the commands and their options                            |
-| `-h`                                 | every command                         | Short form of `--help`                                         |
-| `--version`                          | every command                         | Print the installed version                                    |
-| `-v`                                 | every command                         | Short form of `--version`                                      |
+| Option                           | Commands           | Meaning                                           |
+| -------------------------------- | ------------------ | ------------------------------------------------- |
+| `--config {path}`                | all                | Use an explicit JSON configuration file.          |
+| `--base {ref}`                   | all                | Override the comparison base.                     |
+| `--sidecars {count}`             | all                | Set the positive JavaScript worker count.         |
+| `--debug-timings`                | all                | Select plain output and print timing records.     |
+| `--port {port}`                  | `serve`            | Select a starting port. Zero selects a free port. |
+| `--watch`                        | `serve`            | Watch inputs. This is the default.                |
+| `--no-watch`                     | `serve`            | Serve one snapshot.                               |
+| `--open`                         | `serve`            | Open the reported address in a browser.           |
+| `--out {directory}`              | `build`            | Select config-relative output.                    |
+| `--strict`                       | `build`, `publish` | Require a warning-free build.                     |
+| `--no-changes`                   | `build`, `publish` | Omit comparison work and base history.            |
+| `--endpoint {url}`               | `publish`          | Override `MOKLY_ENDPOINT`.                        |
+| `--token {token}`                | `publish`          | Override `MOKLY_TOKEN`.                           |
+| `--repository {host/owner/name}` | `publish`          | Override repository detection.                    |
+| `--upload-concurrency {count}`   | `publish`          | Bound parallel Blob requests to 1 through 32.     |
+| `--help`, `-h`                   | all                | Show command help.                                |
+| `--version`, `-v`                | all                | Print the installed version.                      |
 
-An option given to a command that does not take it is refused by name rather
-than ignored. `--out` is required by `export`, and `--no-changes` cannot be
-combined with `--base`.
+Unknown, repeated, misplaced, and empty options fail before command work.
+`--base` conflicts with `--no-changes`. Publish chooses a private build directory.
 
 ## Exit status
 
-| Code | Meaning               |
-| ---- | --------------------- |
-| `0`  | The command succeeded |
-| `1`  | The command failed    |
+Success exits `0`. A failure exits `1`. Closing Serve normally also exits `0`.
+Cancelling a build or publish exits `1`.
 
-A command that finishes with build warnings still exits `0`. `--strict`, which
-`build`, `check`, `export` and `publish` accept, prints the warnings and then
-exits `1` under the `build-invalid` category. Its error is
-`1 build warning with --strict` for one warning and
-`<n> build warnings with --strict` for any other count.
+Build warnings print on standard error. `build --strict` and publish fail on
+warnings before output installation or upload. A non-strict build can succeed
+with warnings.
 
-## Errors
+## Error categories
 
-A failure prints a message on standard error that begins with its category, so
-you can tell a configuration problem from an upload problem without reading a
-stack trace:
+Plain errors start with `[mokly/{code}]`. Rich errors show the same code with
+an explanation and recovery action.
 
-```text
-[mokly/config-missing] no mokly.config file was found
-```
+| Category                           | Meaning                                               |
+| ---------------------------------- | ----------------------------------------------------- |
+| `cli-invalid`                      | An argument is invalid.                               |
+| `config-missing`, `config-invalid` | Configuration is missing or invalid.                  |
+| `build-invalid`                    | Catalogue validation or rendering failed.             |
+| `export-invalid`                   | Output selection, assembly, or recovery failed.       |
+| `git-failed`                       | Git identity or comparison history could not be read. |
+| `git-uncommitted`                  | Publish found uncommitted changes.                    |
+| `review-invalid`                   | Comparison creation failed.                           |
+| `server-failed`                    | The server or matching viewer package is unavailable. |
+| `upload-unauthorized`              | The receiver refused the token or repository.         |
+| `upload-invalid-bundle`            | The receiver rejected the artifact.                   |
+| `upload-too-large`                 | A documented upload limit was exceeded.               |
+| `upload-unsupported-version`       | The receiver does not support the format.             |
+| `upload-failed`                    | Upload failed or was cancelled.                       |
 
-| Category                        | Raised when                                                    |
-| ------------------------------- | -------------------------------------------------------------- |
-| `cli-invalid`                   | An argument is unknown, misplaced or missing its value         |
-| `config-missing`                | No configuration file was found                                |
-| `config-invalid`                | The configuration is not valid                                 |
-| `build-invalid`                 | The catalogue could not be built or validated                  |
-| `build-stale`                   | Committed generated files do not match the publish build       |
-| `manifest-invalid`              | A manifest could not be read or does not match                 |
-| `review-invalid`                | A comparison could not be produced from the inputs             |
-| `export-invalid`                | An export destination or artifact was refused                  |
-| `server-failed`                 | The local server could not start or continue                   |
-| `git-failed`                    | A Git command failed                                           |
-| `git-uncommitted`               | Publish found uncommitted files or missing output ignore rules |
-| `baseline-history-unavailable`  | The branch point is not in the checkout                        |
-| `baseline-incompatible-earlier` | The comparison base was built by an earlier Mokly              |
-| `baseline-extraction-failed`    | The historical checkout could not be extracted                 |
-| `baseline-command-failed`       | A baseline build command failed                                |
-| `baseline-output-invalid`       | A baseline build produced no valid catalogue                   |
-| `baseline-interrupted`          | Baseline preparation was interrupted                           |
-| `baseline-lock-timeout`         | The baseline cache stayed locked                               |
-| `upload-unauthorized`           | The service refused the token or the repository                |
-| `upload-invalid-bundle`         | The upload was rejected as malformed                           |
-| `upload-too-large`              | An upload limit was exceeded                                   |
-| `upload-unsupported-version`    | The service does not support this upload version               |
-| `upload-failed`                 | The upload failed for any other reason                         |
-
-`baseline-incompatible-earlier` is a typed internal availability outcome, not
-a command failure. Serve stays available, and export or publish exits `0`
-without Changes; those commands print the product line defined by the
-baseline compatibility protocol instead of an error prefix.
-
-Cancelling publish keeps `upload-failed` but prints
-`Publication was cancelled. Run mokly publish again when you are ready.` An
-exhausted request prints
-`The catalogue upload did not complete. Check the endpoint and connection, then retry.`
-
-Warnings name a generated page, an entry, a component, a folder or the
-configuration file. Strict mode counts all warnings, including ignored inputs.
-
-`git-uncommitted` says `The checkout has uncommitted changes.` Its hint says
-`Commit, stash or ignore these files, then publish again.` `build-stale` says
-`The committed generated files are out of date.` Its hint says
-`Run mokly build, commit the result and publish again.` Both show at most 20
-paths, then the number of other paths, in plain and rich output. Changes found
-after export say that they appeared during the export.
+A recovery error names the retained paths. Inspect them before removing files.
+Credentials and raw receiver response bodies do not appear in terminal output.

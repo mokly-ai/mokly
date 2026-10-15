@@ -58,6 +58,15 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
 /// Report retained warnings first, then the command's typed failure.
 pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
+        BuildError::Interrupted { source } => crate::build_output::failure(style, source, redactor),
+        BuildError::Viewer => style.error(Code::ServerFailed, "Build or reinstall the matching @mokly/viewer package.", redactor),
+        BuildError::Static { source: mokly_static::error::Error::Cancelled } => style.error(Code::BuildInvalid, "build cancelled", redactor),
+        BuildError::Static { source } => {
+            let message = source.to_string();
+            let code = if matches!(source, mokly_static::error::Error::Empty) { Code::BuildInvalid } else { Code::ExportInvalid };
+            style.error_lines(code, message.strip_prefix("[mokly-static] ").unwrap_or(&message), redactor)
+        },
+        BuildError::Git { base, .. } => style.error(Code::GitFailed, &format!("Git information could not be read for {base:?}. Check the repository and configured base."), redactor),
         BuildError::Cancelled => style.error(Code::BuildInvalid, "build cancelled", redactor),
         BuildError::Deferred {
             modules,

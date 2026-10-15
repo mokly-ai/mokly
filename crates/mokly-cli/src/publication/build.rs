@@ -4,9 +4,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_model::output::upload::Publication;
-use mokly_publish::error::{DirectoryFailure, Error, Result};
 use mokly_publish::runtime::Cancellation;
 use mokly_publish::snapshot::OutputSnapshot;
+
+use crate::publication::error::{DirectoryFailure, Error, Result};
 
 /// Inputs pinned before static output generation.
 #[derive(Clone, Debug)]
@@ -29,7 +30,7 @@ pub struct BuildRequest {
     pub publication: Publication,
 }
 
-/// Static output transaction, filled by mokly-static in the later milestone.
+/// Static output transaction composed from mokly-static at the CLI root.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StaticOutputMock))]
 pub trait StaticOutput: Send + Sync {
     /// Build, install, and return the same finalized bytes without reading them back.
@@ -38,22 +39,6 @@ pub trait StaticOutput: Send + Sync {
         request: &BuildRequest,
         cancellation: &dyn Cancellation,
     ) -> Result<Arc<dyn OutputSnapshot>>;
-}
-
-/// Explicit unavailable state until the static output implementation exists.
-pub struct UnavailableOutput;
-
-impl StaticOutput for UnavailableOutput {
-    fn build(
-        &self,
-        _: &BuildRequest,
-        cancellation: &dyn Cancellation,
-    ) -> Result<Arc<dyn OutputSnapshot>> {
-        if cancellation.is_cancelled() {
-            return Err(Error::Cancelled);
-        }
-        Err(Error::StaticUnavailable)
-    }
 }
 
 /// Private build directory allocation, never tied to automatic upload cleanup.

@@ -1,6 +1,6 @@
 ---
 title: "build"
-description: "Generate the catalogue's documents and manifest in one transaction."
+description: "Validate and render a complete static catalogue."
 section: "cli"
 order: 2
 ---
@@ -9,65 +9,55 @@ order: 2
 
 ```shell
 npx mokly build
-npx mokly build --watch
+npx mokly build --no-changes --out .context/site --strict
+npx mokly build --config tools/mokly.config.json --base origin/main
 ```
 
 ## Options
 
-| Option            | Meaning                                                     |
-| ----------------- | ----------------------------------------------------------- |
-| `--config <path>` | Use an explicit `mokly.config` file                         |
-| `--watch`         | Rebuild after validated source changes                      |
-| `--debug-timings` | Report phase timings and catalogue counts on standard error |
-| `--strict`        | Fail before writing when the build reports warnings         |
+| Option               | Meaning                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| `--config {path}`    | Load a JSON configuration file. Omission searches upward.                                           |
+| `--out {directory}`  | Write beside the config for a relative path. The default is `mokly-static/` at the repository root. |
+| `--base {ref}`       | Override `review.base`, whose default is `origin/main`.                                             |
+| `--no-changes`       | Build current content without Git history or a comparison.                                          |
+| `--strict`           | Fail on warnings before output installation.                                                        |
+| `--sidecars {count}` | Set the positive JavaScript worker count.                                                           |
+| `--debug-timings`    | Select plain output and report timing records.                                                      |
 
-## Warnings
+`--base` and `--no-changes` cannot be combined. Build starts no server or
+watcher. Use [Serve](/docs/cli/serve/) for watched browsing.
 
-A build can succeed with warnings, for example a styled link placed inside a
-button. Each warning is one line on standard error naming the route and the
-element, the output is still written, and the exit status stays `0`. Pass
-`--strict` to print the warnings and then fail without writing anything.
-The failure says `1 build warning with --strict` for one warning and
-`<n> build warnings with --strict` otherwise.
+## Output
 
-With `--watch --strict`, a warning rejects that compilation and keeps the last
-successful output. Watching continues so you can repair the source.
+The output contains `index.html`, `404.html`, and one shell stub at
+`view/{entry path}/index.html`. `mokly-viewer/` holds the browser client,
+catalogue index, entry details, styles, fonts, and any comparison generation.
+`static/mokly-generated/` holds rendered documents and generated resources.
+`static/` also holds exactly the authored resources the catalogue references.
 
-## What it writes
+The ownership marker lists every file and its exact digest. Identical inputs
+produce identical output, including its deployment identity. Static controls
+are read-only and make no live render request.
 
-Generated output goes only under `<mockupsDir>/mokly-generated/`: one directory per entry named by
-its path, with a document per effective viewport and color scheme for screens
-and component variants, each page, Markdown documents and copied resources,
-`mokly-manifest.json`, compiled CSS in `styles/` and copied CSS assets in `assets/`.
-The entire directory is disposable and replaced as a transaction; a failed
-build leaves the previous output in place. Referenced authored assets stay
-under `mockupsDir` outside `mokly-generated/`.
+## Destination and recovery
 
-The manifest stays internal: its source inventory is never served over HTTP,
-published in an export or included in comparison resources. Ordinary public
-JSON beside your catalogue is unaffected unless it is referenced by the
-catalogue; only referenced assets are served and exported.
+The output must be a strict descendant of the repository root. It cannot
+overlap source roots, protected inputs, dependencies, or runtime directories.
+Git must ignore it. Mokly accepts missing or empty output and complete output
+that its current ownership marker authorizes.
 
-## Git tracking and watching
+A reservation stops competing writers. The build stages the new output and
+checks its inputs again before installation. A changed input fails with a
+retry instruction. A failed installation restores the old output when the
+destination is still absent. Recovery never overwrites a newly created
+folder. A cleanup failure names the remaining reservation or backup.
 
-`check` reads the Git index to decide whether to compare generated files;
-`build` never reads head tracking or refuses to write a new route. Either
-commit the **entire** `mokly-generated/` tree, or ignore that directory. After building a new entry in a tracked catalogue, `check`
-lists its route under `untracked:` until it is staged. Only `check` reports
-partial tracking, with instructions for both choices.
-`publish` requires a clean checkout. It compares committed generated files with
-the compilation and requires derived output to be ignored by Git.
+## Warnings and exit status
 
-`build --watch` performs an initial build and then watches configured inputs with debounced
-rebuilds. Every successful complete compilation replaces `mokly-generated/`;
-errors preserve the last-good tree and watching continues. Plain `serve` and
-`export` never write generated output. Use `serve --build` to opt into writing
-while you browse.
+Warnings appear on standard error. Without `--strict`, warnings do not change
+the exit status. With it, the build fails before installation. Success exits
+`0` and prints the output directory, file count, and deployment instruction.
+A failure or cancellation exits `1` with its error category.
 
-Mokly keeps private state in `.mokly-cache/` at the repository
-root and writes a `.gitignore` file inside it, so Git never shows or adds that
-folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
-such as formatters or linters, read only that file.
-
-Warnings name a generated page, an entry, a component, a folder or the
-configuration file. Strict mode counts all warnings, including ignored inputs.
+See [static delivery](/docs/reference/export-delivery/) for host requirements.

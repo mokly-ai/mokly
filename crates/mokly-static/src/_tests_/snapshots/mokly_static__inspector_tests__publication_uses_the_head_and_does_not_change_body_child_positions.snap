@@ -1,0 +1,5 @@
+---
+source: crates/mokly-static/src/_tests_/inspector_tests.rs
+expression: html
+---
+<html><head><template data-mokly-inspector="">{&quot;ranges&quot;:[],&quot;links&quot;:[]}</template><script src="/mokly-viewer/client/inspector.js"></script></head><body><main><h1>Title</h1><p>Body</p></main></body></html>

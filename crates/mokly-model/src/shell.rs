@@ -1,6 +1,6 @@
 //! One data-free shell document shared by every shell route.
 
-use mokly_model::namespace::VIEWER_DIRECTORY;
+use crate::namespace::VIEWER_DIRECTORY;
 
 /// Build identical shell bytes for one catalogue title.
 pub fn html(title: &str) -> Vec<u8> {
