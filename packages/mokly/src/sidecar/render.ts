@@ -10,6 +10,7 @@ import type { RenderResult } from "../generated/sidecar/RenderResult.js";
 import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.js";
 
 import type { Generation } from "./bundle.js";
+import { componentOutput } from "./component-output.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail } from "./errors.js";
 import { finishMarkup } from "./markup.js";
@@ -99,6 +100,8 @@ export async function render(
           return adapter(props, context);
         }
         node = React.createElement(Adapter);
+        if (kind === "component")
+          node = componentOutput(generation.runtime, session, node);
         const renderer = generation.exports?.renderer?.default;
         if (renderer !== undefined) {
           if (typeof renderer !== "function")
@@ -155,10 +158,37 @@ export async function render(
         server.renderToStaticMarkup,
         node,
       );
+      if (
+        kind === "component" &&
+        !generation.stories.has(name) &&
+        !session.componentOutput
+      )
+        collected.html =
+          server.renderToStaticMarkup(
+            componentOutput(generation.runtime, session, null),
+          ) + collected.html;
       const result = finishMarkup(collected.html, session);
+      const owners =
+        kind === "component" && "entry" in params
+          ? [generation.bindings![name]!.path]
+          : [];
       return {
         html: result.html,
-        styles: [...new Set([...collected.styles, ...result.styles])],
+        styles: [
+          ...collected.styles.map((css) => ({ css, owners })),
+          ...result.styles.map((style) => ({
+            ...style,
+            owners: style.owners.length ? style.owners : owners,
+          })),
+        ].filter(
+          (style, index, all) =>
+            all.findIndex(
+              (other) =>
+                other.css === style.css &&
+                JSON.stringify(other.owners) === JSON.stringify(style.owners),
+            ) === index,
+        ),
+        markers: result.markers,
         resources: [...resources],
         warnings: [],
         instances: session.instances,

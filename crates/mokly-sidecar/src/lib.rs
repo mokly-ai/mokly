@@ -23,6 +23,7 @@ mod process_io;
 pub mod process_memory;
 mod process_transport;
 mod process_worker;
+pub mod render_records;
 mod request_display;
 pub mod results;
 pub mod typescript;

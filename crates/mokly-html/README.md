@@ -33,7 +33,9 @@ that browser tree. Displaced instance regions lose their ownership and report
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The
 provider returns those records separately from consumer HTML. The core
-checks exact payloads, parent relationships, and complete consumption.
+checks exact payloads, parent relationships, and complete consumption. A private
+adapter-output placement lets the core attach the component root inside
+consumer renderer wrappers. Only instance and slot markers reach served bytes.
 
 `markdown::LinkResolver` classifies source-relative links before rendering.
 `links::rewrite` returns logical references for cross-view anchor validation

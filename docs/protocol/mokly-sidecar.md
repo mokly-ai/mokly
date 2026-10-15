@@ -42,7 +42,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"instances":[],"slots":[],"warnings":[]}}
+{"id":12,"result":{"html":"<!--mokly-output:start id=\"p-0\"--><button class=\"css-1x2\">Save</button><!--mokly-output:end id=\"p-0\"-->","styles":[{"css":".css-1x2{color:red}","owners":["ui/button"]}],"markers":[{"id":"p-0","payload":{"kind":"output"}}],"resources":[],"instances":[],"slots":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 

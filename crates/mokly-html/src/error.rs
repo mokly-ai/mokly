@@ -105,6 +105,12 @@ impl HtmlError {
 /// Internal failures without stringified source wrappers.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// An injected runtime adapter failed.
+    #[error("runtime adapter failed: {source}")]
+    Provider {
+        /// Original typed provider failure.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
     /// Model data could not be encoded.
     #[error("JSON encoding failed: {source}")]
     Json {

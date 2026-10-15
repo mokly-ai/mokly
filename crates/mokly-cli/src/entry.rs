@@ -6,7 +6,6 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use mokly_catalogue::config::Loader;
-use mokly_catalogue::definition_provider::DeferredDefinitions;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::Builder;
 use mokly_catalogue::working_tree::WorkingTree;
@@ -25,7 +24,7 @@ use terminal_size::{Width, terminal_size};
 
 use crate::entry_publish;
 
-use super::render_runtime::NativeGraphs;
+use super::render_runtime::Services;
 
 pub(super) trait Terminal {
     fn stdout(&self, text: &str);
@@ -114,16 +113,29 @@ pub(super) fn main() -> ExitCode {
             }
         };
         let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+        let services = match Services::new(tree.clone(), &cwd, &options.common, redactor.clone()) {
+            Ok(services) => services,
+            Err(error) => {
+                terminal.stderr(&style.error(Code::BuildInvalid, &error.to_string(), &redactor));
+                return ExitCode::FAILURE;
+            }
+        };
         let service: &dyn BuildService = &CatalogueBuild {
-            graphs: Arc::new(NativeGraphs { tree: tree.clone() }),
+            graphs: services.runtime.clone(),
             config: Arc::new(Loader { tree: tree.clone() }),
             catalogue: Arc::new(Builder {
                 tree: tree.clone(),
                 discovery: Arc::new(Discoverer { tree }),
-                definitions: Arc::new(DeferredDefinitions),
+                definitions: services.runtime.clone(),
             }),
         };
-        return match service.run(&cwd, options) {
+        let result = service.run(&cwd, options);
+        let shutdown = services.shutdown();
+        if let Err(error) = shutdown {
+            terminal.stderr(&style.error(Code::BuildInvalid, &error.to_string(), &redactor));
+            return ExitCode::FAILURE;
+        }
+        return match result {
             Ok(summary) => {
                 terminal.stderr(&build_output::warnings(
                     &style,

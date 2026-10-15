@@ -35,6 +35,12 @@ pub enum CatalogueError {
 /// Typed internal failures, without stringified wrappers.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// An injected runtime adapter failed.
+    #[error("runtime adapter failed: {source}")]
+    Provider {
+        /// Original typed provider failure.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
     /// Data encoding failed.
     #[error("JSON encoding failed: {source}")]
     Json {

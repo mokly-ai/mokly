@@ -17,6 +17,7 @@ use crate::discovery::{Discovery, Inventory, SourceKind};
 use crate::error::{CatalogueError, Result};
 use crate::locations::at;
 use crate::prepare_sources::{append, canonical_order, duplicate_indices};
+use crate::render_sources::JavaScriptCatalogue;
 use crate::template_types::{ElementRegistry, Template};
 use crate::validate_templates;
 use crate::{documents, folders, identity, moves, parsing, registry, relationships};
@@ -38,6 +39,8 @@ pub struct PreparedCatalogue {
     pub elements: ElementRegistry,
     /// JavaScript sources awaiting the Milestone 8 sidecar implementation.
     pub deferred_modules: Vec<String>,
+    /// Private JavaScript handles, bundle inputs, and saved React slots.
+    pub javascript: JavaScriptCatalogue,
     /// Sorted unique non-fatal warnings.
     pub warnings: Vec<Warning>,
 }
@@ -84,6 +87,7 @@ impl CatalogueBuilder for Builder {
             slot_fragments: BTreeMap::new(),
             elements: BTreeMap::new(),
             deferred_modules: Vec::new(),
+            javascript: JavaScriptCatalogue::default(),
             warnings: Vec::new(),
         };
         let mut failed = BTreeSet::new();

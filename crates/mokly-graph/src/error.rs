@@ -78,6 +78,12 @@ impl GraphError {
 /// Internal failures retain their error type.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// An injected runtime adapter failed.
+    #[error("runtime adapter failed: {source}")]
+    Provider {
+        /// Original typed provider failure.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
     /// A large-stack preparation thread could not start.
     #[error("preparation thread could not start: {source}")]
     PreparationThread {

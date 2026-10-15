@@ -47,7 +47,16 @@ impl FragmentRenderer for MemoFragments {
             "{:?}/{:?}/{:?}/{}",
             request.kind, request.viewport, request.color_scheme, request.ignore_enabled
         );
-        let slots = request.slots.keys().cloned().collect::<Vec<_>>().join("\n");
+        let slots = request
+            .slots
+            .iter()
+            .map(|(name, token)| format!("{name}:{token}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let effective = format!(
+            "{}\n{}\n{:?}",
+            request.entry_path, request.entry_title, request.saved_slots
+        );
         let key = if matches!(&request.kind, RenderKind::Page) {
             key(
                 NodeKind::Fragment,
@@ -63,6 +72,7 @@ impl FragmentRenderer for MemoFragments {
                 &[
                     self.generation.as_bytes(),
                     request.handle.as_bytes(),
+                    effective.as_bytes(),
                     props.as_bytes(),
                     axes.as_bytes(),
                     slots.as_bytes(),

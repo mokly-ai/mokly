@@ -11,7 +11,7 @@ presentation. The npm shim starts this binary with inherited streams.
 - Use watched Serve when the command is omitted.
 - Select plain or rich output and protect terminal diagnostics.
 - Keep success and failure exit statuses at 0 and 1.
-- Load JSON configuration, validate the catalogue, and render every HTML view.
+- Load JSON configuration, validate the catalogue, and render every HTML or JavaScript view.
 
 ## What This Crate Does
 
@@ -19,6 +19,14 @@ Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
+The composition root constructs a
+lazy sidecar pool with the normalized `--sidecars` or environment count.
+The npm shim supplies its package root and Node executable. Direct binary
+execution checks the adjacent installed package and development ancestors.
+An HTML-only catalogue starts no sidecar and needs no package lookup result.
+Catalogue and graph factories share the same runtime, cache, and pool.
+Build installs interrupt and termination handling before command work. Both
+the signal path and normal exit drain the pool through one shutdown guard.
 The composition root captures `MOKLY_SIDECAR_TIMEOUT_MS` once. Option
 validation accepts a positive 64-bit integer and retains it for PoolOptions.
 Invalid values fail `cli-invalid` with the accepted range.
@@ -32,8 +40,8 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust
-core. The binary owns catalogue work and file writes. `build` renders HTML
-screens, components, pages, and Markdown
+core. The binary owns catalogue work and file writes. `build` renders HTML and React
+screens, components, stories, pages, and Markdown
 documents into the bounded process cache. It reports all render warnings
 before strict-mode failure. Static output belongs to `mokly-static`.
 Catalogue counts include variants. Shared-body warnings name

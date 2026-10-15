@@ -152,7 +152,7 @@ function wrapSlot(
       React.Fragment,
       null,
       session.boundary(
-        `mokly-slot:start id="${slotRegion}" instance="${region}" name="${name}"`,
+        `mokly-slot:start id="${slotRegion}" instance="${region}" name="${name.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}"`,
       ),
       React.createElement(
         runtime.contexts.owner.Provider,

@@ -70,11 +70,16 @@ export function validateFields(
 ): DefinitionDiagnostic[] {
   const output = definitionShapes(data.input, data.kind, module, exportName);
   const input = data.input;
-  const add = (code: DefinitionDiagnostic["code"], message: string) =>
+  const add = (
+    code: DefinitionDiagnostic["code"],
+    message: string,
+    variantSlug?: string,
+  ) =>
     output.push({
       code,
       module,
       exportName,
+      ...(variantSlug !== undefined ? { variantSlug } : {}),
       message:
         code === "invalid-definition"
           ? `${module} export ${exportName}: export ${exportName} is not a Mokly definition: ${message}`
@@ -107,7 +112,11 @@ export function validateFields(
       );
       for (const key of Object.keys(variant)) {
         if (key === "variants")
-          add("invalid-variants", "a variant cannot declare variants");
+          add(
+            "invalid-variants",
+            "a variant cannot declare variants",
+            typeof variant.slug === "string" ? variant.slug : undefined,
+          );
         else if (
           !(
             data.kind === "screen"
@@ -135,7 +144,11 @@ export function validateFields(
                 ]
           ).includes(key)
         )
-          add("invalid-field", `unknown field ${key}`);
+          add(
+            "invalid-field",
+            `unknown field ${key}`,
+            typeof variant.slug === "string" ? variant.slug : undefined,
+          );
       }
       if (
         typeof variant.slug !== "string" ||
@@ -158,6 +171,7 @@ export function dataProps(
   declared: boolean,
   location: string,
   warnings: Warning[],
+  excluded?: string[],
 ): Record<string, unknown> {
   if (input === undefined) return {};
   if (declared) {
@@ -184,6 +198,7 @@ export function dataProps(
         throw new Error("accessor is not data");
       output[key] = copyData(descriptor.value);
     } catch {
+      excluded?.push(key);
       warnings.push({
         code: "props-not-data",
         message: `${location}: prop ${key} is not plain data`,

@@ -7,6 +7,8 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+mokly-render = { workspace = true }
+mokly-sidecar = { workspace = true }
 mokly-html = { workspace = true }
 mokly-css = { workspace = true }
 mokly-graph = { workspace = true }
@@ -24,6 +26,7 @@ unicode-width = "0.2.2"
 unimock = { version = "0.6.8", optional = true }
 url = "2.5.8"
 serde_json = "1.0.154"
+ctrlc = { version = "3.5.2", features = ["termination"] }
 
 [dev-dependencies]
 mokly-catalogue = { workspace = true, features = ["mock"] }

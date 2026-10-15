@@ -22,7 +22,10 @@ modules from the sidecar adapter. Its `prepare` method reads stylesheet
 inputs and computes document plans. It renders no document. Each plan carries
 a route and the document node's input hash, which is the public
 `documentKey`. `dyn RenderGeneration` supports on-demand rendering, a full
-build pass, resource reads, and closure queries.
+build pass, resource reads, and closure queries. `render_props` validates a
+complete transient props map and uses the same composition and closure path.
+Its document does not replace the saved plan or catalogue props. The generation
+also exposes validated PostCSS directory watches, including empty glob matches.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return
@@ -33,7 +36,8 @@ set of parsed documents. Eviction changes work only.
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 It stops at declared catalogue documents. The working-tree adapter implements
 `mokly-source-interface::tree::SourceTree`. Historical rendering supplies the
-same boundary through the comparison adapter; that integration is in progress.
+same boundary through the comparison adapter. `mokly-render` supplies the
+JavaScript factories and selected base dependencies through that path.
 Serve must also apply the public policy's read-time confinement rules.
 
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share

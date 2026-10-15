@@ -19,6 +19,7 @@ pub mod url_safety;
 
 mod assembly;
 mod autolinks;
+mod component_root;
 mod components;
 mod conditions;
 mod context;

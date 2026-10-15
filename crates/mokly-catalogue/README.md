@@ -35,8 +35,12 @@ ownership. Later stages reuse it instead of walking again.
 `Builder` implements `CatalogueBuilder`. It produces `PreparedCatalogue`: a
 validated in-memory model, private HTML and Markdown bodies, variant slot
 fragments, the element registry, warnings, and the source inventory. It calls
-`dyn DefinitionProvider` only for discovered JavaScript files. The sidecar
-adapter supplies definitions through that boundary. `DeferredDefinitions`
+`dyn DefinitionProvider` with the resolved configuration only for discovered JavaScript files. The sidecar
+adapter supplies definitions through that boundary. Private JavaScript
+recipes retain handles separately from source attribution, saved React slots,
+module edges, class-map identity, and the resolved handle table. Declared
+controls pass the Rust validator. Story control hints do not change schemas.
+Inference exclusions become warnings only after final path derivation. `DeferredDefinitions`
 marks its result as deferred and leaves those files in `deferred_modules`
 without evaluating them. A successful provider clears that deferred set, so a
 build cannot report success after skipping JavaScript inputs.

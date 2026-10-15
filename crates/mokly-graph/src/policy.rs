@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::protection::{ProtectedBy, SourcePolicy};
+use mokly_css::dependencies::PluginInput;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{Result, invalid};
@@ -38,6 +39,8 @@ pub struct FilePolicy {
     pub sources: SourcePolicy,
     /// Specific imported-by diagnostics, after ordinary source precedence.
     pub imported_by: BTreeMap<String, String>,
+    /// Consumer plugin sources keep their own recovery message.
+    pub plugin_inputs: BTreeMap<String, PluginInput>,
     /// Private dependency, package, and actual output trees.
     pub private: Vec<PathBuf>,
     decisions: Mutex<BTreeMap<String, result::Result<PublicFile, PublicDenial>>>,
@@ -78,6 +81,7 @@ impl FilePolicy {
             repo_root: config.repo_root.clone(),
             sources: policy,
             imported_by,
+            plugin_inputs: BTreeMap::new(),
             private,
             decisions: Mutex::new(BTreeMap::new()),
         })
@@ -113,6 +117,13 @@ impl FilePolicy {
             ProtectedBy::RootMatch { .. } => PublicDenial::RootMatch,
             ProtectedBy::ReservedBasename => PublicDenial::Reserved,
             ProtectedBy::ListedInput => {
+                if let Some(origin) = self.plugin_inputs.get(path) {
+                    return PublicDenial::Postcss {
+                        plugin: origin.plugin.clone(),
+                        stylesheet: origin.stylesheet.clone(),
+                        relative_file: mokly_model::routes::relative(&origin.stylesheet, path),
+                    };
+                }
                 let direct = self.imported_by.get(path).cloned();
                 let imported = direct.or_else(|| {
                     if self.imported_by.is_empty() {

@@ -31,6 +31,7 @@ export interface Owner {
   seen: Set<string>;
 }
 export interface RenderSession {
+  componentOutput?: boolean;
   context: RenderContext;
   sourceRoot: string;
   dependencyRoots: readonly string[];

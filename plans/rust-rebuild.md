@@ -745,7 +745,7 @@ At completion React components, React screens, JavaScript pages, and
 Storybook stories render through the sidecar, and the example catalogue
 renders again.
 
-- [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
+- [x] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
       fail-closed rules.
   - [x] Add the standalone Node entry, bounded NDJSON, method dispatch,
@@ -757,7 +757,7 @@ renders again.
         CLI timeout override.
   - [x] Apply the approved resolved bindings, usage drafts, PostCSS contexts,
         and fragment-scoped registry style collection.
-- [ ] Implement consumer bundling in the sidecar with the bundler of Decision
+- [x] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
   - [x] Add unevaluated esbuild generations, attributed facades, the JSX
@@ -766,7 +766,7 @@ renders again.
         JavaScript and CSS under stable dependency graph names.
   - [x] Add the PostCSS worker and preserve local module locations, plugin
         creation lifetime, and dependency plugin names and globs.
-- [ ] Implement component, screen, page, and story renders, with
+- [x] Implement component, screen, page, and story renders, with
       `defineScreen` rendering over props, `json-schema-to-ts` for declared
       schemas and the `props` literal type for undeclared ones, schema
       inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
@@ -776,29 +776,36 @@ renders again.
       a stories file is a component entry whose stories are its variants.
   - [x] Add the authoring API with schema and literal prop inference, and
         standalone component, screen, story, and page renders.
-  - [ ] Connect resolved catalogue paths, complete usage records, schema
+  - [x] Connect resolved catalogue paths, complete usage records, schema
         validation, and fragment caching through the approved binding.
-- [ ] Implement `describe`: every definition the entry modules and stories
+- [x] Implement `describe`: every definition the entry modules and stories
       files export, one per export, rejecting arrays containing definitions, with the
       story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
-- [ ] Reconcile the rendering page's authenticated fragment placements and
+- [x] Reconcile the rendering page's authenticated fragment placements and
       logical inputs with the sidecar's typed instance and slot render-result
       records before connecting the Milestone 5 composition boundary.
-- [ ] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
+- [x] Connect the Milestone 5 fragment and CSS interfaces: capture authenticated
       input and marker-placement metadata in the sidecar, resolve definition
       handles to catalogue identities, and supply the bundle generation,
       delivery roots, and component stylesheet lists to the native graph.
-- [ ] Extend the definition-provider boundary for `describe` handles,
+- [x] Extend the definition-provider boundary for `describe` handles,
       declared controls, story control hints, slot handles, excluded non-data
       prop keys, and authoring diagnostics; emit `props-not-data` after path
       derivation names the entry and key.
 - [ ] Implement live prop editing in Serve through the same render path.
+  - [x] Add the shared `RenderGeneration::render_props` path with Rust prop
+        validation, fragment caching, document composition, and closure checks.
+  - [ ] Wire the Serve live render route to the shared JavaScript runtime.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
+  - [x] Read and classify the previous rendering and component rules and tests
+        for the core integration gap sweep.
+  - [ ] Compare captured example and large scenarios after the example port
+        and comparison integration land.
 - [ ] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
 - [ ] Restore the example typecheck; validate or replace the viewer browser
@@ -831,6 +838,10 @@ and `.context/rust-rebuild/sweeps/m8-sidecar.md`. Round 1 fixes and merge
 decisions: `.context/rust-rebuild/delegation/m8-sidecar/report-2.md` and
 `.context/rust-rebuild/delegation/m8-sidecar/merge-decisions.md`. Final part 1
 fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
+
+Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
+sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
+`.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
 
 - [ ] Commit.
 

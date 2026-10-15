@@ -10,9 +10,11 @@ use crate::config_types::ResolvedConfig;
 use crate::diagnostic::{Code, Issue};
 use crate::discovery::SourceKind;
 use crate::error::Result;
+use crate::identity;
 use crate::input::ParsedEntry;
 use crate::preparation::{Builder, PreparedCatalogue};
 use crate::prepare_entry;
+use crate::provided_entries;
 use crate::yaml::Document;
 
 impl Builder {
@@ -33,11 +35,16 @@ impl Builder {
             .cloned()
             .collect();
         if !javascript.is_empty() {
-            let described = self.definitions.describe(&javascript)?;
+            let described = self.definitions.describe(config, &javascript)?;
             if !described.deferred {
                 prepared.deferred_modules.clear();
             }
             prepared.model.folders.extend(described.folders);
+            prepared.javascript.generation = described.generation;
+            prepared.javascript.bindings = described.bindings;
+            prepared.warnings.extend(described.warnings);
+            issues.extend(described.issues);
+            let mut pending = Vec::new();
             for source in described.sources {
                 if traversal(&source) || Path::new(&source).is_absolute() {
                     issues.push(Issue::new(
@@ -84,8 +91,26 @@ impl Builder {
                     continue;
                 }
                 let parsed = ParsedEntry {
+                    issues: definition
+                        .rendering
+                        .issues
+                        .iter()
+                        .map(|diagnostic| {
+                            let mut issue = diagnostic.issue.clone();
+                            if let Some(slug) = &diagnostic.variant
+                                && let Ok((path, _)) = identity::derive(
+                                    &definition.input,
+                                    file,
+                                    &config.roots[file.root_index],
+                                    &definition.source,
+                                )
+                            {
+                                issue.message = format!("{path}/{slug}: {}", issue.message);
+                            }
+                            issue
+                        })
+                        .collect(),
                     input: definition.input,
-                    issues: Vec::new(),
                     document: Document {
                         value: serde_json::Value::Null,
                         positions: BTreeMap::new(),
@@ -99,10 +124,28 @@ impl Builder {
                     file,
                     &config.roots[file.root_index],
                     definition.kind,
-                    definition.source,
+                    definition.source.clone(),
                     &prepared.model.color_schemes,
                 ) {
-                    Ok(result) => {
+                    Ok(mut result) => {
+                        for issue in &mut result.issues {
+                            if let Some(location) = &mut issue.location {
+                                if location.export.is_none() {
+                                    location.export = definition.source.export.clone();
+                                }
+                            } else {
+                                issue.location = Some(definition.source.clone());
+                            }
+                        }
+                        if let Some(parent) = result.entries.first() {
+                            pending
+                                .push((parent.metadata.path.clone(), definition.rendering.clone()));
+                        }
+                        provided_entries::attach(
+                            prepared,
+                            &mut result.entries,
+                            &definition.rendering,
+                        );
                         if result.failed {
                             failed.extend(
                                 result
@@ -117,6 +160,7 @@ impl Builder {
                     Err(issue) => issues.push(issue),
                 }
             }
+            provided_entries::references(prepared, &pending, issues);
         }
         Ok(())
     }

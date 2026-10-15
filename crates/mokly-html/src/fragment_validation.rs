@@ -4,7 +4,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_model::catalogue::EntryContent;
-use mokly_model::diagnostic::AuthoringKind;
 use mokly_model::material::{instance_key, props_key, slot_key};
 use mokly_model::usage::ComponentInputOwner;
 use mokly_model::wire_decode;
@@ -12,7 +11,6 @@ use mokly_model::wire_decode;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::Fragment;
-use crate::props;
 use crate::tree::{Node, RegionKind};
 
 pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Result<()> {
@@ -71,14 +69,6 @@ pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Res
                 Code::BuildInvalid,
                 "forged fragment instance metadata",
             ));
-        }
-        if let (Some(schema), Some(props)) = (schema, &props) {
-            props::validate_for(
-                schema,
-                props,
-                &instance.component_id,
-                AuthoringKind::JavaScript,
-            )?;
         }
         let scope = format!("{:?}/{:?}", instance.owner, instance.slot_key);
         if !scopes.entry(scope).or_default().insert(instance.order) {

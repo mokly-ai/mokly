@@ -45,3 +45,6 @@ mod rendering_tests;
 #[cfg(test)]
 #[path = "_tests_/snapshot_tests.rs"]
 mod snapshot_tests;
+
+mod document_composition;
+mod temporary;

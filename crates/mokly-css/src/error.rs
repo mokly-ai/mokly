@@ -10,6 +10,9 @@ pub type Result<T> = result::Result<T, CssError>;
 /// Failures distinguish policy, transform, import, and asset errors.
 #[derive(Debug, Error)]
 pub enum CssError {
+    /// An injected consumer processor failed.
+    #[error("[mokly-css/internal] {0}")]
+    Internal(#[from] InternalError),
     /// The delivery root cannot form a portable route.
     #[error(
         "[mokly-css/build-invalid] cannot deliver imported CSS for {path}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)"
@@ -78,4 +81,15 @@ pub enum TransformFailure {
     Modules,
     /// Generated local name collision.
     Collision,
+}
+
+/// Infrastructure errors retain their original source.
+#[derive(Debug, Error)]
+pub enum InternalError {
+    /// Consumer runtime failure.
+    #[error("consumer processor failed: {source}")]
+    Provider {
+        /// Typed underlying failure.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }

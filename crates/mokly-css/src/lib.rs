@@ -2,6 +2,7 @@
 #![warn(unreachable_pub)]
 
 pub mod compiler;
+pub mod dependencies;
 pub mod error;
 pub mod modules;
 pub mod names;
@@ -29,3 +30,5 @@ mod modules_tests;
 #[cfg(test)]
 #[path = "_tests_/syntax_tests.rs"]
 mod syntax_tests;
+
+mod compiler_assets;

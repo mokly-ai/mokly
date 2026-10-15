@@ -1576,6 +1576,7 @@ version = "0.14.0"
 dependencies = [
  "async-trait",
  "clap",
+ "ctrlc",
  "dunce",
  "insta",
  "mokly-catalogue",
@@ -1586,6 +1587,8 @@ dependencies = [
  "mokly-model",
  "mokly-platform",
  "mokly-publish",
+ "mokly-render",
+ "mokly-sidecar",
  "mokly-source-interface",
  "serde_json",
  "tempfile",
@@ -1737,6 +1740,29 @@ dependencies = [
  "tracing",
  "unimock",
  "url",
+]
+
+[[package]]
+name = "mokly-render"
+version = "0.14.0"
+dependencies = [
+ "globset",
+ "insta",
+ "mokly-catalogue",
+ "mokly-compare",
+ "mokly-css",
+ "mokly-graph",
+ "mokly-html",
+ "mokly-model",
+ "mokly-platform",
+ "mokly-sidecar",
+ "mokly-source-interface",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+ "unimock",
 ]
 
 [[package]]

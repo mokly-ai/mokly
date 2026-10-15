@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { executeNative } from "./execution.mjs";
 
@@ -34,7 +35,17 @@ export function systemRuntime() {
     execute: (binary, arguments_) =>
       executeNative(binary, arguments_, {
         platform: process.platform,
-        spawn,
+        spawn: (program, args, options) =>
+          spawn(program, args, {
+            ...options,
+            env: {
+              ...process.env,
+              MOKLY_PACKAGE_ROOT: fileURLToPath(
+                new URL("../", import.meta.url),
+              ),
+              MOKLY_NODE_EXECUTABLE: process.execPath,
+            },
+          }),
         subscribe: (signal, handler) => process.on(signal, handler),
         unsubscribe: (signal, handler) =>
           process.removeListener(signal, handler),

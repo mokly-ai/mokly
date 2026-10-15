@@ -28,9 +28,13 @@ and [entry props](./mokly-entry-props.md#validation) contracts own the codes.
 ## Authoring Diagnostics
 
 `diagnostics` is an ordered list of
-`{ code, module, exportName?, message }` records. A module is repository-relative.
+`{ code, module, exportName?, variantSlug?, message }` records. A module is repository-relative.
 An export name is present when the diagnostic concerns one export. The message
-follows the owning authoring contract and keeps its source detail.
+follows the owning authoring contract and keeps its source detail. A variant
+slug lets the core attribute unknown fields after deriving the final parent
+path. A definition with valid identity metadata stays in the inventory when
+an unknown field makes it invalid. Its data validation waits until its metadata
+is valid, so dependent props do not add secondary errors.
 
 The list accepts the codes of the
 [entry module contract](./mokly-entry-modules.md#diagnostics):
@@ -54,6 +58,9 @@ the module and diagnostic text.
 Each record has typed entry metadata, controls, variants, and Storybook
 control hints. The transport has no catch-all metadata map. Imported
 entry references use `{ handle }`, distinct from authored path strings.
+Definitions and variants also carry optional `excludedProps` lists of non-data
+inference keys. The core emits their warnings after it derives each final
+entry path. Storybook excludes non-prop args before it collects these keys.
 Saved React slot values remain inside the loaded generation and serialize
 as slot-name to opaque handle records. Functions and React elements never
 serialize as data props. The core builds the catalogue and component registry

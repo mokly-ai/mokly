@@ -1,4 +1,4 @@
-//! The built CLI validates catalogues without a sidecar, Git, or output writes.
+//! HTML builds need no Node process; JavaScript fails closed when Node is absent.
 
 use std::fs;
 use std::path::Path;
@@ -18,6 +18,7 @@ fn run(directory: &Path, args: &[&str], mode: &str) -> Output {
         .current_dir(directory)
         .env("MOKLY_OUTPUT", mode)
         .env("PATH", "")
+        .env_remove("MOKLY_NODE_EXECUTABLE")
         .env_remove("MOKLY_SIDECARS")
         .env_remove("CI")
         .output()
@@ -143,7 +144,7 @@ fn html_errors_report_the_exact_one_based_source_location() {
 }
 
 #[test]
-fn a_deferred_javascript_file_cannot_report_a_complete_catalogue() {
+fn javascript_without_node_cannot_report_a_complete_catalogue() {
     let directory = TempDir::new().unwrap();
     write(directory.path(), "mokly.config.json", "{}");
     write(
@@ -161,7 +162,7 @@ fn a_deferred_javascript_file_cannot_report_a_complete_catalogue() {
     assert!(
         String::from_utf8(output.stderr)
             .unwrap()
-            .contains("JavaScript rendering is unavailable for specs/entry.mockup.ts")
+            .contains("node is unavailable")
     );
     assert!(output.stdout.is_empty());
 }

@@ -45,9 +45,18 @@ test("sidecar extracts consumer runtime registries on repeated renders", async (
     });
     assert.match(result.html, /Styled/);
     assert.match(result.html, /Emotion/);
-    assert.match(result.styles.join("\n"), /rgb\(1,\s*2,\s*3\)/);
-    assert.match(result.styles.join("\n"), /rgba\(4,\s*5,\s*6,\s*1\.00\)/);
-    assert.match(result.styles.join("\n"), /rgb\(7,\s*8,\s*9\)/);
+    assert.match(
+      result.styles.map((style) => style.css).join("\n"),
+      /rgb\(1,\s*2,\s*3\)/,
+    );
+    assert.match(
+      result.styles.map((style) => style.css).join("\n"),
+      /rgba\(4,\s*5,\s*6,\s*1\.00\)/,
+    );
+    assert.match(
+      result.styles.map((style) => style.css).join("\n"),
+      /rgb\(7,\s*8,\s*9\)/,
+    );
   }
   await sidecar.call("shutdown");
 });
@@ -76,9 +85,25 @@ test("persistent registry rules exclude unused styles and do not depend on rende
     });
   const first = await render(false);
   const second = await render(true);
-  assert.match(first.styles.join(""), /rgba\(11,22,33,1.00\)/);
-  assert.ok(!first.styles.join("").includes("44,55,66"));
-  assert.match(second.styles.join(""), /rgba\(44,55,66,1.00\)/);
-  assert.ok(!second.styles.join("").includes("11,22,33"));
+  assert.match(
+    first.styles.map((style) => style.css).join(""),
+    /rgba\(11,22,33,1.00\)/,
+  );
+  assert.ok(
+    !first.styles
+      .map((style) => style.css)
+      .join("")
+      .includes("44,55,66"),
+  );
+  assert.match(
+    second.styles.map((style) => style.css).join(""),
+    /rgba\(44,55,66,1.00\)/,
+  );
+  assert.ok(
+    !second.styles
+      .map((style) => style.css)
+      .join("")
+      .includes("11,22,33"),
+  );
   assert.deepEqual(await render(false), first);
 });

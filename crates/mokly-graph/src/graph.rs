@@ -22,7 +22,7 @@ use crate::error::{GraphError, Result};
 use crate::key::{NodeKind, data_key, key};
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
-use crate::session::Session;
+use crate::session::{Session, StyleInputs};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::RenderWorkers;
 use crate::{config_key, error, markdown_assets, markdown_sources, planning, styles};
@@ -99,6 +99,8 @@ impl Graph {
         let mut module_names = ModuleNames::default();
         let mut resources: BTreeMap<String, ResourcePlan> = BTreeMap::new();
         let mut imported_by = BTreeMap::new();
+        let mut plugin_inputs = BTreeMap::new();
+        let mut directories = BTreeSet::new();
         let roots = styles::roots(&config, &self.inputs);
         let configured: Vec<_> = styles::roots(&config, &DeliveryInputs::default())
             .into_keys()
@@ -196,9 +198,15 @@ impl Graph {
                 .model
                 .sources
                 .extend(bundle.inputs.into_keys().filter(|path| {
-                    !markdown_assets.files.contains(path) || original_sources.contains(path)
+                    (!path.split('/').any(|part| part == "node_modules")
+                        || bundle.repository_aliases.contains(path)
+                        || bundle.plugin_inputs.contains_key(path))
+                        && (!markdown_assets.files.contains(path)
+                            || original_sources.contains(path))
                 }));
             imported_by.extend(bundle.imported_by);
+            plugin_inputs.extend(bundle.plugin_inputs);
+            directories.extend(bundle.directories);
         }
         catalogue
             .model
@@ -217,13 +225,14 @@ impl Graph {
         for plan in plans.values() {
             names.insert(&plan.route, false)?;
         }
-        let policy = FilePolicy::new(
+        let mut policy = FilePolicy::new(
             self.tree.clone(),
             &config,
             &catalogue.model.sources,
             imported_by,
             output,
         )?;
+        policy.plugin_inputs = plugin_inputs;
         for path in local_roots {
             if let Err(reason) = policy.stylesheet_input(&path, !private_before.contains(&path)) {
                 return Err(error::invalid(
@@ -237,7 +246,16 @@ impl Graph {
         }
         let policy: Arc<dyn PublicPolicy> = Arc::new(policy);
         Ok(Arc::new(Session::new(
-            config, catalogue, plans, resources, self, policy, matchers,
+            config,
+            catalogue,
+            plans,
+            resources,
+            self,
+            policy,
+            StyleInputs {
+                matchers,
+                directories: directories.into_iter().collect(),
+            },
         )))
     }
 }

@@ -191,21 +191,42 @@ fn a_thousand_nested_elements_render_on_the_preparation_and_render_stacks() {
 }
 
 #[test]
-fn configured_postcss_keeps_one_explicit_sidecar_failure() {
+fn postcss_runs_only_for_styles_and_reports_each_failure_once() {
     let root = fixture();
     write(
         root.path(),
         "mokly.config.json",
         r#"{"postcss":"postcss.mjs"}"#,
     );
-    write(root.path(), "postcss.mjs", "export default {};");
+    write(
+        root.path(),
+        "postcss.mjs",
+        "throw new Error('fixture-postcss-failure'); export default {};",
+    );
     write(
         root.path(),
         "specs/a.screen.html",
         "---\ntitle: A\n---\n<p>A</p>",
     );
-    fails(
+    let unused = run(root.path());
+    assert_eq!(unused.status.code(), Some(0));
+    assert!(unused.stdout.is_empty());
+    assert!(unused.stderr.is_empty());
+    write(
         root.path(),
-        "[mokly/build-invalid] consumer PostCSS requires a sidecar: postcss.mjs\n",
+        "mokly.config.json",
+        r#"{"postcss":"postcss.mjs","stylesheets":[{"match":"**","stylesheets":["style.css"]}]}"#,
+    );
+    write(root.path(), "style.css", "p { color: red; }");
+    let output = run(root.path());
+    assert_eq!(output.status.code(), Some(1));
+    assert!(output.stdout.is_empty());
+    let error = String::from_utf8(output.stderr).unwrap();
+    assert!(error.starts_with("[mokly/build-invalid]"), "{error}");
+    assert!(error.contains("postcss.mjs"), "{error}");
+    assert_eq!(
+        error.matches("fixture-postcss-failure").count(),
+        1,
+        "{error}"
     );
 }

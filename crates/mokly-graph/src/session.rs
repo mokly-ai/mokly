@@ -6,11 +6,10 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::normalize_warnings;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::StylesheetBundler;
-use mokly_html::composition::{ComposeRequest, Composer};
-use mokly_html::error::HtmlError;
-use mokly_model::axes::Viewport;
-use mokly_model::catalogue::EntryContent;
+use mokly_html::composition::Composer;
+use mokly_model::data::Props;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
@@ -20,16 +19,24 @@ use crate::error::{GraphError, Result, invalid};
 use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
-use crate::types::{DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan};
+use crate::types::{
+    DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TemporaryDocument,
+};
 use crate::workers::{ArtifactWorker, RenderWorkers};
-use crate::{markdown_links, rendering, route_inventory, styles, validation};
+use crate::{document_composition, route_inventory, styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
     pub(crate) state: Arc<State>,
 }
 
+pub(crate) struct StyleInputs {
+    pub(crate) matchers: styles::Matchers,
+    pub(crate) directories: Vec<DirectoryDependency>,
+}
+
 pub(crate) struct State {
+    pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) matchers: styles::Matchers,
     pub(crate) reference_index: Arc<dyn ReferenceIndex>,
     pub(crate) inputs: DeliveryInputs,
@@ -53,11 +60,12 @@ impl Session {
         resources: BTreeMap<String, ResourcePlan>,
         graph: &Graph,
         policy: Arc<dyn PublicPolicy>,
-        matchers: styles::Matchers,
+        styles: StyleInputs,
     ) -> Self {
         Self {
             state: Arc::new(State {
-                matchers,
+                matchers: styles.matchers,
+                directories: styles.directories,
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
                 inputs: graph.inputs.clone(),
                 config,
@@ -84,62 +92,7 @@ impl Session {
             return Ok(artifact);
         }
         let entry = &self.state.catalogue.model.entries[plan.entry];
-        let result = (|| -> Result<Arc<Artifact>> {
-            let mut composed = if matches!(entry.content, EntryContent::Document { .. }) {
-                let resolver = markdown_links::Resolver {
-                    tree: self.state.tree.clone(),
-                    config: &self.state.config,
-                    catalogue: &self.state.catalogue,
-                    entry,
-                    route,
-                    policy: self.state.policy.as_ref(),
-                };
-                rendering::markdown(&self.state.catalogue, entry, plan, &resolver)?
-            } else {
-                match self.state.composer.compose(&ComposeRequest {
-                    catalogue: &self.state.catalogue,
-                    entry,
-                    viewport: plan.viewport.unwrap_or(Viewport::Desktop),
-                    color_scheme: plan.color_scheme,
-                    stylesheets: plan.stylesheets.clone(),
-                }) {
-                    Ok(composed) => composed,
-                    Err(source) => {
-                        return Err(GraphError::Html {
-                            source: HtmlError::Route {
-                                route: route.into(),
-                                source: Box::new(source),
-                            },
-                        });
-                    }
-                }
-            };
-            if plan.viewport.is_some() {
-                let parent = entry
-                    .metadata
-                    .variant_of
-                    .as_ref()
-                    .unwrap_or(&entry.metadata.path);
-                let hrefs = styles::links(&styles::LinkInput {
-                    matchers: &self.state.matchers,
-                    config: &self.state.config,
-                    path: &entry.metadata.path,
-                    route,
-                    scheme: plan.color_scheme,
-                    components: &composed.components,
-                    inputs: &self.state.inputs,
-                    resources: &self.state.resources,
-                    module: self
-                        .state
-                        .inputs
-                        .entry_modules
-                        .get(parent)
-                        .map_or(entry.metadata.source.path.as_str(), String::as_str),
-                })?;
-                styles::install(&mut composed.tree, &hrefs);
-            }
-            rendering::finish(composed, plan, entry, &self.state.catalogue)
-        })();
+        let result = document_composition::document(self, plan, entry);
         match result {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(GraphError::Document {
@@ -168,6 +121,9 @@ impl RenderGeneration for Session {
     }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
         self.state.workers.document(route, self)
+    }
+    fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument> {
+        temporary::render(self, route, props)
     }
     fn closure(&self, route: &str) -> Result<Closure> {
         self.state.workers.closure(route, self)
@@ -215,6 +171,9 @@ impl RenderGeneration for Session {
         }
         normalize_warnings(&mut summary.warnings);
         Ok(summary)
+    }
+    fn stylesheet_directories(&self) -> &[DirectoryDependency] {
+        &self.state.directories
     }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()

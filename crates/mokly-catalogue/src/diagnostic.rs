@@ -6,6 +6,27 @@ use serde_json::Value;
 /// Stable catalogue diagnostic code. Automation can branch on this enum.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Code {
+    /// JavaScript authoring diagnostic `component-schema`.
+    ComponentSchema,
+    /// JavaScript authoring diagnostic `component-props`.
+    ComponentProps,
+    /// JavaScript authoring diagnostic `component-element`.
+    ComponentElement,
+    /// JavaScript authoring diagnostic `component-controls`.
+    ComponentControls,
+    /// JavaScript authoring diagnostic `component-slots`.
+    ComponentSlots,
+    /// JavaScript authoring diagnostic `duplicate-export`.
+    DuplicateExport,
+    /// JavaScript authoring diagnostic `array-export`.
+    ArrayExport,
+    /// JavaScript authoring diagnostic `empty-module`.
+    EmptyModule,
+    /// JavaScript authoring diagnostic `unknown-link-definition`.
+    UnknownLinkDefinition,
+    /// JavaScript authoring diagnostic `invalid-definition`.
+    InvalidDefinition,
+
     /// Invalid configuration.
     ConfigInvalid,
     /// Invalid path segment.
@@ -62,6 +83,17 @@ impl Code {
     /// Exact kebab-case protocol identifier.
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::ComponentSchema => "component-schema",
+            Self::ComponentProps => "component-props",
+            Self::ComponentElement => "component-element",
+            Self::ComponentControls => "component-controls",
+            Self::ComponentSlots => "component-slots",
+            Self::DuplicateExport => "duplicate-export",
+            Self::ArrayExport => "array-export",
+            Self::EmptyModule => "empty-module",
+            Self::UnknownLinkDefinition => "unknown-link-definition",
+            Self::InvalidDefinition => "invalid-definition",
+
             Self::ConfigInvalid => "config-invalid",
             Self::InvalidSegment => "invalid-segment",
             Self::InvalidPath => "invalid-path",

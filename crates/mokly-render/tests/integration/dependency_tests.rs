@@ -1,0 +1,135 @@
+//! Selected external dependency roots keep logical CSS names and physical PostCSS inputs.
+
+use std::fs;
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use mokly_catalogue::discovery::Discoverer;
+use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
+use mokly_catalogue::working_tree::WorkingTree;
+use mokly_compare::cache_types::Lease;
+use mokly_compare::dependency_types::{Resolved, Tier};
+use mokly_graph::cache::MemoryCache;
+use mokly_graph::types::GraphFactory;
+use mokly_graph::workers::ThreadWorkers;
+use mokly_render::runtime::Runtime;
+use mokly_render::side::BaseSide;
+use mokly_sidecar::methods::{Call, ModuleResolution};
+use unimock::Unimock;
+
+use super::support::Consumer;
+
+#[test]
+fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources() {
+    let consumer = Consumer::new();
+    let dependencies = tempfile::tempdir().unwrap();
+    let package = dependencies.path().join("node_modules/fixture-theme");
+    fs::create_dir_all(&package).unwrap();
+    fs::write(
+        package.join("package.json"),
+        r#"{"name":"fixture-theme","version":"1.0.0"}"#,
+    )
+    .unwrap();
+    fs::write(
+        package.join("skin.module.css"),
+        ".external { color: MOKLY_COLOR; }\n",
+    )
+    .unwrap();
+    consumer.replace(
+        "library/chip.tsx",
+        "import styles from",
+        "import extra from 'fixture-theme/skin.module.css';\nimport styles from",
+    );
+    consumer.replace(
+        "library/chip.tsx",
+        "className={styles.chip}",
+        "className={styles.chip + ' ' + extra.external}",
+    );
+    let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap();
+    let base = Arc::new(BaseSide {
+        sources: Lease {
+            directory: consumer.root().into(),
+            guard: Box::new(Unimock::new(())),
+        },
+        dependencies: Resolved {
+            tier: Tier::Installed,
+            node_modules: workspace.join("node_modules"),
+            module_resolution: ModuleResolution {
+                package_roots: vec![
+                    workspace.to_string_lossy().into_owned(),
+                    dependencies.path().to_string_lossy().into_owned(),
+                ],
+                ..Default::default()
+            },
+            warning: None,
+            lease: Some(Lease {
+                directory: dependencies.path().into(),
+                guard: Box::new(Unimock::new(())),
+            }),
+            repository_roots: vec![consumer.root().into()],
+        },
+        identity: "dependency-base".into(),
+    });
+    let runtime = Arc::new(Runtime::new(
+        Arc::new(WorkingTree),
+        Arc::new(WorkingTree),
+        consumer.pool.clone(),
+        Arc::new(MemoryCache::new(16 * 1024 * 1024)),
+        Arc::new(ThreadWorkers::new(2).unwrap()),
+        env!("CARGO_PKG_VERSION").into(),
+        Some(base),
+    ));
+    let builder: &dyn CatalogueBuilder = &Builder {
+        tree: Arc::new(WorkingTree),
+        discovery: Arc::new(Discoverer {
+            tree: Arc::new(WorkingTree),
+        }),
+        definitions: runtime.clone(),
+    };
+    let prepared = builder.prepare(&consumer.config(), None).unwrap();
+    let logical = "node_modules/.mokly-roots/1/fixture-theme/skin.module.css";
+    assert!(
+        prepared
+            .javascript
+            .generation
+            .as_ref()
+            .unwrap()
+            .modules
+            .contains_key(logical)
+    );
+    let factory: &dyn GraphFactory = runtime.as_ref();
+    let generation = factory
+        .create(&consumer.config())
+        .unwrap()
+        .prepare(consumer.config(), prepared, None)
+        .unwrap();
+    assert!(
+        !generation
+            .catalogue()
+            .model
+            .sources
+            .iter()
+            .any(|path| path.contains("node_modules"))
+    );
+    let html = String::from_utf8(
+        generation
+            .render("components/chip/index.mobile.html")
+            .unwrap()
+            .bytes
+            .clone(),
+    )
+    .unwrap();
+    let calls = consumer.pool.calls.lock().unwrap();
+    let maps = calls
+        .iter()
+        .find_map(|call| match call {
+            Call::CssModules(maps) => Some(maps),
+            _ => None,
+        })
+        .unwrap();
+    assert!(html.contains(&maps.class_maps[logical]["external"]));
+    assert!(calls.iter().any(|call| matches!(call, Call::ProcessCss(css) if css.source_path == package.join("skin.module.css").to_string_lossy())));
+}

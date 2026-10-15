@@ -109,8 +109,14 @@ export class Session {
           )
         )
           protocol("bindings must contain every described handle exactly once");
-        for (const entry of Object.values(request.params.entries))
-          if (!isEntryPath(entry.path))
+        const folders = new Set(
+          definitions.folders.map((folder) => folder.handle),
+        );
+        for (const [handle, entry] of Object.entries(request.params.entries))
+          if (
+            !isEntryPath(entry.path) &&
+            !(entry.path === "" && folders.has(handle))
+          )
             protocol("bindings require complete catalogue paths");
         generation.bindings = request.params.entries;
         for (const registration of generation.registrations.values())

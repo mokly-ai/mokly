@@ -16,6 +16,10 @@ use crate::results::Warning;
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Variant {
+    /// Non-data inference exclusions, before catalogue path derivation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub excluded_props: Option<Vec<String>>,
     /// Authored final path segment.
     pub slug: String,
     /// Display title.
@@ -63,6 +67,10 @@ pub struct Variant {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Definition {
+    /// Non-data inference exclusions, before catalogue path derivation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub excluded_props: Option<Vec<String>>,
     /// Repository-relative module and export name.
     pub handle: String,
     /// Module that created the definition; it can differ from the exporting module.

@@ -103,6 +103,7 @@ fn html(error: &HtmlError) -> String {
 
 fn css(error: &CssError) -> String {
     match error {
+        CssError::Internal(source) => source.to_string(),
         CssError::Asset { message, .. } | CssError::Transform { message, .. } => message.clone(),
         CssError::Import {
             stylesheet,
