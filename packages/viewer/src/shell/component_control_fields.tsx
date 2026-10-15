@@ -155,12 +155,7 @@ function ControlInput({
             ...numberInputBounds(control),
             type: "number",
           }
-        : {
-            ...(control.maxLength === undefined
-              ? {}
-              : { maxLength: control.maxLength }),
-            type: "text",
-          })}
+        : { type: "text" })}
       onChange={(event) => onChange(event.currentTarget.value, false)}
       value={String(field.value)}
     />

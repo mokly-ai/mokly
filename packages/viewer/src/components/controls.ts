@@ -105,7 +105,10 @@ function validateOptions(
   });
 }
 
-/** Saved props must also satisfy the narrower constraints of their controls. */
+/**
+ * Saved props must also satisfy the narrower constraints of their controls.
+ * A text length counts code points, like the schema's `maxLength`.
+ */
 export function validateControlledValues(
   controls: Readonly<Record<string, ComponentControl>>,
   props: ComponentPropsData,
@@ -117,7 +120,7 @@ export function validateControlledValues(
     if (
       control.kind === "text" &&
       (typeof value !== "string" ||
-        value.length > (control.maxLength ?? Infinity))
+        [...value].length > (control.maxLength ?? Infinity))
     )
       invalidData(`${at}.${key}`, "text exceeds control limits");
     if (control.kind === "boolean" && typeof value !== "boolean")

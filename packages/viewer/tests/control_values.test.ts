@@ -143,6 +143,20 @@ test("text and select fields keep their own limits", () => {
   });
 });
 
+test("text length counts code points, like the schema", () => {
+  assert.deepEqual(
+    validateControlDraft(target, draft({ label: "😀😀😀😀😀" })),
+    {
+      errors: {},
+      overrides: { label: { kind: "set", value: "😀😀😀😀😀" } },
+    },
+  );
+  assert.deepEqual(
+    validateControlDraft(target, draft({ label: "😀😀😀😀😀😀" })).errors,
+    { label: "Check this value and its allowed limits." },
+  );
+});
+
 test("the complete props must satisfy the schema", () => {
   assert.deepEqual(validateControlDraft(target, draft({ label: undefined })), {
     errors: { "": "Check the highlighted values." },
