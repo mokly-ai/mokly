@@ -956,26 +956,37 @@ Publish client final review and merge decisions:
 
 ## Milestone 13: Release packaging
 
-- [ ] Build and pack the viewer before the CLI authoring declarations and
+- [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
 - [ ] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
-- [ ] Update Release Please for the package set and write the breaking-change
+  - [x] Restore paired tags, native archive inspection, all package manifests,
+        registry guards, and native/viewer/CLI publication ordering.
+  - [x] Add Linux x64, Linux ARM64, macOS ARM64, and Windows x64 jobs.
+  - [ ] Settle the Intel macOS runner-policy exception and add its matrix row.
+- [x] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
-- [ ] Make Release Please update the exact `@mokly/viewer` pin in
+- [x] Make Release Please update the exact `@mokly/viewer` pin in
       `packages/mokly/package.json` with the viewer release. Test the manifest
       and lockfile updates together.
-- [ ] Verify that Release Please preserves the private root native `file:`
+- [x] Verify that Release Please preserves the private root native `file:`
       links and keeps the public CLI native versions coordinated. The binary
       embeds the CLI package version at build time.
 - [ ] Verify native TLS on macOS and Windows CI. Build all five target
       binaries with a target C toolchain and check `ldd`, `otool -L`, or
       `dumpbin /dependents` for an unintended crypto shared-library dependency.
-- [ ] Reconnect the Node agreement and profile-selector tests to the shim's
+- [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
-- [ ] Commit.
+- [ ] Check that a Rust-only change can trigger the CLI release component;
+      Release Please path filtering does not include `crates/` in
+      `packages/mokly`.
+- [ ] Run the installed static output and Serve smoke after their integration.
+- [x] Commit.
+
+Release package evidence: `.context/rust-rebuild/delegation/m13/report-1.md`.
+Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
 
 ## Milestone 14: Large-project acceptance
 

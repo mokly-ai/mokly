@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = new URL("../", import.meta.url);
@@ -23,7 +24,10 @@ for (const directory of ["guides", "protocol"]) {
   await fs.cp(
     new URL(`../../../docs/${directory}`, import.meta.url),
     new URL(`docs/${directory}`, root),
-    { recursive: true },
+    {
+      recursive: true,
+      filter: (source) => path.basename(source) !== "fixtures",
+    },
   );
 }
 for (const file of [

@@ -35,7 +35,9 @@ generated tree: delete every committed `mokly-generated/` directory and
 across the upgrade when the base commit's sources pass the current validation,
 and is unavailable with those diagnostics otherwise. Review result v8 and read model v7 replace the earlier
 numbers; no reader accepts an earlier number. The authoring API and config load with no compatibility shims. Mokly
-Cloud resets and republishes; the upload exchange is unchanged.
+Cloud resets and republishes; the upload exchange is unchanged. The
+[complete Rust upgrade note](./npm-release-notes-formats.md#first-rust-core-release)
+covers commands, data-only configuration, authoring, caches, and wire formats.
 
 ## Breaking Viewer Delivery Release Note
 

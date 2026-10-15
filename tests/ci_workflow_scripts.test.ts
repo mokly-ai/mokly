@@ -7,9 +7,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { minVersion } from "semver";
 import { parse } from "yaml";
 
+import { TESTED_NODE_VERSIONS } from "../packages/mokly/src/version.mjs";
 import { RELEASE_VERIFICATION_RUNTIMES } from "../scripts/release/evidence_contract.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -46,11 +46,13 @@ test("the Node profile selector adds release runtimes only for release pull requ
       `\${{ steps.${id}.outputs.${output} }}`,
       `the selector's job must expose its ${output} output`,
     );
-  const manifest = JSON.parse(
-    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
-  ) as { engines: { node: string } };
-  const minimumTestedNode = minVersion(manifest.engines.node)?.version;
+  const minimumTestedNode = TESTED_NODE_VERSIONS[0];
   assert.ok(minimumTestedNode);
+  assert.equal(`node-${minimumTestedNode}`, RELEASE_VERIFICATION_RUNTIMES[0]);
+  assert.equal(
+    `node-${TESTED_NODE_VERSIONS[1]!.split(".")[0]}`,
+    RELEASE_VERIFICATION_RUNTIMES[1],
+  );
   const [ordinaryRuntime] = RELEASE_VERIFICATION_RUNTIMES;
   for (const profile of [
     { release: false, nodes: [minimumTestedNode], runtimes: [ordinaryRuntime] },

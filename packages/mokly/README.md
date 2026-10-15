@@ -95,9 +95,11 @@ node --import tsx --test tests/sidecar_methods.test.ts
 cargo test -p mokly-sidecar
 ```
 
+The package `prepack` builds the viewer before the authoring declarations.
+Release packing creates the viewer archive before the CLI archive.
 The package build emits ESM JavaScript and declarations, the sidecar entry and
 worker, the shim, and packaged Markdown. Each build clears stale package
-output and copied docs first. Build output stays ignored.
+output and copied docs first. Protocol fixtures stay outside the archive. Build output stays ignored.
 Key code: [authoring](./src/authoring/definitions.ts),
 [sidecar](./src/sidecar/session.ts), and the
 [Rust pool](../../crates/mokly-sidecar/README.md).

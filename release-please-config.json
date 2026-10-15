@@ -8,6 +8,104 @@
     }
   ],
   "packages": {
+    "packages/mokly": {
+      "release-type": "node",
+      "component": "mokly",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "include-v-in-tag": true,
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/mokly/package.json",
+          "jsonpath": "$['optionalDependencies'][*]"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['optionalDependencies'][*]"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-darwin-arm64/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-darwin-arm64']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-darwin-x64/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-darwin-x64']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-linux-arm64-gnu/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-linux-arm64-gnu']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-linux-x64-gnu/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-linux-x64-gnu']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/native-win32-x64-msvc/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/native-win32-x64-msvc']['version']"
+        },
+        {
+          "type": "generic",
+          "path": "/docs/guides/start/install.md"
+        },
+        {
+          "type": "generic",
+          "path": "/docs/guides/ci/github-action.md"
+        }
+      ]
+    },
     "packages/viewer": {
       "release-type": "node",
       "component": "viewer",
@@ -31,6 +129,16 @@
           "type": "json",
           "path": "/package-lock.json",
           "jsonpath": "$['packages']['packages/viewer']['version']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/mokly/package.json",
+          "jsonpath": "$['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['dependencies']['@mokly/viewer']"
         }
       ]
     }

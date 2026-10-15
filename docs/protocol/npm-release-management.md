@@ -1,5 +1,7 @@
 # npm Release Management
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management
@@ -7,8 +9,9 @@ Continuation of [CI And npm Release Contract](./npm-release.md).
 Conventional Commits feed two release-please Node components through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
 `main` creates or updates a release PR; an ordinary push with no release does
-not publish. The single release PR owns the root version, which the CLI and the five
-platform packages share, the viewer version, both changelogs, the root
+not publish. The CLI component at `packages/mokly` owns its public manifest. The single
+release PR owns the CLI version, which the private root and five platform
+packages share, the viewer version, both changelogs, the root
 lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
@@ -38,14 +41,17 @@ versions advance only through the release PR.
 
 The `node-workspace` plugin uses `updateAllPackages: true` to propose both
 components whenever either releases, including a patch of an otherwise
-unchanged component; the platform packages take the root version. It preserves
+unchanged component; the platform packages take the CLI version through JSON `extra-files`. It preserves
 the CLI's exact viewer dependency and its exact optional platform dependencies
 (no caret or local link).
 Versions remain independent; `linked-versions` would incorrectly force them
 equal and is unnecessary for a combined PR. A viewer `extra-files` JSON updater
-also sets the root lockfile's `packages[""].dependencies["@mokly/viewer"]`:
-release-please 17.6.0's workspace updater handles linked workspace versions but
-does not update that root dependency edge. Release PR checks must pass `npm ci`
+also sets the private root viewer development dependency, the CLI viewer
+dependency, and both lockfile edges:
+release-please 17.6.0 does not apply its workspace lockfile updater when
+`extra-files` already supplies root lockfile updates. Explicit JSON updaters
+therefore set both workspace versions and all coordinated native versions.
+They leave the private root native `file:` links intact. Release PR checks must pass `npm ci`
 and the same version-pair gate before merge.
 
 The release workflow then:
@@ -56,8 +62,9 @@ The release workflow then:
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and
    installs npm 11.21.0, the `packageManager` version, without a package cache.
-   Rust 1.95.0 (the `rust-toolchain.toml` pin) and Chromium are installed only
-   when complete verification is selected. A tag that predates
+   Rust 1.95.0 (the `rust-toolchain.toml` pin) is installed when complete
+   verification is selected. Chromium is installed for the packed viewer smoke
+   in both modes. A tag that predates
    `rust-toolchain.toml` verifies on the runner's default toolchain.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.

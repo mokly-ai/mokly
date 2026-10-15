@@ -56,7 +56,8 @@ non-host packages. The CLI package keeps exact registry versions.
 
 The release workflow builds the binary once per target, in one build job per
 target on a runner of that operating system and architecture, with Rust 1.95.0
-from `rust-toolchain.toml`. Each build job packs its platform package with npm
+from `rust-toolchain.toml`. Each build job uses `scripts/release/build-native.mjs` with a locked release
+build, checks native TLS dependencies, and packs its platform package with npm
 11.21.0 and uploads the archive with its integrity, shasum, inventory, and size
 report. A target that fails to build stops the release before any publication.
 

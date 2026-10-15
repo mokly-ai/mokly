@@ -6,6 +6,8 @@ import path from "node:path";
 
 import { createPackageArchive, inspectRuntimeLicenses } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
+import { packNative } from "./native.mjs";
+import { nativeTarget } from "./targets.mjs";
 
 /** Build registration evidence from reviewed committed bytes, never local dist. */
 export async function createBootstrapArchive({
@@ -22,7 +24,10 @@ export async function createBootstrapArchive({
   repositoryRoot = await fs.realpath(repositoryRoot);
   destination = path.resolve(destination);
   await verifySource(repositoryRoot, expectedCommit);
-  const { relative, version, filename } = bootstrapTarget(packageName);
+  const { relative, version, filename } = await bootstrapTarget(
+    repositoryRoot,
+    packageName,
+  );
   await verifyPackage(repositoryRoot, relative, packageName, version);
   await requireMissingDestination(destination);
   const temporaryRoot = await fs.mkdtemp(
@@ -53,11 +58,18 @@ export async function createBootstrapArchive({
       cwd: checkout,
     });
     await inspectRuntimeLicenses(checkout);
-    const packed = await createPackageArchive(
-      path.join(checkout, relative),
-      path.join(temporaryRoot, "artifact"),
-      packageName,
-    );
+    const packed =
+      packageName === "@mokly/viewer"
+        ? await createPackageArchive(
+            path.join(checkout, relative),
+            path.join(temporaryRoot, "artifact"),
+            packageName,
+          )
+        : await packNative(
+            checkout,
+            packageName,
+            path.join(temporaryRoot, "artifact"),
+          );
     assert.equal(
       packed.report.version,
       version,
@@ -121,8 +133,31 @@ async function verifySource(repositoryRoot, expectedCommit) {
   return await git("rev-parse", "HEAD^{tree}");
 }
 
-function bootstrapTarget(packageName) {
-  assert.equal(packageName, "@mokly/viewer", "unknown bootstrap package");
+async function bootstrapTarget(repositoryRoot, packageName) {
+  if (packageName !== "@mokly/viewer") {
+    const target = nativeTarget(packageName);
+    assert.equal(
+      process.platform,
+      target.os,
+      "bootstrap requires the native target OS",
+    );
+    assert.equal(
+      process.arch,
+      target.cpu,
+      "bootstrap requires the native target architecture",
+    );
+    const { version } = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, "packages/mokly/package.json"),
+        "utf8",
+      ),
+    );
+    return {
+      relative: target.directory,
+      version,
+      filename: `mokly-native-${target.target}-${version}.tgz`,
+    };
+  }
   return {
     relative: "packages/viewer",
     version: "0.1.0",

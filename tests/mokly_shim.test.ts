@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { satisfies } from "semver";
+
 import { platformPackage } from "../packages/mokly/src/platform.mjs";
 import type { ShimRuntime } from "../packages/mokly/src/shim.mjs";
 import { runShim } from "../packages/mokly/src/shim.mjs";
-import { assertNodeVersion } from "../packages/mokly/src/version.mjs";
+import {
+  assertNodeVersion,
+  SUPPORTED_NODE_RANGE,
+} from "../packages/mokly/src/version.mjs";
 
 const VERSION = "fixture-version";
 
@@ -144,4 +149,21 @@ test("binary startup errors give a safe recovery message", async () => {
       return true;
     },
   );
+});
+
+test("the dependency-free shim gate agrees with npm engines at every support boundary", () => {
+  for (let major = 20; major <= 27; major += 1) {
+    for (const minor of [0, 13, 14, 18, 19, 21, 99]) {
+      for (const patch of [0, 1, 99]) {
+        const version = `${major}.${minor}.${patch}`;
+        if (satisfies(version, SUPPORTED_NODE_RANGE))
+          assertNodeVersion(version);
+        else
+          assert.throws(
+            () => assertNodeVersion(version),
+            /Install a supported Node/,
+          );
+      }
+    }
+  }
 });

@@ -147,3 +147,19 @@ release-managed version state. Before the next release:
 viewer first-publish identity, the version restriction, and rejection of
 lifecycle input mutations. Run it with
 `node --import tsx --test tests/release_bootstrap_viewer.test.ts`.
+
+## Native Package Registration
+
+For each native package, run the bootstrap command on its target operating
+system and architecture. Supply the reviewed full commit and that package name:
+
+```sh
+node scripts/release/bootstrap.mjs {reviewed-full-commit-sha} .context/native-bootstrap @mokly/native-linux-x64-gnu
+```
+
+The isolated checkout builds the release binary with the pinned Rust toolchain.
+It packs only the target binary and package metadata. The package version must
+match `packages/mokly/package.json`. The report binds the exact archive hashes
+to the source commit and tree. Register the package interactively only after
+review. Configure each package's own trusted publisher before enabling the
+coordinated release. The command prepares an archive and never publishes it.
