@@ -30,9 +30,19 @@ pub fn validate(files: &[File]) -> Result<()> {
         };
         let allocator = Allocator::default();
         let parsed = Parser::new(&allocator, text, SourceType::mjs()).parse();
-        if !parsed.diagnostics.is_empty() {
-            return Err(Error::Invalid {
+        if let Some(diagnostic) = parsed.diagnostics.first() {
+            let offset = diagnostic
+                .labels
+                .first()
+                .map_or(0, |label| label.offset() as usize)
+                .min(text.len());
+            let prefix = text.get(..offset).unwrap_or("");
+            let line = prefix.bytes().filter(|byte| *byte == b'\n').count() + 1;
+            let column = prefix.rsplit('\n').next().unwrap_or("").chars().count() + 1;
+            return Err(Error::ModuleSyntax {
                 path: file.path.clone(),
+                line,
+                column,
             });
         }
         let mut requests = Requests(
@@ -50,9 +60,20 @@ pub fn validate(files: &[File]) -> Result<()> {
                 || path.starts_with("../")
                 || (path.starts_with('/') && !path.starts_with("//"))
             {
-                decode_path(path)
-                    .ok()
-                    .and_then(|path| routes::resolve(&file.path, &path))
+                decode_path(path).ok().and_then(|path| {
+                    if let Some(relative) = path.strip_prefix('/') {
+                        if relative
+                            .split('/')
+                            .any(|part| matches!(part, "" | "." | ".."))
+                        {
+                            None
+                        } else {
+                            Some(relative.into())
+                        }
+                    } else {
+                        routes::resolve(&file.path, &path)
+                    }
+                })
             } else {
                 None
             };
@@ -60,8 +81,9 @@ pub fn validate(files: &[File]) -> Result<()> {
                 .as_ref()
                 .is_some_and(|target| paths.contains(target.as_str()))
             {
-                return Err(Error::Invalid {
-                    path: format!("{}: import {request:?}", file.path),
+                return Err(Error::ModuleReference {
+                    path: file.path.clone(),
+                    request,
                 });
             }
         }

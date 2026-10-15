@@ -14,12 +14,15 @@ on the upload client.
 - Validate package module requests against the exact browser inventory.
 - Compute deterministic deployment identities and finalize ownership v3.
 - Reserve output and use exclusive moves for capture, installation, and recovery.
-- Detect changed source inputs before installation.
+- Detect changed selected inputs before installation. Missing unrelated files and
+  unreadable unrelated paths do not fail a build.
 
 ## What This Crate Does
 
 `CatalogueAssembler` implements `dyn Assembler`. It consumes a render generation
-and the matching viewer package bytes. It builds canonical index v7 and detail
+and the matching viewer package bytes. It omits only logical links that cannot cross the inspector wire boundary.
+Other ranges and links stay inspectable. Inspector failures carry a typed reason
+and the document route. It builds canonical index v7 and detail
 v1 files with revision zero and no live capability. The shared model writer
 adds publication metadata when requested and writes the ownership marker last.
 

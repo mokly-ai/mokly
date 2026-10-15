@@ -40,3 +40,12 @@ fn validates_import_export_dynamic_and_decoded_specifiers() {
         assert!(validate(&files(script)).is_err(), "{script}");
     }
 }
+
+#[test]
+fn absolute_module_requests_resolve_from_the_site_root_and_syntax_names_position() {
+    validate(&files("import '/mokly-viewer/client/a+b.js';")).unwrap();
+    let error = validate(&files("\nconst = syntax")).unwrap_err();
+    assert!(
+        matches!(error, crate::error::Error::ModuleSyntax { path, line: 2, column: 7 } if path == "mokly-viewer/client/shell.js")
+    );
+}

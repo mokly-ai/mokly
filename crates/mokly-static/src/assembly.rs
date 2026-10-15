@@ -24,6 +24,7 @@ use crate::error::{Error, InternalError, Result};
 use crate::identity;
 use crate::inspector;
 use crate::inventory::Inventory;
+use crate::modules;
 use crate::transaction::Cancellation;
 
 /// Inputs pinned by the command; the comparison adapter supplies its complete generation.
@@ -59,22 +60,27 @@ pub struct CatalogueAssembler {
 
 impl Assembler for CatalogueAssembler {
     fn assemble(&self, input: Assembly<'_>, cancellation: &dyn Cancellation) -> Result<Artifact> {
-        crate::modules::validate(&input.viewer)?;
+        modules::validate(&input.viewer)?;
         let model = &input.generation.catalogue().model;
         if model.entries.is_empty() {
             return Err(Error::Empty);
         }
-        let keys: Vec<_> = input
-            .generation
-            .plans()
-            .values()
-            .map(|plan| ViewKey {
-                path: model.entries[plan.entry].metadata.path.clone(),
+        let mut keys = Vec::new();
+        for plan in input.generation.plans().values() {
+            let entry = model
+                .entries
+                .get(plan.entry)
+                .ok_or_else(|| Error::PlanEntry {
+                    route: plan.route.clone(),
+                    entry: plan.entry,
+                })?;
+            keys.push(ViewKey {
+                path: entry.metadata.path.clone(),
                 viewport: plan.viewport,
                 color_scheme: plan.color_scheme,
                 key: plan.key.0.clone(),
-            })
-            .collect();
+            });
+        }
         let state = Publication {
             config_path: input.config_path,
             deployment_id: "0".repeat(64),
@@ -87,7 +93,9 @@ impl Assembler for CatalogueAssembler {
             base: input.base,
             live_generation: None,
         };
-        let mut index = match projection::index(model, &keys, &state) {
+        let mut index = match tracing::info_span!("index.build")
+            .in_scope(|| projection::index(model, &keys, &state))
+        {
             Ok(index) => index,
             Err(source) => return Err(InternalError::Model { source }.into()),
         };
@@ -119,7 +127,14 @@ impl Assembler for CatalogueAssembler {
             let document = rendered.document.as_ref().ok_or_else(|| Error::Invalid {
                 path: plan.route.clone(),
             })?;
-            if let Some(detail) = details.get_mut(&model.entries[plan.entry].metadata.path)
+            let entry = model
+                .entries
+                .get(plan.entry)
+                .ok_or_else(|| Error::PlanEntry {
+                    route: plan.route.clone(),
+                    entry: plan.entry,
+                })?;
+            if let Some(detail) = details.get_mut(&entry.metadata.path)
                 && let Some(view) = detail.views.iter_mut().find(|view| {
                     Some(view.viewport) == plan.viewport && view.color_scheme == plan.color_scheme
                 })
@@ -133,7 +148,7 @@ impl Assembler for CatalogueAssembler {
             }
             inventory.insert(
                 namespace::generated(&plan.route),
-                inspector::inject(document)?.into(),
+                inspector::inject(document, &plan.route)?.into(),
             )?;
         }
         for route in input.generation.resource_routes() {

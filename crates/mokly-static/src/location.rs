@@ -12,6 +12,8 @@ use crate::filesystem::{Entry, Files};
 pub struct Boundary {
     /// Repository root for build, private parent for publish.
     pub allowed: PathBuf,
+    /// Lexical spelling of the allowed root when reached through an alias.
+    pub lexical_allowed: Option<PathBuf>,
     /// Source roots cannot contain or be contained by an output.
     pub roots: Vec<PathBuf>,
     /// Inventoried inputs and package runtime paths cannot be contained by output.
@@ -43,6 +45,7 @@ impl Boundary {
         }
         Self {
             allowed,
+            lexical_allowed: None,
             roots: config
                 .roots
                 .iter()
@@ -83,9 +86,13 @@ pub(crate) fn validate(
     let lexical = normalize(requested);
     let real = files.project(&lexical)?;
     let allowed = files.project(&boundary.allowed)?;
+    let lexical_allowed = boundary
+        .lexical_allowed
+        .as_ref()
+        .unwrap_or(&boundary.allowed);
     if !lexical.is_absolute()
-        || lexical == boundary.allowed
-        || !lexical.starts_with(&boundary.allowed)
+        || lexical == *lexical_allowed
+        || !lexical.starts_with(lexical_allowed)
         || real == allowed
         || !real.starts_with(&allowed)
         || matches!(files.entry(&lexical)?, Some(Entry::Unsafe | Entry::File(_)))
@@ -94,9 +101,9 @@ pub(crate) fn validate(
             path: lexical.clone(),
         });
     }
-    for path in [&lexical, &real] {
+    for (path, allowed_root) in [(&lexical, lexical_allowed), (&real, &allowed)] {
         if path
-            .strip_prefix(&allowed)
+            .strip_prefix(allowed_root)
             .unwrap_or(path)
             .components()
             .any(|part| {

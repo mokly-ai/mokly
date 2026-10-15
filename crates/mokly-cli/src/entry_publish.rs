@@ -2,7 +2,7 @@
 
 use std::env;
 use std::process::ExitCode;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Instant;
 
 use async_trait::async_trait;
@@ -11,7 +11,7 @@ use mokly_cli::grammar;
 use mokly_cli::output::Style;
 use mokly_cli::publication::build::SystemDirectories;
 use mokly_cli::publication::command::{Command, Options, Publish};
-use mokly_cli::publication::error::Error;
+use mokly_cli::publication_signals::PublicationSignals;
 use mokly_cli::publish_errors::render;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
@@ -27,14 +27,15 @@ use mokly_publish::hints::SystemOutputHints;
 use mokly_publish::http::ReqwestHttp;
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
-use mokly_publish::runtime::{CommandCancellation, SystemClock};
+use mokly_publish::runtime::SystemClock;
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
-use mokly_sidecar::pool::SidecarPool;
 
+use crate::interrupts::Interrupts;
 use crate::one_shot::Lines;
 use crate::publication_runtime;
 use crate::terminal::Terminal;
+use crate::{command_diagnostics, serve_trace};
 
 pub(super) fn run(
     publish: &grammar::Publish,
@@ -42,14 +43,27 @@ pub(super) fn run(
     redactor: Arc<Redactor>,
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
+    if publish.common.debug_timings {
+        serve_trace::install(terminal.clone(), format!("publish-{}", std::process::id()));
+    }
+    let timing = tracing::info_span!("publish", status = "error").entered();
     let started = Instant::now();
     let lines = Arc::new(Lines::new(
         style.clone(),
         redactor.clone(),
         terminal.clone(),
     ));
-    let cancellation = CommandCancellation::default();
-    let pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>> = Arc::new(Mutex::new(None));
+    let interrupts = match Interrupts::publish() {
+        Ok(interrupts) => interrupts,
+        Err(error) => {
+            terminal.stderr(&style.error(Code::UploadFailed, &error.to_string(), &redactor));
+            return ExitCode::FAILURE;
+        }
+    };
+    let cancellation = PublicationSignals {
+        signals: interrupts.cancellation.clone(),
+        token: interrupts.publication.clone(),
+    };
     let settings = match Settings::new(
         publish.endpoint.as_deref().unwrap_or_default(),
         publish.token.clone().unwrap_or_default(),
@@ -108,8 +122,8 @@ pub(super) fn run(
         directories: Arc::new(SystemDirectories),
         output: Arc::new(publication_runtime::Output {
             common: publish.common.clone(),
-            cancellation: cancellation.clone(),
-            pool: pool.clone(),
+            cancellation: interrupts.cancellation.clone(),
+            pool: interrupts.pool.clone(),
             phases: lines.clone(),
         }),
         reporter: lines.clone(),
@@ -137,23 +151,11 @@ pub(super) fn run(
             return ExitCode::FAILURE;
         }
     };
-    let result = runtime.block_on(async {
-        let signals = signals(cancellation.clone(), pool.clone());
-        let handle = match signals {
-            Ok(handle) => handle,
-            Err(_) => {
-                return Err(Error::Exchange {
-                    source: error::Error::Failed,
-                });
-            }
-        };
-        let result = command.run(&options, &settings, &cancellation).await;
-        handle.abort();
-        result
-    });
+    let result = runtime.block_on(command.run(&options, &settings, &cancellation));
     lines.clear();
     match result {
         Ok(receipt) => {
+            timing.record("status", "ok");
             lines.published(&receipt, started.elapsed());
             ExitCode::SUCCESS
         }
@@ -161,49 +163,10 @@ pub(super) fn run(
             terminal.stderr(&mokly_cli::publish_errors::command(
                 &error, style, &redactor,
             ));
+            command_diagnostics::emit(&error, terminal.as_ref(), &redactor);
             ExitCode::FAILURE
         }
     }
-}
-
-fn signals(
-    cancellation: CommandCancellation,
-    pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
-) -> std::io::Result<tokio::task::JoinHandle<()>> {
-    #[cfg(unix)]
-    {
-        let mut interrupt =
-            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::interrupt())?;
-        let mut terminate =
-            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
-        Ok(tokio::spawn(async move {
-            tokio::select! { _ = interrupt.recv() => {}, _ = terminate.recv() => {} }
-            cancellation.token.cancel();
-            stop_pool(pool).await;
-        }))
-    }
-    #[cfg(not(unix))]
-    {
-        Ok(tokio::spawn(async move {
-            if tokio::signal::ctrl_c().await.is_ok() {
-                cancellation.token.cancel();
-                stop_pool(pool).await;
-            }
-        }))
-    }
-}
-
-async fn stop_pool(pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>) {
-    let _ = tokio::task::spawn_blocking(move || {
-        let pool = pool
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone();
-        if let Some(pool) = pool {
-            let _ = pool.shutdown();
-        }
-    })
-    .await;
 }
 
 struct Uploading {

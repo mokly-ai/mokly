@@ -54,3 +54,6 @@ refusal. Keep authored material outside the output directory.
 A failed build preserves the earlier site when recovery is safe. If recovery
 cannot restore it, the error names the retained backup. Check those paths
 before removing an abandoned reservation.
+
+Ignore `.mokly-export-reservations/` in Git as well as the selected output.
+The owned reservation namespace stays after cleanup.

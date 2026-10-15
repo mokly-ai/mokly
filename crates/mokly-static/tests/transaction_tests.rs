@@ -31,6 +31,7 @@ fn factory(rename: Arc<dyn Rename>) -> OutputTransactions {
 fn boundary(root: &Path) -> Boundary {
     Boundary {
         allowed: root.into(),
+        lexical_allowed: None,
         roots: vec![],
         inputs: vec![],
     }
@@ -57,7 +58,8 @@ fn install(root: &Path, bytes: &'static [u8]) {
 
 #[test]
 fn replacement_is_complete_and_the_namespace_has_no_active_lock() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     install(root.path(), b"old");
     install(root.path(), b"new");
     assert_eq!(
@@ -79,7 +81,8 @@ fn replacement_is_complete_and_the_namespace_has_no_active_lock() {
 #[test]
 fn ownership_rejects_unlisted_files_empty_directories_and_bad_markers() {
     for extra in ["file", "directory", "marker"] {
-        let root = TempDir::new().unwrap();
+        let temporary = TempDir::new().unwrap();
+        let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
         install(root.path(), b"old");
         let site = root.path().join("site");
         match extra {
@@ -102,7 +105,8 @@ fn ownership_rejects_unlisted_files_empty_directories_and_bad_markers() {
 
 #[test]
 fn missing_owned_files_are_allowed_but_competing_writers_are_not() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     install(root.path(), b"old");
     fs::remove_file(root.path().join("site/index.html")).unwrap();
     let factory = factory(Arc::new(SystemRename));
@@ -120,7 +124,8 @@ fn missing_owned_files_are_allowed_but_competing_writers_are_not() {
 
 #[test]
 fn cancellation_after_capture_restores_the_exact_earlier_output() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     install(root.path(), b"old");
     let transaction = factory(Arc::new(SystemRename))
         .open(&root.path().join("site"), boundary(root.path()))
@@ -168,7 +173,8 @@ impl Rename for Race {
 #[test]
 fn failed_install_restores_but_never_overwrites_a_late_destination() {
     for mutation in ["restore", "destination", "capture"] {
-        let root = TempDir::new().unwrap();
+        let temporary = TempDir::new().unwrap();
+        let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
         install(root.path(), b"old");
         let transaction = factory(Arc::new(Race { mutation }))
             .open(&root.path().join("site"), boundary(root.path()))
@@ -199,7 +205,8 @@ fn failed_install_restores_but_never_overwrites_a_late_destination() {
 
 #[test]
 fn output_appearing_after_initial_absence_is_never_adopted() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     let site = root.path().join("site");
     let transaction = factory(Arc::new(SystemRename))
         .open(&site, boundary(root.path()))
@@ -217,7 +224,8 @@ fn output_appearing_after_initial_absence_is_never_adopted() {
 
 #[test]
 fn untrusted_inventory_cannot_write_outside_its_stage() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     let site = root.path().join("site");
     let transaction = factory(Arc::new(SystemRename))
         .open(&site, boundary(root.path()))
@@ -230,4 +238,49 @@ fn untrusted_inventory_cannot_write_outside_its_stage() {
     ));
     transaction.abandon().unwrap();
     assert!(!site.exists());
+}
+
+struct Canonical(std::path::PathBuf);
+impl Canonical {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
+}
+
+#[test]
+fn late_owned_output_and_disappeared_initial_output_are_preserved() {
+    let temporary = TempDir::new().unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let site = root.join("site");
+    let transaction = factory(Arc::new(SystemRename))
+        .open(&site, boundary(&root))
+        .unwrap();
+    transaction
+        .stage(&artifact(transaction.output(), b"new"), &never())
+        .unwrap();
+    fs::create_dir(&site).unwrap();
+    for file in artifact(&site, b"late").files {
+        fs::write(site.join(file.path), file.bytes).unwrap();
+    }
+    assert!(matches!(
+        transaction.install(&never()),
+        Err(Error::Replaced { .. })
+    ));
+    assert_eq!(fs::read(site.join("index.html")).unwrap(), b"late");
+    let transaction = factory(Arc::new(SystemRename))
+        .open(&site, boundary(&root))
+        .unwrap();
+    transaction
+        .stage(&artifact(transaction.output(), b"new"), &never())
+        .unwrap();
+    fs::rename(&site, root.join("moved-old")).unwrap();
+    assert!(matches!(
+        transaction.install(&never()),
+        Err(Error::Replaced { .. })
+    ));
+    assert!(!site.exists());
+    assert_eq!(
+        fs::read(root.join("moved-old/index.html")).unwrap(),
+        b"late"
+    );
 }

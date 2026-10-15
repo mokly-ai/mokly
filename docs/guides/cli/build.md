@@ -61,3 +61,6 @@ the exit status. With it, the build fails before installation. Success exits
 A failure or cancellation exits `1` with its error category.
 
 See [static delivery](/docs/reference/export-delivery/) for host requirements.
+
+Ignore `.mokly-export-reservations/` in Git as well as the selected output.
+The owned reservation namespace stays after cleanup.

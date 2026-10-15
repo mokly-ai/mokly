@@ -1,9 +1,10 @@
 //! Native composition root for the shared build and publish output pipeline.
 
-use chrono::{SecondsFormat, Utc};
 use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+
+use chrono::{SecondsFormat, Utc};
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -14,25 +15,20 @@ use mokly_cli::build::{BuildError, BuildService, CatalogueBuild};
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Build;
+use mokly_cli::pre_installation;
+use mokly_cli::static_admission::{Admission, OutputAdmission};
 use mokly_cli::static_build::{self, Drain, Phases, Request, StaticBuild, Timestamp};
-use mokly_git::control;
-use mokly_git::disk::SystemDisk;
-use mokly_git::repository::{GitRepositories, Repositories};
-use mokly_git::system::SystemRunner;
-use mokly_model::output::artifact::{Artifact, File};
+use mokly_model::output::artifact::Artifact;
 use mokly_model::output::upload::Publication;
-use mokly_platform::processes::SystemProcessGroups;
 use mokly_platform::rename::SystemRename;
-use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 use mokly_static::assembly::CatalogueAssembler;
 use mokly_static::filesystem::SystemFiles;
 use mokly_static::fingerprint::{CapturedTree, SourceFingerprints};
-use mokly_static::transaction::{self, OutputTransactions};
+use mokly_static::transaction::{OutputTransactions, Transaction};
 
-use crate::render_runtime::Services;
-use crate::viewer_assets;
+use crate::{static_setup, viewer_assets};
 
 pub(super) struct Context {
     pub(super) cancellation: Arc<dyn Cancellation>,
@@ -43,6 +39,7 @@ pub(super) struct Context {
 pub(super) struct PublicationInput {
     pub(super) identity: Publication,
     pub(super) repository: PathBuf,
+    pub(super) warnings_are_fatal: bool,
 }
 
 pub(super) fn run(
@@ -58,69 +55,63 @@ pub(super) fn run(
     });
     let captured = Arc::new(CapturedTree::new(live));
     let tree: Arc<dyn SourceTree> = captured.clone();
-    let config = match (Loader { tree: tree.clone() }).load(cwd, options.common.config.as_deref()) {
-        Ok(config) => config,
-        Err(source) => return Err(BuildError::Catalogue { source }),
+    let files = Arc::new(SystemFiles);
+    let runtime_roots = env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(Path::to_owned))
+        .into_iter()
+        .chain(env::var_os("MOKLY_PACKAGE_ROOT").map(PathBuf::from))
+        .chain(viewer_assets::dist())
+        .collect();
+    let admission: &dyn Admission = &OutputAdmission {
+        config: Arc::new(Loader { tree: tree.clone() }),
+        transactions: Arc::new(OutputTransactions {
+            files,
+            rename: Arc::new(SystemRename),
+        }),
+        cancellation: context.cancellation.clone(),
+        runtime_roots,
     };
-    if !options.no_changes {
-        let base = options
-            .common
-            .base
-            .clone()
-            .or_else(|| {
-                config
-                    .input
-                    .review
-                    .as_ref()
-                    .and_then(|review| review.base.clone())
-            })
-            .unwrap_or_else(|| "origin/main".into());
-        context
-            .phases
-            .start(static_build::Phase::Comparing(base.clone()));
-        let repositories: &dyn Repositories = &GitRepositories {
-            runner: Arc::new(SystemRunner {
-                clock: Arc::new(control::SystemClock::default()),
-                cancellation: Arc::new(Cancel(context.cancellation.clone())),
-                groups: Arc::new(SystemProcessGroups),
-            }),
-            disk: Arc::new(SystemDisk),
-        };
-        if let Err(source) = repositories
-            .open(&config.repo_root)
-            .and_then(|repository| repository.merge_base(&base))
-        {
-            return Err(BuildError::Git { base, source });
-        }
-    }
-    let assets: &dyn ViewerAssets = &PackageAssets {
-        tree: Arc::new(WorkingTree),
-    };
-    let dist = viewer_assets::dist().ok_or(BuildError::Viewer)?;
-    let viewer = match assets.load(&dist) {
-        Ok(files) => files
-            .into_iter()
-            .map(|(path, file)| File {
-                path,
-                bytes: file.bytes,
-            })
-            .collect(),
-        Err(_) => return Err(BuildError::Viewer),
-    };
-    let services = match Services::new(
-        tree.clone(),
+    let admitted = admission.open(cwd, options, publication.is_some())?;
+    let config = admitted.config;
+    let mut transaction = admitted.transaction;
+    let result = prepare(
         cwd,
-        &config.repo_root,
-        &options.common,
-        Arc::new(RenderDiagnostics(context.phases.clone())),
-        context.cancellation.clone(),
-    ) {
-        Ok(services) => services,
-        Err(source) => {
-            return Err(BuildError::Rendering {
-                source: Box::new(source),
-                warnings: Vec::new(),
-            });
+        options,
+        context,
+        &config,
+        captured,
+        publication,
+        transaction.as_mut(),
+    );
+    result.map(|artifact| (artifact, config.repo_root))
+}
+
+fn prepare(
+    cwd: &Path,
+    options: &Build,
+    context: &Context,
+    config: &ResolvedConfig,
+    captured: Arc<CapturedTree>,
+    publication: Option<PublicationInput>,
+    transaction: &mut dyn Transaction,
+) -> Result<Artifact, BuildError> {
+    let tree: Arc<dyn SourceTree> = captured.clone();
+    let setup = pre_installation::settle(
+        static_setup::setup(cwd, options, context, config, tree.clone()),
+        context.cancellation.as_ref(),
+    );
+    let (services, viewer) = match setup {
+        Ok(value) => value,
+        Err(primary) => {
+            return match transaction.abandon() {
+                Ok(()) => Err(primary),
+                Err(cleanup) => Err(BuildError::Cleanup {
+                    primary: Box::new(primary),
+                    cleanup: Box::new(cleanup),
+                    path: transaction.recovery_path().into(),
+                }),
+            };
         }
     };
     *context
@@ -145,52 +136,34 @@ pub(super) fn run(
     let files = Arc::new(SystemFiles);
     let service: &dyn StaticBuild = &static_build::Builder {
         render,
-        transactions: Arc::new(OutputTransactions {
-            files: files.clone(),
-            rename: Arc::new(SystemRename),
-        }),
         assembler: Arc::new(CatalogueAssembler { tree }),
         fingerprints: Arc::new(SourceFingerprints { files }),
         inputs: captured,
-        cancellation: Arc::new(Cancel(context.cancellation.clone())),
+        cancellation: context.cancellation.clone(),
         drain: drain.clone(),
         phases: context.phases.clone(),
         timestamp: Arc::new(SystemTimestamp),
     };
-    let directory = mokly_static::location::output(&config, options.out.as_deref());
-    let allowed = publication
-        .as_ref()
-        .and_then(|_| directory.parent())
-        .unwrap_or(&config.repo_root);
     let repository = publication
         .as_ref()
         .map_or(&config.repo_root, |input| &input.repository);
     let metadata = publication.as_ref().map(|input| input.identity.clone());
-    let result = service.build(Request {
-        cwd,
-        config: &config,
-        options,
-        viewer,
-        allowed,
-        repository,
-        publication: metadata,
-        runtime_directories: std::iter::once(dist)
-            .chain(
-                env::current_exe()
-                    .ok()
-                    .and_then(|path| path.parent().map(Path::to_owned)),
-            )
-            .chain(env::var_os("MOKLY_PACKAGE_ROOT").map(PathBuf::from))
-            .collect(),
-    });
-    let stopped = drain.stop();
-    match result {
-        Ok((artifact, _)) => {
-            stopped?;
-            Ok((artifact, config.repo_root))
-        }
-        Err(error) => Err(error),
-    }
+    service
+        .build(
+            Request {
+                cwd,
+                config,
+                options,
+                viewer,
+                repository,
+                publication: metadata,
+                warnings_are_fatal: publication
+                    .as_ref()
+                    .is_some_and(|input| input.warnings_are_fatal),
+            },
+            transaction,
+        )
+        .map(|(artifact, _)| artifact)
 }
 
 struct LoadedConfig(ResolvedConfig);
@@ -226,28 +199,9 @@ impl Drain for PoolDrain {
         }
     }
 }
-struct Cancel(Arc<dyn Cancellation>);
-impl transaction::Cancellation for Cancel {
-    fn requested(&self) -> bool {
-        self.0.requested()
-    }
-}
-impl control::Cancellation for Cancel {
-    fn cancelled(&self) -> bool {
-        self.0.requested()
-    }
-}
-
 struct SystemTimestamp;
 impl Timestamp for SystemTimestamp {
     fn now(&self) -> String {
         Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
-    }
-}
-
-struct RenderDiagnostics(Arc<dyn Phases>);
-impl mokly_sidecar::workers::Diagnostics for RenderDiagnostics {
-    fn emit(&self, message: &str) {
-        self.0.diagnostic(message);
     }
 }

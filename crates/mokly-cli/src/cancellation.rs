@@ -6,9 +6,12 @@ use std::sync::{Arc, Mutex};
 use mokly_sidecar::workers::Clock;
 
 /// Cancellation queried by build phases, source reads, and document workers.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CancellationMock))]
 pub trait Cancellation: Send + Sync {
     /// Whether the first interruption has requested cancellation.
     fn requested(&self) -> bool;
+    /// Observe all signal notifications already delivered before a phase settles.
+    fn drain(&self) {}
     /// Record an interruption; true means the caller must exit immediately.
     fn interrupt(&self) -> bool;
 }

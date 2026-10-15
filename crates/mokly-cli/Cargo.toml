@@ -57,6 +57,9 @@ thiserror = "2.0.21"
 [features]
 mock = ["dep:unimock", "mokly-publish/mock"]
 
+[target."cfg(unix)".dependencies]
+signal-hook = "0.4.5"
+
 [dependencies.mokly-publish]
 workspace = true
 
@@ -72,3 +75,7 @@ features = ["mock"]
 
 [dependencies.mokly-static]
 workspace = true
+
+[dev-dependencies.mokly-static]
+workspace = true
+features = ["mock"]

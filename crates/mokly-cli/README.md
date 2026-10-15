@@ -50,7 +50,10 @@ Build and Serve share the same runtime composition. Each command owns one
 pool and cache across catalogue preparation, document rendering, and live
 prop previews. Serve checks the render token and installed revision before
 passing validated props to the graph. Control bounds also apply in the core.
-Build installs interrupt and termination handling before command work. Both
+Build and publish install signal handling before command work. The native signal
+flag records delivered signals before the listener task runs. The shared
+pre-installation boundary drains and checks it after configuration, Git, render,
+and stage work. Output reservation precedes Git and sidecar preparation. Both
 the signal path and normal exit drain the pool through one shutdown guard.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
@@ -74,7 +77,9 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust
-core. The binary owns catalogue work and file writes. `build` renders HTML and React
+core. The binary owns catalogue work and file writes. Build and publish support
+`--debug-timings` with the same structured trace as Serve. `MOKLY_DIAGNOSTIC=1`
+adds a redacted command stack and the original typed failure context. `build` renders HTML and React
 screens, components, stories, pages, and Markdown
 documents into the bounded process cache. It reports all render warnings
 before strict-mode failure. `mokly-static` writes the shell, canonical index and details, documents,
@@ -98,7 +103,8 @@ the installed bytes directly to one cached upload preparation. Checkout failures
 unique sorted paths and their recovery hint in both output modes. Completed
 output stays in the private directory after an upload failure. The warning
 policy waits for a user decision. The isolated `warnings_are_fatal` function
-makes publish warnings fatal with either value of `--strict`.
+makes publish warnings fatal with either value of `--strict`. The command prints
+`with --strict` only when the user supplied that option.
 
 ## Quick Start
 

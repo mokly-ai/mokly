@@ -1,7 +1,7 @@
 //! Catalogue validation and complete in-memory rendering before static output.
 
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config::ConfigLoader;
@@ -16,6 +16,7 @@ use thiserror::Error;
 
 use crate::cancellation::Cancellation;
 use crate::grammar::Build;
+use crate::pre_installation;
 
 /// Validated catalogue counts and warnings for terminal presentation.
 #[derive(Clone, Debug)]
@@ -39,6 +40,29 @@ pub enum BuildError {
         /// Primary failure before any earlier output moved.
         source: Box<BuildError>,
     },
+    /// The build failed and stopping render workers also failed.
+    #[error("[mokly-cli/build] {primary}; render shutdown failed: {shutdown}")]
+    Shutdown {
+        /// Original failure, including a classified cancellation.
+        primary: Box<BuildError>,
+        /// Independent render shutdown failure.
+        shutdown: Box<BuildError>,
+    },
+    /// Transaction cleanup failed after an earlier command error.
+    #[error("[mokly-cli/build] {primary}; output cleanup failed: {cleanup}")]
+    Cleanup {
+        /// Original typed command failure.
+        primary: Box<BuildError>,
+        /// Typed cleanup failure; never a sidecar error.
+        cleanup: Box<mokly_static::error::Error>,
+        /// Exact retained operation path.
+        path: PathBuf,
+    },
+    /// The selected publication policy refuses warnings without an explicit --strict.
+    #[error(
+        "[mokly-cli/build] The catalogue has build warnings. Fix the reported warnings and retry."
+    )]
+    Warnings,
     /// The matching viewer package is unavailable.
     #[error("[mokly-cli/build] Build or reinstall the matching @mokly/viewer package.")]
     Viewer,
@@ -142,11 +166,7 @@ impl BuildService for CatalogueBuild {
                 Err(_) => Err(runtime(InternalError::PreparationPanicked)),
             }
         });
-        if self.cancellation.requested() {
-            Err(BuildError::Cancelled)
-        } else {
-            result
-        }
+        pre_installation::settle(result, self.cancellation.as_ref())
     }
 }
 

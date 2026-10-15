@@ -340,6 +340,13 @@ more than re-deriving the behaviour from the requirements.
     `{{name}}` in text and attributes. The catalogue checker and HTML renderer
     use the same rule.
 
+40. Static output parser (2026-10-15): keep Oxc for the module-request rules
+    of `mokly-export-browser.md`. A real parser distinguishes regular
+    expressions, division, comments, and decoded import strings. The added
+    dependency closure has 32 crates. Licence classes are MIT, MIT/Apache-2.0,
+    Unicode-3.0, and Apache-2.0 WITH LLVM-exception OR BSL-1.0 for
+    `dragonbox_ecma`. Review Oxc's 0.x API changes with dependency updates.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -849,6 +856,8 @@ renders again.
         example.
   - [ ] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
+- [ ] Add browser specs against copied static output, including navigation,
+      inspection, no live endpoints, and the comparison modes after the M9 join.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -1027,7 +1036,19 @@ Tags: ui
         input rechecks, and config-relative output selection.
   - [ ] Join the Milestone 9 comparison generation, removed records, and detail
         evidence before identity finalization. Repeat the comparison-specific
-        reference scenarios after that integration.
+        reference scenarios after that integration. The join must replace the
+        premature "Comparing with {base}" success line, populate upload
+        `baseRef` instead of null, and give a reason for Changes unavailable.
+  - [ ] Add subprocess recovery tests through a test-only fault seam for rollback,
+        backup cleanup, cancellation plus cleanup, and cleanup-only failure.
+        Keep the recovery page's Status line until these checks pass.
+  - [ ] Add an independent reader of the installed ownership and upload fixtures.
+        Keep ownership, upload exchange, and validation Status lines until this
+        reader and the M9 comparison join are verified.
+  - [ ] Complete the sweep rows owned by M12 static, transaction, and static
+        closure acceptance. Add the remaining exact destination races,
+        reservation mutations, Unicode/NUL rename paths, imported resources,
+        private templates, and host-normalized path cases named in the sweep.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
@@ -1038,11 +1059,15 @@ Tags: ui
   - [x] Add clean-checkout checks, cancellable Git calls, the static-output
         trait, and the pre-build private-directory line. Keep completed
         output after upload failure.
-  - [x] Connect `mokly-static` to the CLI-owned publish adapter and its rich
+  - [ ] Connect `mokly-static` to the CLI-owned publish adapter and its rich
         terminal phases. Both crates use the shared output shapes and marker
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
         transitions, source changes, and the deferred gap-sweep scenarios.
+    - [ ] Complete the sweep rows owned by M12 publication acceptance: assigned
+          credentials, checkout and cancelled-bundle variants, interrupted
+          compiler diagnostics, rich summary styling, and every retry status
+          through the real process.
     - [x] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
           `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
           `mokly-publish` into the CLI publication error contract when the
@@ -1059,8 +1084,11 @@ Publish client final review and merge decisions:
 
 - [x] Restore the preview deployment workflow on the new CLI.
 - [x] Write the build and publish guides.
-      Static output evidence: `.context/rust-rebuild/delegation/m12-static/report-1.md`,
-      `.context/rust-rebuild/m12-smoke/`, and `.context/rust-rebuild/sweeps/m12-static.md`.
+
+Static output evidence: `.context/rust-rebuild/delegation/m12-static/report-1.md`,
+`.context/rust-rebuild/m12-smoke/`, and `.context/rust-rebuild/sweeps/m12-static.md`.
+Round 1 fixes and merge decisions: `.context/rust-rebuild/delegation/m12-static/report-2.md`
+and `.context/rust-rebuild/delegation/m12-static/merge-decisions.md`.
 
 - [x] Commit.
 
@@ -1108,6 +1136,9 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 
 ## Milestone 14: Large-project acceptance
+
+- [ ] Restrict static fingerprints to configured roots, inventoried sources,
+      and reached closure files. Measure this boundary under the large fixtures.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the

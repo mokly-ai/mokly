@@ -113,6 +113,7 @@ impl Publish for Command {
             base: options.base.clone(),
             no_changes: options.no_changes,
             warnings_are_fatal: warnings_are_fatal(options.strict),
+            strict: options.strict,
             publication,
         };
         let snapshot = self.output.build(&request, cancellation)?;

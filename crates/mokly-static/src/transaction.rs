@@ -61,7 +61,16 @@ struct OutputTransaction {
 }
 
 impl Transactions for OutputTransactions {
-    fn open(&self, requested: &Path, boundary: Boundary) -> Result<Box<dyn Transaction>> {
+    fn open(&self, requested: &Path, mut boundary: Boundary) -> Result<Box<dyn Transaction>> {
+        if boundary.lexical_allowed.is_none() && !requested.starts_with(&boundary.allowed) {
+            let real_root = self.files.project(&boundary.allowed)?;
+            for ancestor in requested.ancestors().skip(1) {
+                if self.files.project(ancestor)? == real_root {
+                    boundary.lexical_allowed = Some(ancestor.into());
+                    break;
+                }
+            }
+        }
         let output = location::validate(self.files.as_ref(), requested, &boundary)?;
         let owned = ownership::validate(self.files.as_ref(), &output)?;
         let identity = owned.map(|owned| owned.identity);
@@ -115,6 +124,7 @@ impl OutputTransaction {
             }),
         }
     }
+    #[tracing::instrument(name = "output.rollback", skip_all, err)]
     fn restore(&self, primary: Error) -> Result<()> {
         let backup = self.reservation.join("backup");
         let result = (|| {
@@ -149,6 +159,7 @@ impl Transaction for OutputTransaction {
         self.boundary.inputs.extend(inputs);
         self.recheck()
     }
+    #[tracing::instrument(name = "output.stage", skip_all, err)]
     fn stage(&self, artifact: &Artifact, cancellation: &dyn Cancellation) -> Result<()> {
         artifact::validate(artifact)?;
         tracing::debug!(files = artifact.files.len(), "staging static output");
@@ -171,6 +182,7 @@ impl Transaction for OutputTransaction {
         }
         Ok(())
     }
+    #[tracing::instrument(name = "output.install", skip_all, err)]
     fn install(&self, cancellation: &dyn Cancellation) -> Result<()> {
         if let Err(error) = self.recheck() {
             return self.failure(error);
@@ -180,7 +192,8 @@ impl Transaction for OutputTransaction {
         }
         let backup = self.reservation.join("backup");
         if self.identity.is_some() {
-            if let Err(error) = self.move_exclusive(&self.output, &backup) {
+            let capture = tracing::info_span!("output.capture");
+            if let Err(error) = capture.in_scope(|| self.move_exclusive(&self.output, &backup)) {
                 return self.failure(error);
             }
             let captured = ownership::validate(self.files.as_ref(), &backup);
@@ -229,6 +242,7 @@ impl Transaction for OutputTransaction {
             }),
         }
     }
+    #[tracing::instrument(name = "output.cleanup", skip_all, err)]
     fn abandon(&self) -> Result<()> {
         reservation::cleanup(self.files.as_ref(), &self.reservation)
     }
@@ -237,5 +251,11 @@ impl Transaction for OutputTransaction {
 impl std::fmt::Debug for dyn Cancellation + '_ {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str("Cancellation")
+    }
+}
+
+impl std::fmt::Debug for dyn Transaction + '_ {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("Transaction")
     }
 }

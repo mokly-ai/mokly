@@ -72,6 +72,8 @@ pub struct CommandCancellation {
 /// Safe accounting events; credentials and receiver responses never enter it.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReporterMock))]
 pub trait Reporter: Send + Sync {
+    /// Reset the visible label before each Plan, including an empty re-plan.
+    fn round(&self, _round: usize) {}
     /// Report initial or advanced progress for a round with missing blobs.
     fn progress(&self, progress: &Progress);
 }

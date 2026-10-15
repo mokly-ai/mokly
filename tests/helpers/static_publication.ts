@@ -6,9 +6,12 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 const exec = promisify(execFile);
-const workspace = path.resolve(import.meta.dirname, "../..");
+export const workspace = path.resolve(import.meta.dirname, "../..");
 
-export async function publicationFixture(javascript = false) {
+export async function publicationFixture(
+  javascript = false,
+  objectFormat: "sha1" | "sha256" = "sha1",
+) {
   const root = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-static-publish-"),
   );
@@ -36,7 +39,7 @@ export async function publicationFixture(javascript = false) {
       "junction",
     );
   for (const args of [
-    ["init", "-q"],
+    ["init", "-q", `--object-format=${objectFormat}`],
     ["config", "user.name", "Mokly Test"],
     ["config", "user.email", "test@example.com"],
     ["add", "."],
@@ -47,18 +50,48 @@ export async function publicationFixture(javascript = false) {
   return root;
 }
 
-export function publish(root: string, endpoint: string, mode = "plain") {
-  const child = spawn(
-    process.execPath,
+export function publish(
+  root: string,
+  endpoint: string,
+  mode = "plain",
+  options: {
+    args?: string[];
+    env?: NodeJS.ProcessEnv;
+    environmentCredentials?: boolean;
+  } = {},
+) {
+  return command(
+    root,
+    "publish",
     [
-      path.join(workspace, "packages/mokly/bin/mokly.mjs"),
-      "publish",
       "--no-changes",
       "--repository=example.com/team/site",
       "--sidecars=1",
-      `--endpoint=${endpoint}`,
-      "--token=private/a==",
+      ...(options.environmentCredentials
+        ? []
+        : [`--endpoint=${endpoint}`, "--token=private/a=="]),
+      ...(options.args ?? []),
     ],
+    mode,
+    {
+      ...(options.environmentCredentials
+        ? { MOKLY_ENDPOINT: endpoint, MOKLY_TOKEN: "private/a==" }
+        : {}),
+      ...options.env,
+    },
+  );
+}
+
+export function command(
+  root: string,
+  verb: "build" | "publish",
+  args: string[],
+  mode = "plain",
+  extra: NodeJS.ProcessEnv = {},
+) {
+  const child = spawn(
+    process.execPath,
+    [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
     {
       cwd: root,
       env: {
@@ -66,6 +99,7 @@ export function publish(root: string, endpoint: string, mode = "plain") {
         MOKLY_OUTPUT: mode,
         MOKLY_PACKAGE_ROOT: path.join(workspace, "packages/mokly"),
         MOKLY_VIEWER_DIST: path.join(workspace, "packages/viewer/dist"),
+        ...extra,
       },
       stdio: ["ignore", "pipe", "pipe"],
     },

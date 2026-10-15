@@ -153,7 +153,7 @@ reservation recovery guarantees.
 If the signal is set after that check, the failure is a cancellation. Marking
 an error as a cancellation keeps its original category, message, and
 diagnostic, so `MOKLY_DIAGNOSTIC=1` shows the diagnostic of the failing
-operation. `mokly build` prints the original code and message, while
+operation. `mokly build` prints `build cancelled` with `build-invalid`, while
 `mokly publish` prints the publication-cancelled output. This window is the
 only place where cancellation may be inferred from the command signal. It is
 safe because installation has not begun: no backup or reservation holds the

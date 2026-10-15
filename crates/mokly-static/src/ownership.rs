@@ -35,7 +35,12 @@ pub(crate) fn validate(files: &dyn Files, root: &Path) -> Result<Option<Owned>> 
                 marker: false,
             }));
         }
-        None => return Err(Error::Unowned { path: root.into() }),
+        None => {
+            return Err(Error::Unowned {
+                path: root.into(),
+                entries: names(root, &children),
+            });
+        }
         Some(Entry::File(size)) if size <= FILE_LIMIT as u64 => {
             match Ownership::parse(&files.read(&marker, FILE_LIMIT)?) {
                 Ok(owned) => owned,
@@ -65,6 +70,7 @@ pub(crate) fn validate(files: &dyn Files, root: &Path) -> Result<Option<Owned>> 
         marker: true,
     };
     let mut pending = children;
+    let mut unexpected = Vec::new();
     while let Some(path) = pending.pop() {
         match files.entry(&path)? {
             Some(Entry::File(_)) if path == marker => {}
@@ -73,8 +79,14 @@ pub(crate) fn validate(files: &dyn Files, root: &Path) -> Result<Option<Owned>> 
                 pending.extend(files.children(&path)?);
                 validated.directories.push(path);
             }
-            _ => return Err(Error::Unexpected { path }),
+            _ => unexpected.push(path),
         }
+    }
+    if !unexpected.is_empty() {
+        return Err(Error::UnexpectedEntries {
+            path: root.into(),
+            entries: names(root, &unexpected),
+        });
     }
     Ok(Some(validated))
 }
@@ -96,4 +108,19 @@ pub(crate) fn dispose(files: &dyn Files, root: &Path, mut owned: Owned) -> Resul
         files.unlink(&root.join(MARKER))?;
     }
     files.rmdir(root)
+}
+
+fn names(root: &Path, paths: &[PathBuf]) -> Vec<String> {
+    let mut names: Vec<_> = paths
+        .iter()
+        .map(|path| {
+            path.strip_prefix(root)
+                .unwrap_or(path)
+                .to_string_lossy()
+                .replace('\\', "/")
+        })
+        .collect();
+    names.sort_by(|a, b| a.encode_utf16().cmp(b.encode_utf16()));
+    names.dedup();
+    names
 }

@@ -27,6 +27,7 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
@@ -83,20 +84,14 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24.21.0
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Validate Cloudflare configuration
         run: |
           missing=0
@@ -152,7 +147,7 @@ jobs:
               "Status: **" + process.env.DEPLOY_STATUS + "**",
               "- Preview: " + (process.env.PREVIEW_URL || "unavailable"),
               "- Cloudflare branch: " + (process.env.PREVIEW_BRANCH || "unknown"),
-              "- Commit: " + context.sha,
+              "- Commit: " + context.payload.pull_request.head.sha,
               "- Workflow: " + context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId,
             ];
             const body = lines.join("\n");
@@ -161,7 +156,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
-            const existing = comments.find((comment) => comment.user?.type === "Bot" && comment.body?.startsWith(marker));
+            const existing = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker));
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -207,25 +202,34 @@ jobs:
             const root = "https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(account) + "/pages/projects/" + encodeURIComponent(process.env.CLOUDFLARE_PROJECT_NAME);
             const headers = { Authorization: "Bearer " + token };
             const ids = [];
+            const safe = value => String(value).replaceAll(token, "[redacted]").replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").slice(0, 300);
+            async function request(url, method = "GET") {
+              let response;
+              try { response = await fetch(url, { method, headers }); }
+              catch { throw new Error(method + " request failed"); }
+              const body = await response.json().catch(() => null);
+              if (!response.ok || !body?.success) {
+                const reason = body?.errors?.map(error => error.message).join("; ");
+                throw new Error(method + " HTTP " + response.status + (reason ? ": " + safe(reason) : ": invalid response"));
+              }
+              return body;
+            }
             try {
               for (let page = 1; ; page++) {
-                const response = await fetch(root + "/deployments?per_page=100&page=" + page, { headers });
-                if (!response.ok) throw new Error("list HTTP " + response.status);
-                const body = await response.json();
-                if (!body.success || !Array.isArray(body.result)) throw new Error("invalid deployment list");
+                const body = await request(root + "/deployments?per_page=100&page=" + page);
+                if (!Array.isArray(body.result)) throw new Error("invalid deployment list");
                 ids.push(...body.result.filter(item => item.deployment_trigger?.metadata?.branch === process.env.PREVIEW_BRANCH).map(item => item.id));
-                if (body.result.length < 100 || (body.result_info?.total_pages && page >= body.result_info.total_pages)) break;
+                const pages = body.result_info?.total_pages;
+                if (Number.isInteger(pages) && pages > 0 ? page >= pages : body.result.length === 0) break;
               }
-              let failed = 0;
+              const failures = [];
               for (const id of ids) {
-                try {
-                  const response = await fetch(root + "/deployments/" + encodeURIComponent(id) + "?force=true", { method: "DELETE", headers });
-                  if (!response.ok) failed++;
-                } catch { failed++; }
+                try { await request(root + "/deployments/" + encodeURIComponent(id) + "?force=true", "DELETE"); }
+                catch (error) { failures.push(safe(id) + ": " + safe(error.message)); }
               }
-              core.setOutput("status", failed ? "retained: " + failed + " deletions failed" : "deleted: " + ids.length + " branch deployments");
-            } catch {
-              core.setOutput("status", "retained: deployment list failed");
+              core.setOutput("status", failures.length ? "retained: " + failures.join("; ") : "deleted: " + ids.length + " branch deployments");
+            } catch (error) {
+              core.setOutput("status", "retained: " + safe(error.message));
             }
       - name: Mark preview inactive
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -250,7 +254,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
-            const existing = comments.find((comment) => comment.user?.type === "Bot" && comment.body?.startsWith(marker));
+            const existing = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker));
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

@@ -6,7 +6,7 @@ use mokly_model::usage::{CatalogueUsage, ComponentRangeRecord, ComponentRangeTar
 
 use crate::inspector::inject;
 
-fn document(html: &str) -> Composed {
+pub(super) fn document(html: &str) -> Composed {
     Composed {
         tree: parse::document(html),
         usage: CatalogueUsage::Ready {
@@ -22,9 +22,14 @@ fn document(html: &str) -> Composed {
 }
 #[test]
 fn publication_uses_the_head_and_does_not_change_body_child_positions() {
-    let html =
-        String::from_utf8(inject(&document("<main><h1>Title</h1><p>Body</p></main>")).unwrap())
-            .unwrap();
+    let html = String::from_utf8(
+        inject(
+            &document("<main><h1>Title</h1><p>Body</p></main>"),
+            "home/index.html",
+        )
+        .unwrap(),
+    )
+    .unwrap();
     assert!(html.find("data-mokly-inspector").unwrap() < html.find("</head>").unwrap());
     assert!(html.ends_with("<body><main><h1>Title</h1><p>Body</p></main></body></html>"));
     insta::assert_snapshot!(html);
@@ -43,7 +48,7 @@ fn oversized_usage_is_explicit_and_never_truncated() {
             })
             .collect(),
     };
-    let html = String::from_utf8(inject(&document).unwrap()).unwrap();
+    let html = String::from_utf8(inject(&document, "home/index.html").unwrap()).unwrap();
     assert!(html.contains("&quot;ranges&quot;:[]"));
     assert!(html.contains("&quot;error&quot;:&quot;limit&quot;"));
 }
@@ -53,7 +58,7 @@ fn reserved_authored_markers_and_invalid_parent_indices_fail() {
         "<template data-mokly-inspector>{}</template>",
         "<a data-mokly-inspector-link=0 href='#a'>link</a>",
     ] {
-        assert!(inject(&document(html)).is_err());
+        assert!(inject(&document(html), "home/index.html").is_err());
     }
     let mut document = document("<p>Body</p>");
     document.usage = CatalogueUsage::Ready {
@@ -65,11 +70,11 @@ fn reserved_authored_markers_and_invalid_parent_indices_fail() {
             parent_id: Some("r-0".into()),
         }],
     };
-    assert!(inject(&document).is_err());
+    assert!(inject(&document, "home/index.html").is_err());
 }
 
 #[test]
-fn a_link_outside_the_wire_bounds_has_an_explicit_error_map() {
+fn a_link_outside_the_wire_bounds_is_omitted_without_disabling_inspection() {
     let mut document = document("<a href='x'>Link</a>");
     fn attach(nodes: &mut [mokly_html::tree::Node]) {
         for node in nodes {
@@ -87,7 +92,8 @@ fn a_link_outside_the_wire_bounds_has_an_explicit_error_map() {
         }
     }
     attach(&mut document.tree);
-    let html = String::from_utf8(inject(&document).unwrap()).unwrap();
-    assert!(html.contains("&quot;error&quot;:&quot;limit&quot;"));
+    let html = String::from_utf8(inject(&document, "home/index.html").unwrap()).unwrap();
+    assert!(!html.contains("&quot;error&quot;"));
+    assert!(html.contains("&quot;links&quot;:[]"));
     assert!(!html.contains("data-mokly-inspector-link"));
 }

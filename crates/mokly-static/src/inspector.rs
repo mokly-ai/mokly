@@ -9,6 +9,7 @@ use mokly_model::usage::{CatalogueUsage, ComponentRangeTarget};
 use serde::Serialize;
 
 use crate::error::{Error, InternalError, Result};
+use crate::inspector_error::InspectorFailure;
 
 #[derive(Serialize)]
 struct Metadata {
@@ -40,7 +41,7 @@ enum Target {
 }
 
 /// Add bounded inert metadata and the packaged script without changing body positions.
-pub fn inject(document: &Composed) -> Result<Vec<u8>> {
+pub fn inject(document: &Composed, route: &str) -> Result<Vec<u8>> {
     let mut nodes = document.tree.clone();
     let mut metadata = Metadata {
         ranges: Vec::new(),
@@ -64,8 +65,9 @@ pub fn inject(document: &Composed) -> Result<Vec<u8>> {
                         || parent.is_some_and(|parent| parent >= index)
                         || (range.parent_id.is_some() && parent.is_none())
                     {
-                        return Err(Error::Invalid {
-                            path: "inspector ranges".into(),
+                        return Err(Error::Inspector {
+                            route: route.into(),
+                            reason: InspectorFailure::Ranges,
                         });
                     }
                     let key = match &range.target {
@@ -80,24 +82,8 @@ pub fn inject(document: &Composed) -> Result<Vec<u8>> {
         }
         _ => metadata.error = Some("unavailable"),
     }
-    links(&mut nodes, &mut metadata.links, &mut BTreeMap::new())?;
-    if metadata.links.iter().any(|link| {
-        link.fragment
-            .as_ref()
-            .is_some_and(|fragment| !wire_fragment(fragment))
-    }) {
-        metadata.error = Some("unavailable");
-    }
-    if metadata.links.len() > 1024
-        || metadata.links.iter().any(|link| {
-            link.screen_path.len() > 256
-                || link
-                    .fragment
-                    .as_ref()
-                    .is_some_and(|fragment| fragment.len() > 256)
-                || matches!(&link.target, Target::Named { name } if name.len() > 256)
-        })
-    {
+    links(&mut nodes, &mut metadata.links, &mut BTreeMap::new(), route)?;
+    if metadata.links.len() > 1024 {
         metadata.error = Some("limit");
     }
     let mut text = encode(&metadata)?;
@@ -123,8 +109,9 @@ pub fn inject(document: &Composed) -> Result<Vec<u8>> {
         ),
     ];
     if !head(&mut nodes, &additions) {
-        return Err(Error::Invalid {
-            path: "document head".into(),
+        return Err(Error::Inspector {
+            route: route.into(),
+            reason: InspectorFailure::Head,
         });
     }
     Ok(serialize::html(&nodes).into_bytes())
@@ -141,16 +128,18 @@ fn links(
     nodes: &mut [Node],
     output: &mut Vec<Navigation>,
     indices: &mut BTreeMap<Navigation, usize>,
+    route: &str,
 ) -> Result<()> {
     for node in nodes {
         match node {
             Node::Element(element) => {
-                if element.get("data-mokly-inspector").is_some()
-                    || element.get("data-mokly-inspector-link").is_some()
-                {
-                    return Err(Error::Invalid {
-                        path: "reserved inspector metadata".into(),
-                    });
+                for attribute in ["data-mokly-inspector", "data-mokly-inspector-link"] {
+                    if element.get(attribute).is_some() {
+                        return Err(Error::Inspector {
+                            route: route.into(),
+                            reason: InspectorFailure::Reserved { attribute },
+                        });
+                    }
                 }
                 if let Some(reference) = &element.navigation
                     && element.get("data-mokly-link").is_some()
@@ -166,6 +155,10 @@ fn links(
                             name => Target::Named { name: name.into() },
                         },
                     };
+                    if !wire_link(&navigation) {
+                        links(&mut element.children, output, indices, route)?;
+                        continue;
+                    }
                     let index = *indices.entry(navigation.clone()).or_insert_with(|| {
                         let index = output.len();
                         output.push(navigation);
@@ -173,9 +166,9 @@ fn links(
                     });
                     element.set("data-mokly-inspector-link", index.to_string());
                 }
-                links(&mut element.children, output, indices)?;
+                links(&mut element.children, output, indices, route)?;
             }
-            Node::Region { children, .. } => links(children, output, indices)?,
+            Node::Region { children, .. } => links(children, output, indices, route)?,
             _ => {}
         }
     }
@@ -218,4 +211,13 @@ fn wire_fragment(fragment: &str) -> bool {
         && fragment
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || b"_:.-".contains(&byte))
+}
+
+fn wire_link(link: &Navigation) -> bool {
+    link.screen_path.len() <= 256
+        && link
+            .fragment
+            .as_ref()
+            .is_none_or(|fragment| fragment.len() <= 256 && wire_fragment(fragment))
+        && !matches!(&link.target, Target::Named { name } if name.len() > 256)
 }

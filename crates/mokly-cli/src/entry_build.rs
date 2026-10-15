@@ -15,6 +15,7 @@ use crate::interrupts::Interrupts;
 use crate::one_shot::Lines;
 use crate::static_runtime::{self, Context};
 use crate::terminal::Terminal;
+use crate::{command_diagnostics, serve_trace};
 
 pub(super) fn run(
     options: &Build,
@@ -22,6 +23,10 @@ pub(super) fn run(
     redactor: Arc<Redactor>,
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
+    if options.common.debug_timings {
+        serve_trace::install(terminal.clone(), format!("build-{}", std::process::id()));
+    }
+    let timing = tracing::info_span!("build", status = "error").entered();
     let started = Instant::now();
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
@@ -48,19 +53,16 @@ pub(super) fn run(
         phases: lines.clone(),
     };
     let result = static_runtime::run(&cwd, options, &context, None);
-    let shutdown = interrupts.shutdown();
     lines.clear();
-    if let Err(error) = shutdown {
-        terminal.stderr(&style.error(Code::BuildInvalid, &error.to_string(), &redactor));
-        return ExitCode::FAILURE;
-    }
     match result {
         Ok((artifact, root)) => {
+            timing.record("status", "ok");
             lines.built(&artifact, &root, started.elapsed());
             ExitCode::SUCCESS
         }
         Err(error) => {
             terminal.stderr(&build_output::failure(style, &error, &redactor));
+            command_diagnostics::emit(&error, terminal.as_ref(), &redactor);
             ExitCode::FAILURE
         }
     }

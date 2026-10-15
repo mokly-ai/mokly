@@ -8,50 +8,115 @@ import { parse } from "yaml";
 
 import { prepareHosting } from "../scripts/preview/hosting.mjs";
 
-test("preview policy uses the native CLI and isolates fork credentials", async () => {
-  const workflow = parse(
+interface Step {
+  uses?: string;
+  with?: Record<string, unknown>;
+  env?: Record<string, string>;
+  run?: string;
+}
+interface Job {
+  if?: string;
+  permissions?: Record<string, string>;
+  steps: Step[];
+}
+interface Workflow {
+  on: Record<string, unknown>;
+  permissions: Record<string, string>;
+  concurrency: { "cancel-in-progress": boolean };
+  jobs: Record<string, Job>;
+}
+async function workflow(): Promise<Workflow> {
+  return parse(
     await fs.readFile(".github/workflows/preview.yml", "utf8"),
+  ) as Workflow;
+}
+
+function allowed(
+  condition: string,
+  event: string,
+  action: string,
+  fork: boolean,
+  release: boolean,
+): boolean {
+  const github = {
+    event_name: event,
+    repository: "owner/repo",
+    event: {
+      action,
+      pull_request: {
+        head: {
+          repo: { full_name: fork ? "fork/repo" : "owner/repo" },
+          ref: release ? "release-please--main" : "feature",
+        },
+        labels: [],
+      },
+    },
+  };
+  const expression = condition.replace(
+    "github.event.pull_request.labels.*.name",
+    "[]",
   );
-  assert.equal(workflow.on.pull_request_target, undefined);
-  assert.equal(workflow.permissions["pull-requests"], undefined);
-  assert.equal(workflow.concurrency["cancel-in-progress"], true);
-  for (const name of ["deploy-pr", "close-pr"]) {
-    assert.match(
-      workflow.jobs[name].if,
-      /head\.repo\.full_name == github\.repository/,
+  return Boolean(
+    Function(
+      "github",
+      "startsWith",
+      "contains",
+      "join",
+      `return (${expression})`,
+    )(
+      github,
+      (value: string, prefix: string) => value.startsWith(prefix),
+      (value: string, part: string) => value.includes(part),
+      (value: string[], separator: string) => value.join(separator),
+    ),
+  );
+}
+
+test("every preview job has least-privilege credentials and checkout properties", async () => {
+  const value = await workflow();
+  const nodeVersion = (await fs.readFile(".nvmrc", "utf8")).trim();
+  assert.equal(value.on.pull_request_target, undefined);
+  assert.equal(value.permissions["pull-requests"], undefined);
+  assert.equal(value.concurrency["cancel-in-progress"], true);
+  let installers = 0;
+  for (const job of Object.values(value.jobs)) {
+    const secretSteps = job.steps.filter((step) =>
+      Object.values(step.env ?? {}).some((value) => value.includes("secrets.")),
     );
-  }
-  assert.match(workflow.jobs["deploy-pr"].if, /release-please--/);
-  for (const name of ["deploy-main", "deploy-pr"]) {
-    const steps = workflow.jobs[name].steps;
-    assert.equal(
-      steps.find((step: { uses?: string }) => step.uses?.includes("checkout@"))
-        ?.with["fetch-depth"],
-      0,
-    );
-    assert.equal(
-      steps.find((step: { uses?: string }) =>
-        step.uses?.includes("setup-node@"),
-      )?.with["node-version"],
-      "24.21.0",
-    );
-    const build = steps.find(
-      (step: { name: string }) => step.name === "Build Mokly preview",
-    );
-    assert.match(build.run, /npm run build/);
-    assert.match(build.run, /bin\/mokly\.mjs build/);
-    assert.match(
-      build.run,
-      name === "deploy-main" ? /--no-changes/ : /--base origin\/main/,
-    );
-    assert.match(build.run, /--out \.\.\/\.\.\/\.context\/mokly-preview/);
-    assert.equal(build.env, undefined);
-    for (const step of steps)
+    if (secretSteps.length || job.permissions?.["pull-requests"] === "write") {
+      assert.ok(job.if);
+      for (const action of ["opened", "synchronize", "closed"])
+        assert.equal(
+          allowed(job.if, "pull_request", action, true, false),
+          false,
+        );
+    }
+    if (job.steps.some((step) => step.uses?.includes("checkout@"))) {
+      installers++;
+      for (const step of job.steps.filter((step) =>
+        step.uses?.includes("checkout@"),
+      )) {
+        assert.equal(step.with?.["fetch-depth"], 0);
+        assert.equal(step.with?.["persist-credentials"], false);
+      }
+      if (job.if && allowed(job.if, "pull_request", "opened", false, false))
+        assert.equal(
+          allowed(job.if, "pull_request", "opened", false, true),
+          false,
+        );
+    }
+    for (const step of job.steps) {
       if (step.uses) assert.match(step.uses, /@[a-f0-9]{40}$/);
+      if (step.with?.cache)
+        assert.equal(step.with["cache-dependency-path"], "package-lock.json");
+      if (step.uses?.includes("setup-node@"))
+        assert.equal(step.with?.["node-version"], nodeVersion);
+    }
   }
+  assert.ok(installers > 0);
 });
 
-test("host policy writes a separate copy and preserves the built site", async () => {
+test("host policy preserves its source and gives JSON and generations exact headers", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-hosting-"));
   try {
     const source = path.join(root, "source");
@@ -63,10 +128,13 @@ test("host policy writes a separate copy and preserves the built site", async ()
       await fs.readFile(path.join(output, "index.html"), "utf8"),
       "site",
     );
+    const headers = await fs.readFile(path.join(output, "_headers"), "utf8");
+    assert.match(headers, /X-Content-Type-Options: nosniff/);
     assert.match(
-      await fs.readFile(path.join(output, "_headers"), "utf8"),
-      /X-Content-Type-Options: nosniff/,
+      headers,
+      /! Cache-Control\n {2}Cache-Control: public, max-age=31536000, immutable/,
     );
+    assert.match(headers, /Content-Type: application\/json; charset=utf-8/);
     assert.deepEqual(await fs.readdir(source), ["index.html"]);
     await assert.rejects(prepareHosting(source, source), /outside/);
   } finally {

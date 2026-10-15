@@ -7,6 +7,8 @@ use mokly_graph::error::GraphError;
 use mokly_model::output::error::FormatError;
 use thiserror::Error;
 
+use crate::inspector_error::InspectorFailure;
+
 /// Static output result.
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -14,32 +16,42 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Error)]
 pub enum Error {
     /// Output overlaps protected inputs or escapes its allowed root.
-    #[error("[mokly-static] Unsafe output directory: {path:?}.")]
+    #[error("[mokly-static] Unsafe output directory: {}.", .path.display())]
     Destination {
         /// Requested destination.
         path: PathBuf,
     },
     /// Nonempty output has no valid regular ownership marker.
-    #[error("[mokly-static] Output is not owned by Mokly: {path:?}.")]
+    #[error("[mokly-static] Output is not owned by Mokly: {}.", .path.display())]
     Unowned {
         /// Refused output.
         path: PathBuf,
+        /// Known unexpected entries, relative to output.
+        entries: Vec<String>,
     },
     /// A regular marker could not authorize replacement.
-    #[error("[mokly-static] Invalid export ownership inventory: {path:?}.")]
+    #[error("[mokly-static] Invalid export ownership inventory: {}.", .path.display())]
     Ownership {
         /// Refused output.
         path: PathBuf,
     },
     /// An unlisted or unsafe entry must survive replacement.
-    #[error("[mokly-static] Unexpected or unsafe output entry at {path:?}.")]
+    #[error("[mokly-static] Unexpected or unsafe output entry at {}.", .path.display())]
     Unexpected {
         /// Entry requiring user recovery.
         path: PathBuf,
     },
+    /// The actual output contains entries outside its ownership inventory.
+    #[error("[mokly-static] Unexpected output entries in {}.", .path.display())]
+    UnexpectedEntries {
+        /// Refused output directory.
+        path: PathBuf,
+        /// Sorted relative entries; presentation bounds the list.
+        entries: Vec<String>,
+    },
     /// Another writer or abandoned transaction owns this destination.
     #[error(
-        "[mokly-static] Output is reserved at {path:?}. Confirm no writer is active and inspect its backup before recovery."
+        "[mokly-static] Output is reserved at {}. Confirm no writer is active and inspect its backup before recovery.", .path.display()
     )]
     Reserved {
         /// Exact reservation.
@@ -47,14 +59,14 @@ pub enum Error {
     },
     /// The originally accepted output or its alias changed.
     #[error(
-        "[mokly-static] Output changed during the build: {path:?}. Retry after checking the directory."
+        "[mokly-static] Output changed during the build: {}. Retry after checking the directory.", .path.display()
     )]
     Replaced {
         /// Pinned output.
         path: PathBuf,
     },
     /// Input capture changed before installation.
-    #[error("[mokly-static] Inputs changed during the build: {path:?}. Build again.")]
+    #[error("[mokly-static] Inputs changed during the build: {}. Build again.", .path.display())]
     InputsChanged {
         /// Changed input.
         path: PathBuf,
@@ -71,7 +83,7 @@ pub enum Error {
         path: String,
     },
     /// Exact, case, or prefix collision in the complete output inventory.
-    #[error("[mokly-static] Output paths collide: {path:?} and {other:?}.")]
+    #[error("[mokly-static] Output paths collide: {path} and {other}.")]
     Collision {
         /// New path.
         path: String,
@@ -79,14 +91,14 @@ pub enum Error {
         other: String,
     },
     /// A regular file exceeds its specified ceiling.
-    #[error("[mokly-static] Output file exceeds 64 MiB: {path:?}.")]
+    #[error("[mokly-static] Output file exceeds 64 MiB: {path}.")]
     TooLarge {
         /// Rejected file.
         path: String,
     },
     /// Recovery failed; both causes remain available for inspection.
     #[error(
-        "[mokly-static] {primary}\nRecovery failed: {cleanup}\nInspect retained recovery path {path:?}."
+        "[mokly-static] {primary}\nRecovery failed: {cleanup}\nInspect retained recovery path {}.", .path.display()
     )]
     Recovery {
         /// Original failure.
@@ -99,7 +111,7 @@ pub enum Error {
     },
     /// Installation succeeded but old files or reservation remain.
     #[error(
-        "[mokly-static] The new site is installed. Cleanup failed: {source}\nInspect remaining recovery path {path:?}."
+        "[mokly-static] The new site is installed. Cleanup failed: {source}\nInspect remaining recovery path {}.", .path.display()
     )]
     Installed {
         /// Cleanup failure.
@@ -111,22 +123,50 @@ pub enum Error {
     #[error("[mokly-static] The catalogue is empty.")]
     Empty,
     /// Required package or generated output is absent or malformed.
-    #[error("[mokly-static] Invalid static output at {path:?}.")]
+    #[error("[mokly-static] Invalid static output at {path}.")]
     Invalid {
         /// Offending file or route.
         path: String,
+    },
+    /// Inspector publication failed for a specific current document.
+    #[error("[mokly-static] {route}: {reason}")]
+    Inspector {
+        /// Generated document route.
+        route: String,
+        /// Typed metadata failure.
+        reason: InspectorFailure,
+    },
+    /// A document plan refers to an absent catalogue entry.
+    #[error("[mokly-static] Invalid document plan for {route}: entry {entry} is absent.")]
+    PlanEntry {
+        /// Planned route.
+        route: String,
+        /// Invalid entry index.
+        entry: usize,
+    },
+    /// A package script cannot be parsed as a module.
+    #[error("[mokly-static] Could not read module references: {path}:{line}:{column}.")]
+    ModuleSyntax {
+        /// Script path.
+        path: String,
+        /// One-based parser line.
+        line: usize,
+        /// One-based parser column.
+        column: usize,
+    },
+    /// A package module request does not resolve to an inventoried file.
+    #[error("[mokly-static] Module resource is unavailable: {path} -> {request}.")]
+    ModuleReference {
+        /// Importing script.
+        path: String,
+        /// Decoded request.
+        request: String,
     },
     /// A graph render failed without losing its diagnostic records.
     #[error("[mokly-static] {source}")]
     Render {
         /// Original render failure.
         source: Box<GraphError>,
-    },
-    /// A caller's primary failure retained beside a cleanup failure.
-    #[error("[mokly-static] {source}")]
-    Primary {
-        /// Original typed error.
-        source: Box<dyn std::error::Error + Send + Sync>,
     },
     /// Unexpected adapter failure keeps its typed cause.
     #[error("[mokly-static] {0}")]
@@ -137,7 +177,7 @@ pub enum Error {
 #[derive(Debug, Error)]
 pub enum InternalError {
     /// Filesystem operation failed.
-    #[error("{operation} failed at {path:?}: {source}")]
+    #[error("{operation} failed at {}: {source}", .path.display())]
     Io {
         /// Operation name.
         operation: &'static str,

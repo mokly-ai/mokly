@@ -31,6 +31,7 @@ fn writer(rename: Arc<dyn Rename>) -> OutputTransactions {
 fn boundary(root: &Path) -> Boundary {
     Boundary {
         allowed: root.into(),
+        lexical_allowed: None,
         roots: vec![],
         inputs: vec![],
     }
@@ -76,7 +77,8 @@ impl Rename for Race {
 
 #[test]
 fn successful_install_is_kept_when_backup_cleanup_fails() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     previous(root.path());
     let transaction = writer(Arc::new(Race("cleanup")))
         .open(&root.path().join("site"), boundary(root.path()))
@@ -103,7 +105,8 @@ fn successful_install_is_kept_when_backup_cleanup_fails() {
 
 #[test]
 fn failed_cancellation_restore_is_a_recovery_error_with_both_causes() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     previous(root.path());
     let transaction = writer(Arc::new(Race("restore")))
         .open(&root.path().join("site"), boundary(root.path()))
@@ -129,7 +132,8 @@ fn failed_cancellation_restore_is_a_recovery_error_with_both_causes() {
 
 #[test]
 fn a_substitution_at_capture_is_restored_with_its_unowned_bytes() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     previous(root.path());
     let transaction = writer(Arc::new(Race("substitute")))
         .open(&root.path().join("site"), boundary(root.path()))
@@ -152,4 +156,11 @@ fn a_substitution_at_capture_is_restored_with_its_unowned_bytes() {
             .join(".mokly-export-reservations/locks/site")
             .exists()
     );
+}
+
+struct Canonical(std::path::PathBuf);
+impl Canonical {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
 }

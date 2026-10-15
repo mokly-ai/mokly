@@ -13,7 +13,8 @@ use tempfile::TempDir;
 
 #[test]
 fn explicit_hidden_inputs_are_rechecked_and_source_membership_changes_are_seen() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     fs::create_dir(root.path().join(".context")).unwrap();
     let input = root.path().join(".context/helper.ts");
     fs::write(&input, "original").unwrap();
@@ -34,7 +35,8 @@ fn explicit_hidden_inputs_are_rechecked_and_source_membership_changes_are_seen()
 #[cfg(unix)]
 #[test]
 fn escaping_dangling_and_cyclic_links_contribute_only_safe_metadata() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     let outside = TempDir::new().unwrap();
     fs::write(outside.path().join("secret"), "never read").unwrap();
     std::os::unix::fs::symlink(outside.path(), root.path().join("outside")).unwrap();
@@ -55,7 +57,8 @@ fn escaping_dangling_and_cyclic_links_contribute_only_safe_metadata() {
 #[cfg(unix)]
 #[test]
 fn canonical_output_exclusion_also_excludes_a_different_logical_alias() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     let output = root.path().join("output");
     fs::create_dir(&output).unwrap();
     std::os::unix::fs::symlink(&output, root.path().join("alias")).unwrap();
@@ -69,4 +72,11 @@ fn canonical_output_exclusion_also_excludes_a_different_logical_alias() {
     let after = fingerprints.capture(root.path(), &[output]).unwrap();
     verify(&before, &after).unwrap();
     assert_eq!(before.len(), 1);
+}
+
+struct Canonical(std::path::PathBuf);
+impl Canonical {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
 }

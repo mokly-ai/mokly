@@ -54,7 +54,9 @@ fn records(
     for (path, detail) in details {
         result.push(File {
             path: viewer(&format!("entries/{path}.json")),
-            bytes: json(detail)?.into(),
+            bytes: tracing::info_span!("detail.build")
+                .in_scope(|| json(detail))?
+                .into(),
         });
     }
     Ok(result)

@@ -1,0 +1,135 @@
+---
+source: crates/mokly-cli/src/_tests_/static_failure_tests.rs
+expression: output
+---
+[mokly/server-failed] Build or reinstall the matching @mokly/viewer package.
+
+[mokly/git-failed] Git information could not be read for main. Check the repository and configured base.
+
+[mokly/build-invalid] build cancelled
+
+[mokly/build-invalid] The catalogue is empty.
+
+[mokly/build-invalid] home/index.html: data-mokly-inspector-link is reserved for Mokly.
+
+[mokly/export-invalid] Invalid export ownership inventory: C:\site.
+
+[mokly/export-invalid] Output is not owned by Mokly: /repo/site.
+  - a
+  - z
+
+[mokly/export-invalid] Unexpected output entries in /repo/site.
+  - file-00
+  - file-01
+  - file-02
+  - file-03
+  - file-04
+  - file-05
+  - file-06
+  - file-07
+  - file-08
+  - file-09
+  - file-10
+  - file-11
+  - file-12
+  - file-13
+  - file-14
+  - file-15
+  - file-16
+  - file-17
+  - file-18
+  - file-19
+  … 3 other entries.
+
+[mokly/export-invalid] build cancelled
+Recovery failed: Exclusive rename failed: destination exists: /repo/site
+Inspect retained recovery path /kept/backup.
+
+[mokly/export-invalid] The new site is installed. Cleanup failed: Unexpected or unsafe output entry at /kept/backup/new.
+Inspect remaining recovery path /kept/backup.
+
+[mokly/build-invalid] build cancelled
+[mokly/build-invalid] Render shutdown failed: Build or reinstall the matching @mokly/viewer package.
+
+[mokly/export-invalid] build cancelled
+Recovery failed: Unexpected or unsafe output entry at /kept/[redacted].
+Inspect retained recovery path /kept/[redacted].
+
+x The catalogue server could not start.  [mokly/server-failed]
+  Build or reinstall the matching @mokly/viewer package.
+  Check the reported port or process and retry.
+
+x Git information could not be read.  [mokly/git-failed]
+  Git information could not be read for main.
+  Check the repository and configured base.
+
+x The catalogue could not be built.  [mokly/build-invalid]
+  build cancelled
+  Fix the reported catalogue source and retry.
+
+x The catalogue could not be built.  [mokly/build-invalid]
+  The catalogue is empty.
+  Fix the reported catalogue source and retry.
+
+x The catalogue could not be built.  [mokly/build-invalid]
+  home/index.html: data-mokly-inspector-link is reserved for Mokly.
+  Fix the reported catalogue source and retry.
+
+x The static output could not be written.  [mokly/export-invalid]
+  Invalid export ownership inventory: C:\site.
+  Fix the reported output directory or input and retry.
+
+x The static output could not be written.  [mokly/export-invalid]
+  Output is not owned by Mokly: /repo/site.
+    - a
+    - z
+  Fix the reported output directory or input and retry.
+
+x The static output could not be written.  [mokly/export-invalid]
+  Unexpected output entries in /repo/site.
+    - file-00
+    - file-01
+    - file-02
+    - file-03
+    - file-04
+    - file-05
+    - file-06
+    - file-07
+    - file-08
+    - file-09
+    - file-10
+    - file-11
+    - file-12
+    - file-13
+    - file-14
+    - file-15
+    - file-16
+    - file-17
+    - file-18
+    - file-19
+    … 3 other entries.
+  Fix the reported output directory or input and retry.
+
+x The static output could not be written.  [mokly/export-invalid]
+  build cancelled
+  Recovery failed: Exclusive rename failed: destination exists: /repo/site
+  Inspect retained recovery path /kept/backup.
+  Fix the reported output directory or input and retry.
+
+x The static output could not be written.  [mokly/export-invalid]
+  The new site is installed. Cleanup failed: Unexpected or unsafe output entry at /kept/backup/new.
+  Inspect remaining recovery path /kept/backup.
+  Fix the reported output directory or input and retry.
+
+x The catalogue could not be built.  [mokly/build-invalid]
+  build cancelled
+  Fix the reported catalogue source and retry.
+x The catalogue could not be built.  [mokly/build-invalid]
+  Render shutdown failed: Build or reinstall the matching @mokly/viewer package.
+  Fix the reported catalogue source and retry.
+
+x The static output could not be written.  [mokly/export-invalid]
+  build cancelled
+  Recovery failed: Unexpected or unsafe output entry at /kept/[redacted].
+  Inspect retained recovery path /kept/[redacted].
+  Fix the reported output directory or input and retry.

@@ -50,3 +50,21 @@ pub mod input_selection;
 #[cfg(test)]
 #[path = "_tests_/input_selection_tests.rs"]
 mod input_selection_tests;
+
+#[cfg(test)]
+#[path = "_tests_/fingerprint_tests.rs"]
+mod fingerprint_tests;
+
+pub mod inspector_error;
+
+#[cfg(test)]
+#[path = "_tests_/inspector_map_tests.rs"]
+mod inspector_map_tests;
+
+#[cfg(test)]
+#[path = "_tests_/assembly_tests.rs"]
+mod assembly_tests;
+
+#[cfg(test)]
+#[path = "_tests_/reservation_tests.rs"]
+mod reservation_tests;

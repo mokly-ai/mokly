@@ -14,7 +14,7 @@ export async function prepareHosting(source, destination) {
   });
   await fs.writeFile(
     path.join(output, "_headers"),
-    "/*\n  Cache-Control: no-cache\n  X-Content-Type-Options: nosniff\n\n/mokly-viewer/diffs/generations/*\n  Cache-Control: public, max-age=31536000, immutable\n",
+    "/*\n  Cache-Control: no-cache\n  X-Content-Type-Options: nosniff\n\n/*.json\n  ! Content-Type\n  Content-Type: application/json; charset=utf-8\n\n/mokly-viewer/diffs/generations/*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n",
     { flag: "wx" },
   );
 }

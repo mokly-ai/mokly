@@ -43,9 +43,17 @@ impl BuildFailure for BuildError {
     }
     fn category(&self) -> Category {
         match self {
-            BuildError::Interrupted { source } => source.category(),
+            BuildError::Interrupted { .. } => Category::BuildInvalid,
+            BuildError::Shutdown { primary, .. } => primary.category(),
+            BuildError::Cleanup { .. } => Category::ExportInvalid,
             BuildError::Static {
-                source: Error::Cancelled | Error::Empty,
+                source:
+                    Error::Cancelled
+                    | Error::Empty
+                    | Error::Inspector {
+                        reason: mokly_static::inspector_error::InspectorFailure::Reserved { .. },
+                        ..
+                    },
             }
             | BuildError::Cancelled => Category::BuildInvalid,
             BuildError::Static { .. } => Category::ExportInvalid,

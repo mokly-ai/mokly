@@ -119,7 +119,8 @@ impl Lines {
             self.success(&format!("{message} ({})", duration(elapsed)));
         }
         if let Some(url) = &receipt.completion.viewer_url {
-            self.terminal.stdout(&format!("{url}\n"));
+            self.terminal
+                .stdout(&format!("{}\n", self.redactor.safe(url)));
         }
     }
     fn success(&self, text: &str) {
@@ -208,6 +209,14 @@ impl BuildReporter for Lines {
     }
 }
 impl Reporter for Lines {
+    fn round(&self, _: usize) {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        state.label = Some("Uploading catalogue".into());
+        if self.animate {
+            self.terminal
+                .stdout(&frame(&self.style, "Uploading catalogue", state.frame));
+        }
+    }
     fn progress(&self, progress: &Progress) {
         if !self.animate {
             return;

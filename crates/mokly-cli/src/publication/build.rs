@@ -24,6 +24,8 @@ pub struct BuildRequest {
     pub base: Option<String>,
     /// Current-only output performs no base lookup.
     pub no_changes: bool,
+    /// The user explicitly requested --strict.
+    pub strict: bool,
     /// Effective policy, resolved by warnings_are_fatal.
     pub warnings_are_fatal: bool,
     /// Inspected revision and repository metadata used for envelope finalization.

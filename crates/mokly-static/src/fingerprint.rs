@@ -13,6 +13,7 @@ use crate::error::{Error, InternalError, Result};
 use crate::filesystem::{Entry, Files};
 
 /// Captured source reads. Rechecks include inputs beneath normally excluded directories.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = InputTreeMock))]
 pub trait InputTree: SourceTree {
     /// Capture the complete inventoried sources before document callbacks run.
     fn capture(&self, root: &Path, paths: &[String]) -> Result<()>;
@@ -108,6 +109,7 @@ impl InputTree for CapturedTree {
 }
 
 /// Broader source membership fingerprint catches additions and sidecar-owned reads.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = FingerprintsMock))]
 pub trait Fingerprints: Send + Sync {
     /// Hash a confined tree without output, dependency, and build artifacts.
     fn capture(&self, root: &Path, excluded: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>>;
@@ -150,14 +152,28 @@ impl SourceFingerprints {
         if excluded.iter().any(|path| physical.starts_with(path)) {
             return Ok(());
         }
-        match self.files.entry(physical)? {
+        let entry = match self.files.entry(physical) {
+            Ok(entry) => entry,
+            Err(_) => {
+                output.insert(logical.into(), "unreadable".into());
+                return Ok(());
+            }
+        };
+        match entry {
             Some(Entry::Directory(_)) => {
                 if ancestors.contains(physical) {
                     return Ok(());
                 }
                 let mut ancestors = ancestors.clone();
                 ancestors.insert(physical.into());
-                for child in self.files.children(physical)? {
+                let children = match self.files.children(physical) {
+                    Ok(children) => children,
+                    Err(_) => {
+                        output.insert(logical.into(), "unreadable".into());
+                        return Ok(());
+                    }
+                };
+                for child in children {
                     let Some(name) = child.file_name() else {
                         continue;
                     };
@@ -189,7 +205,12 @@ impl SourceFingerprints {
                 }
             }
             Some(Entry::File(_)) => {
-                output.insert(logical.into(), self.files.hash(physical)?);
+                output.insert(
+                    logical.into(),
+                    self.files
+                        .hash(physical)
+                        .unwrap_or_else(|_| "unreadable".into()),
+                );
             }
             Some(Entry::Unsafe) => {
                 if let Ok(target) = self.files.link(physical) {
@@ -205,11 +226,7 @@ impl SourceFingerprints {
                     }
                 }
             }
-            None => {
-                return Err(Error::InputsChanged {
-                    path: logical.into(),
-                });
-            }
+            None => {}
         }
         Ok(())
     }

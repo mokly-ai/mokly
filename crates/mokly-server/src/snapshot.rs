@@ -14,6 +14,7 @@ use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
+use mokly_model::shell;
 use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
@@ -24,7 +25,6 @@ use crate::evidence::{Completion, RenderRoute};
 use crate::generation::Generation;
 use crate::revision::{RenderLease, RevisionLease};
 use crate::revision_file::RevisionFile;
-use mokly_model::shell;
 
 /// One immutable publication; replacement swaps this whole value.
 #[derive(Clone)]

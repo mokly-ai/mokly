@@ -16,7 +16,8 @@ browser shell, entry details, documents, styles, and referenced assets to
 `mokly-static/` at the repository root. A static file server can serve these
 files without the source tree or a Mokly process.
 
-Add `/mokly-static/` to the root `.gitignore`. Keep the source files in Git.
+Add `/mokly-static/` and `.mokly-export-reservations/` to the root `.gitignore`.
+The reservation namespace stays after a build. Keep source files in Git.
 
 ## Choose an output directory
 

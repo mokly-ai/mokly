@@ -131,7 +131,6 @@ async fn a_dirty_checkout_stops_before_build_or_network() {
 #[tokio::test]
 async fn a_build_failure_keeps_its_own_error_and_stops_before_recheck_or_network() {
     for error in [
-        Error::StaticUnavailable,
         Error::BuildWarnings,
         Error::Exchange {
             source: error::Error::Cancelled,

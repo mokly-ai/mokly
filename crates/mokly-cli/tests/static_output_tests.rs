@@ -67,9 +67,14 @@ fn builds_twice_with_identical_bytes_and_complete_public_fences() {
         root.path(),
     );
     build(root.path(), ".context/first");
-    build(root.path(), ".context/second");
+    let other = TempDir::new().unwrap();
+    copy(
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("../mokly-graph/tests/fixtures/catalogue"),
+        other.path(),
+    );
+    build(other.path(), ".context/second");
     let files = inventory(&root.path().join(".context/first"));
-    assert_eq!(files, inventory(&root.path().join(".context/second")));
+    assert_eq!(files, inventory(&other.path().join(".context/second")));
     let marker = Ownership::parse(&files[Path::new(".mokly-export-artifact")]).unwrap();
     assert_eq!(files.len(), marker.files.len() + 1);
     for entry in marker.files {

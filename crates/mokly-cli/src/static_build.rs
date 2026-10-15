@@ -11,11 +11,12 @@ use mokly_static::assembly::{Assembler, Assembly};
 use mokly_static::error;
 use mokly_static::fingerprint::{Fingerprints, InputTree};
 use mokly_static::input_selection;
-use mokly_static::location::Boundary;
-use mokly_static::transaction::{Cancellation, Transaction, Transactions};
+use mokly_static::transaction::{self, Transaction};
 
 use crate::build::{BuildError, BuildService, BuildSummary};
+use crate::cancellation::Cancellation;
 use crate::grammar::Build;
+use crate::pre_installation;
 
 /// One-shot phase reporting shared by build and publish.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -62,34 +63,36 @@ pub struct Request<'a> {
     pub options: &'a Build,
     /// Exact matching viewer package bytes.
     pub viewer: Vec<File>,
-    /// Private parent for publish, repository root for build.
-    pub allowed: &'a Path,
     /// Git root for upload configuration identity.
     pub repository: &'a Path,
     /// Publication metadata context, excluding browser identity.
     pub publication: Option<Publication>,
-    /// Package and executable directories protected from output replacement.
-    pub runtime_directories: Vec<std::path::PathBuf>,
+    /// Publication warnings are fatal according to the isolated policy.
+    pub warnings_are_fatal: bool,
 }
 
 /// Wall clock read only at publication metadata finalization.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = TimestampMock))]
 pub trait Timestamp: Send + Sync {
     /// UTC with exact millisecond precision.
     fn now(&self) -> String;
 }
 
 /// Unified build pipeline used by both public verbs.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StaticBuildMock))]
 pub trait StaticBuild: Send + Sync {
     /// Install output and return the very same immutable artifact.
-    fn build(&self, request: Request<'_>) -> Result<(Artifact, BuildSummary), BuildError>;
+    fn build(
+        &self,
+        request: Request<'_>,
+        transaction: &mut dyn Transaction,
+    ) -> Result<(Artifact, BuildSummary), BuildError>;
 }
 
 /// CLI-owned composition of independent static and render services.
 pub struct Builder {
     /// Complete catalogue rendering.
     pub render: Arc<dyn BuildService>,
-    /// Safe output ownership and replacement.
-    pub transactions: Arc<dyn Transactions>,
     /// Output projection from the generation.
     pub assembler: Arc<dyn Assembler>,
     /// Live source membership hash boundary.
@@ -107,45 +110,39 @@ pub struct Builder {
 }
 
 impl StaticBuild for Builder {
-    fn build(&self, request: Request<'_>) -> Result<(Artifact, BuildSummary), BuildError> {
-        let output = mokly_static::location::output(request.config, request.options.out.as_deref());
-        let mut boundary = Boundary::catalogue(request.config, request.allowed.into());
-        boundary.roots.extend(request.runtime_directories.clone());
-        let mut transaction = static_result(self.transactions.open(&output, boundary))?;
+    #[tracing::instrument(name = "output.write", skip_all, err)]
+    fn build(
+        &self,
+        request: Request<'_>,
+        transaction: &mut dyn Transaction,
+    ) -> Result<(Artifact, BuildSummary), BuildError> {
         let recovery_path = transaction.recovery_path().to_owned();
-        let result = self.prepare(&request, transaction.as_mut());
-        let result = match result {
-            Err(source) if self.cancellation.requested() => Err(BuildError::Interrupted {
-                source: Box::new(source),
-            }),
-            Ok(_) if self.cancellation.requested() => Err(BuildError::Cancelled),
-            result => result,
-        };
+        let result = pre_installation::settle(
+            self.prepare(&request, transaction),
+            self.cancellation.as_ref(),
+        );
         let stopped = self.drain.stop();
         let result = match (result, stopped) {
             (Ok(value), Ok(())) => Ok(value),
-            (Err(primary), Err(cleanup)) => Err(BuildError::Static {
-                source: error::Error::Recovery {
-                    primary: Box::new(build_cause(primary)),
-                    cleanup: Box::new(build_cause(cleanup)),
-                    path: recovery_path.clone(),
-                },
+            (Err(primary), Err(shutdown)) => Err(BuildError::Shutdown {
+                primary: Box::new(primary),
+                shutdown: Box::new(shutdown),
             }),
             (Err(error), Ok(())) | (Ok(_), Err(error)) => Err(error),
         };
         match result {
             Ok((artifact, summary)) => {
-                static_result(transaction.install(self.cancellation.as_ref()))?;
+                static_result(
+                    transaction.install(&StaticCancellation(self.cancellation.as_ref())),
+                )?;
                 Ok((artifact, summary))
             }
             Err(primary) => match transaction.abandon() {
                 Ok(()) => Err(primary),
-                Err(cleanup) => Err(BuildError::Static {
-                    source: error::Error::Recovery {
-                        primary: Box::new(build_cause(primary)),
-                        cleanup: Box::new(cleanup),
-                        path: recovery_path,
-                    },
+                Err(cleanup) => Err(BuildError::Cleanup {
+                    primary: Box::new(primary),
+                    cleanup: Box::new(cleanup),
+                    path: recovery_path,
                 }),
             },
         }
@@ -175,6 +172,9 @@ impl Builder {
             .collect();
         static_result(transaction.protect(protected))?;
         self.phases.warnings(&rendered.summary.warnings);
+        if request.warnings_are_fatal && !rendered.summary.warnings.is_empty() {
+            return Err(BuildError::Warnings);
+        }
         let base = if request.options.no_changes {
             None
         } else {
@@ -223,9 +223,11 @@ impl Builder {
                 base,
                 metadata,
             },
-            self.cancellation.as_ref(),
+            &StaticCancellation(self.cancellation.as_ref()),
         ))?;
-        static_result(transaction.stage(&artifact, self.cancellation.as_ref()))?;
+        static_result(
+            transaction.stage(&artifact, &StaticCancellation(self.cancellation.as_ref())),
+        )?;
         static_result(self.inputs.verify())?;
         let after = static_result(
             self.fingerprints
@@ -248,12 +250,15 @@ fn static_result<T>(result: error::Result<T>) -> Result<T, BuildError> {
         Err(source) => Err(BuildError::Static { source }),
     }
 }
-fn build_cause(error: BuildError) -> error::Error {
-    match error {
-        BuildError::Static { source } => source,
-        BuildError::Cancelled => error::Error::Cancelled,
-        error => error::Error::Primary {
-            source: Box::new(error),
-        },
+/// Static transaction adapter shares the command's delivered signal state.
+pub struct StaticCancellation<'a>(pub &'a dyn Cancellation);
+impl transaction::Cancellation for StaticCancellation<'_> {
+    fn requested(&self) -> bool {
+        self.0.drain();
+        self.0.requested()
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/static_build/mod.rs"]
+mod tests;

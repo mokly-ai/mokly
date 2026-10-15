@@ -13,13 +13,15 @@ use tempfile::TempDir;
 fn boundary(root: &Path) -> Boundary {
     Boundary {
         allowed: root.into(),
+        lexical_allowed: None,
         roots: vec![root.join("specs")],
         inputs: vec![root.join("config.json"), root.join("package.json")],
     }
 }
 #[test]
 fn refuses_source_roots_repository_ancestors_and_private_names() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     fs::create_dir(root.path().join("specs")).unwrap();
     let writer: &dyn Transactions = &OutputTransactions {
         files: Arc::new(SystemFiles),
@@ -50,7 +52,8 @@ fn refuses_source_roots_repository_ancestors_and_private_names() {
 #[cfg(unix)]
 #[test]
 fn confined_aliases_pin_the_real_destination_and_retargeting_is_detected() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     fs::create_dir(root.path().join("specs")).unwrap();
     fs::create_dir(root.path().join("owned")).unwrap();
     fs::create_dir(root.path().join("other")).unwrap();
@@ -73,7 +76,8 @@ fn confined_aliases_pin_the_real_destination_and_retargeting_is_detected() {
 #[cfg(unix)]
 #[test]
 fn rejects_output_symlinks_and_escape_aliases_including_dangling_links() {
-    let root = TempDir::new().unwrap();
+    let temporary = TempDir::new().unwrap();
+    let root = Canonical(dunce::canonicalize(temporary.path()).unwrap());
     let outside = TempDir::new().unwrap();
     let writer: &dyn Transactions = &OutputTransactions {
         files: Arc::new(SystemFiles),
@@ -88,4 +92,28 @@ fn rejects_output_symlinks_and_escape_aliases_including_dangling_links() {
                 .is_err()
         );
     }
+}
+
+struct Canonical(std::path::PathBuf);
+impl Canonical {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn an_absolute_output_through_a_repository_alias_checks_like_with_like() {
+    let temporary = TempDir::new().unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let alias_parent = TempDir::new().unwrap();
+    let alias = alias_parent.path().join("repository");
+    std::os::unix::fs::symlink(&root, &alias).unwrap();
+    let writer: &dyn Transactions = &OutputTransactions {
+        files: Arc::new(SystemFiles),
+        rename: Arc::new(SystemRename),
+    };
+    let transaction = writer.open(&alias.join("site"), boundary(&root)).unwrap();
+    assert_eq!(transaction.output(), root.join("site"));
+    transaction.abandon().unwrap();
 }

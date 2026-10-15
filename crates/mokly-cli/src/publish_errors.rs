@@ -76,6 +76,9 @@ pub fn command(error: &error::Error, style: &Style, redactor: &Redactor) -> Stri
         error::Error::Exchange { source } => return render(source, style, redactor),
         error::Error::Build { failure } => {
             if let Some(error) = failure.native() {
+                if crate::pre_installation::cancelled(error) {
+                    return render(&Error::Cancelled, style, redactor);
+                }
                 return crate::build_output::failure(style, error, redactor);
             }
             let code = match failure.category() {
@@ -99,10 +102,6 @@ pub fn command(error: &error::Error, style: &Style, redactor: &Redactor) -> Stri
             build_directories,
         } => {
             return uncommitted(paths, *during_build, build_directories, style, redactor);
-        }
-        error::Error::StaticUnavailable => {
-            return "[mokly/build-invalid] Static output is not available in this build.\n"
-                .to_owned();
         }
         error::Error::BuildWarnings => (
             Code::BuildInvalid,

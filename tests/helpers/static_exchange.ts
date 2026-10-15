@@ -28,13 +28,22 @@ function archive(bytes: Buffer): Map<string, Buffer> {
 }
 
 export async function exchange(
-  options: { retry?: boolean; holdPlan?: () => void } = {},
+  options: {
+    retry?: boolean;
+    holdPlan?: () => void;
+    holdBlob?: () => void;
+    planStatus?: number;
+  } = {},
 ) {
   const bodies: Buffer[] = [];
   const blobs = new Map<string, Buffer>();
   const attempts = new Map<string, number>();
   let entries: MarkerEntry[] = [];
   let complete = 0;
+  const published = new Set<string>();
+  const metadata: Array<{ configPath: string; headSha: string }> = [];
+  const missingCounts: number[] = [];
+  let identity = "";
   let base = "";
   let failure: unknown;
   const server = http.createServer(async (request, response) => {
@@ -50,6 +59,11 @@ export async function exchange(
           [...files.keys()],
           ["mokly-upload.json", ".mokly-export-artifact"],
         );
+        const envelope = JSON.parse(
+          files.get("mokly-upload.json")!.toString(),
+        ) as { configPath: string; headSha: string };
+        metadata.push(envelope);
+        identity = `${envelope.headSha}:${envelope.configPath}`;
         const marker = JSON.parse(
           files.get(".mokly-export-artifact")!.toString(),
         ) as { files: MarkerEntry[] };
@@ -57,6 +71,17 @@ export async function exchange(
         for (const entry of entries) {
           const bytes = files.get(entry.path);
           if (bytes) blobs.set(entry.sha256, bytes);
+        }
+        missingCounts.push(
+          new Set(
+            entries
+              .map((entry) => entry.sha256)
+              .filter((hash) => !blobs.has(hash)),
+          ).size,
+        );
+        if (options.planStatus) {
+          response.writeHead(options.planStatus).end();
+          return;
         }
         if (options.holdPlan) {
           options.holdPlan();
@@ -87,6 +112,10 @@ export async function exchange(
           crypto.createHash("sha256").update(bytes).digest("hex"),
           hash,
         );
+        if (options.holdBlob) {
+          options.holdBlob();
+          return;
+        }
         attempts.set(hash, (attempts.get(hash) ?? 0) + 1);
         if (options.retry && attempts.get(hash) === 1) {
           response.writeHead(503, { "Retry-After": "0" }).end();
@@ -100,8 +129,10 @@ export async function exchange(
           assert.equal(blobs.get(entry.sha256)?.length, entry.size);
         }
         complete++;
+        const status = published.has(identity) ? 200 : 201;
+        published.add(identity);
         response
-          .writeHead(complete === 1 ? 201 : 200, {
+          .writeHead(status, {
             "Content-Type": "application/json",
           })
           .end(JSON.stringify({ viewerUrl: `${base}/catalogue` }));
@@ -119,6 +150,8 @@ export async function exchange(
     endpoint: `${base}/plan?key=1=2`,
     bodies,
     attempts,
+    metadata,
+    missingCounts,
     get completed() {
       return complete;
     },

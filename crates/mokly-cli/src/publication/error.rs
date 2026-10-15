@@ -34,9 +34,6 @@ pub enum Error {
         "[mokly-cli/publication/git-failed] HEAD changed during the build. Run mokly publish again."
     )]
     HeadChanged,
-    /// An injected output adapter cannot build this request.
-    #[error("[mokly-cli/publication/build-invalid] Static output is not available in this build.")]
-    StaticUnavailable,
     /// An error owned by the static output transaction retains its category.
     #[error("[mokly-cli/publication/build] {failure}")]
     Build {
