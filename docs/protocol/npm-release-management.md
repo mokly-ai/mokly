@@ -1,5 +1,7 @@
 # npm Release Management
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CI And npm Release Contract](./npm-release.md).
 
 ## Release Management
@@ -7,12 +9,15 @@ Continuation of [CI And npm Release Contract](./npm-release.md).
 Conventional Commits feed two release-please Node components through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
 `main` creates or updates a release PR; an ordinary push with no release does
-not publish. The single release PR owns the root version, which the CLI and the five
-platform packages share, the viewer version, both changelogs, the root
+not publish. The CLI component at `packages/mokly` owns its public manifest. The single
+release PR owns the CLI version, which the private root and five platform
+packages share, the viewer version, both changelogs, the root
 lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
-Both tags must identify the same reviewed release commit.
+Both tags must identify the same reviewed release commit. The CLI's
+`changelog-path` is `/CHANGELOG.md`; its build copies that root file into the
+published package. The root file retains the full CLI release history.
 
 The [Pull Request Title Contract](./ci-verification.md#pull-request-title-contract)
 checks every proposed squash title before merge because release-please reads
@@ -38,14 +43,17 @@ versions advance only through the release PR.
 
 The `node-workspace` plugin uses `updateAllPackages: true` to propose both
 components whenever either releases, including a patch of an otherwise
-unchanged component; the platform packages take the root version. It preserves
+unchanged component; the platform packages take the CLI version through JSON `extra-files`. It preserves
 the CLI's exact viewer dependency and its exact optional platform dependencies
 (no caret or local link).
 Versions remain independent; `linked-versions` would incorrectly force them
 equal and is unnecessary for a combined PR. A viewer `extra-files` JSON updater
-also sets the root lockfile's `packages[""].dependencies["@mokly/viewer"]`:
-release-please 17.6.0's workspace updater handles linked workspace versions but
-does not update that root dependency edge. Release PR checks must pass `npm ci`
+also sets the private root viewer development dependency, the CLI viewer
+dependency, and both lockfile edges:
+release-please 17.6.0 does not apply its workspace lockfile updater when
+`extra-files` already supplies root lockfile updates. Explicit JSON updaters
+therefore set both workspace versions and all coordinated native versions.
+They leave the private root native `file:` links intact. Release PR checks must pass `npm ci`
 and the same version-pair gate before merge.
 
 The release workflow then:
@@ -56,8 +64,9 @@ The release workflow then:
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and
    installs npm 11.21.0, the `packageManager` version, without a package cache.
-   Rust 1.95.0 (the `rust-toolchain.toml` pin) and Chromium are installed only
-   when complete verification is selected. A tag that predates
+   Rust 1.95.0 (the `rust-toolchain.toml` pin) is installed when complete
+   verification is selected. Chromium is installed for the packed viewer smoke
+   in both modes. A tag that predates
    `rust-toolchain.toml` verifies on the runner's default toolchain.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
@@ -66,8 +75,10 @@ The release workflow then:
    complete `cargo xtask check --dependency-audit strict` gate. The
    [release verification evidence contract](./npm-release-evidence.md) defines
    candidate selection, validation and failure semantics.
-6. Downloads the five platform archives from the build jobs, packs the viewer
-   and then the CLI, validates every packed manifest and inventory plus the
+6. On the first run, downloads the five platform archives from the build jobs
+   and packs the viewer and then the CLI. A retry downloads the first run's
+   checked seven-package archive set and runs `pack.mjs --reuse` without a
+   build. It validates every packed manifest and inventory plus the
    runtime license closure, and smoke-tests clean consumers from those exact
    archives under the
    [release contract](./npm-release.md#release-build-matrix-and-publication-order).
@@ -91,7 +102,13 @@ The release workflow then:
 
 Publishing occurs in the workflow invocation that creates both GitHub releases.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
-(`vX.Y.Z`) and `viewer_ref` (`viewer-vX.Y.Z`) pair through the identical path.
+(`vX.Y.Z`) and `viewer_ref` (`viewer-vX.Y.Z`) pair. Its required
+`artifact_run_id` identifies the original `main` push run with the checked
+archive set. The workflow verifies that run's repository, numeric workflow
+identity, branch, and event. Its head can differ from the tag commit when a
+later push creates the release. The archive recheck binds the saved bytes to
+the checked-out tag's commit and tree. An automatic attempt lists only its own
+run's artifacts.
 Its `verification` input defaults to `evidence`; selecting `complete` forces the
 full local gate without making GitHub evidence requests. A single concurrency
 group serializes automatic runs and manual retries without cancelling an
@@ -129,11 +146,30 @@ Release Please wrote, because it marks each component's release. Then rerun the
 Release workflow. HTML entities such as `&lt;path&gt;` do not work: Release
 Please decodes them when it rewrites the body for a second parse.
 
-When the tags exist but `publish` fails, rerun only the failed job. That rerun
-keeps the selected tags and keeps the release commit as `GITHUB_SHA`. A full
-rerun repeats Release Please, which no longer reports a created release, so
-`publish` is skipped. A manual dispatch is the retry path once the run can no
-longer be rerun.
+When the tags exist but publication fails, rerun the failed job. Before a
+publication, the workflow saves `mokly-release-{cli-version}` with every
+checked archive and report. It retains this set and the native build artifacts
+for 90 days. Initial uploads use `overwrite: true`. A failed publish-job rerun
+selects the saved complete set and skips its upload, so it cannot delete the
+only retained copy. No package lifecycle rebuilds reused archives.
+
+Use **Re-run failed jobs**. A full workflow rerun repeats Release Please. The
+releases already exist, so Release Please reports no newly created pair and
+publication is skipped. If the failed-job rerun is unavailable, use a manual
+dispatch with both tags and the original run's `artifact_run_id`.
+
+A manual dispatch requires the original automatic run's `artifact_run_id`.
+It downloads that run's complete set, rechecks the archive hashes, inventories,
+source identities, and consumer smokes, then resumes the registry sequence.
+Missing, expired, duplicate, or wrong-source artifacts stop the retry. Do not
+rebuild bytes to recover a partially published version. Recover the retained
+checked set or prepare a new reviewed release version.
+
+If the first run failed before it saved the complete set, rerun its failed
+jobs. Before any new build, a registry lookup must prove all seven versions
+absent; any existing version requires the saved set. Native registrations use
+the reserved `0.0.0` version, which no coordinated release publishes, under the
+[bootstrap contract](./npm-bootstrap.md#native-package-registration).
 
 ## Registry Operations And Evidence
 

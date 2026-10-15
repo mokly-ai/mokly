@@ -5,15 +5,16 @@ import type { Loader, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
+import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
 
 export interface BundleInputs {
   files: Map<string, Uint8Array>;
   cssModules: Set<string>;
-  stylePackages: Set<string>;
 }
 
 export function consumerPlugins(
@@ -21,15 +22,13 @@ export function consumerPlugins(
   inputs: BundleInputs,
   require: ConsumerRequire,
   paths: ModulePaths,
-  maps?: Record<string, Record<string, string>>,
   runtimeKey = "mokly:runtime",
 ): Plugin[] {
   const root = params.sourceRoot;
   const ownPackage = path.resolve(import.meta.dirname, "../..");
-  const aliases = Object.entries(params.moduleResolution.aliases).sort(
-    ([left], [right]) => right.length - left.length,
-  );
   return [
+    require.peerPlugin,
+    styleAdaptersPlugin(params),
     {
       name: "mokly-consumer",
       setup(build) {
@@ -73,11 +72,22 @@ export function consumerPlugins(
           }),
         );
         build.onResolve({ filter: /^mokly:runtime$/ }, (args) => {
-          if (!["mokly-authoring", "mokly-css"].includes(args.namespace))
+          if (
+            !["mokly-authoring", "mokly-css", "mokly-style"].includes(
+              args.namespace,
+            )
+          )
             return {
               errors: [{ text: "Mokly's generation runtime is reserved" }],
             };
           return { path: runtimeKey, external: true };
+        });
+        build.onResolve({ filter: /^mokly:css-map:/ }, (args) => {
+          if (args.namespace !== "mokly-css")
+            return {
+              errors: [{ text: "Mokly's generation runtime is reserved" }],
+            };
+          return { path: runtimeKey + args.path, external: true };
         });
         build.onResolve({ filter: /^react\/jsx-dev-runtime$/ }, () => ({
           path: "jsx",
@@ -97,6 +107,7 @@ export function consumerPlugins(
         build.onResolve(
           { filter: /^(react|react-dom)(\/.*)?$/ },
           async (args) => {
+            if (args.pluginData === "consumer-peer") return;
             try {
               return {
                 path: await require.resolvePeer(args.path),
@@ -107,20 +118,6 @@ export function consumerPlugins(
             }
           },
         );
-        build.onResolve({ filter: /.*/ }, (args) => {
-          const alias = aliases.find(
-            ([name]) => args.path === name || args.path.startsWith(`${name}/`),
-          );
-          const resolved = alias
-            ? alias[1] + args.path.slice(alias[0].length)
-            : args.path;
-          const library =
-            /^(styled-components|react-native-web|@emotion\/(react|cache|styled))(?:\/|$)/.exec(
-              resolved,
-            )?.[1];
-          if (library) inputs.stylePackages.add(library);
-          return undefined;
-        });
         build.onResolve({ filter: /\.css$/ }, async (args) => {
           if (args.pluginData === "css-resolved") return;
           const resolved = await build.resolve(args.path, {
@@ -140,7 +137,9 @@ export function consumerPlugins(
         });
         build.onResolve({ filter: /.*/ }, async (args) => {
           if (
-            ["repository-resolved", "css-resolved"].includes(args.pluginData) ||
+            ["repository-resolved", "css-resolved", "consumer-peer"].includes(
+              args.pluginData,
+            ) ||
             !["file", ""].includes(args.namespace)
           )
             return;
@@ -176,22 +175,8 @@ export function consumerPlugins(
           if (empty || !module)
             return { contents: "export default {};", loader: "js" };
           inputs.cssModules.add(file);
-          if (maps) {
-            const names = Object.keys(maps[file] ?? {})
-              .filter(
-                (name) =>
-                  /^[$_\p{ID_Start}](?:[$_\p{ID_Continue}]|\u200c|\u200d)*$/u.test(
-                    name,
-                  ) && !reserved.has(name),
-              )
-              .sort();
-            return {
-              contents: `const map = require("mokly:runtime").css(${JSON.stringify(file)}); export default map;\n${names.map((name, index) => `const __class_${index} = map[${JSON.stringify(name)}]; export { __class_${index} as ${name} };`).join("\n")}`,
-              loader: "js",
-            };
-          }
           return {
-            contents: `module.exports = require("mokly:runtime").css(${JSON.stringify(file)});`,
+            contents: `export default require("mokly:runtime").css(${JSON.stringify(file)});\nexport * from ${JSON.stringify(cssModulePrefix + file)};`,
             loader: "js",
           };
         });
@@ -199,12 +184,6 @@ export function consumerPlugins(
     },
   ];
 }
-
-const reserved = new Set(
-  "await break case catch class const continue debugger default delete do else enum export extends false finally for function if implements import in instanceof interface let new null package private protected public return static super switch this throw true try typeof var void while with yield".split(
-    " ",
-  ),
-);
 
 const sourceLoaders: Record<string, Loader> = {
   "": "js",

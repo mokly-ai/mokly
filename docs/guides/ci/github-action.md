@@ -59,7 +59,7 @@ jobs:
           version: ${{ vars.MOKLY_VERSION }}
           endpoint: ${{ vars.MOKLY_ENDPOINT }}
           token: ${{ secrets.MOKLY_TOKEN }}
-          config: mokly.config.ts
+          config: mokly.config.json
           base: origin/main
 ```
 

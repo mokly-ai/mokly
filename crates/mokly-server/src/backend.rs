@@ -36,7 +36,7 @@ pub trait Documents: Send + Sync {
     fn usage(&self, route: &str) -> Option<CatalogueUsage>;
     /// Read an already reached authored file through the live confinement boundary.
     fn authored(&self, path: &str) -> Option<OpenedFile>;
-    /// Render complete edited props through the same graph in isolation.
+    /// Render complete edited props through the shared graph without saving the document.
     fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument>;
 }
 

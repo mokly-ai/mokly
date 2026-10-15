@@ -259,9 +259,10 @@ independently from the preview colour scheme; see the
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)
 
-The guides are user-facing and ship with the npm package. The protocol
-documents are the specification that keeps the Rust core, the sidecar, the
-viewer, and the tests aligned.
+The CLI package ships the complete guide and protocol trees, including the
+receiver fixtures, and a copy of the root changelog. The protocol documents
+keep the Rust core, the sidecar, the viewer, and the tests aligned. Release
+Please maintains the changelog history in the root `CHANGELOG.md`.
 
 ## Develop Mokly
 

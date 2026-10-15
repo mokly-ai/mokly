@@ -2,19 +2,27 @@ import fs from "node:fs";
 
 const VERSION = "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
 
-/** Select the viewer release independently while the CLI package is private. */
+/** A publication always selects the CLI and viewer tags from one release. */
 export function resolvePublishRefs(input) {
+  let cli;
   let viewer;
   if (input.eventName === "workflow_dispatch") {
+    cli = input.manualRef;
     viewer = input.manualViewerRef;
-    if (!viewer) throw new Error("manual viewer_ref is required");
   } else if (input.eventName === "push") {
-    if (input.viewerReleaseCreated !== "true") return undefined;
+    const cliCreated = input.releaseCreated === "true";
+    const viewerCreated = input.viewerReleaseCreated === "true";
+    if (!cliCreated && !viewerCreated) return undefined;
+    if (!cliCreated || !viewerCreated)
+      throw new Error("release-please omitted one release from the tag pair");
+    cli = input.releaseTag;
     viewer = input.viewerReleaseTag;
-    if (!viewer) throw new Error("release-please omitted its viewer tag");
   } else throw new Error(`unsupported release event: ${input.eventName}`);
+  if (!cli || !viewer)
+    throw new Error("both publish_ref and viewer_ref are required");
+  validateTag(cli);
   validateTag(viewer, "viewer-");
-  return { viewer };
+  return { cli, viewer };
 }
 
 export function validateTagVersion(ref, version, prefix = "") {

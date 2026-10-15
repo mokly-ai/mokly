@@ -31,9 +31,10 @@ installs exactly one, and its version equals the CLI version in every release.
 The viewer is an MIT ESM package with no Node-only entry; the
 [shell delivery contract](./mokly-shell-delivery.md) owns its runtime boundary.
 The CLI package ships `docs/guides` and `docs/protocol` at the exact package
-version, so the cloud documentation site and independent upload receivers
-implement that release's documented boundaries. Source fixtures, tests, plans,
-caches, review artifacts, and build output other than `dist` are not published.
+version, including the public JSON receiver fixtures. It also ships the root
+`CHANGELOG.md` with its release history. Packing compares every guide, protocol
+file, and changelog byte with its source. Tests, private source fixtures, plans,
+caches, and review artifacts are not published.
 
 Read the CLI version from `packages/mokly/package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
@@ -52,13 +53,39 @@ may use local `file:` links. The root links the five platform packages through
 optional dependencies; they are outside npm's workspace list, so npm skips
 non-host packages. The CLI package keeps exact registry versions.
 
+## Native Runtime Floors
+
+The native binary runs on the operating systems supported by the selected Node
+version. Linux x64 and ARM64 require glibc 2.28 or newer, the Node 22 floor.
+The Linux release builds use `cargo zigbuild` 0.23.4 and checksum-verified Zig
+0.15.2 with an explicit `{triple}.2.28` target. Host glibc does not select the
+binary's minimum. Windows x64 uses `-C target-feature=+crt-static`; it needs no
+separate Visual C++ runtime installation. Both macOS architectures require
+macOS 11.0 or newer, the Node 22 floor. Their builds set
+`MACOSX_DEPLOYMENT_TARGET=11.0` and use the system frameworks.
+
+`inspect-native.mjs` records imported libraries and the highest required GLIBC
+version, the macOS `minos`, or the Windows DLL list. It rejects a GLIBC
+requirement above 2.28, a macOS minimum above 11.0, a dynamic MSVC runtime, or
+an unintended crypto shared library. It uses `readelf` on Linux, `otool -L`
+and `otool -l` on macOS, and Visual Studio `dumpbin /dependents` on Windows.
+The macOS reader accepts `LC_BUILD_VERSION` and `LC_VERSION_MIN_MACOSX` and
+checks every recorded minimum. Missing inspection data or tools fail the
+release.
+
 ## Release Build Matrix And Publication Order
 
 The release workflow builds the binary once per target, in one build job per
 target on a runner of that operating system and architecture, with Rust 1.95.0
-from `rust-toolchain.toml`. Each build job packs its platform package with npm
+from `rust-toolchain.toml`. Each build job uses `scripts/release/build-native.mjs` with a locked release
+build, checks native TLS dependencies, and packs its platform package with npm
 11.21.0 and uploads the archive with its integrity, shasum, inventory, and size
 report. A target that fails to build stops the release before any publication.
+Linux x64 and ARM64 and Windows x64 use Blacksmith's 2-vCPU tiers. macOS ARM64
+uses its 6-vCPU tier. The one native-build exception is `darwin-x64` on
+GitHub-hosted `macos-26-intel`, with `actions/checkout`; the other build rows
+use Blacksmith checkout. A build refuses a different host OS or architecture.
+Native jobs install npm dependencies with lifecycle scripts disabled.
 
 The publish job downloads the five archives, verifies that each archive's
 version equals the CLI version and that its inventory holds exactly the binary
@@ -70,6 +97,11 @@ catalogue, and `mokly serve`; a React host renders the viewer from every public
 viewer entry in a browser bundle; a NodeNext consumer type-checks the authoring
 API. The smokes install the archives, not the source tree or a workspace link,
 and read protocol documents from the installed package.
+
+The first run saves the checked seven-package set for 90 days before any
+publication. A retry reuses those exact archives under the
+[retry contract](./npm-release-management.md#release-recovery). It never
+rebuilds a partially published version.
 
 Publication order is the platform packages, then the viewer, then the CLI. Each
 publication completes its registry verification before the next starts, so an

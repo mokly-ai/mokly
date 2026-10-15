@@ -59,7 +59,9 @@ Each release records one checked commit, both immutable tags and every package
 version, the CLI's exact viewer and platform dependencies, every uploaded
 tarball and pack report, every registry verification result, the GitHub
 releases, the npm URLs, the provenance and signature results, and every
-clean-consumer smoke result. The preserved verification record identifies
+clean-consumer smoke result. The checked package set and native archives stay available for 90 days. A
+manual retry supplies the first automatic run id and reuses its bytes.
+The preserved verification record identifies
 whether the workflow ran the complete gate or reused CI, and in evidence mode
 names the selected CI run, evidence commit, matching tree, and report count.
 Keep the workflow run and the protection read-backs. An interactive bootstrap

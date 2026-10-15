@@ -90,8 +90,10 @@ package has no matching reachable tag, fail closed and tell the author to run
 `git fetch --tags origin` before retrying.
 
 The released surface comes from the baseline tag; the current surface comes
-from the working tree, including staged, unstaged, and untracked changes. For
-each side:
+from the working tree, including staged, unstaged, and untracked changes. When
+a package moves, resolve its tagged root by its package name in that tag's
+Release Please configuration. Exactly one tagged package must match. A move
+never resets its export baseline. For each side:
 
 1. Read that side's `<package root>/package.json` and include every key in its
    `exports` map, including non-JavaScript exports.

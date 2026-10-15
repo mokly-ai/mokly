@@ -92,7 +92,14 @@ test("the tag verification entrypoint works in an isolated checkout without node
     path.join(fixture.root, "scripts/release"),
     { recursive: true },
   );
-  await fixture.git("add", "scripts");
+  await fs.mkdir(path.join(fixture.root, "packages/mokly"), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    path.join(fixture.root, "packages/mokly/package.json"),
+    JSON.stringify({ name: "@mokly/mokly", version: "0.8.0" }),
+  );
+  await fixture.git("add", "scripts", "packages/mokly");
   await fixture.git(
     "-c",
     "core.hooksPath=/dev/null",
@@ -103,6 +110,7 @@ test("the tag verification entrypoint works in an isolated checkout without node
     "test: release entrypoint",
   );
   const commit = await fixture.git("rev-parse", "HEAD");
+  await fixture.git("tag", "v0.8.0");
   await fixture.git("tag", "-a", "viewer-v0.1.0", "-m", "test viewer tag");
   const remote = path.join(path.dirname(fixture.root), "origin.git");
   await execute("git", ["clone", "--bare", fixture.root, remote]);
@@ -126,9 +134,9 @@ test("the tag verification entrypoint works in an isolated checkout without node
   );
   const { stdout, stderr } = await execute(
     process.execPath,
-    [script, "viewer-v0.1.0"],
+    [script, "v0.8.0", "viewer-v0.1.0"],
     options,
   );
-  assert.equal(stdout, `Verified viewer-v0.1.0 at ${commit}.\n`);
+  assert.equal(stdout, `Verified v0.8.0 and viewer-v0.1.0 at ${commit}.\n`);
   assert.equal(stderr, "");
 });

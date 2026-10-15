@@ -1,36 +1,33 @@
-/** Import the exact viewer archive from an isolated installed consumer. */
+/** Exercise installed release archives from a new consumer outside the repository. */
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { runCommand } from "./command.mjs";
-import { SMOKE_SOURCE } from "./smoke_source.mjs";
+import { inspectReleaseSet } from "./package_set.mjs";
+import { smokeBrowser } from "./smoke_browser.mjs";
+import {
+  installConsumer,
+  smokeAuthoring,
+  smokeBuild,
+} from "./smoke_consumer.mjs";
+import { smokeServe } from "./smoke_serve.mjs";
 
-const archive = process.argv[2];
-if (!archive) throw new Error("Usage: smoke.mjs ARCHIVE");
-const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-viewer-smoke-"));
+const repositoryRoot = path.resolve(import.meta.dirname, "../..");
+const directory = path.resolve(process.argv[2] ?? ".context/release-artifact");
+const packages = await inspectReleaseSet(repositoryRoot, directory);
+const root = await fs.mkdtemp(
+  path.join(os.tmpdir(), "mokly-release-consumer-"),
+);
 try {
-  await fs.writeFile(
-    path.join(root, "package.json"),
-    JSON.stringify({
-      private: true,
-      type: "module",
-      dependencies: {
-        "@mokly/viewer": `file:${path.resolve(archive)}`,
-        react: "^19.0.0",
-        "react-dom": "^19.0.0",
-      },
-    }),
-  );
-  await runCommand(
-    "npm",
-    ["install", "--ignore-scripts", "--no-audit", "--no-fund"],
-    { cwd: root },
-  );
-  await fs.writeFile(path.join(root, "smoke.mjs"), SMOKE_SOURCE);
-  await runCommand(process.execPath, ["smoke.mjs"], { cwd: root });
+  await installConsumer(root, packages);
+  await smokeAuthoring(root);
+  await smokeBrowser(root, repositoryRoot);
+  const version = packages.find(({ report }) => report.name === "@mokly/mokly")
+    .report.version;
+  const shim = await smokeBuild(root, version);
+  await smokeServe(root, shim);
   process.stdout.write(
-    "The installed viewer archive passed its smoke check.\n",
+    "Installed CLI, viewer, native, authoring, Build, and Serve smokes passed.\n",
   );
 } finally {
   await fs.rm(root, { recursive: true, force: true });

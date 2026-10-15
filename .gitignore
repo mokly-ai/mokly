@@ -21,3 +21,4 @@ packages/mokly/docs/
 # Static sites and persistent output reservation namespaces.
 /mokly-static/
 .mokly-export-reservations/
+packages/mokly/CHANGELOG.md

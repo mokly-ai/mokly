@@ -30,7 +30,6 @@ export interface Generation {
   bindings?: Record<string, EntryBinding>;
   maps?: Record<string, Record<string, string>>;
   cssModules: Set<string>;
-  stylePackages: Set<string>;
   runtime: AuthoringRuntime;
   exports?: BundleExports;
   definitions?: Definitions;
@@ -52,7 +51,7 @@ export interface BundleExports {
 
 export async function bundle(
   params: BundleParams,
-  maps?: Record<string, Record<string, string>>,
+  compile: typeof build = build,
 ): Promise<{ generation: Generation; result: BundleResult }> {
   try {
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;
@@ -62,7 +61,6 @@ export async function bundle(
     const inputs = {
       files: new Map<string, Uint8Array>(),
       cssModules: new Set<string>(),
-      stylePackages: new Set<string>(),
     };
     const files = [
       ...params.entryFiles,
@@ -75,7 +73,6 @@ export async function bundle(
         logical(params.sourceRoot, path.resolve(params.sourceRoot, file)),
         await confinedFile(params.sourceRoot, file),
       );
-    if (params.storiesFiles.length) require.resolve("@storybook/react");
     const previews = ["tsx", "ts", "jsx", "js", "mjs", "cjs"].map(
       (extension) => `.storybook/preview.${extension}`,
     );
@@ -127,11 +124,15 @@ export async function bundle(
           `moduleResolution.loaders[${extension}] cannot use "css"; rename the stylesheet to .css or use a JavaScript-safe loader`,
         );
     const options = {
-      absWorkingDir: params.sourceRoot,
+      absWorkingDir: path.resolve(
+        params.sourceRoot,
+        params.configurationDirectory,
+      ),
+      absPaths: ["metafile", "log"],
       stdin: {
         contents: imports.join("\n"),
         resolveDir: params.sourceRoot,
-        sourcefile: "mokly-entry",
+        sourcefile: path.resolve(params.sourceRoot, "mokly-entry"),
       },
       bundle: true,
       write: false,
@@ -143,40 +144,11 @@ export async function bundle(
       jsxDev: true,
       metafile: true,
       logLevel: "silent",
-      plugins: consumerPlugins(
-        params,
-        inputs,
-        require,
-        paths,
-        maps,
-        runtimeKey,
-      ),
+      plugins: consumerPlugins(params, inputs, require, paths, runtimeKey),
       ...resolutionOptions(params.sourceRoot, resolution),
       loader: loaders as Record<string, Loader>,
     } satisfies Parameters<typeof build>[0];
-    let compiled = await build(options);
-    if (inputs.stylePackages.size) {
-      const adapters: string[] = [];
-      if (inputs.stylePackages.has("styled-components")) {
-        imports.push('import * as __styled from "styled-components";');
-        adapters.push("styled: __styled");
-      }
-      if (inputs.stylePackages.has("react-native-web")) {
-        imports.push('import * as __native from "react-native-web";');
-        adapters.push("native: __native");
-      }
-      if (
-        [...inputs.stylePackages].some((name) => name.startsWith("@emotion/"))
-      ) {
-        imports.push('import * as __emotion from "@emotion/react";');
-        adapters.push("emotion: __emotion");
-      }
-      imports.push(`export const styleAdapters = {${adapters.join(",")}};`);
-      compiled = await build({
-        ...options,
-        stdin: { ...options.stdin, contents: imports.join("\n") },
-      });
-    }
+    const compiled = await compile(options);
     const { modules: graph, physical } = moduleGraph(compiled.metafile!, paths);
     const hash = createHash("sha256");
     for (const module of graph) {
@@ -218,7 +190,6 @@ export async function bundle(
       code: compiled.outputFiles![0]!.text,
       runtimeKey,
       cssModules: inputs.cssModules,
-      stylePackages: inputs.stylePackages,
       runtime: new AuthoringRuntime(),
       handles: new Map(),
       registrations: new Map(),
