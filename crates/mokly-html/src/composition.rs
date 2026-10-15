@@ -15,6 +15,7 @@ use mokly_model::usage::{
 };
 
 use crate::context::Context;
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::{FragmentRenderer, OwnedStyle, RenderKind};
 use crate::tree::{Node, Region, RegionKind};
@@ -111,7 +112,7 @@ impl Composer for HtmlComposer {
                     slots.clone(),
                 ),
                 EntryContent::Page => (PropSchema::default(), Props::new(), Vec::new()),
-                _ => return Err(invalid("html-element", "entry has no HTML render")),
+                _ => return Err(invalid(Code::HtmlElement, "entry has no HTML render")),
             };
             let parent = entry
                 .metadata
@@ -237,12 +238,7 @@ impl Engine<'_> {
                         }
                     }
                 }
-                Node::Comment(text) if text.trim_start().starts_with("mokly-") => {
-                    return Err(invalid(
-                        "html-element",
-                        "the mokly- comment prefix is reserved",
-                    ));
-                }
+                Node::Comment(text) if text.trim_start().starts_with("mokly-") => {}
                 node => output.push(node),
             }
         }

@@ -4,6 +4,7 @@ use std::mem;
 
 use mokly_html::composition::Composed;
 use mokly_html::fragment::Fragment;
+use mokly_html::links::Reference;
 use mokly_html::tree;
 use mokly_html::tree::{Node, RegionKind};
 
@@ -13,6 +14,16 @@ pub(crate) fn document(document: &Composed) -> usize {
     mem::size_of::<Composed>()
         + nodes(&document.tree)
         + usage
+        + document.links.capacity() * mem::size_of::<Reference>()
+        + document
+            .links
+            .iter()
+            .map(|link| {
+                link.source_route.capacity()
+                    + link.target.capacity()
+                    + link.fragment.as_ref().map_or(0, String::capacity)
+            })
+            .sum::<usize>()
         + document
             .warnings
             .iter()

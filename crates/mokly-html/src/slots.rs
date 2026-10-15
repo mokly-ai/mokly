@@ -9,9 +9,10 @@ use mokly_model::usage::ComponentSlotRecord;
 
 use crate::composition::Engine;
 use crate::context::{Context, Slot};
+use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid};
 use crate::tree::{Element, Node, Region, RegionKind};
-use crate::{forwarded_slots, source_locations};
+use crate::{forwarded_slots, ignore_checks, source_locations};
 
 impl Engine<'_> {
     pub(crate) fn supplied_slots(
@@ -35,7 +36,7 @@ impl Engine<'_> {
             }
             if !component.slots.contains(&name) {
                 return Err(invalid(
-                    "html-slot",
+                    Code::HtmlSlot,
                     format!("component {} does not declare slot {name}", component.path),
                 ));
             }
@@ -97,7 +98,7 @@ impl Engine<'_> {
         {
             for (name, body) in supplied {
                 if !context.declared_slots.contains(name) {
-                    return Err(invalid("html-slot", format!("undeclared slot {name}")));
+                    return Err(invalid(Code::HtmlSlot, format!("undeclared slot {name}")));
                 }
                 context.slots.insert(
                     name.clone(),
@@ -122,7 +123,7 @@ impl Engine<'_> {
         let name = element.get("name").unwrap_or("children");
         if !context.declared_slots.iter().any(|slot| slot == name) {
             return Err(invalid(
-                "html-slot",
+                Code::HtmlSlot,
                 format!("undeclared slot placeholder {name}"),
             ));
         }
@@ -172,12 +173,19 @@ impl Engine<'_> {
 
     pub(crate) fn ignore(&mut self, element: Element, context: &Context) -> Result<Vec<Node>> {
         let Some(id) = element.get("id").filter(|id| !id.is_empty()) else {
-            return Err(invalid("html-element", "mokly-ignore needs a nonempty id"));
+            return Err(invalid(
+                Code::HtmlElement,
+                "mokly-ignore needs a nonempty id",
+            ));
         };
         let material_key = element.get("material-key").map(str::to_owned);
+        ignore_checks::id(id)?;
         let id = id.to_owned();
         if context.ignore && !self.ignore_ids.insert(id.clone()) {
-            return Err(invalid("html-element", format!("duplicate ignore id {id}")));
+            return Err(invalid(
+                Code::HtmlElement,
+                format!("duplicate ignore id {id}"),
+            ));
         }
         let children = self.nodes(element.children, context)?;
         if !context.ignore {
@@ -185,7 +193,7 @@ impl Engine<'_> {
         }
         if contains_ownership(&children) {
             return Err(invalid(
-                "html-element",
+                Code::HtmlElement,
                 format!("ignore region {id} cannot enclose an instance or slot region"),
             ));
         }

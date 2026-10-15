@@ -23,6 +23,10 @@ A complete path has no leading slash. A relative path starts with `./` or
 own folder path. A variant uses its parent's base. A declared path follows
 the same rules.
 
+A relative link in a component body uses the component's own base, even when
+a screen uses that component. Supplied slot content keeps its supplier's
+base. Formatting or moving the receiving placeholder does not change it.
+
 ## Link to a heading
 
 A `#fragment` names a bare HTML id. It can contain Unicode letters, numbers,

@@ -8,7 +8,7 @@ use mokly_catalogue::config::ConfigLoader;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
-use mokly_graph::error::GraphError;
+use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::types::GraphFactory;
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
@@ -80,6 +80,32 @@ pub struct CatalogueBuild {
 
 impl BuildService for CatalogueBuild {
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+        std::thread::scope(|scope| {
+            let thread = match std::thread::Builder::new()
+                .name("mokly-build".into())
+                .stack_size(64 * 1024 * 1024)
+                .spawn_scoped(scope, || self.attempt(cwd, options))
+            {
+                Ok(thread) => thread,
+                Err(source) => return Err(runtime(InternalError::PreparationThread { source })),
+            };
+            match thread.join() {
+                Ok(result) => result,
+                Err(_) => Err(runtime(InternalError::PreparationPanicked)),
+            }
+        })
+    }
+}
+
+fn runtime(source: InternalError) -> BuildError {
+    BuildError::Rendering {
+        source: Box::new(GraphError::Internal(source)),
+        warnings: Vec::new(),
+    }
+}
+
+impl CatalogueBuild {
+    fn attempt(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
         let config = match self.config.load(cwd, options.common.config.as_deref()) {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),

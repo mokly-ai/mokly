@@ -4,10 +4,15 @@ use crate::context::{Context, Slot};
 use crate::tree::Node;
 
 pub(crate) fn forwarded(nodes: &[Node], context: &Context) -> Option<Slot> {
-    let [Node::Element(element)] = nodes else {
+    let mut meaningful = nodes.iter().filter(|node| {
+        !matches!(node, Node::Comment(_))
+            && !matches!(node, Node::Text(text) if text.bytes().all(|byte| byte.is_ascii_whitespace()))
+    });
+    let Some(Node::Element(element)) = meaningful.next() else {
         return None;
     };
-    if element.name != "slot"
+    if meaningful.next().is_some()
+        || element.name != "slot"
         || element
             .attributes
             .iter()

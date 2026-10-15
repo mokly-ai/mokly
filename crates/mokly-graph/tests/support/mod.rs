@@ -35,6 +35,16 @@ pub fn prepare_with_inputs(
     threads: usize,
     inputs: mokly_graph::delivery_inputs::DeliveryInputs,
 ) -> (Result<Arc<dyn RenderGeneration>>, Arc<dyn RenderCache>) {
+    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(bytes));
+    prepare_with_cache(root, cache, threads, inputs)
+}
+
+pub fn prepare_with_cache(
+    root: &Path,
+    cache: Arc<dyn RenderCache>,
+    threads: usize,
+    inputs: mokly_graph::delivery_inputs::DeliveryInputs,
+) -> (Result<Arc<dyn RenderGeneration>>, Arc<dyn RenderCache>) {
     let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
     let config = Loader { tree: tree.clone() }.load(root, None).unwrap();
     let prepared = Builder {
@@ -44,7 +54,6 @@ pub fn prepare_with_inputs(
     }
     .prepare(&config, None)
     .unwrap();
-    let cache: Arc<dyn RenderCache> = Arc::new(MemoryCache::new(bytes));
     let tree: Arc<dyn SourceTree> = Arc::new(SourceSnapshot::new(tree));
     let graph: &dyn RenderGraph = &Graph {
         inputs,

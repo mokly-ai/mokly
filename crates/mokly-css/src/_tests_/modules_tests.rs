@@ -1,6 +1,32 @@
 //! Scoped names depend on paths while unrelated CSS identities stay global.
 
+use crate::module_integrity;
 use crate::modules::scope;
+
+#[test]
+fn declaration_list_at_rules_keep_local_functions_and_identifiers() {
+    let source = "@font-face { font-family: Brand; src: local(\"Brand\"), url(brand.woff2) format(\"woff2\"); }\n@font-face { font-family: local; src: url(other.woff2) }\n@property --local { syntax: \"<color>\"; initial-value: red; inherits: false }\n@page { size: auto; @top-left { content: local; } }\n.x { color: red }";
+    let (css, exports) = scope("fonts.module.css", source).unwrap();
+    assert!(exports.contains_key("x"));
+    assert_eq!(
+        css.split(".mokly_").next().unwrap(),
+        source.split(".x").next().unwrap()
+    );
+}
+
+#[test]
+fn token_guard_rejects_non_name_changes_with_the_exact_diagnostic() {
+    let error = module_integrity::check(
+        "fonts.module.css",
+        "@font-face { src: local(\"Brand\") }",
+        "@font-face { src\"Brand\" }",
+    )
+    .unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "[mokly-css/build-invalid] CSS Modules scoping would change more than local names in fonts.module.css:1:1; move this CSS to a plain stylesheet"
+    );
+}
 
 #[test]
 fn modules_scope_only_local_class_id_and_animation_names() {

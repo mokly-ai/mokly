@@ -2,6 +2,7 @@
 
 use mokly_model::catalogue::SourceLocation;
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node};
 
@@ -9,13 +10,13 @@ use crate::tree::{Element, Node};
 pub(crate) fn mark(nodes: &mut [Node], target: &str, fragment: Option<&str>) -> Result<()> {
     if root_count(nodes) != 1 {
         return Err(invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             "MockLink child control must render exactly one root element",
         ));
     }
     let root = first_root(nodes).ok_or_else(|| {
         invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             "MockLink child control has no root element",
         )
     })?;

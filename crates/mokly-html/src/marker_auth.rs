@@ -2,6 +2,7 @@
 
 use mokly_model::usage::ComponentSlotRecord;
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::{Fragment, FragmentMarkerKind};
 use crate::marker_syntax::{Marker, required};
@@ -13,13 +14,13 @@ pub(crate) fn start(marker: &Marker, fragment: &Fragment, parent: Option<&str>) 
         .find(|record| record.id == marker.id)
         .ok_or_else(|| {
             invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 "fragment marker has no authenticated placement",
             )
         })?;
     if record.parent_id.as_deref() != parent {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "fragment marker has the wrong parent",
         ));
     }
@@ -41,7 +42,10 @@ pub(crate) fn start(marker: &Marker, fragment: &Fragment, parent: Option<&str>) 
     if valid {
         Ok(())
     } else {
-        Err(invalid("build-invalid", "forged fragment marker payload"))
+        Err(invalid(
+            Code::BuildInvalid,
+            "forged fragment marker payload",
+        ))
     }
 }
 
@@ -62,7 +66,7 @@ pub(crate) fn slot<'a>(marker: &Marker, fragment: &'a Fragment) -> Result<&'a Co
         })
         .ok_or_else(|| {
             invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 "slot marker has no authenticated placement",
             )
         })?;
@@ -72,7 +76,7 @@ pub(crate) fn slot<'a>(marker: &Marker, fragment: &'a Fragment) -> Result<&'a Co
         .find(|slot| &slot.key == key)
         .ok_or_else(|| {
             invalid(
-                "build-invalid",
+                Code::BuildInvalid,
                 "slot marker has no authenticated input record",
             )
         })

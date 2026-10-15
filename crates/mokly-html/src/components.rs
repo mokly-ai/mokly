@@ -9,6 +9,7 @@ use mokly_model::wire_props;
 
 use crate::composition::Engine;
 use crate::context::Context;
+use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid};
 use crate::fragment::RenderKind;
 use crate::props::{camel_case, coerce, schema_at, validate, value_at};
@@ -24,7 +25,7 @@ impl Engine<'_> {
     ) -> Result<Vec<Node>> {
         if self.stack.contains(&component.path) {
             return Err(invalid(
-                "html-element",
+                Code::HtmlElement,
                 format!(
                     "component cycle: {} -> {}",
                     self.stack.join(" -> "),
@@ -46,7 +47,7 @@ impl Engine<'_> {
             .unwrap_or_else(|| component.path.rsplit('/').next().unwrap_or(&component.path));
         if (explicit_id.is_some() && !kebab(id)) || !is_path_segment(id) {
             return Err(invalid(
-                "html-attribute",
+                Code::HtmlAttribute,
                 format!("invalid component instance id {id:?}"),
             ));
         }
@@ -60,7 +61,7 @@ impl Engine<'_> {
                 .and_then(|properties| properties.get(&name))
             else {
                 return Err(invalid(
-                    "html-attribute",
+                    Code::HtmlAttribute,
                     format!("component {} has no prop /{name}", component.path),
                 ));
             };
@@ -71,7 +72,7 @@ impl Engine<'_> {
             {
                 if schema_at(&context.schema, reference).is_none() {
                     return Err(invalid(
-                        "html-props",
+                        Code::HtmlProps,
                         format!("undeclared prop reference {reference}"),
                     ));
                 }
@@ -85,7 +86,7 @@ impl Engine<'_> {
                     .map_or_else(|| text.clone(), |rest| format!("${rest}"));
                 Some(coerce(schema, &text).ok_or_else(|| {
                     invalid(
-                        "html-attribute",
+                        Code::HtmlAttribute,
                         format!("component {} prop /{name} rejects {text:?}", component.path),
                     )
                 })?)
@@ -113,7 +114,7 @@ impl Engine<'_> {
                 .is_some_and(|site| self.invocation_sites.get(&key) == Some(site));
         if existing.is_some() && !repeated {
             return Err(invalid(
-                "html-attribute",
+                Code::HtmlAttribute,
                 format!("duplicate component instance id {id:?} in one input scope"),
             ));
         }

@@ -4,12 +4,14 @@ use mokly_model::axes::Viewport;
 
 use crate::composition::Engine;
 use crate::context::Context;
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node};
-use crate::{conditions, relative_links};
+use crate::{conditions, ignore_checks, relative_links};
 
 impl Engine<'_> {
     pub(crate) fn element(&mut self, mut element: Element, context: &Context) -> Result<Vec<Node>> {
+        ignore_checks::attributes(&element)?;
         let mut result = Vec::new();
         let viewport = match self.request.viewport {
             Viewport::Mobile => "mobile",
@@ -24,7 +26,7 @@ impl Engine<'_> {
                 Some("false") => false,
                 _ => {
                     return Err(invalid(
-                        "html-element",
+                        Code::HtmlElement,
                         "mokly-ignore-scope enabled must be true or false",
                     ));
                 }

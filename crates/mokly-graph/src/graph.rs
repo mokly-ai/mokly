@@ -49,10 +49,37 @@ impl RenderGraph for Graph {
     fn prepare(
         &self,
         config: ResolvedConfig,
+        catalogue: PreparedCatalogue,
+        output: Option<&Path>,
+    ) -> Result<Arc<dyn RenderGeneration>> {
+        std::thread::scope(|scope| {
+            let thread = match std::thread::Builder::new()
+                .name("mokly-prepare".into())
+                .stack_size(64 * 1024 * 1024)
+                .spawn_scoped(scope, || self.prepare_generation(config, catalogue, output))
+            {
+                Ok(thread) => thread,
+                Err(source) => {
+                    return Err(error::InternalError::PreparationThread { source }.into());
+                }
+            };
+            match thread.join() {
+                Ok(result) => result,
+                Err(_) => Err(error::InternalError::PreparationPanicked.into()),
+            }
+        })
+    }
+}
+
+impl Graph {
+    fn prepare_generation(
+        &self,
+        config: ResolvedConfig,
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> Result<Arc<dyn RenderGeneration>> {
         let config_key = config_key::resolved(&config, &self.version)?;
+        let matchers = styles::Matchers::new(&config)?;
         let markdown_assets = markdown_assets::collect(&config, &catalogue, self.tree.as_ref())?;
         for entry in &mut catalogue.model.entries {
             if let EntryContent::Document { resources, .. } = &mut entry.content {
@@ -185,6 +212,7 @@ impl RenderGraph for Graph {
             &config_key,
             &resources,
             &self.inputs,
+            &matchers,
         )?;
         for plan in plans.values() {
             names.insert(&plan.route, false)?;
@@ -209,7 +237,7 @@ impl RenderGraph for Graph {
         }
         let policy: Arc<dyn PublicPolicy> = Arc::new(policy);
         Ok(Arc::new(Session::new(
-            config, catalogue, plans, resources, self, policy,
+            config, catalogue, plans, resources, self, policy, matchers,
         )))
     }
 }

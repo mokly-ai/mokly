@@ -7,6 +7,7 @@ use mokly_model::paths::is_entry_path;
 use mokly_model::routes;
 use mokly_model::usage::ComponentInputOwner;
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::Fragment;
 use crate::tree::{Element, Node, RegionKind};
@@ -31,7 +32,7 @@ pub(crate) fn destination(path: &str, base: &str) -> Result<String> {
     };
     complete.filter(|path| is_entry_path(path)).ok_or_else(|| {
         invalid(
-            "html-attribute",
+            Code::HtmlAttribute,
             format!("invalid logical destination {path:?}"),
         )
     })

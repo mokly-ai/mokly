@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::iter;
 
-use globset::Glob;
+use globset::{GlobBuilder, GlobMatcher};
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::types::StylesheetRoot;
 use mokly_html::tree;
@@ -14,6 +14,30 @@ use mokly_model::routes;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{Result, invalid};
 use crate::types::ResourcePlan;
+
+pub(crate) struct Matchers(Vec<GlobMatcher>);
+
+impl Matchers {
+    pub(crate) fn new(config: &ResolvedConfig) -> Result<Self> {
+        let mut matchers = Vec::new();
+        for rule in config.input.stylesheets.iter().flatten() {
+            match GlobBuilder::new(&rule.r#match)
+                .literal_separator(true)
+                .backslash_escape(false)
+                .build()
+            {
+                Ok(glob) => matchers.push(glob.compile_matcher()),
+                Err(source) => {
+                    return Err(invalid(
+                        &rule.r#match,
+                        format!("invalid stylesheet match: {source}"),
+                    ));
+                }
+            }
+        }
+        Ok(Self(matchers))
+    }
+}
 
 pub(crate) fn roots(
     config: &ResolvedConfig,
@@ -59,6 +83,7 @@ pub(crate) fn roots(
 }
 
 pub(crate) struct LinkInput<'a> {
+    pub(crate) matchers: &'a Matchers,
     pub(crate) config: &'a ResolvedConfig,
     pub(crate) path: &'a str,
     pub(crate) route: &'a str,
@@ -71,6 +96,7 @@ pub(crate) struct LinkInput<'a> {
 
 pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
     let LinkInput {
+        matchers,
         config,
         path,
         route,
@@ -93,11 +119,7 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         .collect();
     let mut shared = Vec::new();
     let mut specific = Vec::new();
-    for rule in config.input.stylesheets.iter().flatten() {
-        let matcher = match Glob::new(&rule.r#match) {
-            Ok(glob) => glob.compile_matcher(),
-            Err(error) => return Err(invalid(path, format!("invalid stylesheet match: {error}"))),
-        };
+    for (rule, matcher) in config.input.stylesheets.iter().flatten().zip(&matchers.0) {
         if !matcher.is_match(format!("{path}/index.html")) {
             continue;
         }

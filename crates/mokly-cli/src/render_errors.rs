@@ -1,25 +1,65 @@
 //! Render diagnostics preserve normative user text without internal crate prefixes.
 
+use std::collections::BTreeSet;
+
 use mokly_css::error::CssError;
 use mokly_graph::error::GraphError;
+use mokly_html::diagnostic_code::Code;
 use mokly_html::error::HtmlError;
 
 pub(crate) fn diagnostics(error: &GraphError) -> Vec<String> {
+    let mut output = Vec::new();
+    collect(error, "", &mut BTreeSet::new(), &mut output);
+    output
+}
+
+fn collect(
+    error: &GraphError,
+    entry: &str,
+    seen: &mut BTreeSet<(String, String)>,
+    output: &mut Vec<String>,
+) {
     match error {
-        GraphError::Attempt { failures, .. } => failures.iter().flat_map(diagnostics).collect(),
-        GraphError::Invalid { message, .. } => vec![message.clone()],
-        GraphError::Html { source } => vec![html(source)],
-        GraphError::Css { source } => vec![css(source)],
-        GraphError::Internal(source) => vec![source.to_string()],
+        GraphError::Attempt { failures, .. } => {
+            for failure in failures {
+                collect(failure, entry, seen, output);
+            }
+        }
+        GraphError::Document { entry, source } => collect(source, entry, seen, output),
+        _ => {
+            let (subject, detail) = match error {
+                GraphError::Invalid { route, message, .. } => (
+                    route
+                        .rsplit_once("/index.")
+                        .map_or(route.as_str(), |(entry, _)| entry),
+                    message.strip_prefix(route).unwrap_or(message).to_owned(),
+                ),
+                _ => (entry, presentation(error)),
+            };
+            if seen.insert((subject.into(), detail)) {
+                output.push(presentation(error));
+            }
+        }
+    }
+}
+
+fn presentation(error: &GraphError) -> String {
+    match error {
+        GraphError::Attempt { .. } | GraphError::Document { .. } => String::new(),
+        GraphError::Invalid { message, .. } => message.clone(),
+        GraphError::Html { source } => html(source),
+        GraphError::Css { source } => css(source),
+        GraphError::Internal(source) => source.to_string(),
     }
 }
 
 fn html(error: &HtmlError) -> String {
     match error {
         HtmlError::Attempt { source, .. } => html(source),
+        HtmlError::Route { source, .. } if source.location().is_some() => html(source),
         HtmlError::Route { route, source } => format!("{route}: {}", html(source)),
         HtmlError::Located { location, source } => format!(
-            "{}:{}:{} {}",
+            "{}:{}:{}: {}",
             location.path,
             location.line,
             location.column,
@@ -31,9 +71,9 @@ fn html(error: &HtmlError) -> String {
             location,
         } => {
             let location = location.as_ref().map_or(String::new(), |location| {
-                format!("{}:{}:{} ", location.path, location.line, location.column)
+                format!("{}:{}:{}: ", location.path, location.line, location.column)
             });
-            if *code == "build-invalid" {
+            if *code == Code::BuildInvalid {
                 format!("{location}{message}")
             } else {
                 format!("{location}[mokly/{code}] {message}")
@@ -41,7 +81,17 @@ fn html(error: &HtmlError) -> String {
         }
         HtmlError::Props { source } => match source {
             mokly_model::error::ModelError::Props(diagnostic)
-            | mokly_model::error::ModelError::Schema(diagnostic) => diagnostic.to_string(),
+            | mokly_model::error::ModelError::Schema(diagnostic) => format!(
+                "[mokly/{}] {}{} at {:?}: {}",
+                diagnostic.code,
+                diagnostic.entry,
+                diagnostic
+                    .variant
+                    .as_ref()
+                    .map_or(String::new(), |variant| format!(" variant {variant}")),
+                diagnostic.path,
+                diagnostic.message
+            ),
             mokly_model::error::ModelError::Internal(source) => source.to_string(),
         },
         HtmlError::FragmentUnavailable { handle } => {

@@ -26,6 +26,19 @@ pub enum UrlError {
     Escape,
 }
 
+impl UrlError {
+    /// User-facing detail without the internal crate prefix.
+    pub fn reason(self) -> &'static str {
+        match self {
+            Self::Characters => "unsafe URL characters",
+            Self::Encoding => "malformed URL encoding",
+            Self::Utf8 => "malformed UTF-8 URL",
+            Self::Separator => "encoded separator or unsafe path",
+            Self::Escape => "unsafe or escaping URL",
+        }
+    }
+}
+
 /// Decode a portable local reference and resolve it in the static namespace.
 pub fn local_target(source: &str, reference: &str) -> result::Result<Option<String>, UrlError> {
     if reference.starts_with('#') || reference.is_empty() {

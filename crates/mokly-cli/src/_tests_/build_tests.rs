@@ -96,8 +96,8 @@ fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
     }
 }
 
-fn graphs(warnings: Vec<Warning>) -> Arc<dyn GraphFactory> {
-    let generation: Arc<dyn RenderGeneration> = Arc::new(Unimock::new(
+fn graphs(warnings: Vec<Warning>) -> (Arc<dyn GraphFactory>, Vec<Unimock>) {
+    let generation_mock = Unimock::new(
         RenderGenerationMock::render_all
             .next_call(matching!())
             .returns(Ok(RenderSummary {
@@ -105,17 +105,20 @@ fn graphs(warnings: Vec<Warning>) -> Arc<dyn GraphFactory> {
                 warnings,
                 ..Default::default()
             })),
-    ));
-    let graph: Arc<dyn RenderGraph> = Arc::new(Unimock::new(
+    );
+    let generation: Arc<dyn RenderGeneration> = Arc::new(generation_mock.clone());
+    let graph_mock = Unimock::new(
         RenderGraphMock::prepare
             .next_call(matching!((config, catalogue, output) if config.file == Path::new("/repo/mokly.config.json") && catalogue.model.entries.len() == 2 && output.is_some()))
             .returns(Ok(generation)),
-    ));
-    Arc::new(Unimock::new(
+    );
+    let graph: Arc<dyn RenderGraph> = Arc::new(graph_mock.clone());
+    let factory: Arc<dyn GraphFactory> = Arc::new(Unimock::new(
         GraphFactoryMock::create
             .next_call(matching!((config) if config.file == Path::new("/repo/mokly.config.json")))
             .returns(Ok(graph)),
-    ))
+    ));
+    (factory, vec![graph_mock, generation_mock])
 }
 
 #[test]
@@ -130,10 +133,11 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
     let builder = Arc::new(Unimock::new(CatalogueBuilderMock::prepare
         .next_call(matching!((config, output) if config.file == Path::new("/repo/mokly.config.json") && *output == Some(Path::new("/repo/mokly-static"))))
         .returns(Ok(prepared(Vec::new())))));
+    let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
         config: loader,
         catalogue: builder,
-        graphs: graphs(Vec::new()),
+        graphs,
     };
     let summary = service.run(Path::new("/repo"), &options()).unwrap();
     assert_eq!(summary.counts, BTreeMap::from([(EntryKind::Screen, 2)]));
@@ -159,10 +163,11 @@ fn strict_build_keeps_warnings_and_resolves_explicit_output_from_cwd() {
             .next_call(matching!((_, output) if *output == Some(Path::new("/repo/nested/preview"))))
             .returns(Ok(prepared(vec![warning.clone()]))),
     ));
+    let (graphs, _guards) = graphs(vec![warning.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
         config: loader,
         catalogue: builder,
-        graphs: graphs(vec![warning.clone()]),
+        graphs,
     };
     let mut options = options();
     options.out = Some("preview".into());

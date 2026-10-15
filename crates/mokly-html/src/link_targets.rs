@@ -1,5 +1,6 @@
 //! Effective browsing target metadata and first-base lookup.
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::Node;
 
@@ -22,7 +23,7 @@ pub(crate) fn request_target(value: &str) -> Result<Option<String>> {
         return Ok(Some(value.into()));
     }
     Err(invalid(
-        "build-invalid",
+        Code::BuildInvalid,
         format!("invalid catalogue link target {value:?}"),
     ))
 }

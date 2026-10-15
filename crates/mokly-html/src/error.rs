@@ -7,6 +7,8 @@ use mokly_model::catalogue::SourceLocation;
 use mokly_model::error::ModelError;
 use thiserror::Error;
 
+use crate::diagnostic_code::Code;
+
 /// Composition result.
 pub type Result<T> = result::Result<T, HtmlError>;
 
@@ -41,7 +43,7 @@ pub enum HtmlError {
     #[error("[mokly-html/{code}] {message}")]
     Invalid {
         /// Stable authoring code.
-        code: &'static str,
+        code: Code,
         /// Exact actionable detail.
         message: String,
         /// Invocation or source location.
@@ -65,6 +67,31 @@ pub enum HtmlError {
 }
 
 impl HtmlError {
+    /// The nearest known authored coordinate, independent of wrapper errors.
+    pub fn location(&self) -> Option<&SourceLocation> {
+        match self {
+            Self::Located { location, .. }
+            | Self::Invalid {
+                location: Some(location),
+                ..
+            } => Some(location),
+            Self::Attempt { source, .. } | Self::Route { source, .. } => source.location(),
+            _ => None,
+        }
+    }
+
+    /// Attach one coordinate without adding duplicate source locations.
+    pub fn at(self, location: SourceLocation) -> Self {
+        if self.location().is_some() {
+            self
+        } else {
+            Self::Located {
+                location,
+                source: Box::new(self),
+            }
+        }
+    }
+
     /// Retain composition warnings for the invocation's terminal report.
     pub fn warnings(&self) -> Vec<Warning> {
         match self {
@@ -86,7 +113,7 @@ pub enum InternalError {
     },
 }
 
-pub(crate) fn invalid(code: &'static str, message: impl Into<String>) -> HtmlError {
+pub(crate) fn invalid(code: Code, message: impl Into<String>) -> HtmlError {
     HtmlError::Invalid {
         code,
         message: message.into(),
