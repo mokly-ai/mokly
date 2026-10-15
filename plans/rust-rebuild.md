@@ -706,7 +706,7 @@ Tags: ui
       select labels, and validate control input with a profile validator
       that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Replace server rendering and hydration in the viewer package with the
+- [x] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
       entry mounts into the stub, index and detail readers replace
       `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the

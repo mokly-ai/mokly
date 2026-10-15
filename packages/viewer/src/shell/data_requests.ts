@@ -1,6 +1,7 @@
 /** The entry details one shell route needs, and how each request fares. */
 
 import {
+  currentEntry,
   detailKey,
   fenceDetail,
   type DetailRequest,
@@ -19,18 +20,30 @@ export type DetailDelivery =
 
 /**
  * The details a route renders from: the routed entry's own, and for a use
- * case the detail of each step screen, whose views its frames inspect.
+ * case the detail of each step screen, whose views its frames inspect. Only
+ * an entry or a removed record that the given index lists has a detail, so a
+ * publication that drops or renames the routed entry requests none and
+ * installs; the route then shows the missing state.
  */
 export function routeDetailRequests(
   index: CatalogueReadModel,
   route: ShellRoute,
 ): readonly DetailRequest[] {
   if (route.view.kind !== "target") return [];
-  const entry = route.view.target.entry;
-  if (route.snapshot !== undefined)
-    return index.comparisonUrl === null
-      ? []
-      : [{ path: entry.path, snapshotId: route.snapshot }];
+  const routed = route.view.target.entry;
+  const snapshotId = route.snapshot;
+  if (snapshotId !== undefined)
+    return index.comparisonUrl !== null &&
+      index.removedEntries.some(
+        (record) =>
+          record.snapshotId === snapshotId &&
+          record.entry.path === routed.path &&
+          record.entry.kind === routed.kind,
+      )
+      ? [{ path: routed.path, snapshotId }]
+      : [];
+  const entry = currentEntry(index, routed.path);
+  if (entry?.kind !== routed.kind) return [];
   const requests: DetailRequest[] = [{ path: entry.path }];
   if (entry.kind === "use-case")
     for (const step of entry.steps)

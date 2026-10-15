@@ -98,6 +98,23 @@ test("a removed route requests nothing without a published comparison", () => {
   assert.deepEqual(routeDetailRequests(unpublished, removed), []);
 });
 
+test("a route requests nothing for an entry the index no longer lists", () => {
+  const guide = route("/view/guide/");
+  const dropped = indexFixture((raw) => {
+    raw.pages = [];
+    raw.tree = raw.tree.filter((node) => node.path !== "guide");
+  });
+  assert.deepEqual(routeDetailRequests(dropped, guide), []);
+  const tour = indexFixture();
+  const asPage = { ...guide, view: { ...guide.view } };
+  if (asPage.view.kind === "target")
+    asPage.view.target = {
+      ...asPage.view.target,
+      entry: { ...tour.useCases[0]!, path: "guide" },
+    } as never;
+  assert.deepEqual(routeDetailRequests(tour, asPage), []);
+});
+
 test("an accepted detail installs against the index it was fenced with", async () => {
   const index = indexFixture();
   const request = { path: "guide" };
