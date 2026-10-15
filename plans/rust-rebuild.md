@@ -964,7 +964,7 @@ Publish client final review and merge decisions:
   - [x] Restore paired tags, native archive inspection, all package manifests,
         registry guards, and native/viewer/CLI publication ordering.
   - [x] Add Linux x64, Linux ARM64, macOS ARM64, and Windows x64 jobs.
-  - [ ] Settle the Intel macOS runner-policy exception and add its matrix row.
+  - [x] Settle the Intel macOS runner-policy exception and add its matrix row.
 - [x] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
 - [x] Make Release Please update the exact `@mokly/viewer` pin in
@@ -979,14 +979,15 @@ Publish client final review and merge decisions:
 - [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
-- [ ] Check that a Rust-only change can trigger the CLI release component;
-      Release Please path filtering does not include `crates/` in
-      `packages/mokly`.
+- [ ] Settle Release Please selection for core-only commits under the
+      Milestone 15 review decision.
 - [ ] Run the installed static output and Serve smoke after their integration.
 - [x] Commit.
 
 Release package evidence: `.context/rust-rebuild/delegation/m13/report-1.md`.
 Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
+Release review and merge decisions: `.context/rust-rebuild/delegation/m13/report-2.md`
+and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1008,6 +1009,9 @@ Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
+- [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
+      the history page at close-out; retain their links and migration content.
+
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Open the pull request. Its description and squash body write `{target}`
@@ -1017,6 +1021,9 @@ Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 13 review 1, finding 5: the user must settle the Release Please
+    component for core-only commits; keep the `packages/mokly` layout until
+    that decision. Native builds and paired-tag publication remain unchanged.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
@@ -1103,6 +1110,9 @@ Release gap sweep: `.context/rust-rebuild/sweeps/m13-release.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Replace the Intel macOS release runner before GitHub retires its Intel
+      images, preserving native build and execution coverage.
 
 - Publish the first 0.x release of the new core: platform packages, viewer,
   then CLI; verify each registry package.

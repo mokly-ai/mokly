@@ -145,7 +145,10 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     publish.steps
       .filter((step) => step.env?.GITHUB_TOKEN)
       .map((step) => step.name),
-    ["Select verification evidence"],
+    [
+      "Resolve checked archives for publication",
+      "Select verification evidence",
+    ],
   );
   const preserve = publish.steps.find(
     (step) => step.name === "Preserve checked artifacts",

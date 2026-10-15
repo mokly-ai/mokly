@@ -40,9 +40,23 @@ test("native release jobs build locked targets and gate publication on the matri
   );
   assert.ok(native?.strategy);
   assert.equal(native.strategy["fail-fast"], false);
-  assert.equal(native.env?.CARGO_BUILD_JOBS, 4);
+
   const rows = native.strategy.matrix.include;
   assert.equal(new Set(rows.map(({ target }) => target)).size, rows.length);
+  assert.deepEqual(
+    rows.map(({ target }) => target).sort(),
+    NATIVE_TARGETS.map(({ target }) => target).sort(),
+  );
+  assert.equal(
+    rows.find(({ target }) => target === "darwin-x64")?.runner,
+    "macos-26-intel",
+  );
+  assert.ok(native.steps.some(({ run }) => run === "npm ci --ignore-scripts"));
+  assert.ok(
+    native.steps.some(({ run }) =>
+      run?.includes("scripts/release/verify-fresh.mjs"),
+    ),
+  );
   for (const row of rows) {
     const target = NATIVE_TARGETS.find(({ target }) => target === row.target);
     assert.ok(target);
@@ -57,7 +71,9 @@ test("native release jobs build locked targets and gate publication on the matri
     native.steps.some(
       (step) =>
         step.uses?.startsWith("actions/upload-artifact@") &&
-        step.with?.["include-hidden-files"] === true,
+        step.with?.["include-hidden-files"] === true &&
+        step.with?.overwrite === true &&
+        step.with?.["retention-days"] === 90,
     ),
   );
   const publish = workflow.jobs.publish!;
@@ -71,4 +87,19 @@ test("native release jobs build locked targets and gate publication on the matri
     ),
   );
   assert.equal(native.permissions?.["id-token"], undefined);
+  assert.match(native.if!, /artifact_run_id == ''/);
+  assert.ok(
+    publish.steps.some(
+      (step) =>
+        step.with?.["run-id"] ===
+        "${{ steps.publish_artifacts.outputs.artifact_run_id }}",
+    ),
+  );
+  assert.ok(
+    publish.steps.some((step) =>
+      step.run?.includes("pack.mjs .context/release-artifact --reuse"),
+    ),
+  );
+  for (const job of Object.values(workflow.jobs))
+    assert.equal(job.env?.CARGO_BUILD_JOBS, undefined);
 });

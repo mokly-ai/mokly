@@ -158,6 +158,7 @@ function validateCliOrNative(metadata, name) {
       "bin",
       "dist",
       "config.schema.json",
+      "CHANGELOG.md",
       "LICENSE",
       "README.md",
       "docs/guides",

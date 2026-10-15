@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.6.0/schemas/config.json",
   "bootstrap-sha": "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
   "plugins": [
     {
@@ -11,7 +11,7 @@
     "packages/mokly": {
       "release-type": "node",
       "component": "mokly",
-      "changelog-path": "CHANGELOG.md",
+      "changelog-path": "/CHANGELOG.md",
       "include-component-in-tag": false,
       "include-v-in-tag": true,
       "bump-minor-pre-major": true,

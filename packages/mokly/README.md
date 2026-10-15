@@ -99,7 +99,10 @@ The package `prepack` builds the viewer before the authoring declarations.
 Release packing creates the viewer archive before the CLI archive.
 The package build emits ESM JavaScript and declarations, the sidecar entry and
 worker, the shim, and packaged Markdown. Each build clears stale package
-output and copied docs first. Protocol fixtures stay outside the archive. Build output stays ignored.
+output and copied docs first. The package includes the complete guide and
+protocol trees, their public receiver fixtures, and the root changelog history.
+Release Please writes the root `CHANGELOG.md`; the build copies it into the
+package. Copied docs, the package changelog, and build output stay ignored.
 Key code: [authoring](./src/authoring/definitions.ts),
 [sidecar](./src/sidecar/session.ts), and the
 [Rust pool](../../crates/mokly-sidecar/README.md).

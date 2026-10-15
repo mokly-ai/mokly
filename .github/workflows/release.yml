@@ -13,6 +13,10 @@ on:
         description: Immutable viewer-vX.Y.Z tag to verify and publish
         required: true
         type: string
+      artifact_run_id:
+        description: Original main-push run that holds the checked release archives
+        required: true
+        type: string
       verification:
         description: Reuse exact-tree CI evidence or run complete verification
         required: true
@@ -48,11 +52,16 @@ jobs:
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
   select-release:
+    permissions:
+      actions: read
+      contents: read
     if: always()
     needs:
       - release-please
     runs-on: blacksmith-2vcpu-ubuntu-2404
     outputs:
+      artifact_run_id: ${{ steps.artifacts.outputs.artifact_run_id }}
+      artifact_name: ${{ steps.artifacts.outputs.artifact_name }}
       publish_ref: ${{ steps.select.outputs.publish_ref }}
       viewer_ref: ${{ steps.select.outputs.viewer_ref }}
       verification: ${{ steps.select.outputs.verification }}
@@ -71,8 +80,17 @@ jobs:
           VIEWER_RELEASE_CREATED: ${{ needs.release-please.outputs.viewer_release_created }}
           VIEWER_RELEASE_TAG: ${{ needs.release-please.outputs.viewer_tag_name }}
         run: node scripts/release/resolve-ref.mjs
+      - name: Select checked release archives
+        id: artifacts
+        if: steps.select.outputs.publish_ref != ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_EVENT: ${{ github.event_name }}
+          ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
+          PUBLISH_REF: ${{ steps.select.outputs.publish_ref }}
+        run: node scripts/release/select-artifacts.mjs
   build-native:
-    if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != ''
+    if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != '' && needs.select-release.outputs.artifact_run_id == ''
     needs: [select-release]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
@@ -92,10 +110,10 @@ jobs:
           - target: win32-x64-msvc
             triple: x86_64-pc-windows-msvc
             runner: blacksmith-2vcpu-windows-2025
-          # darwin-x64 needs an approved Intel runner-policy exception.
-          # Package-set verification refuses publication without its archive.
+          - target: darwin-x64
+            triple: x86_64-apple-darwin
+            runner: macos-26-intel
     env:
-      CARGO_BUILD_JOBS: 4
       RELEASE_TARGET: ${{ matrix.target }}
       RUST_TARGET: ${{ matrix.triple }}
       PUBLISH_REF: ${{ needs.select-release.outputs.publish_ref }}
@@ -105,7 +123,14 @@ jobs:
         shell: bash
     steps:
       - name: Check out immutable native release
+        if: matrix.target != 'darwin-x64'
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.select-release.outputs.publish_ref }}
+      - name: Check out Intel macOS native release
+        if: matrix.target == 'darwin-x64'
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           ref: ${{ needs.select-release.outputs.publish_ref }}
@@ -123,7 +148,12 @@ jobs:
       - name: Verify native release tags
         run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" "$VIEWER_REF"
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+      - name: Set up Linux release tools
+        if: startsWith(matrix.target, 'linux-')
+        run: node scripts/release/setup-linux.mjs
+      - name: Require unpublished versions before building
+        run: node scripts/release/verify-fresh.mjs
       - name: Build and pack target
         run: node scripts/release/build-native.mjs "$RELEASE_TARGET"
       - name: Inspect native TLS dependencies
@@ -137,9 +167,10 @@ jobs:
           path: .context/release-artifact/
           include-hidden-files: true
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 90
+          overwrite: true
   publish:
-    if: always() && needs.select-release.result == 'success' && needs.build-native.result == 'success' && needs.select-release.outputs.publish_ref != ''
+    if: always() && needs.select-release.result == 'success' && (needs.build-native.result == 'success' || (needs.build-native.result == 'skipped' && needs.select-release.outputs.artifact_run_id != '')) && needs.select-release.outputs.publish_ref != ''
     needs:
       - release-please
       - select-release
@@ -152,7 +183,6 @@ jobs:
       contents: read
       id-token: write
     env:
-      CARGO_BUILD_JOBS: 4
       PUBLISH_REF: ${{ needs.select-release.outputs.publish_ref }}
       RELEASE_VERIFICATION: ${{ needs.select-release.outputs.verification }}
       VIEWER_REF: ${{ needs.select-release.outputs.viewer_ref }}
@@ -172,6 +202,21 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Verify immutable tags
         run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" "$VIEWER_REF"
+      - name: Resolve checked archives for publication
+        id: publish_artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_EVENT: ${{ github.event_name }}
+          ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
+        run: node scripts/release/select-artifacts.mjs
+      - name: Download first-run checked release archives
+        if: steps.publish_artifacts.outputs.artifact_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ steps.publish_artifacts.outputs.artifact_name }}
+          run-id: ${{ steps.publish_artifacts.outputs.artifact_run_id }}
+          github-token: ${{ github.token }}
+          path: .context
       - name: Install dependencies
         run: npm ci
       - name: Audit workspace dependencies
@@ -190,6 +235,7 @@ jobs:
         if: steps.evidence.outputs.mode != 'evidence'
         run: GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict
       - name: Download native release archives
+        if: steps.publish_artifacts.outputs.artifact_run_id == ''
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: release-native-*
@@ -199,7 +245,15 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Prepare exact publish artifacts
         id: package
-        run: node scripts/release/pack.mjs .context/release-artifact
+        env:
+          ARTIFACT_RUN_ID: ${{ steps.publish_artifacts.outputs.artifact_run_id }}
+        run: |
+          if [ -n "$ARTIFACT_RUN_ID" ]; then
+            node scripts/release/pack.mjs .context/release-artifact --reuse
+          else
+            node scripts/release/verify-fresh.mjs
+            node scripts/release/pack.mjs .context/release-artifact
+          fi
       - name: Smoke-test exact publish artifacts
         run: node scripts/release/smoke.mjs .context/release-artifact
       - name: Recheck immutable tags and source
@@ -213,7 +267,8 @@ jobs:
             .context/release-evidence/record.json
           if-no-files-found: error
           include-hidden-files: true
-          retention-days: 14
+          retention-days: 90
+          overwrite: true
       - name: Publish and verify native packages
         run: node scripts/release/publish-native.mjs .context/release-artifact
       - name: Guard existing viewer version

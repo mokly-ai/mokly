@@ -4,4 +4,13 @@ export function packNative(
   target: string,
   destination: string,
   binaryPath?: string,
+  options?: {
+    registration?: boolean;
+    execute?: (
+      file: string,
+      args: string[],
+      options: { cwd: string; env?: Record<string, string> },
+    ) => Promise<{ stdout: string; stderr: string }>;
+    inspect?: (binary: string, os: string) => Promise<string>;
+  },
 ): Promise<PackedRelease>;

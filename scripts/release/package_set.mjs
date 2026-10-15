@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { createPackageArchive, inspectRuntimeLicenses } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
+import { inspectPublishedDocs } from "./packed_docs.mjs";
 import { inspectPackedManifest } from "./packed_manifest.mjs";
 import { releasePackages } from "./targets.mjs";
 import { verifyPackageVersions } from "./versions.mjs";
@@ -60,6 +61,8 @@ export async function inspectReleasePackage(root, directory, descriptor) {
     expected,
     "packed manifest must match the release source",
   );
+  if (descriptor.name === "@mokly/mokly")
+    await inspectPublishedDocs(archivePath, root);
   return { archivePath, report };
 }
 

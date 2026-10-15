@@ -154,12 +154,21 @@ For each native package, run the bootstrap command on its target operating
 system and architecture. Supply the reviewed full commit and that package name:
 
 ```sh
-node scripts/release/bootstrap.mjs {reviewed-full-commit-sha} .context/native-bootstrap @mokly/native-linux-x64-gnu
+node scripts/release/bootstrap.mjs {reviewed-full-commit-sha} .context/native-bootstrap/linux-x64-gnu @mokly/native-linux-x64-gnu
 ```
 
-The isolated checkout builds the release binary with the pinned Rust toolchain.
-It packs only the target binary and package metadata. The package version must
-match `packages/mokly/package.json`. The report binds the exact archive hashes
-to the source commit and tree. Register the package interactively only after
-review. Configure each package's own trusted publisher before enabling the
-coordinated release. The command prepares an archive and never publishes it.
+Use a distinct `.context/native-bootstrap/{target}` destination for every
+target. Prepare Linux's pinned Zig and cargo-zigbuild tools first. The isolated
+checkout installs npm dependencies with lifecycle scripts disabled and builds
+the native binary. It uses the release runtime floors and records the same
+library dependency inspection as a coordinated build.
+
+Native registration always packs version `0.0.0`. No coordinated CLI release
+publishes this version. Its binary embeds the reviewed source's CLI version,
+which the report records as `binaryVersion`. The staging manifest changes the
+registration version without modifying the reviewed checkout. The report binds
+the source commit and tree to the exact archive; `tls-dependencies.txt` records
+the native runtime check. Register interactively with the `bootstrap` dist-tag
+only after review. Configure each package's own trusted publisher before the
+first coordinated release. The command prepares bytes and never publishes.
+Do not use registration bytes as a coordinated release or retry artifact.

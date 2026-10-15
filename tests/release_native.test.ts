@@ -91,12 +91,15 @@ test("the CLI archive requires its shim, sidecar, authoring, schema and packaged
     );
 });
 
-test("the built CLI inventory rejects missing runtime entries and source fixtures", async () => {
+test("the built CLI inventory requires runtime, changelog, and receiver fixtures", async () => {
   const report = await inspectDryRun(
     path.join(repositoryRoot, "packages/mokly"),
     "@mokly/mokly",
   );
   for (const missing of [
+    "CHANGELOG.md",
+    "docs/protocol/fixtures/upload-plan-v1.json",
+    "docs/protocol/fixtures/export-ownership-v3.json",
     "bin/mokly.mjs",
     "dist/sidecar.js",
     "dist/index.d.ts",
@@ -115,11 +118,7 @@ test("the built CLI inventory rejects missing runtime entries and source fixture
       /missing/,
     );
   }
-  for (const added of [
-    "src/sidecar.ts",
-    "docs/protocol/fixtures/catalogue-v7.json",
-    "tests/fixture.js",
-  ])
+  for (const added of ["src/sidecar.ts", "tests/fixture.js"])
     assert.throws(
       () =>
         validatePackageReport(

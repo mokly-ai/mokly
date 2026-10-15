@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = new URL("../", import.meta.url);
@@ -24,10 +23,7 @@ for (const directory of ["guides", "protocol"]) {
   await fs.cp(
     new URL(`../../../docs/${directory}`, import.meta.url),
     new URL(`docs/${directory}`, root),
-    {
-      recursive: true,
-      filter: (source) => path.basename(source) !== "fixtures",
-    },
+    { recursive: true },
   );
 }
 for (const file of [
@@ -42,3 +38,8 @@ for (const file of [
     new URL(`dist/${file}`, root),
   );
 }
+
+await fs.copyFile(
+  new URL("../../../CHANGELOG.md", import.meta.url),
+  new URL("CHANGELOG.md", root),
+);

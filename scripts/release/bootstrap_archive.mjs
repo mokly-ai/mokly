@@ -10,12 +10,16 @@ import { packNative } from "./native.mjs";
 import { nativeTarget } from "./targets.mjs";
 
 /** Build registration evidence from reviewed committed bytes, never local dist. */
-export async function createBootstrapArchive({
-  repositoryRoot,
-  expectedCommit,
-  destination,
-  packageName = "@mokly/viewer",
-}) {
+export async function createBootstrapArchive(
+  {
+    repositoryRoot,
+    expectedCommit,
+    destination,
+    packageName = "@mokly/viewer",
+  },
+  dependencies = {},
+) {
+  const buildNative = dependencies.packNative ?? packNative;
   assert.match(
     expectedCommit,
     /^[a-f0-9]{40}$/,
@@ -24,11 +28,11 @@ export async function createBootstrapArchive({
   repositoryRoot = await fs.realpath(repositoryRoot);
   destination = path.resolve(destination);
   await verifySource(repositoryRoot, expectedCommit);
-  const { relative, version, filename } = await bootstrapTarget(
+  const { relative, version, sourceVersion, filename } = await bootstrapTarget(
     repositoryRoot,
     packageName,
   );
-  await verifyPackage(repositoryRoot, relative, packageName, version);
+  await verifyPackage(repositoryRoot, relative, packageName, sourceVersion);
   await requireMissingDestination(destination);
   const temporaryRoot = await fs.mkdtemp(
     path.join(os.tmpdir(), "mokly-bootstrap-"),
@@ -53,10 +57,14 @@ export async function createBootstrapArchive({
       cwd: checkout,
     });
     await verifySource(checkout, expectedCommit);
-    await verifyPackage(checkout, relative, packageName, version);
-    await runCommand("npm", ["ci", "--no-audit", "--no-fund"], {
-      cwd: checkout,
-    });
+    await verifyPackage(checkout, relative, packageName, sourceVersion);
+    await runCommand(
+      "npm",
+      ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+      {
+        cwd: checkout,
+      },
+    );
     await inspectRuntimeLicenses(checkout);
     const packed =
       packageName === "@mokly/viewer"
@@ -65,10 +73,12 @@ export async function createBootstrapArchive({
             path.join(temporaryRoot, "artifact"),
             packageName,
           )
-        : await packNative(
+        : await buildNative(
             checkout,
             packageName,
             path.join(temporaryRoot, "artifact"),
+            undefined,
+            { registration: true },
           );
     assert.equal(
       packed.report.version,
@@ -101,6 +111,12 @@ export async function createBootstrapArchive({
       `${JSON.stringify(report, null, 2)}\n`,
       { flag: "wx" },
     );
+    if (packageName !== "@mokly/viewer") {
+      await fs.copyFile(
+        path.join(path.dirname(packed.archivePath), "tls-dependencies.txt"),
+        path.join(destination, "tls-dependencies.txt"),
+      );
+    }
     return { archivePath, report };
   } finally {
     await fs.rm(temporaryRoot, { force: true, recursive: true });
@@ -154,13 +170,15 @@ async function bootstrapTarget(repositoryRoot, packageName) {
     );
     return {
       relative: target.directory,
-      version,
-      filename: `mokly-native-${target.target}-${version}.tgz`,
+      sourceVersion: version,
+      version: "0.0.0",
+      filename: `mokly-native-${target.target}-0.0.0.tgz`,
     };
   }
   return {
     relative: "packages/viewer",
     version: "0.1.0",
+    sourceVersion: "0.1.0",
     filename: "mokly-viewer-0.1.0.tgz",
   };
 }

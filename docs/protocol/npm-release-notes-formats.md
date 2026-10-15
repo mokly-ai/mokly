@@ -45,8 +45,8 @@ capture and reject undeclared worker routes.
 
 ## First Rust Core Release
 
-The first Rust core release is a breaking 0.x minor release. Install the CLI,
-viewer, and native packages from the same coordinated release. Rebuild all
+The first Rust core release is a breaking 0.x minor release. Install `@mokly/mokly`; npm
+selects its matching viewer and native dependencies. Rebuild all
 published catalogues. No compatibility reader or converter exists for older
 configuration, authoring modules, generated output, or caches.
 
@@ -55,12 +55,16 @@ configuration, authoring modules, generated output, or caches.
 - Use `serve` to browse with watch enabled by default. Use `build` to validate,
   render every view, and write a static site. `publish` builds a private site
   and uploads it. `check`, `export`, and `review` are absent. For validation,
-  run `mokly build --strict --out {temporary-directory}`.
+  run `mokly build --strict --out {temporary-directory}`. Replace
+  `export --out` with `build --out`. `build --watch` and `serve --build` are
+  absent; use watched Serve for development.
 - Configuration is data-only `mokly.config.json`. `--config` names another JSON
   file. TypeScript and JavaScript configuration and `defineConfig` are absent.
   Use the shipped `config.schema.json` for editor checks. Filesystem paths are
   relative to the configuration file. `$componentStylesheets` is the only
-  stylesheet token.
+  stylesheet token. Replace the `componentStylesheets` JavaScript export
+  with this token in the JSON stylesheet list. `WatchConfig` and `ReviewConfig`
+  are removed configuration types.
 - Do not commit generated output. `build` defaults to `mokly-static/`, which
   must be ignored by Git. Remove committed `mokly-generated/` output and
   `.mokly-cache`. Serve and comparisons render in memory. Base extraction and
@@ -74,9 +78,11 @@ configuration, authoring modules, generated output, or caches.
 ### Platforms And JavaScript
 
 The npm shim selects one version-matched Rust binary. Supported targets are
-Linux x64 and ARM64 with glibc, macOS x64 and ARM64, and Windows x64 with MSVC.
+Linux x64 and ARM64 with glibc 2.28 or newer, macOS x64 and ARM64, and Windows
+x64 with MSVC. The binary uses the supported Node runtime's OS floor. Windows
+links its C runtime statically and needs no separate Visual C++ runtime.
 There is no JavaScript CLI fallback. Keep optional dependencies enabled during
-installation. Node supports `>=22.14.0 <24.14.0 || >=24.19.0`; the shim rejects
+installation. Mokly supports Node `>=22.14.0 <24.14.0 || >=24.19.0`; the shim rejects
 unsupported versions before binary lookup.
 
 HTML-only catalogues need no JavaScript sidecar. React and Storybook authoring,
@@ -128,7 +134,9 @@ version only. The [format inventory](./mokly-format-versions.md) owns all number
 Use the viewer's root, `./browser`, `./data`, and `./styles.css` entries. The
 `./server` and `./runtime` entries, `renderViewer`, shell hydration, and embedded
 bootstrap data are absent. `MoklyViewer` takes index and detail sources.
-`readCatalogueIndex` and `readEntryDetail` read those boundaries. The index has
+`readCatalogueIndex` and `readEntryDetail` read those boundaries.
+`resolveInstance` and `InstanceResolution` are available only from
+`@mokly/viewer`; remove imports of them from `@mokly/mokly`. The index has
 one revision and a document key per document; updates refresh affected frames
 without reloading the page. Serve sends no cross-origin response headers.
 

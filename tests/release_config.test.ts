@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { releaseUpdates } from "../scripts/release/version_updates.mjs";
 import { verifyPackageVersions } from "../scripts/release/versions.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -44,57 +45,44 @@ test("the private workspace coordinates a CLI and viewer release with seven publ
   }
 });
 
-test("release JSON updates move manifests and lockfile together without changing private native links", async (t) => {
-  const root = await fs.mkdtemp(
-    path.join(os.tmpdir(), "mokly-release-versions-"),
+test("pinned Release Please updates all manifest and lockfile edges and retains changelog history", async (t) => {
+  const sourceHistory = await fs.readFile(
+    path.join(repositoryRoot, "CHANGELOG.md"),
+    "utf8",
   );
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const config = await json("release-please-config.json");
-  const contents = new Map<string, Record<string, unknown>>();
-  const versions = { "packages/mokly": "0.15.0", "packages/viewer": "0.6.0" };
-  for (const [component, version] of Object.entries(versions)) {
-    for (const update of [
-      {
-        path: `/${component}/package.json`,
-        jsonpath: "$['version']",
-        type: "json",
-      },
-      ...config.packages[component]["extra-files"],
-    ]) {
-      if (update.type !== "json") continue;
-      const file = update.path.slice(1);
-      const content = contents.get(file) ?? (await json(file));
-      setVersion(content, update.jsonpath, version);
-      contents.set(file, content);
+  for (const changed of [
+    ["packages/mokly/src/index.ts"],
+    ["packages/viewer/src/index.ts"],
+    ["packages/mokly/src/index.ts", "packages/viewer/src/index.ts"],
+  ]) {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "mokly-release-versions-"),
+    );
+    t.after(() => fs.rm(root, { recursive: true, force: true }));
+    const updates = await releaseUpdates(repositoryRoot, changed);
+    assert.ok(updates.has("packages/mokly/package.json"));
+    assert.ok(updates.has("packages/viewer/package.json"));
+    assert.ok(
+      updates
+        .get("CHANGELOG.md")
+        ?.includes(sourceHistory.slice(sourceHistory.indexOf("\n") + 1).trim()),
+    );
+    assert.ok(!updates.has("packages/mokly/CHANGELOG.md"));
+    for (const [file, content] of updates) {
+      const destination = path.join(root, file);
+      await fs.mkdir(path.dirname(destination), { recursive: true });
+      await fs.writeFile(destination, content);
     }
+    const { cli, viewer } = await verifyPackageVersions(root);
+    assert.notEqual(
+      cli.version,
+      (await json("packages/mokly/package.json")).version,
+    );
+    assert.notEqual(
+      viewer.version,
+      (await json("packages/viewer/package.json")).version,
+    );
+    assert.match(cli.version, /^0\./);
+    assert.match(viewer.version, /^0\./);
   }
-  contents.set(".release-please-manifest.json", versions);
-  for (const [file, content] of contents) {
-    const destination = path.join(root, file);
-    await fs.mkdir(path.dirname(destination), { recursive: true });
-    await fs.writeFile(destination, JSON.stringify(content));
-  }
-  await verifyPackageVersions(root);
 });
-
-// Apply the JSONPath subset used by the release configuration. A separate
-// recorded integration run exercises the real pinned Release Please plugin.
-function setVersion(
-  root: Record<string, unknown>,
-  selector: string,
-  version: string,
-) {
-  const keys = [...selector.matchAll(/\['([^']*)'\]|\[\*\]/gu)].map(
-    (match) => match[1] ?? "*",
-  );
-  assert.equal(
-    "$" + keys.map((key) => (key === "*" ? "[*]" : `['${key}']`)).join(""),
-    selector,
-  );
-  let owner = root;
-  for (const key of keys.slice(0, -1))
-    owner = owner[key] as Record<string, unknown>;
-  const last = keys.at(-1)!;
-  if (last === "*") for (const key of Object.keys(owner)) owner[key] = version;
-  else owner[last] = version;
-}

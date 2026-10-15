@@ -67,7 +67,20 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
       assert.ok(Array.isArray(values), `${context} runner matrix`);
       for (const value of values) {
         assert.ok(typeof value === "string", `${context} runner matrix value`);
-        assertMinimumRunner(value, context);
+        if (
+          workflowName === "release.yml" &&
+          jobName === "build-native" &&
+          value === "macos-26-intel"
+        ) {
+          const rows = job.strategy?.matrix?.include as Record<
+            string,
+            unknown
+          >[];
+          assert.deepEqual(
+            rows.filter((row) => row[key] === value).map((row) => row.target),
+            ["darwin-x64"],
+          );
+        } else assertMinimumRunner(value, context);
       }
     }
   }
