@@ -968,7 +968,7 @@ Publish client final review and merge decisions:
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.
-- [ ] Add the release build matrix for the five targets, the package set
+- [x] Add the release build matrix for the five targets, the package set
       (viewer, five platform packages, CLI), the registry guards, and the
       publish order.
   - [x] Restore paired tags, native archive inspection, all package manifests,
@@ -992,6 +992,9 @@ Publish client final review and merge decisions:
 - [ ] Settle Release Please selection for core-only commits under the
       Milestone 15 review decision.
 - [ ] Run the installed static output and Serve smoke after their integration.
+- [ ] Integrate the Milestone 8 part 2 npm-version fix before release checks
+      can pass; the bumped-copy sidecar tests and version-path regression stay
+      required.
 - [x] Commit.
 
 Release package evidence: `.context/rust-rebuild/delegation/m13/report-1.md`.

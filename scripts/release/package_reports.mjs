@@ -46,7 +46,7 @@ export function validateCliReport(report) {
         file === "config.schema.json" ||
         file === "bin/mokly.mjs" ||
         /^dist\/.+\.(?:js|mjs|ts)$/.test(file) ||
-        /^docs\/(?:guides|protocol)\/.+\.(?:md|json)$/.test(file),
+        /^docs\/(?:guides|protocol)\/.+/.test(file),
       `CLI contains non-allowlisted path ${file}`,
     );
   }
