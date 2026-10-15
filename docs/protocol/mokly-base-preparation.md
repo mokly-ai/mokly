@@ -59,7 +59,9 @@ prefetch sets, public reads, and streamed digests.
 Each PostCSS context runs in a child process whose working directory is its
 side's source root. This confines relative file reads and automatic Tailwind
 source discovery to that side. The head and base can use the same installed
-third-party dependencies while reading separate repository sources.
+third-party dependencies while reading separate repository sources. The child
+receives the selected dependency directories in `NODE_PATH`, so CSS package
+imports use those dependencies without writing links into the source lease.
 
 Historical runtime failures keep typed diagnostic codes through catalogue,
 HTML, CSS, and graph wrappers. The following policy applies only to Changes;

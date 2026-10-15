@@ -22,7 +22,10 @@ test("base Tailwind automatic scans use the base source root and never head sour
       path.join(root, "postcss.mjs"),
       `export default { plugins: { "@tailwindcss/postcss": {} } };`,
     );
-    await fs.writeFile(path.join(root, "input.css"), "@tailwind utilities;");
+    await fs.writeFile(
+      path.join(root, "input.css"),
+      '@import "tailwindcss/theme.css"; @tailwind utilities;',
+    );
   }
   const sidecar = startSidecar(context, head);
   await sidecar.call("hello");
@@ -35,7 +38,7 @@ test("base Tailwind automatic scans use the base source root and never head sour
         context,
         postcss: "postcss.mjs",
         sourcePath: "input.css",
-        text: "@tailwind utilities;",
+        text: '@import "tailwindcss/theme.css"; @tailwind utilities;',
       }),
     );
   const before = await render(base, "base");

@@ -59,6 +59,10 @@ export class PostcssWorkers {
     if (!worker) {
       worker = fork(new URL("./postcss-worker.js", import.meta.url), [], {
         cwd: root,
+        env: {
+          ...process.env,
+          NODE_PATH: paths.dependencyRoots.join(path.delimiter),
+        },
         stdio: ["ignore", "pipe", "pipe", "ipc"],
       });
       worker.stdout?.setEncoding("utf8");
