@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use html5gum::{DefaultEmitter, Token, Tokenizer};
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 
 pub(crate) struct Marker {
@@ -20,14 +21,14 @@ pub(crate) fn parse(comment: &str) -> Result<Option<Marker>> {
     }
     let (name, attributes) = comment
         .split_once(char::is_whitespace)
-        .ok_or_else(|| invalid("build-invalid", "malformed fragment marker"))?;
+        .ok_or_else(|| invalid(Code::BuildInvalid, "malformed fragment marker"))?;
     let (kind, phase) = name
         .strip_prefix("mokly-")
         .and_then(|name| name.split_once(':'))
-        .ok_or_else(|| invalid("build-invalid", "unknown fragment marker"))?;
+        .ok_or_else(|| invalid(Code::BuildInvalid, "unknown fragment marker"))?;
     if !matches!(kind, "instance" | "slot" | "ignore" | "link") || !matches!(phase, "start" | "end")
     {
-        return Err(invalid("build-invalid", "unknown fragment marker"));
+        return Err(invalid(Code::BuildInvalid, "unknown fragment marker"));
     }
     let attributes = attributes_of(attributes)?;
     let allowed: &[&str] = match (phase, kind) {
@@ -43,14 +44,14 @@ pub(crate) fn parse(comment: &str) -> Result<Option<Marker>> {
         .any(|key| !allowed.contains(&key.as_str()))
     {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "unknown fragment marker attribute",
         ));
     }
     let id = attributes
         .get("id")
         .filter(|id| !id.is_empty())
-        .ok_or_else(|| invalid("build-invalid", "fragment marker has no id"))?
+        .ok_or_else(|| invalid(Code::BuildInvalid, "fragment marker has no id"))?
         .clone();
     Ok(Some(Marker {
         kind: kind.into(),
@@ -84,7 +85,7 @@ fn attributes_of(source: &str) -> Result<BTreeMap<String, String>> {
             Token::EndTag(tag) if tags == 1 && tag.name.as_ref() == b"i" => tags += 1,
             _ => {
                 return Err(invalid(
-                    "build-invalid",
+                    Code::BuildInvalid,
                     "malformed fragment marker attributes",
                 ));
             }
@@ -92,7 +93,7 @@ fn attributes_of(source: &str) -> Result<BTreeMap<String, String>> {
     }
     attributes
         .filter(|_| tags == 2)
-        .ok_or_else(|| invalid("build-invalid", "malformed fragment marker attributes"))
+        .ok_or_else(|| invalid(Code::BuildInvalid, "malformed fragment marker attributes"))
 }
 
 pub(crate) fn required<'a>(marker: &'a Marker, name: &str) -> Result<&'a str> {
@@ -100,5 +101,5 @@ pub(crate) fn required<'a>(marker: &'a Marker, name: &str) -> Result<&'a str> {
         .attributes
         .get(name)
         .map(String::as_str)
-        .ok_or_else(|| invalid("build-invalid", format!("fragment marker lacks {name}")))
+        .ok_or_else(|| invalid(Code::BuildInvalid, format!("fragment marker lacks {name}")))
 }

@@ -1,21 +1,10 @@
-import fs from "node:fs";
-
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { isManifestComponentVariant } from "../src/components/manifest_types.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
+import { shellModelFixture } from "./catalogue_v7_fixture.js";
+
 export function componentWorkspaceFixture() {
-  const model = readCatalogue(
-    JSON.parse(
-      fs.readFileSync(
-        new URL(
-          "../../../docs/protocol/fixtures/catalogue-v6.json",
-          import.meta.url,
-        ),
-        "utf8",
-      ),
-    ),
-  );
+  const model = shellModelFixture();
 
   const catalogue = viewerCatalogue(model);
 

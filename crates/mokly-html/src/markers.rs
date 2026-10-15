@@ -5,6 +5,7 @@ use std::mem;
 
 use mokly_catalogue::preparation::PreparedCatalogue;
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::Fragment;
 use crate::marker_syntax::{Marker, parse, required};
@@ -23,7 +24,7 @@ pub(crate) fn attach(
     fragment_validation::placements(&nodes, fragment)?;
     if ids.len() != fragment.markers.len() {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "an authenticated fragment marker was not consumed",
         ));
     }
@@ -53,16 +54,16 @@ fn siblings(
                         .or(inherited),
                 )?;
                 if !ids.insert(marker.id.clone()) {
-                    return Err(invalid("build-invalid", "duplicate fragment marker id"));
+                    return Err(invalid(Code::BuildInvalid, "duplicate fragment marker id"));
                 }
                 stack.push((marker, Vec::new()));
             } else {
                 let Some((start, mut children)) = stack.pop() else {
-                    return Err(invalid("build-invalid", "unmatched fragment marker"));
+                    return Err(invalid(Code::BuildInvalid, "unmatched fragment marker"));
                 };
                 if start.id != marker.id || start.kind != marker.kind {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         "crossing or reordered fragment markers",
                     ));
                 }
@@ -75,14 +76,14 @@ fn siblings(
                             .find(|instance| instance.key == key)
                             .ok_or_else(|| {
                                 invalid(
-                                    "build-invalid",
+                                    Code::BuildInvalid,
                                     "instance marker has no authenticated input record",
                                 )
                             })?;
                         if required(&start, "path")? != instance.component_id
                             || required(&start, "props")? != instance.props_key
                         {
-                            return Err(invalid("build-invalid", "forged instance marker"));
+                            return Err(invalid(Code::BuildInvalid, "forged instance marker"));
                         }
                         Some(RegionKind::Instance {
                             path: instance.component_id.clone(),
@@ -102,7 +103,7 @@ fn siblings(
                     }
                     "ignore" => {
                         if !ignore_ids.insert(start.id.clone()) {
-                            return Err(invalid("build-invalid", "duplicate ignore id"));
+                            return Err(invalid(Code::BuildInvalid, "duplicate ignore id"));
                         }
                         Some(RegionKind::Ignore {
                             id: start.id.clone(),
@@ -119,7 +120,7 @@ fn siblings(
                         control_roots::mark(&mut children, target, fragment)?;
                         None
                     }
-                    _ => return Err(invalid("build-invalid", "unknown fragment marker")),
+                    _ => return Err(invalid(Code::BuildInvalid, "unknown fragment marker")),
                 };
                 let nodes = if let Some(kind) = kind {
                     vec![Node::Region {
@@ -161,7 +162,7 @@ fn siblings(
     }
     if !stack.is_empty() {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "fragment marker does not close under one parent",
         ));
     }

@@ -204,7 +204,10 @@ impl Checker<'_> {
                     } else {
                         WarningSubject::Entry(self.path.into())
                     },
-                    message: format!("component element {name} is moved out of a table"),
+                    message: format!(
+                        "component element {name} is moved out of <{}> by HTML parsing",
+                        self.stack.last().map_or("table", String::as_str)
+                    ),
                 });
             }
         }

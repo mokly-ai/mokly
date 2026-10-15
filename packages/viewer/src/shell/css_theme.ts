@@ -59,7 +59,7 @@ const DARK_ROLES = `
  * sees a light first paint and no script decides the appearance. An explicit
  * choice wins over the system in either direction, and both rules select the
  * root that states the appearance, never the host document.
- * Standalone Auto depends on `appearance-startup.js` restoring the root mark;
+ * The standalone browser entry restores the root mark before its first render;
  * embedded roots receive that mark from their React `theme` prop instead.
  */
 export const SHELL_THEME_CSS = `
@@ -68,4 +68,16 @@ export const SHELL_THEME_CSS = `
 }
 
 :root[data-mokly-theme="dark"] {${DARK_ROLES}}
+`;
+
+/**
+ * The stub before the bundle runs: its root states no appearance yet, so the
+ * standalone stylesheet gives it Auto through the system preference. Only the
+ * standalone stylesheet carries this rule; an embedded root always states its
+ * appearance, and the embedded stylesheet never receives the rule.
+ */
+export const STANDALONE_STUB_THEME_CSS = `
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mokly-theme]) {${DARK_ROLES}  }
+}
 `;

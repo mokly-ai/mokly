@@ -25,6 +25,10 @@ pub enum Destination {
 pub trait LinkResolver: Send + Sync {
     /// Check and classify one decoded source destination.
     fn resolve(&self, destination: &str) -> Result<Destination>;
+    /// Resolve with the source-relative byte position of the authored link.
+    fn resolve_at(&self, destination: &str, _offset: usize) -> Result<Destination> {
+        self.resolve(destination)
+    }
 }
 
 /// Render one Markdown document with its owned template and inline stylesheet.
@@ -34,11 +38,10 @@ pub fn render(
     scheme: ColorScheme,
     resolver: &dyn LinkResolver,
 ) -> Result<Vec<Node>> {
-    let options = Options::ENABLE_TABLES
-        | Options::ENABLE_STRIKETHROUGH
-        | Options::ENABLE_TASKLISTS
-        | Options::ENABLE_GFM;
-    let events: Vec<_> = Parser::new_ext(body, options).collect();
+    let options =
+        Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH | Options::ENABLE_TASKLISTS;
+    let (events, spans): (Vec<_>, Vec<_>) =
+        Parser::new_ext(body, options).into_offset_iter().unzip();
     let mut rewritten = Vec::new();
     let mut ids = BTreeSet::new();
     let mut links = Vec::new();
@@ -112,7 +115,7 @@ pub fn render(
                 id,
             }) => {
                 let image = matches!(&events[index], Event::Start(Tag::Image { .. }));
-                let destination = resolver.resolve(&dest_url)?;
+                let destination = resolver.resolve_at(&dest_url, spans[index].start)?;
                 let logical = matches!(destination, Destination::Logical(_));
                 let destination = match destination {
                     Destination::Logical(url) | Destination::Url(url) => Some(CowStr::from(url)),

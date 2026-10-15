@@ -13,7 +13,7 @@ const root = path.resolve(import.meta.dirname, "..");
 test("viewer discovery includes tooling and viewer tests in sorted order", async () => {
   const files = await discoverNodeFiles(root);
   assert.ok(files.includes("tests/verification_evidence.test.ts"));
-  assert.ok(files.includes("packages/viewer/tests/server.test.tsx"));
+  assert.ok(files.includes("packages/viewer/tests/nav_rows_render.test.tsx"));
   assert.ok(files.every((file) => /\.test\.tsx?$/.test(file)));
   assert.deepEqual(files, [...new Set(files)].sort());
 });

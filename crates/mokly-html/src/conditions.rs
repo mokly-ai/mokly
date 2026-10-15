@@ -6,6 +6,7 @@ use mokly_model::data::DataValue;
 use mokly_model::prop_schema::{JsonType, Types};
 
 use crate::context::Context;
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::props::{schema_at, substitute, value_at};
 use crate::tree::Element;
@@ -14,7 +15,7 @@ pub(crate) fn visible(element: &mut Element, context: &Context, viewport: &str) 
     if let Some(value) = element.take("mokly-viewport") {
         if !matches!(value.as_str(), "mobile" | "desktop") {
             return Err(invalid(
-                "html-attribute",
+                Code::HtmlAttribute,
                 "mokly-viewport must be mobile or desktop",
             ));
         }
@@ -23,14 +24,17 @@ pub(crate) fn visible(element: &mut Element, context: &Context, viewport: &str) 
         }
     }
     if let Some(value) = element.take("mokly-if") {
-        let name = value
-            .strip_prefix('$')
-            .ok_or_else(|| invalid("html-props", "mokly-if must name a declared boolean prop"))?;
+        let name = value.strip_prefix('$').ok_or_else(|| {
+            invalid(
+                Code::HtmlProps,
+                "mokly-if must name a declared boolean prop",
+            )
+        })?;
         let schema = schema_at(&context.schema, name)
-            .ok_or_else(|| invalid("html-props", format!("undeclared prop reference {name}")))?;
+            .ok_or_else(|| invalid(Code::HtmlProps, format!("undeclared prop reference {name}")))?;
         if !matches!(schema.types, Some(Types::Single(JsonType::Boolean))) {
             return Err(invalid(
-                "html-props",
+                Code::HtmlProps,
                 format!("mokly-if {value:?} must name a declared boolean prop"),
             ));
         }
@@ -65,7 +69,7 @@ pub(crate) fn attribute_value(value: &str, context: &Context) -> Result<Option<S
         let name = name.trim_ascii();
         if schema_at(&context.schema, name).is_none() {
             return Err(invalid(
-                "html-props",
+                Code::HtmlProps,
                 format!("undeclared prop reference {name}"),
             ));
         }

@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 
 use mokly_model::usage::{ComponentRangeRecord, ComponentRangeTarget};
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Node, RegionKind};
 
@@ -19,7 +20,10 @@ fn ignores(nodes: &[Node], active: bool, ids: &mut BTreeSet<String>) -> Result<(
                 if let RegionKind::Ignore { id, .. } = &region.kind
                     && !ids.insert(id.clone())
                 {
-                    return Err(invalid("html-element", format!("duplicate ignore id {id}")));
+                    return Err(invalid(
+                        Code::HtmlElement,
+                        format!("duplicate ignore id {id}"),
+                    ));
                 }
                 if active
                     && matches!(
@@ -28,7 +32,7 @@ fn ignores(nodes: &[Node], active: bool, ids: &mut BTreeSet<String>) -> Result<(
                     )
                 {
                     return Err(invalid(
-                        "html-element",
+                        Code::HtmlElement,
                         "an ignore region cannot enclose an instance or slot boundary",
                     ));
                 }

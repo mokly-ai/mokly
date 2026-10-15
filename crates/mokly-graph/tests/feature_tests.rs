@@ -56,52 +56,59 @@ fn component_links_use_their_definition_base_while_slots_keep_the_supplier_base(
 
 #[test]
 fn directly_forwarded_slots_keep_the_original_owner_and_input_scope() {
-    let directory = fixture(&[
-        (
-            "specs/home.screen.html",
-            "---\ntitle: Home\n---\n<ui-forward><ui-leaf label=\"Inside\"></ui-leaf></ui-forward>",
-        ),
-        (
-            "specs/forward.component.html",
-            "---\ntitle: Forward\nelement: ui-forward\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\n---\n<ui-middle><slot></slot></ui-middle>",
-        ),
-        (
-            "specs/middle.component.html",
-            "---\ntitle: Middle\nelement: ui-middle\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\n---\n<aside><slot></slot></aside>",
-        ),
-        (
-            "specs/leaf.component.html",
-            "---\ntitle: Leaf\nelement: ui-leaf\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Saved}\n---\n<em>{{label}}</em>",
-        ),
-    ]);
-    let (generation, _) = support::prepare(directory.path(), 2 * 1024 * 1024, 1);
-    let document = generation
-        .unwrap()
-        .render("home/index.mobile.html")
-        .unwrap();
-    let CatalogueUsage::Ready {
-        instances, slots, ..
-    } = &document.document.as_ref().unwrap().usage
-    else {
-        panic!("usage not ready")
-    };
-    assert_eq!(instances.len(), 3);
-    assert_eq!(slots.len(), 2);
-    let forwarded = slots
-        .iter()
-        .find(|slot| slot.source_slot_key.is_some())
-        .unwrap();
-    let original = slots
-        .iter()
-        .find(|slot| Some(&slot.key) == forwarded.source_slot_key.as_ref())
-        .unwrap();
-    assert!(matches!(forwarded.owner, ComponentInputOwner::Entry));
-    let leaf = instances
-        .iter()
-        .find(|instance| instance.component_id == "leaf")
-        .unwrap();
-    assert_eq!(leaf.slot_key.as_deref(), Some(original.key.as_str()));
-    assert!(matches!(leaf.owner, ComponentInputOwner::Entry));
+    for forwarding in [
+        "<ui-middle><slot></slot></ui-middle>",
+        "<ui-middle>\n  <!-- formatting -->\n  <slot></slot>\n</ui-middle>",
+    ] {
+        let directory = fixture(&[
+            (
+                "specs/home.screen.html",
+                "---\ntitle: Home\n---\n<ui-forward><ui-leaf label=\"Inside\"></ui-leaf></ui-forward>",
+            ),
+            (
+                "specs/forward.component.html",
+                &format!(
+                    "---\ntitle: Forward\nelement: ui-forward\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\nslots: [children]\n---\n{forwarding}"
+                ),
+            ),
+            (
+                "specs/middle.component.html",
+                "---\ntitle: Middle\nelement: ui-middle\npropSchema: {type: object, additionalProperties: false, properties: {}}\nslots: [children]\n---\n<aside><slot></slot></aside>",
+            ),
+            (
+                "specs/leaf.component.html",
+                "---\ntitle: Leaf\nelement: ui-leaf\npropSchema: {type: object, additionalProperties: false, required: [label], properties: {label: {type: string}}}\nprops: {label: Saved}\n---\n<em>{{label}}</em>",
+            ),
+        ]);
+        let (generation, _) = support::prepare(directory.path(), 2 * 1024 * 1024, 1);
+        let document = generation
+            .unwrap()
+            .render("home/index.mobile.html")
+            .unwrap();
+        let CatalogueUsage::Ready {
+            instances, slots, ..
+        } = &document.document.as_ref().unwrap().usage
+        else {
+            panic!("usage not ready")
+        };
+        assert_eq!(instances.len(), 3);
+        assert_eq!(slots.len(), 2);
+        let forwarded = slots
+            .iter()
+            .find(|slot| slot.source_slot_key.is_some())
+            .unwrap();
+        let original = slots
+            .iter()
+            .find(|slot| Some(&slot.key) == forwarded.source_slot_key.as_ref())
+            .unwrap();
+        assert!(matches!(forwarded.owner, ComponentInputOwner::Entry));
+        let leaf = instances
+            .iter()
+            .find(|instance| instance.component_id == "leaf")
+            .unwrap();
+        assert_eq!(leaf.slot_key.as_deref(), Some(original.key.as_str()));
+        assert!(matches!(leaf.owner, ComponentInputOwner::Entry));
+    }
 }
 
 #[test]

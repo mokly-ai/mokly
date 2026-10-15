@@ -220,14 +220,14 @@ scrollable region scrolls internally:
   `aria-describedby`; the dot stays distinct from selection and draws no rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
   40px gap that stack from the top below 760px, internal `overflow: auto`,
+  safe centring (a row or frame wider than the stage starts at its left edge),
   `MOBILE` / `DESKTOP` uppercase frame labels, and no toolbar above the grid.
 - **Details inspector** — the shared icon footer opens the chosen tab in place;
   closing it leaves no icon selected. Desktop uses a centered grip on the divider
   and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style
   grabber. The footer owns that sheet's surface and shadow while its dock owns
   placement and height. Only panel content scrolls within the bounded workspace.
-  Details contains a two-column
-  body (`1.35fr / 1fr`) with description and
+  Details contains a two-column body (`1.35fr / 1fr`) with description and
   `Why this screen —` rationale on the left and uppercase-labelled metadata
   rows (Source, Moved from, Schemes, Changed views, Tags, Related docs,
   Dependencies, Used by) on the right. Paths render as monospace chips; use

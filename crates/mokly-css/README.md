@@ -34,7 +34,9 @@ CSS inputs by their authored paths.
 
 `modules::scope` returns CSS and sorted class exports from one naming rule:
 `mokly_{first-12-SHA256-path-digits}_{local}`. The map is suitable for the
-sidecar's CSS Modules table. Plain CSS has no map.
+sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
+retain their values. An independent token check rejects scoping that changes
+anything beyond local names and the module scope/composition syntax.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration

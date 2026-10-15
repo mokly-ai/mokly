@@ -27,7 +27,7 @@ sidecar, and the authoring API. It lists the five `@mokly/native-<target>`
 packages as exact optional dependencies and has React and React DOM peer
 dependencies for React authoring only. It does not depend on React Native,
 React Native Web, consumer applications, or their workspace layouts. The
-sidecar resolves React from the consumer's configuration file and bundles every
+sidecar resolves React from the side's configuration directory through its module resolution settings and bundles every
 JavaScript authoring input into one graph, so component trees use one React
 runtime.
 

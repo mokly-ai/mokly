@@ -120,7 +120,12 @@ Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`, module
 resolution package roots, and local stylesheet paths) are config-relative.
 `roots[].files` globs are relative to their root; `watch.rules[].paths` are
 repository-relative POSIX globs; a stylesheet `match` matches catalogue
-routes. HTTP(S) stylesheet URLs are allowed. `colorSchemes` is a non-empty,
+entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs:
+`*` does not cross `/`, and `**` can cross directories. Stylesheet matchers use
+`globset` brace alternatives and character classes directly, with backslash
+escaping disabled. Root-file validation and expansion apply to `roots[].files`.
+Stylesheet matchers compile once per generation; the first matching rule applies.
+HTTP(S) stylesheet URLs are allowed. `colorSchemes` is a non-empty,
 duplicate-free subset of `"light" | "dark"` that must include `"light"`; it
 defaults to `["light"]` and normalizes to light-first order.
 

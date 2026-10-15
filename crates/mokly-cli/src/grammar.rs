@@ -43,6 +43,9 @@ pub struct Common {
     /// Sidecar count; defaults to MOKLY_SIDECARS or the core count.
     #[arg(long, value_parser = positive)]
     pub sidecars: Option<usize>,
+    /// Validated environment override for every sidecar request deadline.
+    #[arg(skip)]
+    pub sidecar_timeout_ms: Option<u64>,
     /// Write timing JSON to stderr and select plain output.
     #[arg(long, global = true)]
     pub debug_timings: bool,

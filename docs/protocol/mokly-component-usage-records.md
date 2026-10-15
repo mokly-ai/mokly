@@ -146,6 +146,8 @@ mobile/light, mobile/dark, desktop/light, desktop/dark. A view with no
 instances has an explicit empty record. In the entry detail a view's `usage`
 is `ready`, `pending`, or `unavailable` and never omitted.
 
-Readers reject unknown fields, invalid hashes, missing references, cycles,
-incorrect ordering, duplicate records, invalid source locations, and owners
-absent from the view.
+The core's readers reject unknown fields, invalid hashes, missing
+references, cycles, incorrect ordering, duplicate records, invalid source
+locations, and owners absent from the view. The viewer's readers apply the
+same rules but ignore unknown fields, under the
+[serialization contract](./mokly-catalogue-serialization.md#versions).

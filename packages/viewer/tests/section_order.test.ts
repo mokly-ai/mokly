@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import test from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
+import { readCatalogueIndex } from "../src/catalogue/index_reader.js";
 import { projectTree } from "../src/catalogue/tree.js";
 import {
   analyzeHierarchy,
@@ -11,6 +10,8 @@ import {
 import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import { adoptCatalogueTree } from "../src/viewer/catalogue_tree.js";
+
+import { rawIndexFixture } from "./catalogue_v7_fixture.js";
 
 const entry = (path: string, kind: string, title: string): ManifestEntry =>
   ({ path, kind, title }) as ManifestEntry;
@@ -116,26 +117,17 @@ test("the public tree carries each order so the viewer sorts sections as Serve d
 });
 
 test("the public reader keeps valid folder orders and rejects repeated names", () => {
-  const model = JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  );
-  const folder = model.tree.find(
-    (node: { kind: string }) => node.kind === "folder",
-  );
+  const model = rawIndexFixture();
+  const folder = model.tree.find((node) => node.kind === "folder");
+  assert.ok(folder);
   folder.order = ["...", "browse"];
-  model.treeOrder = [folder.path.split("/").at(-1), "..."];
-  const read = readCatalogue(model);
+  model.treeOrder = [folder.path.split("/").at(-1)!, "..."];
+  const read = readCatalogueIndex(model);
   assert.deepEqual(read.treeOrder, model.treeOrder);
   assert.deepEqual(read.tree.find((node) => node.path === folder.path)?.order, [
     "...",
     "browse",
   ]);
   folder.order = ["browse", "browse"];
-  assert.throws(() => readCatalogue(model), /order/);
+  assert.throws(() => readCatalogueIndex(model), /order/);
 });

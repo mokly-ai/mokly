@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
-import type { StaticDelivery } from "../packages/viewer/dist/navigation/delivery.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
 import {
   advertisedPreviewPaths,
   previewEndpoint,
+  type PreviewDelivery,
 } from "../packages/viewer/dist/previews/request.js";
 import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.js";
 
@@ -14,12 +14,7 @@ const GENERATION = "b".repeat(64);
 const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
 const BASE = "https://catalogue.test/view/archive/removed/";
 
-const delivery: StaticDelivery = {
-  schemaVersion: 5,
-  deploymentId: "c".repeat(64),
-  canonicalPath: "/view/archive/removed/",
-  comparisonUrl: COMPARISON,
-};
+const delivery: PreviewDelivery = { comparisonUrl: COMPARISON };
 
 const removedPage: RemovedPreviewData = {
   path: "removed-page",

@@ -6,6 +6,7 @@ use mokly_model::material::{instance_key, slot_key};
 use mokly_model::usage::{ComponentInputOwner, ComponentInstanceRecord, ComponentSlotRecord};
 
 use crate::context::Context;
+use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid};
 use crate::tree::{Node, RegionKind};
 
@@ -54,13 +55,13 @@ pub(crate) fn rebase(
     }
     if instance_keys.len() != instances.len() || slot_keys.len() != slots.len() {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "fragment input scope contains a cycle",
         ));
     }
     for instance in instances {
         instance.owner = owner(&instance.owner, &instance_keys, context)
-            .ok_or_else(|| invalid("build-invalid", "unknown fragment owner"))?;
+            .ok_or_else(|| invalid(Code::BuildInvalid, "unknown fragment owner"))?;
         instance.slot_key = instance
             .slot_key
             .as_ref()
@@ -69,7 +70,7 @@ pub(crate) fn rebase(
     }
     for slot in slots {
         slot.owner = owner(&slot.owner, &instance_keys, context)
-            .ok_or_else(|| invalid("build-invalid", "unknown fragment slot owner"))?;
+            .ok_or_else(|| invalid(Code::BuildInvalid, "unknown fragment slot owner"))?;
         slot.instance_key = instance_keys[&slot.instance_key].clone();
         slot.key = slot_keys[&slot.key].clone();
         slot.source_slot_key = slot

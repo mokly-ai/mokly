@@ -9,8 +9,6 @@ const entry = (name, condition = "import") => ({
 });
 const VIEWER_EXPORTS = {
   ".": entry("index"),
-  "./server": entry("server", "node"),
-  "./runtime": entry("runtime"),
   "./browser": entry("browser"),
   "./data": entry("data"),
   "./styles.css": "./dist/styles.css",

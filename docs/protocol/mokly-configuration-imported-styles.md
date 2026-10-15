@@ -37,8 +37,10 @@ head as owned style elements under the
 `postcss` optionally names a config-relative local module inside `repoRoot`.
 The core inventories its local imports as watched stylesheet inputs. The
 module runs in the sidecar's `processCss` call, in a fresh isolated module
-context per bundle generation, with consumer plugin packages loaded unbundled
-from the consumer's `node_modules`. PostCSS 8-compatible arrays include
+context per explicit PostCSS context id, with consumer plugin packages loaded unbundled
+from the side's selected `node_modules`. Requests carry the source root,
+repository roots, and resolution settings. Repository-owned presets use the
+side's mapped source copy; installed plugin packages remain unbundled. PostCSS 8-compatible arrays include
 instances, uncalled creators, plain functions and `{ postcss: fn }` objects;
 ordered package-name records are also accepted. ESM imports and CommonJS
 `require()` use their respective Node resolution conditions. The call returns
@@ -58,6 +60,9 @@ extension is rejected at config validation because it would emit an
 undelivered sibling stylesheet; rename the input to `.css` or use a
 JavaScript-safe loader. Local configured stylesheet paths and PostCSS inputs
 are protected authored sources: they are never served as files, and they
-cannot resolve outside `repoRoot`, including through symlink aliases.
+cannot escape their side's source root through symlinks. Package CSS and
+JavaScript inside selected dependency roots are also allowed under the
+[sidecar module rules](./mokly-sidecar-modules.md), with stable dependency
+names and no catalogue source attribution.
 Authored public CSS enters a document only through the
 [referenced asset closure](./mokly-public-closure.md).

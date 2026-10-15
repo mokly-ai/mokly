@@ -27,7 +27,6 @@ function context(changedEntries: readonly string[]): ShellContext {
     base: "main",
     changedEntries,
     changesStatus: "ready",
-    updateVersion: 1,
   };
 }
 

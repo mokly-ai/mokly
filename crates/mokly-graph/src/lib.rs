@@ -27,6 +27,7 @@ mod planning;
 mod rendering;
 mod resource_edges;
 mod resource_keys;
+mod routing_inputs;
 mod session;
 mod styles;
 mod validation;
@@ -42,4 +43,10 @@ mod cache_tests;
 mod resource_access;
 
 mod closure_prefetch;
+#[cfg(test)]
+#[path = "_tests_/rendering_tests.rs"]
+mod rendering_tests;
 pub mod resource_reach;
+#[cfg(test)]
+#[path = "_tests_/snapshot_tests.rs"]
+mod snapshot_tests;

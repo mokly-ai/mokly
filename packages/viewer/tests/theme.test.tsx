@@ -1,18 +1,11 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
 import { embeddedStyles } from "../scripts/styles.mjs";
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { SHELL_CSS } from "../src/shell/css.js";
-import {
-  viewerCatalogue,
-  viewerContext,
-  viewerView,
-} from "../src/viewer/projection.js";
-import { defaultSelection } from "../src/viewer/selection.js";
-import { renderViewer } from "../src/viewer/server.js";
 import { VIEWER_CSS } from "../src/viewer/styles.js";
+
+import { embeddedMarkup } from "./presentation_v7_helpers.js";
 
 /** Exactly what a host receives, scoped away from its own document. */
 const EMBEDDED_CSS: string = embeddedStyles(SHELL_CSS, VIEWER_CSS);
@@ -22,25 +15,8 @@ const ACCENT_OVERRIDES = new Map([
   ["--mokly-accent-soft", "--_mokly-private-accent-soft-default"],
 ]);
 
-const fixture = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-
 function render(theme?: "auto" | "light" | "dark"): string {
-  return renderViewer({
-    viewerId: "theme-test",
-    catalogue: fixture,
-    baseUrl: "https://catalogue.example",
-    ...(theme ? { theme } : {}),
-  });
+  return embeddedMarkup(theme ? { theme } : {});
 }
 
 test("an explicit theme is present in the initial markup", () => {
@@ -59,41 +35,12 @@ test("an omitted theme renders Auto, without guessing a scheme", () => {
 });
 
 test("theme is independent of the preview colour scheme", () => {
-  const html = renderViewer({
-    viewerId: "theme-test",
-    catalogue: fixture,
-    baseUrl: "https://catalogue.example",
+  const html = embeddedMarkup({
     theme: "dark",
     defaultSelection: { colorScheme: "light" },
   });
   assert.match(html, /data-mokly-theme="dark"/);
   assert.match(html, /data-mokly-color-scheme="light"/);
-});
-
-test("a full-document render applies the theme prop over its host context", () => {
-  const catalogue = viewerCatalogue(fixture);
-  const context = {
-    ...viewerContext(fixture, defaultSelection),
-    embedded: false,
-    theme: "light" as const,
-  };
-  const host = {
-    schemaVersion: 1 as const,
-    catalogue,
-    context,
-    view: viewerView(catalogue, defaultSelection),
-  };
-  const props = {
-    viewerId: "theme-test",
-    catalogue: fixture,
-    baseUrl: "https://catalogue.example",
-  };
-
-  assert.match(
-    renderViewer({ ...props, theme: "dark" }, host),
-    /data-mokly-theme="dark"/,
-  );
-  assert.match(renderViewer(props, host), /data-mokly-theme="light"/);
 });
 
 test("Auto resolves through CSS, so no script decides the appearance", () => {

@@ -3,6 +3,8 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::usage::{InstanceDraft, SlotDraft};
+
 /// Package version reported during hello.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
@@ -56,6 +58,10 @@ pub struct Render {
     pub styles: Vec<String>,
     /// Repository-relative non-CSS public resource seeds.
     pub resources: Vec<String>,
+    /// Instance placements for core validation and usage construction.
+    pub instances: Vec<InstanceDraft>,
+    /// Supplied slots and their physical placements.
+    pub slots: Vec<SlotDraft>,
     /// Nonfatal render diagnostics.
     pub warnings: Vec<Warning>,
 }
@@ -91,6 +97,14 @@ pub struct Dependency {
     pub kind: DependencyKind,
     /// Source path.
     pub path: String,
+    /// Plugin name used in dependency diagnostics.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub plugin: Option<String>,
+    /// Directory-relative matching pattern, absent for an explicit file.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub glob: Option<String>,
 }
 
 /// Consumer PostCSS result.

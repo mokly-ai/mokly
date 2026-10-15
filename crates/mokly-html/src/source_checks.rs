@@ -2,6 +2,7 @@
 
 use html5gum::{DefaultEmitter, Error, Token, Tokenizer};
 
+use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 
 /// Reject reserved authored metadata before HTML5 parsing removes duplicates.
@@ -17,7 +18,7 @@ pub fn validate(source: &str, fragment_markers: bool) -> Result<()> {
                 }) =>
             {
                 return Err(invalid(
-                    "build-invalid",
+                    Code::BuildInvalid,
                     "reserved navigation metadata in consumer output",
                 ));
             }
@@ -33,18 +34,10 @@ pub fn validate(source: &str, fragment_markers: bool) -> Result<()> {
                     || fragment_markers
                 {
                     return Err(invalid(
-                        "build-invalid",
+                        Code::BuildInvalid,
                         format!("duplicate navigation attribute {name}"),
                     ));
                 }
-            }
-            Token::Comment(comment)
-                if !fragment_markers && comment.value.starts_with(b"mokly-") =>
-            {
-                return Err(invalid(
-                    "html-element",
-                    "the mokly- comment prefix is reserved",
-                ));
             }
             _ => {}
         }
@@ -73,7 +66,7 @@ pub fn page(source: &str) -> Result<()> {
         || counts != [1, 1, 1]
     {
         return Err(invalid(
-            "html-element",
+            Code::HtmlElement,
             "page must start with <!doctype html> and contain one html, head and body element",
         ));
     }

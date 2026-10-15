@@ -31,6 +31,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
         subject: WarningSubject::Entry("base".into()),
         message: "fallback".into(),
     };
+    let (graphs, _guards) = graphs(vec![head.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
         config: Arc::new(Unimock::new(
             ConfigLoaderMock::load
@@ -42,7 +43,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
                 .next_call(matching!(_, _))
                 .returns(Ok(prepared(vec![head.clone()]))),
         )),
-        graphs: graphs(vec![head.clone()]),
+        graphs,
         changes: Arc::new(Unimock::new(
             ChangesServiceMock::classify
                 .next_call(matching!(_, _, _))
@@ -71,6 +72,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
 
 #[test]
 fn an_invalid_internal_review_is_a_fatal_build_error() {
+    let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
         config: Arc::new(Unimock::new(
             ConfigLoaderMock::load
@@ -82,7 +84,7 @@ fn an_invalid_internal_review_is_a_fatal_build_error() {
                 .next_call(matching!(_, _))
                 .returns(Ok(prepared(Vec::new()))),
         )),
-        graphs: graphs(Vec::new()),
+        graphs,
         changes: Arc::new(Unimock::new(
             ChangesServiceMock::classify
                 .next_call(matching!(_, _, _))

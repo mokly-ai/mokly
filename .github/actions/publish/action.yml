@@ -57,8 +57,9 @@ runs:
         const expected = cli.dependencies?.["@mokly/viewer"];
         if (expected !== undefined) {
           assert.match(expected, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
-          const require = createRequire(cliPath);
-          const viewer = JSON.parse(fs.readFileSync(path.join(path.dirname(require.resolve("@mokly/viewer/server")), "../package.json"), "utf8"));
+          const directory = createRequire(cliPath).resolve.paths("@mokly/viewer")?.find(candidate => fs.existsSync(path.join(candidate, "@mokly/viewer/package.json")));
+          assert.ok(directory, "@mokly/viewer is not installed");
+          const viewer = JSON.parse(fs.readFileSync(path.join(directory, "@mokly/viewer/package.json"), "utf8"));
           assert.equal(viewer.name, "@mokly/viewer");
           assert.equal(viewer.version, expected);
         }

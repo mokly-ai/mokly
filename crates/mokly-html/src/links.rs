@@ -3,13 +3,15 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::{ColorScheme, Viewport};
-use mokly_model::catalogue::{EntryContent, ModelEntry};
+use mokly_model::catalogue::ModelEntry;
 use mokly_model::paths::is_entry_path;
 use mokly_model::routes;
 use unicode_general_category::{GeneralCategory, get_general_category};
 
+use crate::diagnostic_code::Code;
 use crate::error;
 use crate::error::{Result, invalid};
+use crate::link_destination;
 use crate::link_targets::{first_base, request_target};
 use crate::tree::Node;
 
@@ -58,7 +60,7 @@ pub fn rewrite(
     };
     if active && first_base(nodes, "href").is_some() {
         return Err(invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "a document with an activatable catalogue link cannot contain <base href>",
         ));
     }
@@ -92,89 +94,121 @@ fn walk(
         match node {
             Node::Region { children, .. } => active |= walk(children, context, references)?,
             Node::Element(element) => {
-                if element.get("data-mokly-link").is_some() {
-                    return Err(invalid(
-                        "build-invalid",
-                        "data-mokly-link is reserved for Mokly",
-                    ));
-                }
-                element.take("data-mokly-target");
-                let mut destination = None;
-                for attribute in ["href", "data-nav-href"] {
-                    if let Some(logical) = element
-                        .get(attribute)
-                        .and_then(|value| value.strip_prefix("mock:"))
-                        .map(str::to_owned)
-                    {
-                        if attribute == "href"
-                            && !((element.is_html()
-                                && matches!(element.name.as_str(), "a" | "area"))
-                                || (element.namespace == "http://www.w3.org/2000/svg"
-                                    && element.name == "a"))
+                let location = element
+                    .source
+                    .clone()
+                    .unwrap_or_else(|| source.metadata.source.clone());
+                let result = (|| -> Result<bool> {
+                    if element.get("data-mokly-link").is_some() {
+                        return Err(invalid(
+                            Code::BuildInvalid,
+                            "data-mokly-link is reserved for Mokly",
+                        ));
+                    }
+                    element.take("data-mokly-target");
+                    let mut destination = None;
+                    for attribute in ["href", "data-nav-href"] {
+                        if let Some(logical) = element
+                            .get(attribute)
+                            .and_then(|value| value.strip_prefix("mock:"))
+                            .map(str::to_owned)
                         {
-                            return Err(invalid(
-                                "build-invalid",
-                                format!("logical href is not allowed on <{}>", element.name),
-                            ));
-                        }
-                        let (path, fragment) = logical
-                            .split_once('#')
-                            .map_or((logical.as_str(), None), |(path, fragment)| {
-                                (path, Some(fragment))
+                            if attribute == "href"
+                                && !((element.is_html()
+                                    && matches!(element.name.as_str(), "a" | "area"))
+                                    || (element.namespace == "http://www.w3.org/2000/svg"
+                                        && element.name == "a"))
+                            {
+                                return Err(invalid(
+                                    Code::BuildInvalid,
+                                    format!("logical href is not allowed on <{}>", element.name),
+                                ));
+                            }
+                            let (path, fragment) = logical
+                                .split_once('#')
+                                .map_or((logical.as_str(), None), |(path, fragment)| {
+                                    (path, Some(fragment))
+                                });
+                            if fragment.is_some_and(|fragment| !valid_fragment(fragment)) {
+                                return Err(invalid(
+                                    Code::BuildInvalid,
+                                    format!("invalid logical fragment in mock:{logical}"),
+                                ));
+                            }
+                            let path = resolve_path(path, source, entries)?;
+                            let complete = format!(
+                                "{path}{}",
+                                fragment.map_or(String::new(), |f| format!("#{f}"))
+                            );
+                            if destination.as_ref().is_some_and(|other| other != &complete) {
+                                return Err(invalid(
+                                    Code::BuildInvalid,
+                                    "conflicting logical navigation destinations",
+                                ));
+                            }
+                            destination = Some(complete.clone());
+                            let target =
+                                entries.get(&path.to_ascii_lowercase()).ok_or_else(|| {
+                                    invalid(
+                                        Code::UnknownLinkTarget,
+                                        format!("link target {path} does not exist"),
+                                    )
+                                })?;
+                            let target_route =
+                                link_destination::route(target, entries, viewport, scheme)?;
+                            let href = routes::relative(route, &target_route)
+                                + &fragment
+                                    .map_or(String::new(), |f| format!("#{}", routes::encode(f)));
+                            element.set(attribute, href);
+                            references.push(Reference {
+                                source_route: route.into(),
+                                target: path,
+                                fragment: fragment.map(str::to_owned),
                             });
-                        if fragment.is_some_and(|fragment| !valid_fragment(fragment)) {
-                            return Err(invalid(
-                                "build-invalid",
-                                format!("invalid logical fragment in mock:{logical}"),
-                            ));
-                        }
-                        let path = resolve_path(path, source, entries)?;
-                        let complete = format!(
-                            "{path}{}",
-                            fragment.map_or(String::new(), |f| format!("#{f}"))
-                        );
-                        if destination.as_ref().is_some_and(|other| other != &complete) {
-                            return Err(invalid(
-                                "build-invalid",
-                                "conflicting logical navigation destinations",
-                            ));
-                        }
-                        destination = Some(complete.clone());
-                        let target = entries.get(&path.to_ascii_lowercase()).ok_or_else(|| {
-                            invalid(
-                                "unknown-link-target",
-                                format!("unknown catalogue target {path}"),
-                            )
-                        })?;
-                        let target_route = destination_route(target, entries, viewport, scheme)?;
-                        let href = routes::relative(route, &target_route)
-                            + &fragment
-                                .map_or(String::new(), |f| format!("#{}", routes::encode(f)));
-                        element.set(attribute, href);
-                        references.push(Reference {
-                            source_route: route.into(),
-                            target: path,
-                            fragment: fragment.map(str::to_owned),
-                        });
-                        element.navigation = references.last().cloned();
-                        if attribute == "href" {
-                            active = true;
-                            element.set("data-mokly-link", complete);
-                            if let Some(target) = element.get("target").or(base_target) {
-                                let target = request_target(target)?;
-                                if let Some(target) = target {
-                                    element.set("data-mokly-target", target);
+                            element.navigation = references.last().cloned();
+                            if attribute == "href" {
+                                active = true;
+                                element.set("data-mokly-link", complete);
+                                if let Some(target) = element.get("target").or(base_target) {
+                                    let target = request_target(target)?;
+                                    if let Some(target) = target {
+                                        element.set("data-mokly-target", target);
+                                    }
                                 }
                             }
                         }
                     }
+                    active |= walk(&mut element.children, context, references)?;
+                    Ok(active)
+                })();
+                match result {
+                    Ok(value) => active |= value,
+                    Err(source) => return Err(source.at(location)),
                 }
-                active |= walk(&mut element.children, context, references)?;
             }
             _ => {}
         }
     }
     Ok(active)
+}
+
+/// Collect only logical destinations that remain on the final browser tree.
+pub fn references(nodes: &[Node]) -> Vec<Reference> {
+    let mut output = Vec::new();
+    let mut pending: Vec<_> = nodes.iter().collect();
+    while let Some(node) = pending.pop() {
+        match node {
+            Node::Element(element) => {
+                if let Some(reference) = &element.navigation {
+                    output.push(reference.clone());
+                }
+                pending.extend(element.children.iter().rev());
+            }
+            Node::Region { children, .. } => pending.extend(children.iter().rev()),
+            _ => {}
+        }
+    }
+    output
 }
 
 fn resolve_path(
@@ -205,7 +239,7 @@ fn resolve_path(
     };
     let path = path.filter(|path| is_entry_path(path)).ok_or_else(|| {
         invalid(
-            "build-invalid",
+            Code::BuildInvalid,
             "logical destination is not a valid catalogue path",
         )
     })?;
@@ -220,52 +254,17 @@ fn resolve_path(
             .is_some_and(|previous| previous.eq_ignore_ascii_case(&path))
     }) {
         return Err(invalid(
-            "moved-link-target",
-            format!("target {path} moved to {}", target.metadata.path),
+            Code::MovedLinkTarget,
+            format!(
+                "link target {path} does not exist; it moved to {}",
+                target.metadata.path
+            ),
         ));
     }
     Err(invalid(
-        "unknown-link-target",
-        format!("unknown catalogue target {path}"),
+        Code::UnknownLinkTarget,
+        format!("link target {path} does not exist"),
     ))
-}
-
-fn destination_route(
-    entry: &ModelEntry,
-    entries: &BTreeMap<String, &ModelEntry>,
-    viewport: Viewport,
-    scheme: ColorScheme,
-) -> Result<String> {
-    let path = &entry.metadata.path;
-    Ok(match &entry.content {
-        EntryContent::Screen { visual, .. } | EntryContent::Component { visual, .. } => {
-            routes::view(
-                path,
-                viewport,
-                if visual.color_schemes.contains(&scheme) {
-                    scheme
-                } else {
-                    ColorScheme::Light
-                },
-            )
-        }
-        EntryContent::Page => routes::document(path, ColorScheme::Light),
-        EntryContent::Document { color_schemes, .. } => routes::document(
-            path,
-            if color_schemes.contains(&scheme) {
-                scheme
-            } else {
-                ColorScheme::Light
-            },
-        ),
-        EntryContent::UseCase { steps } => {
-            let screen = steps
-                .first()
-                .and_then(|step| entries.get(&step.screen_path.to_ascii_lowercase()))
-                .ok_or_else(|| invalid("build-invalid", "use case link has no first screen"))?;
-            destination_route(screen, entries, viewport, scheme)?
-        }
-    })
 }
 
 /// Logical fragment grammar, independent of CSS selector syntax.

@@ -9,7 +9,7 @@ import type {
   ComponentInputOwner,
   ComponentInstanceRecord,
   ComponentViewRecord,
-  ManifestComponent,
+  ComponentSchemaRecord,
 } from "./manifest_types.js";
 import { validateProps } from "./props.js";
 import { validateComponentSource } from "./source.js";
@@ -19,10 +19,7 @@ import { validateViewReferences } from "./view_references.js";
 export function validateComponentViews(
   value: unknown,
   dark: boolean,
-  components: ReadonlyMap<
-    string,
-    Pick<ManifestComponent, "propSchema" | "slots">
-  >,
+  components: ReadonlyMap<string, ComponentSchemaRecord>,
   at: string,
   rootId?: string,
 ): asserts value is readonly ComponentViewRecord[] {
@@ -72,10 +69,7 @@ export function validateComponentViews(
 /** Validate one actual render without asserting completeness of other views. */
 export function validateComponentViewRecord(
   view: ComponentViewRecord,
-  components: ReadonlyMap<
-    string,
-    Pick<ManifestComponent, "propSchema" | "slots">
-  >,
+  components: ReadonlyMap<string, ComponentSchemaRecord>,
   at: string,
   rootId?: string,
   historical = false,

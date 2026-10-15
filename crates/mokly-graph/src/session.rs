@@ -21,7 +21,7 @@ use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::types::{DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan};
-use crate::workers::RenderWorkers;
+use crate::workers::{ArtifactWorker, RenderWorkers};
 use crate::{markdown_links, rendering, route_inventory, styles, validation};
 
 #[derive(Clone)]
@@ -30,6 +30,7 @@ pub(crate) struct Session {
 }
 
 pub(crate) struct State {
+    pub(crate) matchers: styles::Matchers,
     pub(crate) reference_index: Arc<dyn ReferenceIndex>,
     pub(crate) inputs: DeliveryInputs,
     pub(crate) config: ResolvedConfig,
@@ -52,9 +53,11 @@ impl Session {
         resources: BTreeMap<String, ResourcePlan>,
         graph: &Graph,
         policy: Arc<dyn PublicPolicy>,
+        matchers: styles::Matchers,
     ) -> Self {
         Self {
             state: Arc::new(State {
+                matchers,
                 reference_index: Arc::new(MemoryReferenceIndex::default()),
                 inputs: graph.inputs.clone(),
                 config,
@@ -81,59 +84,69 @@ impl Session {
             return Ok(artifact);
         }
         let entry = &self.state.catalogue.model.entries[plan.entry];
-        let mut composed = if matches!(entry.content, EntryContent::Document { .. }) {
-            let resolver = markdown_links::Resolver {
-                tree: self.state.tree.clone(),
-                config: &self.state.config,
-                catalogue: &self.state.catalogue,
-                entry,
-                route,
-                policy: self.state.policy.as_ref(),
-            };
-            rendering::markdown(&self.state.catalogue, entry, plan, &resolver)?
-        } else {
-            match self.state.composer.compose(&ComposeRequest {
-                catalogue: &self.state.catalogue,
-                entry,
-                viewport: plan.viewport.unwrap_or(Viewport::Desktop),
-                color_scheme: plan.color_scheme,
-                stylesheets: plan.stylesheets.clone(),
-            }) {
-                Ok(composed) => composed,
-                Err(source) => {
-                    return Err(GraphError::Html {
-                        source: HtmlError::Route {
-                            route: route.into(),
-                            source: Box::new(source),
-                        },
-                    });
+        let result = (|| -> Result<Arc<Artifact>> {
+            let mut composed = if matches!(entry.content, EntryContent::Document { .. }) {
+                let resolver = markdown_links::Resolver {
+                    tree: self.state.tree.clone(),
+                    config: &self.state.config,
+                    catalogue: &self.state.catalogue,
+                    entry,
+                    route,
+                    policy: self.state.policy.as_ref(),
+                };
+                rendering::markdown(&self.state.catalogue, entry, plan, &resolver)?
+            } else {
+                match self.state.composer.compose(&ComposeRequest {
+                    catalogue: &self.state.catalogue,
+                    entry,
+                    viewport: plan.viewport.unwrap_or(Viewport::Desktop),
+                    color_scheme: plan.color_scheme,
+                    stylesheets: plan.stylesheets.clone(),
+                }) {
+                    Ok(composed) => composed,
+                    Err(source) => {
+                        return Err(GraphError::Html {
+                            source: HtmlError::Route {
+                                route: route.into(),
+                                source: Box::new(source),
+                            },
+                        });
+                    }
                 }
+            };
+            if plan.viewport.is_some() {
+                let parent = entry
+                    .metadata
+                    .variant_of
+                    .as_ref()
+                    .unwrap_or(&entry.metadata.path);
+                let hrefs = styles::links(&styles::LinkInput {
+                    matchers: &self.state.matchers,
+                    config: &self.state.config,
+                    path: &entry.metadata.path,
+                    route,
+                    scheme: plan.color_scheme,
+                    components: &composed.components,
+                    inputs: &self.state.inputs,
+                    resources: &self.state.resources,
+                    module: self
+                        .state
+                        .inputs
+                        .entry_modules
+                        .get(parent)
+                        .map_or(entry.metadata.source.path.as_str(), String::as_str),
+                })?;
+                styles::install(&mut composed.tree, &hrefs);
             }
-        };
-        if plan.viewport.is_some() {
-            let parent = entry
-                .metadata
-                .variant_of
-                .as_ref()
-                .unwrap_or(&entry.metadata.path);
-            let hrefs = styles::links(&styles::LinkInput {
-                config: &self.state.config,
-                path: &entry.metadata.path,
-                route,
-                scheme: plan.color_scheme,
-                components: &composed.components,
-                inputs: &self.state.inputs,
-                resources: &self.state.resources,
-                module: self
-                    .state
-                    .inputs
-                    .entry_modules
-                    .get(parent)
-                    .map_or(entry.metadata.source.path.as_str(), String::as_str),
-            })?;
-            styles::install(&mut composed.tree, &hrefs);
+            rendering::finish(composed, plan, entry, &self.state.catalogue)
+        })();
+        match result {
+            Ok(artifact) => Ok(artifact),
+            Err(source) => Err(GraphError::Document {
+                entry: entry.metadata.path.clone(),
+                source: Box::new(source),
+            }),
         }
-        rendering::finish(composed, plan, entry, &self.state.catalogue.model.entries)
     }
 
     pub(crate) fn walker(&self) -> Walker {
@@ -167,39 +180,10 @@ impl RenderGeneration for Session {
         self.read_resource(route)
     }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
-        let artifact = self.raw(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        if let Err(source) = self
-            .walker()
-            .collect(route, &document.tree, &document.resources)
-        {
-            return Err(GraphError::Attempt {
-                failures: vec![source],
-                warnings: document.warnings.clone(),
-            });
-        }
-        if let Err(source) = validation::links(self, &document.links) {
-            return Err(GraphError::Attempt {
-                failures: vec![source],
-                warnings: document.warnings.clone(),
-            });
-        }
-        self.state
-            .cache
-            .insert(self.state.plans[route].key.clone(), artifact.clone());
-        Ok(artifact)
+        self.state.workers.document(route, self)
     }
     fn closure(&self, route: &str) -> Result<Closure> {
-        let artifact = self.render(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        self.walker()
-            .collect(route, &document.tree, &document.resources)
+        self.state.workers.closure(route, self)
     }
     fn render_all(&self) -> Result<RenderSummary> {
         let routes: Vec<_> = self.state.plans.keys().cloned().collect();
@@ -247,5 +231,43 @@ impl RenderGeneration for Session {
     }
     fn resource_routes(&self) -> Vec<String> {
         self.state.resources.keys().cloned().collect()
+    }
+}
+
+impl ArtifactWorker for Session {
+    fn closure_job(&self, route: &str) -> Result<Closure> {
+        let artifact = self.artifact(route)?;
+        let document = artifact
+            .document
+            .as_ref()
+            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
+        self.walker()
+            .collect(route, &document.tree, &document.resources)
+    }
+    fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
+        let artifact = self.raw(route)?;
+        let document = artifact
+            .document
+            .as_ref()
+            .ok_or_else(|| invalid(route, "document has no composed tree"))?;
+        if let Err(source) = self
+            .walker()
+            .collect(route, &document.tree, &document.resources)
+        {
+            return Err(GraphError::Attempt {
+                failures: vec![source],
+                warnings: document.warnings.clone(),
+            });
+        }
+        if let Err(source) = validation::links(self, &document.links) {
+            return Err(GraphError::Attempt {
+                failures: vec![source],
+                warnings: document.warnings.clone(),
+            });
+        }
+        self.state
+            .cache
+            .insert(self.state.plans[route].key.clone(), artifact.clone());
+        Ok(artifact)
     }
 }

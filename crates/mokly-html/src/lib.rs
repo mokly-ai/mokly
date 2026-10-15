@@ -3,16 +3,19 @@
 
 pub mod composition;
 pub mod controls;
+pub mod diagnostic_code;
 pub mod error;
 pub mod fragment;
 pub mod links;
 pub mod markdown;
+pub mod normalization;
 pub mod parse;
 pub mod props;
 pub mod safety;
 pub mod serialize;
 pub mod source_checks;
 pub mod tree;
+pub mod url_safety;
 
 mod assembly;
 mod autolinks;
@@ -25,11 +28,17 @@ mod elements;
 mod forwarded_slots;
 mod fragment_rebase;
 mod fragment_validation;
+mod html_arena;
+mod html_sink;
+mod ignore_checks;
 mod javascript;
+mod link_destination;
 mod link_targets;
 mod marker_auth;
 mod marker_syntax;
 mod markers;
+mod normalized_regions;
+mod normalized_usage;
 mod raw_markers;
 mod regions;
 mod relative_links;
@@ -46,6 +55,9 @@ mod fragment_tests;
 #[path = "_tests_/marker_tests.rs"]
 mod marker_tests;
 #[cfg(test)]
+#[path = "_tests_/parser_tests.rs"]
+mod parser_tests;
+#[cfg(test)]
 #[path = "_tests_/props_tests.rs"]
 mod props_tests;
 #[cfg(test)]
@@ -57,3 +69,6 @@ mod substitution_tests;
 #[cfg(test)]
 #[path = "_tests_/support.rs"]
 mod support;
+#[cfg(test)]
+#[path = "_tests_/url_safety_tests.rs"]
+mod url_safety_tests;

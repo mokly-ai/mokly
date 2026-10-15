@@ -1,20 +1,9 @@
-import fs from "node:fs";
-
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
-export const model = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v6.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
+import { shellModelFixture } from "./catalogue_v7_fixture.js";
+
+export const model = shellModelFixture();
 
 export const catalogue = viewerCatalogue(model);
 

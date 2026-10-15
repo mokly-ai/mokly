@@ -6,7 +6,7 @@
   "errors": [
     {
       "code": "unknown-link-target",
-      "message": "specs/home.screen.html: link target unknown does not exist",
+      "message": "link target unknown does not exist",
       "path": "specs/home.screen.html",
       "line": 4,
       "column": 4

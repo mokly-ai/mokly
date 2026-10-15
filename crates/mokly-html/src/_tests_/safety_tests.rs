@@ -68,3 +68,20 @@ fn gfm_autolinks_keep_code_and_explicit_link_labels_literal() {
     assert!(html.contains("<code>https://code.example</code>"));
     assert!(!html.contains("href=\"https://label.example\""));
 }
+
+#[test]
+fn markdown_safety_uses_scheme_position_for_url_colons() {
+    let resolver = Unimock::new(
+        LinkResolverMock::resolve
+            .each_call(matching!(_))
+            .answers(&|_, value| Ok(Destination::Url(value.into()))),
+    );
+    let tree = render(
+        "[Fragment](#x:y) [Query](?t=10:30) [Path](./images/a:b.svg)",
+        "Links",
+        ColorScheme::Light,
+        &resolver,
+    )
+    .unwrap();
+    safety::validate(&tree).unwrap();
+}

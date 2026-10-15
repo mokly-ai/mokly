@@ -1,4 +1,4 @@
-import type { CatalogueReadModel } from "../../packages/viewer/dist/catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../../packages/viewer/dist/catalogue/scoped_types.js";
 import { searchRow } from "../../packages/viewer/dist/shell/search_query.js";
 
 import { catalogueModel } from "./viewer_catalogue.js";
@@ -21,7 +21,9 @@ export const transferReady = row(
   ["operations"],
 );
 
-export function selectionModel(detailsChanged: boolean): CatalogueReadModel {
+export function selectionModel(
+  detailsChanged: boolean,
+): ShellCatalogueReadModel {
   const model = catalogueModel();
   const template = model.screens[0]!;
   const changes = (included: boolean) => ({
@@ -36,14 +38,14 @@ export function selectionModel(detailsChanged: boolean): CatalogueReadModel {
         ...template,
         changes: changes(false),
         path: "welcome",
-        tags: welcome.tags,
+        tags: [...welcome.tags],
         title: welcome.title,
       },
       {
         ...template,
         changes: changes(detailsChanged),
         path: "product/browse/details",
-        tags: details.tags,
+        tags: [...details.tags],
         title: details.title,
       },
     ],

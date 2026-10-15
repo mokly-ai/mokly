@@ -1,4 +1,4 @@
-/** Local temporary prop editing with cancellable provider-backed previews. */
+/** Temporary prop editing of the shown entry with cancellable live renders. */
 
 import {
   useCallback,
@@ -10,103 +10,88 @@ import {
   type ReactNode,
 } from "react";
 
-import type { ViewerCapabilityRequest } from "../client/host_capability_descriptor.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
 import type { ComponentOverride } from "../components/render_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
-import { useViewerCapabilities } from "./capability_context.js";
-import {
-  controlDraft,
-  validateControlDraft,
-  type ControlDraft,
-  type ControlDraftField,
-} from "./component_control_fields.js";
 import { ComponentControlsPanel } from "./component_controls_panel.js";
 import {
   controlsUnavailable,
   controlViewKey,
   initialComponentEditorState,
+  withPreviews,
 } from "./component_controls_state.js";
+import {
+  acceptedRender,
+  editContextKey,
+  EditLifecycle,
+  shouldRerender,
+} from "./component_edit_lifecycle.js";
 import { useComponentPreviewExpiration } from "./component_preview_expiration.js";
-import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
+import {
+  controlDraft,
+  validateControlDraft,
+  type ControlDraft,
+  type ControlDraftField,
+  type ControlTarget,
+} from "./control_values.js";
+import { useViewerCapabilities } from "./data_context.js";
+import type { WorkspaceData } from "./workspace_data.js";
 
-/** Control output consumed by both the stage and Props panel. */
+/** Control output consumed by both the stage and the Props panel. */
 export interface ComponentControlsResult {
   panel: ReactNode;
   previewViews: readonly GeneratedComponentView[];
   props?: ComponentWireProps;
 }
 
-/** Own one component variant's edit lifecycle. */
+/** Own the edit lifecycle of the shown screen, component or variant. */
 export function useComponentControls({
   comparing,
   contexts,
   data,
-  request,
-  variant,
+  target,
   workspaceRef,
 }: {
   comparing: boolean;
   contexts: readonly GeneratedComponentView[];
   data: WorkspaceData;
-  request?: ViewerCapabilityRequest | undefined;
-  variant?: WorkspaceVariant | undefined;
+  target: ControlTarget | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
 }): ComponentControlsResult {
   const capabilities = useViewerCapabilities();
-  const component = data.component;
-  const generation = request?.source.renderGeneration;
-  const scope = `${variant?.value.path ?? "none"}/${comparing}/${generation ?? "static"}/${variant ? JSON.stringify(variant.value.props) : ""}`;
+  const previews = capabilities?.temporaryPreviews;
+  const latestPreviews = useRef(previews);
+  latestPreviews.current = previews;
+  const scope = `${target?.path ?? "none"}/${comparing}`;
   const initial = useMemo(
     () =>
       initialComponentEditorState(
-        component,
-        variant,
+        target,
         scope,
-        component && variant ? controlDraft(component, variant) : {},
+        target ? controlDraft(target) : {},
       ),
-    [component, scope, variant],
+    [scope, target],
   );
   const [stored, setStored] = useState(initial);
-  const state = stored.scope === scope ? stored : initial;
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const active = useRef<AbortController | undefined>(undefined);
-  const sequence = useRef(0);
+  const state =
+    stored.scope === scope && (stored.dirty || stored === initial)
+      ? stored
+      : initial;
+  const [lifecycle] = useState(() => new EditLifecycle());
   const pageIds = useRef(new Map<string, string>());
-  const unavailable = controlsUnavailable(
-    data,
-    variant,
-    comparing,
-    Boolean(capabilities?.temporaryPreviews && request && generation),
-  );
-  const contextKey = contexts.map(controlViewKey).join("|");
-
-  const cancel = useCallback(() => {
-    sequence.current += 1;
-    clearTimeout(timer.current);
-    timer.current = undefined;
-    active.current?.abort();
-    active.current = undefined;
-  }, []);
+  const unavailable = controlsUnavailable(target, comparing, Boolean(previews));
+  const contextKey = editContextKey(contexts, previews);
+  const cancel = useCallback(() => lifecycle.cancel(), [lifecycle]);
 
   const render = useCallback(
     async (
       draft: ControlDraft,
       overrides: Readonly<Record<string, ComponentOverride>>,
     ) => {
-      if (
-        !component ||
-        !variant ||
-        !request ||
-        !generation ||
-        !capabilities?.temporaryPreviews ||
-        unavailable
-      )
-        return;
-      const operation = sequence.current;
-      const controller = new AbortController();
-      active.current = controller;
+      const live = latestPreviews.current;
+      if (!target || !live || unavailable) return;
+      const operation = lifecycle.begin();
       setStored((current) =>
         current.scope === scope
           ? { ...current, failure: undefined, status: "Updating preview…" }
@@ -114,46 +99,46 @@ export function useComponentControls({
       );
       try {
         const results = await Promise.all(
-          contexts.map((view) => {
+          contexts.map(async (view) => {
             const key = controlViewKey(view);
             const pageId =
               pageIds.current.get(key) ??
               globalThis.crypto.randomUUID().replaceAll("-", "");
             pageIds.current.set(key, pageId);
-            return capabilities.temporaryPreviews!.render(
-              request,
+            const result = await live.render(
               {
-                componentId: component.path,
-                variantPath: variant.value.path,
+                entryPath: target.path,
                 viewport: view.viewport,
                 colorScheme: view.colorScheme,
-                generation,
                 pageId,
                 overrides,
               },
-              view,
-              controller.signal,
+              operation.signal,
             );
+            return [key, result] as const;
           }),
         );
-        if (controller.signal.aborted || operation !== sequence.current) return;
+        if (
+          !operation.current() ||
+          !acceptedRender(results, latestPreviews.current)
+        )
+          return;
         setStored((current) => {
           if (current.scope !== scope) return current;
-          const previews = new Map(current.previews);
-          for (const result of results)
-            previews.set(controlViewKey(result.view), result);
+          const next = new Map(current.previews);
+          for (const [key, result] of results) next.set(key, result);
           return {
             ...current,
             draft,
             dirty: true,
             failure: undefined,
-            previews,
-            props: results[0]?.props ?? current.props,
+            previews: next,
+            props: results[0]?.[1].props ?? current.props,
             status: "Edited props",
           };
         });
       } catch (error) {
-        if (controller.signal.aborted || operation !== sequence.current) return;
+        if (!operation.current()) return;
         setStored((current) =>
           current.scope === scope
             ? {
@@ -168,26 +153,17 @@ export function useComponentControls({
         );
       }
     },
-    [
-      capabilities,
-      component,
-      contexts,
-      generation,
-      request,
-      scope,
-      unavailable,
-      variant,
-    ],
+    [contexts, lifecycle, scope, target, unavailable],
   );
 
   const edit = useCallback(
     (draft: ControlDraft, immediate: boolean) => {
-      if (!component || !variant || unavailable) return;
+      if (!target || unavailable) return;
       cancel();
-      const validated = validateControlDraft(component, variant, draft);
+      const validated = validateControlDraft(target, draft);
       if (!validated.overrides) {
         setStored((current) => ({
-          ...current,
+          ...(current.scope === scope ? current : initial),
           draft,
           dirty: true,
           errors: validated.errors,
@@ -202,17 +178,16 @@ export function useComponentControls({
         return;
       }
       setStored((current) => ({
-        ...current,
+        ...(current.scope === scope ? current : initial),
         draft,
         dirty: true,
         errors: {},
         failure: undefined,
       }));
-      const submit = () => void render(draft, validated.overrides!);
-      if (immediate) submit();
-      else timer.current = setTimeout(submit, 150);
+      const overrides = validated.overrides;
+      lifecycle.schedule(immediate, () => void render(draft, overrides));
     },
-    [cancel, component, initial, render, unavailable, variant],
+    [cancel, initial, lifecycle, render, scope, target, unavailable],
   );
 
   useEffect(() => {
@@ -235,17 +210,17 @@ export function useComponentControls({
     [scope],
   );
   useComponentPreviewExpiration({
-    capabilities,
     onExpired: expire,
     previews: state.previews,
-    request,
+    temporaryPreviews: previews,
     workspaceRef,
   });
   const previousContext = useRef(contextKey);
   useEffect(() => {
-    if (previousContext.current === contextKey) return;
+    const previous = previousContext.current;
     previousContext.current = contextKey;
-    if (state.dirty && !unavailable) edit(state.draft, true);
+    if (shouldRerender(previous, contextKey, state.dirty, unavailable))
+      edit(state.draft, true);
   }, [contextKey, edit, state.dirty, state.draft, unavailable]);
 
   const change = (key: string, field: ControlDraftField, immediate: boolean) =>
@@ -255,29 +230,18 @@ export function useComponentControls({
     setStored(initial);
   };
   const retry = () => {
-    if (!component || !variant) return;
+    if (!target) return;
     cancel();
-    const validated = validateControlDraft(component, variant, state.draft);
+    const validated = validateControlDraft(target, state.draft);
     if (validated.overrides) void render(state.draft, validated.overrides);
   };
-  const previews = useMemo(
-    () =>
-      data.views.map((view) => {
-        const preview = state.previews.get(controlViewKey(view));
-        return preview && view.variantPath === variant?.value.path
-          ? {
-              ...view,
-              path: decodeURIComponent(preview.previewUrl),
-              usage: preview.view,
-            }
-          : view;
-      }),
-    [data.views, state.previews, variant?.value.path],
+  const previewViews = useMemo(
+    () => withPreviews(data.views, state.previews, target),
+    [data.views, state.previews, target],
   );
   return {
     panel: (
       <ComponentControlsPanel
-        component={component}
         data={data}
         disabled={Boolean(unavailable)}
         onChange={change}
@@ -285,10 +249,10 @@ export function useComponentControls({
         onRetry={retry}
         state={state}
         status={unavailable ?? state.status}
-        variant={variant}
+        target={target}
       />
     ),
-    previewViews: previews,
-    ...(variant ? { props: state.props } : {}),
+    previewViews,
+    ...(target ? { props: state.props } : {}),
   };
 }

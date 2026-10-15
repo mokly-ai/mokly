@@ -14,7 +14,7 @@ use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{Result, invalid};
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
-use crate::{error, resource_keys, styles};
+use crate::{error, resource_keys, routing_inputs, styles};
 
 pub(crate) fn documents(
     config: &ResolvedConfig,
@@ -23,6 +23,7 @@ pub(crate) fn documents(
     config_key: &NodeKey,
     resources: &BTreeMap<String, ResourcePlan>,
     delivery: &DeliveryInputs,
+    matchers: &styles::Matchers,
 ) -> Result<BTreeMap<String, DocumentPlan>> {
     let mut sources = BTreeMap::new();
     for entry in &catalogue.model.entries {
@@ -30,7 +31,7 @@ pub(crate) fn documents(
         if sources.contains_key(path) {
             continue;
         }
-        let bytes = match tree.read(&config.repo_root.join(path)) {
+        let bytes = match tree.read_shared(&config.repo_root.join(path)) {
             Ok(bytes) => bytes,
             Err(_) => return Err(invalid(path, format!("could not read entry source {path}"))),
         };
@@ -81,7 +82,11 @@ pub(crate) fn documents(
             .variant_of
             .as_ref()
             .unwrap_or(&entry.metadata.path);
-        let components = components(parent, catalogue);
+        let mut components = components(&entry.metadata.path, catalogue);
+        if matches!(entry.content, EntryContent::Component { .. }) {
+            components.insert(parent.clone());
+        }
+        let routing = routing_inputs::key(entry, &components, catalogue)?;
         for (viewport, scheme) in views {
             let route = viewport.map_or_else(
                 || routes::document(&entry.metadata.path, scheme),
@@ -89,6 +94,7 @@ pub(crate) fn documents(
             );
             let links = if viewport.is_some() {
                 styles::links(&styles::LinkInput {
+                    matchers,
                     config,
                     path: &entry.metadata.path,
                     route: &route,
@@ -106,6 +112,7 @@ pub(crate) fn documents(
             };
             let mut inputs = vec![
                 config_key.0.clone(),
+                routing.0.clone(),
                 sources[&entry.metadata.source.path].0.clone(),
                 entry.metadata.path.clone(),
                 format!("{viewport:?}/{scheme:?}"),
@@ -162,8 +169,27 @@ fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
     let mut found = BTreeSet::new();
     let mut stack = vec![path.to_owned()];
     while let Some(path) = stack.pop() {
-        if let Some(template) = catalogue.templates.get(&path) {
-            for component in direct_components(&template.body, catalogue) {
+        let parent = catalogue
+            .model
+            .entries
+            .iter()
+            .find(|entry| entry.metadata.path == path)
+            .and_then(|entry| entry.metadata.variant_of.as_ref())
+            .unwrap_or(&path);
+        let bodies = catalogue
+            .templates
+            .get(parent)
+            .map(|template| template.body.as_str())
+            .into_iter()
+            .chain(
+                catalogue
+                    .slot_fragments
+                    .get(&path)
+                    .into_iter()
+                    .flat_map(|slots| slots.values().map(String::as_str)),
+            );
+        for body in bodies {
+            for component in direct_components(body, catalogue) {
                 if found.insert(component.clone()) {
                     stack.push(component);
                 }
@@ -193,7 +219,14 @@ fn component_key(
         .find(|entry| entry.metadata.path == path)
         .and_then(|entry| sources.get(&entry.metadata.source.path))
         .ok_or_else(|| invalid(path, "component source key is missing"))?;
-    let mut inputs = vec![source.0.clone()];
+    let mut inputs = vec![source.0.clone(), path.into()];
+    inputs.extend(
+        catalogue
+            .elements
+            .iter()
+            .filter(|(_, element)| element.path == path)
+            .map(|(name, _)| name.clone()),
+    );
     for child in catalogue
         .templates
         .get(path)

@@ -21,6 +21,8 @@ pub(super) fn commands_for(
             cargo(&["xtask", "build-native"]),
             cargo(&["fmt", "--all", "--", "--check"]),
             rust_clippy(),
+            npm(&["run", "build", "--workspace", "@mokly/viewer"]),
+            npm(&["run", "build", "--workspace", "@mokly/mokly"]),
             cargo(&["test", "--workspace"]),
         ],
     }
@@ -39,6 +41,8 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         rust_clippy(),
+        npm(&["run", "build", "--workspace", "@mokly/viewer"]),
+        npm(&["run", "build", "--workspace", "@mokly/mokly"]),
         cargo(&["test", "--workspace"]),
     ]
 }

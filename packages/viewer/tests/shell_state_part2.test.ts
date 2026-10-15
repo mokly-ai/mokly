@@ -39,7 +39,7 @@ test("bare removed routes announce only published snapshot identity", () => {
     const initial = createInitialShellState(
       candidateCatalogue,
       viewerContext(candidate, defaultSelection),
-      { kind: "home" },
+      { view: { kind: "home" } },
       undefined,
     );
     const state = withRoute(
@@ -51,12 +51,12 @@ test("bare removed routes announce only published snapshot identity", () => {
     const navigations: ScreenNavigateEvent[] = [];
     announceNavigation(
       {
-        model: candidate,
         events: () => ({
           onScreenNavigate: (event: ScreenNavigateEvent) =>
             navigations.push(event),
         }),
       } as never,
+      candidateCatalogue,
       state.selection,
       state.route.fragment,
       undefined,
@@ -111,12 +111,7 @@ test("unknown frame routes mutate only uncontrolled host display state", () => {
     catalogue,
     new URL("https://example.test/view/missing-entry"),
   );
-  const state = createInitialShellState(
-    catalogue,
-    context,
-    home.view,
-    undefined,
-  );
+  const state = createInitialShellState(catalogue, context, home, undefined);
 
   assert.equal(frameMissState(state, missing, sections, true), state);
   const uncontrolled = frameMissState(state, missing, sections, false);
@@ -138,7 +133,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
   assert.ok(variant && "variantOf" in variant);
   const historical = {
     ...variant,
-    colorSchemes: ["light", "dark"] as const,
+    colorSchemes: ["light" as const, "dark" as const],
     changes: {
       status: "ready" as const,
       kind: "removed" as const,
@@ -168,12 +163,7 @@ test("filter transitions restore their disclosure baseline and route activation 
     catalogue,
     new URL("https://example.test/view/guide/"),
   );
-  let state = createInitialShellState(
-    catalogue,
-    context,
-    route.view,
-    undefined,
-  );
+  let state = createInitialShellState(catalogue, context, route, undefined);
   const baseline = state.disclosures;
   state = withFilterSelection(state, {
     ...state.selection,

@@ -28,7 +28,7 @@ the `mokly-` prefix is reserved for markers.
 | Marker                                                                 | Meaning                                                                         |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `<!--mokly-instance:start id="r-3" path="…" instance="…" props="…"-->` | a rendered component instance; `props` is the canonical props digest            |
-| `<!--mokly-slot:start id="r-3" name="children"-->`                     | slot content supplied to instance `r-3` by its enclosing owner                  |
+| `<!--mokly-slot:start id="r-4" instance="r-3" name="children"-->`      | slot region `r-4` supplied to instance `r-3` by its input owner                 |
 | `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                           |
 | `<!--mokly-link:start id="…" to="…"-->`                                | a `MockLink asChild` control in a sidecar fragment; consumed by link adaptation |
 | `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                                  |
@@ -59,6 +59,16 @@ as its innermost scope.
 Formatting clones that the adoption agency algorithm creates and elements that
 the parser implies take their position in the tree; nothing refers to the
 token that created them.
+
+The core serializes and re-parses composed content with the HTML5 algorithm
+before it derives usage or comparison ownership. Content moved by that parser
+produces `html-foster-parented`, naming the component element and its parent.
+An instance, slot, or ignore marker pair that no longer shares one parent
+loses its region. Its nodes belong to the enclosing region; a split ignore
+range compares as ordinary content. A slot record can remain without a range.
+Remaining logical inputs and placements use that repaired ownership and their
+corresponding identity keys. If a re-owned instance key collides, that instance
+also loses its region; the repair remains a warning.
 
 ## Materiality
 

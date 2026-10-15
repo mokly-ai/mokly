@@ -11,9 +11,14 @@ use mokly_source_interface::tree::{Child, Node, SourceTree};
 /// Public HTTP reads must use the live tree and recheck confinement separately.
 pub struct SourceSnapshot {
     source: Arc<dyn SourceTree>,
-    reads: Mutex<BTreeMap<PathBuf, Vec<u8>>>,
+    reads: Mutex<BTreeMap<PathBuf, Arc<ReadCell>>>,
     nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
     directories: Mutex<BTreeMap<PathBuf, Vec<Child>>>,
+}
+
+#[derive(Default)]
+struct ReadCell {
+    bytes: Mutex<Option<Arc<[u8]>>>,
 }
 
 impl SourceSnapshot {
@@ -57,12 +62,19 @@ impl SourceTree for SourceSnapshot {
         Ok(children)
     }
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
-        let mut reads = self.reads.lock().unwrap_or_else(|error| error.into_inner());
-        if let Some(bytes) = reads.get(path) {
-            return Ok(bytes.clone());
+        Ok(self.read_shared(path)?.to_vec())
+    }
+    fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
+        let cell = {
+            let mut reads = self.reads.lock().unwrap_or_else(|error| error.into_inner());
+            reads.entry(path.into()).or_default().clone()
+        };
+        let mut value = cell.bytes.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(bytes) = &*value {
+            return Ok(Arc::clone(bytes));
         }
-        let bytes = self.source.read(path)?;
-        reads.insert(path.into(), bytes.clone());
+        let bytes = self.source.read_shared(path)?;
+        *value = Some(Arc::clone(&bytes));
         Ok(bytes)
     }
 }

@@ -1,6 +1,7 @@
 /** The change status and stylesheet evidence that one page's Details show. */
 
 import type { ResourceEvidence } from "../review/types.js";
+import { viewEvidenceReasons } from "../review/view_evidence.js";
 import { publicEntryStatus } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -35,7 +36,7 @@ export function pageComparisonEvidence(
       ? {
           status,
           ...(page.resourceEvidence
-            ? { resources: page.resourceEvidence }
+            ? { resources: viewEvidenceReasons(page.resourceEvidence) }
             : {}),
         }
       : {};

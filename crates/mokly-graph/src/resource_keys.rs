@@ -84,7 +84,7 @@ pub(crate) fn inputs(
         {
             continue;
         }
-        let Ok(bytes) = tree.read(&absolute) else {
+        let Ok(bytes) = tree.read_shared(&absolute) else {
             continue;
         };
         inputs.insert(path.into(), digest(&bytes));

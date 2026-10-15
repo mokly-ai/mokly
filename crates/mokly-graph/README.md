@@ -24,6 +24,11 @@ a route and the document node's input hash, which is the public
 `documentKey`. `dyn RenderGeneration` supports on-demand rendering, a full
 build pass, resource reads, and closure queries.
 
+Document keys include component paths and element names. Logical links depend
+on their destination routes, including use-case first steps. An unresolved link
+substitution inside a component depends on the routing inventory, including
+when a prop reaches it through another component.
+
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
@@ -38,9 +43,15 @@ edge context for comparison proof.
 
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
-It stops at declared catalogue documents. The working-tree adapter and the
-Git-tree adapter both implement `mokly-source-interface::tree::SourceTree`.
+It stops at declared catalogue documents. The working-tree adapter implements
+`mokly-source-interface::tree::SourceTree`. Historical rendering supplies the
+same boundary through the comparison adapter; that integration is in progress.
 Serve must also apply the public policy's read-time confinement rules.
+
+Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
+storage. Each path has its own read cell, so file IO does not hold the snapshot
+map lock. Preparation and render workers have 64 MiB stacks while the remaining
+tree operations are converted to iterative walks.
 
 ## Quick Start
 

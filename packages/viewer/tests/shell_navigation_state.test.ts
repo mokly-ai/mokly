@@ -49,7 +49,7 @@ test("removed component variants keep catalogue-wide Dark available", () => {
   assert.ok(variant && "variantOf" in variant);
   const historical = {
     ...variant,
-    colorSchemes: ["light", "dark"] as const,
+    colorSchemes: ["light" as const, "dark" as const],
     changes: {
       status: "ready" as const,
       kind: "removed" as const,
@@ -79,12 +79,7 @@ test("filter transitions restore their disclosure baseline and route activation 
     catalogue,
     new URL("https://example.test/view/guide/"),
   );
-  let state = createInitialShellState(
-    catalogue,
-    context,
-    route.view,
-    undefined,
-  );
+  let state = createInitialShellState(catalogue, context, route, undefined);
   const baseline = state.disclosures;
   state = withFilterSelection(state, {
     ...state.selection,
@@ -136,12 +131,7 @@ test("standalone store actions preserve every sequential search byte", () => {
     catalogue,
     new URL("https://example.test/view/product/browse/home/"),
   );
-  let state = createInitialShellState(
-    catalogue,
-    context,
-    route.view,
-    undefined,
-  );
+  let state = createInitialShellState(catalogue, context, route, undefined);
   const stateRef = { current: state };
   const store = shellStore({
     catalogue,

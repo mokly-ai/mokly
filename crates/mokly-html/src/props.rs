@@ -7,6 +7,7 @@ use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::prop_schema::{JsonType, Primitive, PropSchema, Types};
 use mokly_model::validation::{PropValidator, accepts};
 
+use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid, json};
 use crate::serialize;
 
@@ -127,13 +128,13 @@ fn substitute_inner(
         let name = rest[start + 2..end].trim_ascii();
         let Some(prop) = schema_at(schema, name) else {
             return Err(invalid(
-                "html-props",
+                Code::HtmlProps,
                 format!("undeclared prop reference {name}"),
             ));
         };
         if !is_scalar(prop) {
             return Err(invalid(
-                "html-props",
+                Code::HtmlProps,
                 format!("prop reference {name} must name a scalar value"),
             ));
         }

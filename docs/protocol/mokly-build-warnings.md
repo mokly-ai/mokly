@@ -69,16 +69,16 @@ subject-kind tie-break that is empty for a route. Duplicates have equal code,
 route or subject, and message. The order does not depend on the rendering
 order, the operating system, or the absolute checkout path.
 
-| Code                             | Producer                                                                                                        |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `base-dependencies`              | A base-side dependency install that fell back to the working tree ([comparison](./mokly-comparison.md#sides))   |
-| `duplicate-component-stylesheet` | A component that declares one real file twice ([component stylesheets](./mokly-component-stylesheets.md))       |
-| `html-foster-parented`           | A component element moved out of a table ([HTML screens](./mokly-html-screens.md#diagnostics))                  |
-| `html-unused-props`              | A declared prop that no body reference reads ([HTML screens](./mokly-html-screens.md#diagnostics))              |
-| `link-control-ancestor`          | A styled link control inside a warning-tier ancestor ([link controls](./mokly-link-controls.md))                |
-| `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))          |
-| `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                    |
-| `props-not-data`                 | A non-data prop value excluded from an inferred schema ([entry props](./mokly-entry-props.md#schema-inference)) |
+| Code                             | Producer                                                                                                              |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `base-dependencies`              | A base-side dependency install that fell back to the working tree ([comparison](./mokly-comparison.md#sides))         |
+| `duplicate-component-stylesheet` | A component that declares one real file twice ([component stylesheets](./mokly-component-stylesheets.md))             |
+| `html-foster-parented`           | HTML5 parsing moved a component element or its composed content ([HTML screens](./mokly-html-screens.md#diagnostics)) |
+| `html-unused-props`              | A declared prop that no body reference reads ([HTML screens](./mokly-html-screens.md#diagnostics))                    |
+| `link-control-ancestor`          | A styled link control inside a warning-tier ancestor ([link controls](./mokly-link-controls.md))                      |
+| `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))                |
+| `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                          |
+| `props-not-data`                 | A non-data prop value excluded from an inferred schema ([entry props](./mokly-entry-props.md#schema-inference))       |
 
 Each producing contract defines its own message. A new producer adds a row
 here and defines its message in its own contract.

@@ -7,15 +7,14 @@ how Serve, export and the public viewer converged on this tree.
 Retaining the known branch name in the exported navigation fallback is
 implemented in M31.
 The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
-keeps the sentence during loading; a nameless embedded catalogue still omits it.
+keeps the sentence during loading; an index without a `base` omits it.
 
 ## Scope
 
 `metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
 uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
-`previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
-and the public viewer reads `previousPath` from the read model. No shell module
+`previousPaths`, read from the index's `previousPath`. No shell module
 reads those pairs, follows a `variantOf`, or case-folds a path itself:
 reference and parent resolution follow the
 [branch-point lookup contract](../../../../docs/protocol/mokly-branch-point-lookup.md)
@@ -26,9 +25,9 @@ records that path on each row; under Changes a moved row reads
 mark only when `materialChangedEntries` lists it. Details add a `Moved from`
 row after Source, and the comparison details name the previous path as the
 earlier side. A pure move is in Changes without changing, so workspace
-statuses count material changes only and keep it Unmodified: the public
-projection sets `materialEntries` from each entry's `changes.kind`, and server
-pages read `componentChanges.changedEntries`. The same lookup contract owns
+statuses count material changes only and keep it Unmodified: the projection
+sets `materialEntries` from each entry's `changes.kind`. The same lookup
+contract owns
 counterparts for workspace inputs, variants and nested component instances.
 
 `catalogue_branch_point.ts` implements that pure lookup beside `createCatalogue`.
@@ -52,11 +51,14 @@ fails when a shell or viewer module outside the lookup reads `previousPaths`,
 follows a `variantOf`, or case-folds a path.
 
 These React components are the Browse shell tree: catalogue, stages,
-navigation and inspector. `document.tsx` supplies the standalone document
-envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
-the browser by Serve, export and React hosts, with host-owned slots as ordinary
-children. The [viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
-defines the tree and its state model.
+navigation and inspector. The tree renders only in the browser:
+`src/browser.tsx` mounts the standalone shell into the stub that Serve and
+`build` deliver, and React hosts render it inside `MoklyViewer`, with
+host-owned slots as ordinary children. The
+[viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
+defines the tree and its state model, and the
+[shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md)
+the data it reads.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
 native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
@@ -98,17 +100,15 @@ row, and gives up when a commit leaves it hidden.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
 fixed prefixes and complete paths; display labels never enter a key. It rejects
 empty path segments and every earlier key form on restore.
-`disclosure_storage.ts` owns the v4 map codec and its storage key; early
-capture, hydration, the shell store, and watched-reload recovery share its
+`disclosure_storage.ts` owns the v4 map codec and its storage key; the
+stored preferences the browser entry reads and the shell store share its
 validation. Earlier storage versions are never read, translated, or removed.
-Stored watched recovery separately requires `filterBaselineDisclosures` and
-`changesStatus`; missing fields reject the complete stored snapshot.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
 owns the shared folder ordering and identity used by this shell.
-`nav_changed.ts` names the changed mark's class, attribute and wording, so the
-server row and each React store update use the same presentation contract;
+`nav_changed.ts` names the changed mark's class, attribute and wording, so
+every rendered row uses the same presentation contract;
 `css_nav_changed.ts` draws the mark from `data-changed` and
 `data-changed-variants` alone. `nav_model.ts` applies search and Changes
 visibility to parents and their variant children. `changes_activation.ts`
@@ -161,27 +161,24 @@ so Props and highlighting remain read-only until Current is selected.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
 resolves, so a removed variant of a moved or case-renamed parent opens in its
 siblings' workspace and keeps their mode. The mode owner also includes the
-evidence revision. Serve currently republishes evidence for each on-demand
-comparison document, so the first navigation after a new comparison resets the
-mode for any sibling.
+index revision, so a publication returns an active comparison to Current.
 
-`css.ts` concatenates the standalone stylesheet. Split string modules preserve
-its exact bytes. The package build scopes an embedded stylesheet separately and
+`css.ts` concatenates the shared stylesheet. Split string modules preserve
+its exact bytes. The standalone stylesheet adds one rule to it: a root without
+an appearance mark, the stub before the bundle runs, takes the Auto appearance
+from the system. The package build scopes an embedded stylesheet separately and
 uses packaged relative font URLs; its selector-aware transform maps document
 selectors and shell-root `.mbk` selectors to the embedding scope without
-rewriting class names. Standalone Serve/export retain their original CSS and
-font delivery paths.
+rewriting class names. The standalone shell keeps the original CSS and font
+paths.
 
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot
-selects its exact removed record. Baseline repository access remains in the
-CLI's `src/server/baseline_catalogue.ts`.
+selects its exact removed record.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
-selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
+selection, disclosure, drawer, details and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
-helpers shared by SSR and the live tree; `delivery.ts` validates static
-deployment continuity before a read-model route transition.
-`store_browser_actions.ts` owns DOM interaction and
+helpers. `store_browser_actions.ts` owns DOM interaction and
 `store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
@@ -191,12 +188,27 @@ usage revision arrives. An unavailable
 frame destination changes only an uncontrolled or standalone display;
 controlled viewers report the frame error and wait for host-owned selection.
 
+`data_controller.ts` owns one shell root's data outside React: the installed
+index, the entry details whose fences accepted them, the publications of the
+event stream, and the live descriptor. `data_requests.ts` lists the details a
+route renders from (the routed entry's, plus each step screen's for a use
+case), loads one detail under the fences of the
+[shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
+and loads a publication refresh. `data_commit.ts` adopts a new index and its
+details as one snapshot and rebinds the route and the disclosures to it;
+`data_store.ts` binds the controller to the store, and `data_context.tsx`
+exposes the routed delivery and the live render capability. The stage renders
+the frames once the routed details arrive; until then `stage_delivery.tsx`
+shows the loading state, or the unavailable state with retry. The element
+generation of `frame_source_hook.ts` advances only when a frame's
+`documentKey` changes at the same source, so a publication reloads only the
+frames whose document changed.
+
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical
 resolution binds that route to its published snapshot; an explicit query must
-match, while an inferred identity is canonicalized into the URL. Static
-delivery v5 carries only the page's canonical path, comparison URL, and
-deployment identity; entry destinations come from the shared route helpers.
+match, while an inferred identity is canonicalized into the URL. Entry
+destinations come from the shared route helpers.
 
 Authenticated frame navigation stays logical until `frame_event_router.tsx`
 resolves its path through `byPath` and derives the canonical URL with `viewHref`.
@@ -209,19 +221,18 @@ and generated-path rows because the address bar and path chip already identify
 the entry.
 
 Snapshot selection is route-owned state as well as public selection state. One
-validated query/parser/resolver carries it through SSR, hydration, controlled
-hosts and history. Headings, crumbs, Details and previous-preview lookup consume
+validated query/parser/resolver carries it through the first render,
+controlled hosts and history. Headings, crumbs, Details and previous-preview lookup consume
 the resolved removed record and route.
 
 `workspace_data.ts` describes shell data, while `workspace_usage_data.ts`
 projects use and affected-consumer links. Its `entry` is always the exact routed
 screen, component parent, or component variant; component routes retain their
-parent schema separately for controls. The public viewer projects those
-values only from validated catalogue records. Embedded bootstrap and workspace JSON use
-canonical key ordering so their validated client projections retain the exact
-server bytes during hydration. `comparison_views.tsx` renders React-owned frame
-chrome around the snapshots from validated comparison metadata. The CLI
-supplies its private live capabilities through typed server context.
+parent schema separately for controls. The lists of a screen or component
+come from its entry detail's `workspace`, and every value is projected only
+from validated index and detail records. `comparison_views.tsx` renders
+React-owned frame chrome around the snapshots from validated comparison
+metadata.
 
 `workspace_evidence_data.ts` merges an entry's own reasons, the selected
 screen's or saved view's projected and live view evidence, and a loaded
@@ -235,66 +246,38 @@ sentences and selector lists nested in its item, like the approved card.
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
 same markup; `workspace_evidence.tsx` keeps ignored content and the status
 lines separate. The heading names the branch point only when its name is
-known; an empty or blank name leaves the heading alone. An embedded catalogue
-has no name, because `viewerContext` supplies an empty one, so its Details
-keep the rest of the evidence without that sentence. `workspace_data.ts`
-passes the shell's known name to `publicWorkspace`. A workspace that a served
-or exported shell builds from public data, before its private or inert
-workspace arrives, therefore keeps the sentence while that data loads.
-A workspace built from the published catalogue projects the
-selected views' catalogue `resourceEvidence` through
-`../viewer/public_workspace_views.ts`. A whole-document page has no workspace:
-`page_evidence_data.ts` reads its status and one evidence record from the
-published page record, or from live `pageEvidence` for a private catalogue,
-and `page_evidence.tsx` renders them in the page's `details.tsx` panel with the
-page wording. `views.tsx` shows that status beside the page title.
+known; an empty or blank name leaves the heading alone. An index without a
+`base` has no name, because `viewerContext` supplies an empty one, so its
+Details keep the rest of the evidence without that sentence. `workspace_data.ts`
+passes the shell's known name to `publicWorkspace`, so a workspace keeps the
+sentence while its entry detail loads. The workspace projects the selected
+views' `resourceEvidence` from the held entry detail through
+`../viewer/public_workspace_views.ts` and `../review/view_evidence.ts`. A
+whole-document page has no workspace: `page_evidence_data.ts` reads its status
+from the index record and its evidence record from the page's entry detail,
+and `page_evidence.tsx` renders them in the page's `details.tsx` panel with
+the page wording. `views.tsx` shows that status beside the page title.
 
-A live entry-scoped fallback never derives cross-entry Usage from `omitted`
-views: `use_workspace_data.ts` exposes loading until matching private evidence
-is adopted and failed after a current read failure or rejection, rather than
-publishing a partial or false-empty list.
+A view whose entry detail is not held carries `omitted` usage, and no list is
+derived from it: `use_workspace_data.ts` exposes loading until the routed
+detail is accepted, and the failed state with retry after a failed or rejected
+load, rather than publishing a partial or false-empty list. It keeps one
+entry-owned workspace object, so a publication that replaces the detail keeps
+loaded usage and local editor state.
 
-Standalone full-document composition lives in `src/standalone`:
-[`../standalone/bootstrap_types.ts`](../standalone/bootstrap_types.ts) owns the
-wire shape and
-[`../standalone/bootstrap_validation.ts`](../standalone/bootstrap_validation.ts)
-validates it before selection. Serve's bootstrap contains the validated
-entry-scoped public catalogue and shell delivery state. Static pages
-carry a compact identity/revision reference and resolve the shared finalized
-complete catalogue before `src/browser.tsx` hydrates that exact server tree.
-The document receives pre-serialized script text; server rendering serializes
-it once and later client renders preserve it verbatim. Live Serve places
-complete private route evidence in a separate descriptor; the capability store
-replaces the fetched page's scoped public bootstrap, source and optional private
-workspace as one monotonic revision instead of accumulating per-route usage.
-`use_workspace_data.ts` keeps one entry-owned workspace object so
-matching evidence refreshes retain already loaded usage and local editor state.
-In a live shell it trusts only the store's workspace bound to the current
-request; the page-lifetime initial workspace seeds that first binding but is
-never reused after navigation, so returning to the first entry shows Loading or
-Failed until its own evidence is adopted.
-The runtime-only scoped catalogue model, projection and strict reader back
-browser hydration and entry/live evidence through one exact-scope boundary.
-Complete live models, missing entry-owned usage and leaked out-of-scope usage
-are rejected. Static external references retain their separate complete-model
-resolution path. Capture validates each live page with the same strict reader
-before replacing its scoped model with that external reference.
-Evidence commits rebuild navigation sections and reconcile the current
-disclosures and pre-filter baseline to exactly their new keys; initial restore
-uses the same `disclosure_storage.ts` reconciliation with an explicit fallback.
-Evidence-only refresh keeps surviving collapsed choices; route navigation owns
-active-route reveal.
-The `nav_rows.tsx` and `nav_leaf_rows.tsx` missing-key defaults remain defensive
-for rendering without a store; mounted shells supply every current key.
-Versioned historical selection adopts new evidence and becomes unavailable if
-that exact snapshot disappears. A removed record without an explicit identity
-can be adopted only while its complete metadata remains unchanged; otherwise
-the existing document reload boundary preserves coherent preview bytes.
-Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
-workspace JSON from a destination shell in the mounted deployment, validating
-the response route, compact catalogue reference, and delivery identities against
-the already installed catalogue without enabling live host behavior or fetching
-the catalogue again.
+Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
+from the stub's origin, shows the loading, failed, and version states, and
+renders the shell chrome; `data_source.ts` reads the index and detail routes,
+and `live_source.ts` the live descriptor, the event stream, and the render
+route of Serve. A publication commit rebuilds the navigation sections and
+reconciles the current disclosures and pre-filter baseline to exactly their
+new keys; initial restore uses the same `disclosure_storage.ts`
+reconciliation with an explicit fallback. A publication keeps surviving
+collapsed choices; route navigation owns active-route reveal. The
+`nav_rows.tsx` and `nav_leaf_rows.tsx` missing-key defaults remain defensive
+for rendering without a store; mounted shells supply every current key. A
+removed-entry route whose snapshot record leaves a refreshed index shows the
+missing state.
 
 `workspace.tsx` coordinates the React workspace without owning transport or
 frame internals. `component_controls.tsx` owns cancellable temporary prop edits;
@@ -317,53 +300,43 @@ navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [rendering boundary of the component controls contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
 defines route loading, revision fencing and export omission.
-The standalone bootstrap contract
-defines usage scope, strict readers, serialization and capture invariants.
 
-Before standalone hydration, stored disclosure and split-width preferences are
-applied to the server DOM. Disclosure helpers treat native `<details>` groups
-and the button-controlled entry-variant lists as the same persisted state.
-Folder identities follow the [folder contract](../../../../docs/protocol/mokly-folders.md#order),
-and persisted values and watched-reload recovery follow the
+Before the first render, the browser entry reads the stored disclosure map,
+the Details choice and the navigation width through
+[`../standalone/preferences.ts`](../standalone/preferences.ts), so the shell
+paints them at once. Disclosure helpers treat native `<details>` groups and the
+button-controlled entry-variant lists as the same persisted state. Folder
+identities follow the [folder contract](../../../../docs/protocol/mokly-folders.md#order),
+and persisted values follow the
 [disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).
-A newer native disclosure activation then wins over that stored value. The
-browser entry reads the resulting DOM into the store's initial state and
-persists the adopted disclosure state; hydration or page exit removes the
-temporary capture. Static catalogue resolution may finish after document load,
-so native choices remain authoritative until hydration starts. React therefore
-adopts the same attributes on its first render instead of replaying preferences
-after hydration.
 
-Appearance has the same explicit handoff with an earlier first-paint boundary.
-`appearance-startup.js` runs before the stylesheet, resolves Auto/Light/Dark,
-and refreshes the parsed control and frame sources before `src/browser.tsx`
-hydrates. [`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts
-that theme and the body's effective
-scheme into the live shell, independently asking the store for matching preview
-files. A light-only catalogue can therefore keep Light previews without
-rewriting a Dark interface during hydration. Without the startup host, the
-bridge leaves the selector hidden. Embedded roots skip the bridge and receive
-`theme` from their host while retaining independent preview controls.
+Appearance follows the same order: the browser entry installs the appearance
+controller of [`../standalone/startup.ts`](../standalone/startup.ts) before the
+first render, so it resolves Auto/Light/Dark from the stored choice or the
+system before the shell paints.
+[`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts that theme
+and the body's effective scheme into the live shell, independently asking the
+store for matching preview files. A light-only catalogue can therefore keep
+Light previews under a Dark interface. Embedded roots skip the bridge and
+receive `theme` from their host while retaining independent preview controls.
 Standalone route installation sends scheme pins to that controller; it never
 changes preview selection separately. A reader's choice wins over later pins
 through navigation and browser history. Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
-comparison backgrounds, including globally light-only catalogues. Startup
-updates this frame value before changing a fragment source.
+comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.tsx` decides when a document keeps its light file under Dark
 in a catalogue with a dark axis. A current document then gets a band above its
 pane, and a removed one a suffix on `Showing previous version`; both carry the
-`Light only` note, which the stylesheet shows only under Dark, so server and
-hydrated markup agree.
+`Light only` note, which the stylesheet shows only under Dark.
 `css_preview_scheme.ts` owns every preview surface background and iframe
 color scheme. Transparent content therefore keeps its selected Light or Dark
 base in screen, page, component, historical and comparison frames, independently
 of interface appearance. Layout styles leave those properties to this module.
-After the bridge mounts, React's frame adapters exclusively own source changes;
-the startup controller only reports the effective scheme, avoiding iframe
-history entries during manual or automatic appearance changes. The frame-source
-hook preserves initial markup and updates sources only for frames without an
-active adapter; it must not race adapter-owned history-replacing navigation.
+React's frame adapters exclusively own source changes; the appearance
+controller only reports the effective scheme, avoiding iframe history entries
+during manual or automatic appearance changes. The frame-source hook keeps the
+first source and updates sources only for frames without an active adapter; it
+must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
@@ -430,10 +403,9 @@ a removed screen share: the "Showing previous version" label, the stage host
 carrying the descriptor the React request lifecycle validates, and the shared
 device chrome around captured screen views. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
-quiet. The served stage holds the unavailable copy without a Retry control,
-because a shell that never hydrates cannot honour that action; the first client
-effect replaces it with the loading state and adds Retry only if its own request
-fails. The request fencing lives in `use_removed_preview.ts`; it creates the
+quiet. The stage shows the loading state while its request runs and adds Retry
+only if that request fails. The request fencing lives in
+`use_removed_preview.ts`; it creates the
 shared snapshot-presentation loader for the loaded generation with only the
 `before` side enabled, then fetches and validates the historical documents
 needed by the selected views before reporting ready. Each loaded frame receives
@@ -455,15 +427,8 @@ See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
 
-During standalone hydration, the workspace adopts the server-rendered status,
-comparison availability and change marks for its first React render. It then
-recomputes that metadata from the active preview selection immediately after
-hydration. The early appearance script already selected the preview files;
-this metadata handoff preserves those frames and avoids rebuilding the shell
-when stored Dark appearance differs from the server's initial Light evidence.
-
 Markdown documents use `DocumentStageFrame` and the plain manifest embed with
 scheme-specific routes. `previews.tsx` and `use_removed_preview.ts` select the
 historical document's scheme through the same page preview lifecycle. Documents
-have no viewport or usage axis. The standalone envelope accepts their entry kind
-so route-scoped bootstraps hydrate and logical links reach the parent shell.
+have no viewport or usage axis; logical links in a document reach the parent
+shell through the frame adapter.

@@ -20,7 +20,7 @@ export const SHELL_NAV_RESIZE_CSS = `
   touch-action: none;
 }
 
-html[data-mokly-hydrated] .mbk-nav[data-resize-ready] .mbk-nav-resize,
+[data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
 :scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
   display: block;
 }
@@ -66,7 +66,7 @@ body.mbk-nav-resizing iframe,
 }
 
 @media (max-width: 56.25rem) {
-  html[data-mokly-hydrated] .mbk-nav[data-resize-ready] .mbk-nav-resize,
+  [data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
   :scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
     display: none;
   }

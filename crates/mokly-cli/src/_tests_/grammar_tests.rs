@@ -2,6 +2,7 @@
 
 use clap::CommandFactory;
 
+use crate::errors::Failure;
 use crate::grammar::{Cli, Verb};
 use crate::options::{Environment, validate};
 use crate::parsing::{ParseError, parse};
@@ -135,6 +136,7 @@ fn environment_fallbacks_and_resource_limits_are_validated() {
     let environment = Environment {
         cores: 4,
         sidecars: Some("2".into()),
+        sidecar_timeout_ms: None,
         endpoint: Some("https://example.com/plan".into()),
         token: Some("secret==".into()),
     };
@@ -178,4 +180,33 @@ fn try_parse(arguments: impl IntoIterator<Item = impl AsRef<str>>) -> Result<Cli
             .map(|argument| argument.as_ref().to_owned())
             .collect::<Vec<_>>(),
     )
+}
+
+#[test]
+fn timeout_environment_is_parsed_once_and_retained_for_the_pool() {
+    for (value, expected) in [("71", 71), ("+1", 1), ("18446744073709551615", u64::MAX)] {
+        let mut cli = parse(&["mokly".into()]).unwrap();
+        validate(
+            &mut cli,
+            &Environment {
+                sidecar_timeout_ms: Some(value.into()),
+                ..Environment::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(cli.common().sidecar_timeout_ms, Some(expected));
+    }
+    for value in ["", "0", "-1", "1.5", " 1", "1 ", "18446744073709551616"] {
+        let mut cli = parse(&["mokly".into()]).unwrap();
+        assert!(matches!(
+            validate(
+                &mut cli,
+                &Environment {
+                    sidecar_timeout_ms: Some(value.into()),
+                    ..Environment::default()
+                }
+            ),
+            Err(Failure::SidecarTimeoutEnvironment)
+        ));
+    }
 }

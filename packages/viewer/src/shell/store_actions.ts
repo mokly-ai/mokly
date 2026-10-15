@@ -7,7 +7,6 @@ import type { ViewerSelection } from "../viewer/types.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import {
-  decodeDisclosureMap,
   disclosureStorageKey,
   encodeDisclosureMap,
 } from "./disclosure_storage.js";
@@ -22,7 +21,6 @@ import { clearTagTerm, parseSearchQuery, setTagTerm } from "./search_query.js";
 import type { ShellBrowserActions } from "./store_browser.js";
 import type { ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
-import { captureScrolls } from "./store_scroll.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
 const detailsStorageKey = "mokly:details-disclosure";
@@ -86,12 +84,6 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         Math.max(192, Math.min(current.navigationMaximum, value)),
       );
       if (!input.embedded) persist(widthStorageKey, String(width));
-    },
-    recoverySnapshot() {
-      return shellRecoverySnapshot(
-        input.stateRef.current,
-        input.interactive && !input.embedded,
-      );
     },
     revealFolder(section, path) {
       const reveal = folderRevealPath(input.sections, section, path);
@@ -208,33 +200,8 @@ export function shellStore(input: StoreActionsInput): ShellStore {
   };
 }
 
-/** Capture reload state without assuming that this shell owns the document. */
-export function shellRecoverySnapshot(
-  state: ShellState,
-  interactive: boolean,
-): ReturnType<ShellStore["recoverySnapshot"]> {
-  const regionScrolls =
-    interactive && typeof document !== "undefined"
-      ? captureScrolls(document)
-      : state.regionScrolls;
-  return {
-    ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
-    disclosures: decodeDisclosureMap(state.disclosures),
-    colorScheme: state.selection.colorScheme,
-    detailsOpen: state.detailsOpen,
-    drawerOpen: state.drawerOpen,
-    filterBaselineDisclosures: state.filterBaseline
-      ? decodeDisclosureMap(state.filterBaseline)
-      : null,
-    navScroll: state.navScroll,
-    query: state.query,
-    regionScrolls,
-    view: state.selection.view,
-    viewport: state.selection.viewport,
-  };
-}
-
-function persistDisclosures(
+/** Persist the disclosure map a standalone shell adopted, unless filtering. */
+export function persistDisclosures(
   selection: ViewerSelection,
   disclosures: Readonly<Record<string, boolean>>,
   standalone: boolean,

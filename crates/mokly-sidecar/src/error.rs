@@ -1,5 +1,6 @@
 //! Fail-closed sidecar error categories.
 
+use std::fmt::{self, Display, Formatter};
 use std::io;
 
 use serde::{Deserialize, Serialize};
@@ -7,6 +8,7 @@ use thiserror::Error;
 use ts_rs::TS;
 
 use crate::diagnostics::DefinitionCode;
+use crate::methods::Call;
 
 /// Sidecar client operation result.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -14,6 +16,29 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Sidecar failures presented by the CLI as build-invalid.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// A request's process crashed on both attempts.
+    #[error("[mokly-sidecar/{kind}] sidecar exited twice during {call}")]
+    RequestCrashed {
+        /// Request's own error category.
+        kind: FailureKind,
+        /// Complete source and view attribution.
+        call: Box<Call>,
+    },
+    /// A generation was disposed or never bundled in this pool.
+    #[error("[mokly-sidecar/bundle-failed] unknown generation {generation}")]
+    UnknownGeneration {
+        /// Requested immutable generation.
+        generation: String,
+    },
+    /// Source bytes changed before a recycled process could reload them.
+    #[error("[mokly-sidecar/bundle-failed] generation {generation} changed while reloading")]
+    GenerationChanged {
+        /// Expected immutable generation.
+        generation: String,
+    },
+    /// The command cancelled its pending and queued sidecar work.
+    #[error("[mokly-sidecar/cancelled] sidecar pool is shut down")]
+    Cancelled,
     /// Node or the sidecar entry could not start.
     #[error("[mokly-sidecar/sidecar-unavailable] {part} is unavailable")]
     Unavailable {
@@ -42,7 +67,15 @@ pub enum Error {
         /// Diagnostic detail returned by the sidecar.
         message: String,
     },
-    /// The request exceeded its retry deadline.
+    /// A request exceeded the deadline on both attempts.
+    #[error("[mokly-sidecar/render-timeout] {call} exceeded {deadline_ms}ms")]
+    RequestTimeout {
+        /// Complete source and view attribution.
+        call: Box<Call>,
+        /// Applied deadline.
+        deadline_ms: u64,
+    },
+    /// A single process exchange exceeded its deadline.
     #[error("[mokly-sidecar/render-timeout] request exceeded {deadline_ms}ms")]
     Timeout {
         /// Applied deadline.
@@ -51,6 +84,39 @@ pub enum Error {
     /// The transport implementation failed.
     #[error("[mokly-sidecar/internal] {0}")]
     Internal(#[from] InternalError),
+}
+
+/// Error category retained after a sidecar crashes twice.
+#[derive(Debug)]
+pub enum FailureKind {
+    /// Bundling, evaluation, or PostCSS request.
+    Bundle,
+    /// Component, screen, story, or page request.
+    Render,
+}
+
+impl FailureKind {
+    pub(crate) fn for_call(call: &Call) -> Self {
+        match call {
+            Call::Bundle(_)
+            | Call::Describe(_)
+            | Call::ProcessCss(_)
+            | Call::CssModules(_)
+            | Call::Bindings(_)
+            | Call::Dispose(_)
+            | Call::DisposeContext(_) => Self::Bundle,
+            _ => Self::Render,
+        }
+    }
+}
+
+impl Display for FailureKind {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::Bundle => "bundle-failed",
+            Self::Render => "render-failed",
+        })
+    }
 }
 
 /// Malformed protocol reasons; each requires replacing the sidecar.
@@ -130,4 +196,13 @@ pub enum InternalError {
         /// Original error.
         source: io::Error,
     },
+    /// A process-group operation failed.
+    #[error("process ownership failed: {source}")]
+    Platform {
+        /// Original platform error.
+        source: mokly_platform::error::Error,
+    },
+    /// A pipe worker or pool state is no longer available.
+    #[error("sidecar synchronization failed")]
+    Synchronization,
 }
