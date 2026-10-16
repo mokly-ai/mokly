@@ -36,6 +36,8 @@ pub enum Fallback {
     InvalidInput,
     /// An ancestor directory used by the head is absent from the base installation.
     MissingDirectory(String),
+    /// Importer lookup uses a directory outside the supported base mapping.
+    UnmappedDirectory(String),
     /// Cache preparation failed.
     Cache,
 }
@@ -72,6 +74,12 @@ impl Warning {
             Fallback::LocalOutside => "local package outside the repository",
             Fallback::InvalidInput => "invalid dependency input",
             Fallback::Cache => "cache unavailable",
+            Fallback::UnmappedDirectory(directory) => {
+                return format!(
+                    "base dependency lookup{location} cannot preserve {}; using working-tree dependencies (configure moduleResolution.packageRoots)",
+                    quoted(directory)
+                );
+            }
             Fallback::MissingDirectory(directory) => {
                 return format!(
                     "base dependencies{location} lack {}; using working-tree dependencies",
@@ -101,6 +109,8 @@ pub struct Request {
     pub configuration: RepoPath,
     /// Ancestor node_modules directories actually used by the current side.
     pub used_directories: Vec<String>,
+    /// Used directories whose importer lookup the base cannot preserve.
+    pub unmapped_directories: Vec<String>,
     /// Normalized repository-relative package roots and other settings.
     pub resolution: ModuleResolution,
 }

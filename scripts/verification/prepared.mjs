@@ -1,13 +1,27 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-/** Require the viewer's build without invoking the absent backend. */
-export async function requirePrepared(repositoryRoot) {
+/** Require the build under test without preparing or modifying it. */
+export async function requirePrepared(
+  repositoryRoot,
+  { browser = false } = {},
+) {
   const missing = [];
-  for (const name of [
+  const files = [
     "packages/viewer/dist/index.js",
     "packages/viewer/dist/browser/inspector.js",
-  ]) {
+  ];
+  if (browser) {
+    const { platformPackage } =
+      await import("../../packages/mokly/src/platform.mjs");
+    files.push(
+      "packages/mokly/dist/shim.mjs",
+      "packages/mokly/dist/sidecar.js",
+      "packages/viewer/dist/browser/shell.js",
+      `packages/${platformPackage(process.platform, process.arch, true).replace("@mokly/", "")}/bin/${process.platform === "win32" ? "mokly.exe" : "mokly"}`,
+    );
+  }
+  for (const name of files) {
     try {
       if (!(await fs.stat(path.join(repositoryRoot, name))).isFile())
         missing.push(name);

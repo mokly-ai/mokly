@@ -3,8 +3,9 @@
 use std::env;
 use std::io::IsTerminal;
 use std::process::ExitCode;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
+use crate::serve_lifecycle::ServeLifecycle;
 use mokly_catalogue::config::relative;
 use mokly_cli::build_output;
 use mokly_cli::cancellation::{Cancellation, ServeCancellation};
@@ -22,19 +23,19 @@ use mokly_server::error::{InternalError, ServerError};
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::publication::SharedPublication;
 use mokly_server::runtime::{ServerRuntime, TokioServer};
-use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::Projector;
 use mokly_server::work::{Workers, parallelism};
 use tokio::sync::{mpsc, watch};
 
-use crate::serve_candidates::ManualCandidates;
+use crate::serve_candidates::{CandidateWork, ManualCandidates};
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
 use crate::serve_services::ServeServices;
 use crate::serve_state::{NativeServeState, ServeStateFactory};
 use crate::serve_timing::ServeTiming;
+use crate::serve_watch::{WatchInputs, WatchedInputs};
 use crate::terminal::Terminal;
-use crate::{serve_controls, serve_shutdown, serve_signals, serve_trace};
+use crate::{serve_controls, serve_preparation, serve_shutdown, serve_signals, serve_trace};
 
 pub(super) fn run(
     common: &Common,
@@ -64,7 +65,7 @@ pub(super) fn run(
     let services = match ServeServices::new(&cwd, common, redactor.clone(), cancellation.clone()) {
         Ok(services) => services,
         Err(error) => {
-            terminal.stderr(&build_output::failure(style, &error, &redactor));
+            terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
             return ExitCode::FAILURE;
         }
     };
@@ -88,19 +89,44 @@ pub(super) fn run(
             Ok(signals) => signals,
             Err(source) => return Err(ServerError::Internal(InternalError::Io { source })),
         };
-        let shutdown = serve_shutdown::start(
-            receiver.clone(),
-            cancellation.clone(),
-            services.pool.clone(),
-        );
+        let phase = Arc::new(serve_shutdown::Phase::default());
+        let lifecycle = Arc::new(ServeLifecycle {
+            watch: Mutex::new(None),
+            cancellation: cancellation.clone(),
+            pool: services.pool.clone(),
+        });
+        let candidates = Arc::new(ManualCandidates::new(lifecycle.clone()));
+        let shutdown = serve_shutdown::start(receiver.clone(), candidates.clone(), phase.clone());
+        let mut reserved = None;
         let result = async {
-            let prepare = preparation.clone();
-            let prepare_cwd = cwd.clone();
-            let prepare_common = common.clone();
-            let parent = tracing::Span::current();
-            let prepared = match tokio::task::spawn_blocking(move || {
-                parent.in_scope(|| prepare.prepare(&prepare_cwd, &prepare_common))
-            })
+            let watching: Option<Arc<dyn WatchInputs>> = {
+                let mut slot = lifecycle
+                    .watch
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner());
+                if !phase.starting() || *receiver.borrow() {
+                    return Ok(ExitCode::SUCCESS);
+                }
+                let watching: Option<Arc<dyn WatchInputs>> = if options.no_watch {
+                    None
+                } else {
+                    Some(Arc::new(WatchedInputs::new(
+                        tree.clone(),
+                        &services.config,
+                    )?))
+                };
+                *slot = watching.clone();
+                watching
+            };
+            let Some(preparing) = candidates.enter() else {
+                return Ok(ExitCode::SUCCESS);
+            };
+            let prepared = match serve_preparation::initial(
+                preparation.clone(),
+                watching.clone(),
+                &cwd,
+                common,
+            )
             .await
             {
                 Ok(Ok(prepared)) => prepared,
@@ -108,11 +134,13 @@ pub(super) fn run(
                     if *receiver.borrow() {
                         return Ok(ExitCode::SUCCESS);
                     }
-                    terminal.stderr(&build_output::failure(style, &error, &redactor));
+                    terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
                     return Ok(ExitCode::FAILURE);
                 }
-                Err(source) => return Err(ServerError::Internal(InternalError::Task { source })),
+                Err(_) if *receiver.borrow() => return Ok(ExitCode::SUCCESS),
+                Err(source) => return Err(source),
             };
+            drop(preparing);
             if *receiver.borrow() {
                 return Ok(ExitCode::SUCCESS);
             }
@@ -131,6 +159,7 @@ pub(super) fn run(
             let base = snapshot.index.base.clone().unwrap_or_default();
             let publications = Arc::new(SharedPublication::new(snapshot));
             let reporter = Arc::new(ServeLines {
+                cwd: cwd.clone(),
                 cancellation: cancellation.clone(),
                 terminal: terminal.clone(),
                 style: style.clone(),
@@ -165,27 +194,33 @@ pub(super) fn run(
                 interactive,
                 &redactor,
             );
-            terminal.stdout(&layout);
-            terminal.stderr(&build_output::warnings(
-                style,
-                &prepared.summary.warnings,
-                &redactor,
-            ));
-            terminal.stdout(&serve_output::catalogue(
-                style,
-                &prepared.summary,
-                timing.elapsed(),
-            ));
-            terminal.stdout(&serve_output::changes_unavailable(
-                style,
-                "Git comparison is unavailable in this build.",
-                &redactor,
-            ));
+            if *receiver.borrow()
+                || !phase.serve(&|| {
+                    terminal.stdout(&layout);
+                    terminal.stderr(&build_output::warnings(
+                        style,
+                        &prepared.summary.warnings,
+                        &redactor,
+                    ));
+                    terminal.stdout(&serve_output::catalogue(
+                        style,
+                        &prepared.summary,
+                        timing.elapsed(),
+                    ));
+                    terminal.stdout(&serve_output::changes_unavailable(
+                        style,
+                        "Git comparison is unavailable in this build.",
+                        &redactor,
+                    ));
+                })
+            {
+                reserved = Some(server);
+                return Ok(ExitCode::SUCCESS);
+            }
             timing.ready();
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }
-            let candidates = Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle)));
             let (rebuild, requests) = mpsc::channel(1);
             let controls = serve_controls::start(
                 interactive,
@@ -200,6 +235,7 @@ pub(super) fn run(
                 },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
+                watching,
                 candidates: candidates.clone(),
                 preparation: preparation.clone(),
                 states,
@@ -227,7 +263,9 @@ pub(super) fn run(
         stop.send_replace(true);
         let shutdown = shutdown.await;
         signals.abort();
-        serve_shutdown::finish(shutdown)?;
+        let finished = serve_shutdown::finish(shutdown);
+        drop(reserved);
+        finished?;
         result
     });
     match result {

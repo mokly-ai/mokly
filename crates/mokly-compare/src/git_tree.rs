@@ -200,7 +200,7 @@ impl SourceTree for GitTree {
         Ok(bytes)
     }
 
-    fn public_digest(&self, path: &Path) -> Result<String> {
+    fn digest(&self, path: &Path) -> Result<String> {
         let Some(relative) = self.relative(path)? else {
             return Err(failure("digest", path, io::ErrorKind::IsADirectory));
         };

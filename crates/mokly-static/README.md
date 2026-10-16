@@ -34,8 +34,15 @@ installation or recovery survives. Cleanup errors retain their recovery paths. O
 comes from a non-following handle and `GetFileInformationByHandle`. The identity
 retains the volume, file index, and creation time.
 
+Input capture and final verification use digest reads for hash-only inputs.
+The snapshot keeps bytes only for actual parsing and delivery.
+
 The CLI owns configuration, complete rendering, sidecar shutdown, and publish
 orchestration. The comparison engine supplies generation output at the same assembly boundary.
+
+Public source reads forward without retaining their bytes. The captured tree
+records their hashes for the final live verification. Digest-only capture uses
+the same streaming adapter and per-path snapshot hash as graph planning.
 
 ## Quick Start
 
@@ -55,7 +62,10 @@ cargo clippy -p mokly-static --all-targets -- -D warnings
 ```
 
 Unit tests mock filesystem boundaries with unimock. Integration tests exercise
-real exclusive directory moves and injected installation races.
+real exclusive directory moves and injected installation races, including
+owned substitutions, empty destination conflicts, unowned captured files,
+reservation mutations, Unicode paths, and cancellation. CLI process tests
+exercise retained recovery bytes through debug-only fault adapters.
 
 ### Key Code
 

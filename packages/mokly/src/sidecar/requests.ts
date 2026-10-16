@@ -8,6 +8,7 @@ const shapes: Record<string, string[]> = {
   hello: [],
   shutdown: [],
   bundle: [
+    "evaluation",
     "entryFiles",
     "storiesFiles",
     "renderer",
@@ -16,6 +17,7 @@ const shapes: Record<string, string[]> = {
     "configurationDirectory",
     "repositoryRoots",
   ],
+  restoreGeneration: ["generation", "params", "compiled", "modules"],
   describe: ["generation"],
   dispose: ["generation"],
   disposeContext: ["context"],
@@ -73,14 +75,43 @@ export function request(value: unknown): Request {
   const params = value.params;
   if (
     Object.keys(params).some((key) => !expected.includes(key)) ||
-    expected.some((key) => key !== "renderer" && !Object.hasOwn(params, key))
+    expected.some(
+      (key) =>
+        key !== "renderer" &&
+        key !== "evaluation" &&
+        !Object.hasOwn(params, key),
+    )
   )
     protocol(`invalid params for ${value.method}`);
   if (value.method === "bundle" && !Object.hasOwn(params, "renderer"))
     params.renderer = null;
+  if (value.method === "restoreGeneration") {
+    if (!record(params.params) || !record(params.compiled))
+      protocol("restoreGeneration requires params and compiled objects");
+    request({ id: value.id, method: "bundle", params: params.params });
+    if (!Array.isArray(params.modules))
+      protocol("restoreGeneration requires modules");
+    for (const key of ["identity", "code", "runtimeKey"])
+      if (typeof params.compiled[key] !== "string")
+        protocol(`compiled.${key} must be a string`);
+    for (const key of ["dependencyRoots", "cssModules"])
+      if (!Array.isArray(params.compiled[key]))
+        protocol(`compiled.${key} must be an array`);
+    for (const key of [
+      "sources",
+      "peers",
+      "inputs",
+      "metadataInputs",
+      "inputDirectories",
+      "metadataDirectories",
+    ])
+      if (!record(params.compiled[key]))
+        protocol(`compiled.${key} must be an object`);
+  }
   parameterShapes(params);
   for (const key of [
     "generation",
+    "evaluation",
     "context",
     "configurationDirectory",
     "handle",

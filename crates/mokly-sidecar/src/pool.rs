@@ -1,21 +1,30 @@
 //! Lazy bounded sidecar pool, queueing, retry, recycling, and cancellation.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
-use crate::error::{Error, FailureKind, InternalError, ProtocolError, Result};
+use crate::error::{Error, InternalError, Result};
 use crate::methods::Call;
 use crate::pool_options::{Launch, PoolOptions};
+use crate::pool_releases::Notice;
 use crate::pool_state::{Slot, State};
 use crate::wire::MethodResult;
 use crate::workers::{Clock, WorkerFactory};
+use crate::{pool_affinity, pool_cleanup};
 
 /// Pool boundary consumed by catalogue and rendering services.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PoolMock))]
 pub trait SidecarPool: Send + Sync {
     /// Enqueue one request and return its complete result, or fail closed.
     fn request(&self, call: Call) -> Result<MethodResult>;
-    /// Cancel queued work, drain active requests, and bound shutdown to two seconds.
+    /// Record an epoch-specific final lease release without waiting for a worker.
+    fn release_generation(&self, generation: &str, epoch: u64);
+    /// Record a final PostCSS context release without waiting for a worker.
+    fn release_context(&self, context: &str);
+    /// Cancel queued calls, kill and reap busy workers, and retain idle workers for shutdown.
+    fn cancel_requests(&self) -> Result<()>;
+    /// Cancel work, allow a two-second exit grace, then kill and reap survivors.
     fn shutdown(&self) -> Result<()>;
     /// Kill every owned process without waiting for the graceful shutdown deadline.
     fn abort(&self) -> Result<()>;
@@ -27,8 +36,9 @@ pub struct Pool {
     pub(super) clock: Arc<dyn Clock>,
     pub(super) launch: Launch,
     pub(super) options: PoolOptions,
-    state: Mutex<State>,
-    pub(super) ready: Condvar,
+    pub(super) state: Arc<Mutex<State>>,
+    pub(super) releases: Option<Sender<Notice>>,
+    pub(super) ready: Arc<Condvar>,
 }
 
 impl Pool {
@@ -39,14 +49,18 @@ impl Pool {
         launch: Launch,
         options: PoolOptions,
     ) -> Self {
-        Self {
+        let (sender, receiver) = mpsc::channel();
+        let pool = Self {
             factory,
             clock,
             launch,
             options,
-            state: Mutex::new(State::default()),
-            ready: Condvar::new(),
-        }
+            state: Arc::new(Mutex::new(State::default())),
+            ready: Arc::new(Condvar::new()),
+            releases: Some(sender),
+        };
+        pool.start_releases(receiver);
+        pool
     }
 
     pub(super) fn lock(&self) -> Result<MutexGuard<'_, State>> {
@@ -56,25 +70,32 @@ impl Pool {
         }
     }
 
-    fn acquire(&self) -> Result<(usize, Option<Slot>)> {
+    pub(super) fn acquire(&self, call: &Call) -> Result<(usize, Option<Slot>)> {
         let mut state = self.lock()?;
         let ticket = state.ticket;
         state.ticket += 1;
+        let context = match call {
+            Call::ProcessCss(params) => Some(params.context.clone()),
+            _ => None,
+        };
+        state.waiting.insert(ticket, context);
         self.ready.notify_all();
         loop {
             if state.stopped {
+                state.waiting.remove(&ticket);
                 return Err(Error::Cancelled);
             }
-            if ticket == state.serving {
-                let index = state.available.pop_front().or_else(|| {
-                    if state.slots.len() < self.options.size.get() {
-                        state.slots.push(None);
-                        Some(state.slots.len() - 1)
-                    } else {
-                        None
-                    }
-                });
+            let first = state
+                .waiting
+                .iter()
+                .find(|(_, context)| {
+                    pool_affinity::runnable(&state, context.as_deref(), self.options.size.get())
+                })
+                .map(|(ticket, _)| *ticket);
+            if first == Some(ticket) {
+                let index = pool_affinity::acquire(&mut state, call, self.options.size.get());
                 if let Some(index) = index {
+                    state.waiting.remove(&ticket);
                     state.serving += 1;
                     let slot = state.slots[index].take();
                     self.ready.notify_all();
@@ -88,10 +109,11 @@ impl Pool {
         }
     }
 
-    fn spawn(&self, index: usize) -> Result<Slot> {
+    pub(super) fn spawn(&self, index: usize) -> Result<Slot> {
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
+        self.lock()?.memory.entry(index).or_default().started();
         let mut spawned = self.factory.spawn(&self.launch)?;
         {
             let mut state = self.lock()?;
@@ -121,120 +143,29 @@ impl Pool {
         })
     }
 
-    fn release(&self, index: usize, slot: Option<Slot>) -> Result<()> {
+    pub(super) fn release(&self, index: usize, mut slot: Option<Slot>) -> Result<()> {
+        if let Some(current) = &mut slot
+            && let Err(error) = self.cleanup(current)
+        {
+            tracing::warn!(%error, "sidecar cleanup failed");
+            let _ = current.control.kill();
+            slot = None;
+        }
         let mut state = self.lock()?;
-        state.slots[index] = slot;
+        state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
         }
         state.available.push_back(index);
+        if state.slots[index]
+            .as_ref()
+            .is_some_and(|slot| pool_cleanup::pending(&state, slot))
+            && let Some(sender) = &self.releases
+        {
+            let _ = sender.send(Notice::Work);
+        }
         self.ready.notify_all();
         Ok(())
-    }
-}
-
-impl SidecarPool for Pool {
-    fn request(&self, call: Call) -> Result<MethodResult> {
-        if matches!(call, Call::Shutdown(_)) {
-            self.shutdown()?;
-            return Ok(MethodResult::Empty);
-        }
-        if matches!(call, Call::Hello(_)) {
-            return Err(Error::Protocol(ProtocolError::Handshake));
-        }
-        let (index, mut slot) = self.acquire()?;
-        let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
-        let mut outcome = Err(Error::Crashed);
-        for attempt in 0..2 {
-            if self.lock()?.stopped {
-                outcome = Err(Error::Cancelled);
-                break;
-            }
-            let mut current = match slot.take() {
-                Some(slot) => slot,
-                None => match self.spawn(index) {
-                    Ok(slot) => slot,
-                    Err(error) => {
-                        let retryable = matches!(error, Error::Crashed | Error::Timeout { .. });
-                        outcome = Err(error);
-                        if retryable && attempt == 0 {
-                            continue;
-                        }
-                        break;
-                    }
-                },
-            };
-            outcome = self.execute(&mut current, &call, deadline);
-            let retryable = matches!(&outcome, Err(Error::Crashed | Error::Timeout { .. }));
-            let reusable = outcome.is_ok()
-                || matches!(
-                    &outcome,
-                    Err(Error::UnknownGeneration { .. } | Error::GenerationChanged { .. })
-                )
-                || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable())
-                || matches!(&outcome, Err(Error::Postcss { .. }));
-            if !reusable {
-                let killed = current.control.kill();
-                if let Err(error) = killed {
-                    outcome = Err(error);
-                    break;
-                }
-                if retryable && attempt == 0 {
-                    continue;
-                }
-            } else {
-                slot = Some(current);
-            }
-            break;
-        }
-        if let Some(current) = slot.as_mut() {
-            current.requests += 1;
-            let memory = current.worker.resident_bytes();
-            if current.renders >= 500
-                || (current.requests > 1
-                    && matches!(memory, Ok(bytes) if bytes > 1024 * 1024 * 1024))
-            {
-                let drained = current.control.shutdown().and_then(|()| {
-                    current
-                        .control
-                        .finish(self.clock.now_ms().saturating_add(2_000))
-                });
-                if let Err(error) = drained {
-                    tracing::warn!(%error, "sidecar recycle shutdown failed");
-                    if let Err(error) = current.control.kill() {
-                        tracing::warn!(%error, "sidecar recycle kill failed");
-                    }
-                }
-                slot = None;
-            }
-        }
-        let cancelled = self.lock()?.stopped;
-        self.release(index, slot)?;
-        if matches!(outcome, Err(Error::Crashed)) {
-            let kind = FailureKind::for_call(&call);
-            outcome = Err(Error::RequestCrashed {
-                kind,
-                call: Box::new(call.clone()),
-            });
-        }
-        if let Err(Error::Timeout { deadline_ms }) = outcome {
-            outcome = Err(Error::RequestTimeout {
-                call: Box::new(call),
-                deadline_ms,
-            });
-        }
-        if cancelled {
-            Err(Error::Cancelled)
-        } else {
-            outcome
-        }
-    }
-
-    fn shutdown(&self) -> Result<()> {
-        self.stop(false)
-    }
-    fn abort(&self) -> Result<()> {
-        self.stop(true)
     }
 }
 
@@ -269,3 +200,27 @@ mod pool_reload_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_abort_tests.rs"]
 mod pool_abort_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_pressure_tests.rs"]
+mod pool_pressure_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_lease_tests.rs"]
+mod pool_lease_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_context_tests.rs"]
+mod pool_context_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_scheduling_tests.rs"]
+mod pool_scheduling_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_shutdown_order_tests.rs"]
+mod pool_shutdown_order_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_provenance_tests.rs"]
+mod pool_provenance_tests;

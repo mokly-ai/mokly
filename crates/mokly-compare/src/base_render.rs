@@ -6,15 +6,16 @@ use std::sync::Arc;
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_git::identity::ObjectId;
-use mokly_git::repository::{Repositories, Repository};
+use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::material::catalogue_key;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::base_selection::{BaseLookup, PinnedBase};
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
-use crate::error::{Error, GitResult, Result};
+use crate::error::{Error, Result};
 use crate::git_tree::GitTree;
 use crate::source_failures::SourceFailures;
 use crate::sources::{GitSources, Sources};
@@ -100,7 +101,9 @@ pub trait ChangesService: Send + Sync {
 /// Orchestration has no direct filesystem, process, or sidecar dependency.
 pub struct Changes {
     /// Repository-root identity and bounded Git operations.
-    pub repositories: Arc<dyn Repositories>,
+    pub lookup: Arc<dyn BaseLookup>,
+    /// Selection already pinned during static output admission.
+    pub pinned: Option<Arc<PinnedBase>>,
     /// Batched source-tree factory.
     pub sources: Arc<dyn BaseSourceFactory>,
     /// Same HTML/JavaScript provider boundary for the historical generation.
@@ -116,15 +119,15 @@ impl ChangesService for Changes {
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
-        let base = selected_base(config, base);
-        let (repository, commit) = {
-            let span = tracing::info_span!("review.base-commit", status = "error");
-            let _entered = span.enter();
-            let repository = self.repositories.open(&config.repo_root).base()?;
-            let commit = repository.merge_base(base).base()?;
-            span.record("status", "ok");
-            (repository, commit)
+        let selected = match &self.pinned {
+            Some(pinned) => pinned.clone(),
+            None => self
+                .lookup
+                .pin(&config.repo_root, selected_base(config, base))?,
         };
+        let base = &selected.reference;
+        let repository = selected.repository.clone();
+        let commit = selected.commit.clone();
         let sources = self
             .sources
             .create(repository.clone(), commit.clone(), &config.repo_root)?;

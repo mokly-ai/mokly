@@ -75,7 +75,10 @@ roots from the selected installation and keeps the other settings. Ancestor
 roots precede explicit roots in Node's order. Supply the head's observed
 ancestor dependency directories in `Request.used_directories`. If a base
 install lacks one of these directories, the result uses working dependencies
-with a warning that names the missing directory.
+with a warning that names the missing directory. Used importer directories
+outside the supported lookup also select fallback, including when dependency
+inputs are equal. Each fallback has a typed trace reason. Such workspace layouts
+need explicit package roots; conflicting copies can still require fallback.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 It releases parsed documents after collecting canonical and containment proof.
@@ -88,7 +91,9 @@ budgets make Changes unavailable with the path and limit. Actual-instance implem
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
 
-`Changes` implements `dyn ChangesService`. `BaseProvider` supplies the base
+`GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
+merge base. Static commands retain that `PinnedBase` before current rendering.
+`Changes` implements `dyn ChangesService` and reuses the pin when supplied. `BaseProvider` supplies the base
 render generation through the common graph. HTML needs no extraction. A
 JavaScript provider uses the same request's source and repository handles
 for extraction and dependency leases. The CLI supplies `mokly-render::Runtime`

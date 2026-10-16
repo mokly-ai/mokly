@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::compiled::CompiledGeneration;
 use crate::render_records::{CollectedStyle, MarkerDraft};
 use crate::usage::{InstanceDraft, SlotDraft};
 
@@ -19,6 +20,10 @@ pub struct Hello {
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
 pub struct Module {
+    /// Digest of the bytes that the bundler actually consumed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub digest: Option<String>,
     /// Repository-relative source path.
     pub path: String,
     /// Resolved logical paths in source order.
@@ -40,6 +45,22 @@ pub struct Warning {
 #[serde(deny_unknown_fields)]
 #[ts(rename = "BundleResult")]
 pub struct Bundle {
+    /// Used repository dependency directories whose importer lookup is not mapped.
+    #[serde(
+        default,
+        rename = "unmappedDependencyDirectories",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub unmapped_dependency_directories: Option<Vec<String>>,
+    /// Pool-owned lifetime epoch; never crosses the wire.
+    #[serde(skip)]
+    #[ts(skip)]
+    pub epoch: u64,
+    /// Immutable code for restoration and evaluation-only reuse.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub compiled: Option<CompiledGeneration>,
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.
@@ -115,6 +136,14 @@ pub struct Dependency {
 #[serde(deny_unknown_fields)]
 #[ts(rename = "CssResult")]
 pub struct Css {
+    /// Used repository dependency directories whose importer lookup is not mapped.
+    #[serde(
+        default,
+        rename = "unmappedDependencyDirectories",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub unmapped_dependency_directories: Option<Vec<String>>,
     /// Transformed stylesheet text.
     pub text: String,
     /// Watch dependencies.

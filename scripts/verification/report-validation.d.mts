@@ -7,6 +7,16 @@ export function validateUnshardedReport(
   expected: {
     commit: string;
     runtime: string;
-    suite: "viewer";
+    suite: "viewer" | "browser";
+  },
+): void;
+
+export function validateShardReports(
+  reports: readonly unknown[],
+  expected: {
+    commit: string;
+    runtime: string;
+    suite: "browser";
+    total: number;
   },
 ): void;

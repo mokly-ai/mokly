@@ -50,13 +50,14 @@ A Windows console without Windows Terminal or a known terminal host uses
 ASCII: `+`, `x`, `!`, `R`, `L`, `C`, and `G`. The spinner uses Braille frames
 in modern terminals and `|`, `/`, `-`, `\\` in the fallback.
 
-Every rich line is bounded by stdout's current positive `columns` value, or 80
-columns when unavailable. Mokly accounts for ANSI control sequences when
-measuring, truncates content with a single ellipsis where possible, preserves
-complete styling sequences in the kept prefix, and never writes a partial
-escape sequence. A shortened styled line ends with a full style reset so its
-colour cannot bleed into later output. Authored paths are made relative to
-the repository when possible before truncation.
+Rich lines are bounded by stdout's positive `columns` value, or 80 columns
+when unavailable. Mokly counts display columns, preserves complete ANSI
+sequences, and truncates with one ellipsis where possible. A shortened styled
+line ends with a full reset. Authored paths are repository-relative when possible.
+Recovery paths are the exception: each backup, reservation, or retained private
+output path has its own detail line and is never truncated. These paths are
+relative to the current directory when inside it, otherwise absolute. Control
+escaping and token redaction still apply.
 
 ## Spinner Lifecycle
 
@@ -112,15 +113,13 @@ interactive stdin. Serve then reports its lifecycle boundaries:
   ✔ Changes ready · 5 changes · 1 moved · 2 ignored-only              3.6s
 ```
 
-Catalogue counts come from the catalogue model; zero-valued kinds are omitted.
-Catalogue counts include saved variants as entries of their parent's kind.
+Counts come from the catalogue model, include saved variants in their parent's kind, and omit zero-valued kinds.
 Unavailable Changes says `! Changes unavailable` with its reason and keeps All browsable.
 Base diagnostics follow [base preparation](./mokly-base-preparation.md#shared-render-runtime).
 Serve reports each state's
 [build warnings](./mokly-build-warnings.md) immediately before
-`Catalogue ready`; on-demand renders never repeat them, and the
-`base-dependencies` warning of the
-[comparison contract](./mokly-comparison.md#sides) prints before
+`Catalogue ready`; on-demand renders never repeat them, and the `base-dependencies`
+warning of the [comparison contract](./mokly-comparison.md#sides) prints before
 `Changes ready`. `Changes ready` reports the
 [Changes count](./mokly-catalogue-changes.md#changes-count) as `<n> changes`,
 then nonzero `<n> moved` and `<n> ignored-only` counts. Ignored-only counts
@@ -147,6 +146,15 @@ paths become `+<n> more`. The action words are `rebuilt`, `reloaded`,
 `config reloaded`, and `comparing again`. A coalesced burst keeps every
 observed candidate path even when its strongest action subsumes the others.
 
+A manual action uses `manual rebuild` as its path label.
+Event loss prints `Watch notifications were lost. Rescanning catalogue inputs.`
+Rich mode prefixes `!`; plain mode prefixes `[mokly/warning]`.
+A changed `repoRoot` prints this diagnostic before module evaluation:
+
+```text
+[mokly/build-invalid] repoRoot changed. Restart Serve to apply this setting.
+```
+
 A failed watched action keeps the last-good catalogue and renders:
 
 ```text
@@ -155,22 +163,14 @@ A failed watched action keeps the last-good catalogue and renders:
             The last good catalogue is still being served.
 ```
 
+Plain watched failures retain the [plain error form](./mokly-terminal-errors.md#plain-compatibility).
 The sidecar's standard error is routed through the reporter as diagnostic
 lines, so consumer output cannot corrupt a spinner.
 
 ## Cache Directory
 
-The first time a command opens the base-side extraction cache or the
-dependency install cache of the
-[runtime contract](./mokly-runtime.md#render-graph-and-cache), it writes one
-line that names the directory. Rich mode prints it dimmed before the next
-durable line; plain mode prints the exact string of the compatibility
-contract on stdout. The line appears once per process and names the directory
-so a reader can delete it, which is always safe.
-
-```text
-  cache ~/.cache/mokly/3f9c1a…
-```
+The [cache directory line](./mokly-terminal-cache.md#cache-directory) names the
+first cache opened by the process in both output modes.
 
 ## One-Shot Commands
 

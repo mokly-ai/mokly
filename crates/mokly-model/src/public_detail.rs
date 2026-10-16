@@ -10,7 +10,7 @@ use crate::usage::CatalogueUsage;
 use crate::wire_props::ComponentWireProps;
 
 /// Entry identity repeated by its detail.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DetailEntry {
     /// Complete entry path.
@@ -24,7 +24,7 @@ pub struct DetailEntry {
 }
 
 /// One view's usage and public comparison evidence.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DetailView {
     /// Viewport axis.
@@ -40,7 +40,7 @@ pub struct DetailView {
 }
 
 /// One current or affected component use.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UsageLink {
     /// Consuming screen or component entry path.
@@ -64,7 +64,7 @@ pub struct UsageLink {
 }
 
 /// Kinds with component usage and viewport views.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum VisualKind {
     /// Screen entry.
@@ -74,7 +74,7 @@ pub enum VisualKind {
 }
 
 /// One instance whose complete props differ.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InputChange {
     /// Effective instance id.
@@ -96,7 +96,7 @@ pub struct InputChange {
 }
 
 /// Comparison and component workspace lists.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Workspace {
     /// Whether this entry has an eligible comparison.
@@ -112,7 +112,7 @@ pub struct Workspace {
 }
 
 /// Changed component reference.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RelatedComponent {
     /// Current component path.
@@ -122,7 +122,7 @@ pub struct RelatedComponent {
 }
 
 /// One public entry detail, current or historical.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct EntryDetailV1 {
     /// Must equal 1; readers gate it first.
@@ -157,7 +157,7 @@ pub struct EntryDetailV1 {
 }
 
 /// Private local-Serve render capability.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RenderCapability {
     /// Exactly /mokly-viewer/components/render.
@@ -168,7 +168,7 @@ pub struct RenderCapability {
 }
 
 /// Serve render capability fenced by generation.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LiveDescriptorV3 {
     /// Must equal 3; readers gate it first.

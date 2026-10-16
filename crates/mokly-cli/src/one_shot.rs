@@ -1,7 +1,7 @@
 //! One owner for one-shot phases, warnings, progress, and durable completion.
 
 use std::io::{self, IsTerminal};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -13,6 +13,7 @@ use mokly_cli::build_output;
 use mokly_cli::changes_output;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::publication::command::BuildReporter;
+use mokly_cli::recovery_output;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
 use mokly_model::output::artifact::Artifact;
@@ -24,6 +25,7 @@ use crate::phase_format::{duration, frame};
 use crate::terminal::Terminal;
 
 pub(super) struct Lines {
+    cwd: PathBuf,
     style: Style,
     redactor: Arc<Redactor>,
     terminal: Arc<dyn Terminal>,
@@ -40,7 +42,12 @@ struct State {
 }
 
 impl Lines {
-    pub(super) fn new(style: Style, redactor: Arc<Redactor>, terminal: Arc<dyn Terminal>) -> Self {
+    pub(super) fn new(
+        style: Style,
+        redactor: Arc<Redactor>,
+        terminal: Arc<dyn Terminal>,
+        cwd: PathBuf,
+    ) -> Self {
         let state = Arc::new(Mutex::new(State::default()));
         let (stop, receiver) = mpsc::channel();
         let animate = style.mode == Mode::Rich && io::stdout().is_terminal();
@@ -66,6 +73,7 @@ impl Lines {
             None
         };
         Self {
+            cwd,
             style,
             redactor,
             terminal,
@@ -144,13 +152,13 @@ impl Phases for Lines {
         if self.style.mode == Mode::Plain {
             return;
         }
-        let label = self.redactor.safe(match phase {
-            Phase::Configuration => "Loading configuration",
-            Phase::Rendering => "Rendering catalogue",
-            Phase::Comparing => "Comparing catalogue",
-            Phase::Writing => "Writing static output",
-            Phase::PreparingUpload => "Preparing upload",
-            Phase::Uploading => "Uploading catalogue",
+        let label = self.redactor.safe(&match phase {
+            Phase::Configuration => "Loading configuration".into(),
+            Phase::Rendering => "Rendering catalogue".into(),
+            Phase::Comparing(base) => format!("Comparing with {base}"),
+            Phase::Writing => "Writing static output".into(),
+            Phase::PreparingUpload => "Preparing upload".into(),
+            Phase::Uploading => "Uploading catalogue".into(),
         });
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if self.animate {
@@ -174,6 +182,13 @@ impl Phases for Lines {
         } else {
             format!("{}\n", bounded(&format!("  {label}…"), self.style.columns))
         });
+    }
+    fn note(&self, message: &str) {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if self.animate && state.label.is_some() {
+            self.terminal.stdout("\r\x1b[2K");
+        }
+        self.terminal.stdout(message);
     }
     fn diagnostic(&self, message: &str) {
         let _state = self.state.lock().unwrap_or_else(|error| error.into_inner());
@@ -220,7 +235,7 @@ impl BuildReporter for Lines {
     fn build_directory(&self, directory: &Path) {
         self.terminal.stdout(&format!(
             "Mokly publish build: {}\n",
-            self.redactor.safe(&directory.to_string_lossy())
+            recovery_output::path(directory, &self.cwd, &self.redactor)
         ));
     }
 }

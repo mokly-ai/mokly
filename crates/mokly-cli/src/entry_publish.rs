@@ -48,11 +48,6 @@ pub(super) fn run(
     }
     let timing = tracing::info_span!("publish", status = "error").entered();
     let started = Instant::now();
-    let lines = Arc::new(Lines::new(
-        style.clone(),
-        redactor.clone(),
-        terminal.clone(),
-    ));
     let interrupts = match Interrupts::publish() {
         Ok(interrupts) => interrupts,
         Err(error) => {
@@ -86,6 +81,12 @@ pub(super) fn run(
             return ExitCode::FAILURE;
         }
     };
+    let lines = Arc::new(Lines::new(
+        style.clone(),
+        redactor.clone(),
+        terminal.clone(),
+        directory.clone(),
+    ));
     let options = Options {
         directory,
         version: VERSION.to_owned(),
@@ -121,7 +122,6 @@ pub(super) fn run(
         }),
         directories: Arc::new(SystemDirectories),
         output: Arc::new(publication_runtime::Output {
-            terminal: terminal.clone(),
             style: style.clone(),
             redactor: redactor.clone(),
             common: publish.common.clone(),
@@ -164,7 +164,10 @@ pub(super) fn run(
         }
         Err(error) => {
             terminal.stderr(&mokly_cli::publish_errors::command(
-                &error, style, &redactor,
+                &error,
+                style,
+                &redactor,
+                &options.directory,
             ));
             command_diagnostics::emit(&error, terminal.as_ref(), &redactor);
             ExitCode::FAILURE

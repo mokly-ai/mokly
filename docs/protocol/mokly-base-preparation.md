@@ -137,20 +137,9 @@ publishes completion. Missing, damaged or incomplete receipts and missing
 data roots rebuild under the entry lock. Failed builds remove partial data.
 OS locks release on close; lock files remain. Deleting the cache is safe.
 
-One reporter guard covers both caches. The first
-open reports the directory once per process. Plain stdout is exactly
+One reporter guard covers both caches and reports the directory once per process. Plain stdout is exactly
 `Mokly cache: <directory>` followed by LF. Rich output follows the
 [terminal rule](./mokly-terminal-output.md#cache-directory).
-
-Configuration ancestors use Node's order, from the configuration directory
-through the repository root. Every ancestor `node_modules` maps to the same
-relative directory under the selected dependency installation. JavaScript
-`nodePaths` and CSS use this order before explicit package roots. Tiers one
-and three use working directories; tier two uses the directories created by
-its base install. If the head used an ancestor directory absent from tier two,
-select tier three with a `base-dependencies` warning naming that directory.
-JavaScript, stylesheet, and PostCSS package reads establish this usage.
-An unused ancestor directory does not cause a warning.
 
 ## Dependency Identity
 
@@ -178,8 +167,9 @@ fails closed with `bundle-failed`. This covers repository packages for npm,
 pnpm, Yarn and Bun without a package manifest inventory. Nested
 `node_modules` directories retain the selected third-party dependencies.
 
-Equal dependency identities reuse working third-party dependencies. No
-install validation or warning applies, including for outside `file:` packages.
+Equal dependency identities reuse working third-party dependencies without
+install validation, including for outside `file:` packages. Lookup warnings
+still apply to unmapped directories.
 Different inputs install each npm lockfile root selected by configuration
 ancestors and `moduleResolution.packageRoots`. A nested app with no root
 lockfile is valid.
@@ -197,6 +187,22 @@ or absolute path, uses a typed fallback reason when an install is needed.
 No install reads it.
 
 ## Installation And Bundle Settings
+
+Configuration ancestors use Node's order, from the configuration directory
+through the repository root. Every ancestor `node_modules` maps to the same
+relative directory under the selected dependency installation. JavaScript
+`nodePaths` and CSS use this order before explicit package roots. Tiers one
+and three use working directories; tier two uses the directories created by
+its base install. If the head used an ancestor directory absent from tier two,
+select tier three with a `base-dependencies` warning naming that directory.
+JavaScript, stylesheet, and PostCSS package reads establish this usage.
+An unused ancestor directory does not cause a warning.
+
+An importer whose dependency lookup is not mapped selects tier three even
+when dependency inputs are equal. The warning names the used `node_modules`
+directory. Such layouts need explicit `moduleResolution.packageRoots`.
+Conflicting copies can still require the fallback. Unused directories do not
+cause it. Each fallback emits a trace event with its typed reason.
 
 Copy the base sources into the private dependency entry. Run each install
 without a shell using `ci --ignore-scripts --no-audit --no-fund`, with explicit
@@ -216,8 +222,8 @@ use fake time and local offline fixtures without registry access.
 
 The result carries third-party `node_modules`, the install lease when needed,
 the complete sidecar `ModuleResolution`, and typed repository root paths.
-Package roots name the selected third-party root, then configured package
-roots there, in order. Repository roots include the working repository root
+Package roots name configuration ancestors, then explicit package roots,
+all inside the selected tier, in Node's order. Repository roots include the working repository root
 in every tier and the copied base repository root inside a tier-two install.
 The sidecar maps these roots to the side's source root. Other settings keep
 their values. Retain the install and extraction leases while bundling.
@@ -232,6 +238,8 @@ lockfile omit the location clause:
 ```text
 base dependencies at "<lockfile>" could not be installed (time limit); using working-tree dependencies
 base dependencies could not be installed (package manager or lockfile unavailable); using working-tree dependencies
+base dependencies at "<lockfile>" lack "<directory>"; using working-tree dependencies
+base dependency lookup cannot preserve "<directory>"; using working-tree dependencies (configure moduleResolution.packageRoots)
 ```
 
 Other typed reasons are `installation failed`, `cache size limit`,

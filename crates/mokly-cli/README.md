@@ -24,13 +24,24 @@ Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a loo
 serves its initial state through `mokly-server`, with lazy document rendering,
 canonical public JSON, authenticated live prop previews, and clean signal
 shutdown. A background pass fills usage after readiness and yields to foreground
-renders. A completed pass publishes complete consumer lists. In rich watched
-mode, `r` enqueues a complete manual rebuild and restarts that pass. A
+renders. A completed pass publishes complete consumer lists. Watched Serve attaches a native observer before module evaluation. It buffers
+startup edits and coalesces filesystem events by path. The same serialized
+queue handles these events and the rich-mode `r` shortcut. A new generation
+restarts the usage pass. Configuration changes attach a candidate observer
+before a second validation pass when roots change. Exact additions extend
+the active observer. Resource callbacks queue their inputs outside render
+tasks. A failed attempt accepts repair events from watched directories.
+`repoRoot` changes require a restart. Sidecar count and timeout are process
+options fixed at startup. Failure keeps the active observer and model. A
 valid candidate replaces the public state and backend with the next revision;
 a failed candidate keeps the last good state. Preparation and projection run
 outside the serving task. A revision race stamps the same candidate again
 without repeating projection. Port 0 requests a free port. An occupied concrete port advances to
 the next available port through 65535. Repeated SIGINT requests coalesce.
+Shutdown closes clients, stops observation, cancels busy pool requests,
+drains render work, closes Git hooks, and shuts down idle sidecars. The
+listener and file locks release last. Startup uses the same lifecycle with a watcher slot and an atomic readiness
+handoff. A stop before that handoff suppresses the ready layout.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
 
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
@@ -90,7 +101,9 @@ documents into the bounded process cache. It reports all render warnings
 before strict-mode failure. `mokly-static` writes the shell, canonical index and details, documents,
 referenced resources, and matching viewer bundle. Relative `--out` paths resolve
 beside the configuration. Output replacement uses exclusive moves and retains
-recovery paths on cleanup failure.
+recovery paths on cleanup failure. Each recovery path has its own detail line
+without a width limit. Paths inside the invocation directory are relative;
+other paths are absolute. Token redaction and control escaping still apply.
 Catalogue counts include variants. Shared-body warnings name
 the parent once. Identity diagnostics keep their location continuation
 lines in both plain and rich output. A diagnostic omits its inner code tag
@@ -98,11 +111,18 @@ only when it equals the command's outer code. Configuration locations are
 repository-relative, or use the basename when the root does not contain
 the configuration file.
 
-The build service computes Changes unless `--no-changes` is set. Changes runs inside the static pipeline before warning gates and output
+The build service computes Changes unless `--no-changes` is set. After output
+admission, it pins the selected base before catalogue validation and rendering.
+The comparison uses that same repository, commit, and ref without another lookup.
+The phase owner erases its animated row before cache notes and serializes both
+streams. Warnings precede the colored Changes status. Nested Git failures keep
+the historical commit and Git detail. Changes runs inside the static pipeline before warning gates and output
 installation. `PreparedBuild` retains its result for the comparison-file join.
 Head and
 base use `mokly-render::Runtime` with one shared pool and render cache.
 JavaScript and PostCSS base inputs hold source and dependency leases.
+Historical sidecars and PostCSS children use the same parent-death protection
+as current rendering, including when consumer code blocks.
 CLI cancellation reaches Git, cache waits, installation, source reads,
 planning, comparison, and document workers. `--base`
 overrides `review.base`; the default ref is `origin/main`. It retains review v8,
@@ -151,6 +171,17 @@ HTML, React, and stylesheet edits.
 cargo test -p mokly-cli
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
+
+Process recovery tests use the [debug fault adapters](./src/test_faults/mod.rs).
+`MOKLY_TEST_STATIC_FAULTS` selects injected filesystem failures or signal gates.
+The optional `MOKLY_TEST_STATIC_READY`, `MOKLY_TEST_STATIC_EVENTS`,
+`MOKLY_TEST_STATIC_PREVIOUS`, and `MOKLY_TEST_STATIC_COLUMNS` values provide
+isolated test paths and terminal width. Release builds compile none of these
+adapters or hooks. The compiler probe checks only that the fault module erases
+itself without debug assertions and cannot be referenced in that mode. It does
+not inspect a packed release binary. The signal-session probe creates and drops
+both build and publish signal handlers. Normal source and output operations
+still use their injected trait boundaries.
 
 ### Key Code
 

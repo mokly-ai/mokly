@@ -138,7 +138,7 @@ impl SourceTree for WorkingTree {
         Ok(children)
     }
 
-    fn public_digest(&self, path: &Path) -> Result<String> {
+    fn digest(&self, path: &Path) -> Result<String> {
         working_tree_read::digest(path)
     }
 

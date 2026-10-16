@@ -15,7 +15,7 @@ use crate::workers::{FactoryMock, Spawned, WorkerMock};
 fn call(index: usize) -> Call {
     Call::ProcessCss(ProcessCss {
         repository_roots: Vec::new(),
-        context: "css".into(),
+        context: format!("css-{index}"),
         source_root: "/repo".into(),
         module_resolution: ModuleResolution::default(),
         postcss: "config".into(),
@@ -62,6 +62,7 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
                                 entered.send(index).unwrap();
                                 receivers[index].lock().unwrap().recv().unwrap();
                                 Ok(MethodResult::Css(Css {
+                                    unmapped_dependency_directories: None,
                                     text: params.text.clone(),
                                     dependencies: Vec::new(),
                                 }))

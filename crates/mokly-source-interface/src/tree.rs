@@ -58,16 +58,15 @@ pub trait SourceTree: Send + Sync {
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
         self.read(path)
     }
-    /// Hash public bytes without pinning them in a source snapshot.
-    /// Disk and Git adapters stream oversized files with bounded memory.
-    fn public_digest(&self, path: &Path) -> Result<String> {
-        Ok(Sha256::digest(self.read_public(path)?)
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect::<String>())
-    }
     /// Read immutable bytes without copying a retained source on cache hits.
     fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
         Ok(self.read(path)?.into())
+    }
+    /// Hash an inventoried regular file without requiring callers to retain its bytes.
+    fn digest(&self, path: &Path) -> Result<String> {
+        Ok(Sha256::digest(self.read_shared(path)?)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect())
     }
 }

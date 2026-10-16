@@ -31,3 +31,14 @@ fn canonical_duplicates_keep_the_nearest_ancestor() {
     usage.record(&aliases, "node_modules/theme/index.js");
     assert_eq!(usage.directories(), ["app/node_modules"]);
 }
+
+#[test]
+fn a_repository_named_dependency_records_its_unmapped_directory() {
+    let usage: &dyn DependencyUsage = &UsedDependencies::default();
+    usage.record(
+        &Default::default(),
+        "packages/ui/node_modules/theme/index.js",
+    );
+    assert_eq!(usage.unmapped_directories(), ["packages/ui/node_modules"]);
+    assert!(usage.directories().is_empty());
+}

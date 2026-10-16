@@ -7,8 +7,8 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{CssError, Result};
 use crate::package::Package;
-use crate::paths;
 use crate::resolution::Resolution;
+use crate::{lookup_roots, paths};
 
 /// Shared CSS resolution boundary. Sidecar adapters supply consumer settings.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ImportResolverMock))]
@@ -50,12 +50,6 @@ impl ImportResolver for SourceResolver {
         if specifier.starts_with('.') || specifier.starts_with('/') {
             return Err(failure());
         }
-        let mut directories = Vec::new();
-        let mut directory = Path::new(&relative_source).parent();
-        while let Some(base) = directory {
-            directories.push(base.to_string_lossy().into_owned());
-            directory = base.parent();
-        }
         let parts: Vec<_> = specifier.split('/').collect();
         let package_segments = if specifier.starts_with('@') { 2 } else { 1 };
         if parts.len() < package_segments {
@@ -67,25 +61,9 @@ impl ImportResolver for SourceResolver {
         } else {
             format!("./{}", parts[package_segments..].join("/"))
         };
-        let bases = directories
-            .iter()
-            .map(|directory| {
-                let authored = format!("{directory}/node_modules")
-                    .trim_start_matches('/')
-                    .to_owned();
-                let root = self
-                    .settings
-                    .dependency_aliases
-                    .get(&authored)
-                    .unwrap_or(&authored);
-                format!("{root}/{package}")
-            })
-            .chain(
-                self.settings
-                    .dependency_roots
-                    .iter()
-                    .map(|root| format!("{root}/{package}")),
-            );
+        let bases = lookup_roots::roots(&relative_source, &self.settings)
+            .into_iter()
+            .map(|root| format!("{root}/{package}"));
         for base in bases {
             if let Ok(bytes) = self
                 .tree

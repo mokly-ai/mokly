@@ -1,0 +1,10 @@
+---
+source: crates/mokly-cli/src/_tests_/one_shot_tests.rs
+expression: text
+---
+  [32m✔[0m Published Mokly catalogue · 0 files uploaded, 9 unchanged (1.5s)
+https://example.com/catalogue
+  [32m✔[0m Published Mokly catalogue · 1 file uploaded, 8 unchanged (1.5s)
+https://example.com/catalogue
+  [32m✔[0m Published Mokly catalogue · 2 files uploaded, 7 unchanged (1.5s)
+https://example.com/catalogue

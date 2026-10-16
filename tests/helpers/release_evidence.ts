@@ -20,7 +20,7 @@ export function releaseRun(overrides: Record<string, unknown> = {}) {
 }
 
 export function verificationArtifacts(expired = false) {
-  return Array.from({ length: 2 }, (_, index) => ({
+  return Array.from({ length: 10 }, (_, index) => ({
     id: index + 1,
     name: `verification-report-${index + 1}`,
     expired,
@@ -46,4 +46,8 @@ export function gitExecutor(commit = TAG_COMMIT, tree = TAG_TREE) {
     stdout: `${args[1] === "HEAD" ? commit : tree}\n`,
     stderr: "",
   });
+}
+
+export function browserInventory(reports = releaseReports()): string[] {
+  return reports.find((report) => report.suite === "browser")!.fullFiles;
 }

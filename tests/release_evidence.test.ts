@@ -19,6 +19,7 @@ import {
   TAG_COMMIT,
   TAG_TREE,
   nodeInventory,
+  browserInventory,
   verificationArtifacts,
 } from "./helpers/release_evidence.js";
 import {
@@ -108,6 +109,7 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
     taggedTree: TAG_TREE,
     evidenceTree: TAG_TREE,
     liveNodeFiles: nodeInventory(reports),
+    liveBrowserFiles: browserInventory(reports),
   };
   assert.equal(classifyEvidence(base, validateCiReports).outcome, "applicable");
   assert.equal(
@@ -150,6 +152,15 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
     "absent",
   );
 
+  const wrongBrowser = classifyEvidence(
+    { ...base, liveBrowserFiles: ["tests/browser/missing.spec.ts"] },
+    validateCiReports,
+  );
+  assert.equal(wrongBrowser.outcome, "invalid");
+  assert.equal(
+    wrongBrowser.reason,
+    "browser report inventory does not match the release checkout",
+  );
   const twoCommits = releaseReports();
   twoCommits[0] = { ...twoCommits[0]!, commit: "c".repeat(40) };
   assert.equal(
@@ -187,6 +198,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     createGithub: () => githubFixture(run),
     readReports: async () => reports,
     discoverNodeFiles: async () => nodeInventory(reports),
+    discoverBrowserFiles: async () => browserInventory(reports),
   });
   assert.deepEqual(record, {
     mode: "evidence",
@@ -196,7 +208,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     selectedRunId: run.id,
     selectedRunUrl: run.html_url,
     evidenceCommit: TAG_COMMIT,
-    reportCount: 2,
+    reportCount: 10,
     reason: `run ${run.id} proves tagged tree ${TAG_TREE}`,
   });
   assert.deepEqual(
@@ -248,6 +260,7 @@ test("invalid evidence records complete output and exits non-zero", async (t) =>
           createGithub: () => githubFixture(releaseRun()),
           readReports: async () => reports,
           discoverNodeFiles: async () => nodeInventory(),
+          discoverBrowserFiles: async () => browserInventory(),
         }),
         item.pattern,
       );

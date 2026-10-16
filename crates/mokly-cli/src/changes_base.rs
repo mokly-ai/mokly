@@ -63,6 +63,7 @@ impl BaseProvider for NativeBase {
                 request,
                 &config,
                 &self.runtime.dependency_usage.directories(),
+                &self.runtime.dependency_usage.unmapped_directories(),
             )?)
         } else {
             None

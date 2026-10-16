@@ -50,6 +50,7 @@ fn an_empty_replan_restores_the_base_label_and_viewer_urls_are_redacted() {
     ));
     let (stop, _) = mpsc::channel();
     let output = super::Lines {
+        cwd: "/repo".into(),
         style: Style {
             mode: Mode::Rich,
             color: false,
@@ -96,4 +97,101 @@ fn an_empty_replan_restores_the_base_label_and_viewer_urls_are_redacted() {
     let written = lines.lock().unwrap().join("");
     assert!(!written.contains("private-token"));
     assert!(written.contains("https://example.com/[redacted]"));
+}
+
+#[test]
+fn rich_publication_receipts_style_zero_one_two_counts_and_leave_urls_unstyled() {
+    let written = Arc::new(Mutex::new(Vec::new()));
+    let capture = written.clone();
+    let terminal = Arc::new(Unimock::new(
+        TerminalMock::stdout
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, text| {
+                capture.lock().unwrap().push(text.to_owned())
+            })),
+    ));
+    let (stop, _) = mpsc::channel();
+    let output = super::Lines {
+        cwd: "/repo".into(),
+        style: Style {
+            mode: Mode::Rich,
+            color: true,
+            ascii: false,
+            columns: 200,
+        },
+        redactor: Arc::new(Redactor::default()),
+        terminal,
+        state: Arc::new(Mutex::new(super::State::default())),
+        stop,
+        timer: Mutex::new(None),
+        animate: false,
+    };
+    for count in 0..=2 {
+        output.published(
+            &Receipt {
+                uploaded: count,
+                unchanged: 9 - count,
+                completion: Completion {
+                    outcome: Outcome::Published,
+                    viewer_url: Some("https://example.com/catalogue".into()),
+                },
+            },
+            Duration::from_millis(1500),
+        );
+    }
+    let text = written.lock().unwrap().join("");
+    for line in text.lines().filter(|line| line.contains("https://")) {
+        assert_eq!(line, "https://example.com/catalogue");
+    }
+    assert!(text.contains("0 files uploaded"));
+    assert!(text.contains("1 file uploaded"));
+    assert!(text.contains("2 files uploaded"));
+    insta::assert_snapshot!(text);
+}
+
+#[test]
+fn an_animated_cache_note_erases_under_the_reporter_lock_and_keeps_the_phase() {
+    let written = Arc::new(Mutex::new(Vec::new()));
+    let capture = written.clone();
+    let state = Arc::new(Mutex::new(super::State {
+        label: Some("Comparing with base".into()),
+        ..Default::default()
+    }));
+    let observed = state.clone();
+    let terminal = Arc::new(Unimock::new(
+        TerminalMock::stdout
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, text| {
+                assert!(
+                    observed.try_lock().is_err(),
+                    "stdout must stay under the phase lock"
+                );
+                capture.lock().unwrap().push(text.to_owned());
+            })),
+    ));
+    let (stop, _) = mpsc::channel();
+    let output = super::Lines {
+        cwd: "/repo".into(),
+        style: Style {
+            mode: Mode::Rich,
+            color: false,
+            ascii: true,
+            columns: 200,
+        },
+        redactor: Arc::new(Redactor::default()),
+        terminal,
+        state: state.clone(),
+        stop,
+        timer: Mutex::new(None),
+        animate: true,
+    };
+    mokly_cli::static_build::Phases::note(&output, "  cache /cache/repository\n");
+    assert_eq!(
+        written.lock().unwrap().join(""),
+        "\r\x1b[2K  cache /cache/repository\n"
+    );
+    assert_eq!(
+        state.lock().unwrap().label.as_deref(),
+        Some("Comparing with base")
+    );
 }

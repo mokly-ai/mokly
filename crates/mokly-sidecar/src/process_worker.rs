@@ -13,6 +13,7 @@ use crate::wire::{Event, MethodResult, Request};
 use crate::workers::{Diagnostics, Worker};
 
 pub(super) struct ProcessWorker {
+    pub(super) diagnostics: Arc<dyn Diagnostics>,
     pub(super) client: Box<dyn SidecarClient>,
     pub(super) clock: Arc<dyn Wait>,
     pub(super) memory: Box<dyn ResidentMemory>,
@@ -44,6 +45,9 @@ impl Worker for ProcessWorker {
         self.client.request(request)
     }
 
+    fn memory_pressure(&self) {
+        self.diagnostics.emit("Sidecar replacement remains above 1 GiB resident memory; backing off memory checks up to 500 completed requests.");
+    }
     fn resident_bytes(&self) -> Result<u64> {
         self.memory
             .resident_bytes(self.discover_memory.swap(false, Ordering::Relaxed))
@@ -54,8 +58,10 @@ pub(super) struct ForwardEvents(pub(super) Arc<dyn Diagnostics>);
 
 impl Events for ForwardEvents {
     fn emit(&mut self, event: Event) {
-        let Event::Diagnostic { message } = event;
-        self.0.emit(&message);
+        match event {
+            Event::Diagnostic { message } => self.0.emit(&message),
+            Event::Operation { operation, pid } => self.0.operation(operation, pid),
+        }
     }
 }
 

@@ -35,6 +35,7 @@ pub(super) trait BaseDependencies: Send + Sync {
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         used_directories: &[String],
+        unmapped_directories: &[String],
     ) -> Result<Arc<BaseSide>>;
 }
 
@@ -49,8 +50,9 @@ impl BaseDependencies for NativeDependencies {
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         used_directories: &[String],
+        unmapped_directories: &[String],
     ) -> Result<Arc<BaseSide>> {
-        match self.prepare_side(request, config, used_directories) {
+        match self.prepare_side(request, config, used_directories, unmapped_directories) {
             Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
                 path: ".".into(),
                 source,
@@ -72,6 +74,7 @@ impl NativeDependencies {
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         used_directories: &[String],
+        unmapped_directories: &[String],
     ) -> Result<Arc<BaseSide>> {
         let locations: &dyn Locations = &SystemLocations;
         let root = locations.repository(&config.repo_root)?;
@@ -125,6 +128,7 @@ impl NativeDependencies {
             head,
             source_root: sources.directory.clone(),
             used_directories: used_directories.to_vec(),
+            unmapped_directories: unmapped_directories.to_vec(),
             source_identity: request.commit.to_string(),
             head_root: config.repo_root.clone(),
             configuration,

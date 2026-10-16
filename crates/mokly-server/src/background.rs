@@ -80,6 +80,7 @@ impl UsagePass {
                         if !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
                     },
                     result = &mut work => {
+                        if *stop.borrow() || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
                         if let Err(error) = result { self.diagnostics.failed(&error); }
                         break;
                     }
@@ -87,7 +88,7 @@ impl UsagePass {
             }
         }
         let publications = self.publications.clone();
-        let origin = origin.clone();
+        let publish_origin = origin.clone();
         let routes: Vec<_> = origin
             .routes
             .iter()
@@ -95,9 +96,13 @@ impl UsagePass {
             .collect();
         let parent = tracing::Span::current();
         let result = tokio::task::spawn_blocking(move || {
-            parent.in_scope(|| publications.completed_many(&origin, &routes))
+            parent.in_scope(|| publications.completed_many(&publish_origin, &routes))
         })
         .await;
+        if *stop.borrow() || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents)
+        {
+            return cancelled();
+        }
         match result {
             Ok(Ok(())) => {}
             Ok(Err(error)) => self.diagnostics.failed(&error),

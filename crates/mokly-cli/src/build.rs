@@ -50,6 +50,12 @@ pub enum BuildError {
         /// Current build and base preparation warnings.
         warnings: Vec<Warning>,
     },
+    /// A watched candidate changes settings owned by the running sidecar pool.
+    #[error("[mokly-cli/serve] {setting} changed. Restart Serve to apply this setting.")]
+    RestartRequired {
+        /// Fixed process-level setting.
+        setting: &'static str,
+    },
     /// A signal stopped work before installation; the original diagnostic remains.
     #[error("[mokly-cli/build] {source}")]
     Interrupted {

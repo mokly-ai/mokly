@@ -54,6 +54,7 @@ mod snapshots;
 
 pub mod ancestor_roots;
 pub mod base_render;
+pub mod base_selection;
 pub mod comparison;
 
 pub mod lookup;

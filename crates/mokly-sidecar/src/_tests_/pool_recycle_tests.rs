@@ -50,6 +50,7 @@ fn seed(pool: &Pool, worker: Unimock) {
     state.bundles.insert(
         "g".into(),
         Bundle {
+            evaluation: None,
             entry_files: Vec::new(),
             renderer: None,
             stories_files: Vec::new(),
@@ -153,24 +154,34 @@ fn a_fresh_oversized_worker_gets_one_request_before_memory_recycling() {
             .returns(100_u64)
             .n_times(2),
     ));
-    for _ in 0..2 {
-        let worker = Unimock::new((
+    for count in [2, 4] {
+        let common = (
             WorkerMock::handshake
                 .next_call(matching!(30_000))
                 .returns(Ok(())),
             WorkerMock::request
                 .each_call(matching!(_, 60_000))
                 .answers(&|_, _, _| Ok(MethodResult::Empty))
-                .n_times(2),
+                .n_times(count),
             WorkerMock::resident_bytes
                 .each_call(matching!())
                 .answers(&|_| Ok(1_073_741_825_u64))
-                .n_times(2),
+                .n_times(if count == 2 { 2 } else { 1 }),
             ControlMock::shutdown.next_call(matching!()).returns(Ok(())),
             ControlMock::finish
                 .next_call(matching!(2_100))
                 .returns(Ok(())),
-        ));
+        );
+        let worker = if count == 4 {
+            Unimock::new((
+                common,
+                WorkerMock::memory_pressure
+                    .some_call(matching!())
+                    .returns(()),
+            ))
+        } else {
+            Unimock::new(common)
+        };
         pool.factory = Arc::new(Unimock::new(
             FactoryMock::spawn
                 .next_call(matching!(_))
@@ -190,8 +201,13 @@ fn a_fresh_oversized_worker_gets_one_request_before_memory_recycling() {
             source_path: "source".into(),
             text: String::new(),
         });
-        pool.request(call.clone()).unwrap();
-        assert_eq!(pool.lock().unwrap().slots[0].as_ref().unwrap().requests, 1);
+        for completed in 1..count {
+            pool.request(call.clone()).unwrap();
+            assert_eq!(
+                pool.lock().unwrap().slots[0].as_ref().unwrap().requests,
+                completed as u64
+            );
+        }
         pool.request(call).unwrap();
         assert!(pool.lock().unwrap().slots[0].is_none());
     }

@@ -2,6 +2,7 @@ import type { CssResult } from "../generated/sidecar/CssResult.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { detail } from "./errors.js";
+import { parentInput } from "./parent-input.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
@@ -11,6 +12,8 @@ type WorkerData = Pick<
   "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
 >;
 
+const parent = parentInput();
+parent.stream.on("error", () => process.exit(1));
 process.on("disconnect", () => process.exit());
 process.once("message", (workerData: WorkerData) => {
   const configuration = configureResolution(workerData).then((paths) =>
@@ -73,7 +76,13 @@ process.once("message", (workerData: WorkerData) => {
         }
         process.send?.({
           id,
-          result: { text: result.css, dependencies },
+          result: {
+            text: result.css,
+            dependencies,
+            unmappedDependencyDirectories: [
+              ...paths.dependencyUsage.unmapped,
+            ].sort(),
+          },
         });
       } catch (error) {
         process.send?.({

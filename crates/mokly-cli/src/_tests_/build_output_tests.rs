@@ -1,5 +1,7 @@
 //! Inner diagnostic tags are omitted only when the outer code is the same.
 
+use std::path::Path;
+
 use mokly_catalogue::diagnostic::{self, Issue};
 use mokly_catalogue::error::CatalogueError;
 
@@ -29,7 +31,7 @@ fn configuration_tags_survive_inside_build_failures() {
                 warnings: Vec::new(),
             },
         };
-        let text = failure(&style, &build, &Redactor::default());
+        let text = failure(&style, &build, &Redactor::default(), Path::new("/repo"));
         assert!(text.contains("[mokly/build-invalid]"), "{text}");
         assert!(
             text.contains("[mokly/config-invalid] invalid inventoried source bad"),
@@ -38,7 +40,7 @@ fn configuration_tags_survive_inside_build_failures() {
         let config = BuildError::Catalogue {
             source: CatalogueError::Config(issue()),
         };
-        let text = failure(&style, &config, &Redactor::default());
+        let text = failure(&style, &config, &Redactor::default(), Path::new("/repo"));
         assert_eq!(text.matches("[mokly/config-invalid]").count(), 1, "{text}");
         if mode == Mode::Plain {
             assert_eq!(

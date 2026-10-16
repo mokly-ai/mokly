@@ -25,6 +25,10 @@ It passes that package's built directory to the binary through
 `MOKLY_VIEWER_DIST`. The binary serves exactly its browser inventory, stylesheet,
 and font. Consumer working-directory layout does not select the viewer.
 
+Serve watches source, style, and referenced resource edits by default.
+It updates the open viewer and reloads only documents whose input key changed.
+Use `serve --no-watch` to browse one snapshot.
+
 The native binary owns commands and file writes. The render sidecar and the
 authoring API share this package under the
 [package contract](../../docs/protocol/mokly-package.md).
@@ -75,9 +79,18 @@ Read the [source guide](../../docs/guides/authoring/screens.md) and
 
 The Rust pool starts `dist/sidecar.js` with inherited environment and piped
 NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
-byte limit. Requests run in order. Consumer logs go to standard error.
+byte limit. Oversized compiled recipes report their size and that limit as
+`bundle-failed`. A separate thread watches the parent pipe and parent identity,
+so a blocked render cannot leave a sidecar behind. Requests run in order. Consumer logs go to standard error.
 
-`bundle` compiles an unevaluated esbuild generation and reports its module
+`bundle` compiles an unevaluated esbuild generation and reports its immutable
+compiled recipe for replay. The recipe keeps dependency-lookup provenance
+for fallback diagnostics after restoration. Evaluation-only changes reuse that compilation across slots and recycling.
+Resolution stamps include ancestor manifests, tsconfig candidates, and directory
+membership. Failed peer resolutions remain failures during replay.
+`restoreGeneration` installs retained code in a new sidecar without reading
+current sources. Worker operation events count actual compilations and
+PostCSS worker lifetimes. The result also reports its module
 graph with stable names for selected installation files. Repository-owned
 workspace packages and PostCSS presets use the side's own source copy.
 `cssModules` installs the core's class maps before evaluation and runs no
@@ -99,6 +112,8 @@ its framing text. Runtime style adapters follow consumer package aliases,
 including `react-native` mapped to `react-native-web`. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
 child process in the side's source root, with consumer plugins unbundled.
+A child watchdog stops even a blocked plugin after its sidecar dies.
+Operation events count each fork and its terminal event once.
 The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 

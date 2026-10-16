@@ -1,9 +1,11 @@
 import { fork } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { once } from "node:events";
+import type { EventEmitter } from "node:events";
 import path from "node:path";
 
 import type { CssResult } from "../generated/sidecar/CssResult.js";
+import type { Operation } from "../generated/sidecar/Operation.js";
 import type { PostcssFailure } from "../generated/sidecar/PostcssFailure.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
@@ -17,7 +19,10 @@ export class PostcssWorkers {
   private contexts = new Map<string, string>();
   private id = 0;
 
-  constructor(private readonly diagnostic: (message: string) => void) {}
+  constructor(
+    private readonly diagnostic: (message: string) => void,
+    private readonly operation: (operation: Operation) => void = () => {},
+  ) {}
 
   async process(params: ProcessCssParams): Promise<CssResult> {
     try {
@@ -65,16 +70,19 @@ export class PostcssWorkers {
             .filter(Boolean)
             .join(path.delimiter),
         },
-        stdio: ["ignore", "pipe", "pipe", "ipc"],
+        stdio: ["pipe", "pipe", "pipe", "ipc"],
       });
       worker.stdout?.setEncoding("utf8");
       worker.stderr?.setEncoding("utf8");
-      worker.on("exit", () => {
-        if (this.workers.get(key) === worker) this.workers.delete(key);
-      });
+      observePostcssProcess(
+        worker,
+        () => {
+          if (this.workers.get(key) === worker) this.workers.delete(key);
+        },
+        this.operation,
+      );
       worker.stdout?.on("data", (chunk) => this.diagnostic(String(chunk)));
       worker.stderr?.on("data", (chunk) => this.diagnostic(String(chunk)));
-      worker.on("error", () => this.workers.delete(key));
       this.workers.set(key, worker);
       worker.send({
         postcss: file,
@@ -149,4 +157,21 @@ function stylesheetSource(paths: ModulePaths, source: string): string {
     if (root) return path.resolve(root, dependency[2]!);
   }
   return path.resolve(paths.sourceRoot, source);
+}
+
+/** Count a fork and its terminal event once, including errors without an exit. */
+export function observePostcssProcess(
+  child: EventEmitter,
+  closed: () => void,
+  operation: (operation: Operation) => void,
+): void {
+  operation("postcss-start");
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    closed();
+    operation("postcss-stop");
+  };
+  child.once("exit", stop).once("error", stop);
 }

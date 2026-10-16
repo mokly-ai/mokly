@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
+use mokly_model::material::digest;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
@@ -14,6 +15,16 @@ pub struct SourceSnapshot {
     reads: Mutex<BTreeMap<PathBuf, Arc<ReadCell>>>,
     nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
     directories: Mutex<BTreeMap<PathBuf, Vec<Child>>>,
+    digests: Mutex<BTreeMap<PathBuf, Arc<DigestCell>>>,
+}
+
+#[cfg(test)]
+#[path = "_tests_/snapshot_digest_tests.rs"]
+mod snapshot_digest_tests;
+
+#[derive(Default)]
+struct DigestCell {
+    value: Mutex<Option<String>>,
 }
 
 #[derive(Default)]
@@ -29,6 +40,7 @@ impl SourceSnapshot {
             reads: Mutex::new(BTreeMap::new()),
             nodes: Mutex::new(BTreeMap::new()),
             directories: Mutex::new(BTreeMap::new()),
+            digests: Mutex::new(BTreeMap::new()),
         }
     }
 }
@@ -40,8 +52,36 @@ impl SourceTree for SourceSnapshot {
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
         self.source.read_public(path)
     }
-    fn public_digest(&self, path: &Path) -> Result<String> {
-        self.source.public_digest(path)
+    fn digest(&self, path: &Path) -> Result<String> {
+        let cell = {
+            let mut digests = self
+                .digests
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            digests.entry(path.into()).or_default().clone()
+        };
+        let mut retained = cell.value.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(value) = &*retained {
+            return Ok(value.clone());
+        }
+        let bytes = self
+            .reads
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(path)
+            .cloned();
+        let bytes = bytes.and_then(|cell| {
+            cell.bytes
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .clone()
+        });
+        let value = match bytes {
+            Some(bytes) => digest(&bytes),
+            None => self.source.digest(path)?,
+        };
+        *retained = Some(value.clone());
+        Ok(value)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());

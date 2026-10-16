@@ -1,7 +1,7 @@
 const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
 export const REQUIRED_CI_JOB_NAME = "Required CI";
 export const VERIFICATION_ARTIFACT_PATTERN = /^verification-/;
-export const VERIFICATION_REPORT_COUNT = 2;
+export const VERIFICATION_REPORT_COUNT = 10;
 export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
   "node-22.14.0",
   "node-24",
@@ -141,6 +141,21 @@ export function classifyEvidence(input, validateReports) {
   if (mismatched)
     return invalid(
       "viewer report inventory does not match the release checkout",
+      input.reports.length,
+      identity.commit,
+    );
+  const browserInventory = sorted(input.liveBrowserFiles);
+  if (
+    input.reports
+      .filter((report) => report.suite === "browser")
+      .some(
+        (report) =>
+          sorted(report.playwrightFiles).join("\n") !==
+          browserInventory.join("\n"),
+      )
+  )
+    return invalid(
+      "browser report inventory does not match the release checkout",
       input.reports.length,
       identity.commit,
     );

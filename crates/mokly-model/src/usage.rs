@@ -19,7 +19,7 @@ pub enum ComponentInputOwner {
     },
 }
 /// Region inspection target.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
 pub enum ComponentRangeTarget {
     /// Logical component instance.
@@ -39,7 +39,7 @@ pub enum ComponentRangeTarget {
 }
 
 /// Optional invocation source metadata.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ComponentSourceLocation {
     /// Repository-relative invocation path.
@@ -51,7 +51,7 @@ pub struct ComponentSourceLocation {
 }
 
 /// One logical use, independent of physical placement.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ComponentInstanceRecord {
     /// Validated instance identity digest.
@@ -79,7 +79,7 @@ pub struct ComponentInstanceRecord {
 }
 
 /// One supplied logical slot, including unrendered slots.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ComponentSlotRecord {
     /// Validated slot identity digest.
@@ -97,7 +97,7 @@ pub struct ComponentSlotRecord {
 }
 
 /// One physical region in tree start order.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ComponentRangeRecord {
     /// Sequential r-n region id.
@@ -111,7 +111,7 @@ pub struct ComponentRangeRecord {
 }
 
 /// Per-view usage readiness. Empty ready arrays mean proven empty usage.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(tag = "status", rename_all = "lowercase", deny_unknown_fields)]
 pub enum CatalogueUsage {
     /// First render has not completed.

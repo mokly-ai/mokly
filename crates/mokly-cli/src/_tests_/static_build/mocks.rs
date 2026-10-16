@@ -64,7 +64,11 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
                         config: config(),
                         generation: graph.clone(),
                         summary: BuildSummary {
-                            changes: BuildChanges::Disabled,
+                            changes: if case.ready {
+                                super::ready_tests::changes()
+                            } else {
+                                BuildChanges::Disabled
+                            },
                             documents: 1,
                             counts: BTreeMap::new(),
                             warnings: if case.warnings {
@@ -157,6 +161,18 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
         Unimock::new(())
     } else if !warned {
         Unimock::new(PhasesMock::start.each_call(matching!(_)).returns(()))
+    } else if case.ready {
+        let warnings = events.clone();
+        let changes = events.clone();
+        Unimock::new((
+            PhasesMock::start.each_call(matching!(_)).returns(()),
+            PhasesMock::warnings
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| record(&warnings, "warnings"))),
+            PhasesMock::changes
+                .next_call(matching!((changes) if matches!(changes, BuildChanges::Ready(_))))
+                .answers_arc(Arc::new(move |_, _| record(&changes, "changes"))),
+        ))
     } else {
         Unimock::new((
             PhasesMock::start.each_call(matching!(_)).returns(()),

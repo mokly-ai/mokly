@@ -45,8 +45,9 @@ impl Lifecycle for ManualCandidates {
         self.lifecycle.stop_watcher().await
     }
     async fn cancel_renders(&self) -> Result<()> {
+        let result = self.lifecycle.cancel_renders().await;
         let _candidate = self.slot.clone().acquire_owned().await;
-        self.lifecycle.cancel_renders().await
+        result
     }
     async fn cancel_git(&self) -> Result<()> {
         self.lifecycle.cancel_git().await

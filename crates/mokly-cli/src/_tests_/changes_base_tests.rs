@@ -64,12 +64,16 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
         ))).returns(Err(mokly_sidecar::error::Error::Protocol(ProtocolError::Handshake))))),
         Arc::new(Unimock::new(())), Arc::new(Unimock::new(())), "test".into(), None,
     ));
+    head.dependency_usage.record(
+        &[("node_modules".into(), "node_modules".into())].into(),
+        "node_modules/x.js",
+    );
     let base = NativeBase {
         runtime: head,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         dependencies: Arc::new(Unimock::new(
             BaseDependenciesMock::prepare
-                .next_call(matching!(_, _, _))
+                .next_call(matching!((_, _, directories, unmapped) if *directories == [String::from("node_modules")] && unmapped.is_empty()))
                 .returns(Ok(Arc::new(BaseSide {
                     sources: Lease {
                         directory: "/base".into(),

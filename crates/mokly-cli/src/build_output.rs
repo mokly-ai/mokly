@@ -1,5 +1,7 @@
 //! Build warning, diagnostic, and discovery-summary presentation.
 
+use std::path::Path;
+
 use mokly_catalogue::diagnostic::{self, Issue, Warning};
 use mokly_catalogue::error::CatalogueError;
 use mokly_graph::error::GraphError;
@@ -10,6 +12,7 @@ use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::pre_installation;
 use crate::publication::failure::{BuildFailure, Category};
+use crate::recovery_output;
 use crate::redaction::Redactor;
 use crate::static_errors;
 
@@ -65,21 +68,50 @@ pub fn catalogue_summary(style: &Style, summary: &BuildSummary) -> String {
 }
 
 /// Report retained warnings first, then the command's typed failure.
-pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
+pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor, cwd: &Path) -> String {
+    failure_detail(style, failure, redactor) + &recovery_output::build(failure, cwd, redactor)
+}
+
+fn failure_detail(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     if pre_installation::cancelled(failure) && !matches!(failure, BuildError::Shutdown { .. }) {
         return style.error(Code::BuildInvalid, "build cancelled", redactor);
     }
+    warnings(style, &warning_records(failure), redactor)
+        + &failure_diagnostics(style, failure, redactor)
+}
+
+/// Retained warnings from one failed preparation attempt.
+pub fn warning_records(failure: &BuildError) -> Vec<Warning> {
+    let mut records = match failure {
+        BuildError::Deferred { warnings, .. }
+        | BuildError::Strict { warnings }
+        | BuildError::Comparison { warnings, .. } => warnings.clone(),
+        BuildError::Catalogue {
+            source: CatalogueError::Invalid { warnings, .. },
+        } => warnings.clone(),
+        BuildError::Rendering { source, warnings } => {
+            let mut records = warnings.clone();
+            records.extend(source.warnings());
+            records
+        }
+        _ => Vec::new(),
+    };
+    mokly_catalogue::diagnostic::normalize_warnings(&mut records);
+    records
+}
+
+/// Format only typed failure details, so watched actions can own warning order.
+pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
         BuildError::Comparison {
             base_ref,
             source,
-            warnings: records,
+            ..
         } => {
-            if matches!(crate::changes_diagnostics::failure_code(source), Code::GitFailed) {
-                return warnings(style, records, redactor) + &style.error(Code::GitFailed, &format!("Git information could not be read for {base_ref}. Check the repository and configured base."), redactor);
+            if matches!(source.as_ref(), mokly_compare::error::Error::Git { .. }) {
+                return style.error(Code::GitFailed, &format!("Git information could not be read for {base_ref}. Check the repository and configured base."), redactor);
             }
-            warnings(style, records, redactor)
-                + &style.error(
+            style.error(
                     crate::changes_diagnostics::failure_code(source),
                     &format!(
                         "comparison against base ref {base_ref:?} failed: {}",
@@ -88,6 +120,11 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
                     redactor,
                 )
         }
+        BuildError::RestartRequired { setting } => style.error(
+            Code::BuildInvalid,
+            &format!("{setting} changed. Restart Serve to apply this setting."),
+            redactor,
+        ),
         BuildError::Interrupted { .. } => style.error(Code::BuildInvalid, "build cancelled", redactor),
         BuildError::Warnings => style.error(Code::BuildInvalid, "The catalogue has build warnings. Fix the reported warnings and retry.", redactor),
         BuildError::Shutdown { primary, shutdown } => {
@@ -100,11 +137,11 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
                 Category::ReviewInvalid => Code::ReviewInvalid,
                 Category::ServerFailed => Code::ViewerUnavailable,
             } };
-            let primary = if pre_installation::cancelled(primary) { "build cancelled".into() } else { static_errors::without_prefixes(&primary.to_string()) };
-            style.error_lines(code, &format!("{primary}\nRender shutdown failed: {}", static_errors::without_prefixes(&shutdown.to_string())), redactor)
+            let primary = if pre_installation::cancelled(primary) { "build cancelled".into() } else { recovery_output::cause(primary) };
+            style.error_lines(code, &format!("{primary}\nRender shutdown failed: {}", recovery_output::cause(shutdown)), redactor)
         },
-        BuildError::Cleanup { primary, cleanup, path } => {
-            let message = format!("{}\nRecovery failed: {}\nInspect retained recovery path {}.", static_errors::without_prefixes(&primary.to_string()), static_errors::detail(cleanup), static_errors::display_path(path));
+        BuildError::Cleanup { primary, cleanup, .. } => {
+            let message = format!("{}\nRecovery failed: {}", recovery_output::cause(primary), static_errors::detail(cleanup));
             style.error_lines(Code::ExportInvalid, &message, redactor)
         },
         BuildError::Viewer => style.error(Code::ViewerUnavailable, "Build or reinstall the matching @mokly/viewer package and retry.", redactor),
@@ -114,49 +151,35 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
         BuildError::Cancelled => style.error(Code::BuildInvalid, "build cancelled", redactor),
         BuildError::Deferred {
             modules,
-            warnings: records,
-        } => {
-            warnings(style, records, redactor)
-                + &style.error(
-                    Code::BuildInvalid,
-                    &format!(
-                        "JavaScript rendering is unavailable for {}",
-                        modules.join(", ")
-                    ),
-                    redactor,
-                )
-        }
-        BuildError::Rendering {
-            source,
-            warnings: records,
-        } => {
-            let mut records = records.clone();
-            records.extend(source.warnings());
-            mokly_catalogue::diagnostic::normalize_warnings(&mut records);
-            let mut output = warnings(style, &records, redactor);
-            output.push_str(&render_diagnostics(style, source, redactor));
-            output
-        }
+            warnings: _,
+        } => style.error(
+            Code::BuildInvalid,
+            &format!(
+                "JavaScript rendering is unavailable for {}",
+                modules.join(", ")
+            ),
+            redactor,
+        ),
+        BuildError::Rendering { source, .. } => render_diagnostics(style, source, redactor),
         BuildError::Strict { warnings: records } => {
             let count = records.len();
-            warnings(style, records, redactor)
-                + &style.error(
-                    Code::BuildInvalid,
-                    &format!(
-                        "{count} build warning{} with --strict",
-                        if count == 1 { "" } else { "s" }
-                    ),
-                    redactor,
-                )
+            style.error(
+                Code::BuildInvalid,
+                &format!(
+                    "{count} build warning{} with --strict",
+                    if count == 1 { "" } else { "s" }
+                ),
+                redactor,
+            )
         }
         BuildError::Catalogue {
             source:
                 CatalogueError::Invalid {
                     issues,
-                    warnings: records,
+                    warnings: _,
                 },
         } => {
-            let mut text = warnings(style, records, redactor);
+            let mut text = String::new();
             for issue in issues {
                 let detail = issue_text(issue, Code::BuildInvalid);
                 let diagnostic = if matches!(

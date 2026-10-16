@@ -175,6 +175,10 @@ paths.
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot
 selects its exact removed record.
+`tag_selection.ts` captures the open picker before a tag changes the search state.
+An inspector tag then returns focus to the toggle in its own shell. Picker
+chips keep the picker callback's focus handling.
+
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
@@ -202,7 +206,9 @@ the frames once the routed details arrive; until then `stage_delivery.tsx`
 shows the loading state, or the unavailable state with retry. The element
 generation of `frame_source_hook.ts` advances only when a frame's
 `documentKey` changes at the same source, so a publication reloads only the
-frames whose document changed.
+frames whose document changed. Saved component view records supplied by prop
+controls keep their index `documentKey`. Only a temporary render URL bypasses
+that key.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical

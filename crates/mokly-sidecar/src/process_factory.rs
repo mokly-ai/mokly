@@ -15,12 +15,14 @@ use crate::process_clock::Wait;
 use crate::process_control::ProcessControl;
 use crate::process_io::{Reaper, read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
+use crate::process_parent::{ParentSpawn, ParentSpawner};
 use crate::process_transport::{Deadlines, PipeTransport};
 use crate::process_worker::{ForwardEvents, ProcessWorker};
 use crate::workers::{Diagnostics, Spawned, WorkerControl, WorkerFactory};
 
 /// Concrete worker factory, assembled once by the executable composition root.
 pub struct NodeFactory {
+    parent: Arc<dyn ParentSpawn>,
     groups: Arc<dyn ProcessGroups>,
     clock: Arc<dyn Wait>,
     diagnostics: Arc<dyn Diagnostics>,
@@ -36,6 +38,7 @@ impl NodeFactory {
         memory: Arc<dyn MemoryFactory>,
     ) -> Self {
         Self {
+            parent: Arc::new(ParentSpawner::default()),
             groups,
             clock,
             diagnostics,
@@ -61,7 +64,7 @@ impl WorkerFactory for NodeFactory {
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }
-        let mut child = match command.spawn() {
+        let mut child = match self.parent.spawn(command) {
             Ok(child) => Reaper(child),
             Err(_) => {
                 return Err(Error::Unavailable {
@@ -127,6 +130,7 @@ impl WorkerFactory for NodeFactory {
         );
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
+                diagnostics: self.diagnostics.clone(),
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
                 memory: self.memory.monitor(pid),

@@ -1,35 +1,28 @@
 //! Stylesheet roots follow ordered module edges and renderer exclusion.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::compiler::Compiler;
 use mokly_css::resolution::Resolution;
 use mokly_css::resolver::{ImportResolver, SourceResolver};
 use mokly_css::types::{CssProcessor, IdentityProcessor, StylesheetBundler, StylesheetRoot};
-use mokly_source_interface::tree::SourceTree;
 
+use crate::leases::ContextLease;
 use crate::postcss::PostCss;
 use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
-use crate::sources::SideTree;
+use crate::sources;
+use crate::stylesheet_cache::CachedStylesheets;
 
 pub(crate) fn compiler(
     runtime: &Runtime,
     config: &ResolvedConfig,
     side: &SideInputs,
 ) -> Arc<dyn StylesheetBundler> {
-    let tree: Arc<dyn SourceTree> = Arc::new(SideTree {
-        _base: runtime.base.clone(),
-        usage: runtime.dependency_usage.clone(),
-        aliases: side.dependency_aliases.clone(),
-        sources: runtime.tree.clone(),
-        dependencies: runtime.dependency_tree.clone(),
-        root: config.repo_root.clone(),
-        dependency_roots: dependency_roots(side),
-        repository_roots: side.repository_roots.clone(),
-    });
+    let tree = sources::reader(runtime, config, side);
     let resolution = &side.module_resolution;
     let resolver: Arc<dyn ImportResolver> = Arc::new(SourceResolver {
         tree: tree.clone(),
@@ -50,6 +43,19 @@ pub(crate) fn compiler(
     let processor = match &config.input.postcss {
         Some(module) => Arc::new(PostCss {
             usage: runtime.dependency_usage.clone(),
+            lease: Arc::new(ContextLease {
+                id: side.context.clone(),
+                pool: runtime.pool.clone(),
+                released: {
+                    let mut cache = runtime
+                        .css
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner());
+                    cache.purge();
+                    cache.releases.clone()
+                },
+                used: AtomicBool::new(false),
+            }),
             pool: runtime.pool.clone(),
             tree: tree.clone(),
             inventory_tree: runtime.inventory_tree.clone(),
@@ -65,11 +71,28 @@ pub(crate) fn compiler(
         }) as Arc<dyn CssProcessor>,
         None => Arc::new(IdentityProcessor),
     };
-    Arc::new(Compiler {
-        tree: tree.clone(),
-        repo_root: config.repo_root.clone(),
-        resolver,
-        processor,
+    let settings = format!(
+        "{:?}:{:?}:{:?}",
+        config.input, side.source_root, side.module_resolution
+    );
+    Arc::new(CachedStylesheets {
+        inner: Arc::new(Compiler {
+            tree: tree.clone(),
+            repo_root: config.repo_root.clone(),
+            resolver,
+            processor,
+        }),
+        tree,
+        root: config.repo_root.clone(),
+        settings,
+        shared: runtime.styles.clone(),
+        local: Mutex::new(
+            runtime
+                .styles
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .empty_peer(),
+        ),
     })
 }
 

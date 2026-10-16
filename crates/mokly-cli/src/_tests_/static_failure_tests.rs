@@ -1,6 +1,6 @@
 //! New static failure arms and combined recovery have exact plain and rich output.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use mokly_static::error::{Error, InternalError};
 use mokly_static::inspector_error::InspectorFailure;
@@ -111,7 +111,7 @@ fn static_errors_show_safe_paths_bounded_entries_and_each_cause_once() {
             columns: 200,
         };
         for sample in &samples {
-            outputs.push(failure(&style, sample, &redactor));
+            outputs.push(failure(&style, sample, &redactor, Path::new("/repo")));
         }
     }
     let output = outputs.join("\n");
@@ -139,7 +139,7 @@ fn shutdown_uses_one_block_and_retains_the_primary_error_category() {
             ascii: true,
             columns: 200,
         };
-        let text = failure(&style, &error, &Redactor::default());
+        let text = failure(&style, &error, &Redactor::default(), Path::new("/repo"));
         assert_eq!(text.matches("[mokly/git-failed]").count(), 1);
         assert!(!text.contains("[mokly/build-invalid]"));
         assert!(text.contains("Render shutdown failed"));

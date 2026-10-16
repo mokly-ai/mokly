@@ -11,6 +11,7 @@ test("every failed preparation command stops before cargo and stamp updates", as
     "git rev-parse --is-shallow-repository",
     "git fetch --unshallow --tags origin",
     "npm ci",
+    "npx playwright install chromium",
   ]) {
     const harness = testboxHarness();
     harness.files.delete(harness.stamp);

@@ -130,10 +130,13 @@ export function consumerPlugins(
           });
           if (resolved.errors.length) return { errors: resolved.errors };
           try {
-            return {
-              path: await paths.resolve(resolved.path),
-              namespace: "mokly-css",
-            };
+            const file = await paths.resolve(resolved.path);
+            await paths.dependencyUsage.resolved(
+              args.path,
+              args.resolveDir,
+              file,
+            );
+            return { path: file, namespace: "mokly-css" };
           } catch (error) {
             return { errors: [{ text: detail(error) }] };
           }
@@ -159,7 +162,13 @@ export function consumerPlugins(
           )
             return resolved;
           try {
-            return { ...resolved, path: await paths.resolve(resolved.path) };
+            const file = await paths.resolve(resolved.path);
+            await paths.dependencyUsage.resolved(
+              args.path,
+              args.resolveDir,
+              file,
+            );
+            return { ...resolved, path: file };
           } catch (error) {
             return { errors: [{ text: detail(error) }] };
           }

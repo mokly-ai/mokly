@@ -35,6 +35,7 @@ fn call() -> Call {
 
 fn css() -> MethodResult {
     MethodResult::Css(Css {
+        unmapped_dependency_directories: None,
         text: "a{}".into(),
         dependencies: Vec::new(),
     })

@@ -1,4 +1,4 @@
-//! Host process scans stay constant across a 1:4 render-count comparison.
+//! Parent-only scans scale across periodic boundaries; executable identities stay cached.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::memory_table::{CanonicalizeMock, RefreshMock};
+use crate::memory_table::{CanonicalizeMock, DiscoverMock, RefreshMock};
 use crate::memory_tree::Sample;
 use crate::process_memory::{Monitor, RESCAN_REQUESTS, ResidentMemory};
 
@@ -19,6 +19,7 @@ struct Counts {
 }
 fn monitor() -> (Monitor, Arc<Counts>) {
     let counts = Arc::new(Counts::default());
+    let discovered = counts.clone();
     let refreshed = counts.clone();
     let paths = counts.clone();
     let records = BTreeMap::from([
@@ -60,21 +61,20 @@ fn monitor() -> (Monitor, Arc<Counts>) {
         ),
     ]);
     let table = Unimock::new((
+        DiscoverMock
+            .each_call(matching!(1))
+            .answers_arc(Arc::new(move |_, _| {
+                discovered.full.fetch_add(1, Ordering::SeqCst);
+                vec![1, 2, 3]
+            })),
         RefreshMock
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, selected| {
-                match selected {
-                    Some(pids) => {
-                        assert_eq!(pids, &[1, 2, 3]);
-                        refreshed.partial.fetch_add(1, Ordering::SeqCst);
-                    }
-                    None => {
-                        refreshed.full.fetch_add(1, Ordering::SeqCst);
-                    }
-                }
+                assert_eq!(selected, &[1, 2, 3]);
+                refreshed.partial.fetch_add(1, Ordering::SeqCst);
                 records
                     .iter()
-                    .filter(|(pid, _)| selected.is_none_or(|pids| pids.contains(pid)))
+                    .filter(|(pid, _)| selected.contains(pid))
                     .map(|(pid, sample)| (*pid, sample.clone()))
                     .collect()
             })),
@@ -93,7 +93,7 @@ fn monitor() -> (Monitor, Arc<Counts>) {
 }
 
 #[test]
-fn full_scans_and_executable_reads_do_not_grow_with_eight_to_thirty_two_renders() {
+fn full_scans_scale_and_executable_identities_stay_cached_across_64_to_256_renders() {
     let run = |renders| {
         let (memory, counts) = monitor();
         assert_eq!(memory.resident_bytes(true).unwrap(), 300);
@@ -106,10 +106,11 @@ fn full_scans_and_executable_reads_do_not_grow_with_eight_to_thirty_two_renders(
             counts.paths.load(Ordering::SeqCst),
         )
     };
-    let small = run(8);
-    let large = run(32);
-    assert_eq!(small, (2, 8, 3));
-    assert_eq!(large.0, small.0);
+    let small = run(64);
+    let large = run(256);
+    assert_eq!(small, (3, 66, 3));
+    assert_eq!(large.0, 6);
+    assert!(large.0 * 2 <= small.0 * 9);
     assert_eq!(large.2, small.2);
     assert!(small.1 > 0 && large.1 <= small.1 * 4);
 }

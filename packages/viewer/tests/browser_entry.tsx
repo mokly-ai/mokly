@@ -17,6 +17,7 @@ import type {
   ViewerTheme,
 } from "@mokly/viewer";
 
+import { browserDetails } from "./browser_details.js";
 import { installFrameHookHarness } from "./frame_hook_harness.js";
 
 interface HostOptions {
@@ -33,6 +34,7 @@ interface HostOptions {
 interface Host {
   root: Root;
   props: MoklyViewerProps;
+  details: Record<string, EntryDetailV1>;
   ref: { current: MoklyViewerHandle | null };
   events: { name: string; value: unknown }[];
   render(): void;
@@ -82,7 +84,14 @@ const start = (id: string, options: HostOptions = {}) => {
     ref,
     events,
     props: {} as MoklyViewerProps,
+    details: structuredClone(data.details.current),
     render() {
+      if (
+        typeof host.props.index === "object" &&
+        !(host.props.index instanceof URL) &&
+        host.props.index.schemaVersion === 7
+      )
+        host.details = browserDetails(host.props.index, host.details);
       const node = <MoklyViewer {...host.props} ref={ref} />;
       host.root.render(options.strict ? <StrictMode>{node}</StrictMode> : node);
     },
@@ -124,7 +133,7 @@ const start = (id: string, options: HostOptions = {}) => {
     index: options.source ?? data.index,
     detail: (path: string, snapshotId?: string) =>
       snapshotId === undefined
-        ? data.details.current[path]!
+        ? host.details[path]!
         : data.details.removed[snapshotId]!,
     ...(sourceNeedsBaseUrl
       ? { baseUrl: options.cross ? data.baseUrl : location.origin }

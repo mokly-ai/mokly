@@ -1,0 +1,119 @@
+import path from "node:path";
+
+import { expect, type Page, type TestInfo } from "@playwright/test";
+
+import type { CatalogueReadModel } from "@mokly/viewer";
+
+import { viewRoute } from "../../packages/viewer/dist/data.js";
+import { paletteColor } from "../helpers/design_palette.js";
+import { repositoryRoot } from "../helpers/fixture.js";
+
+import { test } from "./browser_test.js";
+import { designCases, designCatalogue } from "./design_catalogue.js";
+import { designFileUrl } from "./design_fixture.js";
+type ManifestScreen = CatalogueReadModel["screens"][number];
+
+const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
+
+const changedDesigns = new Set([
+  "design/browse/variants/variant-changes",
+  "design/browse/index-entries/member-changes",
+  "design/changes/diff-controls/current",
+  "design/changes/outcomes/moved",
+  "design/changes/diff-controls/overlay",
+  "design/changes/diff-controls/overlay-long",
+  "design/changes/diff-controls/overlay-panel",
+  "design/changes/diff-controls/side-by-side-apart",
+  "design/changes/outcomes/changed",
+  "design/changes/outcomes/difference",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
+  "design/browse/publication/changes",
+  "design/browse/appearance/workspaces/side-by-side",
+  "design/browse/appearance/workspaces/difference",
+  "design/changes/impact/styles/matched-excluded/excluded",
+]);
+
+async function assertFragmentEligibility(
+  page: Page,
+  testInfo: TestInfo,
+  entry: ManifestScreen,
+  appearance: "light" | "dark",
+  fragment: string,
+): Promise<void> {
+  await page.goto(designFileUrl(path.join(directory, fragment)).href);
+  const componentDesign = entry.path.startsWith("design/components/");
+  const changedComponentOrScreen =
+    componentDesign &&
+    (await page.locator('[data-change-status="changed"]').count()) > 0;
+  const removedComponent =
+    componentDesign &&
+    (await page.locator('[data-change-status="removed"]').count()) > 0 &&
+    (await page.locator(".ce-variants").count()) > 0;
+  const expected =
+    changedDesigns.has(entry.path) ||
+    changedComponentOrScreen ||
+    removedComponent;
+  const toolbar = page.locator(".mbk-cmp-toolbar");
+  await expect(toolbar, fragment).toHaveCount(expected ? 1 : 0);
+  if (!expected) {
+    await expect(
+      page.locator(".mbk-comparison-stage h3"),
+      fragment,
+    ).toHaveCount(0);
+  } else {
+    await expect(toolbar, fragment).toHaveCSS(
+      "background-color",
+      await paletteColor(appearance, "--chrome-surface"),
+    );
+    await expect(toolbar, fragment).toHaveCSS("display", "flex");
+    const bounds = await toolbar.boundingBox();
+    expect(bounds, fragment).not.toBeNull();
+    for (const control of await toolbar.locator(".mbk-seg").all()) {
+      const child = await control.boundingBox();
+      expect(child, fragment).not.toBeNull();
+      expect(child!.y, fragment).toBeGreaterThanOrEqual(bounds!.y);
+      expect(child!.y + child!.height, fragment).toBeLessThanOrEqual(
+        bounds!.y + bounds!.height,
+      );
+    }
+  }
+  await page.screenshot({
+    path: testInfo.outputPath(`${entry.path}.${appearance}.png`),
+    fullPage: true,
+  });
+}
+
+/** Register bounded design cases for one whole-file shard group. */
+export function comparisonEligibility(group: number) {
+  const entries = designCatalogue();
+  const cases = designCases
+    .filter((entry) => entry.kind === "screen")
+    .filter((_, index) => index % 4 === group);
+  for (const viewport of ["desktop", "mobile"] as const)
+    for (const candidate of cases) {
+      test(`${viewport}: ${candidate.path} only offers comparisons with changes and an opaque toolbar`, async ({
+        page,
+      }, testInfo) => {
+        await page.setViewportSize(
+          viewport === "mobile"
+            ? { width: 390, height: 844 }
+            : { width: 1440, height: 1000 },
+        );
+        const entry = entries.find(
+          (entry) => entry.kind === "screen" && entry.path === candidate.path,
+        ) as ManifestScreen;
+        expect(entry).toBeDefined();
+        for (const appearance of candidate.colorSchemes) {
+          await assertFragmentEligibility(
+            page,
+            testInfo,
+            entry,
+            appearance,
+            viewRoute(entry.path, viewport, appearance),
+          );
+        }
+      });
+    }
+}

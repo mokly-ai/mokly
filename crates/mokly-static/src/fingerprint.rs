@@ -40,6 +40,28 @@ impl CapturedTree {
     }
 }
 impl SourceTree for CapturedTree {
+    fn prefetch(&self, paths: &[PathBuf]) -> error::Result<()> {
+        self.snapshot.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> error::Result<Vec<u8>> {
+        let bytes = self.snapshot.read_public(path)?;
+        self.reads
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .entry(path.into())
+            .or_insert_with(|| digest(&bytes));
+        Ok(bytes)
+    }
+    fn digest(&self, path: &Path) -> error::Result<String> {
+        let hash = self.snapshot.digest(path)?;
+        self.reads
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .entry(path.into())
+            .or_insert_with(|| hash.clone());
+        Ok(hash)
+    }
+
     fn project(&self, path: &Path) -> error::Result<Option<Node>> {
         let result = self.snapshot.project(path)?;
         self.nodes
@@ -75,7 +97,7 @@ impl InputTree for CapturedTree {
             if !node.identity.starts_with(root) {
                 return Err(Error::InputsChanged { path: absolute });
             }
-            source(self.read_shared(&node.identity))?;
+            source(self.digest(&node.identity))?;
         }
         Ok(())
     }
@@ -96,11 +118,7 @@ impl InputTree for CapturedTree {
             .unwrap_or_else(|error| error.into_inner())
             .iter()
         {
-            if !self
-                .live
-                .read_shared(path)
-                .is_ok_and(|bytes| digest(&bytes) == *hash)
-            {
+            if !self.live.digest(path).is_ok_and(|current| current == *hash) {
                 return Err(Error::InputsChanged { path: path.clone() });
             }
         }

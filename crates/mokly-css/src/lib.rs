@@ -62,3 +62,5 @@ mod attribution_tests;
 mod compiler_assets;
 mod css_boundaries;
 mod selector_nesting;
+
+mod lookup_roots;

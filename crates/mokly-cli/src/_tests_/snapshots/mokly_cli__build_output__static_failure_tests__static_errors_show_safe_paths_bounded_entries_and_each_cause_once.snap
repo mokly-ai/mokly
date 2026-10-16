@@ -49,17 +49,17 @@ expression: output
 
 [mokly/export-invalid] build cancelled
 Recovery failed: Exclusive rename failed: destination exists: /repo/site
-Inspect retained recovery path /kept/backup.
+  Recovery path: /kept/backup
 
 [mokly/export-invalid] The new site is installed. Cleanup failed: Unexpected or unsafe output entry at /kept/backup/new.
-Inspect remaining recovery path /kept/backup.
+  Recovery path: /kept/backup
 
 [mokly/build-invalid] build cancelled
 Render shutdown failed: Build or reinstall the matching @mokly/viewer package.
 
 [mokly/export-invalid] build cancelled
 Recovery failed: Unexpected or unsafe output entry at /kept/[redacted].
-Inspect retained recovery path /kept/[redacted].
+  Recovery path: /kept/[redacted]
 
 x The catalogue server could not start.  [mokly/server-failed]
   Build or reinstall the matching @mokly/viewer package and retry.
@@ -130,13 +130,13 @@ x The static output could not be written.  [mokly/export-invalid]
 x The static output could not be written.  [mokly/export-invalid]
   build cancelled
   Recovery failed: Exclusive rename failed: destination exists: /repo/site
-  Inspect retained recovery path /kept/backup.
   Fix the reported output directory or input and retry.
+  Recovery path: /kept/backup
 
 x The static output could not be written.  [mokly/export-invalid]
   The new site is installed. Cleanup failed: Unexpected or unsafe output entry at /kept/backup/new.
-  Inspect remaining recovery path /kept/backup.
   Fix the reported output directory or input and retry.
+  Recovery path: /kept/backup
 
 x The catalogue could not be built.  [mokly/build-invalid]
   build cancelled
@@ -146,5 +146,5 @@ x The catalogue could not be built.  [mokly/build-invalid]
 x The static output could not be written.  [mokly/export-invalid]
   build cancelled
   Recovery failed: Unexpected or unsafe output entry at /kept/[redacted].
-  Inspect retained recovery path /kept/[redacted].
   Fix the reported output directory or input and retry.
+  Recovery path: /kept/[redacted]

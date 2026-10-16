@@ -29,8 +29,8 @@ output. Run `npm run build` first. The viewer suite supplies this preparation.
 The raw commands `node --import tsx --test <file>` and
 `npx playwright test <spec>` skip the build and test the last build. After a
 source change, run `npm run build` before using either raw command. One build
-can serve repeated raw runs while the sources stay unchanged. No command
-prepares a baseline, a compiled example snapshot, or a packed archive.
+can serve repeated raw runs while the sources stay unchanged. No test
+command prepares a baseline, a compiled example snapshot, or a packed archive.
 
 The `test:prepared` and `test:browser:prepared` commands keep the
 [strict runner contract](./ci-verification.md#gate-ownership). They are not
@@ -162,6 +162,40 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 `.only`. Spec discovery is defined in
 [CI verification](./ci-verification.md#gate-ownership).
 
+For static-output checks, build the site first, then set
+`MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
+
+```bash
+npx mokly build --config examples/basic/mokly.config.json --out ../../.context/example
+MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
+```
+
+The host serves exact files and directory indexes. It uses a free loopback port.
+Browser specs support POSIX systems only. Specs must not assume an empty Changes set:
+remote Testboxes hold branch edits as working-tree changes against their base.
+`MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
+that open portable documents directly through `file://` URLs.
+
+For example, after the build above:
+
+```bash
+MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser/component_inspector.spec.ts
+```
+
+File mode is checked by a manual run. Supported specs under `tests/browser/`
+are `comparison_design`, `component_controls`, `component_design`,
+`component_design_inspection`, `component_design_selection`, `component_evidence`,
+`component_inspector`, `component_surfaces`, `component_workspace`,
+`design_comparison_eligibility` (and `_2`, `_3`, `_4`),
+`design_comparison_scrolling`, `design_comparison_stacks`,
+`design_component_stacks`, `design_index_entries`, `design_library`,
+`design_modern_controls`, `design_portable`, `design_scroll_together`,
+`design_stylesheet_evidence`, `design_top_bar`, `example_links`, and
+`phone_chrome`; each name has the `.spec.ts` suffix. Continuous runs and the
+private file fixture belong to M8's copied-static-output TODO.
+
+Browser traces and screenshots stay under `.context/playwright-results/`.
+
 ## Development Workflow And Verification Boundary
 
 During development, run only the test files that cover the change: `npm test`
@@ -189,6 +223,12 @@ complete gate. Only the complete `cargo xtask check`, or the validated CI
 aggregate defined in
 [CI verification](./ci-verification.md#verification-boundary), provides
 complete verification.
+
+## Packed Consumer Smoke
+
+`npm run package:smoke` checks the installed archives in a scratch consumer.
+See [Packed Consumer Smoke](./packed-consumer-smoke.md) for its commands,
+coverage, process cleanup, and native browser requirements.
 
 ## Native TLS Build Tools
 

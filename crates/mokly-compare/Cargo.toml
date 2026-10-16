@@ -28,6 +28,7 @@ unimock = { version = "0.6.8", optional = true }
 mock = ["dep:unimock"]
 
 [dev-dependencies]
+mokly-source-interface = { workspace = true, features = ["mock"] }
 tempfile = "3.27.0"
 unimock = "0.6.8"
 

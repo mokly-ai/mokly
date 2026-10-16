@@ -46,3 +46,52 @@ fn asset_route_grammar_keeps_scopes_and_rejects_device_names_and_escapes() {
     assert!(paths::content_type("a.PNG").is_none());
     assert!(paths::external("DATA:image/png;base64,AA"));
 }
+
+#[test]
+fn legacy_css_reference_boundaries_keep_escapes_comments_and_image_sets() {
+    for (source, expected) in [
+        ("color: red; padding: 2px", vec![]),
+        ("color: var(--tone); transform: translateX(0px)", vec![]),
+        (r"background: u\72l(icon.svg)", vec!["icon.svg"]),
+        (r#"@\69mport "theme.css";"#, vec!["theme.css"]),
+        ("a { background: url(a/*/b.svg); }", vec!["a/*/b.svg"]),
+        (r#"a { background: url("a/*b.svg"); }"#, vec!["a/*b.svg"]),
+        (
+            r#"a { background: url("a/*comment*/b.svg"); }"#,
+            vec!["a/*comment*/b.svg"],
+        ),
+        (
+            "a { background: /* asset */url(image.svg); }",
+            vec!["image.svg"],
+        ),
+        (
+            r#"@import /* import */ "theme/*night*/tokens.css";"#,
+            vec!["theme/*night*/tokens.css"],
+        ),
+        (
+            r#"a { content: "url(fake.svg)"; background: url/**/("fake.svg"); }"#,
+            vec![],
+        ),
+        (
+            r#"@import url("theme.css"); a { background: URL(icon.svg); }"#,
+            vec!["theme.css", "icon.svg"],
+        ),
+        (
+            "a { background: url(icon.svg); } /* unclosed",
+            vec!["icon.svg"],
+        ),
+        (
+            r#"a{background:image-set("a.png" 1x, url("b.png") 2x)}"#,
+            vec!["a.png", "b.png"],
+        ),
+    ] {
+        assert_eq!(
+            references(source)
+                .iter()
+                .map(|item| item.value.as_str())
+                .collect::<Vec<_>>(),
+            expected,
+            "{source}"
+        );
+    }
+}

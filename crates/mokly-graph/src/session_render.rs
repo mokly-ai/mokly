@@ -1,15 +1,15 @@
 //! Render saved or temporary props and publish validated closure membership.
 
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
-use crate::closure::{Closure, ClosureBuilder};
+use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
 use crate::workers::ArtifactWorker;
-use crate::{document_composition, validation};
+use crate::{document_composition, resource_digests, validation};
 
 impl Session {
     #[tracing::instrument(
@@ -98,5 +98,39 @@ impl ArtifactWorker for Session {
             .unwrap_or_else(|error| error.into_inner())
             .extend(closure.files);
         Ok(artifact)
+    }
+}
+
+impl ClosureObserver for Session {
+    fn observe(&self, route: &str, path: &str) {
+        if let Some(plan) = self.state.plans.get(route) {
+            let digest = resource_digests::confined(
+                self.state.tree.as_ref(),
+                &self.state.config.repo_root,
+                path,
+            );
+            self.state
+                .inputs
+                .resources
+                .record(&plan.resource_key, path, digest);
+        }
+        let added = self
+            .state
+            .observed
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(path.into());
+        if added {
+            let observer = self
+                .state
+                .observer
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .as_ref()
+                .and_then(Weak::upgrade);
+            if let Some(observer) = observer {
+                observer.observe(&self.state.generation_key, path);
+            }
+        }
     }
 }

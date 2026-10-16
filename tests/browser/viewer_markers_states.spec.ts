@@ -1,0 +1,253 @@
+import { expect } from "@playwright/test";
+
+import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
+
+import { test } from "./browser_test.js";
+import { markerFixture } from "./viewer_marker_fixture.js";
+import {
+  expectMarkerState,
+  openMarkerViewer,
+  screenInstance,
+  setViewerMarkers,
+} from "./viewer_marker_test_helpers.js";
+
+import type {} from "./viewer_harness.js";
+
+let fixture: Awaited<ReturnType<typeof markerFixture>>;
+test.beforeAll(async () => {
+  fixture = await markerFixture();
+});
+test.afterAll(async () => fixture?.close());
+
+for (const cross of [false, true]) {
+  const adapter = cross ? "postMessage" : "same-origin";
+
+  test(`${adapter} marker states cover hidden, missing, other-screen, comparison and pending views`, async ({
+    page,
+  }) => {
+    await openMarkerViewer(page, fixture, cross, { viewport: "mobile" });
+    const visible = screenInstance(fixture, "mobile", "action");
+    const hidden = screenInstance(fixture, "mobile", "hidden");
+    const missing = { ...visible, key: "f".repeat(64) };
+    await setViewerMarkers(page, [
+      { id: "hidden", instance: hidden },
+      { id: "missing", instance: missing },
+    ]);
+    await expectMarkerState(page, "hidden", "hidden");
+    await expectMarkerState(page, "missing", "unavailable");
+    await expect(page.locator("[data-mokly-marker]")).toHaveCount(0);
+
+    await setViewerMarkers(page, [
+      { id: "duplicate", instance: visible },
+      { id: "duplicate", instance: hidden },
+    ]);
+    await expect(page.locator("[data-mokly-marker]")).toHaveCount(0);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (
+              window.viewerHarness
+                .get("one")
+                .events.filter((event) => event.name === "error")
+                .at(-1)?.value as { code?: string } | undefined
+            )?.code,
+        ),
+      )
+      .toBe("markers");
+    await setViewerMarkers(page, [{ id: "visible", instance: visible }]);
+    await expectMarkerState(page, "visible", "visible");
+
+    await page.evaluate(() =>
+      window.viewerHarness.get("one").ref.current.select({
+        screenPath: "pane/default",
+      }),
+    );
+    await expectMarkerState(page, "visible", "unavailable");
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .ref.current.select({ screenPath: "home" }),
+    );
+    await expectMarkerState(page, "visible", "visible");
+
+    await page.evaluate(() => {
+      const host = window.viewerHarness.get("one");
+      const index = structuredClone(host.props.index) as CatalogueReadModel;
+      index.changesStatus = "ready";
+      index.comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
+      for (const entry of [...index.screens, ...index.components])
+        entry.changes = {
+          status: "ready",
+          kind: "unmodified",
+          included: false,
+        };
+      const home = index.screens.find((entry) => entry.path === "home")!;
+      home.changes = { status: "ready", kind: "changed", included: true };
+      home.views = home.views.map((view) => ({
+        ...view,
+        comparison: { status: "ready", kind: "changed", eligible: true },
+      }));
+      host.props.index = index;
+      host.render();
+    });
+    await page.locator('[data-diff-mode="side"]').click();
+    await expectMarkerState(page, "visible", "unavailable");
+    await page.locator('[data-diff-mode="current"]').click();
+    await expectMarkerState(page, "visible", "visible");
+
+    await page.evaluate((visible) => {
+      const host = window.viewerHarness.get("one");
+      const model = structuredClone(host.props.index) as CatalogueReadModel;
+      host.details["home"]!.views = host.details["home"]!.views.map((view) =>
+        view.viewport === "mobile" && view.colorScheme === "light"
+          ? { ...view, usage: { status: "pending" as const } }
+          : view,
+      );
+      host.props = {
+        ...host.props,
+        index: model,
+        defaultSelection: {
+          screenPath: "home",
+          viewport: "mobile",
+          colorScheme: "light",
+        },
+      } as MoklyViewerProps;
+      host.setMarkers([{ id: "pending", instance: visible }]);
+    }, visible);
+    await expectMarkerState(page, "pending", "unavailable");
+    await setViewerMarkers(page, []);
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const values = window.viewerHarness
+            .get("one")
+            .events.filter((event) => event.name === "markers");
+          return values.at(-1)?.value;
+        }),
+      )
+      .toEqual([]);
+  });
+
+  test(`${adapter} one failing measurement reports one marker error for all targets`, async ({
+    page,
+  }) => {
+    await openMarkerViewer(page, fixture, cross, { viewport: "mobile" });
+    const visible = screenInstance(fixture, "mobile", "action");
+    await page.evaluate((visible) => {
+      const host = window.viewerHarness.get("one");
+      const original = host.props.frameAdapter!;
+      let failed = false;
+      host.props = {
+        ...host.props,
+        frameAdapter: {
+          async mount(frame, options) {
+            const mounted = await original.mount(frame, options);
+            return {
+              ...mounted,
+              async listInstanceBoundaries() {
+                if (!failed) {
+                  failed = true;
+                  throw new Error("Private measurement details");
+                }
+                return mounted.listInstanceBoundaries();
+              },
+            };
+          },
+        },
+      } as MoklyViewerProps;
+      host.setMarkers([
+        { id: "first", instance: visible },
+        { id: "second", instance: visible },
+      ]);
+    }, visible);
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          window.viewerHarness.get("one").events.some((event) => {
+            if (event.name !== "markers" || !Array.isArray(event.value))
+              return false;
+            const states = event.value as { id: string; status: string }[];
+            return (
+              states.length === 2 &&
+              states[0]?.id === "first" &&
+              states[0].status === "unavailable" &&
+              states[1]?.id === "second" &&
+              states[1].status === "unavailable"
+            );
+          }),
+        ),
+      )
+      .toBe(true);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            window.viewerHarness
+              .get("one")
+              .events.filter(
+                (event) =>
+                  event.name === "error" &&
+                  (event.value as { code?: string }).code === "markers",
+              ).length,
+        ),
+      )
+      .toBe(1);
+  });
+
+  test(`${adapter} unmount fences an asynchronous marker measurement`, async ({
+    page,
+  }) => {
+    await openMarkerViewer(page, fixture, cross, { viewport: "mobile" });
+    const visible = screenInstance(fixture, "mobile", "action");
+    await page.evaluate((visible) => {
+      const host = window.viewerHarness.get("one");
+      const original = host.props.frameAdapter!;
+      let release = () => {};
+      const waiting = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      (window as unknown as { releaseMarker: () => void }).releaseMarker =
+        release;
+      (window as unknown as { markerWaiting: boolean }).markerWaiting = false;
+      host.props = {
+        ...host.props,
+        frameAdapter: {
+          async mount(frame, options) {
+            const mounted = await original.mount(frame, options);
+            return {
+              ...mounted,
+              async listInstanceBoundaries() {
+                const boundaries = await mounted.listInstanceBoundaries();
+                (
+                  window as unknown as { markerWaiting: boolean }
+                ).markerWaiting = true;
+                await waiting;
+                return boundaries;
+              },
+            };
+          },
+        },
+      } as MoklyViewerProps;
+      host.setMarkers([{ id: "late", instance: visible }]);
+    }, visible);
+    await page.waitForFunction(
+      () => (window as unknown as { markerWaiting: boolean }).markerWaiting,
+    );
+    const before = await page.evaluate(
+      () => window.viewerHarness.get("one").events.length,
+    );
+    await page.evaluate(() => {
+      window.viewerHarness.remove("one");
+      (window as unknown as { releaseMarker: () => void }).releaseMarker();
+    });
+    await page.evaluate(async () => {
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+    });
+    expect(
+      await page.evaluate(() => window.viewerHarness.get("one").events.length),
+    ).toBe(before);
+    await expect(page.locator("#one")).toHaveCount(0);
+  });
+}

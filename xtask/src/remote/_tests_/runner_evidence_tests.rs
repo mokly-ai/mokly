@@ -7,7 +7,7 @@ use super::harness_tests::{Case, harness};
 
 /// Keep the existing remote evidence and cleanup assertions.
 #[test]
-fn complete_remote_gate_downloads_viewer_report_after_both_suites() {
+fn complete_remote_gate_downloads_five_reports_after_six_suites() {
     let fixture = harness(Case::Success);
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
@@ -20,21 +20,21 @@ fn complete_remote_gate_downloads_viewer_report_after_both_suites() {
             .iter()
             .filter(|event| event.starts_with("suite:"))
             .count(),
-        2
+        6
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.starts_with("download:"))
             .count(),
-        1
+        5
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.starts_with("stop:"))
             .count(),
-        2
+        6
     );
     let aggregate = events
         .iter()

@@ -38,6 +38,16 @@ use their resolved logical names. The binary watches source files, hashes
 dependency inputs, and reads stylesheet order from these edges under the
 [imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
 
+`bundle` and `processCss` results can include `unmappedDependencyDirectories`:
+used repository-relative `node_modules` directories whose importer lookup the
+base cannot preserve. Missing data means an empty list. Lookup observation
+retains package-directory links as well as canonical module paths. It covers
+nested workspace installations and a configuration copy that would shadow an
+outside importer's selected package. The core uses these records only for
+[dependency fallback](./mokly-base-preparation.md#installation-and-bundle-settings).
+They do not enter the catalogue source inventory. The compiled recipe retains
+this lookup provenance so worker restoration and evaluation reuse preserve it.
+
 ## Authoring And Evaluation
 
 Repository-owned imports of `@mokly/mokly` receive the attributed authoring
@@ -54,8 +64,8 @@ A `*.module.css` import compiles to a stub that reads its class map from the
 generation table at evaluation. The core scopes the stylesheet after PostCSS
 and supplies all maps with `cssModules` before `describe` evaluates the bundle.
 `cssModules` installs the table without bundling or reading source files.
-One esbuild compilation builds each generation, including its runtime style
-adapters. A root import supplies its own registry. A subpath import resolves
+One esbuild invocation builds each distinct compilation, including runtime
+style adapters. A root import supplies its own registry. A subpath import resolves
 the registry from the directory of its resolved file, so both use the same
 package copy. Wrappers keep the importer's CommonJS default-import interop:
 Node's rule for `.mjs` and `.mts` importers, the `__esModule` default otherwise.
@@ -66,13 +76,16 @@ Peer resolution uses that compiler's resolver from the configuration
 directory. Virtual modules do not enter the source inventory. CSS Modules
 in dependencies use the same logical dependency names as their graph records.
 The sidecar fails closed when a map is absent. Installing maps after
-evaluation is a protocol failure; callers dispose and re-bundle first.
+evaluation is a protocol failure. A changed map uses a new evaluation digest
+and retains the old generation until its final graph or request releases it.
+An evaluation-only change reuses compiled code without another esbuild run.
 
 The generation key includes the real source root and real selected dependency
 roots. A base and a head never share per-generation maps or bindings merely
 because their source bytes are equal. The pool's internal epoch separates
 successive loaded lifetimes of the same generation id. A stale worker disposes
-its copy and replays bundle, maps, describe, and bindings before more work.
+its copy and restores captured code, maps, describe, and bindings before more
+work. Replays never compile the current filesystem for an old generation.
 The fragment key also includes the class-map table digest and effective
 binding and entry fingerprints.
 
@@ -81,3 +94,47 @@ runtime, the authoring facade, and the module inventory. The sidecar performs
 no file writes. A resolution diagnostic names the logical module and the
 authored importer location. It does not expose another checkout, a dependency
 cache, or the bundler's implementation path.
+
+## Compiled Recipes And Release
+
+The private `bundle` result carries `compiled`: code, runtime import key,
+captured entry text, resolved peers, physical input digests,
+logical metadata digests, and the compilation identity. `restoreGeneration`
+installs that recipe with its original parameters, module graph, and evaluated generation id. The bundle result carries the graph once.
+It reads no current source file and invokes no compiler. Peer packages retain
+the selected physical installation. Failed peer resolutions remain explicit and
+raise `MODULE_NOT_FOUND`; native fallback cannot bypass that failure. Equal compilations share retained code
+while their maps, bindings, and authoring registrations remain independent.
+
+Before an evaluation-only bundle, the pool restores a compatible live compilation
+on the selected slot, including after recycling. Independent slots therefore
+reuse the same compilation without another esbuild call.
+
+The reuse stamp includes ancestor `package.json` and `tsconfig.json` candidates
+from each consumed module up to its source or selected dependency root, including
+absent files. Added or removed files in a consumed-module directory invalidate
+reuse, so a higher-priority module cannot remain hidden. Manual `r` uses these
+same input checks. Resolution metadata and directory membership remain observable.
+The reuse stamp also includes the resolved `react/package.json` and Storybook
+preview candidates, including absent candidates. Every digest-only source
+read uses `SourceTree::digest`; a source snapshot retains its digest without
+retaining file contents. CSS bytes belong to stylesheet processing rather
+than the JavaScript compile stamp.
+
+Each `bundle` call starts an unevaluated lifetime, also when the content id
+matches an earlier evaluated lifetime. The pool clears that slot's replay
+markers and installs its maps, description, and bindings before rendering.
+Each bundle result receives an internal pool epoch. Final lease release
+records that epoch without waiting for a sidecar request. A late old release
+cannot retire another live epoch with the same id. Idle slots dispose retired
+state on the release worker. Busy slots apply it before their next request.
+No release starts a sidecar. PostCSS context release follows the same queue
+and reaches every slot which used the context. Context affinity routes all
+requests of one context to one slot. PostCSS cache cleanup is queued without
+acquiring that cache's mutex in a graph destructor. Only used contexts queue
+cleanup. Compiler construction and CSS processing drain those notices.
+
+A worker emits an `operation` event for each catalogue `esbuild` call and each
+PostCSS worker start or stop. The payload contains the operation and sidecar
+PID. The core uses these events for exact counts, including failed calls.
+They carry no source, CSS, props, or file paths.

@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
@@ -16,10 +16,13 @@ use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
 use crate::error::Result;
 use crate::key::NodeKey;
+use crate::resource_inputs::ResourceObserver;
 
 /// A document's input key and render recipe, available before rendering.
 #[derive(Clone, Debug)]
 pub struct DocumentPlan {
+    /// Source recipe before discovered resource bytes enter the document key.
+    pub resource_key: String,
     /// Route inside the generated namespace.
     pub route: String,
     /// Document node input hash, exposed as documentKey in the index.
@@ -37,6 +40,7 @@ pub struct DocumentPlan {
 #[derive(Clone, Debug)]
 pub(crate) struct ResourcePlan {
     pub(crate) key: NodeKey,
+    pub(crate) document_key: NodeKey,
     pub(crate) content_type: String,
     pub(crate) root: StylesheetRoot,
     pub(crate) asset: Option<String>,
@@ -83,6 +87,10 @@ pub trait RenderGeneration: GeneratedResources {
     fn stylesheet_directories(&self) -> &[DirectoryDependency];
     /// All authored files reached by completed documents of this generation.
     fn public_files(&self) -> BTreeSet<String>;
+    /// Lexical resource inputs, including targets that need repair.
+    fn watch_files(&self) -> BTreeSet<String>;
+    /// Register a weak resource subscriber without extending the watcher's lifetime.
+    fn observe_resources(&self, observer: Weak<dyn ResourceObserver>);
     /// Check reached membership without copying the generation's complete set.
     fn contains_public_file(&self, path: &str) -> bool;
 }
