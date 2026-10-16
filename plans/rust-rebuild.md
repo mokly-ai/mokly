@@ -857,7 +857,7 @@ renders again.
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every
         page at both viewports and in both schemes.
-  - [ ] Add the packed consumer smoke.
+  - [x] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
 - [ ] Restore the example typecheck; validate or replace the viewer browser
@@ -882,6 +882,35 @@ renders again.
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+  - [x] Check one served example in `tests/design_catalogue.test.ts`: the
+        frozen inventory, the shared components and their consumers, family
+        adoption, owner chains, stylesheet links and scopes, scripts, link
+        targets and focus stops, control destinations, tag states, and
+        reachability; prove each check with one mutation.
+  - [x] Apply review 3 of the served checks: drain Serve's process group on
+        every path, serve with `--base HEAD`, add the adoption table's family
+        parts and the component explorer destinations, exempt only the brand
+        link from the current-page mark, report non-anchor link markers, match
+        every library root by class token, and make reachability one-way with
+        the contract's runtime-only states.
+  - [ ] Add the browser checks with the restored browser suite: pointer and
+        Tab/Enter activation, history, canonical outer URLs, preserved outer
+        viewport selection, active rows, selection semantics, counts, missing
+        states, highlighting and mask geometry, editable and read-only
+        controls, standalone versus in-screen geometry, icons and carets,
+        desktop divider alignment, comparison bars, the stacked frames, mobile
+        sheets, responsive overflow, bounded scrolling, and portable link round
+        trips.
+  - [ ] Add the Changes checks after Milestone 9: the attribution matrix, one
+        classification of the nine shared sheets per scenario, the rule
+        records and the changed-entry union, and bounded base-side Git
+        batching.
+  - [ ] Add the Rust behaviour tests over the design catalogue after
+        Milestone 9: a parent component renders its own views from its own
+        props, the stacked frames' structure, every comparison caption tied to
+        its recorded change, and the Checklist's Changes.
+  - [ ] Exercise the same journeys in the static output after Milestone 12,
+        and cover the Review snapshot link fallback.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -917,6 +946,9 @@ fixes: `.context/rust-rebuild/delegation/m8-sidecar/report-3.md`.
 Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
 Example and design catalogue render and visual check: `.context/rust-rebuild/example-visual/index.md`.
+Design catalogue checks, their mutation proofs, and the packed consumer smoke: `.context/rust-rebuild/m5-example/design-checks/index.md`.
+Review 3 fixes of the design checks and the smoke: `.context/rust-rebuild/m5-example/round8/index.md`.
+Review 4 fixes, the built-site smoke, and its runs on the merged tree: `.context/rust-rebuild/m5-example/round9/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
@@ -1153,6 +1185,12 @@ Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.
+  - [x] Make `npm run package:smoke` require the built site once Milestone 12
+        supplies the writer.
+- [ ] Cover the three paths of the previous packed smoke: zero-install
+      `npx --package @mokly/mokly mokly` with an empty cache, configuration
+      discovery from a nested directory, and a document page through the
+      installed CLI.
 - [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
       can pass; the bumped-copy sidecar tests and version-path regression stay
       required.
@@ -1167,6 +1205,9 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 Static release verification and smoke scope comparison:
 `.context/rust-rebuild/delegation/m13/report-5.md`.
+Packed example smoke with the built site on the merged tree:
+`.context/rust-rebuild/m5-example/round9/package-smoke.log`; it fails when the
+site is absent: `.context/rust-rebuild/m5-example/round9/package-smoke-no-site.log`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1210,8 +1251,6 @@ Static release verification and smoke scope comparison:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Milestone 13 static verification follow-up: the example branch's packed
-    smoke must check the config-relative output and fail when the site is absent.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
@@ -1272,9 +1311,10 @@ Static release verification and smoke scope comparison:
     2. Desktop component canvas width differs. Severity Low, effort Small.
        Recommended: B, the component design and the mockups adopt the shell's
        fixed 1024px desktop canvas.
-    3. The shell stub declares no icon. Severity Low, effort Small.
-       Recommended: A, the stub declares an icon, so no `/favicon.ico`
-       request fails.
+    3. The shell stub declares no icon. Severity Low, effort Small. Settled
+       at `da23c1ce`: the stub declares the packaged Browse icon, so no
+       `/favicon.ico` request fails, and the packed smoke has no icon
+       allowance.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

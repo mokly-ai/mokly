@@ -31,6 +31,18 @@ export function ExplorerShell({
   viewport: ArtboardViewport;
 }) {
   const style = isStyleScenario(scenario) ? STYLE_CHANGES[scenario] : undefined;
+  // The shell below provides the artboard's DesignNavigation, so the
+  // shortcuts compare with the artboard directly.
+  const current = (to: string) => (to === design ? "page" : undefined);
+  const changes = style
+    ? style.to
+    : scenario === "added" || scenario === "checklist"
+      ? SOLE_CHANGES[scenario].to
+      : scenario === "removed"
+        ? "design/components/states/removed"
+        : scenario === "screen"
+          ? "design/components/inspection/inspection-direct-change"
+          : "design/components/pages/affected";
   const navProps = {
     activeDestination: design,
     changedCount:
@@ -54,28 +66,26 @@ export function ExplorerShell({
     >
       {viewport === "mobile" ? (
         <nav className="ce-mobile-location" aria-label="Catalogue shortcuts">
-          <MockLink to="design/components/inspection/inspection-details">
+          <MockLink
+            to="design/components/inspection/inspection-details"
+            aria-current={current(
+              "design/components/inspection/inspection-details",
+            )}
+          >
             Screens
           </MockLink>
-          <MockLink to="design/components/overview">Components</MockLink>
+          <MockLink
+            to="design/components/overview"
+            aria-current={current("design/components/overview")}
+          >
+            Components
+          </MockLink>
           {scenario === "all" ? (
             <span>
               Changes <span className="ce-change-count">0</span>
             </span>
           ) : (
-            <MockLink
-              to={
-                style
-                  ? style.to
-                  : scenario === "added" || scenario === "checklist"
-                    ? SOLE_CHANGES[scenario].to
-                    : scenario === "removed"
-                      ? "design/components/states/removed"
-                      : scenario === "screen"
-                        ? "design/components/inspection/inspection-direct-change"
-                        : "design/components/pages/affected"
-              }
-            >
+            <MockLink to={changes} aria-current={current(changes)}>
               Changes{" "}
               <span className="ce-change-count">{navProps.changedCount}</span>
             </MockLink>
