@@ -70,9 +70,15 @@ impl ImportResolver for SourceResolver {
         let bases = directories
             .iter()
             .map(|directory| {
-                format!("{directory}/node_modules/{package}")
+                let authored = format!("{directory}/node_modules")
                     .trim_start_matches('/')
-                    .to_owned()
+                    .to_owned();
+                let root = self
+                    .settings
+                    .dependency_aliases
+                    .get(&authored)
+                    .unwrap_or(&authored);
+                format!("{root}/{package}")
             })
             .chain(
                 self.settings

@@ -9,7 +9,7 @@ import { setTimeout } from "node:timers/promises";
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
 import { cssParams, startSidecar } from "./helpers/sidecar.js";
-import { sidecarSources } from "./helpers/sidecar_sources.js";
+import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
 
 async function exited(pid: number): Promise<boolean> {
   try {
@@ -86,7 +86,7 @@ export default {plugins:[{postcssPlugin:"pid",async Once(root){
   );
 }
 
-test("PostCSS appends selected dependency roots to inherited NODE_PATH", async (context) => {
+test("PostCSS puts selected dependency roots before inherited NODE_PATH", async (context) => {
   const { root, base } = await sidecarSources(context);
   const inherited = [
     path.join(root, "inherited-one"),
@@ -112,9 +112,49 @@ test("PostCSS appends selected dependency roots to inherited NODE_PATH", async (
   );
   assert.ok(
     result.text.includes(
-      JSON.stringify([...inherited, ...selected].join(path.delimiter)),
+      JSON.stringify([...selected, ...inherited].join(path.delimiter)),
     ),
     result.text,
   );
+  await sidecar.call("shutdown");
+});
+
+test("PostCSS reports the installed package files it resolves", async (context) => {
+  const { base } = await sidecarSources(context);
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  for (const mode of ["static", "record", "dynamic", "require"]) {
+    const name = `fixture-${mode}`;
+    const extension = mode === "require" ? "cjs" : "mjs";
+    const module = await dependency(
+      base,
+      name,
+      `${mode === "require" ? "module.exports=" : "export default "} () => ({postcssPlugin:"fixture",Once(root){root.append({selector:".loaded",nodes:[{prop:"value",value:"yes"}]});}});`,
+      extension,
+    );
+    const config =
+      mode === "static"
+        ? `import plugin from '${name}'; export default {plugins:[plugin()]};`
+        : mode === "record"
+          ? `export default {plugins:{'${name}':{}}};`
+          : mode === "dynamic"
+            ? `const {default:plugin}=await import('${name}'); export default {plugins:[plugin()]};`
+            : `const plugin=require('${name}'); export default {plugins:[plugin()]};`;
+    await fs.writeFile(path.join(base, `${mode}.mjs`), config);
+    const params = cssParams({
+      sourceRoot: base,
+      context: mode,
+      postcss: `${mode}.mjs`,
+    });
+    params.moduleResolution.packageRoots = [base];
+    const result = await sidecar.call<CssResult>("processCss", params);
+    assert.match(result.text, /value: yes/);
+    assert.ok(
+      result.dependencies.some(
+        (item) => item.path === path.join(module, `index.${extension}`),
+      ),
+      JSON.stringify(result.dependencies),
+    );
+  }
   await sidecar.call("shutdown");
 });

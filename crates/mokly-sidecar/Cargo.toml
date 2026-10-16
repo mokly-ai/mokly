@@ -19,6 +19,7 @@ unimock = { version = "0.6.8", optional = true }
 mokly-platform = { workspace = true, features = ["mock"] }
 insta = "1.49.0"
 unimock = "0.6.8"
+tempfile = "3.27.0"
 
 [features]
 mock = ["dep:unimock"]

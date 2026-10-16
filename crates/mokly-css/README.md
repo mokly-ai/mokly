@@ -34,7 +34,9 @@ Package aliases use the configuration directory's Node ancestor lookup,
 then the configured package roots, as the JavaScript graph does. Imports
 without an alias use the importing stylesheet's directory.
 The core supplies configured package roots as ordered logical dependency
-directories. The resolver applies only one longest-key alias substitution.
+directories. Ancestor aliases map each physical lookup position to its side's
+selected logical dependency root. The resolver applies only one longest-key
+alias substitution.
 
 A configured root delivers `styles/{repository-path}`. A JavaScript root
 delivers `styles/{module-path}.css`. Assets use `assets/{repository-path}`.

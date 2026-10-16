@@ -137,6 +137,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
                 bindings: BTreeMap::from([("g".into(), bindings("old/card"))]),
                 contexts: BTreeSet::new(),
                 renders: 0,
+                requests: 1,
             }));
         }
         state.available.push_back(0);

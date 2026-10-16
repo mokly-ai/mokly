@@ -146,6 +146,7 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                 base,
                 head: Default::default(),
                 source_root: sources.directory,
+                used_directories: Vec::new(),
                 source_identity: commit.to_string(),
                 head_root: root,
                 configuration: RepoPath::parse("mokly.config.json").unwrap(),

@@ -61,6 +61,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::new(),
             renders: 0,
+            requests: 1,
         }));
         state.available.push_back(0);
         state.bundles.insert(

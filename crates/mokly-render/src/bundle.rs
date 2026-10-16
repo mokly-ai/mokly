@@ -70,6 +70,11 @@ pub(crate) fn describe(
         .into_iter()
         .map(|module| (module.path, module.imports))
         .collect();
+    for path in modules.keys() {
+        runtime
+            .dependency_usage
+            .record(&side.dependency_aliases, path);
+    }
     let compiler = stylesheets::compiler(runtime, config, &side);
     let roots = stylesheets::roots(
         &modules,

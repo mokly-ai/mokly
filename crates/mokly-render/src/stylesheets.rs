@@ -22,6 +22,8 @@ pub(crate) fn compiler(
 ) -> Arc<dyn StylesheetBundler> {
     let tree: Arc<dyn SourceTree> = Arc::new(SideTree {
         _base: runtime.base.clone(),
+        usage: runtime.dependency_usage.clone(),
+        aliases: side.dependency_aliases.clone(),
         sources: runtime.tree.clone(),
         dependencies: runtime.dependency_tree.clone(),
         root: config.repo_root.clone(),
@@ -34,11 +36,12 @@ pub(crate) fn compiler(
         repo_root: config.repo_root.clone(),
         settings: Resolution {
             config_directory: side.configuration_directory.clone(),
+            dependency_aliases: side.dependency_aliases.clone(),
             aliases: resolution.aliases.clone(),
             conditions: resolution.conditions.clone(),
             main_fields: resolution.main_fields.clone(),
-            dependency_roots: (1..dependency_roots(side).len())
-                .map(|index| format!("node_modules/.mokly-roots/{index}"))
+            dependency_roots: (0..dependency_roots(side).len())
+                .map(mokly_compare::ancestor_roots::logical)
                 .collect(),
             extensions: resolution.resolve_extensions.clone(),
         },
@@ -46,6 +49,7 @@ pub(crate) fn compiler(
 
     let processor = match &config.input.postcss {
         Some(module) => Arc::new(PostCss {
+            usage: runtime.dependency_usage.clone(),
             pool: runtime.pool.clone(),
             tree: tree.clone(),
             inventory_tree: runtime.inventory_tree.clone(),

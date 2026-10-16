@@ -28,8 +28,14 @@ use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::ModuleResolution;
 
+#[cfg_attr(test, unimock::unimock(api = BaseDependenciesMock))]
 pub(super) trait BaseDependencies: Send + Sync {
-    fn prepare(&self, request: &BaseRequest<'_>, config: &ResolvedConfig) -> Result<Arc<BaseSide>>;
+    fn prepare(
+        &self,
+        request: &BaseRequest<'_>,
+        config: &ResolvedConfig,
+        used_directories: &[String],
+    ) -> Result<Arc<BaseSide>>;
 }
 
 pub(super) struct NativeDependencies {
@@ -38,8 +44,13 @@ pub(super) struct NativeDependencies {
 }
 
 impl BaseDependencies for NativeDependencies {
-    fn prepare(&self, request: &BaseRequest<'_>, config: &ResolvedConfig) -> Result<Arc<BaseSide>> {
-        match self.prepare_side(request, config) {
+    fn prepare(
+        &self,
+        request: &BaseRequest<'_>,
+        config: &ResolvedConfig,
+        used_directories: &[String],
+    ) -> Result<Arc<BaseSide>> {
+        match self.prepare_side(request, config, used_directories) {
             Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
                 path: ".".into(),
                 source,
@@ -60,6 +71,7 @@ impl NativeDependencies {
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
+        used_directories: &[String],
     ) -> Result<Arc<BaseSide>> {
         let locations: &dyn Locations = &SystemLocations;
         let root = locations.repository(&config.repo_root)?;
@@ -112,6 +124,7 @@ impl NativeDependencies {
             base,
             head,
             source_root: sources.directory.clone(),
+            used_directories: used_directories.to_vec(),
             source_identity: request.commit.to_string(),
             head_root: config.repo_root.clone(),
             configuration,

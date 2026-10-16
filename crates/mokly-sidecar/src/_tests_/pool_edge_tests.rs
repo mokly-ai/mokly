@@ -52,6 +52,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::new(),
             renders: 0,
+            requests: 1,
         }));
         state.available.push_back(0);
     }

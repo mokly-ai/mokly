@@ -61,7 +61,7 @@ export class PostcssWorkers {
         cwd: root,
         env: {
           ...process.env,
-          NODE_PATH: [process.env.NODE_PATH, ...paths.dependencyRoots]
+          NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
             .filter(Boolean)
             .join(path.delimiter),
         },

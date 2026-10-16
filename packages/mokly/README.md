@@ -99,7 +99,7 @@ its framing text. Runtime style adapters follow consumer package aliases,
 including `react-native` mapped to `react-native-web`. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
 child process in the side's source root, with consumer plugins unbundled.
-The child appends selected dependency directories to inherited `NODE_PATH`. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
+The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 
 ## Development

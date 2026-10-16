@@ -36,6 +36,15 @@ pub fn run(root: &Path, arguments: &[&str]) -> Output {
 
 /// Run the CLI with a temporary cache and an optional Node executable.
 pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Output {
+    run_with_timeout(root, arguments, node, None)
+}
+
+pub fn run_with_timeout(
+    root: &Path,
+    arguments: &[&str],
+    node: Option<&Path>,
+    timeout: Option<&str>,
+) -> Output {
     let cache = TempDir::new().unwrap();
     let cache_root = cache.path().canonicalize().unwrap();
     let mut command = Command::new(env!("CARGO_BIN_EXE_mokly"));
@@ -56,6 +65,9 @@ pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Ou
         .env_remove("CI");
     if let Some(node) = node {
         command.env("MOKLY_NODE_EXECUTABLE", node);
+    }
+    if let Some(timeout) = timeout {
+        command.env("MOKLY_SIDECAR_TIMEOUT_MS", timeout);
     }
     let output = command.output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);

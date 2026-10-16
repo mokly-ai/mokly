@@ -71,6 +71,8 @@ pub trait Cache: Send + Sync {
 /// Filesystem boundary of cache orchestration and install size supervision.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = StorageMock))]
 pub trait Storage: Send + Sync {
+    /// Check whether an installed dependency directory exists.
+    fn directory(&self, path: &Path) -> Result<bool>;
     /// Ensure a real directory exists without traversing a cache symlink.
     fn prepare(&self, directory: &Path) -> Result<()>;
     /// List staging names so the caller removes only entries with a free lock.

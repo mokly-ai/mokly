@@ -997,6 +997,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       Keep warning gates after comparison and retain the result for M12/M9.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
 - [ ] Add the Comparing phase spinner and measured durations to build Changes.
+  - [x] Connect the Comparing spinner to the static phase reporter.
+  - [ ] Include the comparison duration when the Changes phase settles.
+- [x] Complete the final shared-runtime review: bounded memory sampling,
+      canonical Node identity, ancestor dependency tiers, selected NODE_PATH
+      priority, and direct base, extraction, timeout, and recycle tests.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-6.md`.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new

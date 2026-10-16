@@ -14,6 +14,8 @@ export interface ModuleSources {
 
 /** All filesystem checks share one side's canonical roots and logical names. */
 export class ModulePaths {
+  readonly resolvedDependencies = new Set<string>();
+
   private constructor(
     readonly sourceRoot: string,
     readonly repositoryRoots: string[],
@@ -90,7 +92,13 @@ export class ModulePaths {
     if (candidate.mapped && (!inside(this.sourceRoot, real) || !regular))
       throw this.missing(candidate.name);
     this.name(real);
-    return real;
+    return this.observed(real);
+  }
+
+  private observed(file: string): string {
+    if (this.dependencyRoots.some((root) => inside(root, file)))
+      this.resolvedDependencies.add(file);
+    return file;
   }
 
   private missing(name: string): Error {
@@ -100,7 +108,7 @@ export class ModulePaths {
   async resolve(file: string): Promise<string> {
     if (!path.isAbsolute(file)) return file;
     const candidate = this.candidate(await fs.promises.realpath(file));
-    if (!candidate.mapped) return candidate.file;
+    if (!candidate.mapped) return this.observed(candidate.file);
     try {
       const real = await fs.promises.realpath(candidate.file);
       return this.checked(
@@ -116,7 +124,7 @@ export class ModulePaths {
   resolveSync(file: string): string {
     if (!path.isAbsolute(file)) return file;
     const candidate = this.candidate(fs.realpathSync(file));
-    if (!candidate.mapped) return candidate.file;
+    if (!candidate.mapped) return this.observed(candidate.file);
     try {
       const real = fs.realpathSync(candidate.file);
       return this.checked(candidate, real, fs.statSync(real).isFile());

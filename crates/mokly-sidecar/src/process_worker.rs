@@ -1,10 +1,11 @@
 //! Concrete client session with one deadline shared by all diagnostic frames.
 
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::client::{Events, SidecarClient};
 use crate::error::Result;
+use crate::methods::Call;
 use crate::process_clock::Wait;
 use crate::process_memory::ResidentMemory;
 use crate::process_transport::Deadlines;
@@ -14,9 +15,9 @@ use crate::workers::{Diagnostics, Worker};
 pub(super) struct ProcessWorker {
     pub(super) client: Box<dyn SidecarClient>,
     pub(super) clock: Arc<dyn Wait>,
-    pub(super) memory: Arc<dyn ResidentMemory>,
+    pub(super) memory: Box<dyn ResidentMemory>,
+    pub(super) discover_memory: AtomicBool,
     pub(super) deadlines: Arc<Deadlines>,
-    pub(super) pid: u32,
 }
 
 impl ProcessWorker {
@@ -37,11 +38,15 @@ impl Worker for ProcessWorker {
 
     fn request(&mut self, request: &Request, deadline_ms: u64) -> Result<MethodResult> {
         self.deadline(deadline_ms);
+        if matches!(&request.call, Call::ProcessCss(_)) {
+            self.discover_memory.store(true, Ordering::Relaxed);
+        }
         self.client.request(request)
     }
 
     fn resident_bytes(&self) -> Result<u64> {
-        self.memory.resident_bytes(self.pid)
+        self.memory
+            .resident_bytes(self.discover_memory.swap(false, Ordering::Relaxed))
     }
 }
 

@@ -200,3 +200,41 @@ fn a_base_with_only_a_configured_renderer_uses_extracted_sources() {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+#[test]
+fn a_hanging_base_render_keeps_the_current_static_build_available() {
+    let root = base(&[
+        (
+            "specs/card.mockup.tsx",
+            &CARD.replace(
+                "render:()=> <p className='card'>Before</p>",
+                "render:()=> {while(true) {}}",
+            ),
+        ),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<p>Current</p>",
+        ),
+    ]);
+    dependencies(root.path());
+    fs::remove_file(root.path().join("specs/card.mockup.tsx")).unwrap();
+    let output = changes_support::run_with_timeout(root.path(), &["build"], None, Some("10000"));
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout)
+            .contains("Changes unavailable · base runtime timed out"),
+        "{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("specs/card.mockup.tsx export card") && stderr.contains("exceeded 10000ms"),
+        "{stderr}"
+    );
+    assert!(root.path().join("mokly-static/index.html").is_file());
+}

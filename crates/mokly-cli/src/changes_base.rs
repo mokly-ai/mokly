@@ -59,7 +59,11 @@ impl BaseProvider for NativeBase {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
         let base = if needs_sidecar {
-            Some(self.dependencies.prepare(request, &config)?)
+            Some(self.dependencies.prepare(
+                request,
+                &config,
+                &self.runtime.dependency_usage.directories(),
+            )?)
         } else {
             None
         };
@@ -109,3 +113,7 @@ impl Discovery for Discovered {
         Ok(self.0.clone())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/changes_base_tests.rs"]
+mod changes_base_tests;

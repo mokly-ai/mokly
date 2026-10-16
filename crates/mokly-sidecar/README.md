@@ -35,12 +35,17 @@ disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback
 render. A process recycles after 500 render calls or above 1 GiB resident
 memory across the sidecar and its Node descendants, including PostCSS
-children. Native helper memory is excluded from this recycle sum. Recycling starts after the in-flight result returns.
+children. Native helper memory is excluded when the sidecar executable is
+known. Each worker owns a persistent process table. Most samples refresh only
+known children. Full scans run at spawn, after `processCss`, and every 64
+requests. Cached canonical executable paths handle Node symlinks. A fresh
+worker gets one request before memory recycling can start. Recycling starts
+after the in-flight result returns.
 
 `NodeFactory` inherits the environment and repository working directory. It
 uses `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for
-transport, `dyn Wait` for monotonic deadlines, `dyn ResidentMemory` for the
-resident set, and `dyn Diagnostics` for events and standard error. Shutdown
+transport, `dyn Wait` for monotonic deadlines, and `dyn MemoryFactory` for
+a per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and standard error. Shutdown
 wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
 

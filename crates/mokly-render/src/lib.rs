@@ -6,6 +6,7 @@ mod bundle;
 mod declarations;
 mod definition_input;
 mod definitions;
+pub mod dependency_usage;
 mod diagnostics;
 pub mod error;
 mod failures;

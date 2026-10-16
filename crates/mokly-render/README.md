@@ -34,7 +34,7 @@ stylesheet paths; the worker resolves their physical input on the chosen side.
 Each PostCSS context uses an owned child process in that side's source root.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
-directories after inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
+directories before inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
 
 The graph installs every definition binding and uses `MemoFragments` for
 screens, components, stories, and pages. Its fingerprint includes the bundle,
@@ -50,7 +50,11 @@ Evicted stylesheet resources rebuild from that generation's captured bytes.
 
 `BaseSide` takes the source lease and the complete dependency selection from
 `mokly-compare`. Bundle requests use that extraction, its selected dependencies,
-and all repository mappings. Both sides use the current package version and
+and all repository mappings. Configuration ancestor dependency directories
+retain Node's lookup order on each side, for JavaScript and CSS. The runtime
+records the directories actually used by head JavaScript, CSS, and PostCSS
+package loads for base fallback checks.
+Both sides use the current package version and
 the same document composition code.
 
 ## Quick Start

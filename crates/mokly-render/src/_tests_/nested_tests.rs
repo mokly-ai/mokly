@@ -40,6 +40,7 @@ fn nested_exclusions_fail_before_a_missing_plugin_dependency() {
         glob: None,
     });
     let side = SideInputs {
+        dependency_aliases: Default::default(),
         source_root: "/repo".into(),
         repository_roots: vec!["/repo".into()],
         module_resolution: ModuleResolution::default(),

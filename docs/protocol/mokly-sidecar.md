@@ -22,14 +22,14 @@ output belong to the binary.
   `MOKLY_SIDECARS` accept any positive integer and override that default;
   the option takes precedence over the variable. A catalogue that needs no
   JavaScript starts none.
-- The binary's first request is `hello`. The sidecar's first frame is the
-  matching hello response with its package version. The binary rejects a
-  version other than its own with `sidecar-version` before other traffic.
-- Recycle after 500 renders or over 1 GiB of resident memory across the
-  sidecar and its Node descendants, including PostCSS children. Native helpers
-  are excluded. Wait for in-flight requests, then reload generations on demand.
-- On `shutdown` the sidecar finishes in-flight requests, then exits. The binary
-  terminates a sidecar that has not exited two seconds later.
+- The first exchange is `hello`, with the sidecar's package version.
+  The binary rejects a version other than its own with `sidecar-version`.
+- Recycle after 500 renders or over 1 GiB across the sidecar and its Node
+  descendants. Exclude native helpers when the sidecar executable is known.
+  Sample known children; rescan at spawn, after `processCss`, and every 64 calls.
+  Allow one request per fresh worker before memory recycling. Finish in-flight
+  work before recycling, then reload generations on demand.
+- `shutdown` drains in-flight work; the binary kills survivors after two seconds.
 
 ## Transport
 
@@ -198,7 +198,7 @@ package module state and fixed source and resolution inputs. `disposeContext`
 kills and reaps only that context's process; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
 releases disposed contexts before that process takes more work. The result
-contains transformed text and plugin-reported dependencies for watching.
+contains transformed text, resolved packages, and plugin dependencies.
 The fragment key includes the class-map table digest. When maps change, the
 core disposes and re-bundles the generation before installing the new maps.
 The pool assigns each loaded lifetime an epoch. Every process reloads a stale
@@ -238,8 +238,8 @@ JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 ## Security
 
 The sidecar runs consumer code with the same trust as the consumer's own build.
-The sidecar inherits the environment. Each PostCSS child appends its selected
-dependency directories to inherited `NODE_PATH`. Base dependency installation
+The sidecar inherits the environment. Each PostCSS child puts selected
+dependency directories before inherited `NODE_PATH` entries. Base dependency installation
 disables lifecycle scripts and has a time limit, so no consumer script runs at install time.
 
 ## Related Docs

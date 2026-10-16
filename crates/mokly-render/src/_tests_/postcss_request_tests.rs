@@ -31,11 +31,13 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                 })),
         ));
         let postcss = PostCss {
+            usage: Arc::new(Unimock::new(())),
             pool,
             tree: Arc::new(Unimock::new(())),
             inventory_tree: Arc::new(Unimock::new(())),
             root: "/head".into(),
             side: SideInputs {
+                dependency_aliases: Default::default(),
                 source_root: "/base".into(),
                 repository_roots: vec!["/head".into()],
                 module_resolution: ModuleResolution::default(),

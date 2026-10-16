@@ -16,6 +16,7 @@ pub(super) struct Slot {
     pub(super) bindings: BTreeMap<String, Bindings>,
     pub(super) contexts: BTreeSet<String>,
     pub(super) renders: u64,
+    pub(super) requests: u64,
 }
 
 #[derive(Default)]

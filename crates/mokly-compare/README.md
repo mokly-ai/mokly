@@ -57,7 +57,7 @@ compares clean object identities. It reuses base bytes for equal inputs. `Depend
 uses working third-party dependencies when both sets are equal. In every tier,
 the sidecar maps resolved repository-owned paths into that side's sources.
 Different inputs use
-npm's locked install at the root and each configured independent package
+npm's locked install at the root, configuration ancestors, and each explicit package
 root in the dependency cache. They share one deadline. Successful installs
 remove their private npm download cache before publication. The key includes the exact
 lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
@@ -71,7 +71,11 @@ finished using their directories. `Resolved` returns the primary
 `repository_roots` for sidecar mapping. These roots include the working tree
 and the base source copy for tier two. Supply
 repository-relative package roots in the request; the result names absolute
-roots from the selected installation and keeps the other settings.
+roots from the selected installation and keeps the other settings. Ancestor
+roots precede explicit roots in Node's order. Supply the head's observed
+ancestor dependency directories in `Request.used_directories`. If a base
+install lacks one of these directories, the result uses working dependencies
+with a warning that names the missing directory.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 It releases parsed documents after collecting canonical and containment proof.

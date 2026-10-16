@@ -52,6 +52,7 @@ mod entry_classification;
 mod review_projection;
 mod snapshots;
 
+pub mod ancestor_roots;
 pub mod base_render;
 pub mod comparison;
 

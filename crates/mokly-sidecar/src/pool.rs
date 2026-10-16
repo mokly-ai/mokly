@@ -117,6 +117,7 @@ impl Pool {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::new(),
             renders: 0,
+            requests: 0,
         })
     }
 
@@ -186,9 +187,13 @@ impl SidecarPool for Pool {
             }
             break;
         }
-        if let Some(current) = slot.as_ref() {
+        if let Some(current) = slot.as_mut() {
+            current.requests += 1;
             let memory = current.worker.resident_bytes();
-            if current.renders >= 500 || matches!(memory, Ok(bytes) if bytes > 1024 * 1024 * 1024) {
+            if current.renders >= 500
+                || (current.requests > 1
+                    && matches!(memory, Ok(bytes) if bytes > 1024 * 1024 * 1024))
+            {
                 let drained = current.control.shutdown().and_then(|()| {
                     current
                         .control

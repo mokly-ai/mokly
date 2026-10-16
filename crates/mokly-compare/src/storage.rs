@@ -23,6 +23,15 @@ pub struct SystemStorage {
 }
 
 impl Storage for SystemStorage {
+    fn directory(&self, path: &Path) -> Result<bool> {
+        check(self.cancellation.as_ref())?;
+        match fs::metadata(path) {
+            Ok(metadata) => Ok(metadata.is_dir()),
+            Err(error) if vanished(&error) => Ok(false),
+            Err(source) => Err(InternalError::Io { source }.into()),
+        }
+    }
+
     fn prepare(&self, directory: &Path) -> Result<()> {
         validate_directory(&self.root, directory)?;
         let created = directory

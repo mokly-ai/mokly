@@ -6,7 +6,6 @@ use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use crate::phase_format::{duration, frame};
 use mokly_catalogue::config::relative;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_cli::build::BuildChanges;
@@ -21,6 +20,7 @@ use mokly_publish::accounting::{Progress, Receipt};
 use mokly_publish::completion::Outcome;
 use mokly_publish::runtime::Reporter;
 
+use crate::phase_format::{duration, frame};
 use crate::terminal::Terminal;
 
 pub(super) struct Lines {

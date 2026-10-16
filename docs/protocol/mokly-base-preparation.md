@@ -61,7 +61,7 @@ Each PostCSS context runs in a child process whose working directory is its
 side's source root. This confines relative file reads and automatic Tailwind
 source discovery to that side. The head and base can use the same installed
 third-party dependencies while reading separate repository sources. The child
-appends the selected dependency directories to inherited `NODE_PATH`. CSS
+puts selected dependency directories before inherited `NODE_PATH` entries. CSS
 package resolvers that read `NODE_PATH` can use those directories without
 links in the source lease. Node's ESM resolver does not read `NODE_PATH`.
 
@@ -142,6 +142,16 @@ open reports the directory once per process. Plain stdout is exactly
 `Mokly cache: <directory>` followed by LF. Rich output follows the
 [terminal rule](./mokly-terminal-output.md#cache-directory).
 
+Configuration ancestors use Node's order, from the configuration directory
+through the repository root. Every ancestor `node_modules` maps to the same
+relative directory under the selected dependency installation. JavaScript
+`nodePaths` and CSS use this order before explicit package roots. Tiers one
+and three use working directories; tier two uses the directories created by
+its base install. If the head used an ancestor directory absent from tier two,
+select tier three with a `base-dependencies` warning naming that directory.
+JavaScript, stylesheet, and PostCSS package reads establish this usage.
+An unused ancestor directory does not cause a warning.
+
 ## Dependency Identity
 
 The base input set contains every tracked repository package manifest and
@@ -170,9 +180,9 @@ pnpm, Yarn and Bun without a package manifest inventory. Nested
 
 Equal dependency identities reuse working third-party dependencies. No
 install validation or warning applies, including for outside `file:` packages.
-Different
-inputs install each npm lockfile root selected by the repository root and
-`moduleResolution.packageRoots`. A nested app with no root lockfile is valid.
+Different inputs install each npm lockfile root selected by configuration
+ancestors and `moduleResolution.packageRoots`. A nested app with no root
+lockfile is valid.
 An independent configured package lock gets its own install. Prefer
 `npm-shrinkwrap.json` over `package-lock.json` at each root. Unsupported
 managers and absent supported lockfiles use the fallback tier.

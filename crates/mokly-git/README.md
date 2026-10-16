@@ -80,7 +80,8 @@ cargo clippy -p mokly-git --all-targets -- -D warnings
 ```
 
 Unit tests assert argument order, budgets, and command counts. Integration
-tests execute Git and verify output limits and failed exit statuses.
+tests execute Git and verify output limits, failed exit statuses, and partial
+extraction cleanup after cancellation during a streamed copy.
 
 ### Key Code
 

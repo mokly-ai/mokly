@@ -117,8 +117,14 @@ impl ChangesService for Changes {
         head: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
         let base = selected_base(config, base);
-        let repository = self.repositories.open(&config.repo_root).base()?;
-        let commit = repository.merge_base(base).base()?;
+        let (repository, commit) = {
+            let span = tracing::info_span!("review.base-commit", status = "error");
+            let _entered = span.enter();
+            let repository = self.repositories.open(&config.repo_root).base()?;
+            let commit = repository.merge_base(base).base()?;
+            span.record("status", "ok");
+            (repository, commit)
+        };
         let sources = self
             .sources
             .create(repository.clone(), commit.clone(), &config.repo_root)?;

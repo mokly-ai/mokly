@@ -1,11 +1,13 @@
 //! Map logical dependency graph names to the selected installation for this side.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
+use crate::dependency_usage::DependencyUsage;
 use crate::side::BaseSide;
 
 /// Dependency paths retain logical names while source bytes use their own tree.
@@ -13,6 +15,8 @@ pub(crate) struct SideTree {
     pub(crate) _base: Option<Arc<BaseSide>>,
     pub(crate) sources: Arc<dyn SourceTree>,
     pub(crate) dependencies: Arc<dyn SourceTree>,
+    pub(crate) usage: Arc<dyn DependencyUsage>,
+    pub(crate) aliases: BTreeMap<String, String>,
     pub(crate) root: PathBuf,
     pub(crate) dependency_roots: Vec<PathBuf>,
     pub(crate) repository_roots: Vec<PathBuf>,
@@ -134,7 +138,16 @@ impl SourceTree for SideTree {
             {
                 return self.sources.read(&source);
             }
-            self.dependencies.read(&physical)
+            let bytes = self.dependencies.read(&physical)?;
+            if path.extension().is_some_and(|extension| extension == "css")
+                && let Ok(relative) = path.strip_prefix(&self.root)
+            {
+                self.usage.record(
+                    &self.aliases,
+                    &relative.to_string_lossy().replace('\\', "/"),
+                );
+            }
+            Ok(bytes)
         } else {
             self.sources.read(path)
         }

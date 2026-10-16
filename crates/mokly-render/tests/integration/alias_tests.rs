@@ -80,7 +80,7 @@ fn javascript_and_css_aliases_select_the_configuration_package() {
             .as_ref()
             .unwrap()
             .modules
-            .contains_key("app/node_modules/fixture-config-theme/index.mjs")
+            .contains_key("node_modules/fixture-config-theme/index.mjs")
     );
     let factory: &dyn GraphFactory = consumer.runtime.as_ref();
     let generation = factory

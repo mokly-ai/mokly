@@ -33,3 +33,6 @@ pub mod typescript;
 pub mod usage;
 pub mod wire;
 pub mod workers;
+
+mod memory_table;
+mod memory_tree;

@@ -146,6 +146,7 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         base,
         head,
         source_root: source.directory.clone(),
+        used_directories: Vec::new(),
         source_identity: commit.as_str().to_owned(),
         head_root: root.clone(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),

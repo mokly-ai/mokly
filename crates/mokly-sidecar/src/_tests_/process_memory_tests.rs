@@ -3,13 +3,14 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use crate::process_memory::{Sample, tree_bytes};
+use crate::memory_tree::{Sample, tree_bytes};
 
-fn node(parent: Option<u32>, bytes: u64) -> Sample<'static> {
+fn node(parent: Option<u32>, bytes: u64) -> Sample {
     Sample {
         parent,
         bytes,
-        executable: Some(Path::new("/node")),
+        executable: Some(Path::new("/node").into()),
+        started: 0,
     }
 }
 
@@ -24,7 +25,7 @@ fn resident_sum_includes_node_children_and_excludes_helpers_and_other_sidecars()
         (
             14,
             Sample {
-                executable: Some(Path::new("/esbuild")),
+                executable: Some(Path::new("/esbuild").into()),
                 ..node(Some(10), u64::MAX)
             },
         ),

@@ -1,89 +1,112 @@
-//! Cross-platform Node resident-set sum, including owned PostCSS processes.
+//! Per-worker resident-memory sampling with bounded subtree refresh work.
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+use std::collections::BTreeMap;
+use std::path::PathBuf;
+use std::sync::Mutex;
 
-use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
+use sysinfo::System;
 
 use crate::error::Result;
+use crate::memory_table::{ProcessTable, SystemTable};
+use crate::memory_tree::{descendants, tree_bytes};
 
-/// Process resident memory, kept separate from process orchestration.
+/// Resident memory of one owned sidecar and its Node descendants.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = MemoryMock))]
 pub trait ResidentMemory: Send + Sync {
-    /// Sum a sidecar and descendants with its Node executable; zero after exit.
-    fn resident_bytes(&self, pid: u32) -> Result<u64>;
+    /// Refresh known processes, or discover children after a PostCSS request.
+    fn resident_bytes(&self, discover: bool) -> Result<u64>;
 }
 
-/// Host memory query for supported Linux, macOS, and Windows targets.
+/// Each worker owns a separate process table and cached executable identities.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = MemoryFactoryMock))]
+pub trait MemoryFactory: Send + Sync {
+    /// Create a monitor and discover the initial process subtree.
+    fn monitor(&self, pid: u32) -> Box<dyn ResidentMemory>;
+}
+
+/// Host memory monitor factory for Linux, macOS, and Windows.
 pub struct SystemMemory;
-
-impl ResidentMemory for SystemMemory {
-    fn resident_bytes(&self, pid: u32) -> Result<u64> {
-        let mut system = System::new();
-        system.refresh_processes_specifics(
-            ProcessesToUpdate::All,
-            true,
-            ProcessRefreshKind::nothing()
-                .with_memory()
-                .with_exe(UpdateKind::OnlyIfNotSet)
-                .without_tasks(),
-        );
-        let records = system
-            .processes()
-            .iter()
-            .map(|(pid, process)| {
-                (
-                    pid.as_u32(),
-                    Sample {
-                        parent: process.parent().map(Pid::as_u32),
-                        bytes: process.memory(),
-                        executable: process.exe(),
-                    },
-                )
-            })
-            .collect();
-        Ok(tree_bytes(pid, &records))
+impl MemoryFactory for SystemMemory {
+    fn monitor(&self, pid: u32) -> Box<dyn ResidentMemory> {
+        Box::new(Monitor::new(pid, Box::new(SystemTable(System::new()))))
     }
 }
 
-struct Sample<'a> {
-    parent: Option<u32>,
-    bytes: u64,
-    executable: Option<&'a Path>,
+pub(crate) const RESCAN_REQUESTS: usize = 64;
+
+struct Identity {
+    started: u64,
+    authored: Option<PathBuf>,
+    canonical: Option<PathBuf>,
+}
+struct State {
+    root: u32,
+    table: Box<dyn ProcessTable>,
+    known: Vec<u32>,
+    identities: BTreeMap<u32, Identity>,
+    requests: usize,
 }
 
-fn tree_bytes(root: u32, records: &BTreeMap<u32, Sample<'_>>) -> u64 {
-    let Some(sidecar) = records.get(&root) else {
-        return 0;
-    };
-    let mut children: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
-    for (&pid, sample) in records {
-        if let Some(parent) = sample.parent {
-            children.entry(parent).or_default().push(pid);
-        }
+pub(crate) struct Monitor(Mutex<State>);
+impl Monitor {
+    pub(crate) fn new(root: u32, table: Box<dyn ProcessTable>) -> Self {
+        let mut state = State {
+            root,
+            table,
+            known: Vec::new(),
+            identities: BTreeMap::new(),
+            requests: 0,
+        };
+        state.sample(true);
+        Self(Mutex::new(state))
     }
-    let mut pending = vec![root];
-    let mut visited = BTreeSet::new();
-    let mut total = 0u64;
-    while let Some(pid) = pending.pop() {
-        if !visited.insert(pid) {
-            continue;
+}
+impl ResidentMemory for Monitor {
+    fn resident_bytes(&self, discover: bool) -> Result<u64> {
+        let mut state = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        Ok(state.sample(discover))
+    }
+}
+impl State {
+    fn sample(&mut self, discover: bool) -> u64 {
+        self.requests += 1;
+        let full = discover || self.requests >= RESCAN_REQUESTS;
+        let mut records = self
+            .table
+            .refresh(if full { None } else { Some(&self.known) });
+        let owned = descendants(self.root, &records);
+        if full {
+            self.requests = 0;
         }
-        if let Some(sample) = records.get(&pid)
-            && (pid == root
-                || sidecar
+        self.known = owned.iter().copied().collect();
+        self.identities.retain(|pid, _| owned.contains(pid));
+        records.retain(|pid, _| owned.contains(pid));
+        for (pid, record) in &mut records {
+            let identity = self.identities.entry(*pid).or_insert_with(|| Identity {
+                started: record.started,
+                authored: record.executable.clone(),
+                canonical: record
                     .executable
-                    .is_none_or(|exe| sample.executable == Some(exe)))
-        {
-            total = total.saturating_add(sample.bytes);
+                    .as_deref()
+                    .and_then(|path| self.table.canonicalize(path)),
+            });
+            if identity.started != record.started || identity.authored != record.executable {
+                identity.started = record.started;
+                identity.authored = record.executable.clone();
+                identity.canonical = record
+                    .executable
+                    .as_deref()
+                    .and_then(|path| self.table.canonicalize(path));
+            }
+            record.executable.clone_from(&identity.canonical);
         }
-        if let Some(descendants) = children.get(&pid) {
-            pending.extend(descendants);
-        }
+        tree_bytes(self.root, &records)
     }
-    total
 }
 
+#[cfg(test)]
+#[path = "_tests_/memory_sampling_tests.rs"]
+mod memory_sampling_tests;
 #[cfg(test)]
 #[path = "_tests_/process_memory_tests.rs"]
 mod process_memory_tests;

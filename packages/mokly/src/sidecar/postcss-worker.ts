@@ -36,6 +36,7 @@ process.once("message", (workerData: WorkerData) => {
         const dependencies: CssResult["dependencies"] = [
           ...new Set([
             ...modules,
+            ...paths.resolvedDependencies,
             ...loadedFiles(workerData.sourceRoot as string),
           ]),
         ].map((path) => ({

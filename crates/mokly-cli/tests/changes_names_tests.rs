@@ -28,6 +28,7 @@ mod changes_base;
 #[path = "../src/changes_runtime.rs"]
 mod changes_runtime;
 #[path = "../src/render_runtime.rs"]
+#[expect(dead_code, reason = "the probe injects its own diagnostics reporter")]
 mod render_runtime;
 #[path = "../src/terminal.rs"]
 #[expect(dead_code, reason = "this build probe uses only terminal stdout")]
