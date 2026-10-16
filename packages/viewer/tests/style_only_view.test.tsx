@@ -111,8 +111,11 @@ const MOBILE: ComparisonPresentation = {
   viewport: "mobile",
 };
 
-/** The selected mobile heading of one loaded entry, as the panes render it. */
-function heading(entry: ReviewEntry): string | undefined {
+/**
+ * The selected mobile heading of one loaded entry, as the panes render it,
+ * on the entry's own route or the route of a variant it groups.
+ */
+function heading(entry: ReviewEntry, route = entry.path): string | undefined {
   const result = parseReviewResult({
     schemaVersion: 8,
     baseCommit: "a".repeat(40),
@@ -125,10 +128,10 @@ function heading(entry: ReviewEntry): string | undefined {
     result,
     url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/review.json`,
   };
-  const views = selectedComparisonViews(loaded, MOBILE, kind, entry.path);
+  const views = selectedComparisonViews(loaded, MOBILE, kind, route);
   const markup = renderToStaticMarkup(
     <ComparisonViews
-      entryId={entry.path}
+      entryId={route}
       entryKind={kind}
       presentation={MOBILE}
       presentations={new Map()}
@@ -178,5 +181,43 @@ test("the pane heading takes its noun from the wording of the entry kind", () =>
       changedEntry("component", [dependency(SHEET), { kind: "metadata" }]),
     ),
     "Mobile · Variant changed",
+  );
+});
+
+test("a variant's heading reads the variant's own reasons, not its parent's", () => {
+  const side = (path: string, title: string) => ({
+    path,
+    title,
+    props: {},
+    suppliedSlots: [],
+  });
+  const variant: ReviewEntry = {
+    kind: "component",
+    path: "card/compact",
+    title: "Compact",
+    before: side("card/compact", "Compact"),
+    after: side("card/compact", "Compact"),
+    state: "changed",
+    included: true,
+    reasons: [dependency(SHEET)],
+    views: [
+      view([rule(SHEET, "matched", { kind: "component", path: "card" })]),
+    ],
+  };
+  const parent: ReviewEntry = {
+    kind: "component",
+    path: "card",
+    title: "Card",
+    before: side("card", "Card"),
+    after: side("card", "Card"),
+    state: "unchanged",
+    included: true,
+    reasons: [{ kind: "implementation" }],
+    views: [view(undefined, "unchanged")],
+    variants: [variant],
+  };
+  assert.equal(
+    heading(parent, "card/compact"),
+    "Mobile · Styles this variant uses changed",
   );
 });

@@ -14,7 +14,11 @@ export interface SelectedComparisonView {
   documents: { after?: string; before?: string };
   /** The mode this view shows; one-sided views fall back to Side by side. */
   mode: ComparisonPresentation["mode"];
-  /** The view changed, and only its stylesheet records prove it. */
+  /**
+   * The view is changed, its entry has a reason, every reason is a
+   * dependency, and each named path has a matched or unresolved rule on this
+   * view.
+   */
   styleOnly: boolean;
   view: ReviewView;
   viewport: "desktop" | "mobile";

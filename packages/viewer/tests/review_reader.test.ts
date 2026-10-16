@@ -91,26 +91,30 @@ const INVALID: readonly [string, (result: ReviewResult) => void][] = [
       home(r).included = true;
     },
   ],
-  [
-    "a variant that is not a component",
-    (r) => {
-      // An otherwise valid screen record, so only the kind rule rejects it.
-      const side = { path: "card/screen", title: "card/screen", props: {} };
-      card(r).variants = [
-        {
-          ...variantOf(card(r), "card/screen", []),
-          kind: "screen",
-          before: side,
-          after: side,
-        },
-      ];
-    },
-  ],
 ];
 
 for (const [name, edit] of INVALID)
   test(`the reader rejects ${name}`, () =>
     assert.throws(() => parseReviewResult(fixture(edit)), /\[mokly\/review\]/));
+
+test("the reader rejects a variant that is not a component", () => {
+  // An otherwise valid screen record, so only the kind rule rejects it.
+  const screen = fixture((result) => {
+    const side = { path: "card/screen", title: "card/screen", props: {} };
+    card(result).variants = [
+      {
+        ...variantOf(card(result), "card/screen", []),
+        kind: "screen",
+        before: side,
+        after: side,
+      },
+    ];
+  });
+  assert.throws(
+    () => parseReviewResult(screen),
+    /a variant is a component record/,
+  );
+});
 
 test("a moved component keeps its base path for before-side chains", () => {
   const moved = (result: ReviewResult) => {
