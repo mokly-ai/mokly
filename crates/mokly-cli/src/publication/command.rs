@@ -6,13 +6,15 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::Checkout;
-use mokly_publish::error::{Error, Result};
+use mokly_publish::error;
 use mokly_publish::exchange::Exchange;
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
 use mokly_publish::settings::Settings;
 
 use crate::publication::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
+use crate::publication::error::{Error, ExchangeResult, Result};
+use crate::publication::mapping::checkout_result;
 
 /// Normalized command inputs. Secrets remain in Settings, outside this value.
 #[derive(Clone, Debug)]
@@ -79,9 +81,11 @@ impl Publish for Command {
         settings: &Settings,
         cancellation: &dyn Cancellation,
     ) -> Result<Receipt> {
-        let initial =
+        let initial = checkout_result(
             self.checkout
-                .inspect(&options.directory, &options.owned_paths, cancellation)?;
+                .inspect(&options.directory, &options.owned_paths, cancellation),
+            cancellation,
+        )?;
         if !initial.changed_paths.is_empty() {
             return Err(Error::Uncommitted {
                 paths: initial.changed_paths,
@@ -89,11 +93,14 @@ impl Publish for Command {
                 build_directories: initial.build_directories,
             });
         }
-        let publication = self.checkout.publication(
-            &initial,
-            &options.version,
-            options.repository.as_deref(),
-            &options.actions,
+        let publication = checkout_result(
+            self.checkout.publication(
+                &initial,
+                &options.version,
+                options.repository.as_deref(),
+                &options.actions,
+                cancellation,
+            ),
             cancellation,
         )?;
         let directory = self.directories.create(&initial.root)?;
@@ -106,18 +113,22 @@ impl Publish for Command {
             base: options.base.clone(),
             no_changes: options.no_changes,
             warnings_are_fatal: warnings_are_fatal(options.strict),
+            strict: options.strict,
             publication,
         };
         let snapshot = self.output.build(&request, cancellation)?;
-        let finalized = snapshot.capture()?;
+        let finalized = snapshot.capture().publication()?;
         let artifact = finalized.artifact();
         if artifact.directory != directory {
-            return Err(Error::InvalidBundle);
+            return Err(Error::Exchange {
+                source: error::Error::InvalidBundle,
+            });
         }
         let prepared = finalized.prepared();
-        let final_state =
-            self.checkout
-                .inspect(&initial.root, &options.owned_paths, cancellation)?;
+        let final_state = self
+            .checkout
+            .inspect(&initial.root, &options.owned_paths, cancellation)
+            .publication()?;
         if final_state.root != initial.root || final_state.head_sha != initial.head_sha {
             return Err(Error::HeadChanged);
         }
@@ -135,11 +146,14 @@ impl Publish for Command {
             || prepared.metadata.pull_request != request.publication.pull_request
             || (options.no_changes && prepared.metadata.comparison_path.is_some())
         {
-            return Err(Error::InvalidBundle);
+            return Err(Error::Exchange {
+                source: error::Error::InvalidBundle,
+            });
         }
         self.exchange
             .publish(prepared, settings, cancellation)
             .await
+            .publication()
     }
 }
 

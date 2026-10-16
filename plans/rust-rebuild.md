@@ -340,6 +340,13 @@ more than re-deriving the behaviour from the requirements.
     `{{name}}` in text and attributes. The catalogue checker and HTML renderer
     use the same rule.
 
+40. Static output parser (2026-10-15): keep Oxc for the module-request rules
+    of `mokly-export-browser.md`. A real parser distinguishes regular
+    expressions, division, comments, and decoded import strings. The added
+    dependency closure has 32 crates. Licence classes are MIT, MIT/Apache-2.0,
+    Unicode-3.0, and Apache-2.0 WITH LLVM-exception OR BSL-1.0 for
+    `dragonbox_ecma`. Review Oxc's 0.x API changes with dependency updates.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -675,7 +682,7 @@ from Milestone 12.
       static output.
 - [x] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
-- [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
+- [x] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
   - [x] Replace `examples/basic/mokly.config.ts` with `mokly.config.json`
@@ -684,7 +691,7 @@ from Milestone 12.
         HTML components with variants and slots, a page, a use case, a
         folder record, and a Markdown document.
   - [x] Rewrite `examples/basic/README.md` to the end state.
-  - [ ] Add HTML fixtures and run the gap sweep against the rendering
+  - [x] Add HTML fixtures and run the gap sweep against the rendering
         contracts.
   - [x] Render the example's HTML part and check it at both viewports and in
         both schemes. Its stylesheets pass through the example's PostCSS
@@ -703,6 +710,10 @@ The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
 
 Example port evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m5-example/README.md`.
+HTML fixture sweep and controls evidence: `.context/rust-rebuild/sweeps/m5-html.md`
+and `.context/rust-rebuild/delegation/m8-core/report-9.md`.
+Final sweep review fixes and static/Serve evidence: `.context/rust-rebuild/delegation/m8-core/report-10.md`;
+merge decisions: `.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
 
 ## Milestone 6: Serve
 
@@ -836,6 +847,12 @@ renders again.
         for the core integration gap sweep.
   - [ ] Compare captured example and large scenarios after the example port
         and comparison integration land.
+  - [ ] Add the callback-only regressions from the M5 HTML sweep: conflicting
+        inputs from impure slot replay, renderer mutation isolation, and the
+        page helper call count. Cover and document the render-time failure of
+        a component wrapper whose definition is not exported by an entry
+        module. Cases 30, 32, 36, and 127 remain assigned here; native
+        templates cannot exercise callback side effects or wrapper exports.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every
@@ -849,6 +866,12 @@ renders again.
         example.
   - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
+- [ ] Add browser specs against copied static output, including navigation,
+      inspection, no live endpoints, and the comparison modes after the M9 join.
+      Run the static host against real `mokly build` output with
+      `MOKLY_PLAYWRIGHT_STATIC_DIR`. Port the M8 sweep's static/export/publish
+      cases: exact-file resources, canonical links, read-only controls,
+      deployment changes, public CORS, and historical comparison documents.
 - [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -862,9 +885,6 @@ renders again.
 - [ ] Complete the M8 viewer cases assigned by the browser sweep, including
       route/detail races, frame handoff, live prop edits, and preserved focus.
 
-Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
-Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
-
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
@@ -874,7 +894,7 @@ Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-
         controls, and both viewport layouts through Serve.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
-        comparison output; M12 owns the static build acceptance checks.
+        comparison output; M8 browser owns the static build acceptance checks.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -919,8 +939,14 @@ Final core review fixes: `.context/rust-rebuild/delegation/m8-core/report-3.md`.
 Serve integration: `.context/rust-rebuild/delegation/m8-core/report-4.md`;
 smoke artifacts: `.context/rust-rebuild/m8-serve-smoke/`.
 Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-5.md`.
+CSS integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-7.md`.
+Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8-core/report-8.md`.
 
 - [ ] Commit.
+
+Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
+Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
+Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
 
 ## Milestone 9: Changes
 
@@ -1016,6 +1042,8 @@ Review fixes of the copy and states with their Serve run:
 `.context/rust-rebuild/m10-copy-run-2/log.md`.
 Final review fixes and their check logs:
 `.context/rust-rebuild/delegation/m7/report-9.md`.
+The 409 index refresh, the mobile pending pill, and the frame sandbox message:
+`.context/rust-rebuild/delegation/m7/report-10.md`.
 
 - [ ] Commit.
 
@@ -1032,7 +1060,8 @@ Final review fixes and their check logs:
 - [ ] Implement the watcher with the denial rules, rebuild on change, bundle
       replay for HTML-only edits, and live updates to the viewer through the
       index and entry detail routes under one revision, with frames reloaded
-      by document key and no page reload.
+      by document key and no page reload. Prune build outputs and reservation
+      paths by path, without ownership-marker parsing.
 - [ ] Release PostCSS contexts and replaced sidecar generations when the last
       graph that uses them drops. Design ownership with Serve revision fences,
       cancelled requests, and watch replacement; prevent an old graph from
@@ -1051,6 +1080,28 @@ Final review fixes and their check logs:
       documents, the comparison generation, the shared `mokly-model` ownership
       marker writer, the `--out` option with its default `mokly-static/` output
       directory, and the transaction with backup, exclusive rename, and rollback.
+  - [x] Write deterministic current output, head-only inspector metadata,
+        canonical index and details, exact package assets, and shared ownership.
+        Implement reservations, exclusive installation, rollback, bounded cleanup,
+        input rechecks, and config-relative output selection.
+  - [ ] Join the Milestone 9 comparison generation, removed records, and detail
+        evidence before identity finalization. Repeat the comparison-specific
+        reference scenarios after that integration. The join must replace the
+        premature "Comparing with {base}" success line, populate upload
+        `baseRef` instead of null, and give a reason for Changes unavailable.
+        Nest build review spans under `output.write` with the caller context.
+  - [ ] Add subprocess recovery tests through a test-only fault seam for rollback,
+        backup cleanup, cancellation plus cleanup, and cleanup-only failure.
+        Include process-level configuration and staging signal faults.
+        Keep the recovery page's Status line until these checks pass.
+  - [ ] Add an independent reader of the installed ownership and upload fixtures.
+        Keep ownership, upload exchange, and validation Status lines until this
+        reader and the M9 comparison join are verified.
+  - [ ] Complete the sweep rows owned by M12 static, transaction, and static
+        closure acceptance. Add the remaining exact destination races,
+        reservation mutations, Unicode/NUL rename paths, imported resources,
+        private templates, host-normalized paths, abandoned lock retention,
+        and signal-handler release cases named in the sweep.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
@@ -1066,7 +1117,11 @@ Final review fixes and their check logs:
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
         transitions, source changes, and the deferred gap-sweep scenarios.
-    - [ ] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
+    - [ ] Complete the sweep rows owned by M12 publication acceptance: assigned
+          credentials, checkout variants, interrupted
+          compiler diagnostics, rich summary styling, and every retry status
+          through the real process.
+    - [x] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
           `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
           `mokly-publish` into the CLI publication error contract when the
           static adapter lands.
@@ -1080,14 +1135,16 @@ Publish client final review and merge decisions:
 `.context/rust-rebuild/delegation/m12-publish/report-3.md` and
 `.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
 
-- [ ] Run the browser suite's static host against real `mokly build` output
-      after the writer is integrated. Set `MOKLY_PLAYWRIGHT_STATIC_DIR` to
-      the output directory. Port the M8 sweep's static/export/publish cases,
-      including exact-file resources, canonical links, read-only controls,
-      deployment changes, public CORS, and historical comparison documents.
-- [ ] Restore the preview deployment workflow on the new CLI.
-- [ ] Write the build and publish guides.
-- [ ] Commit.
+- [x] Restore the preview deployment workflow on the new CLI.
+- [x] Write the build and publish guides.
+
+Static output evidence: `.context/rust-rebuild/delegation/m12-static/report-1.md`,
+`.context/rust-rebuild/m12-smoke/`, and `.context/rust-rebuild/sweeps/m12-static.md`.
+Round 1 fixes and merge decisions: `.context/rust-rebuild/delegation/m12-static/report-2.md`
+and `.context/rust-rebuild/delegation/m12-static/merge-decisions.md`.
+Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
+
+- [x] Commit.
 
 ## Milestone 13: Release packaging
 
@@ -1114,11 +1171,15 @@ Publish client final review and merge decisions:
 - [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
+  - [x] Run the local steps that need no credentials or registry write against
+        a scratch checkout and record the blocked steps.
+  - [ ] Complete the seven-package pack, reuse, and smoke with all native
+        archives from the hosted target builds.
 - [ ] Settle Release Please selection for core-only commits under the
       Milestone 15 review decision.
-- [ ] Run the installed static output and Serve smoke after their integration.
+- [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
-  - [ ] Run installed static output after Milestone 12 supplies the writer.
+  - [x] Run installed static output after Milestone 12 supplies the writer.
 - [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
       can pass; the bumped-copy sidecar tests and version-path regression stay
       required.
@@ -1131,8 +1192,16 @@ and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 Final release review fixes: `.context/rust-rebuild/delegation/m13/report-3.md`.
 Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
+Static release verification and smoke scope comparison:
+`.context/rust-rebuild/delegation/m13/report-5.md`.
 
 ## Milestone 14: Large-project acceptance
+
+- [ ] Forward sidecar timing records and add core `sidecar.spawn` and
+      `sidecar.recycle` spans under the timings contract.
+
+- [ ] Restrict static fingerprints to configured roots, inventoried sources,
+      and reached closure files. Measure this boundary under the large fixtures.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1168,6 +1237,8 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 13 static verification follow-up: the example branch's packed
+    smoke must check the config-relative output and fail when the site is absent.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
@@ -1183,10 +1254,15 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
     until the next generation while the user decision is pending.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
+  - M8 core review 3, finding 2, and review 6, finding 7: settle saved-prop
+    control bounds and declared steps that conflict with schema multiples or
+    integer values. Keep the current validation until the user decides.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
+  - Milestone 12 static review 2, finding 6: settle forced build exit during
+    install, rollback, and cleanup. Keep the current forced exit until decided.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention

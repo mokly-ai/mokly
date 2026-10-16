@@ -12,6 +12,40 @@ use serde_json::Number;
 
 use crate::diagnostic::{Code, Issue};
 
+/// Store effective numeric bounds so every read-model consumer sees the same limits.
+pub(crate) fn effective(
+    schema: &PropSchema,
+    controls: &BTreeMap<String, ComponentControl>,
+) -> BTreeMap<String, ComponentControl> {
+    let mut effective = controls.clone();
+    for (name, control) in &mut effective {
+        let Some(property) = schema
+            .properties
+            .as_ref()
+            .and_then(|properties| properties.get(name))
+        else {
+            continue;
+        };
+        if let ControlInput::Number {
+            minimum,
+            maximum,
+            step,
+        } = &mut control.input
+        {
+            *minimum = minimum.clone().or_else(|| property.minimum.clone());
+            *maximum = maximum.clone().or_else(|| property.maximum.clone());
+            *step = step
+                .clone()
+                .or_else(|| property.multiple_of.clone())
+                .or_else(|| {
+                    matches!(property.types, Some(Types::Single(JsonType::Integer)))
+                        .then(|| Number::from(1))
+                });
+        }
+    }
+    effective
+}
+
 pub(crate) fn validate(
     schema: &PropSchema,
     controls: &BTreeMap<String, ComponentControl>,

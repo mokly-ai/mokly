@@ -47,14 +47,22 @@ entry, authoring facade, and JSX shim do not appear as catalogue modules.
 The JSX development shim forwards to the consumer's `react/jsx-runtime` and
 attaches invocation metadata only to `defineComponent` wrappers under the
 [instance rules](./mokly-instances.md#optional-invocation-source).
+Its source file names resolve from the compiler's configuration directory
+before conversion to repository-relative invocation paths.
 
 A `*.module.css` import compiles to a stub that reads its class map from the
 generation table at evaluation. The core scopes the stylesheet after PostCSS
 and supplies all maps with `cssModules` before `describe` evaluates the bundle.
 `cssModules` installs the table without bundling or reading source files.
 One esbuild compilation builds each generation, including its runtime style
-adapters. The adapters capture the same library instances that the consumer
-imports. Peer resolution uses that compiler's resolver from the configuration
+adapters. A root import supplies its own registry. A subpath import resolves
+the registry from the directory of its resolved file, so both use the same
+package copy. Wrappers keep the importer's CommonJS default-import interop:
+Node's rule for `.mjs` and `.mts` importers, the `__esModule` default otherwise.
+The rule matches unwrapped imports in the same Mokly bundle.
+A wrapper diagnostic names the importer's logical source path as its location
+and the wrapped file's logical name when it describes that module's exports.
+Peer resolution uses that compiler's resolver from the configuration
 directory. Virtual modules do not enter the source inventory. CSS Modules
 in dependencies use the same logical dependency names as their graph records.
 The sidecar fails closed when a map is absent. Installing maps after

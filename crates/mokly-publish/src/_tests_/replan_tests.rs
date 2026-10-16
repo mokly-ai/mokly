@@ -134,14 +134,19 @@ async fn completed_blob_progress_precedes_a_later_replan() {
     let events = Arc::new(std::sync::Mutex::new(Vec::new()));
     let captured = Arc::clone(&events);
     let observed = Arc::clone(&events);
-    let reporter = Unimock::new(
+    let rounds = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let reset = rounds.clone();
+    let reporter = Unimock::new((
+        ReporterMock::round
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, round| reset.lock().unwrap().push(round))),
         ReporterMock::progress
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, progress| {
                 captured.lock().unwrap().push(progress.clone())
             }))
             .n_times(2),
-    );
+    ));
     let http = Unimock::new((
         HttpMock::send
             .next_call(matching!((request,_) if request.step==Step::Plan))
@@ -177,4 +182,5 @@ async fn completed_blob_progress_precedes_a_later_replan() {
         .publish(&prepared, &settings(1), &active())
         .await
         .unwrap();
+    assert_eq!(*rounds.lock().unwrap(), vec![0, 1]);
 }

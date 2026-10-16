@@ -7,15 +7,15 @@ order: 4
 
 ## Keep the checkout clean
 
-Publish requires a clean checkout before export and again before upload.
-Git-ignored files, this run's output directory, and Mokly's own caches and
-temporary files never count. Committed generated files count and must match the
-build. Derived generated output must be ignored by Git.
+Publish requires committed HEAD and a clean checkout before the build and again
+before upload. Commit source changes before the job runs. Keep build products
+ignored by Git. Mokly builds in a private directory outside the checkout and
+prints its location before rendering. Ignored files and operation-owned
+reservations do not count as uncommitted changes.
 
-A build step that changes tracked files or leaves files that Git does not ignore
-stops the publish. Commit generated changes before the job runs. Add build
-products to `.gitignore`. Use `npm ci` to install from the committed lockfile
-without changing it.
+Use `npm ci` to install the committed dependency lockfile. A job that changes
+tracked sources or creates non-ignored files must resolve those changes before
+it publishes.
 
 ## Three steps
 
@@ -28,7 +28,7 @@ a redirect.
 
 Publish posts one small gzip-compressed tar archive to the exact endpoint,
 which is the service's plan route. It holds `mokly-upload.json`, the ownership
-marker that lists every exported file with its SHA-256 digest and byte size,
+marker that lists every output file with its SHA-256 digest and byte size,
 and the pinned comparison file when comparisons are enabled. Nothing else is
 in it.
 
@@ -86,12 +86,12 @@ back, and completes again; a second `409` or `410` fails.
 
 `mokly-upload.json` names the Mokly version, the repository, the branch, the
 head revision, the base ref and pinned base revision, the pull request number
-when the job is running on one, the config path and the time the export
+when the job is running on one, the config path and the time the build
 finished. Without comparisons, `baseRef`, `baseSha` and `comparisonPath` are
 all `null`. Receivers must reject missing or extra manifest fields.
 
-The source manifest the build writes is deliberately not part of the export:
-it holds your source inventory and is not a public artifact.
+The source inventory stays in memory. The output contains the public catalogue
+index and entry details. It contains no source manifest or consumer configuration.
 
 ## What the receiver must do
 
@@ -133,7 +133,7 @@ otherwise; an empty `missing` set shows no progress label.
 
 Cancellation prints
 `[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.`
-If Mokly could not put your previous export back, it prints the recovery error
+If Mokly could not put your previous output back, it prints the recovery error
 with the folder to recover instead, even when you cancelled.
 An exhausted transport failure instead tells the reader to check the endpoint
 and connection, then retry.
@@ -148,7 +148,7 @@ and connection, then retry.
 | The manifest or marker declares an unknown version                              | `upload-unsupported-version` |
 | Anything else, including a timeout or a second `409` or `410`                   | `upload-failed`              |
 
-A failed publish leaves the complete local export where it was written, so you
+A failed publish leaves the complete local build where it was written, so you
 can look at exactly what would have been sent, and running it again resumes
 from what the service already stored. The full contract is published under
 Reference as the catalogue upload document.

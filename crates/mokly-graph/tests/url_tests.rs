@@ -8,6 +8,36 @@ use tempfile::TempDir;
 mod support;
 
 #[test]
+fn composed_resource_urls_reject_escapes_encoded_separators_and_invalid_encoding() {
+    for (reference, reason) in [
+        ("../../../outside.svg", "unsafe or escaping URL"),
+        (
+            "../../assets%2Fpixel.svg",
+            "encoded separator or unsafe path",
+        ),
+        ("../../assets/%ZZ.svg", "malformed URL encoding"),
+    ] {
+        let root = TempDir::new().unwrap();
+        fs::create_dir(root.path().join("specs")).unwrap();
+        fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
+        fs::write(
+            root.path().join("specs/home.screen.html"),
+            "---\ntitle: Home\n---\n<ui-image></ui-image>",
+        )
+        .unwrap();
+        fs::write(root.path().join("specs/image.component.html"), format!("---\ntitle: Image\nelement: ui-image\npropSchema: {{type: object, additionalProperties: false, properties: {{}}}}\n---\n<img src=\"{reference}\">" )).unwrap();
+        let generation = support::prepare(root.path(), 1024 * 1024, 1).0.unwrap();
+        let error = generation
+            .closure("home/index.mobile.html")
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("home/index.mobile.html"), "{error}");
+        assert!(error.contains(reference), "{error}");
+        assert!(error.contains(reason), "{error}");
+    }
+}
+
+#[test]
 fn query_and_fragment_colons_survive_rendering_and_the_public_closure() {
     let root = TempDir::new().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();

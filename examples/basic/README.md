@@ -215,7 +215,7 @@ URL. Put Serve options after `--`, for example `npm run dev -- --port 0`.
 To validate the catalogue and write the static site:
 
 ```bash
-npx mokly build --config examples/basic/mokly.config.json --strict --out .context/example
+npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example
 ```
 
 `build` renders every view, fails on an error and, with `--strict`, on a

@@ -83,6 +83,20 @@ fn walk(
                         root.source.clone(),
                     )?;
                     let tag = root.name.clone();
+                    if tag == "button" {
+                        for name in [
+                            "form",
+                            "formaction",
+                            "formenctype",
+                            "formmethod",
+                            "formnovalidate",
+                            "formtarget",
+                            "name",
+                            "value",
+                        ] {
+                            root.take(name);
+                        }
+                    }
                     if inactive || root.get("disabled").is_some() {
                         root.take("href");
                         root.set("data-nav-href", logical);
@@ -95,21 +109,9 @@ fn walk(
                         if matches!(root.get("role"), Some("button")) {
                             root.take("role");
                         }
-                        for name in [
-                            "type",
-                            "disabled",
-                            "form",
-                            "formaction",
-                            "formenctype",
-                            "formmethod",
-                            "formnovalidate",
-                            "formtarget",
-                            "name",
-                            "value",
-                        ] {
-                            if tag == "button" {
-                                root.take(name);
-                            }
+                        if tag == "button" {
+                            root.take("type");
+                            root.take("disabled");
                         }
                         root.set("data-mokly-link-control", tag);
                         active = true;
