@@ -17,6 +17,7 @@ export async function serveStaticFiles(
     requests.push(pathname);
     requestHeaders.push(request.headers);
     response.setHeader("X-Content-Type-Options", "nosniff");
+    response.setHeader("Cache-Control", "no-cache");
     if (allowedOrigins.size > 0) {
       response.setHeader("Vary", "Origin");
       if (request.headers.origin && allowedOrigins.has(request.headers.origin))

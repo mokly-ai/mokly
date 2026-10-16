@@ -18,9 +18,9 @@ export const designCases = inventory as Array<{
 }>;
 
 /** Each spec registers its own catalogue read and owns its mutable entry list. */
-export function designCatalogue(): DesignEntry[] {
+export function designCatalogue(fixtureTest = test): DesignEntry[] {
   const entries: DesignEntry[] = [];
-  test.beforeAll(async ({ request, baseURL }) => {
+  fixtureTest.beforeAll(async ({ request, baseURL }) => {
     const response = await request.get(`${baseURL}/mokly-viewer/index.json`);
     if (!response.ok())
       throw new Error(`Catalogue index: HTTP ${response.status()}`);

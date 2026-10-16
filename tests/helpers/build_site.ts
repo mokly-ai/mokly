@@ -9,6 +9,7 @@ import { timeFixturePhase } from "./fixture_timing.js";
 export async function buildStaticCatalogue(
   cwd: string,
   output: string,
+  signal?: AbortSignal,
 ): Promise<void> {
   await timeFixturePhase(
     "browser-catalogue",
@@ -26,7 +27,7 @@ export async function buildStaticCatalogue(
           "--sidecars",
           "1",
         ],
-        { cwd },
+        { cwd, ...(signal ? { signal } : {}) },
       );
       if (result.exitCode !== 0 || result.signal || result.interrupted)
         throw new Error(

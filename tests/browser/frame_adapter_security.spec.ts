@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { documentFavicon } from "./document_error_allowance.js";
 import {
   crossOriginFixture,
   mountCrossFrame,
@@ -170,7 +171,9 @@ test("host rejects forged frame events and accepts only its active subscribed se
 
 test("loading the published script directly never starts inspection or navigation interception", async ({
   page,
+  allowBrowserError,
 }) => {
+  documentFavicon(allowBrowserError, fixture.frames.url);
   await page.goto(
     `${fixture.frames.url}/static/mokly-generated/home/index.mobile.html`,
   );

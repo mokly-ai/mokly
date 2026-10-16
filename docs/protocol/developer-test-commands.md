@@ -162,7 +162,8 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 `.only`. Spec discovery is defined in
 [CI verification](./ci-verification.md#gate-ownership).
 
-For static-output checks, build the site first, then set
+The normal suite builds and copies the example for its `static_*.spec.ts`
+checks in global setup. To supply an existing output for a selected run, set
 `MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
 
 ```bash
