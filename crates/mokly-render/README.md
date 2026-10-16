@@ -53,7 +53,10 @@ Evicted stylesheet resources rebuild from that generation's captured bytes.
 and all repository mappings. Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS
-package loads for base fallback checks.
+package loads for base fallback checks. It also keeps unmapped importer
+directories, including package-manager links into a root store. Selected
+logical roots take precedence over source-root names in nested CSS exclusion
+checks.
 Both sides use the current package version and
 the same document composition code.
 

@@ -22,7 +22,10 @@ pub fn ready(style: &Style, counts: ComparisonCounts) -> String {
         return String::new();
     }
     let mut parts = vec![
-        format!("  {} Changes ready", if style.ascii { "+" } else { "✔" }),
+        format!(
+            "  {} Changes ready",
+            glyph(style, if style.ascii { "+" } else { "✔" }, 32)
+        ),
         format!(
             "{} change{}",
             counts.changes,
@@ -46,7 +49,11 @@ pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> St
             format!(
                 "{}\n",
                 bounded(
-                    &format!("  ! Changes unavailable · {}", redactor.safe(reason)),
+                    &format!(
+                        "  {} Changes unavailable · {}",
+                        glyph(style, "!", 33),
+                        redactor.safe(reason)
+                    ),
                     style.columns
                 )
             )
@@ -94,6 +101,14 @@ pub fn diagnostics(style: &Style, changes: &BuildChanges, redactor: &Redactor) -
             })
             .collect(),
         _ => String::new(),
+    }
+}
+
+fn glyph(style: &Style, text: &str, color: u8) -> String {
+    if style.color {
+        format!("\x1b[{color}m{text}\x1b[0m")
+    } else {
+        text.into()
     }
 }
 

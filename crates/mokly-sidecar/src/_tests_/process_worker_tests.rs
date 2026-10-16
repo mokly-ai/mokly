@@ -30,6 +30,7 @@ fn deadline_uses_the_injected_clock_and_the_method_duration() {
             })),
     ));
     let mut worker = ProcessWorker {
+        diagnostics: Arc::new(Unimock::new(())),
         client: Box::new(mock.clone()),
         clock: Arc::new(mock),
         memory: Box::new(Unimock::new(())),

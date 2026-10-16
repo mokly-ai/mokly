@@ -71,13 +71,12 @@ impl State {
     fn sample(&mut self, discover: bool) -> u64 {
         self.requests += 1;
         let full = discover || self.requests >= RESCAN_REQUESTS;
-        let mut records = self
-            .table
-            .refresh(if full { None } else { Some(&self.known) });
-        let owned = descendants(self.root, &records);
         if full {
+            self.known = self.table.discover(self.root);
             self.requests = 0;
         }
+        let mut records = self.table.refresh(&self.known);
+        let owned = descendants(self.root, &records);
         self.known = owned.iter().copied().collect();
         self.identities.retain(|pid, _| owned.contains(pid));
         records.retain(|pid, _| owned.contains(pid));

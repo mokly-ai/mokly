@@ -46,6 +46,11 @@ export async function importPostcssModule(
             if (resolved.errors.length) return { errors: resolved.errors };
             try {
               const target = await paths.resolve(resolved.path);
+              await paths.dependencyUsage.resolved(
+                args.path,
+                args.resolveDir,
+                target,
+              );
               if (path.isAbsolute(target) && paths.repositoryOwned(target))
                 return { path: target };
               return {

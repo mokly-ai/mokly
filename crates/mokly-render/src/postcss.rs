@@ -126,6 +126,9 @@ impl PostCss {
             }
             Err(source) => return Err(RenderError::Sidecar { source }),
         };
+        for directory in result.unmapped_dependency_directories.iter().flatten() {
+            self.usage.unmapped(directory);
+        }
         for dependency in &result.dependencies {
             if matches!(dependency.kind, DependencyKind::File)
                 && let Some(path) = self.side.logical_dependency(Path::new(&dependency.path))

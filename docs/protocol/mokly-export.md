@@ -121,12 +121,11 @@ Changes; Serve's watcher ignores the same paths.
    and the existing ownership marker, and reserve the resolved output against
    concurrent writers under the [safety contract](./mokly-export-safety.md).
 2. Resolve the base commit without changing the checkout. Validate the
-   catalogue and render every view through the render cache. With `--strict`,
-   a warning fails here, before any write.
+   catalogue and render every view through the render cache.
 3. Record the input fingerprint: the hashes of every inventoried source, the
    configuration, the renderer module, the configured stylesheets, and the
    authored closure. Render the base side and compute the comparison from
-   those inputs.
+   those inputs. With `--strict`, a warning fails here, before any write.
 4. Assemble every route and resource into a private stage inside the
    reservation on the output filesystem. Validate each path against the
    marker's [portable-path rule](./mokly-export-ownership.md#file-contract)

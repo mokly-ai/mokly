@@ -4,11 +4,14 @@ use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_cli::build::BuildError;
 use mokly_cli::cancellation::Cancellation;
+use mokly_cli::grammar::Build;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
-use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory};
+use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
+use mokly_compare::base_selection::{BaseLookup, GitBaseLookup, PinnedBase};
 use mokly_compare::cache_types::Reporter;
 use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_types::ComparisonResult;
@@ -18,7 +21,7 @@ use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::control::{self, SystemClock, Token};
 use mokly_git::disk::SystemDisk;
-use mokly_git::repository::GitRepositories;
+use mokly_git::repository::{GitRepositories, Repositories};
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
@@ -27,12 +30,11 @@ use mokly_render::runtime::Runtime;
 
 use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
-use crate::terminal::Terminal;
 
 pub(super) fn service(
     runtime: Arc<Runtime>,
     cancellation: Arc<dyn Cancellation>,
-    terminal: Arc<dyn Terminal>,
+    pinned: Option<Arc<PinnedBase>>,
     style: Style,
     redactor: Arc<Redactor>,
     phases: Arc<dyn Phases>,
@@ -44,20 +46,16 @@ pub(super) fn service(
     let reporter: Arc<dyn Reporter> = Arc::new(OnceReporter {
         announced: false.into(),
         reporter: Arc::new(CacheReporter {
-            terminal,
+            phases: phases.clone(),
             style,
             redactor,
         }),
     });
     let changes = Arc::new(Changes {
-        repositories: Arc::new(GitRepositories {
-            runner: Arc::new(SystemRunner {
-                clock: Arc::new(SystemClock::default()),
-                cancellation: token.clone(),
-                groups: Arc::new(SystemProcessGroups),
-            }),
-            disk: Arc::new(SystemDisk),
+        lookup: Arc::new(GitBaseLookup {
+            repositories: repositories(token.clone()),
         }),
+        pinned,
         sources: Arc::new(GitSourceFactory {
             limits: Limits::default(),
             batch_bytes: 48 * 1024 * 1024,
@@ -78,6 +76,44 @@ pub(super) fn service(
     Arc::new(PhasedChanges { changes, phases })
 }
 
+pub(super) fn pin(
+    config: &ResolvedConfig,
+    options: &Build,
+    cancellation: Arc<dyn Cancellation>,
+) -> std::result::Result<Option<Arc<PinnedBase>>, BuildError> {
+    if options.no_changes {
+        return Ok(None);
+    }
+    let base = selected_base(config, options.common.base.as_deref()).to_owned();
+    let token: Arc<dyn control::Cancellation> = Arc::new(GitCancellation {
+        command: cancellation,
+        token: Token::default(),
+    });
+    let lookup: &dyn BaseLookup = &GitBaseLookup {
+        repositories: repositories(token),
+    };
+    match lookup.pin(&config.repo_root, &base) {
+        Ok(pinned) => Ok(Some(pinned)),
+        Err(mokly_compare::error::Error::Git { source }) => Err(BuildError::Git { base, source }),
+        Err(source) => Err(BuildError::Comparison {
+            base_ref: base,
+            source: Box::new(source),
+            warnings: Vec::new(),
+        }),
+    }
+}
+
+fn repositories(token: Arc<dyn control::Cancellation>) -> Arc<dyn Repositories> {
+    Arc::new(GitRepositories {
+        runner: Arc::new(SystemRunner {
+            clock: Arc::new(SystemClock::default()),
+            cancellation: token,
+            groups: Arc::new(SystemProcessGroups),
+        }),
+        disk: Arc::new(SystemDisk),
+    })
+}
+
 struct PhasedChanges {
     changes: Arc<dyn ChangesService>,
     phases: Arc<dyn Phases>,
@@ -89,7 +125,8 @@ impl ChangesService for PhasedChanges {
         base: Option<&str>,
         head: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
-        self.phases.start(Phase::Comparing);
+        self.phases
+            .start(Phase::Comparing(selected_base(config, base).into()));
         self.changes.classify(config, base, head)
     }
 }
@@ -108,7 +145,7 @@ impl control::Cancellation for GitCancellation {
 }
 
 struct CacheReporter {
-    terminal: Arc<dyn Terminal>,
+    phases: Arc<dyn Phases>,
     style: Style,
     redactor: Arc<Redactor>,
 }
@@ -130,7 +167,7 @@ impl Reporter for CacheReporter {
         } else {
             format!("{safe}\n")
         };
-        self.terminal.stdout(&line);
+        self.phases.note(&line);
     }
 }
 

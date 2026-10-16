@@ -38,6 +38,12 @@ pub struct DependencyTiers {
 
 impl Dependencies for DependencyTiers {
     fn resolve(&self, request: &Request) -> Result<Resolved> {
+        if let Some(directory) = request.unmapped_directories.first() {
+            return Ok(fallback(
+                request,
+                Fallback::UnmappedDirectory(directory.clone()),
+            ));
+        }
         if request.base == request.head {
             return Ok(resolved(
                 request,
@@ -106,10 +112,6 @@ impl Dependencies for DependencyTiers {
                     Error::InvalidInput { .. } => Fallback::InvalidInput,
                     _ => Fallback::Cache,
                 };
-                tracing::warn!(
-                    ?reason,
-                    "base third-party dependency installation fell back"
-                );
                 Ok(fallback(request, reason))
             }
         }
@@ -164,6 +166,11 @@ fn package_roots(request: &Request) -> Vec<String> {
 }
 
 fn fallback(request: &Request, reason: Fallback) -> Resolved {
+    tracing::warn!(
+        ?reason,
+        configuration = request.configuration.as_str(),
+        "base third-party dependencies fell back"
+    );
     resolved(
         request,
         Tier::Fallback,

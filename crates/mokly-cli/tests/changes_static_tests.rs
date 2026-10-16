@@ -48,7 +48,7 @@ fn static_build_retains_changes_and_selects_the_explicit_base_once() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("Changes ready · 1 change"), "{stdout}");
     assert!(stdout.contains("Built Mokly to mokly-static"), "{stdout}");
-    assert_eq!(stdout.matches("Comparing catalogue").count(), 1);
+    assert_eq!(stdout.matches("Comparing with fixture-base").count(), 1);
     let index: serde_json::Value = serde_json::from_slice(
         &fs::read(root.path().join("mokly-static/mokly-viewer/index.json")).unwrap(),
     )
@@ -111,7 +111,7 @@ fn base_dependency_warnings_gate_strict_static_builds_and_publish_after_comparis
             "{verb}: {stderr}"
         );
         assert!(!stderr.contains("upload-transport"), "{stderr}");
-        assert!(String::from_utf8_lossy(&output.stdout).contains("Comparing catalogue"));
+        assert!(String::from_utf8_lossy(&output.stdout).contains("Comparing with base-point"));
         if verb == "publish" {
             assert!(String::from_utf8_lossy(&output.stdout).contains("Changes ready · 1 change"));
         }

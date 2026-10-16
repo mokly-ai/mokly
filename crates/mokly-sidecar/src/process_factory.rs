@@ -127,6 +127,7 @@ impl WorkerFactory for NodeFactory {
         );
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
+                diagnostics: self.diagnostics.clone(),
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
                 memory: self.memory.monitor(pid),

@@ -117,7 +117,6 @@ fn inspect(root: &Path) {
     let common = Common {
         config: env::var("MOKLY_TEST_CONFIG").ok(),
         base: env::var("MOKLY_TEST_BASE").ok(),
-        sidecars: Some(std::thread::available_parallelism().map_or(1, usize::from)),
         ..Common::default()
     };
     let tree = Arc::new(WorkingTree);
@@ -139,7 +138,17 @@ fn inspect(root: &Path) {
         changes: changes_runtime::service(
             services.runtime.clone(),
             cancellation.clone(),
-            Arc::new(terminal::SystemTerminal::default()),
+            changes_runtime::pin(
+                &config,
+                &Build {
+                    common: common.clone(),
+                    out: None,
+                    strict: true,
+                    no_changes: false,
+                },
+                cancellation.clone(),
+            )
+            .unwrap(),
             Style {
                 mode: Mode::Plain,
                 color: false,
@@ -182,6 +191,9 @@ fn inspect(root: &Path) {
     names.sort();
     let expected: Vec<String> =
         serde_json::from_str(&env::var("MOKLY_TEST_EXPECTED_CHANGES").unwrap()).unwrap();
+    if let Some(path) = env::var_os("MOKLY_TEST_REVIEW_OUTPUT") {
+        fs::write(path, serde_json::to_vec_pretty(&changes.review).unwrap()).unwrap();
+    }
     if env::var_os("MOKLY_TEST_CHANGED_SUBSET").is_some() {
         assert!(!expected.is_empty());
         for name in expected {
@@ -198,9 +210,6 @@ fn inspect(root: &Path) {
         "Changed entries: {}",
         serde_json::to_string(&names).unwrap()
     );
-    if let Some(path) = env::var_os("MOKLY_TEST_REVIEW_OUTPUT") {
-        fs::write(path, serde_json::to_vec_pretty(&changes.review).unwrap()).unwrap();
-    }
 }
 
 struct ProbeDiagnostics;
@@ -211,8 +220,11 @@ impl Diagnostics for ProbeDiagnostics {
 }
 
 impl Phases for ProbeDiagnostics {
+    fn note(&self, message: &str) {
+        print!("{message}");
+    }
     fn start(&self, phase: Phase) {
-        assert_eq!(phase, Phase::Comparing);
+        assert!(matches!(phase, Phase::Comparing(_)));
     }
     fn diagnostic(&self, message: &str) {
         eprintln!("{message}");

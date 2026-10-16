@@ -92,6 +92,7 @@ impl Pool {
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
+        self.lock()?.memory.entry(index).or_default().started();
         let mut spawned = self.factory.spawn(&self.launch)?;
         {
             let mut state = self.lock()?;
@@ -187,27 +188,7 @@ impl SidecarPool for Pool {
             }
             break;
         }
-        if let Some(current) = slot.as_mut() {
-            current.requests += 1;
-            let memory = current.worker.resident_bytes();
-            if current.renders >= 500
-                || (current.requests > 1
-                    && matches!(memory, Ok(bytes) if bytes > 1024 * 1024 * 1024))
-            {
-                let drained = current.control.shutdown().and_then(|()| {
-                    current
-                        .control
-                        .finish(self.clock.now_ms().saturating_add(2_000))
-                });
-                if let Err(error) = drained {
-                    tracing::warn!(%error, "sidecar recycle shutdown failed");
-                    if let Err(error) = current.control.kill() {
-                        tracing::warn!(%error, "sidecar recycle kill failed");
-                    }
-                }
-                slot = None;
-            }
-        }
+        self.recycle(index, &mut slot)?;
         let cancelled = self.lock()?.stopped;
         self.release(index, slot)?;
         if matches!(outcome, Err(Error::Crashed)) {
@@ -269,3 +250,7 @@ mod pool_reload_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_abort_tests.rs"]
 mod pool_abort_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_pressure_tests.rs"]
+mod pool_pressure_tests;

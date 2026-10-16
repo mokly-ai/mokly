@@ -27,7 +27,7 @@ pub enum Phase {
     /// Prepare and render every current document.
     Rendering,
     /// Resolve the selected comparison.
-    Comparing,
+    Comparing(String),
     /// Assemble and write the completed output.
     Writing,
     /// Validate and compress immutable upload bytes.
@@ -43,6 +43,8 @@ pub trait Phases: Send + Sync {
     fn start(&self, phase: Phase);
     /// Emit consumer diagnostics through the same terminal owner.
     fn diagnostic(&self, message: &str);
+    /// Emit a formatted stdout note under the phase reporter lock.
+    fn note(&self, message: &str);
     /// Print validation warnings before installation and before a summary.
     fn warnings(&self, warnings: &[mokly_catalogue::diagnostic::Warning]);
     /// Report the retained comparison result and historical diagnostics.
@@ -174,10 +176,10 @@ impl Builder {
             .map(|path| request.config.repo_root.join(path))
             .collect();
         static_result(transaction.protect(protected))?;
+        self.phases.warnings(&rendered.summary.warnings);
         if !matches!(rendered.summary.changes, BuildChanges::Disabled) {
             self.phases.changes(&rendered.summary.changes);
         }
-        self.phases.warnings(&rendered.summary.warnings);
         if request.warnings_are_fatal && !rendered.summary.warnings.is_empty() {
             return Err(BuildError::Warnings);
         }

@@ -40,6 +40,14 @@ pub struct Warning {
 #[serde(deny_unknown_fields)]
 #[ts(rename = "BundleResult")]
 pub struct Bundle {
+    /// Used repository dependency directories whose importer lookup is not mapped.
+    #[serde(
+        default,
+        rename = "unmappedDependencyDirectories",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub unmapped_dependency_directories: Option<Vec<String>>,
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.
@@ -115,6 +123,14 @@ pub struct Dependency {
 #[serde(deny_unknown_fields)]
 #[ts(rename = "CssResult")]
 pub struct Css {
+    /// Used repository dependency directories whose importer lookup is not mapped.
+    #[serde(
+        default,
+        rename = "unmappedDependencyDirectories",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub unmapped_dependency_directories: Option<Vec<String>>,
     /// Transformed stylesheet text.
     pub text: String,
     /// Watch dependencies.

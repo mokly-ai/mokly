@@ -35,6 +35,7 @@ fn request() -> Request {
         head: inputs,
         source_root: "/cache/base".into(),
         head_root: "/repo".into(),
+        unmapped_directories: vec![],
         used_directories: Vec::new(),
         source_identity: "commit".into(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),

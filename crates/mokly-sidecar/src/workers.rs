@@ -20,6 +20,8 @@ pub trait Worker: Send {
     fn handshake(&mut self, deadline_ms: u64) -> Result<()>;
     /// Run one call, including any diagnostic frames, within its deadline.
     fn request(&mut self, request: &Request, deadline_ms: u64) -> Result<MethodResult>;
+    /// Report sustained memory pressure once for one slot pressure episode.
+    fn memory_pressure(&self);
     /// Query the process's current resident set in bytes.
     fn resident_bytes(&self) -> Result<u64>;
 }

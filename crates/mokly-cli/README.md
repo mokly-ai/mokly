@@ -100,7 +100,12 @@ only when it equals the command's outer code. Configuration locations are
 repository-relative, or use the basename when the root does not contain
 the configuration file.
 
-The build service computes Changes unless `--no-changes` is set. Changes runs inside the static pipeline before warning gates and output
+The build service computes Changes unless `--no-changes` is set. After output
+admission, it pins the selected base before catalogue validation and rendering.
+The comparison uses that same repository, commit, and ref without another lookup.
+The phase owner erases its animated row before cache notes and serializes both
+streams. Warnings precede the colored Changes status. Nested Git failures keep
+the historical commit and Git detail. Changes runs inside the static pipeline before warning gates and output
 installation. `PreparedBuild` retains its result for the comparison-file join.
 Head and
 base use `mokly-render::Runtime` with one shared pool and render cache.

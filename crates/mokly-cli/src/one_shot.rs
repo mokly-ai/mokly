@@ -152,13 +152,13 @@ impl Phases for Lines {
         if self.style.mode == Mode::Plain {
             return;
         }
-        let label = self.redactor.safe(match phase {
-            Phase::Configuration => "Loading configuration",
-            Phase::Rendering => "Rendering catalogue",
-            Phase::Comparing => "Comparing catalogue",
-            Phase::Writing => "Writing static output",
-            Phase::PreparingUpload => "Preparing upload",
-            Phase::Uploading => "Uploading catalogue",
+        let label = self.redactor.safe(&match phase {
+            Phase::Configuration => "Loading configuration".into(),
+            Phase::Rendering => "Rendering catalogue".into(),
+            Phase::Comparing(base) => format!("Comparing with {base}"),
+            Phase::Writing => "Writing static output".into(),
+            Phase::PreparingUpload => "Preparing upload".into(),
+            Phase::Uploading => "Uploading catalogue".into(),
         });
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if self.animate {
@@ -182,6 +182,13 @@ impl Phases for Lines {
         } else {
             format!("{}\n", bounded(&format!("  {label}…"), self.style.columns))
         });
+    }
+    fn note(&self, message: &str) {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if self.animate && state.label.is_some() {
+            self.terminal.stdout("\r\x1b[2K");
+        }
+        self.terminal.stdout(message);
     }
     fn diagnostic(&self, message: &str) {
         let _state = self.state.lock().unwrap_or_else(|error| error.into_inner());

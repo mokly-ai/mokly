@@ -81,6 +81,11 @@ fn missing_repository_and_missing_ref_fail_with_git_failed_and_the_ref() {
     assert!(failure(root.path(), "required-base", "git-failed").contains("required-base"));
     git(root.path(), &["init", "--initial-branch=fixture-base"]);
     commit(root.path());
+    fs::write(
+        root.path().join("specs/home.screen.html"),
+        "invalid current front matter",
+    )
+    .unwrap();
     assert!(failure(root.path(), "no-such-ref", "git-failed").contains("no-such-ref"));
 }
 
@@ -112,6 +117,11 @@ fn shallow_history_without_a_merge_base_fails_even_when_both_refs_exist() {
             "comparison-base:refs/remotes/origin/comparison-base",
         ],
     );
+    fs::write(
+        root.path().join("specs/home.screen.html"),
+        "invalid current front matter",
+    )
+    .unwrap();
     assert!(
         failure(root.path(), "origin/comparison-base", "git-failed")
             .contains("origin/comparison-base")
@@ -153,5 +163,14 @@ fn a_missing_historical_blob_is_git_failed_instead_of_unavailable_validation() {
             .join(&hash[2..]),
     )
     .unwrap();
-    assert!(failure(root.path(), "fixture-base", "git-failed").contains("fixture-base"));
+    let commit = Command::new("git")
+        .current_dir(root.path())
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .unwrap();
+    let commit = String::from_utf8(commit.stdout).unwrap();
+    let message = failure(root.path(), "fixture-base", "git-failed");
+    assert!(message.contains(commit.trim()), "{message}");
+    assert!(message.contains("malformed Git output"), "{message}");
+    assert!(message.contains("fixture-base"), "{message}");
 }

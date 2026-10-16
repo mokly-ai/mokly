@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
-use super::super::{Faults, InjectedTree};
+use super::{Faults, InjectedTree};
 
 #[test]
 fn public_reads_digests_and_prefetch_reach_the_injected_tree() {

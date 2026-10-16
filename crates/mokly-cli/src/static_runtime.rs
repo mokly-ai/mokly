@@ -30,13 +30,11 @@ use mokly_static::filesystem::{Files, SystemFiles};
 use mokly_static::fingerprint::{CapturedTree, SourceFingerprints};
 use mokly_static::transaction::{OutputTransactions, Transaction, Transactions};
 
-use crate::terminal::Terminal;
 #[cfg(debug_assertions)]
 use crate::test_faults;
 use crate::{changes_runtime, static_setup, viewer_assets};
 
 pub(super) struct Context {
-    pub(super) terminal: Arc<dyn Terminal>,
     pub(super) style: Style,
     pub(super) redactor: Arc<Redactor>,
     pub(super) cancellation: Arc<dyn Cancellation>,
@@ -115,7 +113,11 @@ fn prepare(
         static_setup::setup(cwd, options, context, config, tree.clone()),
         context.cancellation.as_ref(),
     );
-    let (services, viewer) = match setup {
+    let static_setup::Setup {
+        services,
+        viewer,
+        pinned,
+    } = match setup {
         Ok(value) => value,
         Err(primary) => {
             return match transaction.abandon() {
@@ -141,7 +143,7 @@ fn prepare(
         changes: changes_runtime::service(
             services.runtime.clone(),
             context.cancellation.clone(),
-            context.terminal.clone(),
+            pinned,
             context.style.clone(),
             context.redactor.clone(),
             context.phases.clone(),

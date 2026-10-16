@@ -8,12 +8,19 @@ use std::sync::Mutex;
 pub trait DependencyUsage: Send + Sync {
     /// Record a resolved module or stylesheet in its side's logical namespace.
     fn record(&self, aliases: &BTreeMap<String, String>, path: &str);
+    /// Record a used directory whose importer lookup cannot be preserved.
+    fn unmapped(&self, directory: &str);
+    /// Used directories outside the supported base lookup.
+    fn unmapped_directories(&self) -> Vec<String>;
     /// Repository-relative node_modules directories used by the current side.
     fn directories(&self) -> Vec<String>;
 }
 
 #[derive(Default)]
-pub(crate) struct UsedDependencies(Mutex<BTreeSet<String>>);
+pub(crate) struct UsedDependencies {
+    mapped: Mutex<BTreeSet<String>>,
+    unmapped: Mutex<BTreeSet<String>>,
+}
 impl DependencyUsage for UsedDependencies {
     fn record(&self, aliases: &BTreeMap<String, String>, path: &str) {
         let prefix = if let Some(rest) = path.strip_prefix("node_modules/.mokly-roots/") {
@@ -24,6 +31,10 @@ impl DependencyUsage for UsedDependencies {
         } else if path.starts_with("node_modules/") {
             "node_modules".into()
         } else {
+            let parts: Vec<_> = path.split('/').collect();
+            if let Some(index) = parts.iter().position(|part| *part == "node_modules") {
+                self.unmapped(&parts[..=index].join("/"));
+            }
             return;
         };
         if let Some((authored, _)) = aliases
@@ -31,15 +42,29 @@ impl DependencyUsage for UsedDependencies {
             .filter(|(_, logical)| **logical == prefix)
             .max_by_key(|(authored, _)| authored.len())
         {
-            self.0
+            self.mapped
                 .lock()
                 .unwrap_or_else(|error| error.into_inner())
                 .insert(authored.clone());
         }
     }
 
+    fn unmapped(&self, directory: &str) {
+        self.unmapped
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .insert(directory.into());
+    }
+    fn unmapped_directories(&self) -> Vec<String> {
+        self.unmapped
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .iter()
+            .cloned()
+            .collect()
+    }
     fn directories(&self) -> Vec<String> {
-        self.0
+        self.mapped
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .iter()

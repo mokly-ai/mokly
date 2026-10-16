@@ -54,6 +54,7 @@ fn installed_tier_requires_only_directories_that_the_head_used() {
             source_identity: "commit".into(),
             head_root: "/head".into(),
             configuration: RepoPath::parse("app/nested/mokly.config.json").unwrap(),
+            unmapped_directories: vec![],
             used_directories: if used {
                 vec!["app/node_modules".into()]
             } else {
@@ -126,4 +127,32 @@ fn installed_tier_requires_only_directories_that_the_head_used() {
             assert!(resolved.warning.is_none());
         }
     }
+}
+
+#[test]
+fn unmapped_importer_directories_fall_back_even_with_equal_inputs() {
+    let request = Request {
+        base: Inputs::default(),
+        head: Inputs::default(),
+        source_root: "/base".into(),
+        source_identity: "commit".into(),
+        head_root: "/head".into(),
+        configuration: RepoPath::parse("mokly.config.json").unwrap(),
+        resolution: ModuleResolution::default(),
+        used_directories: vec![],
+        unmapped_directories: vec!["packages/ui/node_modules".into()],
+    };
+    let tiers: &dyn Dependencies = &DependencyTiers {
+        cache: Arc::new(Unimock::new(())),
+        commands: Arc::new(Unimock::new(())),
+        storage: Arc::new(Unimock::new(())),
+        clock: Arc::new(Unimock::new(())),
+        timeout: Duration::from_secs(120),
+        install_bytes: 10000,
+    };
+    let selected = tiers.resolve(&request).unwrap();
+    assert_eq!(selected.tier, Tier::Fallback);
+    let warning = selected.warning.unwrap();
+    assert_eq!(warning.code(), "base-dependencies");
+    assert!(warning.message().contains("packages/ui/node_modules"));
 }

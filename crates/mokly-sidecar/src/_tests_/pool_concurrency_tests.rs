@@ -62,6 +62,7 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
                                 entered.send(index).unwrap();
                                 receivers[index].lock().unwrap().recv().unwrap();
                                 Ok(MethodResult::Css(Css {
+                                    unmapped_dependency_directories: None,
                                     text: params.text.clone(),
                                     dependencies: Vec::new(),
                                 }))

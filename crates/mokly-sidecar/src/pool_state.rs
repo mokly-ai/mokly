@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 
 use crate::bindings::Bindings;
+use crate::memory_schedule::MemorySchedule;
 use crate::methods::{Bundle, CssModules};
 use crate::workers::{Worker, WorkerControl};
 
@@ -21,6 +22,7 @@ pub(super) struct Slot {
 
 #[derive(Default)]
 pub(super) struct State {
+    pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
     pub(super) available: VecDeque<usize>,
     pub(super) controls: BTreeMap<usize, Arc<dyn WorkerControl>>,

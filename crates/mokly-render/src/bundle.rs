@@ -65,6 +65,9 @@ pub(crate) fn describe(
         Ok(_) => return Err(RenderError::ResultKind { method: "bundle" }),
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
+    for directory in result.unmapped_dependency_directories.iter().flatten() {
+        runtime.dependency_usage.unmapped(directory);
+    }
     let modules: BTreeMap<_, _> = result
         .modules
         .into_iter()

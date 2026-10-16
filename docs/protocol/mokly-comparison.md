@@ -181,7 +181,9 @@ Third-party dependencies follow three tiers:
    identity when local packages or workspaces participate, and the bundle resolves
    third-party dependencies from there.
 3. The install cannot run, because the machine is offline, the package
-   manager is unsupported, or the time limit passes: tier 1 applies and the
+   manager is unsupported, or the time limit passes; the install lacks a used
+   dependency directory; or an importer's directory lookup is not mapped:
+   working dependencies apply and the
    `base-dependencies` warning names the selected lockfile when one exists and
    gives the fallback reason.
 

@@ -45,13 +45,23 @@ pub fn run_with_timeout(
     node: Option<&Path>,
     timeout: Option<&str>,
 ) -> Output {
+    run_configured(root, arguments, node, timeout, "rich")
+}
+
+pub fn run_configured(
+    root: &Path,
+    arguments: &[&str],
+    node: Option<&Path>,
+    timeout: Option<&str>,
+    mode: &str,
+) -> Output {
     let cache = TempDir::new().unwrap();
     let cache_root = cache.path().canonicalize().unwrap();
     let mut command = Command::new(env!("CARGO_BIN_EXE_mokly"));
     command
         .current_dir(root)
         .args(arguments)
-        .env("MOKLY_OUTPUT", "rich")
+        .env("MOKLY_OUTPUT", mode)
         .env("XDG_CACHE_HOME", &cache_root)
         .env("HOME", &cache_root)
         .env("LOCALAPPDATA", &cache_root)

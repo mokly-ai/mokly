@@ -210,7 +210,14 @@ export async function bundle(
     };
     return {
       generation,
-      result: { generation: id, modules: graph, warnings: [] },
+      result: {
+        generation: id,
+        modules: graph,
+        warnings: [],
+        unmappedDependencyDirectories: [
+          ...paths.dependencyUsage.unmapped,
+        ].sort(),
+      },
     };
   } catch (error) {
     throw new SidecarError(

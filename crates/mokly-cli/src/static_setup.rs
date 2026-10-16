@@ -8,6 +8,7 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_cli::build::BuildError;
 use mokly_cli::grammar::Build;
 use mokly_cli::static_build::Phases;
+use mokly_compare::base_selection::PinnedBase;
 use mokly_model::output::artifact::File;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_source_interface::tree::SourceTree;
@@ -15,7 +16,13 @@ use mokly_static::modules;
 
 use crate::render_runtime::Services;
 use crate::static_runtime::Context;
-use crate::viewer_assets;
+use crate::{changes_runtime, viewer_assets};
+
+pub(super) struct Setup {
+    pub(super) services: Services,
+    pub(super) viewer: Vec<File>,
+    pub(super) pinned: Option<Arc<PinnedBase>>,
+}
 
 pub(super) fn setup(
     cwd: &Path,
@@ -23,7 +30,8 @@ pub(super) fn setup(
     context: &Context,
     config: &ResolvedConfig,
     tree: Arc<dyn SourceTree>,
-) -> Result<(Services, Vec<File>), BuildError> {
+) -> Result<Setup, BuildError> {
+    let pinned = changes_runtime::pin(config, options, context.cancellation.clone())?;
     let assets: &dyn ViewerAssets = &PackageAssets {
         tree: Arc::new(WorkingTree),
     };
@@ -57,7 +65,11 @@ pub(super) fn setup(
             });
         }
     };
-    Ok((services, viewer))
+    Ok(Setup {
+        services,
+        viewer,
+        pinned,
+    })
 }
 
 struct RenderDiagnostics(Arc<dyn Phases>);

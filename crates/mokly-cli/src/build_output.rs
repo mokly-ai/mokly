@@ -82,7 +82,7 @@ fn failure_detail(style: &Style, failure: &BuildError, redactor: &Redactor) -> S
             source,
             warnings: records,
         } => {
-            if matches!(crate::changes_diagnostics::failure_code(source), Code::GitFailed) {
+            if matches!(source.as_ref(), mokly_compare::error::Error::Git { .. }) {
                 return warnings(style, records, redactor) + &style.error(Code::GitFailed, &format!("Git information could not be read for {base_ref}. Check the repository and configured base."), redactor);
             }
             warnings(style, records, redactor)

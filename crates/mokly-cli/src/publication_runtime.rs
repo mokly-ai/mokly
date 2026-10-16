@@ -16,10 +16,8 @@ use mokly_publish::snapshot::{Finalized, OutputSnapshot};
 use mokly_sidecar::pool::SidecarPool;
 
 use crate::static_runtime::{self, Context, PublicationInput};
-use crate::terminal::Terminal;
 
 pub(super) struct Output {
-    pub(super) terminal: Arc<dyn Terminal>,
     pub(super) style: Style,
     pub(super) redactor: Arc<Redactor>,
     pub(super) common: Common,
@@ -47,7 +45,6 @@ impl StaticOutput for Output {
             no_changes: request.no_changes,
         };
         let context = Context {
-            terminal: self.terminal.clone(),
             style: self.style.clone(),
             redactor: self.redactor.clone(),
             cancellation: self.cancellation.clone(),

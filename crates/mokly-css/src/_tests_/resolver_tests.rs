@@ -144,3 +144,40 @@ fn plain_bare_imports_try_the_stylesheet_directory_before_packages() {
         "styles/theme/skin.css"
     );
 }
+
+#[test]
+fn a_package_uses_its_sibling_before_the_authored_ancestor_copy() {
+    for (files, expected) in [
+        (
+            vec![
+                "node_modules/tokens/x.css",
+                "node_modules/.mokly-roots/1/tokens/x.css",
+            ],
+            "node_modules/tokens/x.css",
+        ),
+        (
+            vec![
+                "node_modules/theme/node_modules/tokens/x.css",
+                "node_modules/tokens/x.css",
+            ],
+            "node_modules/theme/node_modules/tokens/x.css",
+        ),
+        (
+            vec!["node_modules/.mokly-roots/1/tokens/x.css"],
+            "node_modules/.mokly-roots/1/tokens/x.css",
+        ),
+    ] {
+        let mut resolver = resolver(&files);
+        resolver.settings.dependency_aliases = [
+            ("app/node_modules".into(), "node_modules".into()),
+            ("node_modules".into(), "node_modules/.mokly-roots/1".into()),
+        ]
+        .into();
+        assert_eq!(
+            resolver
+                .resolve("node_modules/theme/skin.css", "tokens/x.css")
+                .unwrap(),
+            expected
+        );
+    }
+}

@@ -53,6 +53,9 @@ struct CountedWorker {
 }
 
 impl Worker for CountedWorker {
+    fn memory_pressure(&self) {
+        self.inner.memory_pressure();
+    }
     fn handshake(&mut self, deadline_ms: u64) -> Result<()> {
         self.counts.0.lock().unwrap()[self.index] += 1;
         self.inner.handshake(deadline_ms)

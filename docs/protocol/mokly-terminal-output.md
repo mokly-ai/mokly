@@ -113,7 +113,7 @@ interactive stdin. Serve then reports its lifecycle boundaries:
   ✔ Changes ready · 5 changes · 1 moved · 2 ignored-only              3.6s
 ```
 
-Catalogue counts include saved variants in their parent's kind and omit zero-valued kinds.
+Counts come from the catalogue model, include saved variants in their parent's kind, and omit zero-valued kinds.
 Unavailable Changes says `! Changes unavailable` with its reason and keeps All browsable.
 Base diagnostics follow [base preparation](./mokly-base-preparation.md#shared-render-runtime).
 Serve reports each state's

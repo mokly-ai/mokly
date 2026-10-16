@@ -230,5 +230,8 @@ esbuild loader names. The `css` loader is rejected for every extension because
 it would emit an undelivered sibling stylesheet. React and React DOM resolve
 from the consumer through the sidecar's bundle, so these options cannot
 introduce a second React runtime. For the base side of a comparison the
-settings name the `node_modules` directory that the
-[dependency tiers](./mokly-comparison.md#sides) chose.
+settings name the ancestor and explicit `node_modules` directories that the
+[dependency tiers](./mokly-comparison.md#sides) chose. Imports from outside the
+configuration subtree and nested workspace dependencies need `packageRoots`.
+An unmapped lookup falls back with a `base-dependencies` warning naming its
+directory; conflicting package copies can also cause this warning.

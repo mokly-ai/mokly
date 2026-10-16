@@ -22,13 +22,16 @@ output belong to the binary.
   `MOKLY_SIDECARS` accept any positive integer and override that default;
   the option takes precedence over the variable. A catalogue that needs no
   JavaScript starts none.
-- The first exchange is `hello`, with the sidecar's package version.
-  The binary rejects a version other than its own with `sidecar-version`.
-- Recycle after 500 renders or over 1 GiB across the sidecar and its Node
-  descendants. Exclude native helpers when the sidecar executable is known.
-  Sample known children; rescan at spawn, after `processCss`, and every 64 calls.
-  Allow one request per fresh worker before memory recycling. Finish in-flight
-  work before recycling, then reload generations on demand.
+- The first request is `hello`; the sidecar's first frame is its matching hello
+  response with the package version. Reject a mismatch with `sidecar-version`
+  before other traffic.
+- Recycle after 500 renders or over 1 GiB of resident memory across the sidecar
+  and its Node descendants. Exclude native helpers when its executable is known.
+  Allow one request per fresh worker. After a memory recycle, double completed
+  requests before the replacement's first memory check, capped at 500. Reset
+  after a sample at or below the bound. Report one line per pressure episode
+  when a replacement's first check is still over the bound. Finish in-flight
+  work before recycling. Reload generations on demand; see [memory sampling](./mokly-sidecar-memory.md).
 - `shutdown` drains in-flight work; the binary kills survivors after two seconds.
 
 ## Transport
@@ -237,14 +240,11 @@ JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 
 ## Security
 
-The sidecar runs consumer code with the same trust as the consumer's own build.
-The sidecar inherits the environment. Each PostCSS child puts selected
-dependency directories before inherited `NODE_PATH` entries. Base dependency installation
+The sidecar runs consumer code with the consumer build's trust and inherits its environment.
+Each PostCSS child puts selected dependency directories before inherited `NODE_PATH` entries. Base dependency installation
 disables lifecycle scripts and has a time limit, so no consumer script runs at install time.
 
 ## Related Docs
 
-- [Entry props and variants](./mokly-entry-props.md)
-- [Rust core architecture](../architecture/rust-core.md)
-- [HTML screens](./mokly-html-screens.md)
-- [Rendering and document assembly](./mokly-rendering.md)
+- [Entry props and variants](./mokly-entry-props.md), [Rust core architecture](../architecture/rust-core.md)
+- [HTML screens](./mokly-html-screens.md), [Rendering and document assembly](./mokly-rendering.md)

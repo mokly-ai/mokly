@@ -73,7 +73,13 @@ process.once("message", (workerData: WorkerData) => {
         }
         process.send?.({
           id,
-          result: { text: result.css, dependencies },
+          result: {
+            text: result.css,
+            dependencies,
+            unmappedDependencyDirectories: [
+              ...paths.dependencyUsage.unmapped,
+            ].sort(),
+          },
         });
       } catch (error) {
         process.send?.({

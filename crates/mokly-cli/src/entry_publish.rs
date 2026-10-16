@@ -122,7 +122,6 @@ pub(super) fn run(
         }),
         directories: Arc::new(SystemDirectories),
         output: Arc::new(publication_runtime::Output {
-            terminal: terminal.clone(),
             style: style.clone(),
             redactor: redactor.clone(),
             common: publish.common.clone(),

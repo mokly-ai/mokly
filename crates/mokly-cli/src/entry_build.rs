@@ -49,7 +49,6 @@ pub(super) fn run(
         cwd.clone(),
     ));
     let context = Context {
-        terminal: terminal.clone(),
         style: style.clone(),
         redactor: redactor.clone(),
         cancellation: interrupts.cancellation.clone(),

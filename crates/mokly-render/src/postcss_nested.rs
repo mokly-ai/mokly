@@ -10,7 +10,7 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{InternalError, RenderError, Result};
 use crate::postcss_inventory::normalize;
-use crate::side::{SideInputs, dependency_roots};
+use crate::side::SideInputs;
 
 pub(crate) struct Input<'a> {
     pub(crate) tree: &'a dyn SourceTree,
@@ -41,26 +41,12 @@ pub(crate) fn validate(input: &Input<'_>) -> Result<()> {
                 .join(physical)
         };
         let physical = normalize(&physical);
-        let logical = if let Ok(path) = physical.strip_prefix(&input.side.source_root) {
-            Some(path.to_string_lossy().replace('\\', "/"))
-        } else {
-            dependency_roots(input.side)
-                .iter()
-                .enumerate()
-                .find_map(|(index, root)| {
-                    physical.strip_prefix(root).ok().map(|path| {
-                        format!(
-                            "node_modules/{}{}",
-                            if index == 0 {
-                                String::new()
-                            } else {
-                                format!(".mokly-roots/{index}/")
-                            },
-                            path.to_string_lossy().replace('\\', "/")
-                        )
-                    })
-                })
-        };
+        let logical = input.side.logical_dependency(&physical).or_else(|| {
+            physical
+                .strip_prefix(&input.side.source_root)
+                .ok()
+                .map(|path| path.to_string_lossy().replace('\\', "/"))
+        });
         let Some(target) = logical.filter(|path| input.excluded.contains(path)) else {
             continue;
         };

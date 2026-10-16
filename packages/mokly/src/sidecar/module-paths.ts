@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js";
 
+import { DependencyUsage } from "./dependency-usage.js";
 import { inside, logical } from "./path-scope.js";
 import { resolutionOptions } from "./resolution.js";
 
@@ -10,6 +11,7 @@ export interface ModuleSources {
   sourceRoot: string;
   repositoryRoots: string[];
   moduleResolution: ModuleResolution;
+  configurationDirectory?: string;
 }
 
 /** All filesystem checks share one side's canonical roots and logical names. */
@@ -21,6 +23,7 @@ export class ModulePaths {
     readonly repositoryRoots: string[],
     readonly dependencyRoots: string[],
     readonly settings: ModuleResolution,
+    readonly dependencyUsage: DependencyUsage,
   ) {}
 
   static async create(params: ModuleSources): Promise<ModulePaths> {
@@ -38,6 +41,16 @@ export class ModulePaths {
       repositories,
       [...new Set(dependencies)],
       params.moduleResolution,
+      new DependencyUsage(
+        root,
+        [...new Set(dependencies)],
+        params.moduleResolution,
+        params.configurationDirectory === undefined
+          ? dependencies[0] && inside(root, dependencies[0])
+            ? path.dirname(dependencies[0])
+            : root
+          : path.resolve(root, params.configurationDirectory),
+      ),
     );
   }
 
@@ -96,8 +109,9 @@ export class ModulePaths {
   }
 
   private observed(file: string): string {
-    if (this.dependencyRoots.some((root) => inside(root, file)))
+    if (file.split(path.sep).includes("node_modules"))
       this.resolvedDependencies.add(file);
+    this.dependencyUsage.file(file);
     return file;
   }
 

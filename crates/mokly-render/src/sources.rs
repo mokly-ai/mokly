@@ -132,24 +132,25 @@ impl SourceTree for SideTree {
     }
 
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
-        if let Some((_, physical, _)) = self.mapped(path) {
+        let bytes = if let Some((_, physical, _)) = self.mapped(path) {
             if let Some(node) = self.dependencies.project(&physical)?
                 && let Some(source) = self.source_alias(&node.identity)
             {
-                return self.sources.read(&source);
+                self.sources.read(&source)?
+            } else {
+                self.dependencies.read(&physical)?
             }
-            let bytes = self.dependencies.read(&physical)?;
-            if path.extension().is_some_and(|extension| extension == "css")
-                && let Ok(relative) = path.strip_prefix(&self.root)
-            {
-                self.usage.record(
-                    &self.aliases,
-                    &relative.to_string_lossy().replace('\\', "/"),
-                );
-            }
-            Ok(bytes)
         } else {
-            self.sources.read(path)
+            self.sources.read(path)?
+        };
+        if path.extension().is_some_and(|extension| extension == "css")
+            && let Ok(relative) = path.strip_prefix(&self.root)
+        {
+            self.usage.record(
+                &self.aliases,
+                &relative.to_string_lossy().replace('\\', "/"),
+            );
         }
+        Ok(bytes)
     }
 }
