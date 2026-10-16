@@ -30,6 +30,8 @@ function archive(bytes: Buffer): Map<string, Buffer> {
 export async function exchange(
   options: {
     retry?: boolean;
+    retryStatus?: number;
+    token?: string;
     holdPlan?: () => void;
     holdBlob?: () => void;
     planStatus?: number;
@@ -40,6 +42,10 @@ export async function exchange(
   const attempts = new Map<string, number>();
   let entries: MarkerEntry[] = [];
   let complete = 0;
+  let completionAttempts = 0;
+  let activeBlobs = 0;
+  let maxBlobs = 0;
+  const retryStatus = options.retryStatus ?? (options.retry ? 503 : undefined);
   const published = new Set<string>();
   const metadata: Array<{ configPath: string; headSha: string }> = [];
   const missingCounts: number[] = [];
@@ -47,11 +53,19 @@ export async function exchange(
   let base = "";
   let failure: unknown;
   const server = http.createServer(async (request, response) => {
+    const isBlob = request.url?.startsWith("/blobs/") ?? false;
+    if (isBlob) {
+      activeBlobs++;
+      maxBlobs = Math.max(maxBlobs, activeBlobs);
+    }
     try {
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(Buffer.from(chunk));
       const bytes = Buffer.concat(chunks);
-      assert.equal(request.headers.authorization, "Bearer private/a==");
+      assert.equal(
+        request.headers.authorization,
+        `Bearer ${options.token ?? "private/a=="}`,
+      );
       if (request.url === "/plan?key=1=2") {
         bodies.push(bytes);
         const files = archive(bytes);
@@ -87,8 +101,8 @@ export async function exchange(
           options.holdPlan();
           return;
         }
-        if (options.retry && bodies.length === 1) {
-          response.writeHead(503, { "Retry-After": "0" }).end();
+        if (retryStatus && bodies.length === 1) {
+          response.writeHead(retryStatus, { "Retry-After": "0" }).end();
           return;
         }
         response.writeHead(200, { "Content-Type": "application/json" }).end(
@@ -117,8 +131,8 @@ export async function exchange(
           return;
         }
         attempts.set(hash, (attempts.get(hash) ?? 0) + 1);
-        if (options.retry && attempts.get(hash) === 1) {
-          response.writeHead(503, { "Retry-After": "0" }).end();
+        if (retryStatus && attempts.get(hash) === 1) {
+          response.writeHead(retryStatus, { "Retry-After": "0" }).end();
           return;
         }
         blobs.set(hash, bytes);
@@ -127,6 +141,11 @@ export async function exchange(
         assert.equal(request.url, "/complete");
         for (const entry of entries) {
           assert.equal(blobs.get(entry.sha256)?.length, entry.size);
+        }
+        completionAttempts++;
+        if (retryStatus && completionAttempts === 1) {
+          response.writeHead(retryStatus, { "Retry-After": "0" }).end();
+          return;
         }
         complete++;
         const status = published.has(identity) ? 200 : 201;
@@ -140,6 +159,8 @@ export async function exchange(
     } catch (error) {
       failure = error;
       response.writeHead(500).end();
+    } finally {
+      if (isBlob) activeBlobs--;
     }
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -152,6 +173,12 @@ export async function exchange(
     attempts,
     metadata,
     missingCounts,
+    get maximumBlobConcurrency() {
+      return maxBlobs;
+    },
+    get completionAttempts() {
+      return completionAttempts;
+    },
     get completed() {
       return complete;
     },

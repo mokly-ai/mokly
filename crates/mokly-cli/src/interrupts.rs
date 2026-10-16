@@ -19,6 +19,9 @@ use signal_hook::{
 };
 
 pub(super) struct Interrupts {
+    #[cfg(all(debug_assertions, unix))]
+    /// Weak test observation cannot keep a signal registration alive.
+    pub(super) pending_probe: std::sync::Weak<AtomicBool>,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) publication: CommandCancellation,
     pub(super) pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
@@ -151,6 +154,8 @@ impl Interrupts {
                     }
                 };
             Ok(Self {
+                #[cfg(debug_assertions)]
+                pending_probe: Arc::downgrade(&pending),
                 cancellation,
                 publication,
                 pool,

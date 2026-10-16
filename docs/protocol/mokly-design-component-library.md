@@ -151,11 +151,16 @@ Controls below use text, boolean, number and primitive enum selections only.
     a prop panel reads the same in every host.
     Preserve label/input/error associations and assign unique ids for repeated
     forms. This is reusable field framing, not a new forms or schema engine.
-12. **Device frame:** device `phone/browser`, optional caption, depicted dark
-    state, light-only note, compact-phone and expandable flags, browser address;
-    `children` is the screen-content slot. Controls: device, dark state, compact frame and
-    address. Depicted device is independent of render viewport. Saved phone samples use compact sizing so the whole phone fits both viewports.
-    Turning compact sizing off preserves the full-size frame in a scrolling host.
+12. **Device frame:** device `phone/browser`, optional caption, a `scheme`
+    flag that adds the rendered scheme to the caption, depicted dark state,
+    light-only note, compact-phone and expandable flags, browser address;
+    `children` is the screen-content slot. Controls: device, scheme in caption,
+    dark state, compact frame and address. The component explorer previews
+    caption their frames through the `scheme` flag, so no screen draws its own
+    frame caption. Depicted device is independent of render viewport. Saved
+    phone samples use compact sizing so the whole phone fits both viewports.
+    Turning compact sizing off preserves the full-size frame in a scrolling
+    host.
 13. **Comparison pane:** side `before/after`, label, state `present/missing`,
     optional missing message and `children` slot. Controls: label, state and
     optional message. Missing state hides the content slot and uses the existing

@@ -1,12 +1,12 @@
 import { MockLink } from "@mokly/mokly";
 
+import { useCurrentPage } from "../../parts/design_navigation.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 
 import { footerLabelChange } from "./comparison_fixtures.js";
 import { HighlightMask, type InspectionSelection } from "./highlight.js";
 import { ActionExample, ToolbarExample } from "./preview.js";
-import { PreviewScheme } from "./view_controls.js";
 
 export type ScreenPageState =
   | "closed"
@@ -67,6 +67,7 @@ export function ConsumerFrame({
   state: ScreenPageState;
   viewport: ArtboardViewport;
 }) {
+  const current = useCurrentPage();
   const content =
     state === "consumer" ? (
       <div className="ce-other-example">
@@ -77,6 +78,9 @@ export function ConsumerFrame({
           <MockLink
             className="ce-single-highlight ce-highlight-layer"
             to="design/components/inspection/inspection-consumer"
+            aria-current={current(
+              "design/components/inspection/inspection-consumer",
+            )}
             aria-label="Inspect Action, Continue"
           >
             <span>Action · Continue</span>
@@ -107,20 +111,17 @@ export function ConsumerFrame({
         }
       />
     );
-  return (
-    <>
-      <p className="mbk-frame-label">
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · <PreviewScheme />
-      </p>
-      {viewport === "mobile" ? (
-        <PhoneFrame small>{content}</PhoneFrame>
-      ) : (
-        <BrowserFrame
-          address={`example.test/${state === "consumer" ? "details" : state === "removed-consumer" ? "farewell" : state === "empty" || state === "unavailable" ? "reading-room" : "welcome"}`}
-        >
-          {content}
-        </BrowserFrame>
-      )}
-    </>
+  return viewport === "mobile" ? (
+    <PhoneFrame label="Mobile" scheme small>
+      {content}
+    </PhoneFrame>
+  ) : (
+    <BrowserFrame
+      label="Desktop"
+      scheme
+      address={`example.test/${state === "consumer" ? "details" : state === "removed-consumer" ? "farewell" : state === "empty" || state === "unavailable" ? "reading-room" : "welcome"}`}
+    >
+      {content}
+    </BrowserFrame>
   );
 }

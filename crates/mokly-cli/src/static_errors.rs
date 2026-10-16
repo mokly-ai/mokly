@@ -41,10 +41,8 @@ pub fn detail(error: &Error) -> String {
             "Unexpected or unsafe output entry at {}.",
             display_path(path)
         ),
-        Error::Reserved { path } => format!(
-            "Output is reserved at {}. Confirm no writer is active and inspect its backup before recovery.",
-            display_path(path)
-        ),
+        Error::Reserved { .. } =>
+            "Output is reserved. Confirm no writer is active and inspect its backup before recovery.".into(),
         Error::Replaced { path } => format!(
             "Output changed during the build: {}. Retry after checking the directory.",
             display_path(path)
@@ -56,17 +54,15 @@ pub fn detail(error: &Error) -> String {
         Error::Recovery {
             primary,
             cleanup,
-            path,
+            ..
         } => format!(
-            "{}\nRecovery failed: {}\nInspect retained recovery path {}.",
+            "{}\nRecovery failed: {}",
             detail(primary),
-            detail(cleanup),
-            display_path(path)
+            detail(cleanup)
         ),
-        Error::Installed { source, path } => format!(
-            "The new site is installed. Cleanup failed: {}\nInspect remaining recovery path {}.",
-            detail(source),
-            display_path(path)
+        Error::Installed { source, .. } => format!(
+            "The new site is installed. Cleanup failed: {}",
+            detail(source)
         ),
         Error::Unowned { path, entries } => format!(
             "Output is not owned by Mokly: {}.{}",

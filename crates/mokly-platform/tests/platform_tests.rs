@@ -84,3 +84,34 @@ fn filesystem_and_plain_flushes_preserve_files() {
     );
     assert_eq!(fs::read(file).unwrap(), b"content");
 }
+
+#[test]
+fn exclusive_rename_keeps_unicode_paths_and_rejects_nul_without_truncation() {
+    let temporary = tempdir().unwrap();
+    let source = temporary.path().join("équipe-团队-🦀");
+    let destination = temporary.path().join("arrivée-日本");
+    fs::create_dir(&source).unwrap();
+    fs::create_dir(source.join("nested")).unwrap();
+    fs::write(source.join("nested/kept"), "all bytes").unwrap();
+    let rename: &dyn Rename = &SystemRename;
+    rename.exclusive(&source, &destination).unwrap();
+    assert!(!source.exists());
+    assert_eq!(
+        fs::read(destination.join("nested/kept")).unwrap(),
+        b"all bytes"
+    );
+    for (from, to) in [
+        (destination.join("nul\0tail"), source.clone()),
+        (destination.clone(), source.join("nul\0tail")),
+    ] {
+        assert!(matches!(
+            rename.exclusive(&from, &to),
+            Err(Error::InvalidPath { .. })
+        ));
+        assert_eq!(
+            fs::read(destination.join("nested/kept")).unwrap(),
+            b"all bytes"
+        );
+        assert!(!source.exists());
+    }
+}

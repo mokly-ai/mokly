@@ -22,15 +22,17 @@ use mokly_cli::static_admission::{Admission, OutputAdmission};
 use mokly_cli::static_build::{self, Drain, Phases, Request, StaticBuild, Timestamp};
 use mokly_model::output::artifact::Artifact;
 use mokly_model::output::upload::Publication;
-use mokly_platform::rename::SystemRename;
+use mokly_platform::rename::{Rename, SystemRename};
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 use mokly_static::assembly::CatalogueAssembler;
-use mokly_static::filesystem::SystemFiles;
+use mokly_static::filesystem::{Files, SystemFiles};
 use mokly_static::fingerprint::{CapturedTree, SourceFingerprints};
-use mokly_static::transaction::{OutputTransactions, Transaction};
+use mokly_static::transaction::{OutputTransactions, Transaction, Transactions};
 
 use crate::terminal::Terminal;
+#[cfg(debug_assertions)]
+use crate::test_faults;
 use crate::{changes_runtime, static_setup, viewer_assets};
 
 pub(super) struct Context {
@@ -55,13 +57,22 @@ pub(super) fn run(
     publication: Option<PublicationInput>,
 ) -> Result<(Artifact, PathBuf), BuildError> {
     context.phases.start(static_build::Phase::Configuration);
+    let source: Arc<dyn SourceTree> = Arc::new(WorkingTree);
+    #[cfg(debug_assertions)]
+    let source = test_faults::tree(source);
     let live: Arc<dyn SourceTree> = Arc::new(CancellableTree {
-        inner: Arc::new(WorkingTree),
+        inner: source,
         cancellation: context.cancellation.clone(),
     });
     let captured = Arc::new(CapturedTree::new(live));
     let tree: Arc<dyn SourceTree> = captured.clone();
-    let files = Arc::new(SystemFiles);
+    let files: Arc<dyn Files> = Arc::new(SystemFiles);
+    let rename: Arc<dyn Rename> = Arc::new(SystemRename);
+    #[cfg(debug_assertions)]
+    let (files, rename) = (test_faults::files(files), test_faults::rename(rename));
+    let transactions: Arc<dyn Transactions> = Arc::new(OutputTransactions { files, rename });
+    #[cfg(debug_assertions)]
+    let transactions = test_faults::transactions(transactions);
     let runtime_roots = env::current_exe()
         .ok()
         .and_then(|path| path.parent().map(Path::to_owned))
@@ -71,10 +82,7 @@ pub(super) fn run(
         .collect();
     let admission: &dyn Admission = &OutputAdmission {
         config: Arc::new(Loader { tree: tree.clone() }),
-        transactions: Arc::new(OutputTransactions {
-            files,
-            rename: Arc::new(SystemRename),
-        }),
+        transactions,
         cancellation: context.cancellation.clone(),
         runtime_roots,
     };
@@ -147,6 +155,8 @@ fn prepare(
             definitions: services.runtime,
         }),
     });
+    #[cfg(debug_assertions)]
+    let render = test_faults::render(render);
     let files = Arc::new(SystemFiles);
     let service: &dyn StaticBuild = &static_build::Builder {
         render,

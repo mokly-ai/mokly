@@ -1,7 +1,7 @@
 //! One owner for one-shot phases, warnings, progress, and durable completion.
 
 use std::io::{self, IsTerminal};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -13,6 +13,7 @@ use mokly_cli::build_output;
 use mokly_cli::changes_output;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::publication::command::BuildReporter;
+use mokly_cli::recovery_output;
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
 use mokly_model::output::artifact::Artifact;
@@ -24,6 +25,7 @@ use crate::phase_format::{duration, frame};
 use crate::terminal::Terminal;
 
 pub(super) struct Lines {
+    cwd: PathBuf,
     style: Style,
     redactor: Arc<Redactor>,
     terminal: Arc<dyn Terminal>,
@@ -40,7 +42,12 @@ struct State {
 }
 
 impl Lines {
-    pub(super) fn new(style: Style, redactor: Arc<Redactor>, terminal: Arc<dyn Terminal>) -> Self {
+    pub(super) fn new(
+        style: Style,
+        redactor: Arc<Redactor>,
+        terminal: Arc<dyn Terminal>,
+        cwd: PathBuf,
+    ) -> Self {
         let state = Arc::new(Mutex::new(State::default()));
         let (stop, receiver) = mpsc::channel();
         let animate = style.mode == Mode::Rich && io::stdout().is_terminal();
@@ -66,6 +73,7 @@ impl Lines {
             None
         };
         Self {
+            cwd,
             style,
             redactor,
             terminal,
@@ -220,7 +228,7 @@ impl BuildReporter for Lines {
     fn build_directory(&self, directory: &Path) {
         self.terminal.stdout(&format!(
             "Mokly publish build: {}\n",
-            self.redactor.safe(&directory.to_string_lossy())
+            recovery_output::path(directory, &self.cwd, &self.redactor)
         ));
     }
 }

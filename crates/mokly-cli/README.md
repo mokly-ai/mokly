@@ -90,7 +90,9 @@ documents into the bounded process cache. It reports all render warnings
 before strict-mode failure. `mokly-static` writes the shell, canonical index and details, documents,
 referenced resources, and matching viewer bundle. Relative `--out` paths resolve
 beside the configuration. Output replacement uses exclusive moves and retains
-recovery paths on cleanup failure.
+recovery paths on cleanup failure. Each recovery path has its own detail line
+without a width limit. Paths inside the invocation directory are relative;
+other paths are absolute. Token redaction and control escaping still apply.
 Catalogue counts include variants. Shared-body warnings name
 the parent once. Identity diagnostics keep their location continuation
 lines in both plain and rich output. A diagnostic omits its inner code tag
@@ -151,6 +153,17 @@ HTML, React, and stylesheet edits.
 cargo test -p mokly-cli
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
+
+Process recovery tests use the [debug fault adapters](./src/test_faults/mod.rs).
+`MOKLY_TEST_STATIC_FAULTS` selects injected filesystem failures or signal gates.
+The optional `MOKLY_TEST_STATIC_READY`, `MOKLY_TEST_STATIC_EVENTS`,
+`MOKLY_TEST_STATIC_PREVIOUS`, and `MOKLY_TEST_STATIC_COLUMNS` values provide
+isolated test paths and terminal width. Release builds compile none of these
+adapters or hooks. The compiler probe checks only that the fault module erases
+itself without debug assertions and cannot be referenced in that mode. It does
+not inspect a packed release binary. The signal-session probe creates and drops
+both build and publish signal handlers. Normal source and output operations
+still use their injected trait boundaries.
 
 ### Key Code
 

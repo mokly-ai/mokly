@@ -50,6 +50,7 @@ fn an_empty_replan_restores_the_base_label_and_viewer_urls_are_redacted() {
     ));
     let (stop, _) = mpsc::channel();
     let output = super::Lines {
+        cwd: "/repo".into(),
         style: Style {
             mode: Mode::Rich,
             color: false,
@@ -96,4 +97,54 @@ fn an_empty_replan_restores_the_base_label_and_viewer_urls_are_redacted() {
     let written = lines.lock().unwrap().join("");
     assert!(!written.contains("private-token"));
     assert!(written.contains("https://example.com/[redacted]"));
+}
+
+#[test]
+fn rich_publication_receipts_style_zero_one_two_counts_and_leave_urls_unstyled() {
+    let written = Arc::new(Mutex::new(Vec::new()));
+    let capture = written.clone();
+    let terminal = Arc::new(Unimock::new(
+        TerminalMock::stdout
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, text| {
+                capture.lock().unwrap().push(text.to_owned())
+            })),
+    ));
+    let (stop, _) = mpsc::channel();
+    let output = super::Lines {
+        cwd: "/repo".into(),
+        style: Style {
+            mode: Mode::Rich,
+            color: true,
+            ascii: false,
+            columns: 200,
+        },
+        redactor: Arc::new(Redactor::default()),
+        terminal,
+        state: Arc::new(Mutex::new(super::State::default())),
+        stop,
+        timer: Mutex::new(None),
+        animate: false,
+    };
+    for count in 0..=2 {
+        output.published(
+            &Receipt {
+                uploaded: count,
+                unchanged: 9 - count,
+                completion: Completion {
+                    outcome: Outcome::Published,
+                    viewer_url: Some("https://example.com/catalogue".into()),
+                },
+            },
+            Duration::from_millis(1500),
+        );
+    }
+    let text = written.lock().unwrap().join("");
+    for line in text.lines().filter(|line| line.contains("https://")) {
+        assert_eq!(line, "https://example.com/catalogue");
+    }
+    assert!(text.contains("0 files uploaded"));
+    assert!(text.contains("1 file uploaded"));
+    assert!(text.contains("2 files uploaded"));
+    insta::assert_snapshot!(text);
 }
