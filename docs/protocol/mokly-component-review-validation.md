@@ -28,7 +28,14 @@ owner requires kept matches on that component's or variant's own pages. The
 excludes unrendered source paths and declared paths. Source validation accepts
 a `dependency` reason only when a view of that entry carries a rule or
 resource record owned by the entry for that path; a reachable path alone never
-justifies a reason. It uses the recorded classifier evidence, never the
+justifies a reason. A component parent's non-CSS dependency can instead use
+recorded consumer-view proof at a paired instance with unchanged props and
+supplied slot content. That proof retains the exact instance, view, side,
+referring route, written URL, and resolved target. Inline rules use their
+containing public document route and recorded containment proof.
+An `implementation` reason requires the corresponding actual-instance render
+proof. These reasons never alter the component's own view states.
+Validation uses the recorded classifier evidence, never the
 result's own rows or a fresh path match. Source keys use kind and path,
 flattened variants included; a moved entry uses its current path.
 
@@ -50,7 +57,8 @@ Neither a subset nor the set of every changed component is sufficient:
 variant or control metadata edits can be direct changes without
 implementation impact, and a wrapper-only or unresolved entry reason has no
 component impact unless another rule proves a kept own-root match. The CSS
-impact set is never built from consumer-instance matches. Every
+impact set is never built from consumer-instance matches. An included variant with proven render, resource, or CSS impact permits its
+parent identity in affected evidence without a parent Changes row. Every
 classification path performs this validation before it returns a result.
 
 The [selected comparison](./mokly-selected-comparisons.md) of Serve projects

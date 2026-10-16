@@ -51,6 +51,17 @@ trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
 
+`RenderGeneration::comparison_document` composes the same tree before closure
+validation. Both sides require complete, valid closures. A missing referenced
+head resource is `build-invalid`. `resource_bytes` reads confined public routes
+without granting access to private sources or retaining assets in the private
+source snapshot. `resource_digest` hashes opaque resources through a bounded
+stream. Planning prefetches known resource paths for the whole generation and
+retains only digests and reference edges. Closure checks opaque resources by
+confined file identity; HTML and CSS inputs are read for their child references.
+Closure evidence retains exact logical instance and referring
+edge context for comparison proof.
+
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
 It stops at declared catalogue documents. The working-tree adapter implements

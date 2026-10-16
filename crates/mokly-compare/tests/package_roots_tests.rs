@@ -131,7 +131,6 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
             repository,
             cache: cache.clone(),
             files: 10000,
-            blob_bytes: 1024 * 1024,
         };
         let sources = mokly_compare::extraction::Extraction::acquire(&extraction, &commit).unwrap();
         let tiers: &dyn Dependencies = &DependencyTiers {
@@ -147,6 +146,8 @@ fn frontend_installs_with_or_without_an_independent_root_install() {
                 base,
                 head: Default::default(),
                 source_root: sources.directory,
+                unmapped_directories: vec![],
+                used_directories: Vec::new(),
                 source_identity: commit.to_string(),
                 head_root: root,
                 configuration: RepoPath::parse("mokly.config.json").unwrap(),

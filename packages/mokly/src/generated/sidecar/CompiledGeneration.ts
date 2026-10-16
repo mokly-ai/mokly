@@ -3,6 +3,10 @@
 // prettier-ignore
 export type CompiledGeneration = {
 /**
+ * Dependency lookup provenance retained across restored worker generations.
+ */
+unmappedDependencyDirectories?: Array<string>,
+/**
  * Compilation identity before evaluation settings.
  */
 identity: string,

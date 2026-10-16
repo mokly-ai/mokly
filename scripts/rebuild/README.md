@@ -5,6 +5,7 @@
 ```bash
 node scripts/rebuild/behaviour-table.mjs /absolute/scenario
 node scripts/rebuild/behaviour-table.mjs /absolute/scenario /absolute/table.json
+node scripts/rebuild/behaviour-table.mjs /absolute/rust-scenario --adapter=rust
 ```
 
 The default output is `behaviour-table.json` inside the scenario directory.
@@ -17,8 +18,9 @@ object keys use code-unit order.
 `behaviourTable(input, adapter)` accepts an explicit adapter. The adapter
 returns the neutral `BehaviourRecords` type in `behaviour-table.d.mts`.
 `adaptLegacyScenario` reads catalogue v6, review v7, export ownership v3,
-and captured closures. A later adapter can read the Rust formats.
-`readScenario` loads the legacy capture files. Missing files produce empty
+and captured closures. `adaptRustScenario` reads index v7, detail v1, and review v8.
+`readScenario` loads the legacy capture files. `readRustScenario` also loads
+`entry-details.json`, the array of separately captured detail records. Missing files produce empty
 sets and false `availability` fields. Invalid JSON and unsupported versions
 fail with an error.
 

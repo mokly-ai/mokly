@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use mokly_model::axes::EntryKind;
 
-use crate::build::BuildSummary;
+use crate::build::{BuildChanges, BuildSummary};
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 use crate::serve_output::{
@@ -69,6 +69,7 @@ fn ready_layouts_and_shortcuts_follow_the_terminal_contract() {
 #[test]
 fn ready_durations_and_unavailable_reason_have_bounded_styled_rows() {
     let summary = BuildSummary {
+        changes: BuildChanges::Disabled,
         documents: 0,
         counts: BTreeMap::from([
             (EntryKind::Screen, 96),

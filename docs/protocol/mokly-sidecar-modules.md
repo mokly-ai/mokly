@@ -38,6 +38,16 @@ use their resolved logical names. The binary watches source files, hashes
 dependency inputs, and reads stylesheet order from these edges under the
 [imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
 
+`bundle` and `processCss` results can include `unmappedDependencyDirectories`:
+used repository-relative `node_modules` directories whose importer lookup the
+base cannot preserve. Missing data means an empty list. Lookup observation
+retains package-directory links as well as canonical module paths. It covers
+nested workspace installations and a configuration copy that would shadow an
+outside importer's selected package. The core uses these records only for
+[dependency fallback](./mokly-base-preparation.md#installation-and-bundle-settings).
+They do not enter the catalogue source inventory. The compiled recipe retains
+this lookup provenance so worker restoration and evaluation reuse preserve it.
+
 ## Authoring And Evaluation
 
 Repository-owned imports of `@mokly/mokly` receive the attributed authoring

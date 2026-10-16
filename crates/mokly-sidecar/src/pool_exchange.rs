@@ -73,23 +73,7 @@ impl SidecarPool for Pool {
             }
             break;
         }
-        if let Some(current) = slot.as_ref() {
-            let memory = current.worker.resident_bytes();
-            if current.renders >= 500 || matches!(memory, Ok(bytes) if bytes > 1024 * 1024 * 1024) {
-                let drained = current.control.shutdown().and_then(|()| {
-                    current
-                        .control
-                        .finish(self.clock.now_ms().saturating_add(2_000))
-                });
-                if let Err(error) = drained {
-                    tracing::warn!(%error, "sidecar recycle shutdown failed");
-                    if let Err(error) = current.control.kill() {
-                        tracing::warn!(%error, "sidecar recycle kill failed");
-                    }
-                }
-                slot = None;
-            }
-        }
+        self.recycle(index, &mut slot)?;
         let cancelled = self.lock()?.stopped;
         self.release(index, slot)?;
         if matches!(outcome, Err(Error::Crashed)) {

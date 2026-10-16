@@ -94,7 +94,7 @@ pub fn catalogue(style: &Style, summary: &BuildSummary, elapsed: Duration) -> St
         ..style.clone()
     };
     let line = columns(
-        build_output::summary(&full, summary).trim_end(),
+        build_output::catalogue_summary(&full, summary).trim_end(),
         &duration(elapsed),
         style.columns,
     );

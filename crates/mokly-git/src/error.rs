@@ -62,6 +62,14 @@ pub enum Error {
         /// Maximum metadata entries.
         limit: usize,
     },
+    /// One source object cannot fit its byte or framed batch budget.
+    #[error("[mokly-git/read] {path}: source bytes exceed {limit} bytes")]
+    BlobLimit {
+        /// Exact repository-relative file.
+        path: String,
+        /// Maximum byte budget.
+        limit: usize,
+    },
     /// A blob or archive exceeds its byte budget.
     #[error("[mokly-git/read] source bytes exceed {limit} bytes")]
     ByteLimit {
@@ -146,5 +154,21 @@ impl<T> IoResult<T> for io::Result<T> {
             Ok(value) => Ok(value),
             Err(source) => Err(Error::Internal(InternalError::Io { source })),
         }
+    }
+}
+
+impl Error {
+    /// Whether a bounded operation ran out of its configured capacity.
+    pub fn is_limit(&self) -> bool {
+        matches!(
+            self,
+            Self::FileCount { .. }
+                | Self::NodeCount { .. }
+                | Self::ByteLimit { .. }
+                | Self::BlobLimit { .. }
+                | Self::InputLimit { .. }
+                | Self::OutputLimit { .. }
+                | Self::ArgumentLimit { .. }
+        )
     }
 }

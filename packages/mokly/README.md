@@ -84,7 +84,8 @@ byte limit. Oversized compiled recipes report their size and that limit as
 so a blocked render cannot leave a sidecar behind. Requests run in order. Consumer logs go to standard error.
 
 `bundle` compiles an unevaluated esbuild generation and reports its immutable
-compiled recipe for replay. Evaluation-only changes reuse that compilation across slots and recycling.
+compiled recipe for replay. The recipe keeps dependency-lookup provenance
+for fallback diagnostics after restoration. Evaluation-only changes reuse that compilation across slots and recycling.
 Resolution stamps include ancestor manifests, tsconfig candidates, and directory
 membership. Failed peer resolutions remain failures during replay.
 `restoreGeneration` installs retained code in a new sidecar without reading
@@ -110,7 +111,10 @@ Bundle diagnostics use the compiler's source coordinates and reason without
 its framing text. Runtime style adapters follow consumer package aliases,
 including `react-native` mapped to `react-native-web`. Portable stories use the
 consumer's `@storybook/react` annotations and decorators. PostCSS runs in a
-worker with consumer plugin packages kept unbundled. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
+child process in the side's source root, with consumer plugins unbundled.
+A child watchdog stops even a blocked plugin after its sidecar dies.
+Operation events count each fork and its terminal event once.
+The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 
 ## Development
@@ -126,7 +130,7 @@ cargo test -p mokly-sidecar
 The package `prepack` builds the viewer before the authoring declarations.
 Release packing creates the viewer archive before the CLI archive.
 The package build emits ESM JavaScript and declarations, the sidecar entry and
-worker, the shim, and packaged Markdown. Each build clears stale package
+PostCSS child entry, the shim, and packaged Markdown. Each build clears stale package
 output and copied docs first. The package includes the complete guide and
 protocol trees, their public receiver fixtures, and the root changelog history.
 Release Please writes the root `CHANGELOG.md`; the build copies it into the

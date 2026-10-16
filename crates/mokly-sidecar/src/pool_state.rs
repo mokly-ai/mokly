@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use crate::bindings::Bindings;
 use crate::compiled::CompiledGeneration;
+use crate::memory_schedule::MemorySchedule;
 use crate::methods::{Bundle, CssModules};
 use crate::results::Module;
 use crate::workers::{Worker, WorkerControl};
@@ -18,10 +19,12 @@ pub(super) struct Slot {
     pub(super) bindings: BTreeMap<String, Bindings>,
     pub(super) contexts: BTreeSet<String>,
     pub(super) renders: u64,
+    pub(super) requests: u64,
 }
 
 #[derive(Default)]
 pub(super) struct State {
+    pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
     pub(super) available: VecDeque<usize>,
     pub(super) controls: BTreeMap<usize, Arc<dyn WorkerControl>>,

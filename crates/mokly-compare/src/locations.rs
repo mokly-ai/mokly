@@ -1,5 +1,7 @@
 //! OS cache location and a process-scoped terminal announcement.
 
+#[cfg(windows)]
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -27,9 +29,12 @@ impl Locations for SystemLocations {
         let Some(base) = BaseDirs::new() else {
             return Err(Error::UnsafeCache { path: repository });
         };
+        #[cfg(windows)]
+        let local = env::var_os("LOCALAPPDATA").map(PathBuf::from);
+        #[cfg(not(windows))]
+        let local: Option<PathBuf> = None;
         let directory = project_cache_root(
-            &base
-                .cache_dir()
+            &cache_directory(base.cache_dir(), local.as_deref())
                 .join("mokly")
                 .join(repository_key(&repository)),
         )?;
@@ -38,6 +43,10 @@ impl Locations for SystemLocations {
         }
         Ok(directory)
     }
+}
+
+fn cache_directory<'a>(default: &'a Path, local: Option<&'a Path>) -> &'a Path {
+    local.filter(|path| path.is_absolute()).unwrap_or(default)
 }
 
 /// Stable key of a canonical repository path, including its exact OS spelling.
@@ -83,3 +92,7 @@ fn project_cache_root(path: &Path) -> Result<PathBuf> {
         Err(source) => Err(InternalError::Io { source }.into()),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/locations_tests.rs"]
+mod locations_tests;

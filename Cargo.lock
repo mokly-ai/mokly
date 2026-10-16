@@ -710,12 +710,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "cssparser"
+version = "0.38.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11119743ad110e8c1bdccd930d7f5c30c99e5fc76a7b63ec9807e84eef0c5f59"
+dependencies = [
+ "cssparser-macros",
+ "dtoa-short",
+ "itoa",
+ "phf 0.14.0",
+ "smallvec",
+]
+
+[[package]]
 name = "cssparser-color"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbaa233e1dcd9c13a5d3e3a8a2c0f5a727bac380398345dbcb31db4597edc86b"
 dependencies = [
- "cssparser",
+ "cssparser 0.37.0",
 ]
 
 [[package]]
@@ -1872,7 +1885,7 @@ dependencies = [
  "ahash 0.8.12",
  "bitflags",
  "const-str",
- "cssparser",
+ "cssparser 0.37.0",
  "cssparser-color",
  "dashmap",
  "data-encoding",
@@ -2059,6 +2072,7 @@ dependencies = [
  "pulldown-cmark",
  "serde",
  "serde_json",
+ "sha2",
  "tempfile",
  "thiserror",
  "tracing",
@@ -2079,6 +2093,7 @@ dependencies = [
  "insta",
  "libc",
  "mokly-catalogue",
+ "mokly-compare",
  "mokly-css",
  "mokly-git",
  "mokly-graph",
@@ -2110,9 +2125,15 @@ name = "mokly-compare"
 version = "0.14.0"
 dependencies = [
  "directories",
+ "mokly-catalogue",
+ "mokly-css",
  "mokly-git",
+ "mokly-graph",
+ "mokly-html",
+ "mokly-model",
  "mokly-platform",
  "mokly-sidecar",
+ "mokly-source-interface",
  "serde",
  "serde_json",
  "sha2",
@@ -2127,11 +2148,15 @@ dependencies = [
 name = "mokly-css"
 version = "0.14.0"
 dependencies = [
- "cssparser",
+ "cssparser 0.37.0",
+ "cssparser 0.38.0",
  "insta",
  "lightningcss",
  "mokly-model",
  "mokly-source-interface",
+ "precomputed-hash",
+ "selectors",
+ "serde",
  "serde_json",
  "thiserror",
  "tracing",
@@ -2143,6 +2168,7 @@ name = "mokly-git"
 version = "0.14.0"
 dependencies = [
  "mokly-platform",
+ "sha2",
  "tempfile",
  "thiserror",
  "tracing",
@@ -2317,6 +2343,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sysinfo",
+ "tempfile",
  "thiserror",
  "tracing",
  "ts-rs",
@@ -2822,7 +2849,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d05f71e01edca03d245ab0a9f7ce13a974ceb79baaae8faf2ba0b11de6b90913"
 dependencies = [
  "bitflags",
- "cssparser",
+ "cssparser 0.37.0",
  "log",
  "phf 0.11.3",
  "phf_codegen 0.11.3",
@@ -3639,6 +3666,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "selectors"
+version = "0.41.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8322aebea94a6cc288ff884e8a49bdbceef60206c400c6c46d22e62fc4fd91a6"
+dependencies = [
+ "bitflags",
+ "cssparser 0.38.0",
+ "derive_more",
+ "log",
+ "new_debug_unreachable",
+ "precomputed-hash",
+ "rustc-hash",
+ "servo_arc",
+ "smallvec",
+]
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3716,6 +3760,15 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "servo_arc"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4eceb519ec34d8290aaf6e46f435102f2bfa63f22b05a144fb16ab266d3b198"
+dependencies = [
+ "stable_deref_trait",
 ]
 
 [[package]]

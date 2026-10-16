@@ -20,19 +20,23 @@ catalogue decisions, caching, invalidation, comparison, and output.
   `MOKLY_SIDECARS` accept any positive integer and override that default;
   the option takes precedence over the variable. A catalogue that needs no
   JavaScript starts none.
-- The binary's first request is `hello`. The sidecar's first frame is the
-  matching hello response with its package version. The binary rejects a
-  version other than its own with `sidecar-version` before other traffic.
-- A sidecar is recycled after 500 renders or when its resident set passes
-  1 GiB, whichever comes first. Recycling waits for in-flight requests, then
-  replaces the process. Loaded generations are reloaded on demand.
-- On `shutdown` the sidecar finishes in-flight requests, then exits. The binary
-  terminates a sidecar that has not exited two seconds later.
+- The first request is `hello`; the sidecar's first frame is its matching hello
+  response with the package version. Reject a mismatch with `sidecar-version`
+  before other traffic.
+- Recycle after 500 renders or over 1 GiB of resident memory across the sidecar
+  and its Node descendants. Exclude native helpers when its executable is known.
+  Allow one request per fresh worker. After a memory recycle, double completed
+  requests before the replacement's first memory check, capped at 500. Reset
+  after a sample at or below the bound. Report one line per pressure episode
+  when a replacement's first check is still over the bound. Finish in-flight
+  work before recycling. Reload generations on demand; see [memory sampling](./mokly-sidecar-memory.md).
+- `shutdown` drains in-flight work; the binary kills survivors after two seconds.
 
 A sidecar never outlives its binary. Linux spawns set `PR_SET_PDEATHSIG` to
 `SIGKILL` from a persistent launch thread and check for an earlier parent exit.
 On every platform a separate watchdog thread owns the parent pipe and checks
 parent identity. Pipe closure or parent death terminates even a blocked render.
+PostCSS children use the same protection, including on the historical side.
 
 ## Transport
 
@@ -72,6 +76,8 @@ The [render records contract](./mokly-sidecar-render-records.md) defines the
 render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
 
 ## Definitions
+
+The core serializes description across clones of one runtime.
 
 `describe` returns every exported definition with its handle and a
 `diagnostics` list and generation warnings. The [definition transport](./mokly-sidecar-definitions.md)
@@ -193,16 +199,16 @@ excluded with the `props-not-data` warning of the
 
 ## Consumer PostCSS
 
-`processCss` runs the consumer's PostCSS module in a worker inside the sidecar
-with the explicit core-chosen `context`, `sourceRoot`, `repositoryRoots`, and `moduleResolution`.
-`sourcePath` is a logical repository or dependency path. The worker resolves
+`processCss` runs consumer PostCSS in an owned child process with `sourceRoot` as its working directory.
+The core uses a process-wide context sequence and selects `repositoryRoots` and `moduleResolution`.
+`sourcePath` is a logical repository or dependency path. The child resolves
 it against `sourceRoot` or the selected dependency root before setting PostCSS
-`from`. Request labels keep the logical path. Workers are keyed by context and module. Each context has fresh local and
+`from`. Request labels keep the logical path. Children are keyed by context and module. Each context has fresh local and
 package module state and fixed source and resolution inputs. `disposeContext`
-releases only that context; bundle creation and disposal do not reset it.
+kills and reaps only that context's process; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
 releases disposed contexts before that process takes more work. The result
-contains transformed text and plugin-reported dependencies for watching.
+contains transformed text, resolved packages, and plugin dependencies for watching.
 The fragment key includes the class-map table digest. A changed map uses a
 new evaluation digest. The core retains the old generation until its final
 graph or request releases it. CSS text alone invalidates stylesheet nodes.
@@ -234,14 +240,11 @@ JavaScript nor PostCSS never start a sidecar or fail for these reasons.
 
 ## Security
 
-The sidecar runs consumer code with the same trust as the consumer's own build.
-It receives the environment unchanged. Installing a base commit's dependencies for the comparison contract's second
-tier runs the package manager with lifecycle scripts disabled and a time limit,
-so no consumer script executes at install time.
+The sidecar runs consumer code with the consumer build's trust and inherits its environment.
+Each PostCSS child puts selected dependency directories before inherited `NODE_PATH` entries. Base dependency installation
+disables lifecycle scripts and has a time limit, so no consumer script runs at install time.
 
 ## Related Docs
 
-- [Entry props and variants](./mokly-entry-props.md)
-- [Rust core architecture](../architecture/rust-core.md)
-- [HTML screens](./mokly-html-screens.md)
-- [Rendering and document assembly](./mokly-rendering.md)
+- [Entry props and variants](./mokly-entry-props.md), [Rust core architecture](../architecture/rust-core.md)
+- [HTML screens](./mokly-html-screens.md), [Rendering and document assembly](./mokly-rendering.md)

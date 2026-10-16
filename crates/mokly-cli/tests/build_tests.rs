@@ -1,4 +1,4 @@
-//! HTML builds need no Node process; JavaScript fails closed when Node is absent.
+//! The CLI builds mixed catalogues, supports disabled Changes, and fails closed without Node.
 
 use std::fs;
 use std::path::Path;

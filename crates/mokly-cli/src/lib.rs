@@ -6,6 +6,7 @@ pub mod build;
 pub mod build_output;
 pub mod cancellation;
 pub mod cancelled_work;
+pub mod changes_output;
 pub mod codes;
 pub mod errors;
 pub mod grammar;
@@ -23,6 +24,10 @@ pub mod serve_output;
 pub mod serve_settings;
 pub mod version;
 
+mod changes_diagnostics;
+
+mod build_changes;
+mod changes_policy;
 pub mod static_build;
 pub mod watch_output;
 
@@ -34,4 +39,5 @@ pub mod static_admission;
 
 pub mod publication_signals;
 
+mod build_prepare;
 pub mod watch_diagnostics;

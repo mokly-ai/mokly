@@ -61,6 +61,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::new(),
             renders: 0,
+            requests: 1,
         }));
         state.available.push_back(0);
         state.bundles.insert(
@@ -114,7 +115,7 @@ fn maps_installed_on_another_worker_are_replayed_before_describe() {
 #[test]
 fn render_reload_gives_bundle_and_evaluation_their_own_deadlines() {
     let worker = Unimock::new((
-        WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Bundle(_)) && *deadline == 120_000)).returns(Ok(MethodResult::Bundle(results::Bundle { epoch: 0, compiled: None, generation: "g".into(), modules: Vec::new(), warnings: Vec::new() }))),
+        WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Bundle(_)) && *deadline == 120_000)).returns(Ok(MethodResult::Bundle(results::Bundle { unmapped_dependency_directories: None, epoch: 0, compiled: None, generation: "g".into(), modules: Vec::new(), warnings: Vec::new() }))),
         WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::CssModules(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Empty)),
         WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Describe(_)) && *deadline == 120_000)).returns(Ok(definitions())),
         WorkerMock::request.next_call(matching!((request, deadline) if matches!(request.call, Call::Bindings(_)) && *deadline == 30_000)).returns(Ok(MethodResult::Empty)),

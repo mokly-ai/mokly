@@ -68,6 +68,12 @@ pub trait RenderGeneration: GeneratedResources {
     fn catalogue(&self) -> &PreparedCatalogue;
     /// Obtain one document, using the cache or rendering an evicted node again.
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
+    /// Compose comparison material before closure checks, without changing document bytes.
+    fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>>;
+    /// Read a confined resource by its public route. Missing regular targets return None.
+    fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>>;
+    /// Hash a resource with bounded memory; absent resources return None.
+    fn resource_digest(&self, route: &str) -> Result<Option<String>>;
     /// Render complete validated transient props through the same document pipeline.
     /// The caller applies control overrides. The result never changes catalogue state.
     fn render_props(&self, route: &str, props: &Props) -> Result<TemporaryDocument>;

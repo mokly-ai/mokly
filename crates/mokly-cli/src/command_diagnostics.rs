@@ -23,6 +23,12 @@ fn causes(error: &(dyn Error + 'static), redactor: &Redactor) -> String {
     let mut pending = vec![error];
     while let Some(cause) = pending.pop() {
         let combined = match cause.downcast_ref::<BuildError>() {
+            Some(BuildError::Comparison {
+                base_ref, source, ..
+            }) => {
+                pending.push(source.as_ref());
+                Some(format!("Comparison against base {base_ref:?} failed"))
+            }
             Some(BuildError::Shutdown { primary, shutdown }) => {
                 pending.push(shutdown.as_ref());
                 pending.push(primary.as_ref());

@@ -52,6 +52,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::new(),
             renders: 0,
+            requests: 1,
         }));
         state.available.push_back(0);
     }
@@ -60,6 +61,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
 
 fn result() -> MethodResult {
     MethodResult::Css(Css {
+        unmapped_dependency_directories: None,
         text: "success".into(),
         dependencies: Vec::new(),
     })
@@ -91,7 +93,7 @@ fn a_changed_generation_does_not_kill_a_healthy_process() {
     let worker = Unimock::new((
         WorkerMock::request
             .next_call(matching!((request,_) if matches!(request.call,Call::Bundle(_))))
-            .returns(Ok(MethodResult::Bundle(results::Bundle { epoch: 0, compiled: None,
+            .returns(Ok(MethodResult::Bundle(results::Bundle { unmapped_dependency_directories: None, epoch: 0, compiled: None,
                 generation: "changed".into(),
                 modules: Vec::new(),
                 warnings: Vec::new(),

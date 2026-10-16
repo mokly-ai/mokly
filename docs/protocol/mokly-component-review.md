@@ -32,6 +32,10 @@ kinds are:
 - `material` means a canonical-form change of at least one view under the
   [materiality rule](./mokly-comparison.md#materiality) and the
   [instance projection](./mokly-component-changes.md#normalization-and-input-ownership).
+- `implementation` means a render difference proved at an actual paired
+  instance with unchanged props and supplied slot content, when no own or
+  variant view proves that render impact. It is a component-parent reason,
+  not a material change to that parent's own views.
 - `inputs` means caller-owned props of an instance changed; `structure`
   means caller-owned instance identity or order changed, under the same
   projection.
@@ -57,6 +61,9 @@ consumer instance cannot change a component whose own pages keep no match for
 that rule. One view's `excluded` record never cancels another view's
 evidence. Reasons sort by kind, then by `path` or `screenPath`.
 
+Entry reasons determine membership independently of the aggregate view state.
+Actual-instance proof never changes the states of the component's own views.
+
 A view reported `unchanged` or `ignored-only` under the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
 carries no entry-owned record, keeps its `ignoredIds`, and adds no
@@ -64,8 +71,8 @@ implementation-impact or owned-resource evidence. Views omit empty `rules` and
 `resources` lists.
 
 Each affected record groups one changed component and one canonical consumer:
-`changedComponentId`, the component's path, which must name an included entry
-of kind `component`; the consumer's kind and path; and nonempty evidence.
+`changedComponentId`, the component's parent path, whose parent entry or
+included variant entry proves implementation impact on that component; the consumer's kind and path; and nonempty evidence.
 Evidence is built from the union of base and head actual usage, deduplicated.
 A consumer may also be directly changed. Self-impact is not listed. A
 component is affected only through an actual usage path, never because it

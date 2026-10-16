@@ -1,14 +1,17 @@
 //! Shared runtime dependencies injected by the executable composition root.
 
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
+use mokly_catalogue::config::normalize;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::definition_provider::{DefinitionProvider, Definitions};
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::error::{CatalogueError, InternalError};
+use mokly_compare::ancestor_roots;
 use mokly_graph::cache::RenderCache;
 use mokly_graph::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 use mokly_graph::source_snapshot::SourceSnapshot;
@@ -18,6 +21,7 @@ use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::bundle::BundleState;
+use crate::dependency_usage::{DependencyUsage, UsedDependencies};
 use crate::error::Result;
 use crate::graph::JavaScriptGraph;
 use crate::leases::PreparedLease;
@@ -25,6 +29,8 @@ use crate::postcss_cache::CssCache;
 use crate::side::{BaseSide, SideInputs};
 use crate::stylesheet_cache::StylesheetCache;
 use crate::{definitions, side};
+
+static CONTEXT_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Definition and graph factories share one sidecar pool and one fragment cache.
 #[derive(Clone)]
@@ -44,10 +50,12 @@ pub struct Runtime {
     pub version: String,
     /// Base-side leases, absent for a working-tree generation.
     pub base: Option<Arc<BaseSide>>,
+    /// Ancestor dependency directories used by the working generation.
+    pub dependency_usage: Arc<dyn DependencyUsage>,
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
-    pub(crate) sequence: Arc<AtomicU64>,
+    pub(crate) describing: Arc<Mutex<()>>,
     pub(crate) css: Arc<Mutex<CssCache>>,
     pub(crate) bundles: Arc<Mutex<BTreeMap<String, Weak<BundleState>>>>,
 }
@@ -90,10 +98,11 @@ impl Runtime {
             workers,
             version,
             base,
+            dependency_usage: Arc::new(UsedDependencies::default()),
             resources: Arc::new(MemoryResourceInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),
             styles: Arc::new(Mutex::new(StylesheetCache::default())),
-            sequence: Arc::new(AtomicU64::new(0)),
+            describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),
             bundles: Arc::new(Mutex::new(BTreeMap::new())),
         }
@@ -103,16 +112,30 @@ impl Runtime {
         let mut side = side::inputs(
             config,
             self.base.as_ref(),
-            self.sequence.fetch_add(1, Ordering::Relaxed),
+            CONTEXT_SEQUENCE.fetch_add(1, Ordering::Relaxed),
         )?;
         let mut roots = Vec::new();
-        for root in side.dependency_roots {
+        let ancestors = ancestor_roots::directories(&side.configuration_directory);
+        for (original, root) in side.dependency_roots.into_iter().enumerate() {
+            let root = normalize(&root);
             let root = match self.dependency_tree.project(&root) {
                 Ok(Some(node)) => node.identity,
                 _ => root,
             };
-            if !roots.contains(&root) {
+            let index = roots
+                .iter()
+                .position(|candidate| candidate == &root)
+                .unwrap_or(roots.len());
+            if index == roots.len() {
                 roots.push(root);
+            }
+            if let Some(directory) = ancestors.get(original) {
+                let authored = PathBuf::from(directory)
+                    .join("node_modules")
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                side.dependency_aliases
+                    .insert(authored, ancestor_roots::logical(index));
             }
         }
         side.dependency_roots = roots;
@@ -126,6 +149,10 @@ impl DefinitionProvider for Runtime {
         config: &ResolvedConfig,
         files: &[SourceFile],
     ) -> mokly_catalogue::error::Result<Definitions> {
+        let _describing = self
+            .describing
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
         let mut attempt = self.clone();
         attempt.tree = Arc::new(SourceSnapshot::new(self.tree.clone()));
         attempt.dependency_tree = Arc::new(SourceSnapshot::new(self.dependency_tree.clone()));
@@ -149,3 +176,7 @@ impl GraphFactory for Runtime {
         Ok(Arc::new(JavaScriptGraph { runtime }))
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/runtime_tests.rs"]
+mod runtime_tests;

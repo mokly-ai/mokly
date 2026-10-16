@@ -1,5 +1,8 @@
 //! Mokly binary composition root.
 
+mod base_dependencies;
+mod changes_base;
+mod changes_runtime;
 mod command_diagnostics;
 mod entry;
 mod entry_build;
@@ -37,5 +40,6 @@ fn main() -> std::process::ExitCode {
     entry::main()
 }
 
+mod phase_format;
 #[cfg(debug_assertions)]
 mod test_faults;

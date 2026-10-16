@@ -8,7 +8,9 @@ use std::time::{Duration, Instant};
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::diagnostic::Warning;
+use mokly_cli::build::BuildChanges;
 use mokly_cli::build_output;
+use mokly_cli::changes_output;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::publication::command::BuildReporter;
 use mokly_cli::recovery_output;
@@ -19,6 +21,7 @@ use mokly_publish::accounting::{Progress, Receipt};
 use mokly_publish::completion::Outcome;
 use mokly_publish::runtime::Reporter;
 
+use crate::phase_format::{duration, frame};
 use crate::terminal::Terminal;
 
 pub(super) struct Lines {
@@ -180,6 +183,13 @@ impl Phases for Lines {
             format!("{}\n", bounded(&format!("  {label}…"), self.style.columns))
         });
     }
+    fn note(&self, message: &str) {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if self.animate && state.label.is_some() {
+            self.terminal.stdout("\r\x1b[2K");
+        }
+        self.terminal.stdout(message);
+    }
     fn diagnostic(&self, message: &str) {
         let _state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if self.animate {
@@ -192,6 +202,19 @@ impl Phases for Lines {
             message
         };
         self.terminal.stderr(&format!("{text}\n"));
+    }
+    fn changes(&self, changes: &BuildChanges) {
+        self.clear();
+        self.terminal.stderr(&changes_output::diagnostics(
+            &self.style,
+            changes,
+            &self.redactor,
+        ));
+        self.terminal.stdout(&changes_output::summary(
+            &self.style,
+            changes,
+            &self.redactor,
+        ));
     }
     fn warnings(&self, warnings: &[Warning]) {
         if warnings.is_empty() {
@@ -250,30 +273,6 @@ impl Drop for Lines {
         self.clear();
     }
 }
-fn frame(style: &Style, label: &str, index: usize) -> String {
-    let frames = if style.ascii {
-        &["|", "/", "-", "\\"][..]
-    } else {
-        &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"][..]
-    };
-    format!(
-        "\r\x1b[2K{}",
-        bounded(
-            &format!("  {} {label}", frames[index % frames.len()]),
-            style.columns
-        )
-    )
-}
-fn duration(value: Duration) -> String {
-    if value.as_secs() == 0 {
-        format!("{}ms", value.as_micros().saturating_add(500) / 1_000)
-    } else if value.as_secs() < 60 {
-        format!("{:.1}s", value.as_secs_f64())
-    } else {
-        format!("{}m {:02}s", value.as_secs() / 60, value.as_secs() % 60)
-    }
-}
-
 #[cfg(test)]
 #[path = "_tests_/one_shot_tests.rs"]
 mod one_shot_tests;

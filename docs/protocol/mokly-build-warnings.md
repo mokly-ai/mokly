@@ -108,6 +108,11 @@ Each command reports the diagnostics of exactly one build or attempt:
 | `publish` | Its build, before any upload                                                      |
 | `serve`   | Each attempt, once, under [Watched Serve Generations](#watched-serve-generations) |
 
+Base catalogue and composition warnings are not current-build warnings.
+Report and count only base preparation warnings such as `base-dependencies`.
+Collect current-build and base preparation warnings before applying `--strict`,
+so an earlier head warning cannot hide a preparation warning.
+
 Publish applies the [checkout rules](./mokly-upload.md) before it builds. A
 checkout refusal can prevent the build; diagnostics already produced still
 flush. Configuration, registry, and render warnings discovered before a

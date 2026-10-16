@@ -128,7 +128,6 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         repository,
         cache: Arc::clone(&cache),
         files: Limits::default().files,
-        blob_bytes: Limits::default().blob,
     };
     let source = extraction.acquire(&commit).unwrap();
     assert_eq!(
@@ -147,6 +146,8 @@ fn local_dependencies_install_without_network_or_lifecycle_scripts_and_reuse_the
         base,
         head,
         source_root: source.directory.clone(),
+        unmapped_directories: vec![],
+        used_directories: Vec::new(),
         source_identity: commit.as_str().to_owned(),
         head_root: root.clone(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),

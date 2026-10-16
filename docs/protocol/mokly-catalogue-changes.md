@@ -2,6 +2,12 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
+A base commit without the selected configuration file has an empty catalogue.
+Every current entry is added. A malformed configuration or a failed Git read
+keeps its validation or Git failure. A comparison size or command budget
+makes Changes unavailable with a diagnostic naming the path and limit. The
+current build remains usable.
+
 ## Shared Metadata Contract
 
 The catalogue change snapshot v4 pairs the review result v8 of one comparison
@@ -88,7 +94,11 @@ whose current entries and `removedEntries` share a case-folded path, and a
 current entry cannot carry a `removed` comparison state. Only records inside
 `removedEntries` are historical.
 
-Ordinary removed entries sort by kind then path. If a removed variant's
+Ordinary removed entries sort by kind then path. Snapshot decoding rejects
+unknown historical fields, duplicate snapshot identities, invalid parent-title
+placement, and ordering established by the snapshot itself. Complete source
+validation uses both catalogues to verify surviving-parent placement and base
+authored variant order; this order is not inferred from variant path spelling. If a removed variant's
 parent survives, place the removed variant at the position its parent
 occupies in that ordering and keep the base's authored sibling order among
 removed variants. This is the combined parent/variant projection of the
@@ -148,6 +158,8 @@ components, with each variant as its own entry; every selected removed record;
 and every paired moved entry once, counted under `moved` as well. The shell
 shows this count, and the terminal's `Changes ready` line reports the same
 number with the moved count and the `ignored-only` diagnostic count beside it.
+The ignored-only unit is an entry whose aggregate comparison state is
+`ignored-only`; multiple views of that entry count once.
 Instances, affected consumers, source-only edits, and ignored-only views never
 enter the count.
 

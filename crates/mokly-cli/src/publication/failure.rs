@@ -6,6 +6,8 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_static::error::Error;
 
 use crate::build::BuildError;
+use crate::changes_diagnostics;
+use crate::codes::Code;
 
 /// Stable categories preserved through publication.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -43,6 +45,13 @@ impl BuildFailure for BuildError {
     }
     fn category(&self) -> Category {
         match self {
+            BuildError::Comparison { source, .. } => {
+                match changes_diagnostics::failure_code(source) {
+                    Code::GitFailed => Category::GitFailed,
+                    Code::BuildInvalid => Category::BuildInvalid,
+                    _ => Category::ReviewInvalid,
+                }
+            }
             BuildError::Interrupted { .. } => Category::BuildInvalid,
             BuildError::Shutdown { primary, .. } => primary.category(),
             BuildError::Cleanup { .. } => Category::ExportInvalid,

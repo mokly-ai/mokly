@@ -5,6 +5,10 @@ import type { Dependency } from "./Dependency.js";
 // prettier-ignore
 export type CssResult = {
 /**
+ * Used repository dependency directories whose importer lookup is not mapped.
+ */
+unmappedDependencyDirectories?: Array<string>,
+/**
  * Transformed stylesheet text.
  */
 text: string,

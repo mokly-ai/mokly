@@ -29,6 +29,7 @@ impl ProcessCounts {
         (observed, release)
     }
 
+    /// Keep the next sampled worker above the bound until it is replaced.
     pub(super) fn recycle_next(&self) {
         self.recycle.store(true, Ordering::SeqCst);
     }
@@ -102,6 +103,7 @@ impl WorkerFactory for CountedFactory {
                 inner: spawned.worker,
                 counts: self.counts.clone(),
                 index,
+                forced_pressure: AtomicBool::new(false),
             }),
             control: spawned.control,
         })
@@ -112,9 +114,13 @@ struct CountedWorker {
     inner: Box<dyn Worker>,
     counts: Arc<ProcessCounts>,
     index: usize,
+    forced_pressure: AtomicBool,
 }
 
 impl Worker for CountedWorker {
+    fn memory_pressure(&self) {
+        self.inner.memory_pressure();
+    }
     fn handshake(&mut self, deadline_ms: u64) -> Result<()> {
         self.counts.hellos.lock().unwrap()[self.index] += 1;
         self.inner.handshake(deadline_ms)
@@ -129,6 +135,9 @@ impl Worker for CountedWorker {
     }
     fn resident_bytes(&self) -> Result<u64> {
         if self.counts.recycle.swap(false, Ordering::SeqCst) {
+            self.forced_pressure.store(true, Ordering::SeqCst);
+        }
+        if self.forced_pressure.load(Ordering::SeqCst) {
             return Ok(1024 * 1024 * 1024 + 1);
         }
         self.inner.resident_bytes()

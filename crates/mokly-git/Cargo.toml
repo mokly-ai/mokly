@@ -7,6 +7,7 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+sha2 = "0.11.1"
 thiserror = "2.0.21"
 tracing = "0.1.44"
 unimock = { version = "0.6.8", optional = true }

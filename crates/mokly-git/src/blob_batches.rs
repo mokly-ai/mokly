@@ -26,7 +26,10 @@ pub(crate) fn split(entries: &[Entry], bytes: usize, count: usize) -> Result<Vec
     for (index, entry) in entries.iter().enumerate() {
         let cost = cost(entry);
         if cost > bytes {
-            return Err(Error::ByteLimit { limit: bytes });
+            return Err(Error::BlobLimit {
+                path: entry.path.to_string(),
+                limit: bytes,
+            });
         }
         if index - start == count || used.saturating_add(cost) > bytes {
             result.push(start..index);

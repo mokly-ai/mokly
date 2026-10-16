@@ -1,0 +1,112 @@
+//! Adapt composed ownership annotations to the pure CSS document arena.
+
+use std::collections::BTreeMap;
+
+use mokly_css::match_tree::{Containment, MatchElement, MatchTree};
+use mokly_html::tree::{Node, RegionKind};
+use mokly_model::evidence::EvidenceOwner;
+use mokly_model::usage::ComponentInputOwner;
+
+use crate::material::{instances, mapped};
+
+pub(crate) fn document(nodes: &[Node], paths: &BTreeMap<String, String>) -> MatchTree {
+    let mut tree = MatchTree::default();
+    let instances = instances(nodes, paths);
+    let mut context = Context {
+        tree: &mut tree,
+        instances: &instances,
+        paths,
+    };
+    context.walk(nodes, None, &[], &EvidenceOwner::Entry);
+    tree
+}
+
+pub(crate) fn embedded(
+    nodes: &[Node],
+    regions: &[Containment],
+    owner: &EvidenceOwner,
+) -> MatchTree {
+    let mut tree = MatchTree::default();
+    Context {
+        tree: &mut tree,
+        instances: &BTreeMap::new(),
+        paths: &BTreeMap::new(),
+    }
+    .walk(nodes, None, regions, owner);
+    tree
+}
+
+struct Context<'a> {
+    tree: &'a mut MatchTree,
+    instances: &'a BTreeMap<String, String>,
+    paths: &'a BTreeMap<String, String>,
+}
+
+impl Context<'_> {
+    fn walk(
+        &mut self,
+        nodes: &[Node],
+        parent: Option<usize>,
+        regions: &[Containment],
+        owner: &EvidenceOwner,
+    ) {
+        for node in nodes {
+            match node {
+                Node::Region { region, children } => {
+                    let mut regions = regions.to_vec();
+                    let owner = match &region.kind {
+                        RegionKind::Ignore { .. } => continue,
+                        RegionKind::Root { path } | RegionKind::Instance { path, .. } => {
+                            let path = mapped(path, self.paths);
+                            regions.push(Containment {
+                                path: path.clone(),
+                                root: matches!(region.kind, RegionKind::Root { .. }),
+                            });
+                            EvidenceOwner::Component { path }
+                        }
+                        RegionKind::Slot {
+                            owner: ComponentInputOwner::Instance { instance_key },
+                            ..
+                        } => self
+                            .instances
+                            .get(instance_key)
+                            .map_or(EvidenceOwner::Entry, |path| EvidenceOwner::Component {
+                                path: path.clone(),
+                            }),
+                        RegionKind::Slot { .. } => EvidenceOwner::Entry,
+                    };
+                    self.walk(children, parent, &regions, &owner);
+                }
+                Node::Element(element) => {
+                    let index = self.tree.elements.len();
+                    self.tree.elements.push(MatchElement {
+                        name: element.name.clone(),
+                        namespace: element.namespace.clone(),
+                        attributes: element
+                            .attributes
+                            .iter()
+                            .map(|attribute| (attribute.name.clone(), attribute.value.clone()))
+                            .collect(),
+                        parent,
+                        children: Vec::new(),
+                        text: false,
+                        regions: regions.to_vec(),
+                        owner: owner.clone(),
+                    });
+                    if let Some(parent) = parent {
+                        self.tree.elements[parent].children.push(index);
+                    }
+                    if element.name != "template" {
+                        self.walk(&element.children, Some(index), regions, owner);
+                    }
+                }
+                Node::Text(text) if !text.is_empty() => {
+                    if let Some(parent) = parent {
+                        self.tree.elements[parent].text = true;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+}

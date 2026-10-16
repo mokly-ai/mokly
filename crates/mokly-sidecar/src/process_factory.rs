@@ -2,7 +2,7 @@
 
 use std::fs;
 use std::process::{Command, Stdio};
-use std::sync::atomic::AtomicU64;
+use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
@@ -14,7 +14,7 @@ use crate::pool_options::Launch;
 use crate::process_clock::Wait;
 use crate::process_control::ProcessControl;
 use crate::process_io::{Reaper, read_diagnostics, read_frames, write_frames};
-use crate::process_memory::ResidentMemory;
+use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
 use crate::process_transport::{Deadlines, PipeTransport};
 use crate::process_worker::{ForwardEvents, ProcessWorker};
@@ -26,7 +26,7 @@ pub struct NodeFactory {
     groups: Arc<dyn ProcessGroups>,
     clock: Arc<dyn Wait>,
     diagnostics: Arc<dyn Diagnostics>,
-    memory: Arc<dyn ResidentMemory>,
+    memory: Arc<dyn MemoryFactory>,
 }
 
 impl NodeFactory {
@@ -35,7 +35,7 @@ impl NodeFactory {
         groups: Arc<dyn ProcessGroups>,
         clock: Arc<dyn Wait>,
         diagnostics: Arc<dyn Diagnostics>,
-        memory: Arc<dyn ResidentMemory>,
+        memory: Arc<dyn MemoryFactory>,
     ) -> Self {
         Self {
             parent: Arc::new(ParentSpawner::default()),
@@ -130,11 +130,12 @@ impl WorkerFactory for NodeFactory {
         );
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
+                diagnostics: self.diagnostics.clone(),
                 client: Box::new(client),
                 clock: Arc::clone(&self.clock),
-                memory: Arc::clone(&self.memory),
+                memory: self.memory.monitor(pid),
+                discover_memory: AtomicBool::new(false),
                 deadlines,
-                pid,
             }),
             control,
         })

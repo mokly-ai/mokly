@@ -110,6 +110,7 @@ fn postcss_cache_charges_results_and_scan_metadata_and_rejects_oversized_retenti
         "large".into(),
         CssRecord {
             result: Css {
+                unmapped_dependency_directories: None,
                 text: "x".repeat(2048),
                 dependencies: Vec::new(),
             },
@@ -121,6 +122,7 @@ fn postcss_cache_charges_results_and_scan_metadata_and_rejects_oversized_retenti
         "small".into(),
         CssRecord {
             result: Css {
+                unmapped_dependency_directories: None,
                 text: "a{}".into(),
                 dependencies: Vec::new(),
             },
@@ -129,4 +131,24 @@ fn postcss_cache_charges_results_and_scan_metadata_and_rejects_oversized_retenti
     );
     assert!(cache.retained_bytes() > 3);
     assert!(cache.retained_bytes() <= cache.limit);
+}
+
+#[test]
+fn unmapped_directory_metadata_is_included_in_the_cache_byte_bound() {
+    let mut cache = CssCache {
+        limit: 1024,
+        ..Default::default()
+    };
+    cache.insert(
+        "metadata".into(),
+        CssRecord {
+            result: Css {
+                text: "a{}".into(),
+                dependencies: vec![],
+                unmapped_dependency_directories: Some(vec!["x".repeat(4096)]),
+            },
+            processed: None,
+        },
+    );
+    assert_eq!(cache.retained_bytes(), 0);
 }

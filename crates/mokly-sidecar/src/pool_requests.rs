@@ -86,6 +86,8 @@ impl Pool {
                                 value.identity == compiled.identity
                                     && value.inputs == compiled.inputs
                                     && value.input_directories == compiled.input_directories
+                                    && value.unmapped_dependency_directories
+                                        == compiled.unmapped_dependency_directories
                             })
                             .cloned()
                             .unwrap_or_else(|| Arc::new(compiled.clone()));

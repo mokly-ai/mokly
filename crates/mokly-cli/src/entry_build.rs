@@ -49,6 +49,8 @@ pub(super) fn run(
         cwd.clone(),
     ));
     let context = Context {
+        style: style.clone(),
+        redactor: redactor.clone(),
         cancellation: interrupts.cancellation.clone(),
         pool: interrupts.pool.clone(),
         phases: lines.clone(),
