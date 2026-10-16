@@ -248,11 +248,13 @@ To check the packed packages against this example:
 npm run package:smoke
 ```
 
-It packs the viewer, the CLI, and the host's native package, installs them
-into a copy of this example outside the repository, opens a React, a design,
-and an HTML screen through the installed `mokly serve` in headless Chrome,
-builds the copy with `--strict`, and opens the same screens in the built site.
-The
+It packs the viewer, the CLI, and the host's native package and installs them
+into a copy of this example outside the repository. It starts the installed
+`mokly serve` in a directory below `mokly.config.json` and opens a React, a
+design, and an HTML screen and a Markdown document in headless Chrome. It
+builds the copy with `--strict` and opens the same entries in the built site.
+Last, it builds the copy again through `npx` with an empty npm cache and no
+Mokly package in the copy. The
 [developer test commands](../../docs/protocol/developer-test-commands.md#packed-consumer-smoke)
 own its rules.
 

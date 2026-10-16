@@ -949,6 +949,7 @@ Example and design catalogue render and visual check: `.context/rust-rebuild/exa
 Design catalogue checks, their mutation proofs, and the packed consumer smoke: `.context/rust-rebuild/m5-example/design-checks/index.md`.
 Review 3 fixes of the design checks and the smoke: `.context/rust-rebuild/m5-example/round8/index.md`.
 Review 4 fixes, the built-site smoke, and its runs on the merged tree: `.context/rust-rebuild/m5-example/round9/index.md`.
+The design links page split and the three packed smoke paths: `.context/rust-rebuild/m5-example/round10/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
@@ -1193,7 +1194,7 @@ Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md
   - [x] Run installed static output after Milestone 12 supplies the writer.
   - [x] Make `npm run package:smoke` require the built site once Milestone 12
         supplies the writer.
-- [ ] Cover the three paths of the previous packed smoke: zero-install
+- [x] Cover the three paths of the previous packed smoke: zero-install
       `npx --package @mokly/mokly mokly` with an empty cache, configuration
       discovery from a nested directory, and a document page through the
       installed CLI.
@@ -1214,6 +1215,9 @@ Static release verification and smoke scope comparison:
 Packed example smoke with the built site on the merged tree:
 `.context/rust-rebuild/m5-example/round9/package-smoke.log`; it fails when the
 site is absent: `.context/rust-rebuild/m5-example/round9/package-smoke-no-site.log`.
+Packed example smoke with zero-install npx, nested configuration discovery,
+and a document page: `.context/rust-rebuild/m5-example/round10/package-smoke-1.log`;
+its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1309,9 +1313,9 @@ site is absent: `.context/rust-rebuild/m5-example/round9/package-smoke-no-site.l
     renders without caller slot content) is documented; decide option C,
     which lets a component parent supply its own slot content (a contract
     change).
-  - Milestone 8 example port review 2, finding 9: `mokly-design-links.md` sits
-    at its 321-line cap with prose lines over 80 columns; split the page at
-    its next edit.
+  - Milestone 8 example port review 2, finding 9: settled on 2026-10-16. The
+    design links page is three pages within the 250-line limit, its cap is
+    gone, and its retry link opens the exact paragraph.
   - Example visual check (report 6), open findings for the user:
     1. Use-case steps ignore the mobile layout. Severity Medium, effort
        Medium. Recommended: A, the shell shows each step's mobile view in a

@@ -184,13 +184,6 @@ Additional owning groups keep each page at no more than five screens:
   both schemes, so the outer Appearance control moves between its two rendered
   views at the same entry. Existing light-interface entries keep their paths.
 
-Runtime transitions reach the four `design/browse/loading` states, and
-catalogue navigation reaches each of them. An artboard link may open a loading
-state only as a failure state's retry: the two failure states link back to the
-catalogue loading state, and Try again in
-`design/browse/appearance/status/error` opens
-`design/browse/loading/preview-loading`.
-
 `design/browse/views/screen`, `design/browse/views/details-screen` and the whole Welcome
 comparison family — `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,
 `design/changes/diff-controls/overlay-long`, `design/changes/diff-controls/overlay-panel`,
@@ -222,6 +215,15 @@ destinations and the
 boundary between linked states and local runtime controls. Those links are
 mockup navigation, separate from the outer shell that the
 [shell design contract](./mokly-shell-design.md) describes.
+
+## Loading State Retries
+
+Runtime transitions reach the four `design/browse/loading` states, and
+catalogue navigation reaches each of them. An artboard link may open a loading
+state only as a failure state's retry: the two failure states link back to the
+catalogue loading state, and Try again in
+`design/browse/appearance/status/error` opens
+`design/browse/loading/preview-loading`.
 
 ## Depicted Catalogue
 
