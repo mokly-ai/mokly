@@ -1134,11 +1134,15 @@ Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
 - [x] Reconnect the Node agreement and profile-selector tests to the shim's
       gate and tested versions; compare Testbox with the native CI runtime.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
+  - [x] Run the local steps that need no credentials or registry write against
+        a scratch checkout and record the blocked steps.
+  - [ ] Complete the seven-package pack, reuse, and smoke with all native
+        archives from the hosted target builds.
 - [ ] Settle Release Please selection for core-only commits under the
       Milestone 15 review decision.
-- [ ] Run the installed static output and Serve smoke after their integration.
+- [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
-  - [ ] Run installed static output after Milestone 12 supplies the writer.
+  - [x] Run installed static output after Milestone 12 supplies the writer.
 - [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
       can pass; the bumped-copy sidecar tests and version-path regression stay
       required.
@@ -1151,6 +1155,8 @@ and `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 Final release review fixes: `.context/rust-rebuild/delegation/m13/report-3.md`.
 Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
+Static release verification and smoke scope comparison:
+`.context/rust-rebuild/delegation/m13/report-5.md`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1194,6 +1200,8 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 13 static verification follow-up: the example branch's packed
+    smoke must check the config-relative output and fail when the site is absent.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
