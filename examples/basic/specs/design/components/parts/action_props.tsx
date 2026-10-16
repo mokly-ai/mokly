@@ -1,4 +1,5 @@
 import { MetaRow } from "../../parts/metadata_row.js";
+import { CONTROLS_COPY } from "../controls/parts/copy.js";
 /** Shared, typed fixture inputs for saved examples and controls designs. */
 export interface ActionProps {
   label: string;
@@ -89,7 +90,9 @@ export function ActionPropValues({ props }: { props: ActionProps }) {
           presentation="props"
         >
           <code>
-            {props[key] === undefined ? "Not set" : JSON.stringify(props[key])}
+            {props[key] === undefined
+              ? CONTROLS_COPY.notSet
+              : JSON.stringify(props[key])}
           </code>
         </MetaRow>
       ))}

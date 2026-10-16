@@ -2,8 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { build } from "esbuild";
-import type { Loader } from "esbuild";
+import type { build, Loader } from "esbuild";
 
 import { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
@@ -13,6 +12,7 @@ import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { bundleDetail } from "./bundle-errors.js";
+import type { VirtualOrigin } from "./bundle-errors.js";
 import { moduleGraph } from "./bundle-graph.js";
 import { SidecarError } from "./errors.js";
 import { ModulePaths } from "./module-paths.js";
@@ -51,16 +51,20 @@ export interface BundleExports {
 
 export async function bundle(
   params: BundleParams,
-  compile: typeof build = build,
+  compile: typeof build,
 ): Promise<{ generation: Generation; result: BundleResult }> {
+  const virtualOrigins = new Map<string, VirtualOrigin>();
+  let sources: ModulePaths | undefined;
   try {
     const runtimeKey = `mokly:runtime:${randomBytes(24).toString("hex")}`;
     params = { ...params, sourceRoot: await fs.realpath(params.sourceRoot) };
     const paths = await ModulePaths.create(params);
+    sources = paths;
     const require = await consumerRequire(params, paths);
     const inputs = {
       files: new Map<string, Uint8Array>(),
       cssModules: new Set<string>(),
+      virtualOrigins,
     };
     const files = [
       ...params.entryFiles,
@@ -211,7 +215,7 @@ export async function bundle(
   } catch (error) {
     throw new SidecarError(
       "bundle-failed",
-      bundleDetail(error, params.sourceRoot),
+      bundleDetail(error, params.sourceRoot, virtualOrigins, sources),
     );
   }
 }

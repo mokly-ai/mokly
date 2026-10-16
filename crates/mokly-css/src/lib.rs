@@ -28,6 +28,9 @@ mod compiler_tests;
 #[path = "_tests_/modules_tests.rs"]
 mod modules_tests;
 #[cfg(test)]
+#[path = "_tests_/resolver_tests.rs"]
+mod resolver_tests;
+#[cfg(test)]
 #[path = "_tests_/syntax_tests.rs"]
 mod syntax_tests;
 

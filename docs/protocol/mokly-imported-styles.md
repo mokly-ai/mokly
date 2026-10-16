@@ -92,6 +92,9 @@ export condition and the `style` main field are not selected by default.
 Every other module resolution setting, including aliases, package roots,
 extensions, and the symlink policy, is shared with the JavaScript graph. The
 stylesheet pass evaluates no consumer JavaScript.
+An aliased `@import` skips relative-file lookup; a plain bare `@import` first
+tries a relative URL from the importing stylesheet's directory, then Node
+package lookup from that directory.
 
 ## Bundling
 

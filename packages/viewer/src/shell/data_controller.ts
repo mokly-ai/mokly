@@ -1,25 +1,28 @@
 /**
  * One shell root's data outside React: the installed index, the details its
- * fences accepted, the publications of the event stream, and the live
- * descriptor. The shell store renders from it; tests drive it with fakes.
+ * fences accepted, the publications of the event stream and of stale renders,
+ * and the live descriptor. The shell store renders from it; tests drive it
+ * with fakes.
  */
 
 import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
 import type { LiveDescriptorV3 } from "../catalogue/types.js";
-import { MoklyVersionError } from "../catalogue/version_error.js";
+import type { MoklyVersionError } from "../catalogue/version_error.js";
 
 import {
   withDetails,
   withIndex,
   type ShellDataSnapshot,
 } from "./data_commit.js";
+import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
+import { staleAwareLiveSource } from "./data_live_transport.js";
 import {
   loadFencedDetail,
   loadRefresh,
   routeKey,
   type DetailOutcome,
 } from "./data_requests.js";
-import type { ShellDataSource } from "./data_source.js";
+import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
 /** What the controller asks of the shell that owns it. */
@@ -46,9 +49,8 @@ export class ShellDataController {
   #connected = false;
   #closeStream: (() => void) | undefined;
   #streamWarned = false;
-  #descriptor: LiveDescriptorV3 | undefined;
-  #descriptorLoad: AbortController | undefined;
-  #descriptorFailed = false;
+  readonly #descriptor: LiveDescriptor;
+  readonly #live: ShellLiveSource | undefined;
   #refreshing: AbortController | undefined;
   #refreshFailed: string | undefined;
 
@@ -60,6 +62,17 @@ export class ShellDataController {
     this.#snapshot = initial;
     this.#source = source;
     this.#host = host;
+    this.#live =
+      source?.live &&
+      staleAwareLiveSource(source.live, (revision) =>
+        this.#refreshStale(revision),
+      );
+    this.#descriptor = new LiveDescriptor(source?.live, {
+      generation: () => this.#snapshot.index.live?.generation,
+      changed: () => this.#changed(),
+      versionError: (error) => host.versionError(error),
+      warn: (message, cause) => host.warn(message, cause),
+    });
   }
 
   get snapshot(): ShellDataSnapshot {
@@ -73,7 +86,14 @@ export class ShellDataController {
 
   /** The descriptor of the installed render generation, while connected. */
   get descriptor(): LiveDescriptorV3 | undefined {
-    return this.#descriptor;
+    return this.#descriptor.installed;
+  }
+
+  /** Live prop editing while the index is live; absent elsewhere. */
+  get editing(): LiveEditingStatus | undefined {
+    return this.#source?.live && this.#snapshot.index.live
+      ? this.#descriptor.status
+      : undefined;
   }
 
   /** The route whose last publication refresh failed. */
@@ -82,8 +102,8 @@ export class ShellDataController {
   }
 
   /** The live transport, present while a descriptor is installed. */
-  get live(): ShellDataSource["live"] {
-    return this.#descriptor ? this.#source?.live : undefined;
+  get live(): ShellLiveSource | undefined {
+    return this.#descriptor.installed ? this.#live : undefined;
   }
 
   /** A counter that changes with every observable change. */
@@ -142,7 +162,7 @@ export class ShellDataController {
     const live = this.#source?.live;
     if (this.#connected || !live || !this.#snapshot.index.live) return () => {};
     this.#connected = true;
-    this.#loadDescriptor();
+    this.#descriptor.load();
     this.#closeStream = live.subscribe({
       message: (revision, deploymentId) => {
         const installed = this.#snapshot.index;
@@ -150,7 +170,7 @@ export class ShellDataController {
           this.#source?.deploymentChanged();
           return;
         }
-        if (this.#descriptorFailed) this.#loadDescriptor();
+        if (this.#descriptor.failed) this.#descriptor.load();
         if (revision > installed.revision) this.#refresh(revision);
       },
       unavailable: () => {
@@ -161,6 +181,11 @@ export class ShellDataController {
     });
     return () => this.#disconnect();
   }
+
+  /** Load the live descriptor again after its load failed. */
+  readonly retryDescriptor = (): void => {
+    if (this.#connected) this.#descriptor.retry();
+  };
 
   /** Refresh the installed revision again after a failed refresh. */
   readonly retryRefresh = (): void => {
@@ -201,7 +226,7 @@ export class ShellDataController {
       this.#connected &&
       next.index.live?.generation !== previous.live?.generation
     )
-      this.#loadDescriptor();
+      this.#descriptor.load();
     this.#host.commit(next);
     this.#changed();
   }
@@ -234,41 +259,15 @@ export class ShellDataController {
     });
   }
 
-  #loadDescriptor(): void {
-    const live = this.#source?.live;
-    const generation = this.#snapshot.index.live?.generation;
-    this.#descriptorLoad?.abort();
-    this.#descriptorLoad = undefined;
-    this.#descriptorFailed = false;
-    if (this.#descriptor) {
-      this.#descriptor = undefined;
-      this.#changed();
-    }
-    if (!live || !generation) return;
-    const controller = new AbortController();
-    this.#descriptorLoad = controller;
-    void live.loadDescriptor(controller.signal).then(
-      (descriptor) => {
-        if (controller.signal.aborted) return;
-        this.#descriptorLoad = undefined;
-        if (descriptor.generation !== this.#snapshot.index.live?.generation) {
-          this.#descriptorFailed = true;
-          return;
-        }
-        this.#descriptor = descriptor;
-        this.#changed();
-      },
-      (error: unknown) => {
-        if (controller.signal.aborted) return;
-        this.#descriptorLoad = undefined;
-        if (error instanceof MoklyVersionError) {
-          this.#host.versionError(error);
-          return;
-        }
-        this.#descriptorFailed = true;
-        this.#host.warn("Live prop editing is unavailable.", error);
-      },
-    );
+  /**
+   * Serve answered a render of the installed revision with 409, so a newer
+   * publication exists. Refresh once, unless a refresh is loading, so the
+   * shell adopts it also while the event stream is down.
+   */
+  #refreshStale(revision: number): void {
+    const installed = this.#snapshot.index.revision;
+    if (!this.#connected || this.#refreshing || revision !== installed) return;
+    this.#refresh(installed + 1);
   }
 
   #disconnect(): void {
@@ -277,12 +276,7 @@ export class ShellDataController {
     this.#closeStream = undefined;
     this.#refreshing?.abort();
     this.#refreshing = undefined;
-    this.#descriptorLoad?.abort();
-    this.#descriptorLoad = undefined;
-    if (this.#descriptor) {
-      this.#descriptor = undefined;
-      this.#changed();
-    }
+    this.#descriptor.stop();
   }
 
   #changed(): void {

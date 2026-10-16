@@ -49,9 +49,9 @@ export const emptyState = defineComponent({
     },
     {
       slug: "missing-route",
-      title: "Missing screen",
+      title: "Missing route",
       props: {
-        title: "Screen not found",
+        title: "Item not found",
         body: "Nothing in the catalogue matches",
         code: "view/unknown/",
         actionLabel: "Go to the catalogue home",
