@@ -5,10 +5,22 @@ import type { ServedCatalogue, ServedView } from "./served_design.js";
 
 const VIEWPORTS = ["mobile", "desktop"] as const;
 
-const named = (view: ServedView, matches: (name: string) => boolean) =>
+const classes = (element: HtmlElement) =>
+  (attribute(element, "class") ?? "").split(/\s+/u);
+
+const named = (
+  view: ServedView,
+  matches: (name: string) => boolean,
+  within: string | undefined,
+) =>
   [...withAncestors(view.document)]
+    .filter(
+      ([element, ancestors]) =>
+        element.tagName === "a" &&
+        (within === undefined ||
+          ancestors.some((node) => classes(node).includes(within))),
+    )
     .map(([element]) => element)
-    .filter((element) => element.tagName === "a")
     .filter((element) => matches(accessibleName(element)));
 
 /** The semantic destinations of each control family, in every listed view. */
@@ -27,7 +39,7 @@ export function expectationViolations(catalogue: ServedCatalogue): string[] {
     );
     if (views.length === 0) violations.push(`${expectation.source}: no view`);
     for (const view of views) {
-      const found = named(view, matches);
+      const found = named(view, matches, expectation.within);
       const name = expectation.name ?? expectation.namePattern;
       const targets = found.map((link) => attribute(link, "data-mokly-link"));
       const wrong =
@@ -41,9 +53,6 @@ export function expectationViolations(catalogue: ServedCatalogue): string[] {
   }
   return violations;
 }
-
-const classes = (element: HtmlElement) =>
-  (attribute(element, "class") ?? "").split(/\s+/u);
 
 const byClass = (view: ServedView, name: string): HtmlElement[] =>
   [...withAncestors(view.document)]

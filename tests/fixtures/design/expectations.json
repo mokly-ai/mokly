@@ -236,6 +236,48 @@
       "target": "design/browse/loading/preview-loading"
     },
     {
+      "source": "design/components/states/removed-consumer",
+      "viewports": ["desktop"],
+      "name": "ActionChanged",
+      "target": "design/components/states/removed"
+    },
+    {
+      "source": "design/components/states/removed-consumer",
+      "viewports": ["mobile"],
+      "name": "Changes 2",
+      "target": "design/components/states/removed"
+    },
+    {
+      "source": "design/components/states/removed-consumer",
+      "within": "ce-preview-pane",
+      "namePattern": "",
+      "target": null
+    },
+    {
+      "source": "design/components/states/shared-impact/style-outside",
+      "viewports": ["desktop"],
+      "name": "ActionChanged",
+      "target": "design/components/states/shared-impact/style-changed"
+    },
+    {
+      "source": "design/components/states/shared-impact/style-outside",
+      "within": "ce-comparison-evidence",
+      "name": "Action",
+      "target": "design/components/states/shared-impact/style-changed"
+    },
+    {
+      "source": "design/components/overview",
+      "within": "ce-variants",
+      "name": "Disabled",
+      "target": "design/components/pages/variants"
+    },
+    {
+      "source": "design/components/overview",
+      "within": "ce-usage-section",
+      "name": "Welcome↗",
+      "target": "design/components/inspection/inspection-details"
+    },
+    {
       "source": "example/screens/welcome",
       "name": "View details",
       "target": "example/screens/details#details"

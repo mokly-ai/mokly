@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-import { after, before, describe, test } from "node:test";
+import test from "node:test";
 
 import type { ComponentInstanceRecord } from "../packages/viewer/src/generated/catalogue/ComponentInstanceRecord.js";
 
 import {
-  bypassViolations,
   inventoryViolations,
   libraryViolations,
   reachabilityViolations,
@@ -21,40 +20,58 @@ import {
   linkViolations,
   scriptViolations,
 } from "./helpers/design_rules.js";
-import { serveExample, type ServedCatalogue } from "./helpers/served_design.js";
+import { bypassViolations } from "./helpers/design_sources.js";
+import { fileFixture } from "./helpers/file_fixture.js";
+import { serveExample } from "./helpers/served_design.js";
 
 // The design catalogue checks of the design component, component library,
 // component design, and design links contracts, over one served example.
+
+/**
+ * One Serve of the example for the file. Teardown drains its process group,
+ * also after a failed setup, and a run that selects no served test starts no
+ * Serve.
+ */
+const served = fileFixture((owner) =>
+  // An expected-state allowance: Serve renders every view of the example.
+  serveExample(owner, AbortSignal.timeout(300_000)),
+);
+/** The first test that reads the catalogue waits for the shared setup. */
+const setup = { timeout: 600_000 };
 
 test("composition outside the library uses the registered components", () => {
   assert.deepEqual(bypassViolations(), []);
 });
 
-describe("the served design catalogue", () => {
-  let catalogue: ServedCatalogue;
-  let close: () => Promise<void>;
-  before(
-    async () => {
-      // An expected-state allowance: Serve renders every view of the example.
-      ({ catalogue, close } = await serveExample(AbortSignal.timeout(300_000)));
-    },
-    { timeout: 600_000 },
-  );
-  after(() => close?.());
+test(
+  "design screens match the frozen inventory in both viewports",
+  setup,
+  async () => {
+    assert.deepEqual(inventoryViolations(await served()), []);
+  },
+);
 
-  test("design screens match the frozen inventory in both viewports", () => {
-    assert.deepEqual(inventoryViolations(catalogue), []);
-  });
+test(
+  "shared components keep their pages, saved variants, and consumers",
+  setup,
+  async () => {
+    assert.deepEqual(libraryViolations(await served()), []);
+  },
+);
 
-  test("shared components keep their pages, saved variants, and consumers", () => {
-    assert.deepEqual(libraryViolations(catalogue), []);
-  });
+test(
+  "each design view records the shared components of its family",
+  setup,
+  async () => {
+    assert.deepEqual(adoptionViolations(await served()), []);
+  },
+);
 
-  test("each design view records the shared components of its family", () => {
-    assert.deepEqual(adoptionViolations(catalogue), []);
-  });
-
-  test("nested and caller-owned instances keep their owner chains", () => {
+test(
+  "nested and caller-owned instances keep their owner chains",
+  setup,
+  async () => {
+    const catalogue = await served();
     const usage = (path: string) =>
       catalogue.details.get(path)!.views.map(({ usage }) => {
         assert.ok(usage.status === "ready", path);
@@ -93,37 +110,61 @@ describe("the served design catalogue", () => {
         assert.ok(frame.slotKey, "a framed step stays in the caller's slot");
       }
     }
-  });
+  },
+);
 
-  test("each view links exactly the stylesheets of the components it renders", () => {
-    assert.deepEqual(componentSheetViolations(catalogue), []);
-  });
+test(
+  "each view links exactly the stylesheets of the components it renders",
+  setup,
+  async () => {
+    assert.deepEqual(componentSheetViolations(await served()), []);
+  },
+);
 
-  test("shared design stylesheets keep their route scopes", () => {
-    assert.deepEqual(scopeViolations(catalogue), []);
-  });
-
-  test("served view documents run no scripts", () => {
-    assert.deepEqual(scriptViolations(catalogue), []);
-  });
-
-  test("every link opens an entry through one portable focus stop", () => {
-    assert.deepEqual(linkViolations(catalogue), []);
-  });
-
-  test("outside the component explorer, no keyboard stop opens nothing", () => {
-    assert.deepEqual(keyboardStopViolations(catalogue), []);
-  });
-
-  test("each control family opens its specified destinations", () => {
-    assert.deepEqual(expectationViolations(catalogue), []);
-  });
-
-  test("Welcome's tag states agree on query, picker, chips, and rows", () => {
-    assert.deepEqual(tagViolations(catalogue), []);
-  });
-
-  test("an artboard link or the catalogue tree reaches every design screen", () => {
-    assert.deepEqual(reachabilityViolations(catalogue), []);
-  });
+test("shared design stylesheets keep their route scopes", setup, async () => {
+  assert.deepEqual(scopeViolations(await served()), []);
 });
+
+test("served view documents run no scripts", setup, async () => {
+  assert.deepEqual(scriptViolations(await served()), []);
+});
+
+test(
+  "every link opens an entry through one portable focus stop",
+  setup,
+  async () => {
+    assert.deepEqual(linkViolations(await served()), []);
+  },
+);
+
+test(
+  "outside the component explorer, no keyboard stop opens nothing",
+  setup,
+  async () => {
+    assert.deepEqual(keyboardStopViolations(await served()), []);
+  },
+);
+
+test(
+  "each control family opens its specified destinations",
+  setup,
+  async () => {
+    assert.deepEqual(expectationViolations(await served()), []);
+  },
+);
+
+test(
+  "Welcome's tag states agree on query, picker, chips, and rows",
+  setup,
+  async () => {
+    assert.deepEqual(tagViolations(await served()), []);
+  },
+);
+
+test(
+  "an artboard link or the catalogue tree reaches every design screen",
+  setup,
+  async () => {
+    assert.deepEqual(reachabilityViolations(await served()), []);
+  },
+);

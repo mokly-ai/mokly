@@ -88,7 +88,7 @@ its feature contract.
 | `design/browse/appearance/workspaces/difference`              | Browse shell › Appearance › Panels and comparisons                   | Difference comparison                                         |
 | `design/browse/appearance/status/home`                        | Browse shell › Appearance › Status and recovery                      | Home guidance with nothing selected                           |
 | `design/browse/appearance/status/loading`                     | Browse shell › Appearance › Status and recovery                      | Catalogue checking for changes                                |
-| `design/browse/appearance/status/error`                       | Browse shell › Appearance › Status and recovery                      | A screen that could not be shown, with another attempt        |
+| `design/browse/appearance/status/error`                       | Browse shell › Appearance › Status and recovery                      | Screen could not be shown; Try again opens `preview-loading`  |
 | `design/browse/appearance/status/unavailable`                 | Browse shell › Appearance › Status and recovery                      | Changes unavailable                                           |
 | `design/browse/appearance/status/flow`                        | Browse shell › Appearance › Status and recovery                      | Use-case steps around light screens                           |
 | `design/browse/loading/catalogue-loading`                     | Browse shell › Loading and recovery                                  | One status line until the catalogue index arrives             |
@@ -184,9 +184,12 @@ Additional owning groups keep each page at no more than five screens:
   both schemes, so the outer Appearance control moves between its two rendered
   views at the same entry. Existing light-interface entries keep their paths.
 
-Runtime transitions, not artboard links, reach the four `design/browse/loading`
-states. Catalogue navigation reaches each of them, and the two failure states
-link back to the loading state.
+Runtime transitions reach the four `design/browse/loading` states, and
+catalogue navigation reaches each of them. An artboard link may open a loading
+state only as a failure state's retry: the two failure states link back to the
+catalogue loading state, and Try again in
+`design/browse/appearance/status/error` opens
+`design/browse/loading/preview-loading`.
 
 `design/browse/views/screen`, `design/browse/views/details-screen` and the whole Welcome
 comparison family — `design/changes/diff-controls/current`, `design/changes/diff-controls/overlay`,

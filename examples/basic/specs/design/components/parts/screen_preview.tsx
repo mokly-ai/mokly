@@ -7,7 +7,6 @@ import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
 import { footerLabelChange } from "./comparison_fixtures.js";
 import { HighlightMask, type InspectionSelection } from "./highlight.js";
 import { ActionExample, ToolbarExample } from "./preview.js";
-import { PreviewScheme } from "./view_controls.js";
 
 export type ScreenPageState =
   | "closed"
@@ -112,20 +111,17 @@ export function ConsumerFrame({
         }
       />
     );
-  return (
-    <>
-      <p className="mbk-frame-label">
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · <PreviewScheme />
-      </p>
-      {viewport === "mobile" ? (
-        <PhoneFrame small>{content}</PhoneFrame>
-      ) : (
-        <BrowserFrame
-          address={`example.test/${state === "consumer" ? "details" : state === "removed-consumer" ? "farewell" : state === "empty" || state === "unavailable" ? "reading-room" : "welcome"}`}
-        >
-          {content}
-        </BrowserFrame>
-      )}
-    </>
+  return viewport === "mobile" ? (
+    <PhoneFrame label="Mobile" scheme small>
+      {content}
+    </PhoneFrame>
+  ) : (
+    <BrowserFrame
+      label="Desktop"
+      scheme
+      address={`example.test/${state === "consumer" ? "details" : state === "removed-consumer" ? "farewell" : state === "empty" || state === "unavailable" ? "reading-room" : "welcome"}`}
+    >
+      {content}
+    </BrowserFrame>
   );
 }

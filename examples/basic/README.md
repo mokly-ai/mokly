@@ -167,12 +167,15 @@ Props tab's controls, and the Read-only and recovery gallery under
 `specs/design/components/controls/limits/` draws the states without editing
 and the recovery states that keep the edits.
 
-`tests/design_catalogue.test.ts` serves this configuration once and checks
-the design catalogue against the verification and adoption sections of those
-contracts: the frozen screen inventory and the link expectations in
-`tests/fixtures/design/`, the shared components each design family records,
-the stylesheets each view links, and every link's destination and focus
-behaviour.
+`tests/design_catalogue.test.ts` serves this configuration once with
+`--base HEAD` and checks the design catalogue against the verification and
+adoption sections of those contracts. `tests/fixtures/design/` holds the frozen
+screen inventory with the screens that only the catalogue tree reaches, the
+family parts of the adoption table, and the link expectations. The test also
+checks the shared components each design screen records, the stylesheets each
+view links, and every link's destination and focus behaviour. A new design
+screen updates the inventory and, when it depicts no part of its family, the
+adoption sets.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),

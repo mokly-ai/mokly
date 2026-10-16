@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { requiredComponents } from "./design_expectations.js";
+import { ADOPTION, requiredComponents } from "./design_expectations.js";
 import { attribute, textContent, type HtmlElement } from "./html.js";
 import {
   viewRoute,
@@ -54,8 +54,8 @@ const label = (view: ServedView) => view.route;
  * a design entry from a design view, through a portable relative href for
  * the same viewport, with the dark file wherever the target renders one; no
  * link nests in or holds another focus stop; no inactive control is a link;
- * and a design link to its own entry outside navigation says that it is the
- * current one.
+ * only an anchor carries a link marker; and a design link to its own entry
+ * says that it is the current page, apart from the top bar's brand link.
  */
 export function linkViolations(catalogue: ServedCatalogue): string[] {
   const visual = new Map(
@@ -74,7 +74,11 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
   const violations: string[] = [];
   for (const view of catalogue.views)
     for (const [element, ancestors] of withAncestors(view.document)) {
-      if (element.tagName !== "a") continue;
+      if (element.tagName !== "a") {
+        if (attribute(element, "data-mokly-link") !== undefined)
+          violations.push(`${label(view)}: a ${element.tagName} link marker`);
+        continue;
+      }
       const target = attribute(element, "data-mokly-link");
       const href = attribute(element, "href");
       const where = `${label(view)}: "${accessibleName(element)}"`;
@@ -113,7 +117,7 @@ export function linkViolations(catalogue: ServedCatalogue): string[] {
         entryPath === view.path &&
         view.path.startsWith("design/") &&
         attribute(element, "aria-current") === undefined &&
-        !ancestors.some((node) => ["nav", "header"].includes(node.tagName))
+        attribute(element, "class") !== "mbk-brand"
       )
         violations.push(`${where} links to its own entry without aria-current`);
     }
@@ -165,7 +169,12 @@ export function scriptViolations(catalogue: ServedCatalogue): string[] {
 
 /** Recorded usage of each design screen view against its family's shared components. */
 export function adoptionViolations(catalogue: ServedCatalogue): string[] {
-  const violations: string[] = [];
+  const screens = new Set(catalogue.index.screens.map((entry) => entry.path));
+  const violations = ADOPTION.parts.flatMap((part) =>
+    [...(part.except ?? []), ...(part.only ?? [])]
+      .filter((path) => !screens.has(path))
+      .map((path) => `${part.component} lists ${path}, which is no screen`),
+  );
   for (const entry of catalogue.index.screens) {
     if (!entry.path.startsWith("design/")) continue;
     for (const view of catalogue.details.get(entry.path)!.views) {

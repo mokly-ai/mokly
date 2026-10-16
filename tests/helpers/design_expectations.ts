@@ -19,13 +19,22 @@ function fixture<T>(name: string): T {
 export interface DesignInventory {
   /** Every design screen path, in order. */
   screens: string[];
-  /** Screens that no other design artboard links to: the catalogue tree opens them. */
-  treeOnly: string[];
+  /**
+   * The states that, by the design links contract, runtime transitions and
+   * the catalogue tree reach: the loading and recovery screens, the editing
+   * preparation states, the Screen props state, and the Read-only and
+   * recovery gallery.
+   */
+  runtimeOnly: string[];
+  /** Other screens that no design artboard links to yet; the tree opens them. */
+  treeReached: string[];
 }
 
 export interface LinkExpectation {
   source: string;
   viewports?: ("mobile" | "desktop")[];
+  /** A class that a matching link sits inside, such as the stage's pane. */
+  within?: string;
   /** The link's accessible name: its `aria-label`, or else its text. */
   name?: string;
   namePattern?: string;
@@ -45,6 +54,25 @@ export interface TagState {
 }
 
 export const INVENTORY = fixture<DesignInventory>("inventory");
+
+/**
+ * A family part of the adoption table: a shared component that every family
+ * screen records except the listed ones, or that only the listed screens
+ * record, because only they depict it.
+ */
+export interface AdoptionPart {
+  family: string;
+  component: string;
+  reason: string;
+  except?: string[];
+  only?: string[];
+}
+
+export const ADOPTION = fixture<{
+  /** Each family's path pattern. */
+  families: Record<string, string>;
+  parts: AdoptionPart[];
+}>("adoption");
 
 export const {
   sharedComponents: SHARED_COMPONENTS,
@@ -87,7 +115,8 @@ const FIELDLESS = new Set([
 /**
  * The shared component ids that one design screen view must record, by the
  * adoption table of the design component library: shared chrome everywhere,
- * plus the status, view, inspector, field, and flow parts of each family.
+ * the status, view, inspector, field, and flow parts of each family, and the
+ * family parts of `adoption.json`.
  */
 export function requiredComponents(
   path: string,
@@ -114,5 +143,13 @@ export function requiredComponents(
     path === "design/browse/appearance/status/flow"
   )
     ids.push("preview/flow-step", "preview/device-frame");
-  return ids.map((id) => `design/library/${id}`);
+  for (const part of ADOPTION.parts)
+    if (
+      part.only
+        ? part.only.includes(path)
+        : new RegExp(ADOPTION.families[part.family]!, "u").test(path) &&
+          !part.except!.includes(path)
+    )
+      ids.push(part.component);
+  return [...new Set(ids)].map((id) => `design/library/${id}`);
 }

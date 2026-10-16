@@ -120,6 +120,16 @@ Components may compose registered children. Top bar → Tag picker → Tag chip
 records the full nested ownership chain. Components supplied in a caller's slot
 retain that caller's ownership.
 
+A design link to the artboard that renders it names the current page with
+`aria-current="page"`. Catalogue rows, the selected highlight region, and an
+action already in effect get the mark from `useCurrentPage` in
+`../parts/design_navigation.tsx`, which compares a destination with the
+nearest `DesignNavigation` artboard. The component explorer's narrow shortcuts
+compare with the artboard that their shell renders. Only the top bar's brand
+link on the home screen opens its own artboard without the mark. The device frame's `scheme` flag adds the rendered scheme to its caption,
+as the component explorer previews show it, so no screen draws its own frame
+caption.
+
 ## Styles And Hosts
 
 `style_files.ts` names each component's public stylesheet,

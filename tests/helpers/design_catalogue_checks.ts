@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import type { CatalogueNode } from "../../packages/viewer/src/generated/catalogue/CatalogueNode.js";
 
 import {
@@ -9,7 +6,6 @@ import {
   SHARED_COMPONENTS,
 } from "./design_expectations.js";
 import { stylesheets, withAncestors } from "./design_rules.js";
-import { repositoryRoot } from "./fixture.js";
 import { attribute } from "./html.js";
 import type { ServedCatalogue } from "./served_design.js";
 
@@ -58,8 +54,32 @@ export function inventoryViolations(catalogue: ServedCatalogue): string[] {
 }
 
 /**
+ * Whether a design screen view of the viewport records the component in its
+ * usage, directly or inside another instance.
+ */
+function consumed(
+  catalogue: ServedCatalogue,
+  component: string,
+  viewport: (typeof VIEWPORTS)[number],
+): boolean {
+  return catalogue.index.screens.some(
+    (screen) =>
+      screen.path.startsWith("design/") &&
+      catalogue.details
+        .get(screen.path)!
+        .views.some(
+          ({ usage, ...view }) =>
+            view.viewport === viewport &&
+            usage.status === "ready" &&
+            usage.instances.some((use) => use.componentId === component),
+        ),
+  );
+}
+
+/**
  * Every shared component has its page, exactly its saved variants in order,
- * and a real design-screen consumer in each viewport, direct or composed.
+ * and a real design-screen consumer in each viewport, direct or composed, by
+ * the recorded usage.
  */
 export function libraryViolations(catalogue: ServedCatalogue): string[] {
   const components = catalogue.index.components;
@@ -80,16 +100,8 @@ export function libraryViolations(catalogue: ServedCatalogue): string[] {
       .map((entry) => entry.path.slice(parent.length + 1));
     if (saved.join() !== variants.join())
       violations.push(`${parent} saves ${saved.join(", ")}`);
-    const workspace = catalogue.details.get(parent)!.workspace;
-    if (!workspace) {
-      violations.push(`${parent} has no proven usage lists`);
-      continue;
-    }
-    const consumers = workspace.usedBy.filter(
-      (use) => !use.entryPath.startsWith(LIBRARY),
-    );
     for (const viewport of VIEWPORTS)
-      if (!consumers.some((use) => use.viewport === viewport))
+      if (!consumed(catalogue, parent, viewport))
         violations.push(`${parent} has no ${viewport} screen consumer`);
   }
   return violations;
@@ -103,8 +115,11 @@ function treeEntries(nodes: readonly CatalogueNode[]): string[] {
 }
 
 /**
- * Each design screen is linked from another design artboard, or is one of
- * the frozen tree-only screens; the catalogue tree lists every one.
+ * Each design screen has an inbound design link, or the catalogue tree
+ * reaches it: the contract's runtime-only states and the frozen screens that
+ * no artboard links yet. The rule is one way, so a listed screen that gains
+ * a link passes. Every listed path names a design screen, and the tree lists
+ * every design screen.
  */
 export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
   const screens = catalogue.index.screens
@@ -114,19 +129,23 @@ export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
   for (const view of catalogue.views)
     if (view.path.startsWith("design/"))
       for (const [element] of withAncestors(view.document)) {
+        if (element.tagName !== "a") continue;
         const target = attribute(element, "data-mokly-link")?.split("#")[0];
         if (target && target !== view.path) inbound.add(target);
       }
+  const listed = [...INVENTORY.runtimeOnly, ...INVENTORY.treeReached];
   const tree = new Set(treeEntries(catalogue.index.tree));
-  return screens.flatMap((screen) => [
-    ...(!inbound.has(screen) && !INVENTORY.treeOnly.includes(screen)
-      ? [`${screen} has no inbound design link`]
-      : []),
-    ...(inbound.has(screen) && INVENTORY.treeOnly.includes(screen)
-      ? [`${screen} is linked, so it is no longer tree-only`]
-      : []),
-    ...(tree.has(screen) ? [] : [`${screen} is not in the catalogue tree`]),
-  ]);
+  return [
+    ...listed
+      .filter((screen) => !screens.includes(screen))
+      .map((screen) => `${screen} is listed but is no design screen`),
+    ...screens.flatMap((screen) => [
+      ...(inbound.has(screen) || listed.includes(screen)
+        ? []
+        : [`${screen} has no inbound design link`]),
+      ...(tree.has(screen) ? [] : [`${screen} is not in the catalogue tree`]),
+    ]),
+  ];
 }
 
 /**
@@ -193,26 +212,4 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
   ];
   if (pins.join() !== "50,20") violations.push(`scopes pin ${pins.join(", ")}`);
   return violations;
-}
-
-/**
- * Composition outside the library uses the registered components: no module
- * imports a library implementation, and none redraws a library root.
- */
-export function bypassViolations(): string[] {
-  const root = path.join(repositoryRoot, "examples/basic/specs/design");
-  const roots =
-    /className=["'](mbk-topbar|mbk-screen-head|mbk-appearance|mbk-tag-picker|ce-view-controls|ce-inspector|mbk-meta-row|mbk-empty|flow-step|phone-frame|browser-frame|mbk-cmp-toolbar|mbk-nav-head)["']/u;
-  return fs
-    .readdirSync(root, { recursive: true, encoding: "utf8" })
-    .filter((file) => /\.tsx?$/u.test(file) && !file.startsWith("library/"))
-    .flatMap((file) => {
-      const source = fs.readFileSync(path.join(root, file), "utf8");
-      return [
-        ...(/from ["'][^"']*\.view\.js["']/u.test(source)
-          ? [`${file} imports a library implementation`]
-          : []),
-        ...(roots.test(source) ? [`${file} redraws a library root`] : []),
-      ];
-    });
 }

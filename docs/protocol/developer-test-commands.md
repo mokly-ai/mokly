@@ -200,10 +200,12 @@ the repository. The copy keeps the repository layout that the example's
 `repoRoot` and its asset outside the catalogue root need. The smoke installs
 the three archives and the example's own dependencies at the versions the
 workspace installed. Through the installed shim it starts
-`mokly serve --no-watch`, opens a React screen, a design screen, and an HTML
+`mokly serve --no-watch` in its own process group, which it drains on every
+path, as the [fixture lifetime rules](./ci-suite-evidence.md#fixture-lifetime-and-cleanup)
+require. It opens a React screen, a design screen, and an HTML
 screen in the Browse shell in headless Chrome, and waits for each desktop
-frame's text with no page error, console error, or failed request, apart from
-the shell's own icon request. It then runs
+frame's text with no page error, failed request, or console error other than
+the viewer's sandbox reports. It then runs
 `mokly build --strict --no-changes` and checks the site's home, not-found, and
 shell route files. The install needs registry access. Set
 `MOKLY_SMOKE_CHROME` to a Chrome executable when Playwright's browser is not

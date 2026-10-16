@@ -868,15 +868,30 @@ renders again.
         adoption, owner chains, stylesheet links and scopes, scripts, link
         targets and focus stops, control destinations, tag states, and
         reachability; prove each check with one mutation.
+  - [x] Apply review 3 of the served checks: drain Serve's process group on
+        every path, serve with `--base HEAD`, add the adoption table's family
+        parts and the component explorer destinations, exempt only the brand
+        link from the current-page mark, report non-anchor link markers, match
+        every library root by class token, and make reachability one-way with
+        the contract's runtime-only states.
   - [ ] Add the browser checks with the restored browser suite: pointer and
-        Tab/Enter activation, history, active rows, highlighting, editable and
-        read-only controls, comparison bars, mobile sheets, and bounded
-        scrolling.
+        Tab/Enter activation, history, canonical outer URLs, preserved outer
+        viewport selection, active rows, selection semantics, counts, missing
+        states, highlighting and mask geometry, editable and read-only
+        controls, standalone versus in-screen geometry, icons and carets,
+        desktop divider alignment, comparison bars, the stacked frames, mobile
+        sheets, responsive overflow, bounded scrolling, and portable link round
+        trips.
   - [ ] Add the Changes checks after Milestone 9: the attribution matrix, one
         classification of the nine shared sheets per scenario, the rule
         records and the changed-entry union, and bounded base-side Git
         batching.
-  - [ ] Exercise the same journeys in the static output after Milestone 12.
+  - [ ] Add the Rust behaviour tests over the design catalogue after
+        Milestone 9: a parent component renders its own views from its own
+        props, the stacked frames' structure, every comparison caption tied to
+        its recorded change, and the Checklist's Changes.
+  - [ ] Exercise the same journeys in the static output after Milestone 12,
+        and cover the Review snapshot link fallback.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -913,6 +928,7 @@ Example and design catalogue port: `.context/rust-rebuild/m5-example/port.md`.
 Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspector-run/log.md`.
 Example and design catalogue render and visual check: `.context/rust-rebuild/example-visual/index.md`.
 Design catalogue checks, their mutation proofs, and the packed consumer smoke: `.context/rust-rebuild/m5-example/design-checks/index.md`.
+Review 3 fixes of the design checks and the smoke: `.context/rust-rebuild/m5-example/round8/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
@@ -1111,6 +1127,12 @@ Publish client final review and merge decisions:
 - [ ] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [ ] Run installed static output after Milestone 12 supplies the writer.
+  - [ ] Make `npm run package:smoke` require the built site once Milestone 12
+        supplies the writer.
+  - [ ] Cover the three paths of the previous packed smoke: zero-install
+        `npx --package @mokly/mokly mokly` with an empty cache, configuration
+        discovery from a nested directory, and a document page through the
+        installed CLI.
 - [x] Integrate the Milestone 8 part 2 npm-version fix before release checks
       can pass; the bumped-copy sidecar tests and version-path regression stay
       required.

@@ -86,9 +86,9 @@ and `design/browse/views/screen/light-only` keep their names and are variants of
 Those six entries are not folder members; the `design-browse-tags` (Tag states) folder
 has no descendants and is absent from navigation, while the variants stay under Welcome.
 
-Runtime transitions, not artboard links, reach the loading and recovery screens,
-the editing preparation states, the Screen props state, and the Read-only and
-recovery gallery; catalogue navigation reaches each of them.
+Runtime transitions reach the loading and recovery screens, the editing
+preparation states, the Screen props state, and the Read-only and recovery
+gallery; catalogue navigation reaches each, and only a [failure state's retry](./mokly-shell-design-inventory.md#inventory) links into one.
 
 ## Navigation Controls
 

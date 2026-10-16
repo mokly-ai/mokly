@@ -5,17 +5,17 @@
  * screen in headless Chrome; then build it with `--strict`.
  */
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { once } from "node:events";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { createInterface } from "node:readline";
 
 import { chromium } from "@playwright/test";
 
+import { expectedConsoleNotice } from "../../tests/browser/console_notices.js";
+
 import { createPackageArchive } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
+import { spawnServe } from "./serve_process.mjs";
 import { NATIVE_TARGETS } from "./targets.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
@@ -51,10 +51,6 @@ const SCREENS = [
   { path: "design/browse/views/screen", text: "Search catalogue…" },
   { path: "example/team/members", text: "Invite teammate" },
 ];
-
-/** Chrome reports each script it blocks in a sandboxed stage frame. */
-const SANDBOX_NOTICE =
-  /^Blocked script execution in '[^']*' because the document's frame is sandboxed/u;
 
 async function pack(destination) {
   const host = NATIVE_TARGETS.find(
@@ -144,39 +140,23 @@ async function install(consumer, packages) {
   return path.join(consumer, "node_modules/@mokly/mokly/bin/mokly.mjs");
 }
 
-/** Start the installed Serve; the returned stop asserts a clean exit. */
-async function serve(consumer, shim) {
-  const child = spawn(
-    process.execPath,
-    [shim, "serve", ...CONFIG, "--no-watch", "--port", "0"],
-    {
-      cwd: consumer,
-      env: { ...process.env, MOKLY_OUTPUT: "plain" },
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-  const exited = once(child, "exit");
-  let stderr = "";
-  child.stderr.on("data", (chunk) => (stderr += chunk));
-  const stop = async () => {
-    if (child.exitCode === null && child.signalCode === null)
-      child.kill("SIGINT");
-    const [code] = await exited;
-    assert.equal(code, 0, stderr);
-  };
-  const lines = createInterface({
-    input: child.stdout,
-    signal: AbortSignal.timeout(600_000),
+/**
+ * Serve the copy through the installed shim in its own process group, open
+ * the screens, and stop Serve. The group drains on every path, and a normal
+ * stop asserts a clean exit.
+ */
+async function serveAndBrowse(consumer, shim) {
+  const server = spawnServe(shim, [...CONFIG, "--no-watch", "--port", "0"], {
+    cwd: consumer,
   });
-  for await (const line of lines) {
-    const match = /Mokly listening at (http:\/\/127\.0\.0\.1:\d+)/u.exec(line);
-    if (match) {
-      child.stdout.resume();
-      return { url: match[1], stop };
-    }
+  let browsed = false;
+  try {
+    await browse(await server.listening(AbortSignal.timeout(600_000)));
+    browsed = true;
+  } finally {
+    const { code } = await server.stop();
+    if (browsed) assert.equal(code, 0, server.stderr());
   }
-  child.kill("SIGKILL");
-  throw new Error(`installed Serve stopped before it listened: ${stderr}`);
 }
 
 /** Open each screen in the Browse shell and wait for its desktop frame. */
@@ -195,12 +175,13 @@ async function browse(url) {
     });
     const problems = [];
     page.on("pageerror", (error) => problems.push(error.message));
-    // The shell stub names no icon, so the browser's own icon request fails.
+    // The shell stub names no icon until the plan's open review item "The
+    // shell stub declares no icon" is settled, so the icon request fails.
     const icon = (url) => /^https?:\/\/[^/]+\/favicon\.ico$/u.test(url);
     page.on("console", (message) => {
       if (
         message.type() === "error" &&
-        !SANDBOX_NOTICE.test(message.text()) &&
+        !expectedConsoleNotice(message) &&
         !icon(message.location().url)
       )
         problems.push(`${message.text()} ${message.location().url}`);
@@ -208,6 +189,12 @@ async function browse(url) {
     page.on("response", (response) => {
       if (response.status() >= 400 && !icon(response.url()))
         problems.push(`${response.status()} ${response.url()}`);
+    });
+    // A navigation cancels the open event stream, which is no failure.
+    page.on("requestfailed", (request) => {
+      const failure = request.failure()?.errorText;
+      if (failure !== "net::ERR_ABORTED" && !icon(request.url()))
+        problems.push(`${failure} ${request.url()}`);
     });
     for (const screen of SCREENS) {
       await page.goto(`${url}/view/${screen.path}/`, { waitUntil: "load" });
@@ -261,12 +248,7 @@ try {
   const packages = await pack(path.join(scratch, "archives"));
   const consumer = path.join(scratch, "example");
   const shim = await install(consumer, packages);
-  const { url, stop } = await serve(consumer, shim);
-  try {
-    await browse(url);
-  } finally {
-    await stop();
-  }
+  await serveAndBrowse(consumer, shim);
   const site = await build(consumer, shim);
   process.stdout.write(
     `The packed example served a React, a design, and an HTML screen${site ? " and built its site" : ""}.\n`,

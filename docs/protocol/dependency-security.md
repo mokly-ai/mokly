@@ -190,6 +190,12 @@ The current maintenance choices are:
   0.15.0 and 4.0.0, accepts only React Native below 0.86. Move to 4.7 only
   after `@firna/ui` accepts React Native 0.86, in a reviewed change that also
   moves `react-native-worklets` to 0.13.
+- `react-native-svg` 15.15.5 stays on its 15.15 line through a tilde range.
+  Release 15.16.0 imports `TurboModuleRegistry` from `react-native`, which
+  `react-native-web` does not export, so Serve and `build` cannot bundle the
+  example catalogue through its `react-native` alias. Move to a later release
+  only after one works with that alias, in a reviewed change that runs the
+  design catalogue test and `npm run package:smoke`.
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
   status 1 when a reporter event write fails, but the wrapper test in
   `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that
