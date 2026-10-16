@@ -2,8 +2,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { build } from "esbuild";
+
 import { buildStaticCatalogue } from "../../../tests/helpers/build_site.js";
 import { repositoryRoot } from "../../../tests/helpers/fixture.js";
+import { timeFixturePhase } from "../../../tests/helpers/fixture_timing.js";
 import { serveStaticFiles } from "../../../tests/helpers/static_server.js";
 import type {
   CatalogueReadModel,
@@ -18,7 +21,13 @@ import {
   type BrowserSourceOptions,
 } from "./browser_sources.js";
 
-export async function crossOriginFixture(options: BrowserSourceOptions = {}) {
+export function crossOriginFixture(options: BrowserSourceOptions = {}) {
+  return timeFixturePhase("cross-origin-browser", "setup", false, () =>
+    createCrossOriginFixture(options),
+  );
+}
+
+async function createCrossOriginFixture(options: BrowserSourceOptions) {
   const workspace = await fs.mkdtemp(
     path.join(
       process.env["MOKLY_VERIFICATION_RESOURCE_ROOT"] ??
@@ -78,6 +87,20 @@ export async function crossOriginFixture(options: BrowserSourceOptions = {}) {
       "junction",
     );
     await buildStaticCatalogue(workspace, root);
+    await build({
+      stdin: {
+        contents:
+          'export * from "./packages/viewer/dist/client/post_message_adapter.js"; export * from "./packages/viewer/dist/client/same_origin_adapter.js";',
+        resolveDir: repositoryRoot,
+        sourcefile: "browser-adapters.ts",
+      },
+      outfile: path.join(root, "test-adapters.js"),
+      bundle: true,
+      platform: "browser",
+      format: "esm",
+      target: "es2023",
+      logLevel: "silent",
+    });
     const index = JSON.parse(
       await fs.readFile(path.join(root, "mokly-viewer/index.json"), "utf8"),
     ) as CatalogueReadModel;

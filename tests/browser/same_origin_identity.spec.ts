@@ -29,7 +29,7 @@ test("an unowned same-origin document gains no navigation privilege during hando
   await page.goto(fixture.host.url);
   await page.evaluate(async () => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+      `${location.origin}/test-adapters.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as IdentityTestWindow;
     state.frameEvents = [];
@@ -69,7 +69,7 @@ test("an unowned same-origin document gains no navigation privilege during hando
   try {
     await page.evaluate(async () => {
       const { sameOriginAdapter } = (await import(
-        `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+        `${location.origin}/test-adapters.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as IdentityTestWindow;
       const onEvent = state.frameEvents.push.bind(state.frameEvents);
@@ -129,7 +129,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
   await page.goto(fixture.host.url);
   await page.evaluate(async () => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+      `${location.origin}/test-adapters.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as IdentityTestWindow;
     state.frameEvents = [];
@@ -185,7 +185,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
   try {
     await page.evaluate(async () => {
       const { sameOriginAdapter } = (await import(
-        `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+        `${location.origin}/test-adapters.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as IdentityTestWindow;
       const onEvent = state.frameEvents.push.bind(state.frameEvents);

@@ -172,7 +172,7 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
       const usage = JSON.parse(usageJson) as BrowserUsage;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
-        `${location.origin}/mokly-viewer/client/post_message_adapter.js`
+        `${location.origin}/test-adapters.js`
       )) as typeof PostAdapter;
       const old = state.mounted;
       const pending = old
@@ -206,7 +206,7 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
   ).toHaveCount(0);
   const timeout = await page.evaluate(async (origin) => {
     const { postMessageAdapter } = (await import(
-      `${location.origin}/mokly-viewer/client/post_message_adapter.js`
+      `${location.origin}/test-adapters.js`
     )) as typeof PostAdapter;
     return postMessageAdapter({ frameOrigin: origin })
       .mount(document.querySelector<HTMLIFrameElement>("#frame")!, {

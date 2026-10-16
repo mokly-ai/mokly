@@ -25,7 +25,7 @@ export async function mountCrossFrame(
       const usage = JSON.parse(usageJson) as BrowserUsage;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
-        `${location.origin}/mokly-viewer/client/post_message_adapter.js`
+        `${location.origin}/test-adapters.js`
       )) as typeof PostAdapter;
       state.wire = [];
       state.frameEvents = [];

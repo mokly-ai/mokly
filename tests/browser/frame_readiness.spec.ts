@@ -33,10 +33,10 @@ for (const cross of [false, true]) {
       await page.evaluate(
         async ({ cross, status, origin }) => {
           const local = (await import(
-            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
+            `${location.origin}/test-adapters.js`
           )) as typeof LocalAdapter;
           const remote = (await import(
-            `${location.origin}/mokly-viewer/client/post_message_adapter.js`
+            `${location.origin}/test-adapters.js`
           )) as typeof PostAdapter;
           const adapter = cross
             ? remote.postMessageAdapter({ frameOrigin: origin })
