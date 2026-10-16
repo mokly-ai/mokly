@@ -78,13 +78,17 @@ fn collected(styles: &[OwnedStyle]) -> Vec<Node> {
     groups
         .into_iter()
         .map(|(owners, rules)| {
-            let owners = owners.join(" ");
+            let owner_names = owners.join(" ");
             let attributes = if owners.is_empty() {
                 Vec::new()
             } else {
-                vec![("data-mokly-owners", owners.as_str())]
+                vec![("data-mokly-owners", owner_names.as_str())]
             };
-            element("style", &attributes, vec![Node::Text(rules.join("\n"))])
+            let mut style = element("style", &attributes, vec![Node::Text(rules.join("\n"))]);
+            if let Node::Element(element) = &mut style {
+                element.style_owners = Some(owners);
+            }
+            style
         })
         .collect()
 }

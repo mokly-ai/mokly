@@ -19,6 +19,7 @@ pub(crate) const ATTRIBUTE: &str = "data-mokly-normalize";
 const PREFIX: &str = "mokly-normalize:";
 
 pub(crate) struct Metadata {
+    pub(crate) style_owners: Option<Vec<String>>,
     pub(crate) origin: Option<String>,
     pub(crate) navigation: Option<Reference>,
     pub(crate) source: Option<SourceLocation>,
@@ -156,6 +157,7 @@ fn annotate(
                 repair.elements.insert(
                     id.clone(),
                     Metadata {
+                        style_owners: element.style_owners.take(),
                         origin: element.origin.take(),
                         navigation: element.navigation.take(),
                         source: element.source.take(),
@@ -192,6 +194,7 @@ pub(crate) fn metadata(element: &mut Element, repair: &Repair) {
     if let Some(id) = element.take(ATTRIBUTE)
         && let Some(metadata) = repair.elements.get(&id)
     {
+        element.style_owners = metadata.style_owners.clone();
         element.origin = metadata.origin.clone();
         element.navigation = metadata.navigation.clone();
         element.source = metadata.source.clone();

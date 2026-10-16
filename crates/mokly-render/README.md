@@ -78,6 +78,8 @@ logical roots take precedence over source-root names in nested CSS exclusion
 checks.
 Each sidecar worker keeps one source working directory. Head and base module
 evaluation and render callbacks use their own files through `process.cwd()`.
+Both sides forward identical trusted style records into the composed tree
+and comparison.
 Both sides use the current package version and
 the same document composition code.
 

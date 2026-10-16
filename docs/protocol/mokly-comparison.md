@@ -104,7 +104,15 @@ sides; the canonical form exists only to decide equality.
 Styles a [sidecar](./mokly-sidecar.md) render returned are written into the
 head as `<style data-mokly-owners="<component paths>">` elements, one rule
 list per owner set, deduplicated by rule identity. Every rule inside such an
-element belongs to those components. Linked stylesheets keep the
+element belongs to those components. Composition retains trusted owner
+annotations through HTML normalization and graph caching on both sides. An
+authored `data-mokly-owners` attribute does not create that annotation.
+Compare normalized rule sets per owner; formatting and duplicate copies do
+not change material. Owned styles contribute component material on its saved
+views. Consumer-only style differences need a changed selector that reaches
+the exact paired instance with unchanged props and supplied slots; conservative
+selector outcomes retain possible owned instances. This is implementation
+evidence and preserves the component's own view states. Linked stylesheets keep the
 [CSS attribution](./mokly-css-attribution.md) rules.
 
 Head `<style>` elements without owners use the same rule identities and

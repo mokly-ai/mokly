@@ -1048,7 +1048,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         own-page proof, and a byte-bounded parse cache.
   - [x] Resolve multi-component selector ownership and inline evidence
         addresses. Connect page head styles.
-  - [ ] Connect sidecar style ownership through the base render provider.
+  - [x] Connect sidecar style ownership through the base render provider.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/b-regression-final.log`.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and

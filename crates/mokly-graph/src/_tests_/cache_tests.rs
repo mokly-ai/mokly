@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_html::composition::Composed;
 use mokly_html::links::Reference;
+use mokly_html::tree::{Node, element};
 use mokly_model::usage::CatalogueUsage;
 
 use crate::cache::{Artifact, MemoryCache, RenderCache, entry_cost};
@@ -121,4 +122,34 @@ fn retained_logical_links_cannot_exceed_the_artifact_budget() {
     assert!(cache.get(&node("links")).is_none());
     assert_eq!(cache.stats().entries, 0);
     assert!(value.document.is_some());
+}
+
+#[test]
+fn retained_sidecar_style_owners_count_toward_the_document_budget() {
+    let cache: &dyn RenderCache = &MemoryCache::new(32 * 1024);
+    let mut style = element("style", &[], Vec::new());
+    let Node::Element(element) = &mut style else {
+        panic!()
+    };
+    element.style_owners = Some(vec!["x".repeat(1024 * 1024)]);
+    let value = Arc::new(Artifact {
+        bytes: Vec::new(),
+        fragment: None,
+        content_type: "text/html".into(),
+        document: Some(Composed {
+            tree: vec![style],
+            usage: CatalogueUsage::Ready {
+                instances: Vec::new(),
+                slots: Vec::new(),
+                ranges: Vec::new(),
+            },
+            warnings: Vec::new(),
+            resources: Vec::new(),
+            components: Vec::new(),
+            links: Vec::new(),
+        }),
+    });
+    cache.insert(node("owners"), value);
+    assert!(cache.get(&node("owners")).is_none());
+    assert_eq!(cache.stats().entries, 0);
 }

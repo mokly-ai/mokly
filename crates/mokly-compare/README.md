@@ -81,6 +81,10 @@ inputs are equal. Each fallback has a typed trace reason. Such workspace layouts
 need explicit package roots; conflicting copies can still require fallback.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+Both sides retain trusted sidecar style owners. Normalized owned rule sets
+contribute component material. Consumer-only changes require matching style
+proof at a paired instance with unchanged inputs. Authored owner attributes
+supply no such proof.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds graph handles, view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs

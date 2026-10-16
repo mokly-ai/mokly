@@ -14,7 +14,7 @@ use crate::material::{self, Projection};
 use crate::move_context::RenderedMoves;
 use crate::move_types::{MoveEvidence, MoveLines, MoveSignature};
 use crate::view_material;
-use crate::{instance_inputs, move_fingerprint};
+use crate::{instance_inputs, matching_tree, move_fingerprint, owned_styles};
 
 impl MoveEvidence for RenderedMoves<'_> {
     fn signature(
@@ -143,7 +143,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 true,
                 self.memo.as_ref(),
             )?;
-            let comparison = view_material::compare(
+            let mut comparison = view_material::compare(
                 left_document,
                 right_document,
                 &format!("static/mokly-generated/{}", left_plan.route),
@@ -151,6 +151,26 @@ impl MoveEvidence for RenderedMoves<'_> {
                 paths,
                 &resources.aliases,
             );
+            let owned = owned_styles::compare(
+                [&left_document.tree, &right_document.tree],
+                [
+                    Some(&matching_tree::document(&left_document.tree, paths)),
+                    Some(&matching_tree::document(
+                        &right_document.tree,
+                        &BTreeMap::new(),
+                    )),
+                ],
+                paths,
+                self.memo.as_ref(),
+            )?;
+            let owner = matches!(after.content, EntryContent::Component { .. }).then_some(
+                after
+                    .metadata
+                    .variant_of
+                    .as_deref()
+                    .unwrap_or(&after.metadata.path),
+            );
+            owned_styles::apply(&mut comparison, owner, &owned);
             if comparison.changed {
                 return Ok(false);
             }
