@@ -90,7 +90,25 @@ fn symlinked_namespace_owner_and_output_do_not_authorize_a_reservation() {
             files: Arc::new(SystemFiles),
             rename: Arc::new(SystemRename),
         };
-        assert!(writer.open(&output, boundary(&root)).is_err());
+        let entries = || {
+            let mut names: Vec<_> = fs::read_dir(&root)
+                .unwrap()
+                .map(|entry| entry.unwrap().file_name())
+                .collect();
+            names.sort();
+            names
+        };
+        let before = entries();
+        let error = match writer.open(&output, boundary(&root)) {
+            Ok(_) => panic!("symlink must not authorize output"),
+            Err(error) => error,
+        };
+        if kind == "output" {
+            assert!(matches!(error, Error::Destination { path } if path == output));
+        } else {
+            assert!(matches!(error, Error::Unexpected { path } if path == namespace));
+        }
+        assert_eq!(entries(), before);
         assert_eq!(fs::read(original.join("keep")).unwrap(), b"foreign");
         assert!(!namespace.join("locks").exists());
     }

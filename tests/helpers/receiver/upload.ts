@@ -119,8 +119,7 @@ function requestUrl(value: string, endpoint: string): URL {
     !["http:", "https:"].includes(url.protocol) ||
     url.origin !== new URL(endpoint).origin ||
     url.username ||
-    url.password ||
-    url.hash
+    url.password
   )
     throw new Error("invalid");
   return url;
@@ -142,7 +141,9 @@ export function plan(
   const session = object(root.upload);
   if (
     root.schemaVersion !== 1 ||
-    !text(session.id, 255) ||
+    typeof session.id !== "string" ||
+    session.id.length === 0 ||
+    size(session.id) > 255 ||
     !timestamp(session.expiresAt) ||
     !Array.isArray(root.missing)
   )

@@ -5,6 +5,7 @@ use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+#[cfg(unix)]
 use std::process::ExitCode;
 use std::sync::Arc;
 
@@ -17,6 +18,9 @@ use mokly_static::error::{Error, InternalError, Result};
 use mokly_static::filesystem::Files;
 use mokly_static::location::Boundary;
 use mokly_static::transaction::{Transaction, Transactions};
+
+#[cfg(unix)]
+use crate::interrupts::Interrupts;
 
 mod files;
 mod rename;
@@ -179,14 +183,14 @@ fn failure(path: &Path) -> Error {
     Error::Unexpected { path: path.into() }
 }
 
-/// Process probe checks registration and listener ownership after command shutdown.
+/// Probe checks registration and listener ownership after each signal session drops.
 #[cfg(unix)]
 pub(super) fn signal_lifecycle() -> Option<ExitCode> {
     if !Faults::environment().has("handlers") {
         return None;
     }
-    for _ in 0..2 {
-        let probe = match crate::interrupts::Interrupts::new() {
+    for start in [Interrupts::new, Interrupts::publish] {
+        let probe = match start() {
             Ok(interrupts) => interrupts.pending_probe.clone(),
             Err(_) => return Some(ExitCode::FAILURE),
         };

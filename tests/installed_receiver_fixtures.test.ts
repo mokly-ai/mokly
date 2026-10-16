@@ -142,7 +142,8 @@ test(
       )![1];
       upload(metadata);
       for (const altered of [
-        artifact.slice(1),
+        artifact.filter(([name]) => name !== ".mokly-export-artifact"),
+        artifact.filter(([name]) => name !== "index.html"),
         [...artifact, ["extra", Buffer.from("x")] as [string, Buffer]],
         [...artifact, artifact[0]!],
         artifact.map(

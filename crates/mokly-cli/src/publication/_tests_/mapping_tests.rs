@@ -1,5 +1,7 @@
 //! Publish uses only an explicit cancellation classification and keeps recovery failures.
 
+use std::path::Path;
+
 use crate::build::BuildError;
 use crate::output::{Mode, Style};
 use crate::publication::error::Error;
@@ -52,7 +54,7 @@ fn interrupted_publications_keep_the_original_diagnostic_for_optional_stacks() {
             columns: 120,
         };
         assert_eq!(
-            publish_errors::command(&error, &style, &Redactor::default()),
+            publish_errors::command(&error, &style, &Redactor::default(), Path::new("/repo")),
             publish_errors::render(
                 &mokly_publish::error::Error::Cancelled,
                 &style,

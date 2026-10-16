@@ -19,6 +19,14 @@ async function built(root: string) {
   assert.equal(result.code, 0, result.stderr);
   return files(path.join(root, ".context/site"));
 }
+function protectedResource(name: string, reason: string) {
+  return ["desktop", "mobile"]
+    .map(
+      (viewport) =>
+        `[mokly/build-invalid] document links and resources are invalid:\\u000a- home/index.${viewport}.html: protected target ../../${name}: ${reason}\n`,
+    )
+    .join("");
+}
 test(
   "static closure keeps generated private-directory assets and external CSS URLs without stray files",
   { timeout: 120_000 },
@@ -131,11 +139,15 @@ test(
     const root = await publicationFixture();
     try {
       const previous = await built(root);
-      for (const [name, roots] of [
-        ["assets/node_modules/private.svg", []],
-        ["styles/node_modules/private.css", []],
-        ["consumer-package/theme.css", ["consumer-package"]],
-        ["specs/private.svg", ["specs"]],
+      for (const [name, roots, reason] of [
+        ["assets/node_modules/private.svg", [], "consumer dependency tree"],
+        ["styles/node_modules/private.css", [], "consumer dependency tree"],
+        [
+          "consumer-package/theme.css",
+          ["consumer-package"],
+          "private package or output tree",
+        ],
+        ["specs/private.svg", ["specs"], "private package or output tree"],
       ] as const) {
         await write(
           root,
@@ -166,7 +178,7 @@ test(
           "--out=.context/site",
         ]).result;
         assert.equal(result.code, 1, name);
-        assert.match(result.stderr, /private|dependency|source/iu);
+        assert.equal(result.stderr, protectedResource(name, reason));
         assert.deepEqual(
           await files(path.join(root, ".context/site")),
           previous,
@@ -188,6 +200,24 @@ test(
       );
       const output = await built(root);
       assert.equal(output.get("static/logo.svg")?.toString(), "<svg/>");
+      await write(
+        root,
+        "specs/home.screen.html",
+        '---\ntitle: Home\n---\n<img src="../../logo.svg"><link rel="stylesheet" href="../../consumer-package/theme.css">',
+      );
+      const nested = await command(root, "build", [
+        "--no-changes",
+        "--out=.context/site",
+      ]).result;
+      assert.equal(nested.code, 1, nested.stderr);
+      assert.equal(
+        nested.stderr,
+        protectedResource(
+          "consumer-package/theme.css",
+          "private package or output tree",
+        ),
+      );
+      assert.deepEqual(await files(path.join(root, ".context/site")), output);
       assert.ok(
         ![...output.keys()].some((name) =>
           name.startsWith("static/consumer-package/"),

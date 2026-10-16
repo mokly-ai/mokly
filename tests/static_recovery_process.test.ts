@@ -11,13 +11,21 @@ import {
   recoveryFixture,
   reservation,
 } from "./helpers/static_faults.js";
+import {
+  causes,
+  exportCategory,
+  installedBytes,
+  normalized,
+  recoveryPath,
+  unsafe,
+} from "./helpers/static_recovery_assertions.js";
 
 for (const verb of ["build", "publish"] as const)
   for (const mode of ["plain", "rich"]) {
     test(
       `${verb} ${mode} reports install, rollback, and cleanup failures with retained bytes`,
       { timeout: 120_000 },
-      async () => {
+      async (context) => {
         for (const fault of [
           "install",
           "install,restore",
@@ -36,11 +44,7 @@ for (const verb of ["build", "publish"] as const)
             assert.equal(result.code, 1, result.stderr);
             assert.ok(!result.stdout.includes("Built Mokly to"));
             assert.ok(!result.stdout.includes("Published Mokly catalogue"));
-            assert.equal(
-              result.stderr.match(/\[mokly\/export-invalid\]/gu)?.length,
-              1,
-              result.stderr,
-            );
+            exportCategory(result.stderr);
             assert.ok(!result.stderr.includes("[mokly-static"));
             assert.ok(!result.stderr.includes("[mokly-platform"));
             if (fault === "install") {
@@ -48,11 +52,16 @@ for (const verb of ["build", "publish"] as const)
               assert.deepEqual(await files(output), previous);
               await assert.rejects(fs.stat(recovery), { code: "ENOENT" });
             } else if (fault === "install,restore") {
-              assert.ok(
-                result.stderr.indexOf("injected install failure") <
-                  result.stderr.indexOf("injected restore failure"),
+              causes(
+                result.stderr,
+                "injected install failure",
+                "injected restore failure",
               );
-              assert.ok(result.stderr.includes(path.join(recovery, "backup")));
+              assert.ok(
+                result.stderr.includes(
+                  recoveryPath(root, path.join(recovery, "backup"), verb),
+                ),
+              );
               assert.deepEqual(
                 await files(path.join(recovery, "backup")),
                 previous,
@@ -63,8 +72,10 @@ for (const verb of ["build", "publish"] as const)
               fault === "reservation-cleanup"
             ) {
               assert.match(result.stderr, /new site is installed/iu);
-              assert.ok(result.stderr.includes(recovery));
-              assert.notDeepEqual(await files(output), previous);
+              assert.ok(
+                result.stderr.includes(recoveryPath(root, recovery, verb)),
+              );
+              await installedBytes(root, output, verb);
               if (fault === "backup-cleanup")
                 assert.deepEqual(
                   await files(path.join(recovery, "backup")),
@@ -72,7 +83,21 @@ for (const verb of ["build", "publish"] as const)
                 );
             } else {
               assert.match(result.stderr, /Recovery failed/u);
-              assert.ok(result.stderr.includes(recovery));
+              assert.ok(
+                result.stderr.includes(recoveryPath(root, recovery, verb)),
+              );
+              causes(
+                result.stderr,
+                unsafe(
+                  path.join(
+                    recovery,
+                    fault.startsWith("stage")
+                      ? "stage/404.html"
+                      : ".mokly-export-transaction",
+                  ),
+                ),
+                `Recovery failed: ${unsafe(path.join(recovery, "stage"))}`,
+              );
               assert.deepEqual(await files(output), previous);
             }
             const events = (
@@ -80,10 +105,23 @@ for (const verb of ["build", "publish"] as const)
             )
               .trim()
               .split("\n");
+            if (fault === "install")
+              assert.deepEqual(events, [
+                "capture",
+                "install",
+                "restore",
+                "remove-stage",
+                "reservation-unlink",
+              ]);
             assert.equal(
               events.filter((event) => event === "remove-stage").length,
               ["install,restore", "backup-cleanup"].includes(fault) ? 0 : 1,
             );
+            if (mode === "plain")
+              context.assert.snapshot(
+                normalized(result.stderr, root, output, verb),
+                { serializers: [String] },
+              );
           } finally {
             await cleanup(root, verb, output);
           }

@@ -64,7 +64,7 @@ pub(super) fn run(
     let services = match ServeServices::new(&cwd, common, redactor.clone(), cancellation.clone()) {
         Ok(services) => services,
         Err(error) => {
-            terminal.stderr(&build_output::failure(style, &error, &redactor));
+            terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
             return ExitCode::FAILURE;
         }
     };
@@ -108,7 +108,7 @@ pub(super) fn run(
                     if *receiver.borrow() {
                         return Ok(ExitCode::SUCCESS);
                     }
-                    terminal.stderr(&build_output::failure(style, &error, &redactor));
+                    terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
                     return Ok(ExitCode::FAILURE);
                 }
                 Err(source) => return Err(ServerError::Internal(InternalError::Task { source })),
@@ -131,6 +131,7 @@ pub(super) fn run(
             let base = snapshot.index.base.clone().unwrap_or_default();
             let publications = Arc::new(SharedPublication::new(snapshot));
             let reporter = Arc::new(ServeLines {
+                cwd: cwd.clone(),
                 cancellation: cancellation.clone(),
                 terminal: terminal.clone(),
                 style: style.clone(),

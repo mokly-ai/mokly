@@ -1,6 +1,7 @@
 //! Safe publication categories and bounded checkout recovery details.
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 use crate::publication::error;
 use crate::publication::failure::Category;
@@ -71,7 +72,7 @@ pub fn render(error: &Error, style: &Style, redactor: &Redactor) -> String {
 }
 
 /// Render CLI publication failures while retaining local recovery diagnostics.
-pub fn command(error: &error::Error, style: &Style, redactor: &Redactor) -> String {
+pub fn command(error: &error::Error, style: &Style, redactor: &Redactor, cwd: &Path) -> String {
     let (code, detail) = match error {
         error::Error::Interrupted { .. } => return render(&Error::Cancelled, style, redactor),
         error::Error::Exchange { source } => return render(source, style, redactor),
@@ -80,7 +81,7 @@ pub fn command(error: &error::Error, style: &Style, redactor: &Redactor) -> Stri
                 if crate::pre_installation::cancelled(error) {
                     return render(&Error::Cancelled, style, redactor);
                 }
-                return crate::build_output::failure(style, error, redactor);
+                return crate::build_output::failure(style, error, redactor, cwd);
             }
             let code = match failure.category() {
                 Category::BuildInvalid => Code::BuildInvalid,

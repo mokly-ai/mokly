@@ -34,6 +34,7 @@ export function faultCommand(
   faults: string,
   mode = "plain",
   extra: NodeJS.ProcessEnv = {},
+  output = ".context/site",
 ) {
   const env = {
     MOKLY_TEST_STATIC_FAULTS: faults,
@@ -45,13 +46,7 @@ export function faultCommand(
   };
   return verb === "publish"
     ? publish(root, "http://127.0.0.1:1/plan", mode, { env })
-    : command(
-        root,
-        "build",
-        ["--no-changes", "--out=.context/site"],
-        mode,
-        env,
-      );
+    : command(root, "build", ["--no-changes", `--out=${output}`], mode, env);
 }
 export function outputDirectory(
   root: string,

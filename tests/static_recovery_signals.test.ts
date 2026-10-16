@@ -11,13 +11,20 @@ import {
   recoveryFixture,
   reservation,
 } from "./helpers/static_faults.js";
+import {
+  causes,
+  exportCategory,
+  normalized,
+  recoveryPath,
+  unsafe,
+} from "./helpers/static_recovery_assertions.js";
 
 for (const verb of ["build", "publish"] as const)
   for (const mode of ["plain", "rich"]) {
     test(
       `${verb} ${mode} settles configuration staging and captured-output signals`,
       { timeout: 120_000, skip: process.platform === "win32" },
-      async () => {
+      async (context) => {
         for (const fault of [
           "config",
           "setup-signal",
@@ -52,13 +59,38 @@ for (const verb of ["build", "publish"] as const)
             output = outputDirectory(root, verb, result.stdout);
             assert.equal(result.code, 1, result.stderr);
             const failedRecovery = fault.includes(",");
+            const recovery = reservation(output);
             if (failedRecovery) {
-              assert.match(result.stderr, /\[mokly\/export-invalid\]/u);
+              exportCategory(result.stderr);
               assert.match(result.stderr, /Recovery failed/u);
-              assert.ok(result.stderr.includes(reservation(output)));
+              assert.ok(
+                result.stderr.includes(recoveryPath(root, recovery, verb)),
+              );
               assert.ok(!result.stderr.includes("Publication was cancelled"));
+              const captured = fault.startsWith("capture");
+              causes(
+                result.stderr,
+                captured
+                  ? "build cancelled"
+                  : unsafe(
+                      path.join(
+                        recovery,
+                        fault.startsWith("setup")
+                          ? ".mokly-export-transaction"
+                          : "stage/404.html",
+                      ),
+                    ),
+                captured
+                  ? "injected restore failure"
+                  : `Recovery failed: ${unsafe(path.join(recovery, "stage"))}`,
+              );
             } else if (fault === "setup-signal") {
-              assert.match(result.stderr, /\[mokly\/export-invalid\]/u);
+              exportCategory(result.stderr);
+              assert.ok(
+                result.stderr.includes(
+                  unsafe(path.join(recovery, ".mokly-export-transaction")),
+                ),
+              );
               assert.ok(!result.stderr.includes("cancelled"));
             } else if (mode === "plain") {
               assert.equal(
@@ -92,6 +124,11 @@ for (const verb of ["build", "publish"] as const)
               await assert.rejects(fs.promises.stat(reservation(output)), {
                 code: "ENOENT",
               });
+            if (mode === "plain")
+              context.assert.snapshot(
+                normalized(result.stderr, root, output, verb),
+                { serializers: [String] },
+              );
           } finally {
             watcher.close();
             running.child.kill("SIGKILL");

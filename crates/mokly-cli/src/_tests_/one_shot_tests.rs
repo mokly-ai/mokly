@@ -50,6 +50,7 @@ fn an_empty_replan_restores_the_base_label_and_viewer_urls_are_redacted() {
     ));
     let (stop, _) = mpsc::channel();
     let output = super::Lines {
+        cwd: "/repo".into(),
         style: Style {
             mode: Mode::Rich,
             color: false,
@@ -111,6 +112,7 @@ fn rich_publication_receipts_style_zero_one_two_counts_and_leave_urls_unstyled()
     ));
     let (stop, _) = mpsc::channel();
     let output = super::Lines {
+        cwd: "/repo".into(),
         style: Style {
             mode: Mode::Rich,
             color: true,

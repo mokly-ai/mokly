@@ -1,5 +1,7 @@
 //! Publication copy, path escaping and recovery hints.
 
+use std::path::Path;
+
 use crate::publication::error::{self, DirectoryFailure};
 use mokly_publish::error::Error;
 
@@ -117,7 +119,7 @@ fn build_recovery_errors_keep_their_category_and_redacted_recovery_path() {
     };
     let redactor = Redactor::collect(&[], Some("secret/a=="));
     assert_eq!(
-        crate::publish_errors::command(&error, &style, &redactor),
+        crate::publish_errors::command(&error, &style, &redactor, Path::new("/repo")),
         "[mokly/export-invalid] Static build recovery needs /backup/[redacted]\n"
     );
 }
@@ -136,7 +138,12 @@ fn rich_directory_errors_show_the_root_and_windows_recovery_once() {
         ascii: false,
         columns: 200,
     };
-    let rendered = crate::publish_errors::command(&error, &style, &Redactor::collect(&[], None));
+    let rendered = crate::publish_errors::command(
+        &error,
+        &style,
+        &Redactor::collect(&[], None),
+        Path::new("/repo"),
+    );
     for sentence in [
         "The publish build directory could not be prepared.",
         "Temporary root: missing-root.",
