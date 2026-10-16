@@ -45,7 +45,7 @@ impl ServeServices {
             cwd,
             &config.repo_root,
             common,
-            redactor,
+            crate::render_runtime::diagnostics(redactor),
             cancellation,
         ) {
             Ok(services) => services,

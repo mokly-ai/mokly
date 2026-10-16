@@ -35,7 +35,7 @@ impl Services {
         cwd: &Path,
         repository: &Path,
         common: &Common,
-        redactor: Arc<Redactor>,
+        diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
     ) -> Result<Self> {
         let clock = Arc::new(SystemClock::new());
@@ -43,7 +43,6 @@ impl Services {
             .sidecars
             .and_then(NonZeroUsize::new)
             .unwrap_or(NonZeroUsize::MIN);
-        let diagnostics: Arc<dyn Diagnostics> = Arc::new(Reporter { redactor });
         let pool: Arc<dyn SidecarPool> = Arc::new(Pool::new(
             Arc::new(NodeFactory::new(
                 Arc::new(SystemProcessGroups),
@@ -94,6 +93,10 @@ fn runtime(
         VERSION.into(),
         None,
     ))
+}
+
+pub(super) fn diagnostics(redactor: Arc<Redactor>) -> Arc<dyn Diagnostics> {
+    Arc::new(Reporter { redactor })
 }
 
 struct Reporter {

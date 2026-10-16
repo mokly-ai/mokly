@@ -1,5 +1,8 @@
 //! Frozen model output used by CLI adapter tests.
 
+use mokly_git::command::CancellationMock;
+use unimock::{MockFn, Unimock, matching};
+
 use std::path::PathBuf;
 
 use mokly_model::output::artifact::{Artifact, File};
@@ -67,4 +70,12 @@ pub(super) fn settings(concurrency: u8) -> Settings {
         concurrency,
     )
     .unwrap()
+}
+
+pub(super) fn active() -> Unimock {
+    Unimock::new(
+        CancellationMock::is_cancelled
+            .each_call(matching!())
+            .returns(false),
+    )
 }

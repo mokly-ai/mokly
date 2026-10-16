@@ -100,8 +100,10 @@ available and is not rolled back.
 
 Rich errors use `✖ <headline>  [mokly/<code>]`, with the code dimmed, followed
 by the original safe detail when it adds information and one indented hint.
-Secrets are redacted before every line and optional stack. `MOKLY_DIAGNOSTIC=1`
-appends the redacted stack; otherwise expected failures show no stack.
+Secrets are redacted before every line. `MOKLY_DIAGNOSTIC=1` appends the
+core error cause chain, one cause per line, and any supplied sidecar JavaScript
+stack. Expected failures show only their normal error output when this option
+is absent.
 
 For a failure classified as cancellation by the exchange contract, rich mode
 renders headline `Publication was cancelled.`, no detail line, and hint

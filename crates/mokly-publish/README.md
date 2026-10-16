@@ -26,8 +26,8 @@ duplicate keys without constructing its full value tree.
 `Client` implements `Exchange`. It consumes `dyn Http`, `dyn Clock`, and
 `dyn Reporter`. The HTTP adapter uses reqwest with rustls and AWS-LC.
 Redirects and implicit retries are disabled. The exchange owns five attempts
-and one re-plan. A failed Blob drops the other active requests. Progress
-counts a digest once even when `missing` overlaps a Plan-archive digest.
+and one re-plan. A failed Blob drops the other active requests. The reporter resets the phase label at every Plan, including an empty re-plan.
+Progress counts a digest once even when `missing` overlaps a Plan-archive digest.
 Credentials have a redacted debug representation. Transport failures and
 receiver rejections use fixed safe messages.
 

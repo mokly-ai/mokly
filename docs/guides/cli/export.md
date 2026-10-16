@@ -1,72 +1,33 @@
 ---
-title: "export"
-description: "Package a complete static catalogue you can deploy anywhere."
+title: "Build for static hosting"
+description: "Write the files that a static HTTP host needs."
 section: "cli"
 order: 4
 ---
 
-## Usage
+## Create the site
 
 ```shell
-npx mokly export --out .context/mokly-site
+npx mokly build --no-changes --strict --out .context/site
 ```
 
-## Options
+The [build command](/docs/cli/build/) writes the whole catalogue.
+Deploy its contents as the document root of an HTTP(S) origin. The host
+serves directory indexes, files, and their correct MIME types.
 
-| Option            | Meaning                                                     |
-| ----------------- | ----------------------------------------------------------- |
-| `--out <path>`    | Config-relative export directory; required                  |
-| `--config <path>` | Use an explicit `mokly.config` file                         |
-| `--base <ref>`    | Git base ref used to find the branch point                  |
-| `--debug-timings` | Report phase timings and catalogue counts on standard error |
-| `--strict`        | Fail before writing when the build reports warnings         |
+A relative output path resolves beside the JSON configuration. Use a missing
+or empty directory inside the repository. Keep it ignored by Git. Mokly can
+replace an earlier output that has a valid ownership marker.
 
-## What it produces
+Omit `--no-changes` when the site needs Changes. Fetch sufficient history for
+the configured base before running the command.
 
-Export compiles without writing generated files to your catalogue, then
-packages generated views, Markdown documents, CSS and assets under `static/mokly-generated/`,
-referenced authored assets under `static/`, one shell per entry at `view/<path>/index.html`,
-and available Git comparisons under `mokly-viewer/`.
-It does not copy unrelated files or upload anything.
+## Host settings
 
-Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
-requirements are on the Catalogue page for export and hosting.
+Configure revalidation and `X-Content-Type-Options: nosniff`. The site includes
+`404.html` for hosts that support a custom error document. Deploy atomically
+so clients do not read files from different builds.
 
-## Warnings
-
-Export prints the warnings of the build it packages on standard error and
-still exports. With `--strict` it prints them and stops before writing the
-destination. The failure says `1 build warning with --strict` for one warning
-and `<n> build warnings with --strict` otherwise.
-
-## The destination
-
-`--out` resolves beside the loaded config rather than your working directory,
-and an absolute path must stay inside the repository root. Choose a directory
-that is missing or empty and neither contains nor is contained by
-`mokly-generated/`; it must also stay outside source, dependency and
-comparison roots, and keep unrelated files out of it.
-
-A re-export replaces only the output it owns, and restores the previous site
-if installation fails and recovery is safe. If something else recreates the
-destination while an export is running, both it and the captured backup are
-kept for you to recover by hand.
-
-Every exported path must be portable: relative slash-separated Unicode with no
-control character, backslash, colon, empty segment, `.` or `..`, and at most
-1,024 UTF-8 bytes. When a path is refused, Mokly prints it with invisible
-characters escaped so you can rename the file or folder. If the destination
-holds an export from an earlier Mokly release, move any files you added before
-deleting that folder and exporting again.
-
-## History
-
-`--base` overrides `review.base`, which defaults to `origin/main`. The branch
-point must exist in the checkout with enough history to read its complete
-generated tree or rebuild it using that commit's own dependencies and tooling.
-In CI, check out the full history and use a trusted base for rebuilds. A base
-built by an earlier Mokly version makes Changes unavailable; export prints the
-reason and still packages current content. Other invalid baseline inputs fail.
-
-Warnings name a generated page, an entry, a component, a folder or the
-configuration file. Strict mode counts all warnings, including ignored inputs.
+See [Build and host](/docs/catalogue/export-and-host/) for the full host setup.
+Use [Publish](/docs/cli/publish/) when a catalogue receiver should store and
+host the files.

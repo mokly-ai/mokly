@@ -1,4 +1,4 @@
-//! Publish runs its available checks and reports the static builder boundary.
+//! Publish validates clean checkout, configuration, and private build allocation.
 
 use std::fs;
 use std::path::Path;
@@ -49,7 +49,7 @@ fn run(directory: &Path, args: &[&str], mode: &str) -> Output {
 }
 
 #[test]
-fn clean_current_only_publish_prints_one_retained_directory_then_one_unavailable_line() {
+fn clean_current_only_publish_reports_one_directory_then_the_real_build_failure() {
     let directory = checkout();
     for mode in ["plain", "rich"] {
         let output = run(
@@ -63,16 +63,16 @@ fn clean_current_only_publish_prints_one_retained_directory_then_one_unavailable
             mode,
         );
         assert_eq!(output.status.code(), Some(1));
-        assert_eq!(
-            String::from_utf8(output.stderr).unwrap(),
-            "[mokly/build-invalid] Static output is not available in this build.\n"
-        );
+        let error = String::from_utf8(output.stderr).unwrap();
+        assert!(error.contains("[mokly/config-invalid]"), "{error}");
+        assert!(!error.contains("secret"));
         let line = String::from_utf8(output.stdout).unwrap();
-        assert_eq!(line.lines().count(), 1);
-        let path = line
-            .trim_end()
-            .strip_prefix("Mokly publish build: ")
-            .unwrap();
+        let directories: Vec<_> = line
+            .lines()
+            .filter_map(|line| line.strip_prefix("Mokly publish build: "))
+            .collect();
+        assert_eq!(directories.len(), 1);
+        let path = directories[0];
         let path = Path::new(path);
         assert!(path.is_absolute());
         assert_eq!(path.file_name().unwrap(), "site");

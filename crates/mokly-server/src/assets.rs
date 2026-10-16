@@ -1,12 +1,12 @@
 //! Exact built viewer inventory, loaded once before listening.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Bytes;
 use mokly_model::namespace::viewer;
-use mokly_source_interface::tree::SourceTree;
+use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
 
 use crate::error::{InternalError, Result, ServerError};
@@ -56,6 +56,19 @@ impl ViewerAssets for PackageAssets {
         {
             return Err(ServerError::InvalidAssets);
         }
+        let children = match self.tree.children(&dist.join("browser")) {
+            Ok(children) => children,
+            Err(_) => return Err(ServerError::InvalidAssets),
+        };
+        if children.iter().any(|child| child.kind != FileKind::File)
+            || children
+                .iter()
+                .map(|child| &child.name)
+                .collect::<BTreeSet<_>>()
+                != manifest.modules.iter().collect::<BTreeSet<_>>()
+        {
+            return Err(ServerError::InvalidAssets);
+        }
         let mut routes = BTreeMap::new();
         for name in manifest.modules {
             if !name.ends_with(".js") || name.contains(['/', '\\', ':']) || name.starts_with('.') {
@@ -78,6 +91,7 @@ impl ViewerAssets for PackageAssets {
         }
         for (source, route, mime) in [
             ("shell.css", "shell.css", "text/css; charset=utf-8"),
+            ("assets/brand.svg", "client/brand.svg", "image/svg+xml"),
             (
                 "assets/fonts/InterVariable.woff2",
                 "fonts/InterVariable.woff2",
