@@ -67,7 +67,7 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
         viewport={viewport}
         render={() => (
           <EmptyState
-            to={DESTINATIONS.appearanceError}
+            to={DESTINATIONS.previewLoading}
             title="This screen could not be shown"
             body="The catalogue is still available while you try again."
             linkLabel="Try again"

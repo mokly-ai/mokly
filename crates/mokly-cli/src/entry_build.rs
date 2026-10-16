@@ -46,6 +46,7 @@ pub(super) fn run(
         style.clone(),
         redactor.clone(),
         terminal.clone(),
+        cwd.clone(),
     ));
     let context = Context {
         cancellation: interrupts.cancellation.clone(),
@@ -61,7 +62,7 @@ pub(super) fn run(
             ExitCode::SUCCESS
         }
         Err(error) => {
-            terminal.stderr(&build_output::failure(style, &error, &redactor));
+            terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
             command_diagnostics::emit(&error, terminal.as_ref(), &redactor);
             ExitCode::FAILURE
         }

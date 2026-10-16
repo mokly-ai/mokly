@@ -50,13 +50,14 @@ A Windows console without Windows Terminal or a known terminal host uses
 ASCII: `+`, `x`, `!`, `R`, `L`, `C`, and `G`. The spinner uses Braille frames
 in modern terminals and `|`, `/`, `-`, `\\` in the fallback.
 
-Every rich line is bounded by stdout's current positive `columns` value, or 80
-columns when unavailable. Mokly accounts for ANSI control sequences when
-measuring, truncates content with a single ellipsis where possible, preserves
-complete styling sequences in the kept prefix, and never writes a partial
-escape sequence. A shortened styled line ends with a full style reset so its
-colour cannot bleed into later output. Authored paths are made relative to
-the repository when possible before truncation.
+Rich lines are bounded by stdout's positive `columns` value, or 80 columns
+when unavailable. Mokly counts display columns, preserves complete ANSI
+sequences, and truncates with one ellipsis where possible. A shortened styled
+line ends with a full reset. Authored paths are repository-relative when possible.
+Recovery paths are the exception: each backup, reservation, or retained private
+output path has its own detail line and is never truncated. These paths are
+relative to the current directory when inside it, otherwise absolute. Control
+escaping and token redaction still apply.
 
 ## Spinner Lifecycle
 

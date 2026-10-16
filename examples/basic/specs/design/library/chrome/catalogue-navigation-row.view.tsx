@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 
 import { MockLink } from "@mokly/mokly";
 
+import { useCurrentPage } from "../../parts/design_navigation.js";
 import type { DesignDestination } from "../../parts/destinations.js";
 import {
   ChevronIcon,
@@ -114,6 +115,7 @@ export function NavRow({
   activeLabel?: string | undefined;
   node: NavigationRow;
 }) {
+  const current = useCurrentPage();
   const isActive =
     node.kind !== "folder" &&
     (activeKey !== undefined
@@ -154,7 +156,12 @@ export function NavRow({
   const rowProps = {
     className,
     style: navRowStyle(node.depth),
-    "aria-current": isActive ? ("page" as const) : undefined,
+    // A parent row also names the current page when its own entry is shown.
+    "aria-current": isActive
+      ? ("page" as const)
+      : node.to === undefined
+        ? undefined
+        : current(node.to),
   };
   const row =
     node.to === undefined ? (

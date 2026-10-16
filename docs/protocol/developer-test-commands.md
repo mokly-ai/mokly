@@ -29,8 +29,8 @@ output. Run `npm run build` first. The viewer suite supplies this preparation.
 The raw commands `node --import tsx --test <file>` and
 `npx playwright test <spec>` skip the build and test the last build. After a
 source change, run `npm run build` before using either raw command. One build
-can serve repeated raw runs while the sources stay unchanged. No command
-prepares a baseline, a compiled example snapshot, or a packed archive.
+can serve repeated raw runs while the sources stay unchanged. No test
+command prepares a baseline, a compiled example snapshot, or a packed archive.
 
 The `test:prepared` and `test:browser:prepared` commands keep the
 [strict runner contract](./ci-verification.md#gate-ownership). They are not
@@ -212,6 +212,12 @@ complete gate. Only the complete `cargo xtask check`, or the validated CI
 aggregate defined in
 [CI verification](./ci-verification.md#verification-boundary), provides
 complete verification.
+
+## Packed Consumer Smoke
+
+`npm run package:smoke` checks the installed archives in a scratch consumer.
+See [Packed Consumer Smoke](./packed-consumer-smoke.md) for its commands,
+coverage, process cleanup, and native browser requirements.
 
 ## Native TLS Build Tools
 

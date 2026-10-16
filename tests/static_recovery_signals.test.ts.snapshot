@@ -1,0 +1,81 @@
+exports[`build plain settles configuration staging and captured-output signals 1`] = `
+[mokly/build-invalid] build cancelled
+
+`;
+
+exports[`build plain settles configuration staging and captured-output signals 2`] = `
+[mokly/export-invalid] Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/.mokly-export-transaction.
+
+`;
+
+exports[`build plain settles configuration staging and captured-output signals 3`] = `
+[mokly/export-invalid] Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/.mokly-export-transaction.
+Recovery failed: Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/stage.
+  Recovery path: .context/.mokly-export-reservations/locks/site
+
+`;
+
+exports[`build plain settles configuration staging and captured-output signals 4`] = `
+[mokly/build-invalid] build cancelled
+
+`;
+
+exports[`build plain settles configuration staging and captured-output signals 5`] = `
+[mokly/build-invalid] build cancelled
+
+`;
+
+exports[`build plain settles configuration staging and captured-output signals 6`] = `
+[mokly/export-invalid] build cancelled
+Recovery failed: Exclusive rename failed: operating-system operation failed: injected restore failure
+  Recovery path: .context/.mokly-export-reservations/locks/site/backup
+
+`;
+
+exports[`build plain settles configuration staging and captured-output signals 7`] = `
+[mokly/export-invalid] Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/stage/404.html.
+Recovery failed: Unexpected or unsafe output entry at {root}/.context/.mokly-export-reservations/locks/site/stage.
+  Recovery path: .context/.mokly-export-reservations/locks/site
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 1`] = `
+[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 2`] = `
+[mokly/export-invalid] Unexpected or unsafe output entry at {private}/.mokly-export-reservations/locks/site/.mokly-export-transaction.
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 3`] = `
+[mokly/export-invalid] Unexpected or unsafe output entry at {private}/.mokly-export-reservations/locks/site/.mokly-export-transaction.
+Recovery failed: Unexpected or unsafe output entry at {private}/.mokly-export-reservations/locks/site/stage.
+  Recovery path: {private}/.mokly-export-reservations/locks/site
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 4`] = `
+[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 5`] = `
+[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 6`] = `
+[mokly/export-invalid] build cancelled
+Recovery failed: Exclusive rename failed: operating-system operation failed: injected restore failure
+  Recovery path: {private}/.mokly-export-reservations/locks/site/backup
+
+`;
+
+exports[`publish plain settles configuration staging and captured-output signals 7`] = `
+[mokly/export-invalid] Unexpected or unsafe output entry at {private}/.mokly-export-reservations/locks/site/stage/404.html.
+Recovery failed: Unexpected or unsafe output entry at {private}/.mokly-export-reservations/locks/site/stage.
+  Recovery path: {private}/.mokly-export-reservations/locks/site
+
+`;

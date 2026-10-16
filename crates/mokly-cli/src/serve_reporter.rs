@@ -1,6 +1,7 @@
 //! CLI-owned typed render and manual-rebuild diagnostics.
 
 use std::io;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_cli::build::{BuildError, BuildSummary};
@@ -17,6 +18,7 @@ use crate::serve_rebuild::RebuildReporter;
 use crate::terminal::Terminal;
 
 pub(super) struct ServeLines {
+    pub(super) cwd: PathBuf,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) terminal: Arc<dyn Terminal>,
     pub(super) style: Style,
@@ -56,8 +58,12 @@ impl RebuildReporter for ServeLines {
         if self.cancellation.requested() {
             return;
         }
-        self.terminal
-            .stderr(&build_output::failure(&self.style, error, &self.redactor));
+        self.terminal.stderr(&build_output::failure(
+            &self.style,
+            error,
+            &self.redactor,
+            &self.cwd,
+        ));
         if self.style.mode == Mode::Rich {
             self.terminal.stderr(&format!(
                 "{}\n",

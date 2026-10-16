@@ -167,6 +167,20 @@ Props tab's controls, and the Read-only and recovery gallery under
 `specs/design/components/controls/limits/` draws the states without editing
 and the recovery states that keep the edits.
 
+`tests/design_catalogue.test.ts` serves this configuration once with
+`--base HEAD` and checks the design catalogue against the verification and
+adoption sections of those contracts. `tests/fixtures/design/` holds the frozen
+screen inventory with the screens that only the catalogue tree reaches, the
+family parts of the adoption table, and the link expectations. The test also
+checks the shared components each design screen records, the stylesheets each
+view links, and every link's destination and focus behaviour. A new design
+screen updates the inventory. A family part that most screens show lists the
+screens without it, so a new screen without that part joins its `except` set.
+A part that only some screens show, such as the comparison toolbar, a
+comparison pane, an empty state, or the tag picker, lists those screens in its
+`only` set, so the test checks a new screen with that part only after it joins
+the set.
+
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),
 [depicted catalogue](../../docs/protocol/mokly-shell-design-catalogue.md),
@@ -227,6 +241,22 @@ another ref, and `build --no-changes` skips the comparison. The
 [static build contract](../../docs/protocol/mokly-export.md) owns the output,
 and the [preview deployments](../../docs/protocol/npm-preview-deployments.md)
 publish this example for `main` and for pull requests.
+
+To check the packed packages against this example:
+
+```bash
+npm run package:smoke
+```
+
+It packs the viewer, the CLI, and the host's native package and installs them
+into a copy of this example outside the repository. It starts the installed
+`mokly serve` in a directory below `mokly.config.json` and opens a React, a
+design, and an HTML screen and a Markdown document in headless Chrome. It
+builds the copy with `--strict` and opens the same entries in the built site.
+Last, it builds the copy again through `npx` with an empty npm cache and no
+Mokly package in the copy. The
+[developer test commands](../../docs/protocol/developer-test-commands.md#packed-consumer-smoke)
+own its rules.
 
 ## What needs the sidecar
 

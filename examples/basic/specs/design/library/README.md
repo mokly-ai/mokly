@@ -120,6 +120,18 @@ Components may compose registered children. Top bar → Tag picker → Tag chip
 records the full nested ownership chain. Components supplied in a caller's slot
 retain that caller's ownership.
 
+A design link to the artboard that renders it names the current page with
+`aria-current="page"`. Catalogue rows, the selected highlight region, and an
+action already in effect get the mark from `useCurrentPage` in
+`../parts/design_navigation.tsx`, which compares a destination with the
+nearest `DesignNavigation` artboard. The component explorer's narrow shortcuts
+compare with the artboard that their shell renders. Only the top bar's brand
+link on the home screen opens its own artboard without the mark.
+
+The device frame's `scheme` flag adds the rendered scheme to its caption, as
+the component explorer previews show it, so no screen draws its own frame
+caption.
+
 ## Styles And Hosts
 
 `style_files.ts` names each component's public stylesheet,
@@ -166,9 +178,9 @@ From the repository root:
 
 ```sh
 npm run build
-npx mokly build --config examples/basic/mokly.config.json --strict --out .context/example
+npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example
 npm run typecheck
-npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts
+npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts tests/design_catalogue.test.ts
 cargo xtask check
 ```
 
@@ -177,6 +189,10 @@ fails on any error or warning. `tests/design_appearance.test.ts` checks that
 the light and dark palettes theme the same roles and meet their contrast
 pairs, and `tests/design_boundaries.test.ts` checks that marked boundaries
 and control edges stay visible and that only palette sources name colours.
+`tests/design_catalogue.test.ts` serves the example and checks that every
+sample keeps its page and saved variants, has a real screen consumer in each
+viewport, and links only the styles of the components it renders, and that
+each design screen records the shared components of its family.
 Open the changed pages through `npm run dev` in both viewports. Check
 saved variants and local edit, unset and reset in Serve, plus read-only
 inspection in the static build. Keep the output directory as an ignored local
@@ -187,4 +203,5 @@ and [inventory](../../../../../docs/protocol/mokly-design-component-library.md).
 
 Page artboards compose the shared inspector and metadata rows. An inspector tab
 may name an authored destination when a static scenario has separate open and
-closed artboards; ordinary tabs continue using native disclosure behavior.
+closed artboards; that tab's link is its one keyboard stop, so its summary
+leaves the tab order. Ordinary tabs continue using native disclosure behavior.

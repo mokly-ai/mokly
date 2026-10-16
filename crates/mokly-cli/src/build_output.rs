@@ -1,5 +1,7 @@
 //! Build warning, diagnostic, and discovery-summary presentation.
 
+use std::path::Path;
+
 use mokly_catalogue::diagnostic::{self, Issue, Warning};
 use mokly_catalogue::error::CatalogueError;
 use mokly_graph::error::GraphError;
@@ -10,6 +12,7 @@ use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::pre_installation;
 use crate::publication::failure::{BuildFailure, Category};
+use crate::recovery_output;
 use crate::redaction::Redactor;
 use crate::static_errors;
 
@@ -59,7 +62,11 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
 }
 
 /// Report retained warnings first, then the command's typed failure.
-pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
+pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor, cwd: &Path) -> String {
+    failure_detail(style, failure, redactor) + &recovery_output::build(failure, cwd, redactor)
+}
+
+fn failure_detail(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     if pre_installation::cancelled(failure) && !matches!(failure, BuildError::Shutdown { .. }) {
         return style.error(Code::BuildInvalid, "build cancelled", redactor);
     }
@@ -76,11 +83,11 @@ pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> Stri
                 Category::ReviewInvalid => Code::ReviewInvalid,
                 Category::ServerFailed => Code::ViewerUnavailable,
             } };
-            let primary = if pre_installation::cancelled(primary) { "build cancelled".into() } else { static_errors::without_prefixes(&primary.to_string()) };
-            style.error_lines(code, &format!("{primary}\nRender shutdown failed: {}", static_errors::without_prefixes(&shutdown.to_string())), redactor)
+            let primary = if pre_installation::cancelled(primary) { "build cancelled".into() } else { recovery_output::cause(primary) };
+            style.error_lines(code, &format!("{primary}\nRender shutdown failed: {}", recovery_output::cause(shutdown)), redactor)
         },
-        BuildError::Cleanup { primary, cleanup, path } => {
-            let message = format!("{}\nRecovery failed: {}\nInspect retained recovery path {}.", static_errors::without_prefixes(&primary.to_string()), static_errors::detail(cleanup), static_errors::display_path(path));
+        BuildError::Cleanup { primary, cleanup, .. } => {
+            let message = format!("{}\nRecovery failed: {}", recovery_output::cause(primary), static_errors::detail(cleanup));
             style.error_lines(Code::ExportInvalid, &message, redactor)
         },
         BuildError::Viewer => style.error(Code::ViewerUnavailable, "Build or reinstall the matching @mokly/viewer package and retry.", redactor),

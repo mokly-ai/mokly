@@ -13,6 +13,7 @@ const propSchema = {
   properties: {
     device: { enum: ["phone", "browser"] },
     label: text,
+    scheme: flag,
     dark: flag,
     lightOnly: flag,
     small: flag,
@@ -51,6 +52,7 @@ export const deviceFrame = defineComponent({
         { label: "Browser", value: "browser" },
       ],
     },
+    scheme: { kind: "boolean", label: "Scheme in caption" },
     dark: { kind: "boolean", label: "Dark preview" },
     small: { kind: "boolean", label: "Compact frame" },
     address: { kind: "text", label: "Address" },
