@@ -7,15 +7,14 @@ use async_trait::async_trait;
 use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::Checkout;
 use mokly_publish::error;
-
 use mokly_publish::exchange::Exchange;
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
 use mokly_publish::settings::Settings;
 
-use crate::publication::error::{Error, ExchangeResult, Result};
-
 use crate::publication::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
+use crate::publication::error::{Error, ExchangeResult, Result};
+use crate::publication::mapping::checkout_result;
 
 /// Normalized command inputs. Secrets remain in Settings, outside this value.
 #[derive(Clone, Debug)]
@@ -82,10 +81,11 @@ impl Publish for Command {
         settings: &Settings,
         cancellation: &dyn Cancellation,
     ) -> Result<Receipt> {
-        let initial = self
-            .checkout
-            .inspect(&options.directory, &options.owned_paths, cancellation)
-            .publication()?;
+        let initial = checkout_result(
+            self.checkout
+                .inspect(&options.directory, &options.owned_paths, cancellation),
+            cancellation,
+        )?;
         if !initial.changed_paths.is_empty() {
             return Err(Error::Uncommitted {
                 paths: initial.changed_paths,
@@ -93,16 +93,16 @@ impl Publish for Command {
                 build_directories: initial.build_directories,
             });
         }
-        let publication = self
-            .checkout
-            .publication(
+        let publication = checkout_result(
+            self.checkout.publication(
                 &initial,
                 &options.version,
                 options.repository.as_deref(),
                 &options.actions,
                 cancellation,
-            )
-            .publication()?;
+            ),
+            cancellation,
+        )?;
         let directory = self.directories.create(&initial.root)?;
         self.reporter.build_directory(&directory);
         let request = BuildRequest {

@@ -91,6 +91,7 @@ impl ViewerAssets for PackageAssets {
         }
         for (source, route, mime) in [
             ("shell.css", "shell.css", "text/css; charset=utf-8"),
+            ("assets/brand.svg", "client/brand.svg", "image/svg+xml"),
             (
                 "assets/fonts/InterVariable.woff2",
                 "fonts/InterVariable.woff2",

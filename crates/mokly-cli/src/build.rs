@@ -73,7 +73,7 @@ pub enum BuildError {
         source: mokly_static::error::Error,
     },
     /// Comparison history could not be resolved.
-    #[error("[mokly-cli/build] Git information could not be read for {base:?}: {source}")]
+    #[error("[mokly-cli/build] Git information could not be read for {base}: {source}")]
     Git {
         /// Selected reference.
         base: String,
@@ -152,11 +152,12 @@ impl BuildService for CatalogueBuild {
     }
 
     fn prepare(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError> {
+        let parent = tracing::Span::current();
         let result = std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-build".into())
                 .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || self.attempt(cwd, options))
+                .spawn_scoped(scope, || parent.in_scope(|| self.attempt(cwd, options)))
             {
                 Ok(thread) => thread,
                 Err(source) => return Err(runtime(InternalError::PreparationThread { source })),

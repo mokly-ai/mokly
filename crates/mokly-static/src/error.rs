@@ -15,6 +15,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Failures that preserve the existing site or name retained recovery paths.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// A viewer module is not valid UTF-8.
+    #[error("[mokly-static] Viewer script is not UTF-8: {path}.")]
+    ModuleEncoding {
+        /// Viewer package script route.
+        path: String,
+    },
     /// Output overlaps protected inputs or escapes its allowed root.
     #[error("[mokly-static] Unsafe output directory: {}.", .path.display())]
     Destination {

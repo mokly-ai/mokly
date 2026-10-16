@@ -95,16 +95,20 @@ for (const mode of ["plain", "rich"])
     { timeout: 120_000, skip: process.platform === "win32" },
     async () => {
       const root = await publicationFixture();
+      let signals = 0;
       const interrupt = () => {
+        if (signals !== 0) return;
+        signals++;
         running.child.kill("SIGINT");
       };
-      const server = await exchange({ holdBlob: () => interrupt?.() });
+      const server = await exchange({ holdBlob: interrupt });
       let output: string | undefined;
       const running = publish(root, server.endpoint, mode);
 
       try {
         const result = await running.result;
         output = directory(result.stdout);
+        assert.equal(signals, 1);
         assert.equal(result.code, 1);
         assert.match(result.stderr, /Publication was cancelled/);
         assert.ok(!result.stderr.includes("connection"));

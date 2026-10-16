@@ -122,16 +122,16 @@ pub struct SourceFingerprints {
 }
 impl Fingerprints for SourceFingerprints {
     fn capture(&self, root: &Path, excluded: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>> {
-        let root = self.files.project(root)?;
+        let physical = self.files.project(root)?;
         let excluded = excluded
             .iter()
             .map(|path| self.files.project(path))
             .collect::<Result<Vec<_>>>()?;
         let mut result = BTreeMap::new();
         self.walk(
-            &root,
-            &root,
-            &root,
+            &physical,
+            &physical,
+            root,
             &excluded,
             &BTreeSet::new(),
             &mut result,

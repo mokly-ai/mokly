@@ -67,7 +67,6 @@ impl Transactions for OutputTransactions {
             for ancestor in requested.ancestors().skip(1) {
                 if self.files.project(ancestor)? == real_root {
                     boundary.lexical_allowed = Some(ancestor.into());
-                    break;
                 }
             }
         }

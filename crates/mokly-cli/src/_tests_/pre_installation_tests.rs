@@ -124,3 +124,42 @@ fn configuration_git_render_and_staging_failures_share_the_same_window() {
         ));
     }
 }
+
+#[test]
+fn a_delivered_signal_keeps_git_cancellation_but_prints_only_cancellation() {
+    let signals = Unimock::new((
+        CancellationMock::drain.next_call(matching!()).returns(()),
+        CancellationMock::requested
+            .next_call(matching!())
+            .returns(true),
+    ));
+    let result = settle::<()>(
+        Err(BuildError::Git {
+            base: "origin/main".into(),
+            source: mokly_git::error::Error::Cancelled,
+        }),
+        &signals,
+    )
+    .unwrap_err();
+    assert!(matches!(
+        &result,
+        BuildError::Git {
+            source: mokly_git::error::Error::Cancelled,
+            ..
+        }
+    ));
+    for mode in [crate::output::Mode::Plain, crate::output::Mode::Rich] {
+        let style = crate::output::Style {
+            mode,
+            color: false,
+            ascii: true,
+            columns: 100,
+        };
+        let redactor = crate::redaction::Redactor::default();
+        assert_eq!(
+            crate::build_output::failure(&style, &result, &redactor),
+            crate::build_output::failure(&style, &BuildError::Cancelled, &redactor)
+        );
+    }
+    assert!(!result.to_string().contains('"'));
+}

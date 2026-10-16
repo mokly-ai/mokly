@@ -56,7 +56,9 @@ fn build(root: &Path, output: &str) {
         String::from_utf8_lossy(&result.stderr)
     );
     assert!(result.stderr.is_empty());
-    assert!(String::from_utf8_lossy(&result.stdout).contains("Built Mokly to"));
+    assert!(
+        String::from_utf8_lossy(&result.stdout).starts_with(&format!("Built Mokly to {output} ("))
+    );
 }
 
 #[test]

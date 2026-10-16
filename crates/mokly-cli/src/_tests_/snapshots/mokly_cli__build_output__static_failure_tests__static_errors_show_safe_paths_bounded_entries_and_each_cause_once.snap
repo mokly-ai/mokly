@@ -2,7 +2,13 @@
 source: crates/mokly-cli/src/_tests_/static_failure_tests.rs
 expression: output
 ---
-[mokly/server-failed] Build or reinstall the matching @mokly/viewer package.
+[mokly/server-failed] Build or reinstall the matching @mokly/viewer package and retry.
+
+[mokly/server-failed] Viewer script is not UTF-8: mokly-viewer/client/shell.js. Build or reinstall the matching @mokly/viewer package and retry.
+
+[mokly/server-failed] Could not read module references: mokly-viewer/client/shell.js:2:7. Build or reinstall the matching @mokly/viewer package and retry.
+
+[mokly/server-failed] Module resource is unavailable: mokly-viewer/client/shell.js -> ./missing.js. Build or reinstall the matching @mokly/viewer package and retry.
 
 [mokly/git-failed] Git information could not be read for main. Check the repository and configured base.
 
@@ -49,15 +55,26 @@ Inspect retained recovery path /kept/backup.
 Inspect remaining recovery path /kept/backup.
 
 [mokly/build-invalid] build cancelled
-[mokly/build-invalid] Render shutdown failed: Build or reinstall the matching @mokly/viewer package.
+Render shutdown failed: Build or reinstall the matching @mokly/viewer package.
 
 [mokly/export-invalid] build cancelled
 Recovery failed: Unexpected or unsafe output entry at /kept/[redacted].
 Inspect retained recovery path /kept/[redacted].
 
 x The catalogue server could not start.  [mokly/server-failed]
-  Build or reinstall the matching @mokly/viewer package.
-  Check the reported port or process and retry.
+  Build or reinstall the matching @mokly/viewer package and retry.
+
+x The catalogue server could not start.  [mokly/server-failed]
+  Viewer script is not UTF-8: mokly-viewer/client/shell.js.
+  Build or reinstall the matching @mokly/viewer package and retry.
+
+x The catalogue server could not start.  [mokly/server-failed]
+  Could not read module references: mokly-viewer/client/shell.js:2:7.
+  Build or reinstall the matching @mokly/viewer package and retry.
+
+x The catalogue server could not start.  [mokly/server-failed]
+  Module resource is unavailable: mokly-viewer/client/shell.js -> ./missing.js.
+  Build or reinstall the matching @mokly/viewer package and retry.
 
 x Git information could not be read.  [mokly/git-failed]
   Git information could not be read for main.
@@ -123,8 +140,6 @@ x The static output could not be written.  [mokly/export-invalid]
 
 x The catalogue could not be built.  [mokly/build-invalid]
   build cancelled
-  Fix the reported catalogue source and retry.
-x The catalogue could not be built.  [mokly/build-invalid]
   Render shutdown failed: Build or reinstall the matching @mokly/viewer package.
   Fix the reported catalogue source and retry.
 

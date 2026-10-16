@@ -117,3 +117,55 @@ fn an_absolute_output_through_a_repository_alias_checks_like_with_like() {
     assert_eq!(transaction.output(), root.join("site"));
     transaction.abandon().unwrap();
 }
+
+#[test]
+fn a_raw_temporary_root_uses_the_canonical_repository_boundary() {
+    let temporary = TempDir::new().unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let writer: &dyn Transactions = &OutputTransactions {
+        files: Arc::new(SystemFiles),
+        rename: Arc::new(SystemRename),
+    };
+    let transaction = writer
+        .open(&temporary.path().join("site"), boundary(&root))
+        .unwrap();
+    assert_eq!(transaction.output(), root.join("site"));
+    transaction.abandon().unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn repository_aliases_keep_outer_protections_and_detect_retargeting() {
+    let temporary = TempDir::new().unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let alias_parent = TempDir::new().unwrap();
+    let alias = alias_parent.path().join("repository");
+    let outside = TempDir::new().unwrap();
+    fs::create_dir_all(root.join("node_modules/x")).unwrap();
+    fs::create_dir_all(root.join("specs")).unwrap();
+    fs::create_dir_all(root.join(".git")).unwrap();
+    std::os::unix::fs::symlink(&root, &alias).unwrap();
+    std::os::unix::fs::symlink(&root, root.join("node_modules/x/self")).unwrap();
+    let writer: &dyn Transactions = &OutputTransactions {
+        files: Arc::new(SystemFiles),
+        rename: Arc::new(SystemRename),
+    };
+    for suffix in [
+        "",
+        ".git/site",
+        "node_modules/site",
+        "specs/site",
+        "node_modules/x/self/site",
+    ] {
+        assert!(
+            writer.open(&alias.join(suffix), boundary(&root)).is_err(),
+            "{suffix}"
+        );
+    }
+    let mut transaction = writer.open(&alias.join("site"), boundary(&root)).unwrap();
+    fs::remove_file(&alias).unwrap();
+    std::os::unix::fs::symlink(outside.path(), &alias).unwrap();
+    assert!(transaction.protect(vec![]).is_err());
+    transaction.abandon().unwrap();
+    assert!(!outside.path().join("site").exists());
+}

@@ -10,6 +10,9 @@ use crate::codes::Code;
 /// Static ownership and recovery failures retain export-invalid; author metadata is build-invalid.
 pub fn code(error: &Error) -> Code {
     match error {
+        Error::ModuleSyntax { .. }
+        | Error::ModuleReference { .. }
+        | Error::ModuleEncoding { .. } => Code::ViewerUnavailable,
         Error::Empty
         | Error::Cancelled
         | Error::Inspector {
@@ -23,6 +26,12 @@ pub fn code(error: &Error) -> Code {
 /// Render each cause once without Rust crate prefixes or Debug-quoted display paths.
 pub fn detail(error: &Error) -> String {
     match error {
+        Error::ModuleSyntax { .. }
+        | Error::ModuleReference { .. }
+        | Error::ModuleEncoding { .. } => format!(
+            "{} Build or reinstall the matching @mokly/viewer package and retry.",
+            without_prefixes(&error.to_string())
+        ),
         Error::Destination { path } => format!("Unsafe output directory: {}.", display_path(path)),
         Error::Ownership { path } => format!(
             "Invalid export ownership inventory: {}.",

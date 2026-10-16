@@ -92,6 +92,10 @@ The composition root supplies `dyn Publications`,
 through `dyn ServerRuntime` and calls its `dyn BoundServer::run` method with a
 stop channel and `dyn Lifecycle` hooks.
 
+The shared shell declares the Browse brand SVG at
+`/mokly-viewer/client/brand.svg`. The asset loader serves the matching packaged
+icon for both Serve and static output.
+
 ## Development
 
 ```bash

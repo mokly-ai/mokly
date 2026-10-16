@@ -14,6 +14,24 @@ use crate::redaction::Redactor;
 fn static_errors_show_safe_paths_bounded_entries_and_each_cause_once() {
     let samples = [
         BuildError::Viewer,
+        BuildError::Static {
+            source: Error::ModuleEncoding {
+                path: "mokly-viewer/client/shell.js".into(),
+            },
+        },
+        BuildError::Static {
+            source: Error::ModuleSyntax {
+                path: "mokly-viewer/client/shell.js".into(),
+                line: 2,
+                column: 7,
+            },
+        },
+        BuildError::Static {
+            source: Error::ModuleReference {
+                path: "mokly-viewer/client/shell.js".into(),
+                request: "./missing.js".into(),
+            },
+        },
         BuildError::Git {
             base: "main".into(),
             source: mokly_git::error::Error::NoMergeBase,
@@ -103,4 +121,28 @@ fn static_errors_show_safe_paths_bounded_entries_and_each_cause_once() {
     assert!(!output.contains("secret"));
     assert!(!output.contains("file-22"));
     insta::assert_snapshot!(output);
+}
+
+#[test]
+fn shutdown_uses_one_block_and_retains_the_primary_error_category() {
+    let error = BuildError::Shutdown {
+        primary: Box::new(BuildError::Git {
+            base: "main".into(),
+            source: mokly_git::error::Error::NoMergeBase,
+        }),
+        shutdown: Box::new(BuildError::Viewer),
+    };
+    for mode in [Mode::Plain, Mode::Rich] {
+        let style = Style {
+            mode,
+            color: false,
+            ascii: true,
+            columns: 200,
+        };
+        let text = failure(&style, &error, &Redactor::default());
+        assert_eq!(text.matches("[mokly/git-failed]").count(), 1);
+        assert!(!text.contains("[mokly/build-invalid]"));
+        assert!(text.contains("Render shutdown failed"));
+        assert!(!text.contains("\"main\""));
+    }
 }

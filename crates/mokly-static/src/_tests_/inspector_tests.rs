@@ -4,7 +4,9 @@ use mokly_html::composition::Composed;
 use mokly_html::parse;
 use mokly_model::usage::{CatalogueUsage, ComponentRangeRecord, ComponentRangeTarget};
 
+use crate::error::Error;
 use crate::inspector::inject;
+use crate::inspector_error::InspectorFailure;
 
 pub(super) fn document(html: &str) -> Composed {
     Composed {
@@ -54,11 +56,19 @@ fn oversized_usage_is_explicit_and_never_truncated() {
 }
 #[test]
 fn reserved_authored_markers_and_invalid_parent_indices_fail() {
-    for html in [
-        "<template data-mokly-inspector>{}</template>",
-        "<a data-mokly-inspector-link=0 href='#a'>link</a>",
+    for (html, expected) in [
+        (
+            "<template data-mokly-inspector>{}</template>",
+            "data-mokly-inspector",
+        ),
+        (
+            "<a data-mokly-inspector-link=0 href='#a'>link</a>",
+            "data-mokly-inspector-link",
+        ),
     ] {
-        assert!(inject(&document(html), "home/index.html").is_err());
+        assert!(
+            matches!(inject(&document(html), "home/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Reserved { attribute } }) if route == "home/index.html" && attribute == expected)
+        );
     }
     let mut document = document("<p>Body</p>");
     document.usage = CatalogueUsage::Ready {
@@ -70,7 +80,18 @@ fn reserved_authored_markers_and_invalid_parent_indices_fail() {
             parent_id: Some("r-0".into()),
         }],
     };
-    assert!(inject(&document, "home/index.html").is_err());
+    assert!(
+        matches!(inject(&document, "home/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Ranges }) if route == "home/index.html")
+    );
+    document.tree.clear();
+    document.usage = CatalogueUsage::Ready {
+        instances: vec![],
+        slots: vec![],
+        ranges: vec![],
+    };
+    assert!(
+        matches!(inject(&document, "headless/index.html"), Err(Error::Inspector { route, reason: InspectorFailure::Head }) if route == "headless/index.html")
+    );
 }
 
 #[test]

@@ -26,8 +26,8 @@ parents refer only to earlier indices and must match actual nesting.
 Distinct keys derive from these authenticated ranges, including empty pairs.
 Links use `FrameNavigation` without `activation`, with at most 1,024 distinct
 identities. Overflow publishes an explicit error map, never a truncated map.
-A logical link whose path, fragment, or target cannot satisfy the wire grammar
-is omitted from this map. It keeps its portable fallback link. Other links and
+A logical link whose path, ASCII fragment, or target cannot satisfy the
+[wire grammar](./mokly-frame-adapter.md) is omitted from this map. It keeps its portable fallback link. Other links and
 instance ranges remain inspectable.
 Each accepted native link receives `data-mokly-inspector-link="n"`, indexing the
 deduplicated `links` array. Consumer-authored inspector markers and link indices

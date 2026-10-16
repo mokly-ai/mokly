@@ -18,12 +18,16 @@ interface Job {
   if?: string;
   permissions?: Record<string, string>;
   steps: Step[];
+  env?: Record<string, string>;
+  with?: Record<string, unknown>;
+  "timeout-minutes"?: number;
 }
 interface Workflow {
   on: Record<string, unknown>;
   permissions: Record<string, string>;
   concurrency: { "cancel-in-progress": boolean };
   jobs: Record<string, Job>;
+  env?: Record<string, string>;
 }
 async function workflow(): Promise<Workflow> {
   return parse(
@@ -78,11 +82,20 @@ test("every preview job has least-privilege credentials and checkout properties"
   assert.equal(value.on.pull_request_target, undefined);
   assert.equal(value.permissions["pull-requests"], undefined);
   assert.equal(value.concurrency["cancel-in-progress"], true);
+  const hasSecret = (object: unknown) =>
+    /secrets\./u.test(JSON.stringify(object ?? {}));
+  assert.equal(hasSecret(value.env), false);
   let installers = 0;
   for (const job of Object.values(value.jobs)) {
-    const secretSteps = job.steps.filter((step) =>
-      Object.values(step.env ?? {}).some((value) => value.includes("secrets.")),
+    assert.equal(hasSecret(job.env), false);
+    assert.equal(hasSecret(job.with), false);
+    assert.ok(
+      Number.isInteger(job["timeout-minutes"]) && job["timeout-minutes"]! > 0,
     );
+    const secretSteps = job.steps.filter(
+      (step) => hasSecret(step.env) || hasSecret(step.with),
+    );
+    for (const step of secretSteps) assert.equal(hasSecret(step.with), false);
     if (secretSteps.length || job.permissions?.["pull-requests"] === "write") {
       assert.ok(job.if);
       for (const action of ["opened", "synchronize", "closed"])

@@ -14,7 +14,7 @@ npx mokly build --config tools/mokly.config.json --no-changes
 Use `serve`, `build`, or `publish`. With no command, Mokly starts watched Serve.
 Value options accept `--name=value`. Use that form when a value begins with a
 hyphen, such as `--token=-TOKEN` or `--config=-catalogue.config.json`.
-Boolean options take no value.
+Boolean options take no value. There are no silent positional arguments.
 
 ## Options
 

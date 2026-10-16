@@ -13,6 +13,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Local build and checkout failures preserve their categories through publication.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// A signal arrived during a failed pre-build checkout operation.
+    #[error("[mokly-cli/publication] {source}")]
+    Interrupted {
+        /// Original failure retained for optional diagnostics.
+        source: error::Error,
+    },
     /// An exchange, checkout adapter, or upload preparation failure.
     #[error("[mokly-cli/publication] {source}")]
     Exchange {

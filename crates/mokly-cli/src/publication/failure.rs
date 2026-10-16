@@ -56,6 +56,12 @@ impl BuildFailure for BuildError {
                     },
             }
             | BuildError::Cancelled => Category::BuildInvalid,
+            BuildError::Static {
+                source:
+                    Error::ModuleSyntax { .. }
+                    | Error::ModuleReference { .. }
+                    | Error::ModuleEncoding { .. },
+            } => Category::ServerFailed,
             BuildError::Static { .. } => Category::ExportInvalid,
             BuildError::Git { .. } => Category::GitFailed,
             BuildError::Catalogue {

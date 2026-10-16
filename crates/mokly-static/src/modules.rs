@@ -23,7 +23,7 @@ pub fn validate(files: &[File]) -> Result<()> {
         let text = match std::str::from_utf8(&file.bytes) {
             Ok(text) => text,
             Err(_) => {
-                return Err(Error::Invalid {
+                return Err(Error::ModuleEncoding {
                     path: file.path.clone(),
                 });
             }

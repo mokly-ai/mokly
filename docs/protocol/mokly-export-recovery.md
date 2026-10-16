@@ -133,10 +133,10 @@ signal notifications once more and checks again, without a wall-clock delay.
 That extra check closes the race in which Ctrl+C stops a sidecar or a Git
 process and its failure reaches the core before the signal handler runs.
 
-For `mokly build`, the signal handler is installed after the configuration is
-loaded. The window covers these operations:
+Both `mokly build` and `mokly publish` install their signal handlers before
+configuration loading. The window covers these operations:
 
-1. Base resolution and the base side's source extraction.
+1. Configuration loading, base resolution, and the base side's source extraction.
 2. Catalogue validation and rendering.
 3. Public-file capture and changed-path evidence collection.
 4. Comparison generation, the Changes calculation, and removed preview
@@ -145,15 +145,13 @@ loaded. The window covers these operations:
 6. Staging, including identity finalization and the marker.
 7. The final input recheck and the output-location recheck.
 
-`mokly publish` installs its handler earlier, so the same window additionally
-covers publish configuration loading and repository identity. Opening the
+`mokly publish` also includes repository inspection and identity in this window. Opening the
 output transaction stays outside it, because its failures carry separate
 reservation recovery guarantees.
 
 If the signal is set after that check, the failure is a cancellation. Marking
-an error as a cancellation keeps its original category, message, and
-diagnostic, so `MOKLY_DIAGNOSTIC=1` shows the diagnostic of the failing
-operation. `mokly build` prints `build cancelled` with `build-invalid`, while
+an error as a cancellation keeps the original failure as its diagnostic cause.
+`MOKLY_DIAGNOSTIC=1` shows that cause chain. `mokly build` prints `build cancelled` with `build-invalid`, while
 `mokly publish` prints the publication-cancelled output. This window is the
 only place where cancellation may be inferred from the command signal. It is
 safe because installation has not begun: no backup or reservation holds the

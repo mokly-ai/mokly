@@ -13,6 +13,7 @@ import {
   publish,
   removeOutput,
 } from "./helpers/static_publication.js";
+import { timings } from "./helpers/static_timings.js";
 
 const exec = promisify(execFile);
 async function commit(root: string) {
@@ -134,7 +135,7 @@ test(
 );
 
 test(
-  "timings preserve plain output and diagnostic stacks redact credentials",
+  "timings preserve plain output and diagnostic causes redact credentials",
   { timeout: 120_000 },
   async () => {
     const root = await publicationFixture();
@@ -155,13 +156,7 @@ test(
       outputs.push(directory(result.stdout));
       assert.equal(result.code, 0, result.stderr);
       for (const output of [built, result]) {
-        const records = output.stderr
-          .split("\n")
-          .filter((line) => line.startsWith("[mokly:timing] "))
-          .map(
-            (line) =>
-              JSON.parse(line.slice(15)) as { stage: string; event: string },
-          );
+        const records = timings(output.stderr);
         assert.ok(records.some((record) => record.stage === "config.load"));
         assert.ok(
           records.some(
@@ -169,9 +164,29 @@ test(
               record.stage === "output.install" && record.event === "end",
           ),
         );
+        assert.ok(
+          records.some(
+            (record) =>
+              record.stage === "render.document" &&
+              record.parentId !== undefined,
+          ),
+        );
         assert.ok(!output.stdout.includes("✔"));
       }
       assert.ok(result.stderr.includes('"stage":"upload.plan"'));
+      const badBase = await command(root, "build", [
+        "--base=absent-base",
+        "--debug-timings",
+      ]).result;
+      assert.equal(badBase.code, 1);
+      assert.ok(
+        timings(badBase.stderr).some(
+          (record) =>
+            record.stage === "review.base-commit" &&
+            record.event === "end" &&
+            record.status === "error",
+        ),
+      );
       await fs.writeFile(
         path.join(root, "mokly.config.json"),
         '{"private/a==":true}',
@@ -181,7 +196,7 @@ test(
         MOKLY_TOKEN: "private/a==",
       }).result;
       assert.equal(failure.code, 1);
-      assert.match(failure.stderr, /Diagnostic stack:/);
+      assert.match(failure.stderr, /Diagnostic causes:/);
       assert.match(failure.stderr, /\[redacted\]/);
       assert.ok(!failure.stderr.includes("private/a=="));
     } finally {
@@ -206,7 +221,7 @@ test(
       output = directory(result.stdout);
       assert.equal(result.code, 1);
       assert.match(result.stderr, /\[mokly\/upload-unsupported-version\]/);
-      assert.match(result.stderr, /Diagnostic stack:/);
+      assert.match(result.stderr, /Diagnostic causes:/);
       assert.ok(!result.stderr.includes("private/a=="));
       assert.equal(server.bodies.length, 1);
       assert.equal(server.attempts.size, 0);

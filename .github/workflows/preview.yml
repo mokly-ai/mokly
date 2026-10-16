@@ -21,6 +21,7 @@ jobs:
   deploy-main:
     name: Deploy Main Preview
     if: github.event_name == 'push'
+    timeout-minutes: 20
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - name: Check out repository
@@ -78,6 +79,7 @@ jobs:
         startsWith(github.event.pull_request.head.ref, 'release-please--') ||
         contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
       )
+    timeout-minutes: 20
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - name: Check out repository
@@ -182,6 +184,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 20
     runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - name: Delete Cloudflare Pages PR deployments
@@ -216,6 +219,7 @@ jobs:
             }
             try {
               for (let page = 1; ; page++) {
+                if (page > 100) throw new Error("deployment pagination exceeded 100 pages; branch deployments retained");
                 const body = await request(root + "/deployments?per_page=100&page=" + page);
                 if (!Array.isArray(body.result)) throw new Error("invalid deployment list");
                 ids.push(...body.result.filter(item => item.deployment_trigger?.metadata?.branch === process.env.PREVIEW_BRANCH).map(item => item.id));

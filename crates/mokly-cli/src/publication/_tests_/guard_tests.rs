@@ -14,7 +14,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::publication::build::{DirectoriesMock, StaticOutputMock};
 use crate::publication::command::{BuildReporterMock, Command, Options, Publish};
 
-use super::support::{artifact, inventory, publication, settings};
+use super::support::{active, artifact, inventory, publication, settings};
 
 #[tokio::test]
 async fn directory_and_metadata_mismatches_fail_before_plan() {
@@ -106,7 +106,7 @@ async fn directory_and_metadata_mismatches_fail_before_plan() {
         };
         assert!(
             matches!(
-                command.run(&options, &settings(8), &Unimock::new(())).await,
+                command.run(&options, &settings(8), &active()).await,
                 Err(Error::Exchange {
                     source: error::Error::InvalidBundle
                 })

@@ -7,6 +7,7 @@ use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::{Discoverer, Discovery};
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::working_tree::WorkingTree;
+use mokly_source_interface::tree::SourceTree;
 use tempfile::TempDir;
 
 mod support;
@@ -181,4 +182,12 @@ fn configuration_aliases_keep_both_private_source_names() {
     let prepared = support::prepare(directory.path(), Some("mokly.config.json")).unwrap();
     assert!(prepared.model.sources.contains(&"real-config.json".into()));
     assert!(prepared.model.sources.contains(&"mokly.config.json".into()));
+}
+
+#[test]
+fn working_tree_identity_uses_the_shared_platform_spelling() {
+    let temporary = TempDir::new().unwrap();
+    let root = dunce::canonicalize(temporary.path()).unwrap();
+    let node = WorkingTree.project(temporary.path()).unwrap().unwrap();
+    assert_eq!(node.identity, root);
 }

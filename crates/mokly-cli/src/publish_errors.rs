@@ -73,6 +73,7 @@ pub fn render(error: &Error, style: &Style, redactor: &Redactor) -> String {
 /// Render CLI publication failures while retaining local recovery diagnostics.
 pub fn command(error: &error::Error, style: &Style, redactor: &Redactor) -> String {
     let (code, detail) = match error {
+        error::Error::Interrupted { .. } => return render(&Error::Cancelled, style, redactor),
         error::Error::Exchange { source } => return render(source, style, redactor),
         error::Error::Build { failure } => {
             if let Some(error) = failure.native() {

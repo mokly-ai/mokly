@@ -102,3 +102,29 @@ test("cleanup explains a list rejection before attempting any deletion", async (
   assert.equal(result.calls.length, 1);
   assert.match(result.outputs[0]!, /GET HTTP 503: service unavailable/);
 });
+
+test("cleanup without total_pages continues until an empty page", async () => {
+  const result = await execute([
+    { status: 200, body: { success: true, result: [deployment("one")] } },
+    { status: 200, body: { success: true, result: [] } },
+    { status: 200, body: { success: true } },
+  ]);
+  assert.equal(result.calls.length, 3);
+  assert.ok(result.calls[1]?.url.endsWith("page=2"));
+  assert.equal(result.calls[2]?.method, "DELETE");
+  assert.deepEqual(result.outputs, ["deleted: 1 branch deployments"]);
+});
+
+test("cleanup caps pagination and retains all deployments before any delete", async () => {
+  const result = await execute(
+    Array.from({ length: 100 }, () => ({
+      status: 200,
+      body: { success: true, result: [deployment("one")] },
+    })),
+  );
+  assert.equal(result.calls.length, 100);
+  assert.ok(result.calls.every((call) => call.method === "GET"));
+  assert.deepEqual(result.outputs, [
+    "retained: deployment pagination exceeded 100 pages; branch deployments retained",
+  ]);
+});

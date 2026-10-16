@@ -17,6 +17,7 @@ use mokly_model::output::artifact::File;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_server::assets::{PackageAssets, ViewerAssets};
 use mokly_source_interface::tree::SourceTree;
+use mokly_static::modules;
 
 use crate::render_runtime::Services;
 use crate::static_runtime::Context;
@@ -53,11 +54,17 @@ pub(super) fn setup(
             }),
             disk: Arc::new(SystemDisk),
         };
-        if let Err(source) = tracing::info_span!("review.base-commit").in_scope(|| {
-            repositories
-                .open(&config.repo_root)
-                .and_then(|repository| repository.merge_base(&base))
-        }) {
+        if let Err(source) =
+            tracing::info_span!("review.base-commit", status = "error").in_scope(|| {
+                let result = repositories
+                    .open(&config.repo_root)
+                    .and_then(|repository| repository.merge_base(&base));
+                if result.is_ok() {
+                    tracing::Span::current().record("status", "ok");
+                }
+                result
+            })
+        {
             return Err(BuildError::Git { base, source });
         }
     }
@@ -65,7 +72,7 @@ pub(super) fn setup(
         tree: Arc::new(WorkingTree),
     };
     let dist = viewer_assets::dist().ok_or(BuildError::Viewer)?;
-    let viewer = match assets.load(&dist) {
+    let viewer: Vec<File> = match assets.load(&dist) {
         Ok(files) => files
             .into_iter()
             .map(|(path, file)| File {
@@ -75,6 +82,9 @@ pub(super) fn setup(
             .collect(),
         Err(_) => return Err(BuildError::Viewer),
     };
+    if let Err(source) = modules::validate(&viewer) {
+        return Err(BuildError::Static { source });
+    }
     let services = match Services::new(
         tree.clone(),
         cwd,

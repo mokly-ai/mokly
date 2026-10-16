@@ -53,8 +53,11 @@ passing validated props to the graph. Control bounds also apply in the core.
 Build and publish install signal handling before command work. The native signal
 flag records delivered signals before the listener task runs. The shared
 pre-installation boundary drains and checks it after configuration, Git, render,
-and stage work. Output reservation precedes Git and sidecar preparation. Both
-the signal path and normal exit drain the pool through one shutdown guard.
+and stage work. Output reservation precedes Git and sidecar preparation.
+Viewer modules are validated before consumer rendering; invalid package scripts
+retain their path and parser position in a viewer-package failure. Both
+the signal path and normal exit drain the idempotent pool with separate
+shutdown guards.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
 count as one interruption. A later signal kills owned sidecars and exits
@@ -79,7 +82,7 @@ recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust
 core. The binary owns catalogue work and file writes. Build and publish support
 `--debug-timings` with the same structured trace as Serve. `MOKLY_DIAGNOSTIC=1`
-adds a redacted command stack and the original typed failure context. `build` renders HTML and React
+adds the redacted cause chain and any supplied sidecar JavaScript stack. `build` renders HTML and React
 screens, components, stories, pages, and Markdown
 documents into the bounded process cache. It reports all render warnings
 before strict-mode failure. `mokly-static` writes the shell, canonical index and details, documents,
