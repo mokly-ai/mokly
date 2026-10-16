@@ -67,6 +67,9 @@ cargo clippy -p mokly-html --all-targets -- -D warnings
 Enable `mock` for the unimock fragment and composer boundaries. Unit tests
 mock impure boundaries. Graph integration fixtures exercise complete rendered
 document snapshots, assets, and eviction.
+The native HTML sweep fixture covers front matter, template spacing, variants,
+named and repeated slots, ignore scopes, link controls, and resource closure.
+The link-control tests retain the former ancestor and descendant tier matrix.
 
 ### Key Code
 
