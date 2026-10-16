@@ -99,6 +99,9 @@ JavaScript provider uses the same request's source and repository handles
 for extraction and dependency leases. The CLI supplies `mokly-render::Runtime`
 for both sides, sharing its render cache, sidecar pool, and cancellation.
 Historical runtime failures follow the typed policy in base preparation.
+`mokly-static` consumes the retained result and both graph handles to publish
+one complete comparison. The static writer owns file inventory and identity;
+the engine owns classification, removal selection, and historical snapshot IDs.
 
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 `dyn Extraction`, `dyn Dependencies`, and `dyn Cache` in the render graph

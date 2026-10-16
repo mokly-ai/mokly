@@ -21,7 +21,23 @@ use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::assembly::{Assembler, Assembly, CatalogueAssembler};
+use crate::changes::ChangeState;
 use crate::error::Error;
+use mokly_compare::comparison_types::ComparisonResult;
+use mokly_model::public_metadata::ChangesStatus;
+
+struct Disabled;
+impl ChangeState for Disabled {
+    fn status(&self) -> ChangesStatus {
+        ChangesStatus::Disabled
+    }
+    fn base(&self) -> Option<&str> {
+        None
+    }
+    fn ready(&self) -> Option<&ComparisonResult> {
+        None
+    }
+}
 use crate::transaction::CancellationMock;
 
 fn config() -> ResolvedConfig {
@@ -96,8 +112,8 @@ fn request<'a>(
         config_path: "mokly.config.json".into(),
         directory: "/repo/site".into(),
         viewer: vec![],
-        base: None,
-        metadata: None,
+        changes: &Disabled,
+        publication: None,
     }
 }
 

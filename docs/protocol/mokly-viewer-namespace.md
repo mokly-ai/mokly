@@ -15,6 +15,7 @@ protocol names that contain `mokly` are fixed.
 | ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
 | `index.json`                                                 | the catalogue index v7                                          | Serve, output |
 | `entries/<entry path>.json`                                  | one entry detail v1 per current entry                           | Serve, output |
+| `diffs/generations/<generation>/snapshot.json`               | catalogue change snapshot v4                                    | output        |
 | `diffs/generations/<generation>/review.json`                 | review result v8                                                | Serve, output |
 | `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v1 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
@@ -47,6 +48,7 @@ slash; HTTP URLs prepend `/`:
 mokly-viewer/index.json
 mokly-viewer/entries/<entry path>.json
 mokly-viewer/diffs/generations/<64 lowercase hex>/review.json
+mokly-viewer/diffs/generations/<64 lowercase hex>/snapshot.json
 mokly-viewer/diffs/generations/<64 lowercase hex>/entries/<entry path>.json
 static/mokly-generated/<document route>
 static/<catalogue-relative authored closure file>
@@ -84,6 +86,7 @@ versions are:
 | Catalogue index               | 7      | Require 7 before entry and path validation   |
 | Entry detail                  | 1      | Require 1 before reading entry fields        |
 | Live descriptor               | 3      | Require 3 before using the render capability |
+| Catalogue change snapshot     | 4      | Require 4 before reading change metadata     |
 | Review result                 | 8      | Require 8 before reading comparison content  |
 | Removed page preview metadata | 3      | Require 3 before resolving a document        |
 | Export ownership marker       | 3      | Accept 3 for upload and output replacement   |

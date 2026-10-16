@@ -11,6 +11,12 @@ mod ownership;
 mod reservation;
 
 pub mod assembly;
+pub mod changes;
+mod comparison_details;
+mod comparison_files;
+mod comparison_index;
+mod comparison_output;
+mod comparison_workspace;
 pub mod identity;
 pub mod inspector;
 

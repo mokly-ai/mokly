@@ -92,7 +92,8 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
                 .answers_arc(Arc::new(move |_, input, _| {
                     record(&events, "assemble");
                     step(case, "assemble")?;
-                    if let Some(metadata) = input.metadata {
+                    assert_eq!(input.changes.ready().is_some(), case.ready);
+                    if let Some(metadata) = input.publication {
                         assert_eq!(metadata.exported_at, "2026-10-15T12:00:00.000Z");
                     }
                     Ok(artifact())

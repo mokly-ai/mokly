@@ -11,7 +11,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::Builder;
 use mokly_catalogue::working_tree::WorkingTree;
-use mokly_cli::build::{BuildError, BuildService, CatalogueBuild};
+use mokly_cli::build::{BuildError, BuildService, BuildSummary, CatalogueBuild};
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Build;
@@ -53,7 +53,7 @@ pub(super) fn run(
     options: &Build,
     context: &Context,
     publication: Option<PublicationInput>,
-) -> Result<(Artifact, PathBuf), BuildError> {
+) -> Result<(Artifact, PathBuf, BuildSummary), BuildError> {
     context.phases.start(static_build::Phase::Configuration);
     let source: Arc<dyn SourceTree> = Arc::new(WorkingTree);
     #[cfg(debug_assertions)]
@@ -96,9 +96,10 @@ pub(super) fn run(
         publication,
         transaction.as_mut(),
     );
-    result.map(|artifact| (artifact, config.repo_root))
+    result.map(|(artifact, summary)| (artifact, config.repo_root, summary))
 }
 
+#[tracing::instrument(name = "output.write", skip_all, err)]
 fn prepare(
     cwd: &Path,
     options: &Build,
@@ -107,7 +108,7 @@ fn prepare(
     captured: Arc<CapturedTree>,
     publication: Option<PublicationInput>,
     transaction: &mut dyn Transaction,
-) -> Result<Artifact, BuildError> {
+) -> Result<(Artifact, BuildSummary), BuildError> {
     let tree: Arc<dyn SourceTree> = captured.clone();
     let setup = pre_installation::settle(
         static_setup::setup(cwd, options, context, config, tree.clone()),
@@ -174,22 +175,20 @@ fn prepare(
         .as_ref()
         .map_or(&config.repo_root, |input| &input.repository);
     let metadata = publication.as_ref().map(|input| input.identity.clone());
-    service
-        .build(
-            Request {
-                cwd,
-                config,
-                options,
-                viewer,
-                repository,
-                publication: metadata,
-                warnings_are_fatal: publication
-                    .as_ref()
-                    .is_some_and(|input| input.warnings_are_fatal),
-            },
-            transaction,
-        )
-        .map(|(artifact, _)| artifact)
+    service.build(
+        Request {
+            cwd,
+            config,
+            options,
+            viewer,
+            repository,
+            publication: metadata,
+            warnings_are_fatal: publication
+                .as_ref()
+                .is_some_and(|input| input.warnings_are_fatal),
+        },
+        transaction,
+    )
 }
 
 struct LoadedConfig(ResolvedConfig);

@@ -112,9 +112,7 @@ impl Prepared {
             Some(path) => {
                 let review = by_path.get(path.as_str()).ok_or(Error::InvalidBundle)?;
                 let identity = ReviewIdentity::parse(&review.bytes)?;
-                if Some(&identity.base_ref) != metadata.base_ref.as_ref()
-                    || Some(&identity.base_commit) != metadata.base_sha.as_ref()
-                {
+                if Some(&identity.base_commit) != metadata.base_sha.as_ref() {
                     return Err(Error::InvalidBundle);
                 }
                 plan_files.push((*review).clone());

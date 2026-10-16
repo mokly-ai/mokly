@@ -20,11 +20,18 @@ on the upload client.
 ## What This Crate Does
 
 `CatalogueAssembler` implements `dyn Assembler`. It consumes a render generation
-and the matching viewer package bytes. It omits only logical links that cannot cross the inspector wire boundary.
+and the matching viewer package bytes, plus the command's retained `dyn ChangeState`. It omits only logical links that cannot cross the inspector wire boundary.
 Other ranges and links stay inspectable. Inspector failures carry a typed reason
 and the document route. It builds canonical index v7 and detail
 v1 files with revision zero and no live capability. The shared model writer
 adds publication metadata when requested and writes the ownership marker last.
+Ready Changes supplies review v8, snapshot v4, view evidence, workspace lists,
+and removed records from the same comparison result. Both pinned graph sides
+supply immutable documents and resources. Removed details carry their historical
+snapshot ID and generation; removed page and document previews carry metadata v3.
+The comparison inventory is finalized before deployment identity. Disabled or
+unavailable Changes writes no generation; both states remain explicit in the index.
+Publication takes its base ref, commit, and comparison path from that same result.
 
 `OutputTransactions` implements `dyn Transactions` over injected `Files` and
 `mokly-platform::Rename` boundaries. It accepts missing, empty, or owned output.

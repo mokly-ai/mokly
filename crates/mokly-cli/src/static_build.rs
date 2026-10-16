@@ -5,10 +5,10 @@ use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_compare::base_render::selected_base;
 use mokly_model::output::artifact::{Artifact, File};
-use mokly_model::output::upload::{BuildInventory, Publication};
+use mokly_model::output::upload::Publication;
 use mokly_static::assembly::{Assembler, Assembly};
+use mokly_static::changes::PublicationInput;
 use mokly_static::error;
 use mokly_static::fingerprint::{Fingerprints, InputTree};
 use mokly_static::input_selection;
@@ -115,7 +115,6 @@ pub struct Builder {
 }
 
 impl StaticBuild for Builder {
-    #[tracing::instrument(name = "output.write", skip_all, err)]
     fn build(
         &self,
         request: Request<'_>,
@@ -183,27 +182,15 @@ impl Builder {
         if request.warnings_are_fatal && !rendered.summary.warnings.is_empty() {
             return Err(BuildError::Warnings);
         }
-        let base = (!request.options.no_changes).then(|| {
-            selected_base(request.config, request.options.common.base.as_deref()).to_owned()
-        });
         self.phases.start(Phase::Writing);
-        let metadata = if let Some(publication) = &request.publication {
-            let inventory = BuildInventory {
+        let publication = request
+            .publication
+            .as_ref()
+            .map(|identity| PublicationInput {
+                identity: identity.clone(),
                 config_path: relative(&request.config.file, request.repository),
                 exported_at: self.timestamp.now(),
-                comparison: None,
-            };
-            match publication.metadata(&inventory) {
-                Ok(metadata) => Some(metadata),
-                Err(source) => {
-                    return Err(BuildError::Static {
-                        source: error::InternalError::Format { source }.into(),
-                    });
-                }
-            }
-        } else {
-            None
-        };
+            });
         let artifact = static_result(self.assembler.assemble(
             Assembly {
                 config: request.config,
@@ -211,8 +198,8 @@ impl Builder {
                 config_path: relative(&request.config.file, &request.config.repo_root),
                 directory: transaction.output().into(),
                 viewer: request.viewer.clone(),
-                base,
-                metadata,
+                changes: &rendered.summary.changes,
+                publication,
             },
             &StaticCancellation(self.cancellation.as_ref()),
         ))?;

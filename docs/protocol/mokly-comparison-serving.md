@@ -7,6 +7,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 A comparison generation is an immutable set of files under
 `mokly-viewer/diffs/generations/<generation>/`: `review.json`, the
 [review result v8](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
+`snapshot.json`, the catalogue change snapshot v4 in static output;
 `entries/<entry path>.json`, the entry detail v1 of each removed entry under
 the [shell delivery contract](./mokly-shell-delivery.md#entry-detail); the
 removed previews of the [removed previews contract](./mokly-removed-previews.md);
