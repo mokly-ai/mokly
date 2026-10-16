@@ -249,7 +249,7 @@ pub(super) fn run(
                 states,
                 publications: publications.clone(),
                 writer: publications,
-                reporter,
+                reporter: reporter.clone(),
                 cwd: cwd.clone(),
                 options: common.clone(),
             };
@@ -269,9 +269,7 @@ pub(super) fn run(
         }
         .await;
         if result.is_err() {
-            attempt.finish(&[], true, &|warnings| {
-                terminal.stderr(&build_output::warnings(style, warnings, &redactor));
-            });
+            reporter.terminating_failure(warnings.as_ref());
         }
         stop.send_replace(true);
         let shutdown = shutdown.await;

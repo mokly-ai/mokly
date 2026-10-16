@@ -27,19 +27,32 @@ pub(super) async fn initial(
                 Ok(prepared) => prepared,
                 Err(error) => return Ok(Err(error)),
             };
-            attempt.report(&prepared.summary.warnings, false);
             if let Some(watch) = watching {
-                let mut candidate = watch.candidate(&prepared)?;
+                let mut candidate = match watch.candidate(&prepared) {
+                    Ok(candidate) => candidate,
+                    Err(error) => {
+                        attempt.report(&prepared.summary.warnings, false);
+                        return Err(error);
+                    }
+                };
                 if candidate.recheck {
+                    let first_warnings = prepared.summary.warnings.clone();
                     prepared = match preparation.prepare(&cwd, &options) {
                         Ok(prepared) => prepared,
-                        Err(error) => return Ok(Err(error)),
+                        Err(error) => {
+                            attempt.report(&first_warnings, false);
+                            return Ok(Err(error));
+                        }
                     };
-                    attempt.report(&prepared.summary.warnings, false);
-                    watch.recheck(&mut candidate, &prepared)?;
+                    if let Err(error) = watch.recheck(&mut candidate, &prepared) {
+                        attempt.report(&first_warnings, false);
+                        attempt.report(&prepared.summary.warnings, false);
+                        return Err(error);
+                    }
                 }
                 watch.clone().adopt(candidate, &prepared);
             }
+            attempt.report(&prepared.summary.warnings, false);
             Ok(Ok(prepared))
         })
     })
@@ -49,3 +62,7 @@ pub(super) async fn initial(
         Err(source) => Err(ServerError::Internal(InternalError::Task { source })),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/preparation_warning_tests.rs"]
+mod preparation_warning_tests;

@@ -1,4 +1,4 @@
-//! Demand wins a blocked background pass; failures retain warnings across repair.
+//! Demand wins a blocked background pass; each successful attempt owns its warnings.
 
 use std::ffi::CString;
 use std::fs;
@@ -70,7 +70,7 @@ async fn failed_document(serve: &Serve) {
 }
 
 #[tokio::test]
-async fn build_warning_demand_reports_once_and_failed_attempt_repair_prints_only_new_warnings() {
+async fn build_warning_first_demand_delivery_and_attempt_fences() {
     for mode in ["plain", "rich"] {
         let mut serve = Serve::options(&source("Initial"), "2", mode, &|root, _| {
             let path = CString::new(root.join("warning-gate").to_str().unwrap()).unwrap();
@@ -160,7 +160,7 @@ async fn build_warning_demand_reports_once_and_failed_attempt_repair_prints_only
         let repaired = serve
             .ready(failure["revision"].as_u64().unwrap(), "Repaired")
             .await;
-        assert_eq!(count(&serve, "MockLink child control is inside"), 2);
+        assert_eq!(count(&serve, "MockLink child control is inside"), 3);
         assert_eq!(count(&serve, "MockLink child control contains"), 1);
         assert_eq!(serve.index().await["deploymentId"], initial["deploymentId"]);
         let expected = if mode == "rich" {
@@ -170,9 +170,9 @@ async fn build_warning_demand_reports_once_and_failed_attempt_repair_prints_only
             serve
                 .ready(repaired["revision"].as_u64().unwrap(), "Repaired")
                 .await;
-            (3, 2)
+            (4, 2)
         } else {
-            (2, 1)
+            (3, 1)
         };
         // SAFETY: this PID is the live child owned by the test.
         assert_eq!(

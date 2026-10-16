@@ -19,6 +19,7 @@ pub fn path(path: &Path, cwd: &Path, redactor: &Redactor) -> String {
     redactor.safe(&display_path(relative))
 }
 
+/// Format unique recovery paths from a build failure without width truncation.
 pub fn build(error: &BuildError, cwd: &Path, redactor: &Redactor) -> String {
     let mut paths = Vec::new();
     collect_build(error, &mut paths);

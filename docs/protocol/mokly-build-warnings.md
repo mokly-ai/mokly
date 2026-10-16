@@ -159,11 +159,19 @@ Each document backend captures its attempt's sink before publication.
 On-demand, background, and temporary renders deliver warnings from their
 artifacts or retained failure records through that handle. Cache hits use
 the same path. The sink serializes delivery with attempt replacement and
-completion output. A render failure also retains the attempt's seen set.
+completion output. A render or preview failure flushes pending records before
+its diagnostic. It does not make a successful preparation attempt failed.
 Each repair gets a new number and inherits the failed attempt's seen set.
 The next attempt after a successful repair starts with an empty seen set.
-Resource-only reloads and evidence publications retain the current scope.
-Neither can revive the scope of a last-good backend after an attempt fails.
+Resource-only reloads retain the current scope. Evidence publications retain
+the scope their backend captured, including an older fenced scope. Neither
+can revive the scope of a last-good backend after an attempt fails.
+
+When preparation repeats after changed watch roots attach, success reports
+only the final pass's warnings. A failure of the second pass or its recheck
+also retains the first pass's warnings. A fatal Serve error flushes the
+current attempt's pending records before its diagnostic, including after
+shutdown cancels render work. Normal cancellation emits no warnings.
 
 ## Strict Mode
 

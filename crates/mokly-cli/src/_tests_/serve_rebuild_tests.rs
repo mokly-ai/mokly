@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
-use crate::serve_warnings::{ServeWarnings, WarningScopes};
 use mokly_catalogue::config::ConfigLoaderMock;
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::preparation::{CatalogueBuilderMock, PreparedCatalogue};
@@ -27,6 +26,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
+use crate::serve_warnings::{ServeWarnings, WarningScopes};
 
 pub(super) fn initial() -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(

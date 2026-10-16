@@ -185,3 +185,7 @@ mod serve_burst_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_watch_burst_tests.rs"]
 mod serve_watch_burst_tests;
+
+#[cfg(test)]
+#[path = "_tests_/rebuild_warning_tests.rs"]
+mod rebuild_warning_tests;

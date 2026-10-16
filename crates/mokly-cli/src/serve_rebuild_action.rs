@@ -13,9 +13,11 @@ use crate::serve_warnings::AttemptWarnings;
 
 impl ManualRebuilds {
     fn failed_catalogue(&self, batch: &Batch, attempt: &dyn AttemptWarnings, error: &BuildError) {
+        if let Some(watch) = &self.watching {
+            watch.failed();
+        }
         attempt.finish(&build_output::warning_records(error), true, &|warnings| {
             if let Some(watch) = &self.watching {
-                watch.failed();
                 self.reporter.watched_catalogue_failure(
                     batch,
                     &watch.plan().repository,
@@ -34,9 +36,11 @@ impl ManualRebuilds {
         warnings: &[Warning],
         error: &ServerError,
     ) {
+        if let Some(watch) = &self.watching {
+            watch.failed();
+        }
         attempt.finish(warnings, true, &|warnings| {
             if let Some(watch) = &self.watching {
-                watch.failed();
                 self.reporter.watched_server_failure(
                     batch,
                     &watch.plan().repository,
@@ -61,7 +65,6 @@ impl ManualRebuilds {
                 return None;
             }
         };
-        attempt.report(&prepared.summary.warnings, false);
         if !self.candidates.active() {
             return None;
         }
@@ -79,21 +82,24 @@ impl ManualRebuilds {
         if let Some(candidate) = &mut candidate
             && candidate.recheck
         {
+            let first_warnings = prepared.summary.warnings.clone();
             prepared = match self.preparation.prepare(&self.cwd, &self.options) {
                 Ok(prepared) => prepared,
                 Err(error) => {
+                    attempt.report(&first_warnings, false);
                     self.failed_catalogue(batch, attempt.as_ref(), &error);
                     return None;
                 }
             };
-            attempt.report(&prepared.summary.warnings, false);
             if let Some(watch) = &self.watching
                 && let Err(error) = watch.recheck(candidate, &prepared)
             {
+                attempt.report(&first_warnings, false);
                 self.failed_server(batch, attempt.as_ref(), &prepared.summary.warnings, &error);
                 return None;
             }
         }
+        attempt.report(&prepared.summary.warnings, false);
         let previous = self.publications.current();
         let revision = previous.index.revision.checked_add(1)?;
         let mut snapshot =

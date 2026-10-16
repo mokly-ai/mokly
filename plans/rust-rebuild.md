@@ -1152,6 +1152,12 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
 Evidence: `.context/rust-rebuild/delegation/m11/report-4.md` and
 `.context/rust-rebuild/sweeps/m11-warnings.md`.
 
+- [x] Correct Serve warning review findings 1 to 7 and flush the current
+      attempt's pending warnings on fatal server failure.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-5.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
+
 ## Milestone 11.1: Watch review corrections
 
 - [x] Merge rebuild updates through `09821954` and preserve both branches.

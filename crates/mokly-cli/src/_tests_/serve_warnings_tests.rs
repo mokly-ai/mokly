@@ -149,7 +149,7 @@ fn build_warning_old_completion_and_failure_cannot_flush_a_replacement() {
 }
 
 #[test]
-fn build_warning_render_failure_retains_seen_set_and_cancellation_discards_every_producer() {
+fn build_warning_render_failure_flushes_without_retaining_seen_set_after_readiness() {
     let fixture = Fixture::new(Mode::Plain);
     let attempt = fixture.sink.begin();
     attempt.finish(&[], false, &|warnings| fixture.finish(warnings, "ready\n"));
@@ -165,7 +165,7 @@ fn build_warning_render_failure_retains_seen_set_and_cancellation_discards_every
     });
     assert_eq!(
         *fixture.output.lock().unwrap(),
-        "ready\n[mokly/warning] home/index.mobile.html: before render failure\nready\n"
+        "ready\n[mokly/warning] home/index.mobile.html: before render failure\n[mokly/warning] home/index.mobile.html: before render failure\nready\n"
     );
 }
 
@@ -194,4 +194,13 @@ fn build_warning_resource_reload_keeps_the_failed_scope_without_reviving_old_pro
             "[mokly/warning] home/index.mobile.html: new\nready\n",
         )
     );
+}
+
+#[test]
+fn an_empty_successful_render_does_not_acquire_the_warning_mutex() {
+    let fixture = Fixture::new(Mode::Plain);
+    let attempt = fixture.sink.begin();
+    attempt.finish(&[], false, &|_| attempt.report(&[], false));
+    attempt.report(&[warning("live")], false);
+    assert!(fixture.output.lock().unwrap().contains("live"));
 }

@@ -41,3 +41,7 @@ fn main() -> std::process::ExitCode {
 
 #[cfg(debug_assertions)]
 mod test_faults;
+
+#[cfg(test)]
+#[path = "_tests_/warning_support.rs"]
+mod warning_support;

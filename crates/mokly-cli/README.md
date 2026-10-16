@@ -47,7 +47,8 @@ diagnostics. It reports listener backoff and recovery in both output modes.
 Serve captures one warning sink per preparation attempt. It sorts and
 deduplicates preparation and composition warnings before the completion line.
 Later on-demand, background, and temporary renders report only new warnings.
-A repair inherits the failed attempt's seen set. Replaced or cancelled
+A repair inherits the failed preparation attempt's seen set. Render and preview
+failures do not change that scope's preparation status. Replaced or cancelled
 producers cannot print warnings. Resource-only reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background

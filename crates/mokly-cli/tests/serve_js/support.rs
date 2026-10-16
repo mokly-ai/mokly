@@ -2,6 +2,7 @@
 
 use std::fs::{self, File};
 use std::io::Write;
+use std::os::fd::OwnedFd;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
@@ -57,7 +58,9 @@ impl Serve {
         .unwrap();
         let (package, input, slave) = super::fixture::terminal(root.path(), &workspace);
         configure(root.path(), &package);
-        let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
+        let (output, writer) = std::os::unix::net::UnixStream::pair().unwrap();
+        output.set_nonblocking(true).unwrap();
+        let child = Command::new(env!("CARGO_BIN_EXE_mokly"))
             .args(["serve", "--port", "0", "--sidecars", sidecars])
             .current_dir(root.path())
             .env("MOKLY_PACKAGE_ROOT", package)
@@ -68,19 +71,18 @@ impl Serve {
             .env_remove("MOKLY_SIDECAR_TIMEOUT_MS")
             .env_remove("MOKLY_SIDECARS")
             .stdin(Stdio::from(slave))
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stdout(Stdio::from(OwnedFd::from(writer.try_clone().unwrap())))
+            .stderr(Stdio::from(OwnedFd::from(writer)))
             .kill_on_drop(true)
             .spawn()
             .unwrap();
         let lines = Arc::new(Mutex::new(Vec::new()));
         let ready = Arc::new(Notify::new());
-        let stdout = child.stdout.take().unwrap();
-        let stderr = child.stderr.take().unwrap();
-        let readers = vec![
-            read(stdout, lines.clone(), ready.clone()),
-            read(stderr, lines.clone(), ready.clone()),
-        ];
+        let readers = vec![read(
+            tokio::net::UnixStream::from_std(output).unwrap(),
+            lines.clone(),
+            ready.clone(),
+        )];
         Self {
             root,
             child,

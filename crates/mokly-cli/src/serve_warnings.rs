@@ -26,7 +26,10 @@ pub(super) trait WarningScopes: Send + Sync {
 pub trait AttemptWarnings: RenderWarnings {
     /// Print new sorted warnings and the result atomically with respect to producers.
     /// The output callback must not reenter the warning scope.
+    /// Only preparation or adoption failure retains seen records for the next attempt.
     fn finish(&self, warnings: &[Warning], failed: bool, output: &dyn Fn(&[Warning]));
+    /// Flush a fatal Serve error's pending records after render cancellation.
+    fn terminate(&self, output: &dyn Fn(&[Warning]));
 }
 
 #[derive(Default)]
@@ -98,6 +101,9 @@ struct Attempt {
 
 impl RenderWarnings for Attempt {
     fn report(&self, warnings: &[Warning], failed: bool) {
+        if warnings.is_empty() && !failed {
+            return;
+        }
         let mut state = self
             .owner
             .state
@@ -107,7 +113,6 @@ impl RenderWarnings for Attempt {
             return;
         }
         state.pending.extend_from_slice(warnings);
-        state.failed |= failed;
         if state.ready || failed {
             let warnings = take_new(&mut state);
             if !warnings.is_empty() {
@@ -136,6 +141,17 @@ impl AttemptWarnings for Attempt {
         let warnings = take_new(&mut state);
         output(&warnings);
         state.ready = true;
+    }
+    fn terminate(&self, output: &dyn Fn(&[Warning])) {
+        let mut state = self
+            .owner
+            .state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if state.number == self.number {
+            output(&take_new(&mut state));
+            state.ready = true;
+        }
     }
 }
 

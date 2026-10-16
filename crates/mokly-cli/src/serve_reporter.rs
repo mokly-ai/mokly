@@ -17,7 +17,7 @@ use mokly_server::error::ServerError;
 use mokly_watch::event::Batch;
 
 use crate::serve_rebuild::RebuildReporter;
-use crate::serve_warnings::AttemptWarnings;
+use crate::serve_warnings::{AttemptWarnings, WarningScopes};
 use crate::terminal::Terminal;
 
 pub(super) struct ServeLines {
@@ -174,11 +174,23 @@ impl RebuildReporter for ServeLines {
 }
 
 impl ServeLines {
+    /// Flush the current attempt before a fatal Serve diagnostic.
+    pub(super) fn terminating_failure(&self, scopes: &dyn WarningScopes) {
+        scopes.current().terminate(&|warnings| {
+            self.terminal.stderr(&build_output::warnings(
+                &self.style,
+                warnings,
+                &self.redactor,
+            ));
+        });
+    }
+    /// Report startup warnings, diagnostics, and full recovery paths in order.
     pub(super) fn preparation_failed(&self, attempt: &dyn AttemptWarnings, error: &BuildError) {
         attempt.finish(&build_output::warning_records(error), true, &|warnings| {
             self.terminal.stderr(
                 &(build_output::warnings(&self.style, warnings, &self.redactor)
-                    + &build_output::failure_diagnostics(&self.style, error, &self.redactor)),
+                    + &build_output::failure_diagnostics(&self.style, error, &self.redactor)
+                    + &mokly_cli::recovery_output::build(error, &self.cwd, &self.redactor)),
             );
         });
     }
@@ -199,3 +211,7 @@ impl ServeLines {
 #[cfg(test)]
 #[path = "_tests_/serve_reporter_tests.rs"]
 mod serve_reporter_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_failure_warning_tests.rs"]
+mod serve_failure_warning_tests;
