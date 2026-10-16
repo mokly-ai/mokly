@@ -17,3 +17,5 @@ export function processTree(pid: number): TreeProcess[];
 export function running<T extends { pid: number; pgid: number }>(
   processes: readonly T[],
 ): T[];
+
+export function processListing(): TreeProcess[];

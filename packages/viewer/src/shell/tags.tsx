@@ -6,6 +6,7 @@ import type { KeyboardEvent } from "react";
 import { TagIcon } from "./icons.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
+import { selectTag } from "./tag_selection.js";
 
 /** One tag control synchronized with the shell's parsed query. */
 export function TagChip({
@@ -25,9 +26,13 @@ export function TagChip({
       aria-pressed={active}
       className={`mbk-chip tag${active ? " active" : ""}`}
       data-mokly-tag={tag}
-      onClick={() => {
-        store?.toggleTag(tag);
-        afterSelect?.();
+      onClick={(event) => {
+        selectTag(
+          event.currentTarget,
+          () => store?.toggleTag(tag),
+          Boolean(store?.state.tagPickerOpen && pickerIndex === undefined),
+          afterSelect,
+        );
       }}
       tabIndex={
         pickerIndex === undefined || !store?.interactive

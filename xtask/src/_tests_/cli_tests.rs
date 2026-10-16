@@ -17,8 +17,8 @@ use crate::rust_file_length::RustFileLengthAuditorRunMock;
 use super::{Application, Cli, Command, Xtask};
 
 #[test]
-fn parses_every_reduced_suite() {
-    for suite in ["repository", "viewer", "native"] {
+fn parses_every_verification_suite() {
+    for suite in ["repository", "viewer", "browser", "native"] {
         let cli =
             Cli::try_parse_from(["xtask", "check", "--suite", suite]).expect("known suite parses");
         let Command::Check {
@@ -55,13 +55,13 @@ fn executor_command_accepts_the_same_mode_flag() {
 fn rejects_unknown_suite_and_missing_or_invalid_shard_values() {
     for args in [
         vec!["xtask", "check", "--suite", "unknown"],
-        vec!["xtask", "check", "--suite", "unit", "--shard"],
-        vec!["xtask", "check", "--suite", "unit", "--shard", "0/4"],
+        vec!["xtask", "check", "--suite", "browser", "--shard"],
+        vec!["xtask", "check", "--suite", "browser", "--shard", "0/4"],
         vec![
             "xtask",
             "check",
             "--suite",
-            "unit",
+            "browser",
             "--shard",
             "1/9007199254740992",
         ],

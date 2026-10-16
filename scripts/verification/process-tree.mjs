@@ -10,7 +10,13 @@ function listing(fields) {
 
 /** Every live process below `pid`, from one `ps` listing. */
 export function processTree(pid) {
-  const rows = listing("pid=,ppid=,pgid=,stat=,args=").map(
+  const rows = processListing();
+  return descendants(pid, rows);
+}
+
+/** One process snapshot; all descendant groups must be captured before signalling. */
+export function processListing() {
+  return listing("pid=,ppid=,pgid=,stat=,args=").map(
     ([child, parent, group, stat, ...args]) => ({
       pid: Number(child),
       ppid: Number(parent),
@@ -19,6 +25,9 @@ export function processTree(pid) {
       command: args.join(" "),
     }),
   );
+}
+
+function descendants(pid, rows) {
   const tree = [];
   const parents = new Set([pid]);
   for (let grown = true; grown;) {

@@ -4,7 +4,10 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { validateCiReports, readReports } from "../verification/aggregate.mjs";
-import { discoverNodeFiles } from "../verification/evidence.mjs";
+import {
+  discoverNodeFiles,
+  discoverBrowserFiles,
+} from "../verification/evidence.mjs";
 
 import {
   classifyCandidate,
@@ -88,6 +91,7 @@ export async function runReleaseEvidence(options = {}) {
       validateReports: options.validateReports ?? validateCiReports,
       read: options.readReports ?? readReports,
       discoverNode: options.discoverNodeFiles ?? discoverNodeFiles,
+      discoverBrowser: options.discoverBrowserFiles ?? discoverBrowserFiles,
     });
     if (result.outcome === "applicable") {
       last = result;
@@ -187,6 +191,7 @@ async function evaluateCandidate(input) {
       taggedTree: input.identity.taggedTree,
       evidenceTree,
       liveNodeFiles,
+      liveBrowserFiles: await input.discoverBrowser(input.repositoryRoot),
     },
     input.validateReports,
   );

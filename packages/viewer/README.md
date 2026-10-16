@@ -194,6 +194,9 @@ Keep the `index` object, the URL value, the `detail` function, and the frame
 adapter identities stable while the viewer is mounted. Replacing one remounts
 the viewer and cancels pending work.
 
+URL-source requests start after effect replay. A discarded StrictMode effect
+starts no request. Source replacement aborts the old load and fences its result.
+
 ### Selection
 
 `screenPath` names one catalogue entry by its path, such as

@@ -860,15 +860,21 @@ renders again.
   - [x] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
-- [ ] Restore the example typecheck; validate or replace the viewer browser
+- [x] Restore the example typecheck; validate or replace the viewer browser
       fixtures, including their component paths and cross-origin setup.
   - [x] Restore the example typecheck: the root typecheck includes the
         example.
-  - [ ] Validate or replace the viewer browser fixtures, including their
+  - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
 - [ ] Add browser specs against copied static output, including navigation,
       inspection, no live endpoints, and the comparison modes after the M9 join.
-- [ ] Restore the browser suite against `mokly serve` of the example: its
+      Run the static host against real `mokly build` output with
+      `MOKLY_PLAYWRIGHT_STATIC_DIR`. Add continuous runs for
+      `MOKLY_PLAYWRIGHT_FILE_DIR`, including the private slot and variant
+      fixture and the design journeys checked by a manual run. Port the M8 sweep's static/export/publish
+      cases: exact-file resources, canonical links, read-only controls,
+      deployment changes, public CORS, and historical comparison documents.
+- [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
@@ -878,10 +884,28 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Complete the M8 viewer cases assigned by the browser sweep, including
+      route/detail races, frame handoff, live prop edits, and preserved focus.
+- [ ] M8 browser follow-up: make unexpected console errors and `pageerror`
+      failures automatic for every browser page, with explicit per-test
+      allowances for expected failures. Keep the shared sandbox notice rule.
+- [ ] M8 browser follow-up: add Serve browser specs for the example's HTML
+      screens, slot components, document page, and YAML user flow under
+      `examples/basic/specs/example/team`, including native HTML screen links.
+
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+  - [x] Restore current design artboards, library samples, the frozen screen
+        inventory, shared component consumers and ownership, portable links,
+        controls, and both viewport layouts through Serve.
+  - [x] Portable design links, shared samples, and inspector disclosures
+        directly from real `mokly build` output through `file://` URLs are
+        checked by a manual run.
+  - [ ] Complete the remaining design checks with their feature owners:
+        M8 viewer owns live props; M9/M10 own stylesheet attribution and
+        comparison output; M8 browser owns the static build acceptance checks.
   - [x] Check one served example in `tests/design_catalogue.test.ts`: the
         frozen inventory, the shared components and their consumers, family
         adoption, owner chains, stylesheet links and scopes, scripts, link
@@ -893,7 +917,7 @@ renders again.
         link from the current-page mark, report non-anchor link markers, match
         every library root by class token, and make reachability one-way with
         the contract's runtime-only states.
-  - [ ] Add the browser checks with the restored browser suite: pointer and
+  - [x] Add the browser checks with the restored browser suite: pointer and
         Tab/Enter activation, history, canonical outer URLs, preserved outer
         viewport selection, active rows, selection semantics, counts, missing
         states, highlighting and mask geometry, editable and read-only
@@ -909,8 +933,12 @@ renders again.
         Milestone 9: a parent component renders its own views from its own
         props, the stacked frames' structure, every comparison caption tied to
         its recorded change, and the Checklist's Changes.
-  - [ ] Exercise the same journeys in the static output after Milestone 12,
-        and cover the Review snapshot link fallback.
+  - [ ] Exercise the same journeys in the static output under the M8
+        copied-static-output TODO, and cover the Review snapshot link fallback.
+  - Keep the three design inventories aligned when a design changes:
+    `tests/fixtures/design/inventory.json`,
+    `tests/fixtures/design-library/browser-inventory.json`, and
+    `tests/fixtures/design-library/screens.json`.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -962,6 +990,13 @@ Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report
 CSS integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-7.md`.
 Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8-core/report-8.md`.
 
+Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
+Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
+Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
+Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
+Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
+Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -1010,6 +1045,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+- [ ] Port the deferred native Changes browser fixtures in the M8 browser
+      sweep: base references, moved/removed entries, comparison requests and
+      renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
+      assertions. Keep the duplicate component-explorer cases in one suite.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
@@ -1038,6 +1077,9 @@ Tags: ui
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Complete the M8 browser sweep's comparison UI cases against review v8
+      and snapshot v4, including filter disclosure, Changed membership,
+      comparison scroll regions, retained focus, and stylesheet Details.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1078,6 +1120,9 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
       using new bindings or class maps under an old fragment key (M8 review 1,
       finding 8).
 - [x] Behaviour tests that count rebuilds and renders per change.
+- [ ] Port the M8 browser sweep's watch and folder-update cases after watcher
+      integration. Use publication events and document keys in place of page
+      reloads. Keep shutdown, moves, titles, search, and disclosure coverage.
 - [x] Preserve saved component frame document keys when controls supply view
       records. Only temporary preview URLs bypass the saved document key.
 - [x] Bound retained stylesheet results and keep generation source snapshots

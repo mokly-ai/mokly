@@ -148,7 +148,7 @@ The aggregate never infers success from a matrix job's presence alone.
 Stable report artifact names allow a failed-job rerun to replace its own report
 while keeping successful sibling reports from an earlier attempt. A complete
 workflow rerun replaces all report artifacts. Browser failure artifacts are
-attempt-specific.
+attempt-specific and include `.context/playwright-results/`.
 
 The [CI verification contract](./ci-verification.md) defines suite ownership,
 report completeness, caching, and failure semantics. The

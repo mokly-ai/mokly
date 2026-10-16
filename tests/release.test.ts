@@ -109,6 +109,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Audit workspace dependencies",
     "Select verification evidence",
     "Set up Rust",
+    "Install Chromium for verification and smoke",
     "Run complete verification",
     "Prepare exact publish artifacts",
   ];
@@ -129,6 +130,17 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     publish.steps.find((step) => step.name === "Run complete verification")
       ?.run,
     'GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict',
+  );
+  assert.equal(
+    publish.steps.find((step) => step.name === "Run complete verification")?.env
+      ?.PLAYWRIGHT_CHANNEL,
+    "chromium",
+  );
+  assert.equal(
+    publish.steps.find(
+      (step) => step.name === "Install Chromium for verification and smoke",
+    )?.run,
+    "npx playwright install --with-deps chromium",
   );
   const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
   for (const name of ["Set up Rust", "Run complete verification"])

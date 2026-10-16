@@ -1,0 +1,96 @@
+{
+  "affectedConsumers": [],
+  "baseCommit": "57945b6e8d2ad3c3d2e6360ad35ebfd676fc5337",
+  "baseRef": "57945b6e8d2ad3c3d2e6360ad35ebfd676fc5337",
+  "changedPaths": ["specs/action.mockup.tsx"],
+  "changes": [
+    {
+      "after": {
+        "path": "action",
+        "title": "Edited action"
+      },
+      "before": {
+        "path": "action",
+        "title": "Action"
+      },
+      "kind": "component",
+      "reasons": [
+        {
+          "kind": "metadata"
+        }
+      ]
+    },
+    {
+      "after": {
+        "path": "action/default",
+        "title": "Default"
+      },
+      "before": {
+        "path": "action/default",
+        "title": "Default"
+      },
+      "kind": "component",
+      "reasons": [
+        {
+          "kind": "metadata"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "after": {
+        "path": "action",
+        "title": "Edited action"
+      },
+      "before": {
+        "path": "action",
+        "title": "Action"
+      },
+      "dependencies": ["public/action.css", "specs/action.mockup.tsx"],
+      "path": "action",
+      "sharedImpact": [],
+      "state": "unchanged",
+      "title": "Edited action",
+      "variants": [
+        {
+          "after": {
+            "description": "Action",
+            "path": "action/default",
+            "props": {},
+            "suppliedSlots": [],
+            "title": "Default"
+          },
+          "before": {
+            "description": "Action",
+            "path": "action/default",
+            "props": {},
+            "suppliedSlots": [],
+            "title": "Default"
+          },
+          "path": "action/default",
+          "state": "unchanged",
+          "title": "Default",
+          "views": [
+            {
+              "colorScheme": "light",
+              "ignoredIds": [],
+              "state": "unchanged",
+              "viewport": "mobile"
+            },
+            {
+              "colorScheme": "light",
+              "ignoredIds": [],
+              "state": "unchanged",
+              "viewport": "desktop"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "ignoredImpact": [],
+  "schemaVersion": 6,
+  "screens": [],
+  "sharedImpact": []
+}

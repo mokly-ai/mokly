@@ -8,7 +8,8 @@ repository, commits its own history there, and asserts against that history. A
 fixture repository may create and read its own remotes because those references
 are fixture-owned inputs inside the test tree. The browser suite's example
 server runs `mokly serve` with `--base HEAD` and compares with the checked-out
-`HEAD`; every worker's server uses that same command.
+`HEAD`; every worker's server uses that same command through the npm shim. Serve
+binds a free port with `--port 0`.
 
 CI's viewer, browser, and native jobs key npm's download cache from the
 checked-out `package-lock.json`. Their cache steps use local data: none
@@ -18,14 +19,13 @@ reuse depends on that determinism.
 
 The automated checks for repository inputs are deliberately narrow:
 
+- [`tests/verification_example_servers.test.ts`](../../tests/verification_example_servers.test.ts)
+  requires the browser command to include `--base HEAD` through the exported
+  `exampleServerCommand` builder in `tests/browser/example_servers.ts`. It
+  checks the Playwright configuration, each worker's server, and readiness.
 - [`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
-  requires the browser example server command to include `--base HEAD`,
-  checked through the exported `exampleServerCommand` builder in
-  `tests/browser/example_servers.ts`
-  rather than source text. The Playwright configuration must start every
-  worker's server with that builder. The test also requires the viewer,
-  browser, and native jobs to use the checked-out lockfile and never resolve
-  `origin/main` or a branch-point lockfile.
+  requires viewer, browser, and native jobs to use the checked-out lockfile and
+  never resolve `origin/main` or a branch-point lockfile.
 
 These checks are properties of the workflow, not copies of its text. Review
 owns workflow literals such as job names, step order, matrix values and run

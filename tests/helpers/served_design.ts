@@ -8,7 +8,7 @@ import type { CatalogueReadModel } from "../../packages/viewer/src/generated/cat
 import type { ColorScheme } from "../../packages/viewer/src/generated/catalogue/ColorScheme.js";
 import type { EntryDetailV1 } from "../../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
 import type { Viewport } from "../../packages/viewer/src/generated/catalogue/Viewport.js";
-import { spawnServe } from "../../scripts/release/serve_process.mjs";
+import { spawnServe } from "../../scripts/verification/serve-process.mjs";
 
 import type { FixtureOwner } from "./file_fixture.js";
 import { repositoryRoot } from "./fixture.js";
@@ -60,7 +60,7 @@ export async function serveExample(
   owner: FixtureOwner,
   signal: AbortSignal,
 ): Promise<ServedCatalogue> {
-  const server = spawnServe(
+  const server = await spawnServe(
     shim,
     [
       "--config",

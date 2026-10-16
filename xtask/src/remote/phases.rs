@@ -8,6 +8,7 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::clients::outcome::success;
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::{probe_identity, require_warmup_id, warmup_ids};
+use crate::remote::plan::COMMAND_COUNT;
 use crate::remote::reporting::warning;
 
 use crate::remote::runner::DefaultRemoteRunner;
@@ -22,7 +23,7 @@ impl DefaultRemoteRunner {
     ) -> Result<()> {
         let dependencies = &self.dependencies;
         let results = thread::scope(|scope| {
-            let workers: Vec<_> = (0..2)
+            let workers: Vec<_> = (0..COMMAND_COUNT)
                 .map(|_| {
                     scope.spawn(|| {
                         if dependencies.interrupt.requested() {
