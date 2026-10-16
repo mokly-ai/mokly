@@ -114,7 +114,12 @@ fn configuration_git_render_and_staging_failures_share_the_same_window() {
             columns: 80,
         };
         assert_eq!(
-            crate::build_output::failure(&style, &result, &crate::redaction::Redactor::default()),
+            crate::build_output::failure(
+                &style,
+                &result,
+                &crate::redaction::Redactor::default(),
+                Path::new("/repo")
+            ),
             "[mokly/build-invalid] build cancelled\n"
         );
         assert!(matches!(
@@ -157,8 +162,13 @@ fn a_delivered_signal_keeps_git_cancellation_but_prints_only_cancellation() {
         };
         let redactor = crate::redaction::Redactor::default();
         assert_eq!(
-            crate::build_output::failure(&style, &result, &redactor),
-            crate::build_output::failure(&style, &BuildError::Cancelled, &redactor)
+            crate::build_output::failure(&style, &result, &redactor, Path::new("/repo")),
+            crate::build_output::failure(
+                &style,
+                &BuildError::Cancelled,
+                &redactor,
+                Path::new("/repo")
+            )
         );
     }
     assert!(!result.to_string().contains('"'));

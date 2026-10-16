@@ -1095,14 +1095,17 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
         premature "Comparing with {base}" success line, populate upload
         `baseRef` instead of null, and give a reason for Changes unavailable.
         Nest build review spans under `output.write` with the caller context.
-  - [ ] Add subprocess recovery tests through a test-only fault seam for rollback,
+        Repeat the Changes-enabled build-directory entry delivery cases;
+        their current-only acceptance is complete.
+  - [x] Add subprocess recovery tests through a test-only fault seam for rollback,
         backup cleanup, cancellation plus cleanup, and cleanup-only failure.
         Include process-level configuration and staging signal faults.
-        Keep the recovery page's Status line until these checks pass.
-  - [ ] Add an independent reader of the installed ownership and upload fixtures.
+        The recovery page stays in progress for the M9 stages and the open
+        forced-exit decision recorded under review.
+  - [x] Add an independent reader of the installed ownership and upload fixtures.
         Keep ownership, upload exchange, and validation Status lines until this
         reader and the M9 comparison join are verified.
-  - [ ] Complete the sweep rows owned by M12 static, transaction, and static
+  - [x] Complete the sweep rows owned by M12 static, transaction, and static
         closure acceptance. Add the remaining exact destination races,
         reservation mutations, Unicode/NUL rename paths, imported resources,
         private templates, host-normalized paths, abandoned lock retention,
@@ -1122,7 +1125,7 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
         transitions, source changes, and the deferred gap-sweep scenarios.
-    - [ ] Complete the sweep rows owned by M12 publication acceptance: assigned
+    - [x] Complete the sweep rows owned by M12 publication acceptance: assigned
           credentials, checkout variants, interrupted
           compiler diagnostics, rich summary styling, and every retry status
           through the real process.
@@ -1148,6 +1151,9 @@ Static output evidence: `.context/rust-rebuild/delegation/m12-static/report-1.md
 Round 1 fixes and merge decisions: `.context/rust-rebuild/delegation/m12-static/report-2.md`
 and `.context/rust-rebuild/delegation/m12-static/merge-decisions.md`.
 Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
+Non-comparison M12 acceptance: `.context/rust-rebuild/delegation/m12-static/report-4.md`
+and `.context/rust-rebuild/sweeps/m12-static.md`.
+Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md`.
 
 - [x] Commit.
 
@@ -1273,6 +1279,9 @@ site is absent: `.context/rust-rebuild/m5-example/round9/package-smoke-no-site.l
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
+  - Milestone 12 static review 3, finding 4: the packed native binary scan for
+    `MOKLY_TEST_` needs user approval for a new gate. The module-erasure test
+    checks only compiler exclusion of the debug fault module.
   - Milestone 12 static review 2, finding 6: settle forced build exit during
     install, rollback, and cleanup. Keep the current forced exit until decided.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
