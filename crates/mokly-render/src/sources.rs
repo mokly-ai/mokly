@@ -3,10 +3,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
-use crate::side::BaseSide;
+use crate::runtime::Runtime;
+use crate::side::{BaseSide, SideInputs, dependency_roots};
 
 /// Dependency paths retain logical names while source bytes use their own tree.
 pub(crate) struct SideTree {
@@ -25,6 +27,9 @@ pub(crate) struct LeasedTree {
 }
 
 impl SourceTree for LeasedTree {
+    fn digest(&self, path: &Path) -> Result<String> {
+        self.tree.digest(path)
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         self.tree.project(path)
     }
@@ -83,6 +88,18 @@ impl SideTree {
 }
 
 impl SourceTree for SideTree {
+    fn digest(&self, path: &Path) -> Result<String> {
+        if let Some((_, physical, _)) = self.mapped(path) {
+            if let Some(node) = self.dependencies.project(&physical)?
+                && let Some(source) = self.source_alias(&node.identity)
+            {
+                return self.sources.digest(&source);
+            }
+            self.dependencies.digest(&physical)
+        } else {
+            self.sources.digest(path)
+        }
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         if path == self.root.join("node_modules/.mokly-roots") {
             return Ok(Some(Node {
@@ -130,4 +147,19 @@ impl SourceTree for SideTree {
             self.sources.read(path)
         }
     }
+}
+
+pub(crate) fn reader(
+    runtime: &Runtime,
+    config: &ResolvedConfig,
+    side: &SideInputs,
+) -> Arc<dyn SourceTree> {
+    Arc::new(SideTree {
+        _base: runtime.base.clone(),
+        sources: runtime.tree.clone(),
+        dependencies: runtime.dependency_tree.clone(),
+        root: config.repo_root.clone(),
+        dependency_roots: dependency_roots(side),
+        repository_roots: side.repository_roots.clone(),
+    })
 }

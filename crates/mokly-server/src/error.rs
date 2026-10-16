@@ -47,6 +47,12 @@ pub enum ServerError {
 /// Original source types retained across the internal boundary.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// An injected runtime provider failed.
+    #[error("runtime provider failed: {source}")]
+    Provider {
+        /// Original typed provider error.
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
     /// Filesystem or socket operation failed.
     #[error("IO failed: {source}")]
     Io {

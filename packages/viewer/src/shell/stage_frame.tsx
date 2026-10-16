@@ -25,6 +25,7 @@ import {
   generatedUsage,
   generatedView,
   shellFrameUsage,
+  stageDocumentKey,
 } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
 
@@ -97,7 +98,7 @@ export function StageFrame({
   );
   const generation = useFrameGeneration(
     source,
-    preview ? undefined : selected?.documentKey,
+    stageDocumentKey(selected, preview),
   );
   const mounted = useMountedShellFrame({
     ...(temporary ? { adapter: previewAdapter } : {}),

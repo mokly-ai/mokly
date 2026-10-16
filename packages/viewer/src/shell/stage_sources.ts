@@ -1,6 +1,9 @@
 /** Source and usage projection for saved and temporary stage views. */
 
-import { currentDocumentPath } from "../catalogue/delivery_paths.js";
+import {
+  currentDocumentPath,
+  VIEWER_DIRECTORY,
+} from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueUsage,
   ShellCatalogueView,
@@ -88,4 +91,14 @@ export function resolvedFrameSource(
   baseUrl: string | URL | undefined,
 ): string | undefined {
   return source && baseUrl ? new URL(source, baseUrl).href : source;
+}
+
+/** Saved workspace views retain their index key; temporary documents own their URL. */
+export function stageDocumentKey(
+  view: ShellCatalogueView | undefined,
+  preview: GeneratedComponentView | undefined,
+): string | undefined {
+  return preview?.path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
+    ? undefined
+    : view?.documentKey;
 }

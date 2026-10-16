@@ -51,11 +51,16 @@ struct Fields {
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
         match field.name() {
-            "viewport" | "scheme" => {
+            "viewport" | "scheme" | "action" | "operation" => {
                 self.values.insert(field.name().into(), json!(value));
             }
             "status" => self.error = value == "error",
             _ => {}
+        }
+    }
+    fn record_u64(&mut self, field: &Field, value: u64) {
+        if field.name() == "worker" {
+            self.values.insert("worker".into(), json!(value));
         }
     }
     fn record_bool(&mut self, field: &Field, value: bool) {
@@ -64,7 +69,7 @@ impl Visit for Fields {
         }
     }
     fn record_debug(&mut self, field: &Field, value: &dyn std::fmt::Debug) {
-        if matches!(field.name(), "viewport" | "scheme") {
+        if matches!(field.name(), "viewport" | "scheme" | "action") {
             self.record_str(field, &format!("{value:?}"));
         }
     }
@@ -74,6 +79,7 @@ fn stage(name: &str) -> bool {
     matches!(
         name,
         "serve.ready"
+            | "watch.action"
             | "serve.background"
             | "config.load"
             | "catalogue.discover"
@@ -83,6 +89,7 @@ fn stage(name: &str) -> bool {
             | "render.document"
             | "render.fragment"
             | "css.bundle"
+            | "css.postcss"
             | "index.build"
             | "detail.build"
             | "build"
@@ -170,6 +177,13 @@ where
         }
     }
     fn on_event(&self, event: &Event<'_>, context: Context<'_, S>) {
+        let mut fields = Fields::default();
+        event.record(&mut fields);
+        if let Some(operation) = fields.values.get("operation") {
+            let record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),"role":"core","stage":"sidecar.operation","event":"counts","id":self.next.fetch_add(1, Ordering::SeqCst),"elapsedMs":self.elapsed(),"operation":operation,"worker":fields.values.get("worker"),"count":1});
+            self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
+        }
+
         if *event.metadata().level() == Level::ERROR
             && let Some(span) = context.event_span(event)
             && let Some(timing) = span.extensions_mut().get_mut::<SpanTiming>()

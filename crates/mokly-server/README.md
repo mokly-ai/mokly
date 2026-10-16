@@ -37,8 +37,13 @@ use these same boundaries.
 Evidence revisions share the generation's assets, routes, backend, and shell.
 Unchanged detail payloads and index bytes also stay shared. Delivery stamps the
 current revision into canonical JSON without copying the payload. Only changed
-details are validated and encoded. `Snapshot::detail` supplies the matching
+details are validated and encoded. Source replacements retain ready usage
+when its document key is equal. They compare detail values without revision
+and share equal payloads and their encoded byte slices across generations. `Snapshot::detail` supplies the matching
 revision to typed consumers. Shutdown fences and drains queued publications.
+The transport closes clients before lifecycle hooks. The render-cancellation
+hook interrupts provider requests before the HTTP worker pool drains them.
+The listener stays reserved through sidecar shutdown and final release.
 
 `UsagePass` renders every view in catalogue order after readiness. It yields
 between documents and waits while foreground requests need the worker pool.

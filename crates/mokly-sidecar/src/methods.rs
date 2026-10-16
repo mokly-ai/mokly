@@ -7,6 +7,7 @@ use serde_json::Value;
 use ts_rs::TS;
 
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+use crate::compiled::RestoreGeneration;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -24,7 +25,7 @@ pub struct Generation {
 }
 
 /// Consumer module resolution settings; list order is meaningful.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ModuleResolution {
     /// Module aliases.
@@ -48,10 +49,14 @@ pub struct ModuleResolution {
 }
 
 /// Inputs compiled into one unevaluated bundle.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(rename = "BundleParams")]
 pub struct Bundle {
+    /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub evaluation: Option<String>,
     /// Entry module files.
     pub entry_files: Vec<String>,
     /// Optional consumer renderer module.
@@ -194,6 +199,8 @@ pub enum Call {
     Hello(Empty),
     /// Compile without evaluating consumer modules.
     Bundle(Bundle),
+    /// Restore an immutable compiled generation in another worker.
+    RestoreGeneration(Box<RestoreGeneration>),
     /// Evaluate and inventory definitions.
     Describe(Generation),
     /// Install the resolved handle table after describe.

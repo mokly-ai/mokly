@@ -124,7 +124,7 @@ impl ArtifactWorker for PropsJob<'_> {
             .ok_or_else(|| invalid(route, "temporary document has no tree"))?;
         validation::links(self.session, &document.links)?;
         self.session
-            .walker()
+            .preview_walker()
             .collect(route, &document.tree, &document.resources)
     }
 }
@@ -146,7 +146,7 @@ impl ArtifactWorker for Rendered<'_> {
             .ok_or_else(|| invalid(route, "temporary document has no tree"))?;
         validation::links(self.session, &document.links)?;
         self.session
-            .walker()
+            .preview_walker()
             .collect(route, &document.tree, &document.resources)
     }
 }

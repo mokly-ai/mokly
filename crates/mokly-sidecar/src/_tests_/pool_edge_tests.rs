@@ -91,7 +91,7 @@ fn a_changed_generation_does_not_kill_a_healthy_process() {
     let worker = Unimock::new((
         WorkerMock::request
             .next_call(matching!((request,_) if matches!(request.call,Call::Bundle(_))))
-            .returns(Ok(MethodResult::Bundle(results::Bundle {
+            .returns(Ok(MethodResult::Bundle(results::Bundle { epoch: 0, compiled: None,
                 generation: "changed".into(),
                 modules: Vec::new(),
                 warnings: Vec::new(),
@@ -109,6 +109,7 @@ fn a_changed_generation_does_not_kill_a_healthy_process() {
     pool.lock().unwrap().bundles.insert(
         "g".into(),
         Bundle {
+            evaluation: None,
             entry_files: Vec::new(),
             renderer: None,
             stories_files: Vec::new(),

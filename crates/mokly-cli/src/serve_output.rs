@@ -153,7 +153,7 @@ fn accept_line(style: &Style, line: &str) -> String {
     format!("{line}\n")
 }
 
-fn columns(left: &str, right: &str, width: usize) -> String {
+pub(crate) fn columns(left: &str, right: &str, width: usize) -> String {
     let right_width = unicode_width::UnicodeWidthStr::width(right);
     if width <= right_width + 3 {
         return bounded(&format!("{left} {right}"), width);
@@ -164,7 +164,7 @@ fn columns(left: &str, right: &str, width: usize) -> String {
     format!("{left}{}{right}", " ".repeat(gap))
 }
 
-fn duration(value: Duration) -> String {
+pub(crate) fn duration(value: Duration) -> String {
     if value < Duration::from_secs(1) {
         format!("{:.0}ms", value.as_secs_f64() * 1000.0)
     } else if value < Duration::from_secs(60) {

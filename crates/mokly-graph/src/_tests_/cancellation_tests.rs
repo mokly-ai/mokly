@@ -82,9 +82,9 @@ fn planning_checks_each_entry_even_when_exports_share_a_source() {
         RenderWorkersMock::cancelled
             .next_call(matching!())
             .returns(false),
-        SourceTreeMock::read_shared
+        SourceTreeMock::digest
             .next_call(matching!((path) if *path == Path::new("/repo/page.mockup.ts")))
-            .returns(Ok(Arc::from(b"source".as_slice()))),
+            .returns(Ok("source-digest".into())),
         RenderWorkersMock::cancelled
             .next_call(matching!())
             .returns(false),
@@ -103,6 +103,7 @@ fn planning_checks_each_entry_even_when_exports_share_a_source() {
         &NodeKey("config".into()),
         &BTreeMap::new(),
         &styles::Matchers::new(&config).unwrap(),
+        "",
     )
     .unwrap_err();
     assert_cancelled(error);

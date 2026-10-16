@@ -6,7 +6,6 @@ use std::sync::Arc;
 
 use globset::GlobBuilder;
 
-use mokly_model::material::digest;
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
 use crate::error::{InternalError, RenderError, Result};
@@ -47,11 +46,10 @@ impl Scan {
         if let Some(digest) = self.digests.get(path) {
             return Ok(digest.clone());
         }
-        let bytes = match tree.read(path) {
-            Ok(bytes) => bytes,
+        let value = match tree.digest(path) {
+            Ok(value) => value,
             Err(source) => return Err(InternalError::Source { source }.into()),
         };
-        let value = digest(&bytes);
         self.digests.insert(path.into(), value.clone());
         Ok(value)
     }

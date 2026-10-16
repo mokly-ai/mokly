@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -75,11 +75,25 @@ impl JavaScriptGraph {
         catalogue: &mut PreparedCatalogue,
     ) -> Result<Arc<dyn RenderGraph>> {
         let mut side = self.runtime.side(config)?;
-        let mut inputs = DeliveryInputs::default();
+        let mut inputs = DeliveryInputs {
+            resources: self.runtime.resources.clone(),
+            ..Default::default()
+        };
+        let mut compiler = None;
         let declarations = declarations::validate(self.runtime.tree.clone(), config, catalogue)?;
         let mut fragments: Arc<dyn FragmentRenderer> = Arc::new(DeferredFragments);
         if let Some(generation) = &catalogue.javascript.generation {
             side.context = generation.css_context.clone();
+            if let Some(prepared) = self
+                .runtime
+                .prepared
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .get(&generation.css_context)
+                .and_then(Weak::upgrade)
+            {
+                compiler = Some(prepared.compiler.clone());
+            }
             let bindings = Bindings {
                 generation: generation.id.clone(),
                 entries: catalogue
@@ -120,6 +134,7 @@ impl JavaScriptGraph {
                 Arc::new(Fragments {
                     pool: self.runtime.pool.clone(),
                     generation: generation.id.clone(),
+                    _lease: generation.lease.clone(),
                 }),
                 self.runtime.cache.clone(),
             ));
@@ -151,6 +166,7 @@ impl JavaScriptGraph {
                 )
             });
             inputs = DeliveryInputs {
+                resources: self.runtime.resources.clone(),
                 fragment_generation: Some(fingerprint),
                 stylesheet_roots: stylesheets::roots(
                     &generation.modules,
@@ -169,7 +185,8 @@ impl JavaScriptGraph {
                 _base: self.runtime.base.clone(),
             }),
             composer: Arc::new(HtmlComposer { fragments }),
-            stylesheets: stylesheets::compiler(&self.runtime, config, &side),
+            stylesheets: compiler
+                .unwrap_or_else(|| stylesheets::compiler(&self.runtime, config, &side)),
             cache: self.runtime.cache.clone(),
             workers: self.runtime.workers.clone(),
             version: self.runtime.version.clone(),

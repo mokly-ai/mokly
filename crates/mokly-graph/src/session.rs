@@ -1,7 +1,7 @@
 //! On-demand document evaluation and eviction-safe resource reconstruction.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::normalize_warnings;
@@ -19,6 +19,7 @@ use crate::error::{GraphError, Result};
 use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
+use crate::resource_inputs::ResourceObserver;
 use crate::types::{
     DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TemporaryDocument,
 };
@@ -30,8 +31,9 @@ pub(crate) struct Session {
     pub(crate) state: Arc<State>,
 }
 
-#[derive(Clone)]
 pub(crate) struct State {
+    pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
+    pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
     pub(crate) generation_key: String,
     pub(crate) public_files: Arc<Mutex<BTreeSet<String>>>,
@@ -63,8 +65,21 @@ pub(crate) struct SessionInput {
 
 impl Session {
     pub(crate) fn new(graph: &Graph, input: SessionInput) -> Self {
+        for plan in input.plans.values() {
+            graph.inputs.resources.retain(&plan.resource_key);
+        }
         Self {
             state: Arc::new(State {
+                observed: Arc::new(Mutex::new(
+                    input
+                        .plans
+                        .values()
+                        .flat_map(|plan| {
+                            graph.inputs.resources.paths(&plan.resource_key).into_keys()
+                        })
+                        .collect(),
+                )),
+                observer: Arc::new(Mutex::new(None)),
                 generation_key: input.generation_key,
                 directories: input.directories,
                 public_files: Arc::new(Mutex::new(BTreeSet::new())),
@@ -85,8 +100,16 @@ impl Session {
         }
     }
 
+    pub(crate) fn preview_walker(&self) -> Walker {
+        Walker {
+            observer: None,
+            ..self.walker()
+        }
+    }
+
     pub(crate) fn walker(&self) -> Walker {
         Walker {
+            observer: Some(Arc::new(self.clone())),
             tree: self.state.tree.clone(),
             policy: self.state.policy.clone(),
             generated: Arc::new(self.clone()),
@@ -171,11 +194,33 @@ impl RenderGeneration for Session {
             .unwrap_or_else(|error| error.into_inner())
             .clone()
     }
+    fn watch_files(&self) -> BTreeSet<String> {
+        self.state
+            .observed
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
+    }
+    fn observe_resources(&self, observer: Weak<dyn ResourceObserver>) {
+        *self
+            .state
+            .observer
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(observer);
+    }
     fn contains_public_file(&self, path: &str) -> bool {
         self.state
             .public_files
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .contains(path)
+    }
+}
+
+impl Drop for State {
+    fn drop(&mut self) {
+        for plan in self.plans.values() {
+            self.inputs.resources.release(&plan.resource_key);
+        }
     }
 }

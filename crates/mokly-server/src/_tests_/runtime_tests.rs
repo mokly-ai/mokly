@@ -50,12 +50,12 @@ async fn connection_errors_continue_and_resource_errors_back_off_without_closing
         LifecycleMock::stop_watcher
             .next_call(matching!())
             .returns(Ok(())),
-        HttpApplicationMock::stop_renders
-            .next_call(matching!())
-            .returns(()),
         LifecycleMock::cancel_renders
             .next_call(matching!())
             .returns(Ok(())),
+        HttpApplicationMock::stop_renders
+            .next_call(matching!())
+            .returns(()),
         LifecycleMock::cancel_git
             .next_call(matching!())
             .returns(Ok(())),

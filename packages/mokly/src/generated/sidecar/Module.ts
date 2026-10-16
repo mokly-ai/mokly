@@ -3,6 +3,10 @@
 // prettier-ignore
 export type Module = {
 /**
+ * Digest of the bytes that the bundler actually consumed.
+ */
+digest?: string,
+/**
  * Repository-relative source path.
  */
 path: string,
