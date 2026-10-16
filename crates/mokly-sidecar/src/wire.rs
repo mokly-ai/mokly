@@ -7,6 +7,7 @@ use ts_rs::TS;
 use crate::definitions::Definitions;
 use crate::error::{Error, ProtocolError, RemoteCode, Result};
 use crate::methods::Call;
+use crate::operations::Operation;
 use crate::postcss_failure::PostcssFailure;
 use crate::results;
 
@@ -63,6 +64,13 @@ pub enum Response {
     deny_unknown_fields
 )]
 pub enum Event {
+    /// An operation performed by the worker process.
+    Operation {
+        /// Actual operation, emitted before compilation or at worker lifecycle boundaries.
+        operation: Operation,
+        /// Sidecar process identity.
+        pid: u32,
+    },
     /// Consumer or sidecar diagnostic output.
     Diagnostic {
         /// Diagnostic text forwarded through the terminal reporter.
@@ -135,6 +143,7 @@ impl Response {
                 Call::RenderPage(_) => Ok(MethodResult::Page(decode(result)?)),
                 Call::ProcessCss(_) => Ok(MethodResult::Css(decode(result)?)),
                 Call::CssModules(_)
+                | Call::RestoreGeneration(_)
                 | Call::Bindings(_)
                 | Call::DisposeContext(_)
                 | Call::Dispose(_)

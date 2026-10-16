@@ -179,6 +179,8 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 - [Component Workspace Design](./mokly-component-workspace-design.md)
 - [Depicted Design Catalogue](./mokly-shell-design-catalogue.md)
 - [Design Component Attribution](./mokly-design-component-attribution.md)
+- [Design Mockup Navigation Links](./mokly-design-links-navigation.md)
+- [Design Mockup Scheme, Comparison, And Tag Links](./mokly-design-links-comparisons.md)
 - [Mokly Design Component Library Inventory](./mokly-design-component-library.md)
 - [Mokly Design Mockup Links](./mokly-design-links.md)
 - [Mokly Shell Design Contract](./mokly-shell-design.md)

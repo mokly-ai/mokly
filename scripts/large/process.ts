@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { setTimeout } from "node:timers/promises";
 
 import { monitor } from "./memory.js";
+import { validPid } from "./signals.js";
 import { timingCollector } from "./timings.js";
 
 export function start(args: string[], cwd: string) {
@@ -21,7 +22,12 @@ export function start(args: string[], cwd: string) {
     stderr = "",
     failure: Error | undefined;
   const kill = (signal: NodeJS.Signals) => {
-    if (child.pid === undefined) return;
+    if (
+      !validPid(child.pid) ||
+      child.exitCode !== null ||
+      child.signalCode !== null
+    )
+      return;
     try {
       process.kill(-child.pid, signal);
     } catch (error) {
@@ -34,19 +40,16 @@ export function start(args: string[], cwd: string) {
   };
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", interrupt);
-  const finishMemory = monitor(child.pid ?? -1, (message, pids) => {
-    failure = new Error(message);
-    // Sidecars own separate process groups. Kill their descendants immediately
-    // on a safety stop, before graceful cancellation can allocate more memory.
-    for (const pid of pids.reverse()) {
-      try {
-        process.kill(pid, "SIGKILL");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-      }
-    }
-    kill("SIGTERM");
-  });
+  const finishMemory = validPid(child.pid)
+    ? monitor(child.pid, (message) => {
+        failure = new Error(message);
+      })
+    : async () => ({
+        peakKiB: 0,
+        totalPeakKiB: 0,
+        samples: 0,
+        sampleIntervalMs: 50,
+      });
   child.stdout.on("data", (chunk) => {
     stdout = (stdout + String(chunk)).slice(-512 * 1024);
   });

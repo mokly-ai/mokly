@@ -14,14 +14,17 @@ pub mod output;
 pub mod parsing;
 pub mod publication;
 pub mod publish_errors;
+pub mod recovery_output;
 pub mod redaction;
 mod render_errors;
 pub mod serve;
 pub mod serve_errors;
 pub mod serve_output;
+pub mod serve_settings;
 pub mod version;
 
 pub mod static_build;
+pub mod watch_output;
 
 pub mod pre_installation;
 
@@ -30,3 +33,5 @@ pub mod static_errors;
 pub mod static_admission;
 
 pub mod publication_signals;
+
+pub mod watch_diagnostics;

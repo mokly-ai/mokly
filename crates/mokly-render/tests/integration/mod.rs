@@ -19,3 +19,9 @@ mod slot_order_tests;
 mod source_alias_tests;
 mod support;
 mod validation_tests;
+mod watch_dependencies_tests;
+mod watch_lifetimes_tests;
+mod watch_metadata_tests;
+mod watch_tests;
+
+mod watch_compilation_tests;

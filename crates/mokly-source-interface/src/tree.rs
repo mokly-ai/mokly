@@ -3,6 +3,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use sha2::{Digest, Sha256};
+
 use crate::error::Result;
 
 /// An entry's kind before following any symbolic link.
@@ -51,5 +53,12 @@ pub trait SourceTree: Send + Sync {
     /// Read immutable bytes without copying a retained source on cache hits.
     fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
         Ok(self.read(path)?.into())
+    }
+    /// Hash an inventoried regular file without requiring callers to retain its bytes.
+    fn digest(&self, path: &Path) -> Result<String> {
+        Ok(Sha256::digest(self.read_shared(path)?)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect())
     }
 }

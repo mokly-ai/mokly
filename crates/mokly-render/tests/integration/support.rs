@@ -15,6 +15,7 @@ use mokly_graph::workers::ThreadWorkers;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::methods::Call;
+use mokly_sidecar::operations::Operation;
 use mokly_sidecar::pool::{Pool, SidecarPool};
 use mokly_sidecar::pool_options::{Launch, PoolOptions};
 use mokly_sidecar::process_clock::SystemClock;
@@ -29,12 +30,18 @@ use super::process_counts::{CountedFactory, ProcessCounts};
 #[path = "../../../../tests/rust/package_version.rs"]
 pub(super) mod package_version;
 
-#[derive(Default)]
-struct Reporter(Mutex<Vec<String>>);
+struct Reporter {
+    messages: Mutex<Vec<String>>,
+    counts: Arc<ProcessCounts>,
+}
 impl Diagnostics for Reporter {
+    fn operation(&self, operation: Operation, pid: u32) {
+        self.counts.record(operation, pid);
+    }
+
     fn emit(&self, message: &str) {
         eprintln!("{message}");
-        self.0.lock().unwrap().push(message.into());
+        self.messages.lock().unwrap().push(message.into());
     }
 }
 
@@ -44,6 +51,27 @@ pub(super) struct CapturedPool {
 }
 
 impl SidecarPool for CapturedPool {
+    fn release_generation(&self, generation: &str, epoch: u64) {
+        self.calls
+            .lock()
+            .unwrap()
+            .push(Call::Dispose(mokly_sidecar::methods::Generation {
+                generation: generation.into(),
+            }));
+        self.inner.release_generation(generation, epoch);
+    }
+    fn release_context(&self, context: &str) {
+        self.calls.lock().unwrap().push(Call::DisposeContext(
+            mokly_sidecar::bindings::DisposeContext {
+                context: context.into(),
+            },
+        ));
+        self.inner.release_context(context);
+    }
+    fn cancel_requests(&self) -> mokly_sidecar::error::Result<()> {
+        self.inner.cancel_requests()
+    }
+
     fn request(&self, call: Call) -> mokly_sidecar::error::Result<MethodResult> {
         self.calls.lock().unwrap().push(call.clone());
         self.inner.request(call)
@@ -65,6 +93,12 @@ pub(super) struct Consumer {
 
 impl Consumer {
     pub(super) fn new() -> Self {
+        Self::with_sidecars(2)
+    }
+    pub(super) fn single() -> Self {
+        Self::with_sidecars(1)
+    }
+    fn with_sidecars(sidecars: usize) -> Self {
         let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../..")
             .canonicalize()
@@ -95,7 +129,10 @@ impl Consumer {
                     inner: Arc::new(NodeFactory::new(
                         Arc::new(SystemProcessGroups),
                         clock.clone(),
-                        Arc::new(Reporter::default()),
+                        Arc::new(Reporter {
+                            messages: Mutex::default(),
+                            counts: processes.clone(),
+                        }),
                         Arc::new(SystemMemory),
                     )),
                     counts: processes.clone(),
@@ -108,7 +145,7 @@ impl Consumer {
                     version: package_version::read(),
                 },
                 PoolOptions {
-                    size: 2.try_into().unwrap(),
+                    size: sidecars.try_into().unwrap(),
                     timeout_ms: None,
                 },
             )),

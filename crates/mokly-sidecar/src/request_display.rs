@@ -9,6 +9,9 @@ impl Display for Call {
         match self {
             Self::Hello(_) => formatter.write_str("hello"),
             Self::Bundle(_) => formatter.write_str("bundle"),
+            Self::RestoreGeneration(value) => {
+                write!(formatter, "restoreGeneration {}", value.generation)
+            }
             Self::Describe(value) => write!(formatter, "describe {}", value.generation),
             Self::RenderScreen(value) => render(formatter, value),
             Self::RenderComponent(value) => render(formatter, &value.render),

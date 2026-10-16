@@ -26,13 +26,17 @@ mod markdown_links;
 mod markdown_sources;
 mod planning;
 mod rendering;
+mod resource_digests;
 mod resource_edges;
+pub mod resource_inputs;
 mod resource_keys;
 mod routing_inputs;
 mod session;
 mod session_render;
 mod styles;
+mod stylesheet_keys;
 mod validation;
+mod watch_rules;
 mod weight;
 
 #[cfg(test)]

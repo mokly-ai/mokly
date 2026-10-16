@@ -34,7 +34,13 @@ export function InspectorView({
           open={initial === tab.id}
           style={{ "--tab-column": index + 1 } as CSSProperties}
         >
-          <summary role="button" aria-label={tab.label} title={tab.label}>
+          <summary
+            // A linked tab's anchor is its one keyboard stop.
+            {...(tab.destination
+              ? { tabIndex: -1 }
+              : { role: "button", "aria-label": tab.label })}
+            title={tab.label}
+          >
             {tab.destination ? (
               <MockLink
                 to={tab.destination}

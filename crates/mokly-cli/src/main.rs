@@ -11,6 +11,9 @@ mod publication_runtime;
 mod render_runtime;
 mod serve_candidates;
 mod serve_controls;
+mod serve_debounce;
+mod serve_lifecycle;
+mod serve_preparation;
 mod serve_rebuild;
 mod serve_reporter;
 mod serve_services;
@@ -19,11 +22,20 @@ mod serve_signals;
 mod serve_state;
 mod serve_timing;
 mod serve_trace;
+mod serve_watch;
+mod serve_watch_events;
 mod static_runtime;
 mod static_setup;
 mod terminal;
 mod viewer_assets;
 
 fn main() -> std::process::ExitCode {
+    #[cfg(all(debug_assertions, unix))]
+    if let Some(result) = test_faults::signal_lifecycle() {
+        return result;
+    }
     entry::main()
 }
+
+#[cfg(debug_assertions)]
+mod test_faults;

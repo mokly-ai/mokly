@@ -4,13 +4,11 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 
-The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
-when a catalogue needs a JavaScript bundle, a React, page, or Storybook
-render, or a consumer PostCSS module. The sidecar returns text: HTML
-fragments, CSS, module and definition inventories, and diagnostics. It never
-reads the catalogue, never writes files, and keeps only loaded
-bundle generations and explicit consumer PostCSS contexts. Catalogue decisions, caching, invalidation, comparison, and
-output belong to the binary.
+The sidecar runs JavaScript bundles, React, page and Storybook renders, and
+consumer PostCSS. It returns HTML, CSS, module and definition inventories,
+and diagnostics. It never reads the catalogue or writes files. It retains
+only loaded bundle generations and explicit PostCSS contexts. The binary owns
+catalogue decisions, caching, invalidation, comparison, and output.
 
 ## Lifecycle
 
@@ -31,6 +29,11 @@ output belong to the binary.
 - On `shutdown` the sidecar finishes in-flight requests, then exits. The binary
   terminates a sidecar that has not exited two seconds later.
 
+A sidecar never outlives its binary. Linux spawns set `PR_SET_PDEATHSIG` to
+`SIGKILL` from a persistent launch thread and check for an earlier parent exit.
+On every platform a separate watchdog thread owns the parent pipe and checks
+parent identity. Pipe closure or parent death terminates even a blocked render.
+
 ## Transport
 
 Frames are newline-delimited UTF-8 JSON, with at most 64 MiB of JSON bytes
@@ -38,7 +41,7 @@ per frame, excluding its LF delimiter. A request has `id`, `method`, and
 `params`; a method without parameters uses `{}`. A response repeats `id` with
 exactly one of `result` or `error`; a method without a return value uses
 `result: null`. An event has `event` and `params` and no `id`. Requests on one
-sidecar run in order; the pool spreads independent requests across sidecars.
+sidecar run in order; the pool spreads independent requests across sidecars. A request waiting for its affine slot does not block the first later request that can use another slot.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","entry":{"path":"ui/button","title":"Button"},"props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
@@ -48,25 +51,25 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ## Methods
 
-| Method            | Params                                                                                                            | Result                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `hello`           | none                                                                                                              | `{ version }`                                                                       |
-| `bundle`          | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings }`                                                 |
-| `describe`        | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
-| `renderScreen`    | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
-| `renderComponent` | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
-| `renderStory`     | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
-| `renderPage`      | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
-| `processCss`      | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies }`                                                            |
-| `bindings`        | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
-| `disposeContext`  | PostCSS context                                                                                                   | nothing                                                                             |
-| `cssModules`      | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
-| `dispose`         | generation                                                                                                        | nothing                                                                             |
-| `shutdown`        | none                                                                                                              | nothing                                                                             |
+| Method              | Params                                                                                                            | Result                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `hello`             | none                                                                                                              | `{ version }`                                                                       |
+| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings, compiled }`                                       |
+| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                             |
+| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
+| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
+| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
+| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
+| `renderPage`        | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies }`                                                            |
+| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
+| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                             |
+| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
+| `dispose`           | generation                                                                                                        | nothing                                                                             |
+| `shutdown`          | none                                                                                                              | nothing                                                                             |
 
 The [render records contract](./mokly-sidecar-render-records.md) defines the
-render result, binding table, effective entry context, usage drafts, and slot
-inputs. Page results follow the [pages contract](./mokly-pages.md).
+render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
 
 ## Definitions
 
@@ -80,14 +83,15 @@ registers definitions or starts a render.
 ## Bundling
 
 `bundle` compiles an unevaluated in-memory esbuild generation. Its id hashes
-module paths, imports, and bytes; entry and stories lists; preview and renderer;
+module paths, imports, non-CSS source and loader bytes, and the core's optional
+evaluation digest for resolved configuration and CSS Modules; entry and stories lists; preview and renderer;
 the configuration directory; repository roots; module resolution settings;
 the installed React version; the real source root; and the selected real
 dependency roots. Equal head and base sources have separate generations,
-class maps, and bindings. The binary uses the id in each fragment key.
+class maps, and bindings. The binary uses the id in each fragment key. [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release) define replay and release.
 
-The module graph reports sources and dependencies with imports in source
-order, including re-exports, dynamic imports, and stylesheets. A file inside
+The module graph reports the digest of each module's consumed bytes, sources,
+and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside
 a selected dependency root, a `node_modules` directory, is a dependency on
 both sides. JavaScript and CSS imports from it are allowed and use stable
 logical names relative to that root, such as `node_modules/pkg/style.css`.
@@ -199,8 +203,9 @@ releases only that context; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
 releases disposed contexts before that process takes more work. The result
 contains transformed text and plugin-reported dependencies for watching.
-The fragment key includes the class-map table digest. When maps change, the
-core disposes and re-bundles the generation before installing the new maps.
+The fragment key includes the class-map table digest. A changed map uses a
+new evaluation digest. The core retains the old generation until its final
+graph or request releases it. CSS text alone invalidates stylesheet nodes.
 The pool assigns each loaded lifetime an epoch. Every process reloads a stale
 epoch, then replays maps, describe, and bindings before a render.
 Mokly's own CSS work stays in Rust. Expected PostCSS errors carry a typed
@@ -209,16 +214,8 @@ from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
 
 ## Cancellation And Timeouts
 
-Deadlines are 120 seconds for `bundle` and `describe`, 60 seconds for
-`processCss`, and 30 seconds for every other request.
-`MOKLY_SIDECAR_TIMEOUT_MS` replaces every deadline. The CLI reads it once and validates a positive
-64-bit integer before command work. An invalid value fails `cli-invalid`
-with the accepted range. When a deadline passes, the binary kills that
-sidecar, retries the request once on a fresh sidecar, and then fails with
-`render-timeout`. A cancelled command sends `shutdown` to every sidecar and
-kills any that survives the grace period. Build follows the
-[terminal cancellation rule](./mokly-terminal-errors.md#plain-compatibility).
-Render labels split the last `#` as `{module} export {name}`.
+The [cancellation rules](./mokly-sidecar-lifecycle.md#cancellation-and-timeouts)
+define deadlines, process replacement, and shutdown grace.
 
 ## Fail-Closed Rules
 

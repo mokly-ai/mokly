@@ -15,7 +15,7 @@ pub struct NodeKey(pub String);
 pub enum NodeKind {
     /// Resolved data-only config and Mokly version.
     Config,
-    /// Complete authored file bytes.
+    /// Digest of the complete authored file bytes.
     EntrySource,
     /// HTML component source and transitive component keys.
     HtmlComponent,

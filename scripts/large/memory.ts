@@ -2,7 +2,32 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+import { killProcesses, validPid } from "./signals.js";
+
 const execute = promisify(execFile);
+export const DEFAULT_MEMORY_STOP_KIB = 1_750_000;
+export interface MemorySystem {
+  pid: number;
+  ps(): Promise<string>;
+  kill(pid: number, signal: NodeJS.Signals): void;
+  every(sample: () => void, intervalMs: number): () => void;
+}
+const system: MemorySystem = {
+  pid: process.pid,
+  ps: async () =>
+    (
+      await execute("ps", ["-eo", "pid=,ppid=,pgid=,rss="], {
+        maxBuffer: 4 * 1024 * 1024,
+      })
+    ).stdout,
+  kill: (pid, signal) => {
+    process.kill(pid, signal);
+  },
+  every: (sample, interval) => {
+    const timer = setInterval(sample, interval);
+    return () => clearInterval(timer);
+  },
+};
 export interface ProcessRow {
   pid: number;
   parent: number;
@@ -44,43 +69,61 @@ export function treeRss(rows: ProcessRow[], root: number): number {
   return processTree(rows, root).reduce((sum, row) => sum + row.rssKiB, 0);
 }
 export function monitor(
-  root: number,
-  exceeded: (message: string, pids: number[]) => void,
+  root: number | undefined,
+  failed: (message: string) => void,
+  stopKiB = DEFAULT_MEMORY_STOP_KIB,
+  boundary: MemorySystem = system,
 ) {
   let peakKiB = 0,
     totalPeakKiB = 0,
-    samples = 0;
+    samples = 0,
+    stopped = false;
   let active: Promise<void> | undefined;
-  const sample = async () => {
+  let cancel = () => {};
+  const stop = async () => {
+    stopped = true;
+    cancel();
+    await active;
+    return { peakKiB, totalPeakKiB, samples, sampleIntervalMs: 50 };
+  };
+  // No process was started. Never manufacture a sentinel PID for sampling or signals.
+  if (!validPid(root, boundary.pid)) return stop;
+  const abort = (message: string, pids: number[]) => {
+    if (stopped) return;
+    stopped = true;
+    cancel();
     try {
-      const { stdout } = await execute("ps", ["-eo", "pid=,ppid=,pgid=,rss="], {
-        maxBuffer: 4 * 1024 * 1024,
-      });
-      const rows = processRows(stdout);
-      peakKiB = Math.max(peakKiB, treeRss(rows, root));
-      totalPeakKiB = Math.max(totalPeakKiB, treeRss(rows, process.pid));
-      samples++;
-      // A shared-machine safety stop; this is not a pass/fail performance budget.
-      if (totalPeakKiB > 1_750_000)
-        exceeded(
-          "Fixture exceeded the 1,750,000 KiB shared-machine RSS safety stop",
-          processTree(rows, root).map((row) => row.pid),
-        );
+      killProcesses(pids, boundary.kill, boundary.pid);
     } catch (error) {
-      exceeded(`RSS sampling failed: ${String(error)}`, [root]);
+      message += `; shutdown failed: ${String(error)}`;
     }
+    failed(message);
+  };
+  const sample = async () => {
+    let rows: ProcessRow[];
+    try {
+      rows = processRows(await boundary.ps());
+    } catch (error) {
+      abort(`RSS sampling failed: ${String(error)}`, [root]);
+      return;
+    }
+    if (stopped) return;
+    peakKiB = Math.max(peakKiB, treeRss(rows, root));
+    totalPeakKiB = Math.max(totalPeakKiB, treeRss(rows, boundary.pid));
+    samples++;
+    if (stopKiB > 0 && totalPeakKiB > stopKiB)
+      abort(
+        `Fixture exceeded the ${stopKiB.toLocaleString("en-US")} KiB shared-machine RSS safety stop`,
+        processTree(rows, root).map((row) => row.pid),
+      );
   };
   const tick = () => {
-    if (!active)
+    if (!stopped && !active)
       active = sample().finally(() => {
         active = undefined;
       });
   };
+  cancel = boundary.every(tick, 50);
   tick();
-  const timer = setInterval(tick, 50);
-  return async () => {
-    clearInterval(timer);
-    await active;
-    return { peakKiB, totalPeakKiB, samples, sampleIntervalMs: 50 };
-  };
+  return stop;
 }

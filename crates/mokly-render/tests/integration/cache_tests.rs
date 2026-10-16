@@ -106,7 +106,7 @@ fn repeated_describe_reuses_maps_and_changed_postcss_maps_replay_the_bundle() {
     .unwrap();
     let changed = consumer.prepare().unwrap();
     let current = changed.javascript.generation.as_ref().unwrap();
-    assert_eq!(current.id, generation.id);
+    assert_ne!(current.id, generation.id);
     assert_ne!(current.class_maps_digest, generation.class_maps_digest);
     let changed = consumer.generation(changed);
     assert_ne!(
@@ -124,5 +124,78 @@ fn repeated_describe_reuses_maps_and_changed_postcss_maps_replay_the_bundle() {
             .count(),
         2
     );
-    assert!(calls.iter().any(|call| matches!(call, Call::Dispose(_))));
+    assert!(!calls.iter().any(|call| matches!(call, Call::Dispose(_))));
+}
+
+#[test]
+fn html_rebuild_keeps_one_bundle_and_releases_the_last_generation() {
+    let consumer = Consumer::new();
+    let first = consumer.generation(consumer.prepare().unwrap());
+    let second = consumer.generation(consumer.prepare().unwrap());
+    let count = |dispose| {
+        consumer
+            .pool
+            .calls
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|call| {
+                if dispose {
+                    matches!(call, Call::Dispose(_))
+                } else {
+                    matches!(call, Call::Bundle(_))
+                }
+            })
+            .count()
+    };
+    assert_eq!(count(false), 1);
+    drop(first);
+    assert_eq!(count(true), 0);
+    drop(second);
+    assert_eq!(count(true), 1);
+    assert!(
+        consumer
+            .pool
+            .calls
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|call| matches!(call, Call::DisposeContext(_)))
+    );
+}
+
+#[test]
+fn retained_graphs_keep_their_own_resolved_bindings_and_class_maps() {
+    let consumer = Consumer::new();
+    let original = consumer.generation(consumer.prepare().unwrap());
+    original
+        .render("components/chip/index.mobile.html")
+        .unwrap();
+    consumer.replace(
+        "mokly.config.json",
+        "\"dir\": \"specs\"",
+        "\"dir\": \"specs\", \"path\": \"nested\"",
+    );
+    fs::write(
+        consumer.root().join("tokens.json"),
+        r#"{"color":"blue","className":"replacement"}"#,
+    )
+    .unwrap();
+    let next = consumer.generation(consumer.prepare().unwrap());
+    let current = next
+        .render("nested/components/chip/index.mobile.html")
+        .unwrap();
+    let old_props: Props = serde_json::from_str(r#"{"label":"Retained render"}"#).unwrap();
+    let retained = original
+        .render_props("components/chip/index.mobile.html", &old_props)
+        .unwrap();
+    let old = String::from_utf8_lossy(&retained.artifact.bytes);
+    let new = String::from_utf8_lossy(&current.bytes);
+    assert!(old.contains("data-entry=\"components/chip\""), "{old}");
+    assert!(
+        new.contains("data-entry=\"nested/components/chip\""),
+        "{new}"
+    );
+    assert!(old.contains("<button class=\""), "{old}");
+    assert!(new.contains("<button>"), "{new}");
 }

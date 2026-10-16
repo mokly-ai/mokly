@@ -33,9 +33,9 @@ fn duplicate_stylesheet_warnings_name_the_first_authored_path() {
                     },
                 )
             }),
-        SourceTreeMock::read_shared
+        SourceTreeMock::digest
             .each_call(matching!(_))
-            .answers(&|_, path| WorkingTree.read_shared(path)),
+            .answers(&|_, path| WorkingTree.digest(path)),
     )));
     let factory: &dyn GraphFactory = &runtime;
     let generation = factory

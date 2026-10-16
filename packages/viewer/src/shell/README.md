@@ -202,7 +202,9 @@ the frames once the routed details arrive; until then `stage_delivery.tsx`
 shows the loading state, or the unavailable state with retry. The element
 generation of `frame_source_hook.ts` advances only when a frame's
 `documentKey` changes at the same source, so a publication reloads only the
-frames whose document changed.
+frames whose document changed. Saved component view records supplied by prop
+controls keep their index `documentKey`. Only a temporary render URL bypasses
+that key.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical

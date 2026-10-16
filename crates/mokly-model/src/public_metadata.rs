@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 /// Origin-scoped catalogue identity.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogueIdentity {
     /// Lowercase SHA-256 of the configuration identity preimage.
@@ -43,7 +43,7 @@ pub enum ChangeKind {
 }
 
 /// Entry-level membership in Changes.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(tag = "status", rename_all = "lowercase", deny_unknown_fields)]
 pub enum CatalogueChanges {
     /// Preparing state.
@@ -64,7 +64,7 @@ pub enum CatalogueChanges {
 }
 
 /// Per-view comparison eligibility.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(tag = "status", rename_all = "lowercase", deny_unknown_fields)]
 pub enum ComparisonSelection {
     /// Preparing state.
@@ -85,7 +85,7 @@ pub enum ComparisonSelection {
 }
 
 /// Authored display metadata with no source-serving permission.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogueDetails {
     /// Description text.
@@ -101,7 +101,7 @@ pub struct CatalogueDetails {
 }
 
 /// Public fields shared by all record kinds.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CatalogueEntry {
     /// Complete entry path.

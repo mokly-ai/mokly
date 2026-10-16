@@ -1,9 +1,11 @@
 //! Generation recipes reloaded on demand after a process retry or recycle.
 
-use crate::bindings::DisposeContext;
+use std::sync::Arc;
+
 use crate::error::{Error, Result};
-use crate::methods::{Call, Generation};
+use crate::methods::Call;
 use crate::pool::Pool;
+use crate::pool_cleanup;
 use crate::pool_state::Slot;
 use crate::wire::{MethodResult, Request};
 
@@ -14,50 +16,9 @@ impl Pool {
         call: &Call,
         deadline: u64,
     ) -> Result<MethodResult> {
-        let stale = {
-            let state = self.lock()?;
-            slot.generations
-                .iter()
-                .filter(|(id, epoch)| {
-                    !state.bundles.contains_key(*id)
-                        || state.epochs.get(*id).copied().unwrap_or(0) != **epoch
-                })
-                .map(|(id, _)| id.clone())
-                .collect::<Vec<_>>()
-        };
-        for generation in stale {
-            slot.worker.request(
-                &Request {
-                    id: 1,
-                    call: Call::Dispose(Generation {
-                        generation: generation.clone(),
-                    }),
-                },
-                self.options.timeout_ms.unwrap_or(30_000),
-            )?;
-            slot.generations.remove(&generation);
-            slot.maps.remove(&generation);
-            slot.described.remove(&generation);
-            slot.bindings.remove(&generation);
-        }
-        let stale_contexts = {
-            let state = self.lock()?;
-            slot.contexts
-                .difference(&state.contexts)
-                .cloned()
-                .collect::<Vec<_>>()
-        };
-        for context in stale_contexts {
-            slot.worker.request(
-                &Request {
-                    id: 1,
-                    call: Call::DisposeContext(DisposeContext {
-                        context: context.clone(),
-                    }),
-                },
-                self.options.timeout_ms.unwrap_or(30_000),
-            )?;
-            slot.contexts.remove(&context);
+        self.cleanup(slot)?;
+        if let Call::Bundle(params) = call {
+            self.seed_compilation(slot, params)?;
         }
         if let Some(generation) = generation(call) {
             self.prepare(
@@ -91,7 +52,7 @@ impl Pool {
             self.lock()?.contexts.insert(params.context.clone());
             slot.contexts.insert(params.context.clone());
         }
-        let result = slot.worker.request(
+        let mut result = slot.worker.request(
             &Request {
                 id: 1,
                 call: call.clone(),
@@ -103,21 +64,40 @@ impl Pool {
             if state.stopped {
                 return Err(Error::Cancelled);
             }
-            match (call, &result) {
+            match (call, &mut result) {
                 (Call::Bundle(bundle), MethodResult::Bundle(result)) => {
-                    let epoch = match state.epochs.get(&result.generation) {
-                        Some(epoch) => *epoch,
-                        None => {
-                            state.next_epoch += 1;
-                            let epoch = state.next_epoch;
-                            state.epochs.insert(result.generation.clone(), epoch);
-                            epoch
-                        }
-                    };
+                    state.next_epoch += 1;
+                    let epoch = state.next_epoch;
+                    result.epoch = epoch;
+                    state.epochs.insert(result.generation.clone(), epoch);
+                    state
+                        .modules
+                        .insert(result.generation.clone(), result.modules.clone());
+                    state
+                        .leases
+                        .entry(result.generation.clone())
+                        .or_default()
+                        .insert(epoch);
+                    if let Some(compiled) = &result.compiled {
+                        let shared = state
+                            .compiled
+                            .values()
+                            .find(|value| {
+                                value.identity == compiled.identity
+                                    && value.inputs == compiled.inputs
+                                    && value.input_directories == compiled.input_directories
+                            })
+                            .cloned()
+                            .unwrap_or_else(|| Arc::new(compiled.clone()));
+                        state.compiled.insert(result.generation.clone(), shared);
+                    }
                     state
                         .bundles
                         .insert(result.generation.clone(), bundle.clone());
                     slot.generations.insert(result.generation.clone(), epoch);
+                    slot.maps.remove(&result.generation);
+                    slot.described.remove(&result.generation);
+                    slot.bindings.remove(&result.generation);
                 }
                 (Call::CssModules(maps), _) => {
                     state.maps.insert(maps.generation.clone(), maps.clone());
@@ -140,6 +120,9 @@ impl Pool {
                 }
                 (Call::Dispose(generation), _) => {
                     state.bundles.remove(&generation.generation);
+                    state.compiled.remove(&generation.generation);
+                    state.modules.remove(&generation.generation);
+                    state.leases.remove(&generation.generation);
                     state.epochs.remove(&generation.generation);
                     state.maps.remove(&generation.generation);
                     state.bindings.remove(&generation.generation);
@@ -155,6 +138,9 @@ impl Pool {
             }
         }
         Ok(result)
+    }
+    pub(super) fn cleanup(&self, slot: &mut Slot) -> Result<()> {
+        pool_cleanup::cleanup(&self.state, slot, self.options.timeout_ms)
     }
 }
 

@@ -33,6 +33,7 @@ interface PhoneFrameProps {
   dark?: boolean | undefined;
   label?: string;
   lightOnly?: boolean;
+  scheme?: boolean;
   small?: boolean;
 }
 
@@ -41,6 +42,7 @@ export function PhoneFrame({
   dark,
   label,
   lightOnly,
+  scheme,
   small,
 }: PhoneFrameProps) {
   return (
@@ -53,6 +55,7 @@ export function PhoneFrame({
       expandable
       address=""
       {...optional("label", label)}
+      {...optional("scheme", scheme)}
     >
       {children}
     </deviceFrame.Component>
@@ -66,6 +69,7 @@ interface BrowserFrameProps {
   expandable?: boolean;
   label?: string;
   lightOnly?: boolean;
+  scheme?: boolean;
 }
 
 export function BrowserFrame({
@@ -75,6 +79,7 @@ export function BrowserFrame({
   expandable,
   label,
   lightOnly,
+  scheme,
 }: BrowserFrameProps) {
   return (
     <deviceFrame.Component
@@ -86,6 +91,7 @@ export function BrowserFrame({
       small={false}
       expandable={expandable ?? true}
       {...optional("label", label)}
+      {...optional("scheme", scheme)}
     >
       {children}
     </deviceFrame.Component>

@@ -13,7 +13,9 @@ arrive during an active action are coalesced by impact before the next
 action starts, so two rebuilds cannot race to replace the catalogue model.
 The actions are, from least to most impact, `reload`, `rebuild`, and
 `config`; a burst takes the strongest action and keeps every observed
-candidate path for the terminal line. The `r` shortcut of the
+candidate path for the terminal line. The observer keeps one latest descriptor per path while an action runs.
+Access-only notifications schedule no action. Values above one day for
+`watch.debounceMs` use a one-day delay without panicking. Negative values use zero. The `r` shortcut of the
 [terminal output contract](./mokly-terminal-output.md#interactive-controls)
 enqueues a `rebuild` through the same queue. Shutdown stops the queue first.
 
@@ -25,8 +27,9 @@ candidate is adopted in one step with its documents: the model, the route
 set, and the cache entries of the moved nodes replace the old ones together,
 and one revision is published. A failed candidate keeps the last-good model,
 route set, cache, and comparison evidence serving; the error is reported
-through the watch failure line, and the next authored change starts a fresh
-attempt. Warning scopes follow the
+through the watch failure line. After a failed attempt, a regular-file event
+in any watched, non-denied directory starts a fresh attempt. This includes
+a newly created import target that the accepted inventory does not name. Warning scopes follow the
 [watched Serve generations](./mokly-build-warnings.md#watched-serve-generations)
 rule: an attempt starts a new scope, a failed attempt flushes only its own
 warnings before its failure line, and late warnings of a superseded attempt
@@ -43,15 +46,21 @@ validation failure keeps the old configuration, watcher, and model. A changed
 renderer module or module resolution setting produces a new bundle
 generation; the old generation is disposed after adoption. An explicit CLI
 `--base` stays pinned across reloads; without one, the adopted
-configuration's `review.base` applies. The port never changes.
+configuration's `review.base` applies. The port never changes. `repoRoot`
+belongs to the running pool. A candidate that changes it fails with a typed
+restart diagnostic before evaluating modules. Sidecar count and timeout are
+process options fixed at startup; they are not configuration fields. The accepted
+configuration, observer, and model continue serving until Serve restarts.
 
 ## Resource Watches
 
 The referenced closure of every composed document feeds the resource watch
 set. A rendered document adds its closure as soon as it renders, even when
 the background pass has not finished, and a replaced catalogue state replaces
-the whole set. Discovery repeats after watcher readiness to capture references
-introduced while the watcher attached. Missing or invalid paths and their
+the whole set. A resource subscription queues attachment outside the render task. Adoption
+sets the generation, subscribes, and copies its reached resources in one
+critical section. Resource additions extend exact inputs on the active
+observer. Discovery repeats after changed roots attach. Missing or invalid paths and their
 last-known descendants stay observable until repaired or unreferenced; a
 repaired dangling alias restores later edits. A changed resource clears the
 resource evidence of the documents that reference it and recomputes them; it
@@ -76,7 +85,8 @@ check as the result, including a background render failure.
 
 Each completed action publishes one state under the
 [shell delivery contract](./mokly-shell-delivery.md#updates-in-serve):
-`revision` rises by one, the index and every detail are replaced together,
+`revision` rises by one, the index and every detail are replaced together. Equal detail payloads retain
+their encoded bytes. Delivery stamps the new revision without copying them,
 and the event stream carries the revision as the message id. The shell
 refetches the index and the current route's details, updates the navigation,
 the Changes marks, Usage, and the details panel in place, and reloads only
@@ -91,13 +101,14 @@ completion of every operation a caller groups into one edit.
 
 ## Shutdown
 
-Shutdown stops the queue, discards a candidate watcher whose readiness is
-still pending, cancels active Git classification and background work, waits
-for an active configuration transaction, and then closes the watchers,
-timers, sidecars, HTTP listener, event streams, and port in the order of the
-[runtime contract](./mokly-runtime.md#shutdown). No later action starts.
-Tests prove that no orphan process survives a normal shutdown, a failed
-startup, or an interruption, and that the port is reusable afterwards.
+Shutdown follows the [runtime order](./mokly-runtime.md#shutdown), including
+before readiness. One lifecycle owns the watcher before preparation starts.
+An atomic startup handoff prevents a stopped process from reporting readiness.
+The active observer closes in the watcher step. An unadopted candidate drops
+when cancellation drains its preparation in the work step. The listener stays
+reserved until the sidecars end. No later action starts.
+Tests prove that no orphan process survives normal shutdown, failed startup,
+or interruption, and that the port is reusable afterwards.
 
 ## Terminal Presentation
 
