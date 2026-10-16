@@ -18,6 +18,7 @@ pub mod types;
 pub mod urls;
 pub mod workers;
 
+mod component_keys;
 mod config_key;
 mod evaluation;
 mod markdown_assets;

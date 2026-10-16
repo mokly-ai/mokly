@@ -13,7 +13,7 @@ use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::fragment::Fragment;
 use crate::props;
-use crate::tree::{Node, RegionKind};
+use crate::tree::{self, Node, RegionKind};
 
 pub(crate) fn records(fragment: &Fragment, catalogue: &PreparedCatalogue) -> Result<()> {
     for style in &fragment.styles {
@@ -176,7 +176,8 @@ pub(crate) fn placements(nodes: &[Node], fragment: &Fragment) -> Result<()> {
 }
 
 fn collect(nodes: &[Node], seen: &mut BTreeSet<String>, ignored: bool) -> Result<()> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter().rev().map(|node| (node, ignored)).collect();
+    while let Some((node, ignored)) = pending.pop() {
         match node {
             Node::Region { region, children } => {
                 if matches!(
@@ -192,13 +193,12 @@ fn collect(nodes: &[Node], seen: &mut BTreeSet<String>, ignored: bool) -> Result
                 if let RegionKind::Instance { key, .. } = &region.kind {
                     seen.insert(key.clone());
                 }
-                collect(
-                    children,
-                    seen,
-                    ignored || matches!(region.kind, RegionKind::Ignore { .. }),
-                )?;
+                let nested = ignored || matches!(region.kind, RegionKind::Ignore { .. });
+                pending.extend(children.iter().rev().map(|node| (node, nested)));
             }
-            Node::Element(element) => collect(&element.children, seen, ignored)?,
+            Node::Element(element) => {
+                pending.extend(element.children.iter().rev().map(|node| (node, ignored)))
+            }
             _ => {}
         }
     }
@@ -206,18 +206,13 @@ fn collect(nodes: &[Node], seen: &mut BTreeSet<String>, ignored: bool) -> Result
 }
 
 pub(crate) fn component_order(nodes: &[Node], paths: &mut Vec<String>) {
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                if let RegionKind::Instance { path, .. } = &region.kind
-                    && !paths.contains(path)
-                {
-                    paths.push(path.clone());
-                }
-                component_order(children, paths);
-            }
-            Node::Element(element) => component_order(&element.children, paths),
-            _ => {}
+    let mut seen: BTreeSet<_> = paths.iter().cloned().collect();
+    for node in tree::walk(nodes) {
+        if let Node::Region { region, .. } = node
+            && let RegionKind::Instance { path, .. } = &region.kind
+            && seen.insert(path.clone())
+        {
+            paths.push(path.clone());
         }
     }
 }

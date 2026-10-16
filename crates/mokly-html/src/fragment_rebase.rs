@@ -101,7 +101,8 @@ fn regions(
     slots: &BTreeMap<String, String>,
     context: &Context,
 ) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         match node {
             Node::Region { region, children } => {
                 match &mut region.kind {
@@ -128,9 +129,9 @@ fn regions(
                     }
                     _ => {}
                 }
-                regions(children, instances, slots, context);
+                pending.extend(children.iter_mut().rev());
             }
-            Node::Element(element) => regions(&mut element.children, instances, slots, context),
+            Node::Element(element) => pending.extend(element.children.iter_mut().rev()),
             _ => {}
         }
     }

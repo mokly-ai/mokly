@@ -11,6 +11,7 @@ use crate::composition::Engine;
 use crate::context::{Context, Slot};
 use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid};
+use crate::expansion::{After, Expansion};
 use crate::tree::{Element, Node, Region, RegionKind};
 use crate::{forwarded_slots, ignore_checks, source_locations};
 
@@ -119,7 +120,7 @@ impl Engine<'_> {
         Ok(())
     }
 
-    pub(crate) fn slot(&mut self, element: Element, context: &Context) -> Result<Vec<Node>> {
+    pub(crate) fn slot(&mut self, element: Element, context: Arc<Context>) -> Result<Expansion> {
         let name = element.get("name").unwrap_or("children");
         if !context.declared_slots.iter().any(|slot| slot == name) {
             return Err(invalid(
@@ -128,7 +129,7 @@ impl Engine<'_> {
             ));
         }
         let Some(slot) = context.slots.get(name) else {
-            return self.nodes(element.children, context);
+            return Ok(Expansion::native(element.children, context));
         };
         let mut supplier = slot.supplier.as_ref().clone();
         supplier.slot_key = slot.origin_key.clone();
@@ -142,36 +143,33 @@ impl Engine<'_> {
             .clone()
             .unwrap_or_else(|| identity.clone());
         supplier.replay = context.replay || !self.placed_slots.insert(origin);
-        let cache_key = Some((identity, context.ignore));
-        let children =
-            if let Some(cached) = cache_key.as_ref().and_then(|key| self.slot_cache.get(key)) {
-                cached.clone()
-            } else {
-                let nodes = self.nodes(slot.nodes.as_ref().clone(), &supplier)?;
-                if let Some(key) = cache_key {
-                    self.slot_cache.insert(key, nodes.clone());
-                }
-                nodes
-            };
-        if let (Some(key), Some(instance_key)) = (&slot.key, &slot.instance_key) {
-            Ok(vec![Node::Region {
-                region: Region {
-                    id: String::new(),
-                    kind: RegionKind::Slot {
-                        key: key.clone(),
-                        instance_key: instance_key.clone(),
-                        name: name.into(),
-                        owner: supplier.owner,
-                    },
+        let cache_key = (identity, context.ignore);
+        let region = if let (Some(key), Some(instance_key)) = (&slot.key, &slot.instance_key) {
+            Some(Region {
+                id: String::new(),
+                kind: RegionKind::Slot {
+                    key: key.clone(),
+                    instance_key: instance_key.clone(),
+                    name: name.into(),
+                    owner: supplier.owner.clone(),
                 },
-                children,
-            }])
+            })
         } else {
-            Ok(children)
-        }
+            None
+        };
+        let (mut expansion, cache) = if let Some(cached) = self.slot_cache.get(&cache_key) {
+            (Expansion::ready(cached.clone(), Arc::new(supplier)), None)
+        } else {
+            (
+                Expansion::native(slot.nodes.as_ref().clone(), Arc::new(supplier)),
+                Some(cache_key),
+            )
+        };
+        expansion.after.push(After::Slot { cache, region });
+        Ok(expansion)
     }
 
-    pub(crate) fn ignore(&mut self, element: Element, context: &Context) -> Result<Vec<Node>> {
+    pub(crate) fn ignore(&mut self, element: Element, context: Arc<Context>) -> Result<Expansion> {
         let Some(id) = element.get("id").filter(|id| !id.is_empty()) else {
             return Err(invalid(
                 Code::HtmlElement,
@@ -187,35 +185,11 @@ impl Engine<'_> {
                 format!("duplicate ignore id {id}"),
             ));
         }
-        let children = self.nodes(element.children, context)?;
-        if !context.ignore {
-            return Ok(children);
+        let enabled = context.ignore;
+        let mut expansion = Expansion::native(element.children, context);
+        if enabled {
+            expansion.after.push(After::Ignore { id, material_key });
         }
-        if contains_ownership(&children) {
-            return Err(invalid(
-                Code::HtmlElement,
-                format!("ignore region {id} cannot enclose an instance or slot region"),
-            ));
-        }
-        Ok(vec![Node::Region {
-            region: Region {
-                id: String::new(),
-                kind: RegionKind::Ignore { id, material_key },
-            },
-            children,
-        }])
+        Ok(expansion)
     }
-}
-
-fn contains_ownership(nodes: &[Node]) -> bool {
-    nodes.iter().any(|node| match node {
-        Node::Region { region, children } => {
-            matches!(
-                region.kind,
-                RegionKind::Instance { .. } | RegionKind::Slot { .. }
-            ) || contains_ownership(children)
-        }
-        Node::Element(element) => contains_ownership(&element.children),
-        _ => false,
-    })
 }

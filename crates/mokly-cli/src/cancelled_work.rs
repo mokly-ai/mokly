@@ -57,7 +57,7 @@ impl SourceTree for CancellableTree {
 
 /// Scheduler wrapper checks each queued document before it starts.
 pub struct CancellableWorkers {
-    /// Normal large-stack scheduler.
+    /// Normal preparation scheduler.
     pub inner: Arc<dyn RenderWorkers>,
     /// Command cancellation state.
     pub cancellation: Arc<dyn Cancellation>,

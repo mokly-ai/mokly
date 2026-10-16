@@ -1,6 +1,7 @@
 //! Compose one immutable render generation from injected runtime boundaries.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -53,24 +54,12 @@ impl RenderGraph for Graph {
         catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> Result<Arc<dyn RenderGeneration>> {
-        let parent = tracing::Span::current();
-        std::thread::scope(|scope| {
-            let thread = match std::thread::Builder::new()
-                .name("mokly-prepare".into())
-                .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || {
-                    parent.in_scope(|| self.prepare_generation(config, catalogue, output))
-                }) {
-                Ok(thread) => thread,
-                Err(source) => {
-                    return Err(error::InternalError::PreparationThread { source }.into());
-                }
-            };
-            match thread.join() {
-                Ok(result) => result,
-                Err(_) => Err(error::InternalError::PreparationPanicked.into()),
-            }
-        })
+        match catch_unwind(AssertUnwindSafe(|| {
+            self.prepare_generation(config, catalogue, output)
+        })) {
+            Ok(result) => result,
+            Err(_) => Err(error::InternalError::PreparationPanicked.into()),
+        }
     }
 }
 

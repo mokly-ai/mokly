@@ -28,27 +28,26 @@ pub(crate) fn mark(nodes: &mut [Node], target: &str, fragment: Option<&str>) -> 
 }
 
 fn root_count(nodes: &[Node]) -> usize {
-    nodes
-        .iter()
-        .map(|node| match node {
-            Node::Region { children, .. } => root_count(children),
-            Node::Comment(_) => 0,
-            Node::Text(text) if text.trim().is_empty() => 0,
-            Node::Element(_) => 1,
-            _ => 2,
-        })
-        .sum()
+    let mut count = 0;
+    let mut pending: Vec<_> = nodes.iter().collect();
+    while let Some(node) = pending.pop() {
+        match node {
+            Node::Region { children, .. } => pending.extend(children),
+            Node::Comment(_) => {}
+            Node::Text(text) if text.trim().is_empty() => {}
+            Node::Element(_) => count += 1,
+            _ => count += 2,
+        }
+    }
+    count
 }
 
 fn first_root(nodes: &mut [Node]) -> Option<&mut Element> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) => return Some(element),
-            Node::Region { children, .. } => {
-                if let Some(element) = first_root(children) {
-                    return Some(element);
-                }
-            }
+            Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),
             _ => {}
         }
     }

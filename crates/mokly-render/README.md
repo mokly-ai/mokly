@@ -43,6 +43,8 @@ It validates complete props and control bounds before rendering and leaves saved
 documents intact. Returned instance props pass the Rust schema validator.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet resources rebuild from that generation's captured bytes.
+Module stylesheet discovery uses an explicit stack and retains import order
+when it crosses shared dependencies or cycles.
 
 `BaseSide` takes the source lease and the complete dependency selection from
 `mokly-compare`. Bundle requests use that extraction, its selected dependencies,

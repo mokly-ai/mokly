@@ -92,7 +92,7 @@ The repository's large consumer is synthetic and opt-in. Its generator
 produces an HTML variant and a React variant of the same catalogue: nested
 folders, component entries with variants, repeated and nested component usage,
 slots, both viewports and colour schemes, catalogue links, pages, use cases,
-Markdown documents, imported CSS, and images, with configurable sizes. A small
+related Markdown, imported CSS, and images, with configurable sizes. A small
 instance of the generator runs in automated tests; a full-sized instance is
 smoke-tested with the opt-in benchmark. It is a repeatable workload for
 locating scaling costs, not a claim of identical production data or timings.
@@ -101,9 +101,11 @@ The fixture provides a base commit so Changes performs a real comparison:
 after the base commit, setup adds an unrelated rule to the first shared
 stylesheet, so classification exercises real rule evidence and attribution
 excludes the unrelated rule from every linked screen; the benchmark expects
-zero Changes, including use cases. Setup archives a packaged Mokly version
-and a consumer lockfile and installs the head dependencies; setup time is
-reported separately and never repeated during an ordinary run.
+zero Changes, including use cases. `--toolchain install` archives the CLI,
+viewer, native package, and consumer lockfile, then installs head dependencies.
+`--toolchain workspace` reuses the workspace dependencies and saves their
+lockfile for evidence. Every result names the mode. Setup time is separate;
+workspace reuse has no install-time measurement.
 
 The benchmark harness runs four scenarios on each variant, with the sidecar
 count held constant and other heavy work idle:
@@ -121,15 +123,30 @@ count held constant and other heavy work idle:
 
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
-Changes, and reports each measurement as JSON on stdout. CI's small
-correctness fixtures have
+Changes, and reports each measurement as JSON on stdout. A scenario whose integration
+is unavailable reports `status: "deferred"`, its owner, and its reason. It
+reports no success or duration for that scenario. Build and Serve do not wait
+for deferred Changes. A fresh Serve process and browser context define each
+restart; the browser process starts before the measurement.
+
+The harness samples process RSS every 50 ms. It reports the maximum sum for
+the CLI shim, core, and sidecar descendants across process groups, plus the maximum for the whole harness tree,
+including the browser. The report records the Node heap limit and Go worker limit. Chrome uses at most two renderer processes and disables
+GPU acceleration. These are sampled observations, not exact operating
+system high-water marks. A shared-machine run stops at 1,750,000 KiB of whole
+tree RSS. This safety stop is not an acceptance budget. Fixtures and each run's
+logs, timing records, and JSON report stay in ignored directories. Use the
+[large fixture commands](../../tests/fixtures/large/README.md) to select safe
+dimensions, a variant, and one of the four scenarios.
+
+CI's small correctness fixtures have
 [no machine-specific wall-clock assertion](./ci-test-timing.md).
 
 ## Budgets
 
 | Budget                                               | Rule                                                                                                |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `usableMs`                                           | under 5000 ms, cold and warm, on both fixture variants                                              |
+| `usableMs`                                           | recorded cold and warm per variant; numeric approval pending                                        |
 | sidecar deadlines and recycling                      | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                  |
 | dependency install time limit                        | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning |
 | render cache, extraction cache, install cache bounds | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                |
@@ -139,5 +156,5 @@ correctness fixtures have
 
 This table holds the budgets with the values the user approved. A row whose
 value is a recording rule rather than a number is measured and reported, not
-enforced; a number enters the row when the user approves it. The benchmark
-enforces every numeric row and fails when one is exceeded.
+enforced; a number enters the row when the user approves it. The benchmark does not assert wall-clock performance. The acceptance budgets
+for the rebuilt core require approval before a gate can enforce them.

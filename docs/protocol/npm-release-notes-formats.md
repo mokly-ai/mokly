@@ -143,3 +143,20 @@ without reloading the page. Serve sends no cross-origin response headers.
 Mokly Cloud must reset and republish its catalogue with the matching viewer and
 receiver. The Plan, Blob, Complete upload exchange remains v1; its validation
 rules and content-delta behavior do not change.
+
+### Deep Trees And Scale Tools
+
+HTML trees use explicit work stacks for composition, repair, serialization,
+cloning, equality, and destruction. They need no enlarged thread stack.
+`plaintext` has no synthetic closing tag. Its parsed tree is the stable
+browser repair of the serialized payload, including formatting clones and
+foster-parented content. Initial newlines in `pre`, `textarea`, and `listing`
+survive repeated parsing.
+
+The opt-in large fixture has native HTML and React variants. Component parent
+views bring the default count to 5,790 documents across 1,590 routes. Generated
+output is ignored. The harness uses the Rust CLI and reports build and Serve
+measurements, with explicit deferrals for unavailable Changes and watch
+integrations. Workspace dependency reuse and isolated installs are distinct
+modes. Rebuilt-core time budgets require approval; measurements have no
+wall-clock assertions.

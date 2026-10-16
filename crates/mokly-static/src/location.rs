@@ -140,18 +140,22 @@ pub(crate) fn validate(
 }
 
 pub(crate) fn directories(files: &dyn Files, path: &Path) -> Result<()> {
-    match files.entry(path)? {
-        Some(Entry::Directory(_)) => Ok(()),
-        Some(_) => Err(Error::Unexpected { path: path.into() }),
-        None => {
-            if let Some(parent) = path.parent() {
-                directories(files, parent)?;
-            }
-            match files.mkdir(path) {
-                Ok(()) => Ok(()),
-                Err(_) if matches!(files.entry(path)?, Some(Entry::Directory(_))) => Ok(()),
-                Err(error) => Err(error),
-            }
+    let mut missing = Vec::new();
+    let mut next = Some(path);
+    while let Some(path) = next {
+        match files.entry(path)? {
+            Some(Entry::Directory(_)) => break,
+            Some(_) => return Err(Error::Unexpected { path: path.into() }),
+            None => missing.push(path),
+        }
+        next = path.parent();
+    }
+    for path in missing.into_iter().rev() {
+        match files.mkdir(path) {
+            Ok(()) => {}
+            Err(_) if matches!(files.entry(path)?, Some(Entry::Directory(_))) => {}
+            Err(error) => return Err(error),
         }
     }
+    Ok(())
 }

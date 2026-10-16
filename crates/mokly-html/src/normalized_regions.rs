@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::mem;
+use std::vec::IntoIter;
 
 use crate::normalization::{self, ATTRIBUTE, Repair};
 use crate::tree::Node;
@@ -49,47 +50,79 @@ pub(crate) fn classify(nodes: &[Node], repair: &mut Repair) {
     }
 }
 
+struct Frame {
+    parent: Option<Node>,
+    remaining: IntoIter<Node>,
+    output: Vec<Node>,
+    regions: Vec<(String, Vec<Node>)>,
+}
+
 pub(crate) fn restore(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
-    let mut output = Vec::new();
-    let mut stack: Vec<(String, Vec<Node>)> = Vec::new();
-    for mut node in nodes {
-        if let Some((id, start)) = normalization::marker(&node) {
-            let id = id.to_owned();
-            if repair.valid.contains(&id) {
-                if start {
-                    stack.push((id, Vec::new()));
-                } else if let Some((open, children)) = stack.pop() {
-                    if open == id {
-                        if let Some(placement) = repair.regions.get(&id) {
-                            push(
-                                &mut output,
-                                &mut stack,
-                                Node::Region {
-                                    region: placement.region.clone(),
-                                    children,
-                                },
-                            );
-                        }
-                    } else {
-                        repair.moved.extend([open, id]);
-                        for child in children {
-                            push(&mut output, &mut stack, child);
+    let mut frames = vec![Frame {
+        parent: None,
+        remaining: nodes.into_iter(),
+        output: Vec::new(),
+        regions: Vec::new(),
+    }];
+    while let Some(frame) = frames.last_mut() {
+        if let Some(mut node) = frame.remaining.next() {
+            if let Some((id, start)) = normalization::marker(&node) {
+                let id = id.to_owned();
+                if repair.valid.contains(&id) {
+                    if start {
+                        frame.regions.push((id, Vec::new()));
+                    } else if let Some((open, children)) = frame.regions.pop() {
+                        if open == id {
+                            if let Some(placement) = repair.regions.get(&id) {
+                                push(
+                                    &mut frame.output,
+                                    &mut frame.regions,
+                                    Node::Region {
+                                        region: placement.region.clone(),
+                                        children,
+                                    },
+                                );
+                            }
+                        } else {
+                            repair.moved.extend([open, id]);
+                            for child in children {
+                                push(&mut frame.output, &mut frame.regions, child);
+                            }
                         }
                     }
                 }
+                continue;
+            }
+            if let Node::Element(element) = &mut node {
+                normalization::metadata(element, repair);
+                let children = mem::take(&mut element.children);
+                frames.push(Frame {
+                    parent: Some(node),
+                    remaining: children.into_iter(),
+                    output: Vec::new(),
+                    regions: Vec::new(),
+                });
+            } else {
+                push(&mut frame.output, &mut frame.regions, node);
             }
             continue;
         }
-        if let Node::Element(element) = &mut node {
-            normalization::metadata(element, repair);
-            element.children = restore(mem::take(&mut element.children), repair);
+        if let Some(mut frame) = frames.pop() {
+            for (_, children) in frame.regions {
+                frame.output.extend(children);
+            }
+            let Some(mut node) = frame.parent else {
+                return frame.output;
+            };
+            if let Some(children) = node.children_mut() {
+                *children = frame.output;
+            }
+            if let Some(parent) = frames.last_mut() {
+                push(&mut parent.output, &mut parent.regions, node);
+            }
         }
-        push(&mut output, &mut stack, node);
     }
-    for (_, children) in stack {
-        output.extend(children);
-    }
-    output
+    Vec::new()
 }
 
 fn push(output: &mut Vec<Node>, stack: &mut [(String, Vec<Node>)], node: Node) {

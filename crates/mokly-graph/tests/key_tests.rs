@@ -47,7 +47,7 @@ fn cache() -> Arc<dyn RenderCache> {
 }
 
 #[test]
-fn on_demand_renders_use_the_large_stack_with_no_cache_retention() {
+fn on_demand_renders_use_default_workers_with_no_cache_retention() {
     let root = fixture();
     write(
         root.path(),

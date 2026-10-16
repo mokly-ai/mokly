@@ -54,8 +54,11 @@ Serve must also apply the public policy's read-time confinement rules.
 
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
 storage. Each path has its own read cell, so file IO does not hold the snapshot
-map lock. Preparation and render workers have 64 MiB stacks while the remaining
-tree operations are converted to iterative walks.
+map lock. Preparation runs on the caller's stack. Render workers use Rayon's
+default stack. Component keys, document walks, embedded-document resource
+walks, and retained-tree accounting use explicit work stacks. The deep-tree
+test prepares, composes, serializes, compares, and drops 100,000 levels on an
+ordinary thread with cache retention disabled.
 
 ## Quick Start
 

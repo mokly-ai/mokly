@@ -34,7 +34,10 @@ checks complete artifact bytes and upload-only file-count limits.
 
 Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
-tree order. Authored tags and steps keep their order.
+tree order. Authored tags and steps keep their order. Navigation projection
+and validation use explicit work stacks. Navigation nodes clone, format for
+debugging, and drop without recursive ownership operations. The HTML depth
+guarantee does not extend the JSON reader or prop-schema nesting contracts.
 
 `ts-rs` derives declarations from the Rust shapes. Its configuration maps all
 large integer types to TypeScript `number`, because JSON readers use numbers. It supports recursive

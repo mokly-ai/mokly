@@ -48,3 +48,5 @@ pub mod wire_decode;
 pub mod wire_props;
 
 pub mod shell;
+
+mod catalogue_tree;

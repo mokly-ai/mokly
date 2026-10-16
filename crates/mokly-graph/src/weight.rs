@@ -85,12 +85,15 @@ pub(crate) fn fragment(fragment: &Fragment) -> usize {
 }
 
 fn nodes(values: &Vec<Node>) -> usize {
-    values.capacity() * mem::size_of::<Node>()
-        + values
-            .iter()
-            .map(|node| match node {
+    let mut total = 0;
+    let mut pending = vec![values];
+    while let Some(values) = pending.pop() {
+        total += values.capacity() * mem::size_of::<Node>();
+        for node in values {
+            total += match node {
                 Node::Text(text) | Node::Comment(text) | Node::Doctype(text) => text.capacity(),
                 Node::Element(element) => {
+                    pending.push(&element.children);
                     element.name.capacity()
                         + element.namespace.capacity()
                         + element.origin.as_ref().map_or(0, String::capacity)
@@ -109,9 +112,9 @@ fn nodes(values: &Vec<Node>) -> usize {
                             .iter()
                             .map(|a| a.name.capacity() + a.value.capacity())
                             .sum::<usize>()
-                        + nodes(&element.children)
                 }
                 Node::Region { region, children } => {
+                    pending.push(children);
                     region.id.capacity()
                         + match &region.kind {
                             RegionKind::Root { path } => path.capacity(),
@@ -141,8 +144,9 @@ fn nodes(values: &Vec<Node>) -> usize {
                                 id.capacity() + material_key.as_ref().map_or(0, String::capacity)
                             }
                         }
-                        + nodes(children)
                 }
-            })
-            .sum::<usize>()
+            };
+        }
+    }
+    total
 }
