@@ -34,23 +34,26 @@ export async function assertDesignResource(
   if (disk && new URL(documentUrl).protocol === "file:") {
     if (url.protocol !== "file:")
       throw new Error(`Design resource leaves file output: ${href}`);
-    const root = await fs.realpath(path.resolve(disk));
+    const configured = path.resolve(disk);
+    const root = await fs.realpath(configured);
     const target = fileURLToPath(url);
-    const inside = (value: string) => {
-      const relative = path.relative(root, value);
+    const inside = (base: string, value: string) => {
+      const relative = path.relative(base, value);
       return (
         relative !== ".." &&
         !relative.startsWith(`..${path.sep}`) &&
         !path.isAbsolute(relative)
       );
     };
-    if (!inside(target))
-      throw new Error(`Design resource leaves file output: ${href}`);
     try {
-      if (!inside(await fs.realpath(target)))
+      if (!inside(root, await fs.realpath(target)))
         throw new Error(`Design resource leaves file output: ${href}`);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      if (!inside(configured, target) && !inside(root, target))
+        throw new Error(`Design resource leaves file output: ${href}`, {
+          cause: error,
+        });
     }
   } else if (url.origin !== new URL(documentUrl).origin) {
     throw new Error(`Design resource leaves catalogue origin: ${href}`);

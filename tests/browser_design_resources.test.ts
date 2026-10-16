@@ -62,6 +62,19 @@ test("file resources stay inside the built directory and missing resources retur
     assertDesignResource("https://outside.test/", document),
     /leaves file output/,
   );
+  const alias = path.join(parent, "site-alias");
+  await fs.symlink(root, alias, "dir");
+  process.env["MOKLY_PLAYWRIGHT_FILE_DIR"] = alias;
+  const aliasedDocument = pathToFileURL(path.join(alias, "index.html")).href;
+  await assertDesignResource(aliasedDocument, aliasedDocument);
+  await assertDesignResource(document, aliasedDocument);
+  await assert.rejects(
+    assertDesignResource(
+      pathToFileURL(path.join(alias, "escape.html")).href,
+      aliasedDocument,
+    ),
+    /leaves file output/,
+  );
   await assertDesignResource(
     "https://site.test/style.css",
     "https://site.test/page.html",

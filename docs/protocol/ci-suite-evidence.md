@@ -24,8 +24,11 @@ Browser hosts, served design checks, and packed smoke use the shared Serve
 process module under `scripts/verification`. It registers a suspended worker
 before releasing the shim. Before signalling a registered group, cleanup
 records its process tree and each separate sidecar group. Cleanup drains these
-groups even if the test worker stops or Serve needs a forced kill. The native
-sidecar parent-death rule provides a second safeguard.
+groups even if the test worker stops or Serve needs a forced kill. This tree
+drain is the first safeguard. Sidecar parent-death protection is the second:
+Linux uses `PR_SET_PDEATHSIG` with `SIGKILL`; a parent-pipe watchdog runs on
+every platform. A killed Serve binary therefore ends its sidecars even before
+the host begins its drain.
 
 A fixture that owns live resources drains them in reverse registration order
 before it deletes its directory. Every registered cleanup runs even if another
