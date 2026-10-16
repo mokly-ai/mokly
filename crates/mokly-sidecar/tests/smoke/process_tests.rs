@@ -1,5 +1,7 @@
 //! Version, process failure, and unavailable entry smoke checks.
 
+use std::path::PathBuf;
+
 use mokly_sidecar::error::{Error, FailureKind, ProtocolError};
 use mokly_sidecar::methods::{Call, ModuleResolution, ProcessCss};
 use mokly_sidecar::pool::SidecarPool;
@@ -13,7 +15,9 @@ fn wrong_package_version_fails_before_command_traffic() {
         pool.request(Call::ProcessCss(ProcessCss {
             repository_roots: Vec::new(),
             context: "css".into(),
-            source_root: "/repo".into(),
+            source_root: PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .to_string_lossy()
+                .into_owned(),
             module_resolution: ModuleResolution::default(),
             postcss: "unused".into(),
             source_path: "unused".into(),
@@ -29,7 +33,9 @@ fn process_crash_retries_once_and_bad_hello_fails_closed() {
         Call::ProcessCss(ProcessCss {
             repository_roots: Vec::new(),
             context: "css".into(),
-            source_root: "/repo".into(),
+            source_root: PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .to_string_lossy()
+                .into_owned(),
             module_resolution: ModuleResolution::default(),
             postcss: "unused".into(),
             source_path: "unused".into(),
