@@ -1,9 +1,9 @@
+import { cssAnalysis } from "../../packages/viewer/dist/review/css/evidence.js";
 import type {
   CssRuleAttribution,
   DependencyAnalysis,
   DependencyReason,
-} from "../../packages/viewer/dist/data.js";
-import { cssAnalysis } from "../../packages/viewer/dist/review/css/evidence.js";
+} from "../../packages/viewer/dist/review/types.js";
 
 /** Synthetic wire evidence for reader and presentation fixtures, never product data. */
 export function fixtureCssAnalysis(

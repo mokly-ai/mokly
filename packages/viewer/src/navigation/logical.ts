@@ -63,26 +63,6 @@ export function isLinkPath(value: unknown): value is string {
     );
 }
 
-/** Resolve a logical path relative to the containing entry's folder. */
-export function resolveLinkPath(
-  value: string,
-  base: string,
-): string | undefined {
-  if (!/^\.\.?\//.test(value)) return isEntryPath(value) ? value : undefined;
-  if (!isLinkPath(value) || (base !== "" && !isEntryPath(base)))
-    return undefined;
-  const segments = base === "" ? [] : base.split("/");
-  for (const segment of value.split("/")) {
-    if (segment === ".") continue;
-    if (segment === "..") {
-      if (!segments.length) return undefined;
-      segments.pop();
-    } else segments.push(segment);
-  }
-  const result = segments.join("/");
-  return isEntryPath(result) ? result : undefined;
-}
-
 /** Check the bare logical HTML-fragment grammar. */
 export function isLogicalFragment(value: unknown): value is string {
   return typeof value === "string" && LOGICAL_FRAGMENT.test(value);

@@ -1,8 +1,8 @@
 /** Each changed file once, with the sentences and selectors its evidence proves. */
 
-import type { EntryChangeReason } from "../review/component_types.js";
 import { mergeCssAnalysis } from "../review/css/evidence.js";
 import type {
+  ChangeReason,
   CssRuleAttribution,
   DependencyAnalysis,
 } from "../review/types.js";
@@ -38,7 +38,7 @@ const union = (values: readonly string[]) => [...new Set(values)].sort();
  * one path merge by rule key first; files without analysis are a path alone.
  */
 export function stylesheetEvidence(
-  reasons: readonly EntryChangeReason[],
+  reasons: readonly ChangeReason[],
   subject: EvidenceSubject,
 ): readonly StylesheetEvidence[] {
   const analyses = new Map<string, DependencyAnalysis[]>();

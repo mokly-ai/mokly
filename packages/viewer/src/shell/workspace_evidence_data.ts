@@ -1,28 +1,31 @@
 /** Merge route classification with evidence loaded for one comparison. */
 
-import type {
-  ComponentReview,
-  EntryChangeReason,
-} from "../review/component_types.js";
 import { mergeCssAnalysis } from "../review/css/evidence.js";
+import {
+  componentViewEntry,
+  reviewComponent,
+  reviewEntry,
+  viewReasons,
+} from "../review/entries.js";
 import type {
+  ChangeReason,
+  EvidenceReasons,
+  ReviewEntry,
   ReviewResult,
-  ScreenReview,
-  ViewReview,
-  ViewResourceEvidence,
+  ReviewView,
 } from "../review/types.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
-import { componentReview } from "./workspace_entry.js";
 
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
-  comparison: ComponentReview | ScreenReview | undefined;
+  /** The screen's record, or the component parent that groups its variants. */
+  comparison: ReviewEntry | undefined;
   /** Parent id of a component workspace, whose own rules keep its sentence. */
   componentId: string | undefined;
-  views: readonly ViewReview[];
-  resourceViews: readonly ViewResourceEvidence[];
-  reasons: readonly EntryChangeReason[];
+  views: readonly ReviewView[];
+  resourceViews: readonly EvidenceReasons[];
+  reasons: readonly ChangeReason[];
 }
 
 /**
@@ -36,47 +39,42 @@ export function workspaceComparisonEvidence(
 ): WorkspaceComparisonEvidence {
   const selected =
     data.entry.kind === "component"
-      ? componentReview(loaded?.components, data.component, data.entry)
-      : loaded?.screens.find((item) => item.path === data.entry.path);
-  const change = loaded?.changes.find(
-    (item) =>
-      item.kind === data.entry.kind &&
-      (item.after ?? item.before)?.path === data.entry.path,
-  );
+      ? reviewComponent(loaded, data.component?.path ?? data.entry.path)
+      : reviewEntry(loaded, "screen", data.entry.path);
+  const routed =
+    data.entry.kind === "component" || data.entry.kind === "screen"
+      ? reviewEntry(loaded, data.entry.kind, data.entry.path)
+      : undefined;
   const views = [
     ...comparisonViews(data.comparison, variantPath),
     ...comparisonViews(selected, variantPath),
   ];
   const resources = data.resourceEvidence ?? [];
-  const comparison = data.comparison ?? selected;
+  const viewEvidence = views.map(viewReasons);
   return {
-    comparison,
+    comparison: data.comparison ?? selected,
     componentId: data.component?.path,
     views,
-    resourceViews: [...resources, ...views],
+    resourceViews: [...resources, ...viewEvidence],
     reasons: mergeReasons([
       ...(data.change?.reasons ?? []),
-      ...(change?.reasons ?? []),
+      ...(routed?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
-      ...views.flatMap((view) => view.reasons ?? []),
+      ...viewEvidence.flatMap((view) => view.reasons ?? []),
     ]),
   };
 }
 
 function comparisonViews(
-  comparison: ComponentReview | ScreenReview | undefined,
+  comparison: ReviewEntry | undefined,
   variantPath?: string,
-): readonly ViewReview[] {
-  return comparison && "variants" in comparison
-    ? (comparison.variants.find((item) => item.path === variantPath)?.views ??
-        [])
-    : (comparison?.views ?? []);
+): readonly ReviewView[] {
+  if (comparison?.kind !== "component") return comparison?.views ?? [];
+  return componentViewEntry(comparison, variantPath)?.views ?? [];
 }
 
-function mergeReasons(
-  reasons: readonly EntryChangeReason[],
-): EntryChangeReason[] {
-  const merged = new Map<string, EntryChangeReason>();
+function mergeReasons(reasons: readonly ChangeReason[]): ChangeReason[] {
+  const merged = new Map<string, ChangeReason>();
   for (const reason of reasons) {
     const key = `${reason.kind}:${
       reason.kind === "dependency"

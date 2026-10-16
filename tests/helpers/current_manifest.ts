@@ -1,11 +1,9 @@
 import path from "node:path";
 
-import {
-  entryRoute,
-  documentRoute,
-  generatedViews,
-  type ManifestEntry,
-} from "@mokly/viewer/data";
+import { entryRoute, documentRoute } from "@mokly/viewer/data";
+
+import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import type { ManifestEntry } from "../../packages/viewer/dist/registry/types.js";
 
 /** Add a deterministic synthetic inventory to metadata-only structural fixtures. */
 export function currentManifest<

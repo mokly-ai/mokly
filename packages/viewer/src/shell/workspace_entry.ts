@@ -6,7 +6,8 @@ import {
   type ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import type { ManifestScreen } from "../registry/types.js";
-import type { ComponentReview } from "../review/component_types.js";
+import { reviewComponent } from "../review/entries.js";
+import type { ReviewEntry, ReviewResult } from "../review/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
@@ -64,20 +65,20 @@ export function workspaceKey(
 }
 
 /**
- * The component review a workspace reads: its resolved parent's group, or for
- * a variant without an eligible parent, the group that lists the variant.
+ * The component review a workspace reads: its resolved parent's entry, or for
+ * a variant without an eligible parent, the parent entry that groups it.
  */
 export function componentReview(
-  components: readonly ComponentReview[] | undefined,
+  result: ReviewResult | undefined,
   component: ManifestComponent | undefined,
   entry: WorkspaceEntry,
-): ComponentReview | undefined {
+): ReviewEntry | undefined {
   if (component)
-    return components?.find((item) => item.path === component.path);
+    return result?.entries.find(
+      (item) => item.kind === "component" && item.path === component.path,
+    );
   return entry.kind === "component" && isManifestComponentVariant(entry)
-    ? components?.find((item) =>
-        item.variants.some(({ path }) => path === entry.path),
-      )
+    ? reviewComponent(result, entry.path)
     : undefined;
 }
 

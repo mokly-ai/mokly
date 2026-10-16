@@ -11,10 +11,6 @@ const COMPARISON_GENERATION = new RegExp(
   `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/review\\.json$`,
 );
 
-export type HistoricalSnapshotSource =
-  | { kind: "baseline"; identity: string }
-  | { kind: "generation"; identity: string };
-
 /** Whether a value is one public historical snapshot identity. */
 export function isHistoricalSnapshotId(value: unknown): value is string {
   return typeof value === "string" && HASH_64.test(value);
@@ -29,25 +25,26 @@ export function comparisonGeneration(
     : COMPARISON_GENERATION.exec(comparisonUrl)?.[1];
 }
 
-/** Derive one per-record identity from real baseline or generation ownership. */
+/**
+ * Derive one removed record's identity from the comparison's base commit:
+ * the source kind is the literal `base`, so a later generation of the same
+ * base keeps the identity.
+ */
 export function historicalSnapshotId(
   catalogueIdentity: string,
-  source: HistoricalSnapshotSource,
+  baseCommit: string,
   entry: { path: string; kind: string },
 ): string {
   if (!HASH_64.test(catalogueIdentity))
     invalidData("$catalogue", "invalid catalogue identity");
-  if (
-    (source.kind === "baseline" && !HASH_40_OR_64.test(source.identity)) ||
-    (source.kind === "generation" && !HASH_64.test(source.identity))
-  )
-    invalidData("$catalogue", "invalid historical source identity");
+  if (!HASH_40_OR_64.test(baseCommit))
+    invalidData("$catalogue", "invalid base commit");
   return sha256(
     JSON.stringify([
       "mokly-historical-snapshot-v3",
       catalogueIdentity,
-      source.kind,
-      source.identity,
+      "base",
+      baseCommit,
       entry.kind,
       entry.path,
     ]),

@@ -3,8 +3,7 @@
  * heading, then each changed file and the stylesheets examined and excluded.
  */
 
-import type { EntryChangeReason } from "../review/component_types.js";
-import type { ResourceEvidence } from "../review/types.js";
+import type { ChangeReason, EvidenceReasons } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
 import {
@@ -41,8 +40,8 @@ export function StylesheetDetails({
   resources,
   subject,
 }: {
-  reasons: readonly EntryChangeReason[];
-  resources: readonly ResourceEvidence[];
+  reasons: readonly ChangeReason[];
+  resources: readonly EvidenceReasons[];
   subject: EvidenceSubject;
 }) {
   const wording = entryWording(subject.kind);
