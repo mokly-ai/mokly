@@ -174,6 +174,17 @@ impl ClosureBuilder for Walker {
                         }
                         continue;
                     }
+                    if !target.ends_with(".css")
+                        && !target.ends_with(".html")
+                        && !target.ends_with(".htm")
+                    {
+                        if self.tree.digest(&file.absolute).is_err() {
+                            return Err(missing(route, &reference.url));
+                        }
+                        let urls = self.index.parse(&target, &[])?;
+                        edges.insert(target.clone(), urls);
+                        continue;
+                    }
                     match self.tree.read_shared(&file.absolute) {
                         Ok(bytes) => bytes,
                         Err(_) => return Err(missing(route, &reference.url)),

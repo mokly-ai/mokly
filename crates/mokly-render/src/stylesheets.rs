@@ -45,7 +45,14 @@ pub(crate) fn compiler(
             lease: Arc::new(ContextLease {
                 id: side.context.clone(),
                 pool: runtime.pool.clone(),
-                cache: runtime.css.clone(),
+                released: {
+                    let mut cache = runtime
+                        .css
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner());
+                    cache.purge();
+                    cache.releases.clone()
+                },
                 used: AtomicBool::new(false),
             }),
             pool: runtime.pool.clone(),

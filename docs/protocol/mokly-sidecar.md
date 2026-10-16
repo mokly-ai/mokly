@@ -46,25 +46,25 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ## Methods
 
-| Method            | Params                                                                                                            | Result                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `hello`           | none                                                                                                              | `{ version }`                                                                       |
-| `bundle`          | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings }`                                                 |
-| `describe`        | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
-| `renderScreen`    | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
-| `renderComponent` | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
-| `renderStory`     | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
-| `renderPage`      | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
-| `processCss`      | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies }`                                                            |
-| `bindings`        | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
-| `disposeContext`  | PostCSS context                                                                                                   | nothing                                                                             |
-| `cssModules`      | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
-| `dispose`         | generation                                                                                                        | nothing                                                                             |
-| `shutdown`        | none                                                                                                              | nothing                                                                             |
+| Method              | Params                                                                                                            | Result                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `hello`             | none                                                                                                              | `{ version }`                                                                       |
+| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings, compiled }`                                       |
+| `restoreGeneration` | generation, original bundle params, immutable compiled recipe                                                     | nothing                                                                             |
+| `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |
+| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                               | render result                                                                       |
+| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
+| `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
+| `renderPage`        | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies }`                                                            |
+| `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
+| `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                             |
+| `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
+| `dispose`           | generation                                                                                                        | nothing                                                                             |
+| `shutdown`          | none                                                                                                              | nothing                                                                             |
 
 The [render records contract](./mokly-sidecar-render-records.md) defines the
-render result, binding table, effective entry context, usage drafts, and slot
-inputs. Page results follow the [pages contract](./mokly-pages.md).
+render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
 
 ## Definitions
 
@@ -83,7 +83,7 @@ evaluation digest for resolved configuration and CSS Modules; entry and stories 
 the configuration directory; repository roots; module resolution settings;
 the installed React version; the real source root; and the selected real
 dependency roots. Equal head and base sources have separate generations,
-class maps, and bindings. The binary uses the id in each fragment key.
+class maps, and bindings. The binary uses the id in each fragment key. [Compiled recipes](./mokly-sidecar-modules.md#compiled-recipes-and-release) define replay and release.
 
 The module graph reports the digest of each module's consumed bytes, sources,
 and dependencies with imports in source order, including re-exports, dynamic imports, and stylesheets. A file inside

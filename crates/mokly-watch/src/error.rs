@@ -1,20 +1,19 @@
 //! Typed watch setup and classification failures.
 
-use std::path::PathBuf;
-
 /// Watch failures leave the active catalogue in place.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// An operating-system observer could not attach or deliver an event.
-    #[error("[mokly/watch] cannot observe {path}: {source}")]
+    #[error("[mokly-watch/observer] {source}")]
     Observer {
-        /// Requested lexical path.
-        path: PathBuf,
         /// Native observer failure.
         source: notify::Error,
     },
     /// Internal failures preserve their typed cause.
-    #[error("[mokly/watch] {0}")]
+    #[error("[mokly-watch/observer] notifications were lost; rescanning catalogue inputs")]
+    Rescan,
+    /// Internal failures preserve their typed cause.
+    #[error("[mokly-watch/internal] {0}")]
     Internal(#[from] InternalError),
 }
 

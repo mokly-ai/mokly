@@ -26,7 +26,6 @@ fn burst_coalescing_retains_the_last_descriptor_and_every_other_path() {
 fn an_observer_error_is_reported_once_and_later_events_keep_flowing() {
     let inbox = Inbox::default();
     inbox.send(Err(crate::error::Error::Observer {
-        path: "/repo/file".into(),
         source: notify::Error::generic("fixture failure"),
     }));
     inbox.send(Ok(Event {

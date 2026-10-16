@@ -12,6 +12,7 @@ import { inside } from "./path-scope.js";
 
 export interface ConsumerRequire extends NodeJS.Require {
   peerPlugin: Plugin;
+  snapshot(): Record<string, string>;
   resolvePeer(name: string): Promise<string>;
 }
 
@@ -88,6 +89,12 @@ export async function consumerRequire(
   };
   Object.assign(require, native, {
     peerPlugin,
+    snapshot: () =>
+      Object.fromEntries(
+        [...peers].filter(
+          (value): value is [string, string] => typeof value[1] === "string",
+        ),
+      ),
     resolve,
     async resolvePeer(name: string) {
       if (!peers.has(name)) await load([name]);

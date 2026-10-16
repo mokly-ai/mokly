@@ -7,6 +7,7 @@ use serde_json::Value;
 use ts_rs::TS;
 
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+use crate::compiled::RestoreGeneration;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -198,6 +199,8 @@ pub enum Call {
     Hello(Empty),
     /// Compile without evaluating consumer modules.
     Bundle(Bundle),
+    /// Restore an immutable compiled generation in another worker.
+    RestoreGeneration(Box<RestoreGeneration>),
     /// Evaluate and inventory definitions.
     Describe(Generation),
     /// Install the resolved handle table after describe.

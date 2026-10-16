@@ -25,9 +25,12 @@ remain observable.
 
 `NativeObserver` implements `dyn Observer` over the platform `notify`
 backend. It attaches nonrecursive directory watches after a confined walk.
-It replaces the native observer only when effective targets change. A new
-subdirectory extends the existing observer. Rescans renew directory watches
-at their lexical paths after replacements. `close` prevents later attachment.
+It replaces the native observer only when effective roots change. Exact
+inputs extend registrations without repeating the root walk. `dyn WatchFactory`
+and `dyn DirectoryWatch` own native handle creation and batched updates.
+Existing paths remain attached. Linux renews replaced directories. Unknown
+platform create and remove kinds use node lookup. Overflow and pathless
+events request a rescan and report one warning per observer. `close` prevents later attachment.
 The observer inbox keeps one latest descriptor per path. Access notifications
 never schedule work. `Batch` retains every accepted candidate and selects
 `reload`, `rebuild`, or `config` in increasing impact order.

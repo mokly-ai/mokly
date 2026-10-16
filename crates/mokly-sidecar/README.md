@@ -27,9 +27,13 @@ Authoring diagnostics retain their codes and leave a healthy session usable.
 processes to `PoolOptions::size`. The CLI resolves `--sidecars`, `MOKLY_SIDECARS`, and the core count.
 `PoolOptions` takes the parsed `NonZeroUsize` and timeout override.
 
-The pool retains bundle recipes, CSS Modules maps, and resolved handle tables. A process reloads a requested generation on demand and replays its bindings
-after describe. An epoch identifies each loaded lifetime. Disposing and
-re-bundling the same id invalidates every process's old maps and evaluation.
+The pool retains compiled recipes, CSS Modules maps, and resolved handle
+tables. A new process restores old code without compiling changed sources.
+Epoch-specific releases retain newer lifetimes with the same id. Releases
+record state without waiting for a worker. An idle cleanup worker sends
+disposal to each affected slot; busy slots apply it before their next request.
+PostCSS context affinity prevents duplicate workers. `cancel_requests` kills
+busy sidecars before `shutdown` drains idle sidecars.
 Bundle results include the digests of the bytes consumed by each module.
 An optional evaluation digest isolates CSS Modules and resolved configuration
 lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle

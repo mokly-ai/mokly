@@ -1035,6 +1035,33 @@ Final review fixes and their check logs:
 Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
 `.context/rust-rebuild/m11-smoke/`, and `.context/rust-rebuild/sweeps/m11.md`.
 
+## Milestone 11.1: Watch review corrections
+
+- [x] Merge rebuild updates through `09821954` and preserve both branches.
+- [x] Order Serve shutdown and reject changes to running pool settings.
+- [x] Batch native watches, normalize platform events, recover event loss,
+      and extend exact inputs without replacing root observers.
+- [x] Queue resource attachment, close adoption races, and retry failed
+      attempts when newly authored inputs are repaired.
+- [x] Match watched failure layout, bound debounce conversion, and separate
+      filesystem edits from manual rebuild tests.
+- [x] Release pool epochs and PostCSS contexts without blocking graph drops.
+      Give each PostCSS context one worker and release idle workers promptly.
+- [x] Retain compiled code for old-generation replay and reuse compilations
+      when only evaluation settings change.
+- [x] Memoize digest-only reads without retaining bytes, check resource
+      confinement, and cover React and Storybook metadata in bundle reuse.
+- [x] Verify operation counts, failed JavaScript candidates, manual rebuilds,
+      detail usage reuse, watcher bursts, and lifecycle races.
+- [x] Update the watch sweep and specifications. Keep bundle-level CSS
+      invalidation while the user considers review 1b-6.
+- [x] Pass the complete gate, regenerate types without drift, and repeat the
+      Chrome edit smoke without the sidecar timeout override.
+- [x] Commit and write the final round 2 report.
+
+Evidence: `.context/rust-rebuild/delegation/m11/merge-decisions.md` and
+`.context/rust-rebuild/delegation/m11/report-2.md`.
+
 ## Milestone 12: Static build and publish
 
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one

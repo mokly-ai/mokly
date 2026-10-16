@@ -6,6 +6,9 @@ license.workspace = true
 rust-version.workspace = true
 publish = false
 
+[features]
+mock = ["dep:unimock"]
+
 [dependencies]
 async-trait = "0.1.92"
 globset = "0.4.20"
@@ -16,8 +19,10 @@ notify = "8.2.0"
 thiserror = "2.0.21"
 tokio = { version = "1.53.3", features = ["sync", "time"] }
 tracing = "0.1.44"
+unimock = { version = "0.6.8", optional = true }
 
 [dev-dependencies]
+mokly-source-interface = { workspace = true, features = ["mock"] }
 tempfile = "3.27.0"
 tokio = { version = "1.53.3", features = ["macros", "rt"] }
 unimock = "0.6.8"

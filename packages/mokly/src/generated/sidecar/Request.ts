@@ -11,10 +11,11 @@ import type { RenderComponentParams } from "./RenderComponentParams.js";
 import type { RenderPageParams } from "./RenderPageParams.js";
 import type { RenderParams } from "./RenderParams.js";
 import type { RenderStoryParams } from "./RenderStoryParams.js";
+import type { RestoreGeneration } from "./RestoreGeneration.js";
 
 // prettier-ignore
 export type Request = {
 /**
  * Request identity repeated in the response.
  */
-id: number, } & ({ "method": "hello", "params": EmptyParams } | { "method": "bundle", "params": BundleParams } | { "method": "describe", "params": GenerationParams } | { "method": "bindings", "params": BindingsParams } | { "method": "renderScreen", "params": RenderParams } | { "method": "renderComponent", "params": RenderComponentParams } | { "method": "renderStory", "params": RenderStoryParams } | { "method": "renderPage", "params": RenderPageParams } | { "method": "processCss", "params": ProcessCssParams } | { "method": "cssModules", "params": CssModulesParams } | { "method": "dispose", "params": GenerationParams } | { "method": "disposeContext", "params": DisposeContextParams } | { "method": "shutdown", "params": EmptyParams });
+id: number, } & ({ "method": "hello", "params": EmptyParams } | { "method": "bundle", "params": BundleParams } | { "method": "restoreGeneration", "params": RestoreGeneration } | { "method": "describe", "params": GenerationParams } | { "method": "bindings", "params": BindingsParams } | { "method": "renderScreen", "params": RenderParams } | { "method": "renderComponent", "params": RenderComponentParams } | { "method": "renderStory", "params": RenderStoryParams } | { "method": "renderPage", "params": RenderPageParams } | { "method": "processCss", "params": ProcessCssParams } | { "method": "cssModules", "params": CssModulesParams } | { "method": "dispose", "params": GenerationParams } | { "method": "disposeContext", "params": DisposeContextParams } | { "method": "shutdown", "params": EmptyParams });

@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use mokly_css::dependencies::DirectoryDependency;
-use mokly_model::material::digest;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::error::RenderError;
@@ -46,7 +45,7 @@ impl InputStamp {
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
-        let hash = tree.read_shared(&path).ok().map(|bytes| digest(&bytes));
+        let hash = tree.digest(&path).ok();
         self.files.insert(path, hash);
     }
 

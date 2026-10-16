@@ -7,6 +7,7 @@ import type { TestContext } from "node:test";
 import type { BundleParams } from "../../packages/mokly/src/generated/sidecar/BundleParams.js";
 import type { Definitions } from "../../packages/mokly/src/generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../../packages/mokly/src/generated/sidecar/EntryBinding.js";
+import type { Operation } from "../../packages/mokly/src/generated/sidecar/Operation.js";
 import type { ProcessCssParams } from "../../packages/mokly/src/generated/sidecar/ProcessCssParams.js";
 
 export const sidecarFixture = path.resolve("tests/fixtures/sidecar");
@@ -24,6 +25,7 @@ export function startSidecar(context: TestContext) {
   child.stderr.on("data", (chunk) => {
     stderr += String(chunk);
   });
+  const operations: Array<{ operation: Operation; pid: number }> = [];
   let next = 0;
   const pending = new Map<
     number,
@@ -31,6 +33,10 @@ export function startSidecar(context: TestContext) {
   >();
   createInterface({ input: child.stdout }).on("line", (line) => {
     const value = JSON.parse(line);
+    if (value.event === "operation") {
+      operations.push(value.params);
+      return;
+    }
     const waiter = pending.get(value.id);
     assert.ok(waiter, `unexpected frame ${line}`);
     pending.delete(value.id);
@@ -57,7 +63,7 @@ export function startSidecar(context: TestContext) {
       child.stdin.write(JSON.stringify({ id, method, params }) + "\n");
     });
   };
-  return { call, child, stderr: () => stderr };
+  return { call, child, operations, stderr: () => stderr };
 }
 
 export function bundleParams(

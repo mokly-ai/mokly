@@ -67,3 +67,50 @@ fn strongest_action_names_three_paths_and_the_remaining_count() {
     assert!(failure.contains("✖ a.html, b.css, c.js, +2 more"));
     assert!(!failure.contains("reloaded"));
 }
+
+#[test]
+fn failed_actions_print_warnings_before_indented_diagnostics() {
+    let style = Style {
+        mode: Mode::Rich,
+        color: false,
+        ascii: false,
+        columns: 160,
+    };
+    let mut batch = Batch::default();
+    batch.insert(
+        Event {
+            path: "/repo/specs/home.screen.html".into(),
+            kind: Kind::File,
+        },
+        Action::Rebuild,
+    );
+    let text = crate::watch_output::failure(
+        &style,
+        &batch,
+        Path::new("/repo"),
+        "12:05:31",
+        "warning: unused prop\n",
+        "[mokly/build-invalid] missing import\n",
+        &Redactor::default(),
+    );
+    assert_eq!(
+        text,
+        "warning: unused prop\n  12:05:31  ✖ specs/home.screen.html\n            [mokly/build-invalid] missing import\n            The last good catalogue is still being served.\n"
+    );
+    let plain = Style {
+        mode: Mode::Plain,
+        ..style
+    };
+    assert_eq!(
+        crate::watch_output::failure(
+            &plain,
+            &batch,
+            Path::new("/repo"),
+            "12:05:31",
+            "warning\n",
+            "failure\n",
+            &Redactor::default()
+        ),
+        "warning\nfailure\n"
+    );
+}

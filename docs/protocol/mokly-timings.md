@@ -68,6 +68,12 @@ identity is a defect. A contained parse or selector failure in
 escaping error ends the span with `error`. The spans log no paths,
 selectors, CSS, or document text.
 
+`sidecar.operation` carries `event: "counts"`, `count: 1`, `operation`, and
+`worker`, the sidecar PID. Operations are `esbuild`, `postcss-start`, and
+`postcss-stop`. The worker emits each event at the actual operation boundary,
+including failed compilations. Replay and evaluation-only reuse add no
+`esbuild` count. These records contain no authored data.
+
 ## Sidecar Spans
 
 A sidecar emits records with `role: "sidecar"` and its own `pid` and session

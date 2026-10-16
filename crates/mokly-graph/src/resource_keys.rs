@@ -85,6 +85,13 @@ pub(crate) fn inputs(
         {
             continue;
         }
+        let textual = path.ends_with(".css") || path.ends_with(".html") || path.ends_with(".htm");
+        if !textual {
+            if let Ok(hash) = tree.digest(&absolute) {
+                inputs.insert(path.into(), hash);
+            }
+            continue;
+        }
         let Ok(bytes) = tree.read_shared(&absolute) else {
             continue;
         };

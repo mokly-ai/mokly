@@ -255,3 +255,11 @@ fn parent_directory_events_invalidate_required_descendants() {
         );
     }
 }
+
+#[test]
+fn unrepresentable_debounce_values_use_a_bounded_duration() {
+    let mut config = config();
+    config.input.watch.as_mut().unwrap().debounce_ms = Some(1e300);
+    let plan = Plan::new(&config, &[], &[], &BTreeSet::new()).unwrap();
+    assert_eq!(plan.debounce, std::time::Duration::from_secs(86_400));
+}

@@ -5,6 +5,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::{SourceFile, SourceKind};
 use mokly_model::material::digest;
 use mokly_sidecar::methods::Bundle;
+use mokly_source_interface::tree::SourceTree;
 
 use crate::error::{InternalError, Result};
 use crate::side::{SideInputs, dependency_roots};
@@ -43,8 +44,16 @@ pub(crate) fn cache_key(
     config: &ResolvedConfig,
     params: &Bundle,
     side: &SideInputs,
+    tree: &dyn SourceTree,
 ) -> Result<String> {
-    match serde_json::to_vec(&(params, &config.input.roots, dependency_roots(side))) {
+    let roots: Vec<_> = dependency_roots(side)
+        .into_iter()
+        .map(|path| match tree.project(&path) {
+            Ok(Some(node)) => node.identity,
+            _ => path,
+        })
+        .collect();
+    match serde_json::to_vec(&(params, &config.input.roots, roots)) {
         Ok(bytes) => Ok(digest(&bytes)),
         Err(source) => Err(InternalError::Json { source }.into()),
     }

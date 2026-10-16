@@ -5,15 +5,17 @@ import path from "node:path";
 import { build } from "esbuild";
 import type { Loader } from "esbuild";
 
-import { AuthoringRuntime } from "../authoring/runtime.js";
+import type { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
+import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { bundleDetail } from "./bundle-errors.js";
 import { moduleGraph } from "./bundle-graph.js";
+import { bundleResult, fileDigest, restore } from "./compiled.js";
 import { SidecarError } from "./errors.js";
 import { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
@@ -22,6 +24,7 @@ import { consumerPlugins } from "./plugins.js";
 import { resolutionOptions } from "./resolution.js";
 
 export interface Generation {
+  compiled: CompiledGeneration;
   id: string;
   params: BundleParams;
   dependencyRoots: string[];
@@ -151,16 +154,38 @@ export async function bundle(
     const compiled = await compile(options);
     const { modules: graph, physical } = moduleGraph(compiled.metafile!, paths);
     const hash = createHash("sha256");
+    const physicalInputs: Record<string, string | null> = {};
+    const metadataInputs: Record<string, string | null> = {};
     for (const module of graph) {
       const absolute = physical.get(module.path)!;
       const text = inputs.files.get(absolute) ?? (await fs.readFile(absolute));
       module.digest = createHash("sha256").update(text).digest("hex");
       hash.update(JSON.stringify([module.path, module.imports]));
-      if (!module.path.endsWith(".css")) hash.update(text);
+      if (!module.path.endsWith(".css")) {
+        hash.update(text);
+        physicalInputs[absolute] = module.digest;
+      }
+    }
+    for (const file of params.storiesFiles.length ? previews : []) {
+      const absolute = path.resolve(params.sourceRoot, file);
+      metadataInputs[file] = physicalInputs[absolute] =
+        await fileDigest(absolute);
+    }
+    for (const root of paths.dependencyRoots) {
+      const file = path.join(root, "react/package.json");
+      metadataInputs[paths.name(file)] = physicalInputs[file] =
+        await fileDigest(file);
     }
     let reactVersion: string | null = null;
     try {
-      reactVersion = require("react/package.json").version;
+      const file = require.resolve("react/package.json");
+      const bytes = await fs.readFile(file);
+      reactVersion = JSON.parse(bytes.toString()).version;
+      metadataInputs[paths.name(file)] = physicalInputs[file] = createHash(
+        "sha256",
+      )
+        .update(bytes)
+        .digest("hex");
     } catch (error) {
       if (!(
         error &&
@@ -170,10 +195,10 @@ export async function bundle(
       ))
         throw error;
     }
+    hash.update(JSON.stringify(metadataInputs));
     hash.update(
       JSON.stringify([
         params.sourceRoot,
-        params.evaluation,
         paths.dependencyRoots,
         params.entryFiles,
         params.storiesFiles,
@@ -185,32 +210,25 @@ export async function bundle(
         reactVersion,
       ]),
     );
-    const id = hash.digest("hex");
-    const generation: Generation = {
-      id,
-      params,
-      dependencyRoots: paths.dependencyRoots,
+    const compilation: CompiledGeneration = {
+      identity: hash.digest("hex"),
       code: compiled.outputFiles![0]!.text,
       runtimeKey,
-      cssModules: inputs.cssModules,
-      runtime: new AuthoringRuntime(),
-      handles: new Map(),
-      registrations: new Map(),
-      savedSlots: new Map(),
-      sources: new Map(
+      dependencyRoots: paths.dependencyRoots,
+      cssModules: [...inputs.cssModules],
+      sources: Object.fromEntries(
         [...inputPaths].map(([file, physical]) => [
           file,
           Buffer.from(inputs.files.get(physical) ?? []).toString("utf8"),
         ]),
       ),
-      stories: new Map(),
-      warnings: [],
-      require,
+      peers: require.snapshot(),
+      modules: graph,
+      inputs: physicalInputs,
+      metadataInputs,
     };
-    return {
-      generation,
-      result: { generation: id, modules: graph, warnings: [] },
-    };
+    const generation = restore(params, compilation);
+    return { generation, result: bundleResult(generation) };
   } catch (error) {
     throw new SidecarError(
       "bundle-failed",

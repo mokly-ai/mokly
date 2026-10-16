@@ -27,6 +27,9 @@ pub(crate) struct LeasedTree {
 }
 
 impl SourceTree for LeasedTree {
+    fn digest(&self, path: &Path) -> Result<String> {
+        self.tree.digest(path)
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         self.tree.project(path)
     }
@@ -85,6 +88,18 @@ impl SideTree {
 }
 
 impl SourceTree for SideTree {
+    fn digest(&self, path: &Path) -> Result<String> {
+        if let Some((_, physical, _)) = self.mapped(path) {
+            if let Some(node) = self.dependencies.project(&physical)?
+                && let Some(source) = self.source_alias(&node.identity)
+            {
+                return self.sources.digest(&source);
+            }
+            self.dependencies.digest(&physical)
+        } else {
+            self.sources.digest(path)
+        }
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         if path == self.root.join("node_modules/.mokly-roots") {
             return Ok(Some(Node {

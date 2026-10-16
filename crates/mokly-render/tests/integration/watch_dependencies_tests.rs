@@ -4,11 +4,12 @@ use std::fs;
 use std::sync::Arc;
 
 use mokly_sidecar::methods::Call;
+use mokly_sidecar::operations::Operation;
 
 use super::support::Consumer;
 
 fn html() -> Consumer {
-    let consumer = Consumer::new();
+    let consumer = Consumer::single();
     fs::remove_dir_all(consumer.root().join("specs")).unwrap();
     fs::create_dir(consumer.root().join("specs")).unwrap();
     fs::write(consumer.root().join("mokly.config.json"), "{}").unwrap();
@@ -55,6 +56,7 @@ fn html_component_edit_changes_only_its_own_and_consumer_documents() {
         4
     );
     assert!(consumer.pool.calls.lock().unwrap().is_empty());
+    assert_eq!(consumer.processes.count(Operation::Esbuild), 0);
 }
 
 #[test]
@@ -117,6 +119,7 @@ export default {plugins:[{postcssPlugin:'candidates',Once(root,{result}) {
     );
     let config = consumer.generation(consumer.prepare().unwrap());
     assert_eq!(count(), 4);
+    assert_eq!(consumer.processes.count(Operation::Esbuild), 0);
     assert!(config.plans().contains_key("home/index.mobile.dark.html"));
     assert_ne!(
         removed.plans()["home/index.mobile.html"].key,

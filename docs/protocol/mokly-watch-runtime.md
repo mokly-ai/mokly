@@ -14,7 +14,8 @@ action starts, so two rebuilds cannot race to replace the catalogue model.
 The actions are, from least to most impact, `reload`, `rebuild`, and
 `config`; a burst takes the strongest action and keeps every observed
 candidate path for the terminal line. The observer keeps one latest descriptor per path while an action runs.
-Access-only notifications schedule no action. The `r` shortcut of the
+Access-only notifications schedule no action. Values above one day for
+`watch.debounceMs` use a one-day delay without panicking. The `r` shortcut of the
 [terminal output contract](./mokly-terminal-output.md#interactive-controls)
 enqueues a `rebuild` through the same queue. Shutdown stops the queue first.
 
@@ -26,8 +27,9 @@ candidate is adopted in one step with its documents: the model, the route
 set, and the cache entries of the moved nodes replace the old ones together,
 and one revision is published. A failed candidate keeps the last-good model,
 route set, cache, and comparison evidence serving; the error is reported
-through the watch failure line, and the next authored change starts a fresh
-attempt. Warning scopes follow the
+through the watch failure line. After a failed attempt, a regular-file event
+in any watched, non-denied directory starts a fresh attempt. This includes
+a newly created import target that the accepted inventory does not name. Warning scopes follow the
 [watched Serve generations](./mokly-build-warnings.md#watched-serve-generations)
 rule: an attempt starts a new scope, a failed attempt flushes only its own
 warnings before its failure line, and late warnings of a superseded attempt
@@ -44,15 +46,20 @@ validation failure keeps the old configuration, watcher, and model. A changed
 renderer module or module resolution setting produces a new bundle
 generation; the old generation is disposed after adoption. An explicit CLI
 `--base` stays pinned across reloads; without one, the adopted
-configuration's `review.base` applies. The port never changes.
+configuration's `review.base` applies. The port never changes. `repoRoot`, sidecar count, and the sidecar timeout
+belong to the running pool. A candidate that changes one of these settings
+fails with a typed restart diagnostic before evaluating modules. The accepted
+configuration, observer, and model continue serving until Serve restarts.
 
 ## Resource Watches
 
 The referenced closure of every composed document feeds the resource watch
 set. A rendered document adds its closure as soon as it renders, even when
 the background pass has not finished, and a replaced catalogue state replaces
-the whole set. Discovery repeats after watcher readiness to capture references
-introduced while the watcher attached. Missing or invalid paths and their
+the whole set. A resource subscription queues attachment outside the render task. Adoption
+sets the generation, subscribes, and copies its reached resources in one
+critical section. Resource additions extend exact inputs on the active
+observer. Discovery repeats after changed roots attach. Missing or invalid paths and their
 last-known descendants stay observable until repaired or unreferenced; a
 repaired dangling alias restores later edits. A changed resource clears the
 resource evidence of the documents that reference it and recomputes them; it

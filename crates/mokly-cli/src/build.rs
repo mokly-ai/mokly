@@ -32,6 +32,12 @@ pub struct BuildSummary {
 /// Typed build failure; warning records survive both error paths.
 #[derive(Debug, Error)]
 pub enum BuildError {
+    /// A watched candidate changes settings owned by the running sidecar pool.
+    #[error("[mokly-cli/serve] {setting} changed. Restart Serve to apply this setting.")]
+    RestartRequired {
+        /// Fixed process-level setting.
+        setting: &'static str,
+    },
     /// The command was interrupted before successful completion.
     #[error("[mokly-cli/build] build cancelled")]
     Cancelled,

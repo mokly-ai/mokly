@@ -60,7 +60,11 @@ JavaScript factories and selected base dependencies through that path.
 Serve must also apply the public policy's read-time confinement rules.
 
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
-storage. Each path has its own read cell, so file IO does not hold the snapshot
+storage. Digest-only reads memoize a hash without retaining source bytes.
+Entry-source keys and binary closure validation use digest reads. HTML and
+CSS closure parsing retains the bytes it needs. Resource hash reads require a
+confined regular target before opening it.
+Each path has its own read cell, so file IO does not hold the snapshot
 map lock. Preparation and render workers have 64 MiB stacks while the remaining
 tree operations are converted to iterative walks.
 

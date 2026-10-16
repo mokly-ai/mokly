@@ -117,11 +117,18 @@ required files not covered by one of them; a required file with a denied
 directory between a root and itself stays an explicit target. A catalogue
 state keeps a constant-time index of exact files and their ancestors for the
 ignore callback. The watcher is replaced only when the set of effective roots
-changes, not when another file joins a watched directory; a new matching file
-there causes one rebuild and no watcher replacement. Notifications carry path,
+changes. Added exact files extend its directory registrations without a root
+walk or another full preparation. Native additions and removals use one
+`paths_mut()` batch; existing registrations are retained. Linux renews a
+registration after its directory is replaced. Vanished directories are
+skipped. A new matching file in an existing watched directory causes one
+rebuild and no watcher replacement. Notifications carry path,
 kind, and optional stats, coalesce by path, and deliver the latest descriptor
 for that path. A classifier exception is reported once, that event is
-dropped, and later notifications keep flowing.
+dropped, and later notifications keep flowing. Unspecified create and remove
+kinds use the raw rename lookup. A rescan flag or pathless native event
+queues a repository-root change and reports one loss warning per observer.
+The action rescans registrations and rebuilds inputs.
 
 Initial startup tries the requested concrete port and then each higher port in
 order until binding succeeds; port `0` delegates selection to the operating

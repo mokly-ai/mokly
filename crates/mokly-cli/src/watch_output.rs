@@ -60,6 +60,44 @@ pub fn line(
     format!("{text}\n")
 }
 
+/// Warnings precede the watched failure line and indented diagnostics.
+pub fn failure(
+    style: &Style,
+    batch: &Batch,
+    repository: &Path,
+    time: &str,
+    warnings: &str,
+    diagnostics: &str,
+    redactor: &Redactor,
+) -> String {
+    if style.mode == Mode::Plain {
+        return format!("{warnings}{diagnostics}");
+    }
+    let mut output = warnings.to_owned();
+    output.push_str(&line(
+        style,
+        batch,
+        repository,
+        time,
+        Duration::ZERO,
+        false,
+        redactor,
+    ));
+    for diagnostic in diagnostics.lines() {
+        output.push_str(&bounded(
+            &format!("            {diagnostic}"),
+            style.columns,
+        ));
+        output.push('\n');
+    }
+    output.push_str(&bounded(
+        "            The last good catalogue is still being served.",
+        style.columns,
+    ));
+    output.push('\n');
+    output
+}
+
 #[cfg(test)]
 #[path = "_tests_/watch_output_tests.rs"]
 mod watch_output_tests;

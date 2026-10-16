@@ -81,7 +81,11 @@ The Rust pool starts `dist/sidecar.js` with inherited environment and piped
 NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
 byte limit. Requests run in order. Consumer logs go to standard error.
 
-`bundle` compiles an unevaluated esbuild generation and reports its module
+`bundle` compiles an unevaluated esbuild generation and reports its immutable
+compiled recipe for replay. Evaluation-only changes reuse that compilation.
+`restoreGeneration` installs retained code in a new sidecar without reading
+current sources. Worker operation events count actual compilations and
+PostCSS worker lifetimes. The result also reports its module
 graph with stable names for selected installation files. Repository-owned
 workspace packages and PostCSS presets use the side's own source copy.
 `cssModules` installs the core's class maps before evaluation and runs no

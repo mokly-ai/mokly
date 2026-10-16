@@ -12,6 +12,7 @@ use crate::event::Event;
 use crate::plan::Plan;
 
 /// An attached observer owns every native watch until close or drop.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ObserverMock))]
 #[async_trait]
 pub trait Observer: Send + Sync {
     /// Attach a replacement plan before the caller adopts its catalogue.

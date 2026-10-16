@@ -62,6 +62,7 @@ impl PostCss {
     ) -> Result<ProcessedCss> {
         let key = format!("{}:{path}:{}", self.side.context, digest(source.as_bytes()));
         let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
+        cache.purge();
         let mut record = match cache.records.get(&key) {
             Some(record) => record.clone(),
             None => CssRecord {

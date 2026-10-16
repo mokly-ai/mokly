@@ -36,7 +36,8 @@ pub(crate) fn describe(
 ) -> Result<(JavaScriptGeneration, Definitions)> {
     let side = runtime.side(config)?;
     let mut params = bundle_inputs::params(config, files, &side);
-    let cache_key = bundle_inputs::cache_key(config, &params, &side)?;
+    let cache_key =
+        bundle_inputs::cache_key(config, &params, &side, runtime.dependency_tree.as_ref())?;
     let candidates: BTreeMap<_, _> = runtime
         .bundles
         .lock()
@@ -81,13 +82,25 @@ pub(crate) fn describe(
         .get(&format!("generation:{}", result.generation))
         .and_then(Weak::upgrade);
     if let Some(existing) = existing {
+        runtime
+            .pool
+            .release_generation(&result.generation, result.epoch);
         return finish(runtime, side, compiler, existing);
     }
     let lease = Arc::new(BundleLease {
+        epoch: result.epoch,
         id: result.generation,
         pool: runtime.pool.clone(),
     });
     let mut stamp = InputStamp::default();
+    if let Some(compiled) = &result.compiled {
+        stamp.files.extend(
+            compiled
+                .metadata_inputs
+                .iter()
+                .map(|(path, hash)| (config.repo_root.join(path), hash.clone())),
+        );
+    }
     for module in result
         .modules
         .iter()

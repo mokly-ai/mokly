@@ -31,15 +31,15 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                         deadline_ms: 60_000,
                     })
                 })),
-            PoolMock::request
-                .next_call(matching!(Call::DisposeContext(_)))
-                .returns(Ok(mokly_sidecar::wire::MethodResult::Empty)),
+            PoolMock::release_context
+                .next_call(matching!("base"))
+                .returns(()),
         )));
         let postcss = PostCss {
             lease: Arc::new(ContextLease {
                 id: "base".into(),
                 pool: pool.clone(),
-                cache: Arc::new(Mutex::new(CssCache::default())),
+                released: CssCache::default().releases,
                 used: AtomicBool::new(false),
             }),
             pool,

@@ -49,8 +49,10 @@ pub(super) struct ForwardEvents(pub(super) Arc<dyn Diagnostics>);
 
 impl Events for ForwardEvents {
     fn emit(&mut self, event: Event) {
-        let Event::Diagnostic { message } = event;
-        self.0.emit(&message);
+        match event {
+            Event::Diagnostic { message } => self.0.emit(&message),
+            Event::Operation { operation, pid } => self.0.operation(operation, pid),
+        }
     }
 }
 

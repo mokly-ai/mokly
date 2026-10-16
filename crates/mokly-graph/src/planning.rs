@@ -7,14 +7,14 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::{parse, tree};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
-use mokly_model::{material::digest, routes};
+use mokly_model::routes;
 
 use crate::error::{Result, invalid};
 use crate::graph::Graph;
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
 use crate::workers::check_cancelled;
-use crate::{error, resource_keys, routing_inputs, styles};
+use crate::{error, resource_digests, resource_keys, routing_inputs, styles};
 
 pub(crate) fn documents(
     graph: &Graph,
@@ -34,11 +34,14 @@ pub(crate) fn documents(
         if sources.contains_key(path) {
             continue;
         }
-        let bytes = match tree.read_shared(&config.repo_root.join(path)) {
-            Ok(bytes) => bytes,
+        let digest = match tree.digest(&config.repo_root.join(path)) {
+            Ok(digest) => digest,
             Err(_) => return Err(invalid(path, format!("could not read entry source {path}"))),
         };
-        sources.insert(path.clone(), key(NodeKind::EntrySource, &[&bytes]));
+        sources.insert(
+            path.clone(),
+            key(NodeKind::EntrySource, &[digest.as_bytes()]),
+        );
     }
     let mut component_keys = BTreeMap::new();
     for component in catalogue.elements.values() {
@@ -166,10 +169,7 @@ pub(crate) fn documents(
                 .paths(&resource_key)
                 .iter()
                 .filter_map(|(path, baseline)| {
-                    let value = tree
-                        .read_shared(&config.repo_root.join(path))
-                        .ok()
-                        .map(|bytes| digest(&bytes));
+                    let value = resource_digests::confined(tree, &config.repo_root, path);
                     (value != *baseline)
                         .then(|| format!("{path}:{}", value.as_deref().unwrap_or("unavailable")))
                 })

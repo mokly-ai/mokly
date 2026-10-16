@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
+use mokly_catalogue::diagnostic::Warning;
 use mokly_cli::build::{BuildError, BuildSummary};
 use mokly_cli::grammar::Common;
 use mokly_cli::serve::ServePreparation;
@@ -16,12 +17,18 @@ use mokly_watch::event::Batch;
 use tokio::sync::mpsc;
 
 use crate::serve_candidates::CandidateWork;
+use crate::serve_debounce;
 use crate::serve_state::ServeStateFactory;
 use crate::serve_watch::WatchInputs;
 
 #[cfg_attr(test, unimock::unimock(api = RebuildReporterMock))]
-pub(super) trait RebuildReporter: Send + Sync {
+/// Terminal boundary for manual and watched action results.
+pub trait RebuildReporter: Send + Sync {
+    /// Report native event loss once while keeping the accepted catalogue available.
+    fn watcher_rescan(&self);
+    /// Report a completed manual action without observation.
     fn completed(&self, summary: &BuildSummary, elapsed: Duration);
+    /// Report a completed watched action with its coalesced paths.
     fn watched(
         &self,
         batch: &Batch,
@@ -29,7 +36,25 @@ pub(super) trait RebuildReporter: Send + Sync {
         summary: Option<&BuildSummary>,
         elapsed: Duration,
     );
+    /// Flush attempt warnings before the watched catalogue failure.
+    fn watched_catalogue_failure(&self, batch: &Batch, repository: &Path, error: &BuildError) {
+        self.watched(batch, repository, None, Duration::ZERO);
+        self.catalogue_failure(error);
+    }
+    /// Report attachment or projection failure with the watched action line.
+    fn watched_server_failure(
+        &self,
+        batch: &Batch,
+        repository: &Path,
+        _warnings: &[Warning],
+        error: &ServerError,
+    ) {
+        self.watched(batch, repository, None, Duration::ZERO);
+        self.server_failure(error);
+    }
+    /// Report a failed preparation while retaining the accepted state.
     fn catalogue_failure(&self, error: &BuildError);
+    /// Report a transport or observer failure.
     fn server_failure(&self, error: &ServerError);
 }
 
@@ -63,29 +88,21 @@ impl ServeActions for ManualRebuilds {
                     result = &mut serving => return result,
                     Some(()) = requests.recv() => batch.rebuild(),
                     () = async { match &self.watching { Some(watch) => watch.changed().await, None => pending().await } } => {
-                        if let Some(watch) = &self.watching { watch.drain(&mut batch, self.reporter.as_ref()); }
+                        if let Some(watch) = &self.watching { watch.drain(&mut batch, self.reporter.clone()).await; }
                     }
                 }
             }
-            if let Some(watch) = &self.watching {
-                let delay = watch.plan().debounce;
-                let deadline = tokio::time::sleep(delay);
-                tokio::pin!(deadline);
-                loop {
-                    tokio::select! {
-                        result = &mut serving => return result,
-                        _ = &mut deadline => break,
-                        Some(()) = requests.recv() => {
-                            batch.rebuild();
-                            deadline.as_mut().reset(tokio::time::Instant::now() + delay);
-                        },
-                        () = watch.changed() => {
-                            if watch.drain(&mut batch, self.reporter.as_ref()) {
-                                deadline.as_mut().reset(tokio::time::Instant::now() + delay);
-                            }
-                        },
-                    }
-                }
+            if let Some(watch) = &self.watching
+                && let Some(result) = serve_debounce::settle(
+                    watch.clone(),
+                    &mut batch,
+                    self.reporter.clone(),
+                    &mut requests,
+                    &mut serving,
+                )
+                .await
+            {
+                return result;
             }
             let Some(permit) = self.candidates.enter() else {
                 continue;
@@ -128,25 +145,41 @@ impl ServeActions for ManualRebuilds {
                     }
                 }
                 Ok(None) => {}
-                Err(source) => self
-                    .reporter
-                    .server_failure(&ServerError::Internal(InternalError::Task { source })),
+                Err(source) => self.failed_server(
+                    &batch,
+                    &[],
+                    &ServerError::Internal(InternalError::Task { source }),
+                ),
             }
         }
     }
 }
 
 impl ManualRebuilds {
+    fn failed_catalogue(&self, batch: &Batch, error: &BuildError) {
+        if let Some(watch) = &self.watching {
+            watch.failed();
+            self.reporter
+                .watched_catalogue_failure(batch, &watch.plan().repository, error);
+        } else {
+            self.reporter.catalogue_failure(error);
+        }
+    }
+    fn failed_server(&self, batch: &Batch, warnings: &[Warning], error: &ServerError) {
+        if let Some(watch) = &self.watching {
+            watch.failed();
+            self.reporter
+                .watched_server_failure(batch, &watch.plan().repository, warnings, error);
+        } else {
+            self.reporter.server_failure(error);
+        }
+    }
     fn rebuild(&self, batch: &Batch) -> Option<BuildSummary> {
         let mut prepared = match self.preparation.prepare(&self.cwd, &self.options) {
             Ok(prepared) => prepared,
             Err(error) => {
                 tracing::Span::current().record("status", "error");
-                if let Some(watch) = &self.watching {
-                    self.reporter
-                        .watched(batch, &watch.plan().repository, None, Duration::ZERO);
-                }
-                self.reporter.catalogue_failure(&error);
+                self.failed_catalogue(batch, &error);
                 return None;
             }
         };
@@ -157,7 +190,7 @@ impl ManualRebuilds {
             match watch.candidate(&prepared) {
                 Ok(candidate) => Some(candidate),
                 Err(error) => {
-                    self.reporter.server_failure(&error);
+                    self.failed_server(batch, &prepared.summary.warnings, &error);
                     return None;
                 }
             }
@@ -170,14 +203,14 @@ impl ManualRebuilds {
             prepared = match self.preparation.prepare(&self.cwd, &self.options) {
                 Ok(prepared) => prepared,
                 Err(error) => {
-                    self.reporter.catalogue_failure(&error);
+                    self.failed_catalogue(batch, &error);
                     return None;
                 }
             };
             if let Some(watch) = &self.watching
                 && let Err(error) = watch.recheck(candidate, &prepared)
             {
-                self.reporter.server_failure(&error);
+                self.failed_server(batch, &prepared.summary.warnings, &error);
                 return None;
             }
         }
@@ -186,7 +219,7 @@ impl ManualRebuilds {
         let mut snapshot = match self.states.replace(&prepared, revision, &previous) {
             Ok(snapshot) => snapshot,
             Err(error) => {
-                self.reporter.server_failure(&error);
+                self.failed_server(batch, &prepared.summary.warnings, &error);
                 return None;
             }
         };
@@ -214,3 +247,7 @@ mod serve_rebuild_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_burst_tests.rs"]
 mod serve_burst_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_watch_burst_tests.rs"]
+mod serve_watch_burst_tests;

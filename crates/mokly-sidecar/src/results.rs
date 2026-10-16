@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::compiled::CompiledGeneration;
 use crate::render_records::{CollectedStyle, MarkerDraft};
 use crate::usage::{InstanceDraft, SlotDraft};
 
@@ -44,6 +45,14 @@ pub struct Warning {
 #[serde(deny_unknown_fields)]
 #[ts(rename = "BundleResult")]
 pub struct Bundle {
+    /// Pool-owned lifetime epoch; never crosses the wire.
+    #[serde(skip)]
+    #[ts(skip)]
+    pub epoch: u64,
+    /// Immutable code for restoration and evaluation-only reuse.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub compiled: Option<CompiledGeneration>,
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.

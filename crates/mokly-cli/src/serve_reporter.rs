@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+use mokly_catalogue::diagnostic::Warning;
 use mokly_cli::build::{BuildError, BuildSummary};
 use mokly_cli::build_output;
 use mokly_cli::cancellation::Cancellation;
@@ -45,6 +46,51 @@ impl Diagnostics for ServeLines {
     }
 }
 impl RebuildReporter for ServeLines {
+    fn watcher_rescan(&self) {
+        let text = "Watch notifications were lost. Rescanning catalogue inputs.";
+        self.terminal.stderr(&if self.style.mode == Mode::Plain {
+            format!("[mokly/warning] {text}\n")
+        } else {
+            format!("{}\n", bounded(&format!("  ! {text}"), self.style.columns))
+        });
+    }
+
+    fn watched_catalogue_failure(&self, batch: &Batch, repository: &Path, error: &BuildError) {
+        if self.cancellation.requested() {
+            return;
+        }
+        let warnings = build_output::warnings(
+            &self.style,
+            &build_output::warning_records(error),
+            &self.redactor,
+        );
+        let plain = Style {
+            mode: Mode::Plain,
+            color: false,
+            ..self.style.clone()
+        };
+        let diagnostics = build_output::failure_diagnostics(&plain, error, &self.redactor);
+        self.failure_line(batch, repository, &warnings, &diagnostics);
+    }
+    fn watched_server_failure(
+        &self,
+        batch: &Batch,
+        repository: &Path,
+        warnings: &[Warning],
+        error: &ServerError,
+    ) {
+        if self.cancellation.requested() {
+            return;
+        }
+        let plain = Style {
+            mode: Mode::Plain,
+            color: false,
+            ..self.style.clone()
+        };
+        let diagnostics = serve_errors::failure(&plain, error, &self.redactor);
+        let warnings = build_output::warnings(&self.style, warnings, &self.redactor);
+        self.failure_line(batch, repository, &warnings, &diagnostics);
+    }
     fn watched(
         &self,
         batch: &Batch,
@@ -107,3 +153,22 @@ impl RebuildReporter for ServeLines {
         Diagnostics::failed(self, error);
     }
 }
+
+impl ServeLines {
+    fn failure_line(&self, batch: &Batch, repository: &Path, warnings: &str, diagnostics: &str) {
+        let time = chrono::Local::now().format("%H:%M:%S").to_string();
+        self.terminal.stderr(&watch_output::failure(
+            &self.style,
+            batch,
+            repository,
+            &time,
+            warnings,
+            diagnostics,
+            &self.redactor,
+        ));
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/serve_reporter_tests.rs"]
+mod serve_reporter_tests;

@@ -3,15 +3,13 @@
 use std::sync::{Arc, Weak};
 
 use mokly_model::axes::Viewport;
-use mokly_model::material::digest;
-use mokly_source_interface::tree::FileKind;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
 use crate::workers::ArtifactWorker;
-use crate::{document_composition, validation};
+use crate::{document_composition, resource_digests, validation};
 
 impl Session {
     #[tracing::instrument(
@@ -106,20 +104,11 @@ impl ArtifactWorker for Session {
 impl ClosureObserver for Session {
     fn observe(&self, route: &str, path: &str) {
         if let Some(plan) = self.state.plans.get(route) {
-            let absolute = self.state.config.repo_root.join(path);
-            let digest = match self.state.tree.project(&absolute) {
-                Ok(Some(node))
-                    if node.kind == FileKind::File
-                        && node.identity.starts_with(&self.state.config.repo_root) =>
-                {
-                    self.state
-                        .tree
-                        .read_shared(&absolute)
-                        .ok()
-                        .map(|bytes| digest(&bytes))
-                }
-                _ => None,
-            };
+            let digest = resource_digests::confined(
+                self.state.tree.as_ref(),
+                &self.state.config.repo_root,
+                path,
+            );
             self.state
                 .inputs
                 .resources

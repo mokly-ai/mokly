@@ -101,11 +101,7 @@ pub(crate) fn inputs(
                 WatchAction::Rebuild => &mut rebuild,
                 WatchAction::Reload => &mut reload,
             };
-            let hash = tree
-                .read_shared(&path)
-                .ok()
-                .map(|bytes| digest(&bytes))
-                .unwrap_or_default();
+            let hash = tree.digest(&path).ok().unwrap_or_default();
             target.insert(relative.to_string_lossy().into_owned(), hash);
         }
     }

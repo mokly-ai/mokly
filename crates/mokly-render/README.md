@@ -46,7 +46,10 @@ Bundle reuse compares the actual module digests that the sidecar reports.
 HTML edits reuse bundle definitions. CSS text changes reuse JavaScript when
 class maps remain equal. A changed map uses a separate evaluated lifetime.
 Graph leases retain old maps, bindings, and PostCSS contexts until the final
-request releases them. Failed candidates release their own contexts.
+request releases them. Final drops enqueue epoch-specific pool release and
+cache cleanup without waiting for worker requests or the PostCSS cache lock.
+Failed candidates release their own contexts. Bundle metadata stamps include
+resolved React manifests and absent Storybook preview candidates.
 Stylesheet reuse checks source digests, plugin dependency digests, and
 directory-glob membership. Empty directory recipes observe later additions.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.

@@ -5,7 +5,9 @@ use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
+use crate::serve_lifecycle::ServeLifecycle;
 use mokly_catalogue::config::relative;
 use mokly_cli::build_output;
 use mokly_cli::cancellation::{Cancellation, ServeCancellation};
@@ -23,7 +25,6 @@ use mokly_server::error::{InternalError, ServerError};
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::publication::SharedPublication;
 use mokly_server::runtime::{ServerRuntime, TokioServer};
-use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::Projector;
 use mokly_server::work::{Workers, parallelism};
 use tokio::sync::{mpsc, watch};
@@ -90,10 +91,12 @@ pub(super) fn run(
             Ok(signals) => signals,
             Err(source) => return Err(ServerError::Internal(InternalError::Io { source })),
         };
+        let serving = Arc::new(AtomicBool::new(false));
         let shutdown = serve_shutdown::start(
             receiver.clone(),
             cancellation.clone(),
             services.pool.clone(),
+            serving.clone(),
         );
         let result = async {
             let watching: Option<Arc<dyn WatchInputs>> = if options.no_watch {
@@ -164,6 +167,7 @@ pub(super) fn run(
             ));
             let transport: &dyn ServerRuntime = &TokioServer;
             let server = transport.bind(options.port.unwrap_or(4173)).await?;
+            serving.store(true, Ordering::SeqCst);
             let url = format!("http://{}", server.address());
             let interactive =
                 style.mode == Mode::Rich && !options.no_watch && std::io::stdin().is_terminal();
@@ -196,11 +200,11 @@ pub(super) fn run(
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }
-            let lifecycle: Arc<dyn mokly_server::shutdown::Lifecycle> =
-                watching.clone().map_or_else(
-                    || Arc::new(FixedLifecycle) as Arc<dyn mokly_server::shutdown::Lifecycle>,
-                    |watching| watching as Arc<dyn mokly_server::shutdown::Lifecycle>,
-                );
+            let lifecycle = Arc::new(ServeLifecycle {
+                watch: watching.clone(),
+                cancellation: cancellation.clone(),
+                pool: services.pool.clone(),
+            });
             let candidates = Arc::new(ManualCandidates::new(lifecycle));
             let (rebuild, requests) = mpsc::channel(1);
             let controls = serve_controls::start(

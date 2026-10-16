@@ -43,7 +43,7 @@ impl Plan {
     ) -> Result<Self> {
         let mut plan = Self {
             repository: config.repo_root.clone(),
-            debounce: Duration::from_secs_f64(
+            debounce: Duration::try_from_secs_f64(
                 config
                     .input
                     .watch
@@ -51,7 +51,9 @@ impl Plan {
                     .and_then(|watch| watch.debounce_ms)
                     .unwrap_or(75.0)
                     / 1000.0,
-            ),
+            )
+            .unwrap_or(Duration::from_secs(86_400))
+            .min(Duration::from_secs(86_400)),
             exact: HashMap::new(),
             ancestors: HashMap::new(),
             root_index: HashSet::new(),
@@ -124,6 +126,13 @@ impl Plan {
     pub fn resources(&mut self, paths: &BTreeSet<String>) {
         for path in paths {
             self.required(self.repository.join(path), Action::Reload);
+        }
+    }
+
+    /// Keep the active generation's required paths attached until candidate adoption.
+    pub fn extend_required(&mut self, previous: &Self) {
+        for (path, action) in &previous.exact {
+            self.required(path.clone(), *action);
         }
     }
 

@@ -57,53 +57,68 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
 
 /// Report retained warnings first, then the command's typed failure.
 pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
+    warnings(style, &warning_records(failure), redactor)
+        + &failure_diagnostics(style, failure, redactor)
+}
+
+/// Retained warnings from one failed preparation attempt.
+pub fn warning_records(failure: &BuildError) -> Vec<Warning> {
+    let mut records = match failure {
+        BuildError::Deferred { warnings, .. } | BuildError::Strict { warnings } => warnings.clone(),
+        BuildError::Catalogue {
+            source: CatalogueError::Invalid { warnings, .. },
+        } => warnings.clone(),
+        BuildError::Rendering { source, warnings } => {
+            let mut records = warnings.clone();
+            records.extend(source.warnings());
+            records
+        }
+        _ => Vec::new(),
+    };
+    mokly_catalogue::diagnostic::normalize_warnings(&mut records);
+    records
+}
+
+/// Format only typed failure details, so watched actions can own warning order.
+pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
+        BuildError::RestartRequired { setting } => style.error(
+            Code::ConfigInvalid,
+            &format!("{setting} changed. Restart Serve to apply this setting."),
+            redactor,
+        ),
         BuildError::Cancelled => style.error(Code::BuildInvalid, "build cancelled", redactor),
         BuildError::Deferred {
             modules,
-            warnings: records,
-        } => {
-            warnings(style, records, redactor)
-                + &style.error(
-                    Code::BuildInvalid,
-                    &format!(
-                        "JavaScript rendering is unavailable for {}",
-                        modules.join(", ")
-                    ),
-                    redactor,
-                )
-        }
-        BuildError::Rendering {
-            source,
-            warnings: records,
-        } => {
-            let mut records = records.clone();
-            records.extend(source.warnings());
-            mokly_catalogue::diagnostic::normalize_warnings(&mut records);
-            let mut output = warnings(style, &records, redactor);
-            output.push_str(&render_diagnostics(style, source, redactor));
-            output
-        }
+            warnings: _,
+        } => style.error(
+            Code::BuildInvalid,
+            &format!(
+                "JavaScript rendering is unavailable for {}",
+                modules.join(", ")
+            ),
+            redactor,
+        ),
+        BuildError::Rendering { source, .. } => render_diagnostics(style, source, redactor),
         BuildError::Strict { warnings: records } => {
             let count = records.len();
-            warnings(style, records, redactor)
-                + &style.error(
-                    Code::BuildInvalid,
-                    &format!(
-                        "{count} build warning{} with --strict",
-                        if count == 1 { "" } else { "s" }
-                    ),
-                    redactor,
-                )
+            style.error(
+                Code::BuildInvalid,
+                &format!(
+                    "{count} build warning{} with --strict",
+                    if count == 1 { "" } else { "s" }
+                ),
+                redactor,
+            )
         }
         BuildError::Catalogue {
             source:
                 CatalogueError::Invalid {
                     issues,
-                    warnings: records,
+                    warnings: _,
                 },
         } => {
-            let mut text = warnings(style, records, redactor);
+            let mut text = String::new();
             for issue in issues {
                 let detail = issue_text(issue, Code::BuildInvalid);
                 let diagnostic = if matches!(

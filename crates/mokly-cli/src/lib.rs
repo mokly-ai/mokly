@@ -19,6 +19,7 @@ mod render_errors;
 pub mod serve;
 pub mod serve_errors;
 pub mod serve_output;
+pub mod serve_settings;
 pub mod version;
 
 pub mod watch_output;

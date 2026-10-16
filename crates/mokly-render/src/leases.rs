@@ -1,55 +1,41 @@
 //! Graph-owned sidecar lifetimes release state after the final request finishes.
 
 use std::fmt;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Sender;
 
 use mokly_catalogue::render_sources::GenerationLease;
 use mokly_css::types::StylesheetBundler;
-use mokly_sidecar::bindings::DisposeContext;
-use mokly_sidecar::methods::{Call, Generation};
 use mokly_sidecar::pool::SidecarPool;
 
 use crate::bundle::BundleState;
-use crate::postcss_cache::CssCache;
 use crate::side::SideInputs;
 
 pub(crate) struct BundleLease {
     pub(crate) id: String,
+    pub(crate) epoch: u64,
     pub(crate) pool: Arc<dyn SidecarPool>,
 }
 
 impl Drop for BundleLease {
     fn drop(&mut self) {
-        if let Err(error) = self.pool.request(Call::Dispose(Generation {
-            generation: self.id.clone(),
-        })) {
-            tracing::debug!(%error, "bundle release finished after cancellation");
-        }
+        self.pool.release_generation(&self.id, self.epoch);
     }
 }
 
 pub(crate) struct ContextLease {
     pub(crate) id: String,
     pub(crate) pool: Arc<dyn SidecarPool>,
-    pub(crate) cache: Arc<Mutex<CssCache>>,
+    pub(crate) released: Sender<String>,
     pub(crate) used: AtomicBool,
 }
 
 impl Drop for ContextLease {
     fn drop(&mut self) {
-        {
-            let mut cache = self.cache.lock().unwrap_or_else(|error| error.into_inner());
-            cache.scans.remove(&self.id);
-            let prefix = format!("{}:", self.id);
-            cache.records.retain(|key, _| !key.starts_with(&prefix));
-        }
-        if self.used.load(Ordering::Relaxed)
-            && let Err(error) = self.pool.request(Call::DisposeContext(DisposeContext {
-                context: self.id.clone(),
-            }))
-        {
-            tracing::debug!(%error, "PostCSS release finished after cancellation");
+        if self.used.load(Ordering::Relaxed) {
+            let _ = self.released.send(self.id.clone());
+            self.pool.release_context(&self.id);
         }
     }
 }
@@ -70,3 +56,7 @@ impl fmt::Debug for PreparedLease {
 }
 
 impl GenerationLease for PreparedLease {}
+
+#[cfg(test)]
+#[path = "_tests_/lease_drop_tests.rs"]
+mod lease_drop_tests;

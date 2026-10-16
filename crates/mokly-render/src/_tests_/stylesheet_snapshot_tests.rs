@@ -58,12 +58,17 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                 }
             })),
     )));
-    let pool = Arc::new(Unimock::new(
+    let pool = Arc::new(Unimock::new((
+        PoolMock::release_generation
+            .next_call(matching!("bundle", 0))
+            .returns(()),
         PoolMock::request
             .each_call(matching!(_))
             .answers(&|_, call| {
                 Ok(match call {
                     Call::Bundle(_) => MethodResult::Bundle(Bundle {
+                        epoch: 0,
+                        compiled: None,
                         generation: "bundle".into(),
                         warnings: vec![],
                         modules: vec![
@@ -93,7 +98,7 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                     call => panic!("unexpected request {call:?}"),
                 })
             }),
-    ));
+    )));
     let mut runtime = Runtime::new(
         tree.clone(),
         tree,

@@ -5,7 +5,7 @@ import { SidecarError, detail } from "./sidecar/errors.js";
 import { requestId } from "./sidecar/request-id.js";
 import { request } from "./sidecar/requests.js";
 import { Session } from "./sidecar/session.js";
-import { encodeResponse, frames } from "./sidecar/transport.js";
+import { encodeFrame, encodeResponse, frames } from "./sidecar/transport.js";
 
 const version = (
   JSON.parse(
@@ -21,8 +21,18 @@ const send = async (id: string, outcome: object) => {
     write(frame, (error) => (error ? reject(error) : resolve())),
   );
 };
-const session = new Session(version, (message) =>
-  process.stderr.write(message),
+const session = new Session(
+  version,
+  (message) => process.stderr.write(message),
+  undefined,
+  (operation) => {
+    write(
+      encodeFrame({
+        event: "operation",
+        params: { operation, pid: process.pid },
+      }),
+    );
+  },
 );
 try {
   for await (const value of frames(process.stdin)) {
