@@ -146,7 +146,7 @@ impl Pool {
     }
 }
 
-fn generation(call: &Call) -> Option<&str> {
+pub(super) fn generation(call: &Call) -> Option<&str> {
     match call {
         Call::Bindings(value) => Some(&value.generation),
         Call::Describe(value) => Some(&value.generation),

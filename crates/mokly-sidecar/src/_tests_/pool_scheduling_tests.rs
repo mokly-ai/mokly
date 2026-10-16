@@ -106,6 +106,7 @@ fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
     pool.release(
         0,
         Some(Slot {
+            source_root: "/repo".into(),
             worker: Box::new(worker.clone()),
             control: Arc::new(worker),
             generations: BTreeMap::new(),

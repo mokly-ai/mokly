@@ -76,6 +76,8 @@ directories, including package-manager links into a root store. Compiled recipes
 retain that usage across worker restoration and evaluation reuse. Selected
 logical roots take precedence over source-root names in nested CSS exclusion
 checks.
+Each sidecar worker keeps one source working directory. Head and base module
+evaluation and render callbacks use their own files through `process.cwd()`.
 Both sides use the current package version and
 the same document composition code.
 

@@ -1067,8 +1067,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and PostCSS source-directory isolation.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-4.md`.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
-- [ ] Isolate base JavaScript working-directory reads: sidecars run in the head
+- [x] Isolate base JavaScript working-directory reads: sidecars run in the head
       repository, so `process.cwd()` reads in base code can read head files.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/a-regression-after.log`.
 - [x] Apply shared-runtime review fixes: PostCSS child memory accounting, unique
       PostCSS contexts, base timeout recovery, streamed extraction, isolated
       test caches, and direct runtime regression tests.

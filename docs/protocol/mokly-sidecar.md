@@ -13,9 +13,9 @@ catalogue decisions, caching, invalidation, comparison, and output.
 ## Lifecycle
 
 - The binary spawns `node <mokly package>/dist/sidecar.js` with inherited
-  environment, the repository root as working directory, and pipes for
-  standard input and output. Standard error is forwarded to the terminal
-  reporter as diagnostics.
+  environment, input/output pipes, and `sourceRoot` as its fixed working
+  directory. Another root replaces the worker before replay. Missing roots
+  fail startup. Standard error goes to the terminal reporter as diagnostics.
 - The default pool size is the machine's core count. `--sidecars <n>` and
   `MOKLY_SIDECARS` accept any positive integer and override that default;
   the option takes precedence over the variable. A catalogue that needs no

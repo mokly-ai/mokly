@@ -32,6 +32,8 @@ tables. A new process restores old code without compiling changed sources.
 Epoch-specific releases retain newer lifetimes with the same id. Releases
 record state without waiting for a worker. An idle cleanup worker sends
 disposal to each affected slot; busy slots apply it before their next request.
+Each worker keeps the request source root as its working directory for its
+whole lifetime. A change of source root replaces the worker before replay.
 PostCSS context affinity prevents duplicate workers. A busy affine request
 does not block independent work on another available slot. Returning slots
 recheck pending releases before becoming idle. `cancel_requests` kills and reaps
@@ -55,7 +57,7 @@ requests and emits one notice per pressure episode. A sample at or below the
 bound restores normal checks. The 500-render rule always applies. Recycling
 starts after the in-flight request completes.
 
-`NodeFactory` inherits the environment and repository working directory. It
+`NodeFactory` inherits the environment and uses the selected source working directory. It
 uses a persistent launch thread for Linux parent-death signals. The Node
 watchdog observes parent death and pipe closure outside the render thread.
 PostCSS children use the same protection, including historical contexts. It

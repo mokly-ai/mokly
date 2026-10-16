@@ -57,6 +57,7 @@ same cancellation token as Git. Cancellation checkpoints also surround
 comparison and public resource planning. All source wrappers forward exact
 prefetch sets, public reads, and streamed digests.
 
+Sidecar working directories follow the [fixed source-root rule](./mokly-sidecar.md#lifecycle).
 Each PostCSS context runs in a child process whose working directory is its
 side's source root. This confines relative file reads and automatic Tailwind
 source discovery to that side. The head and base can use the same installed

@@ -1,5 +1,6 @@
 //! Base preparation results select the extraction and retain its dependency leases.
 
+use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -18,13 +19,33 @@ use super::support::Consumer;
 
 #[test]
 fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
-    let head = Consumer::new();
+    let head = Consumer::single();
     let base = Consumer::new();
+    fs::write(head.root().join("head-only.txt"), "head secret").unwrap();
+    for (consumer, text) in [(&head, "head cwd"), (&base, "base cwd")] {
+        fs::write(consumer.root().join("cwd.txt"), text).unwrap();
+        consumer.replace(
+            "specs/screen.mockup.tsx",
+            "export default defineScreen({",
+            "import {readFileSync} from 'node:fs';\nconst loaded = readFileSync(process.cwd() + '/cwd.txt', 'utf8');\nfunction exclusive() { try { return readFileSync('head-only.txt','utf8'); } catch (error) { return error.code; } }\nexport default defineScreen({",
+        );
+        consumer.replace(
+            "specs/screen.mockup.tsx",
+            "<h1>{props.label}</h1>",
+            "<h1>{props.label}</h1><p>{loaded}:{readFileSync('cwd.txt', 'utf8')}</p><aside>{exclusive()}</aside>",
+        );
+        consumer.replace(
+            "postcss.mjs",
+            "new URL(\"./tokens.json\", import.meta.url)",
+            "process.cwd() + '/tokens.json'",
+        );
+    }
     head.replace("specs/screen.mockup.tsx", "\"Hello\"", "\"HeadOnly\"");
     base.replace("specs/screen.mockup.tsx", "\"Hello\"", "\"BaseOnly\"");
     let head_generation = head.generation(head.prepare().unwrap());
     let head_document = head_generation.render("screen/index.mobile.html").unwrap();
     assert!(String::from_utf8_lossy(&head_document.bytes).contains("HeadOnly"));
+    assert!(String::from_utf8_lossy(&head_document.bytes).contains("head cwd:head cwd"));
     let dependencies = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -83,6 +104,12 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let html = String::from_utf8(document.bytes.clone()).unwrap();
     assert!(html.contains("BaseOnly"));
     assert!(!html.contains("HeadOnly"));
+    assert!(html.contains("base cwd:base cwd"));
+    assert!(!html.contains("head cwd"));
+    assert!(html.contains("ENOENT"));
+    assert!(!html.contains("head secret"));
+    let restored_head = head_generation.render("screen/index.desktop.html").unwrap();
+    assert!(String::from_utf8_lossy(&restored_head.bytes).contains("head cwd:head cwd"));
     let calls = head.pool.calls.lock().unwrap();
     let Call::Bundle(bundle) = calls
         .iter()
@@ -111,7 +138,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     assert!(calls.iter().any(
         |call| matches!(call, Call::ProcessCss(css) if css.context.starts_with("base-commit:"))
     ));
-    assert_eq!(head.processes.hellos(), vec![1]);
+    assert_eq!(head.processes.hellos(), vec![1, 1, 1]);
     assert!(base.processes.hellos().is_empty());
     drop(calls);
     drop(runtime);

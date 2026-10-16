@@ -28,7 +28,12 @@ impl SidecarPool for Pool {
         if matches!(call, Call::Hello(_)) {
             return Err(Error::Protocol(ProtocolError::Handshake));
         }
+        let source_root = self.source_root(&call)?;
         let (index, mut slot) = self.acquire(&call)?;
+        if let Err(error) = self.isolate(&mut slot, source_root.as_deref()) {
+            self.release(index, slot)?;
+            return Err(error);
+        }
         let deadline = self.options.timeout_ms.unwrap_or_else(|| call.timeout_ms());
         let mut outcome = Err(Error::Crashed);
         for attempt in 0..2 {
@@ -38,7 +43,10 @@ impl SidecarPool for Pool {
             }
             let mut current = match slot.take() {
                 Some(slot) => slot,
-                None => match self.spawn(index) {
+                None => match self.spawn(
+                    index,
+                    source_root.as_deref().unwrap_or(&self.launch.repository),
+                ) {
                     Ok(slot) => slot,
                     Err(error) => {
                         let retryable = matches!(error, Error::Crashed | Error::Timeout { .. });

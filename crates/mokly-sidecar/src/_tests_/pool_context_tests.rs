@@ -36,6 +36,7 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
             .iter()
             .map(|worker| {
                 Some(Slot {
+                    source_root: "/repo".into(),
                     worker: Box::new(worker.clone()),
                     control: Arc::new(worker.clone()),
                     generations: BTreeMap::new(),

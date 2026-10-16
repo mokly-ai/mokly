@@ -1,6 +1,7 @@
 //! Lazy bounded sidecar pool, queueing, retry, recycling, and cancellation.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
@@ -109,12 +110,16 @@ impl Pool {
         }
     }
 
-    pub(super) fn spawn(&self, index: usize) -> Result<Slot> {
+    pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
         self.lock()?.memory.entry(index).or_default().started();
-        let mut spawned = self.factory.spawn(&self.launch)?;
+        let launch = Launch {
+            repository: source_root.into(),
+            ..self.launch.clone()
+        };
+        let mut spawned = self.factory.spawn(&launch)?;
         {
             let mut state = self.lock()?;
             if state.stopped {
@@ -131,6 +136,7 @@ impl Pool {
             return Err(error);
         }
         Ok(Slot {
+            source_root: source_root.into(),
             worker: spawned.worker,
             control: spawned.control,
             generations: BTreeMap::new(),

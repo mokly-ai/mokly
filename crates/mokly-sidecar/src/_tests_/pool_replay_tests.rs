@@ -49,6 +49,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
     {
         let mut state = pool.lock().unwrap();
         state.slots.push(Some(Slot {
+            source_root: "/repo".into(),
             worker: Box::new(worker.clone()),
             control: Arc::new(worker),
             generations: if loaded {

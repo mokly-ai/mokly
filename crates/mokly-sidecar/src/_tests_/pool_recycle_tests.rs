@@ -35,6 +35,7 @@ fn seed(pool: &Pool, worker: Unimock) {
     let request_worker = worker.clone();
     let control = Arc::new(worker);
     state.slots.push(Some(Slot {
+        source_root: "/repo".into(),
         worker: Box::new(request_worker),
         control: control.clone(),
         generations: BTreeMap::from([("g".into(), 0)]),
