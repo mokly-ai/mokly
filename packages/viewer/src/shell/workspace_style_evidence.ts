@@ -1,6 +1,5 @@
 /** Pure stylesheet path and view facts for the React Details panel. */
 
-import { viewReasons } from "../review/entries.js";
 import type {
   ChangeReason,
   EntryChangeReason,
@@ -9,21 +8,24 @@ import type {
 } from "../review/types.js";
 
 /**
- * Whether a changed view's change is proved only by its stylesheet records:
- * its entry has no material reason, and every file it keeps is a stylesheet.
+ * Whether a view reads as a style change: the view is `changed`, every
+ * reason of its entry is a `dependency`, and each named path has a retained
+ * (matched or unresolved) rule on this view. An excluded rule says no changed
+ * style applies, and a resource is no rule, so either keeps the ordinary
+ * label; so does an entry that names no reason.
  */
 export function isStyleOnlyView(
   view: ReviewView,
   reasons: readonly EntryChangeReason[],
 ): boolean {
-  if (
-    view.state !== "changed" ||
-    reasons.some((reason) => reason.kind === "material")
-  )
-    return false;
-  const kept = viewReasons(view).reasons ?? [];
-  return (
-    kept.length > 0 && kept.every((reason) => reason.analysis !== undefined)
+  if (view.state !== "changed" || !reasons.length) return false;
+  const ruled = new Set(
+    (view.rules ?? []).flatMap((rule) =>
+      rule.status === "excluded" ? [] : [rule.stylesheet],
+    ),
+  );
+  return reasons.every(
+    (reason) => reason.kind === "dependency" && ruled.has(reason.path),
   );
 }
 

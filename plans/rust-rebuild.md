@@ -1243,6 +1243,8 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
+      Commit `05923728` already moved the Publish Checkout, Removed Public
+      Options, and Portable Namespace notes there.
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.

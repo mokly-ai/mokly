@@ -127,7 +127,7 @@ test("a stylesheet retained by any view is never also listed as excluded", () =>
   assert.deepEqual(excludedStylesheets([], []), []);
 });
 
-test("only a changed view kept solely by stylesheet records reads as styles", () => {
+test("only a changed view whose every reason names a stylesheet ruled on it reads as styles", () => {
   const base: Pick<ReviewView, "colorScheme" | "ignoredIds" | "viewport"> = {
     colorScheme: "light",
     ignoredIds: [],
@@ -140,22 +140,19 @@ test("only a changed view kept solely by stylesheet records reads as styles", ()
     owner: { kind: "entry" },
   } as const;
   const changed: ReviewView = { ...base, state: "changed", rules: [rule] };
+  const sheet = { kind: "dependency", path: rule.stylesheet } as const;
+  const logo = "static/mockups/logo.svg";
 
-  assert.equal(isStyleOnlyView(changed, []), true);
+  assert.equal(isStyleOnlyView(changed, [sheet]), true);
   assert.equal(
     isStyleOnlyView(
-      {
-        ...changed,
-        resources: [
-          { path: "static/mockups/logo.svg", owner: { kind: "entry" } },
-        ],
-      },
-      [],
+      { ...changed, resources: [{ path: logo, owner: { kind: "entry" } }] },
+      [{ kind: "dependency", path: logo }, sheet],
     ),
     false,
   );
-  assert.equal(isStyleOnlyView(changed, [{ kind: "material" }]), false);
-  assert.equal(isStyleOnlyView({ ...base, state: "changed" }, []), false);
+  assert.equal(isStyleOnlyView(changed, [sheet, { kind: "material" }]), false);
+  assert.equal(isStyleOnlyView({ ...base, state: "changed" }, [sheet]), false);
   assert.equal(
     isStyleOnlyView(
       {
@@ -163,7 +160,7 @@ test("only a changed view kept solely by stylesheet records reads as styles", ()
         state: "unchanged",
         rules: [{ ...rule, selector: "", status: "excluded" }],
       },
-      [],
+      [sheet],
     ),
     false,
   );

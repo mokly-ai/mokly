@@ -91,6 +91,21 @@ const INVALID: readonly [string, (result: ReviewResult) => void][] = [
       home(r).included = true;
     },
   ],
+  [
+    "a variant that is not a component",
+    (r) => {
+      // An otherwise valid screen record, so only the kind rule rejects it.
+      const side = { path: "card/screen", title: "card/screen", props: {} };
+      card(r).variants = [
+        {
+          ...variantOf(card(r), "card/screen", []),
+          kind: "screen",
+          before: side,
+          after: side,
+        },
+      ];
+    },
+  ],
 ];
 
 for (const [name, edit] of INVALID)
@@ -121,6 +136,25 @@ test("an implementation reason belongs to a component parent", () => {
     ];
   });
   assert.throws(() => parseReviewResult(variant), /\[mokly\/review\]/);
+});
+
+test("a chain sorts before a longer chain that starts with it", () => {
+  const chains = (order: readonly number[]) =>
+    fixture((result) => {
+      const [first] = result.affected[0]!.evidence;
+      const longer = {
+        ...structuredClone(first!),
+        via: [
+          ...first!.via,
+          { componentId: "card", instanceKey: "b".repeat(64) },
+        ],
+      };
+      const both = [first!, longer];
+      result.affected[0]!.evidence = order.map((index) => both[index]!);
+    });
+  const ordered = chains([0, 1]);
+  assert.deepEqual(parseReviewResult(structuredClone(ordered)), ordered);
+  assert.throws(() => parseReviewResult(chains([1, 0])), /\[mokly\/review\]/);
 });
 
 test("current variants come before base-only variants", () => {

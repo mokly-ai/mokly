@@ -58,6 +58,8 @@ export function readEntry(value: unknown, variant = false): ReviewEntry {
     ["before", "after", "previousPath", "variants"],
   );
   const kind = reviewChoice(record.kind, KINDS);
+  if (variant && kind !== "component")
+    reviewInvalid("a variant is a component record");
   const entry: ReviewEntry = {
     kind,
     path: reviewEntryPath(record.path),

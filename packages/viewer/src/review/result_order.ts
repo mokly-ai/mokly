@@ -76,7 +76,7 @@ function usageKey(evidence: AffectedUsageEvidence): string {
     evidence.context.entry.path,
     RANK[evidence.context.viewport]!,
     RANK[evidence.context.colorScheme]!,
-    canonicalJson(evidence.via),
+    canonicalJson(evidence.via, 2),
   );
 }
 

@@ -82,8 +82,8 @@ function ComparisonSection({
   const component = entryKind === "component";
   const wording = entryWording(component ? "component" : "screen");
   const label = styleOnly
-    ? "Styles this screen uses changed"
-    : stateLabels[view.state];
+    ? wording.stylesChanged
+    : wording.label(stateLabels[view.state]);
   const pane = (side: ComparisonSide): PaneDocument | undefined => {
     const address = documents[side];
     const document = address ? presentations.get(address) : undefined;
@@ -103,7 +103,7 @@ function ComparisonSection({
       data-diff-viewport={viewport}
     >
       <h3>
-        {viewport === "mobile" ? "Mobile" : "Desktop"} · {wording.label(label)}
+        {viewport === "mobile" ? "Mobile" : "Desktop"} · {label}
         {presentation.requestedColorScheme !== view.colorScheme
           ? " · Light only"
           : ""}
