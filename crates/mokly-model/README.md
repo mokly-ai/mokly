@@ -70,7 +70,8 @@ index, and pending details from a validated model and the graph's input keys.
 `projection_usage` derives complete workspace consumers from ready usage. It
 omits workspace lists while their inputs are pending or unavailable.
 `namespace` owns the fixed deployed directory names and their generated
-TypeScript constants.
+TypeScript constants. `shell::html` supplies the same data-free shell stub to
+Serve and the static writer.
 
 `material` owns the shared props, instance, and slot digest preimages.
 `routes` owns Rust artifact routes and portable relative URL operations.

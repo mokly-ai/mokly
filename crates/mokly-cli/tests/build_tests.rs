@@ -48,15 +48,17 @@ fn plain_and_rich_builds_report_only_the_work_performed() {
             String::from_utf8_lossy(&output.stderr)
         );
         assert!(output.stderr.is_empty());
-        assert_eq!(
-            String::from_utf8(output.stdout).unwrap(),
-            if mode == "plain" {
-                ""
-            } else {
-                "  ✔ Catalogue ready · 1 screen · 1 document\n"
-            }
+        let text = String::from_utf8(output.stdout).unwrap();
+        assert!(text.contains("Built Mokly to mokly-static"));
+        assert!(text.contains("Deploy this directory at your site's root"));
+        assert_eq!(text.contains("Rendering catalogue"), mode == "rich");
+        assert!(directory.path().join("mokly-static/index.html").is_file());
+        assert!(
+            directory
+                .path()
+                .join("mokly-static/mokly-viewer/index.json")
+                .is_file()
         );
-        assert!(!directory.path().join("mokly-static").exists());
     }
 }
 
@@ -71,13 +73,29 @@ fn warnings_print_once_and_strict_fails_before_any_write() {
     );
     write(directory.path(), "existing/sentinel.txt", "keep");
     let warning = "[mokly/warning] entry \"home\": prop \"label\" is not read by the body\n";
-    let output = run(directory.path(), &["build", "--out", "existing"], "plain");
-    assert_eq!(output.status.code(), Some(0));
-    assert!(output.stdout.is_empty());
-    assert_eq!(String::from_utf8(output.stderr).unwrap(), warning);
     let output = run(
         directory.path(),
-        &["build", "--strict", "--out", "existing"],
+        &["build", "--no-changes", "--out", ".context/site"],
+        "plain",
+    );
+    assert_eq!(output.status.code(), Some(0));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("Built Mokly to .context/site"));
+    assert_eq!(String::from_utf8(output.stderr).unwrap(), warning);
+    let marker = fs::read(
+        directory
+            .path()
+            .join(".context/site/.mokly-export-artifact"),
+    )
+    .unwrap();
+    let output = run(
+        directory.path(),
+        &[
+            "build",
+            "--no-changes",
+            "--strict",
+            "--out",
+            ".context/site",
+        ],
         "plain",
     );
     assert_eq!(output.status.code(), Some(1));
@@ -85,6 +103,15 @@ fn warnings_print_once_and_strict_fails_before_any_write() {
     assert_eq!(
         String::from_utf8(output.stderr).unwrap(),
         format!("{warning}[mokly/build-invalid] 1 build warning with --strict\n")
+    );
+    assert_eq!(
+        fs::read(
+            directory
+                .path()
+                .join(".context/site/.mokly-export-artifact")
+        )
+        .unwrap(),
+        marker
     );
     assert_eq!(
         fs::read_to_string(directory.path().join("existing/sentinel.txt")).unwrap(),
@@ -104,7 +131,11 @@ fn config_search_and_explicit_paths_do_not_depend_on_the_package_directory() {
     write(directory.path(), "mokly.config.json", "{}");
     write(directory.path(), "specs/guide.md", "# Guide");
     fs::create_dir_all(directory.path().join("nested/deep")).unwrap();
-    let output = run(&directory.path().join("nested/deep"), &["build"], "plain");
+    let output = run(
+        &directory.path().join("nested/deep"),
+        &["build", "--no-changes"],
+        "plain",
+    );
     assert_eq!(
         output.status.code(),
         Some(0),
@@ -118,7 +149,7 @@ fn config_search_and_explicit_paths_do_not_depend_on_the_package_directory() {
     .unwrap();
     let output = run(
         &directory.path().join("nested/deep"),
-        &["build", "--config", "../../catalogue.json"],
+        &["build", "--no-changes", "--config", "../../catalogue.json"],
         "plain",
     );
     assert_eq!(
@@ -138,7 +169,7 @@ fn html_errors_report_the_exact_one_based_source_location() {
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<main><ui-missing></ui-missing></main>\n",
     );
-    let output = run(directory.path(), &["build"], "plain");
+    let output = run(directory.path(), &["build", "--no-changes"], "plain");
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
     assert_eq!(

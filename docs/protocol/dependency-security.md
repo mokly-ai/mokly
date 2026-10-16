@@ -165,6 +165,13 @@ uses it.
 
 The current maintenance choices are:
 
+- `wrangler` 4.151.0 is an exact development pin for preview deployment and
+  the Cloudflare local static-host checks. It resolves prerelease Miniflare
+  `5.20261012.0-beta` and adds 29 development packages, including workerd and
+  sharp/libvips. The lockfile has no Miniflare override. Update the pin in a
+  reviewed tooling change after static URL, header, preview cleanup, and live
+  dependency-audit checks pass. Remove it if previews no longer use Cloudflare.
+
 - `release-please` 17.6.0 is an exact development pin. Release tests exercise
   its real manifest parser, changelog writer, workspace plugin, and version
   updaters. Update the pin with the workflow action and schema in a reviewed

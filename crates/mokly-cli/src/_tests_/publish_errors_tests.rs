@@ -1,6 +1,7 @@
 //! Publication copy, path escaping and recovery hints.
 
-use mokly_publish::error::{DirectoryFailure, Error};
+use crate::publication::error::{self, DirectoryFailure};
+use mokly_publish::error::Error;
 
 use crate::output::{Mode, Style};
 use crate::publish_errors::{render, uncommitted};
@@ -94,9 +95,9 @@ fn checkout_paths_are_sorted_bounded_escaped_and_have_literal_ignore_rules() {
 #[error("Static build recovery needs /backup/secret/a==")]
 struct RecoveryFailure;
 
-impl mokly_publish::build_failure::BuildFailure for RecoveryFailure {
-    fn category(&self) -> mokly_publish::build_failure::Category {
-        mokly_publish::build_failure::Category::ExportInvalid
+impl crate::publication::failure::BuildFailure for RecoveryFailure {
+    fn category(&self) -> crate::publication::failure::Category {
+        crate::publication::failure::Category::ExportInvalid
     }
     fn detail(&self) -> String {
         self.to_string()
@@ -105,7 +106,7 @@ impl mokly_publish::build_failure::BuildFailure for RecoveryFailure {
 
 #[test]
 fn build_recovery_errors_keep_their_category_and_redacted_recovery_path() {
-    let error = Error::Build {
+    let error = error::Error::Build {
         failure: Box::new(RecoveryFailure),
     };
     let style = Style {
@@ -116,14 +117,14 @@ fn build_recovery_errors_keep_their_category_and_redacted_recovery_path() {
     };
     let redactor = Redactor::collect(&[], Some("secret/a=="));
     assert_eq!(
-        render(&error, &style, &redactor),
+        crate::publish_errors::command(&error, &style, &redactor),
         "[mokly/export-invalid] Static build recovery needs /backup/[redacted]\n"
     );
 }
 
 #[test]
 fn rich_directory_errors_show_the_root_and_windows_recovery_once() {
-    let error = Error::Directory {
+    let error = error::Error::Directory {
         temporary_root: "missing-root".into(),
         reason: DirectoryFailure::Unavailable {
             source: std::io::Error::from(std::io::ErrorKind::NotFound),
@@ -135,7 +136,7 @@ fn rich_directory_errors_show_the_root_and_windows_recovery_once() {
         ascii: false,
         columns: 200,
     };
-    let rendered = render(&error, &style, &Redactor::collect(&[], None));
+    let rendered = crate::publish_errors::command(&error, &style, &Redactor::collect(&[], None));
     for sentence in [
         "The publish build directory could not be prepared.",
         "Temporary root: missing-root.",

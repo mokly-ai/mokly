@@ -32,7 +32,7 @@ to add a file to the inventory.
 
 Write every rendered HTML document, bundled stylesheet, and opaque asset
 beneath `static/mokly-generated/` from the render cache's bytes. Copy only the
-authored `assetClosure` beneath `static/`, keeping its catalogue-relative
+authored `assetClosure` beneath `static/`, keeping its repository-relative
 paths. No stale output and no unreferenced authored file participates.
 Imported CSS and PostCSS sources stay private; scoped npm asset URLs are
 validated against the same inventory. Keep relative resource and document

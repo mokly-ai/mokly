@@ -22,6 +22,9 @@ type Step = {
 };
 
 async function actionFixture(context: test.TestContext) {
+  await fs.promises.mkdir(path.join(repositoryRoot, ".context"), {
+    recursive: true,
+  });
   const root = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/action-"),
   );
@@ -41,8 +44,8 @@ fs.writeFileSync(process.env.CALLS, JSON.stringify({ args, token: process.env.MO
 const cli = path.join(root, 'node_modules/@mokly/mokly'); fs.mkdirSync(cli, { recursive: true });
 fs.writeFileSync(path.join(cli, 'package.json'), JSON.stringify({name: '@mokly/mokly', version: process.env.MOKLY_VERSION, dependencies: process.env.LEGACY_CLI ? {} : {'@mokly/viewer': '0.1.0'}}));
 const viewer = path.join(root, 'node_modules/@mokly/viewer'); fs.mkdirSync(path.join(viewer, 'dist'), { recursive: true });
-fs.writeFileSync(path.join(viewer, 'package.json'), JSON.stringify({name: '@mokly/viewer', version: process.env.VIEWER_VERSION || '0.1.0', exports: {'.': {import: './dist/index.js'}}}));
-fs.writeFileSync(path.join(viewer, 'dist/index.js'), '');
+fs.writeFileSync(path.join(viewer, 'package.json'), JSON.stringify({name: '@mokly/viewer', version: process.env.VIEWER_VERSION || '0.1.0', exports: {'./browser': './dist/browser.js'}}));
+fs.writeFileSync(path.join(viewer, 'dist/browser.js'), '');
 const bin = path.join(root, 'node_modules/.bin'); fs.mkdirSync(bin, { recursive: true });
 fs.writeFileSync(path.join(bin, 'mokly'), '#!${process.execPath}\\n' +
   'require("node:fs").writeFileSync(process.env.CLI_CALLS, JSON.stringify({ args: process.argv.slice(2), token: process.env.MOKLY_TOKEN, endpoint: process.env.MOKLY_ENDPOINT }));\\n', { mode: 0o755 });
@@ -91,7 +94,7 @@ test("composite action installs an exact package separately and forwards hostile
   assert.equal(installed.token, "");
   const output = await fs.promises.readFile(fixture.env.GITHUB_OUTPUT, "utf8");
   const bin = output.trim().slice("mokly_bin=".length);
-  const config = `config space/$(touch ${fixture.root}/injected).ts`;
+  const config = `config space/$(touch ${fixture.root}/injected).json`;
   const base = "branch; echo unexpected";
   await execute("bash", ["-e", "-o", "pipefail", "-c", publish.run], {
     env: {

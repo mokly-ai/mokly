@@ -50,8 +50,14 @@ Build and Serve share the same runtime composition. Each command owns one
 pool and cache across catalogue preparation, document rendering, and live
 prop previews. Serve checks the render token and installed revision before
 passing validated props to the graph. Control bounds also apply in the core.
-Build installs interrupt and termination handling before command work. Both
-the signal path and normal exit drain the pool through one shutdown guard.
+Build and publish install signal handling before command work. The native signal
+flag records delivered signals before the listener task runs. The shared
+pre-installation boundary drains and checks it after configuration, Git, render,
+and stage work. Output reservation precedes Git and sidecar preparation.
+Viewer modules are validated before consumer rendering; invalid package scripts
+retain their path and parser position in a viewer-package failure. Both
+the signal path and normal exit drain the idempotent pool with separate
+shutdown guards.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
 count as one interruption. A later signal kills owned sidecars and exits
@@ -74,10 +80,15 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
 width bounds that preserve ANSI sequences. Command subsystems share the Rust
-core. The binary owns catalogue work and file writes. `build` renders HTML and React
+core. The binary owns catalogue work and file writes. Build and publish support
+`--debug-timings` with the same structured trace as Serve. `MOKLY_DIAGNOSTIC=1`
+adds the redacted cause chain and any supplied sidecar JavaScript stack. `build` renders HTML and React
 screens, components, stories, pages, and Markdown
 documents into the bounded process cache. It reports all render warnings
-before strict-mode failure. Static output belongs to `mokly-static`.
+before strict-mode failure. `mokly-static` writes the shell, canonical index and details, documents,
+referenced resources, and matching viewer bundle. Relative `--out` paths resolve
+beside the configuration. Output replacement uses exclusive moves and retains
+recovery paths on cleanup failure.
 Catalogue counts include variants. Shared-body warnings name
 the parent once. Identity diagnostics keep their location continuation
 lines in both plain and rich output. A diagnostic omits its inner code tag
@@ -90,12 +101,13 @@ the CLI-owned `StaticOutput` adapter. It passes the invocation directory for
 configuration discovery. It reports a child output path inside a private
 external directory before the build starts. That parent also confines the
 output reservation. `mokly-publish` owns the exchange and cached preparation;
-`mokly-model` owns output formats and the marker writer. The static output adapter reports a single `build-invalid` line
-when its implementation is unavailable. Checkout failures list at most 20
+`mokly-model` owns output formats and the marker writer. The static adapter calls the same safe output transaction as `build`. It returns
+the installed bytes directly to one cached upload preparation. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
 output stays in the private directory after an upload failure. The warning
 policy waits for a user decision. The isolated `warnings_are_fatal` function
-makes publish warnings fatal with either value of `--strict`.
+makes publish warnings fatal with either value of `--strict`. The command prints
+`with --strict` only when the user supplied that option.
 
 ## Quick Start
 

@@ -1,5 +1,5 @@
 name: Publish Mokly catalogue
-description: Export and upload a catalogue using a pinned public Mokly npm release
+description: Build and upload a catalogue using a pinned public Mokly npm release
 inputs:
   version:
     description: Exact released CLI version (installs its exact @mokly/viewer dependency)
