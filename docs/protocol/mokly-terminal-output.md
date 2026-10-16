@@ -118,9 +118,8 @@ Unavailable Changes says `! Changes unavailable` with its reason and keeps All b
 Base diagnostics follow [base preparation](./mokly-base-preparation.md#shared-render-runtime).
 Serve reports each state's
 [build warnings](./mokly-build-warnings.md) immediately before
-`Catalogue ready`; on-demand renders never repeat them, and the
-`base-dependencies` warning of the
-[comparison contract](./mokly-comparison.md#sides) prints before
+`Catalogue ready`; on-demand renders never repeat them, and the `base-dependencies`
+warning of the [comparison contract](./mokly-comparison.md#sides) prints before
 `Changes ready`. `Changes ready` reports the
 [Changes count](./mokly-catalogue-changes.md#changes-count) as `<n> changes`,
 then nonzero `<n> moved` and `<n> ignored-only` counts. Ignored-only counts
@@ -147,6 +146,15 @@ paths become `+<n> more`. The action words are `rebuilt`, `reloaded`,
 `config reloaded`, and `comparing again`. A coalesced burst keeps every
 observed candidate path even when its strongest action subsumes the others.
 
+A manual action uses `manual rebuild` as its path label.
+Event loss prints `Watch notifications were lost. Rescanning catalogue inputs.`
+Rich mode prefixes `!`; plain mode prefixes `[mokly/warning]`.
+A changed `repoRoot` prints this diagnostic before module evaluation:
+
+```text
+[mokly/build-invalid] repoRoot changed. Restart Serve to apply this setting.
+```
+
 A failed watched action keeps the last-good catalogue and renders:
 
 ```text
@@ -155,22 +163,14 @@ A failed watched action keeps the last-good catalogue and renders:
             The last good catalogue is still being served.
 ```
 
+Plain watched failures retain the [plain error form](./mokly-terminal-errors.md#plain-compatibility).
 The sidecar's standard error is routed through the reporter as diagnostic
 lines, so consumer output cannot corrupt a spinner.
 
 ## Cache Directory
 
-The first time a command opens the base-side extraction cache or the
-dependency install cache of the
-[runtime contract](./mokly-runtime.md#render-graph-and-cache), it writes one
-line that names the directory. Rich mode prints it dimmed before the next
-durable line; plain mode prints the exact string of the compatibility
-contract on stdout. The line appears once per process and names the directory
-so a reader can delete it, which is always safe.
-
-```text
-  cache ~/.cache/mokly/3f9c1a…
-```
+The [cache directory line](./mokly-terminal-cache.md#cache-directory) names the
+first cache opened by the process in both output modes.
 
 ## One-Shot Commands
 

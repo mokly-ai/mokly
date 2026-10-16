@@ -22,6 +22,7 @@ use crate::diagnostics;
 use crate::error::{RenderError, Result, convert};
 
 pub(crate) struct Fragments {
+    pub(crate) _lease: Option<std::sync::Arc<dyn mokly_catalogue::render_sources::GenerationLease>>,
     pub(crate) pool: Arc<dyn SidecarPool>,
     pub(crate) generation: String,
 }

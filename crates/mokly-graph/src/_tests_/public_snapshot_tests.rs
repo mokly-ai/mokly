@@ -38,7 +38,7 @@ fn private_sources_are_pinned_but_public_resource_reads_are_not_retained() {
 }
 
 #[test]
-fn planning_reuses_public_digests_without_pinning_resource_bytes() {
+fn planning_reuses_digests_without_pinning_resource_bytes() {
     let tree = SourceSnapshot::new(Arc::new(Unimock::new((
         SourceTreeMock::prefetch
             .next_call(matching!((paths) if paths.len() == 2))
@@ -52,7 +52,7 @@ fn planning_reuses_public_digests_without_pinning_resource_bytes() {
                     kind: FileKind::File,
                 }))
             }),
-        SourceTreeMock::public_digest
+        SourceTreeMock::digest
             .next_call(matching!((path) if path.ends_with("movie.mp4")))
             .returns(Ok("movie-digest".into())),
         SourceTreeMock::read_public

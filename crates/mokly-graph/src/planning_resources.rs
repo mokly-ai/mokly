@@ -12,7 +12,7 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 use crate::error::Result;
 use crate::urls::local_target;
 use crate::workers::{RenderWorkers, check_cancelled};
-use crate::{planning, resource_edges, resource_keys};
+use crate::{planning, resource_digests, resource_edges, resource_keys};
 
 #[derive(Default)]
 pub(crate) struct Resources {
@@ -56,14 +56,14 @@ impl Resources {
             let _ = tree.prefetch(&absolute);
             for (path, absolute) in paths.into_iter().zip(absolute) {
                 check_cancelled(workers)?;
-                if !matches!(tree.project(&absolute), Ok(Some(node)) if node.kind == FileKind::File && node.identity.starts_with(&config.repo_root))
-                {
-                    continue;
-                }
                 let (hash, edges) = if path.ends_with(".css")
                     || path.ends_with(".html")
                     || path.ends_with(".htm")
                 {
+                    if !matches!(tree.project(&absolute), Ok(Some(node)) if node.kind == FileKind::File && node.identity.starts_with(&config.repo_root))
+                    {
+                        continue;
+                    }
                     let Ok(bytes) = tree.read_public(&absolute) else {
                         continue;
                     };
@@ -72,7 +72,8 @@ impl Resources {
                         resource_edges::urls(&path, &bytes).unwrap_or_default(),
                     )
                 } else {
-                    let Ok(hash) = tree.public_digest(&absolute) else {
+                    let Some(hash) = resource_digests::confined(tree, &config.repo_root, &path)
+                    else {
                         continue;
                     };
                     (hash, Vec::new())

@@ -20,7 +20,9 @@ so an entry replaced by a symlink is dropped while an explicit root alias
 remains valid. `children` returns lexical child kinds. `read` returns
 owned bytes. `read_shared` returns immutable `Arc<[u8]>` storage, with a default
 adapter over `read`. A caching implementation shares that storage on hits.
-Both methods read bytes from an inventoried regular file and reject a replacement symlink.
+`digest` returns a SHA-256 hash through the same boundary. Snapshot adapters
+can retain only that hash for dependency, resource, and watch stamps.
+The byte-reading methods read bytes from an inventoried regular file and reject a replacement symlink.
 Callers project an explicit alias and read its target identity. Paths are private source-tree paths; public catalogue JSON uses
 repository-relative metadata instead.
 
@@ -38,8 +40,9 @@ and bounded blob batches for these operations. It never follows link blobs.
 `prefetch` accepts an exact confined read set for batched adapters. Its default
 is a no-op. `read_public` bypasses private source-snapshot retention; the caller
 must first apply the same public-path policy as resource delivery.
-`public_digest` returns a SHA-256 digest without private snapshot retention.
-Working and Git adapters stream oversized inputs with bounded memory.
+Working and Git adapters implement `digest` with bounded streaming reads.
+Snapshot and static admission wrappers retain the resulting hash without the
+resource bytes. Every digest-only read uses this same method.
 
 ## Quick Start
 

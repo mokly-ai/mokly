@@ -46,6 +46,8 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                 Ok(match &request.call {
                     Call::Bundle(_) => MethodResult::Bundle(results::Bundle {
                         unmapped_dependency_directories: None,
+                        epoch: 0,
+                        compiled: None,
                         generation: "g".into(),
                         modules: Vec::new(),
                         warnings: Vec::new(),
@@ -78,6 +80,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
 
 fn bundle() -> Bundle {
     Bundle {
+        evaluation: None,
         entry_files: vec!["entry".into()],
         renderer: None,
         stories_files: Vec::new(),
@@ -143,6 +146,8 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         }
         state.available.push_back(0);
         state.bundles.insert("g".into(), bundle());
+        state.epochs.insert("g".into(), 0);
+        state.leases.insert("g".into(), BTreeSet::from([0]));
         state.maps.insert("g".into(), maps("old-control"));
         state.bindings.insert("g".into(), bindings("old/card"));
     }
@@ -161,7 +166,7 @@ fn render(pool: &Pool) {
 }
 
 #[test]
-fn a_busy_second_process_reloads_maps_after_dispose_and_rebundle() {
+fn a_busy_second_process_reloads_maps_after_release_and_rebundle() {
     let sequence = [
         "dispose",
         "bundle",
@@ -170,11 +175,9 @@ fn a_busy_second_process_reloads_maps_after_dispose_and_rebundle() {
         "bindings:new/card",
         "render",
     ];
-    let pool = pair(worker(&sequence, 6), worker(&sequence, 1));
-    pool.request(Call::Dispose(Generation {
-        generation: "g".into(),
-    }))
-    .unwrap();
+    let pool = pair(worker(&sequence, 5), worker(&sequence, 1));
+    pool.release_generation("g", 0);
+    pool.synchronize_releases();
     pool.request(Call::Bundle(bundle())).unwrap();
     pool.request(Call::CssModules(maps("new-control"))).unwrap();
     pool.request(Call::Describe(Generation {

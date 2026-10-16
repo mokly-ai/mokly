@@ -48,6 +48,8 @@ pub trait ClosureBuilder: Send + Sync {
 
 /// Reuses one generation's public policy for every target.
 pub struct Walker {
+    /// Optional lexical dependency recorder, invoked before public validation.
+    pub observer: Option<Arc<dyn ClosureObserver>>,
     /// Authored bytes from a working or Git tree.
     pub tree: Arc<dyn SourceTree>,
     /// Cached eligibility decisions for this generation.
@@ -98,6 +100,12 @@ impl ClosureBuilder for Walker {
             let Some(target) = target else {
                 continue;
             };
+            if !target.starts_with(&namespace::generated(""))
+                && let Some(path) = target.strip_prefix("static/")
+                && let Some(observer) = &self.observer
+            {
+                observer.observe(route, path);
+            }
             if let Some(generated) = target.strip_prefix(&namespace::generated(""))
                 && self.generated.is_document(generated)
             {
@@ -188,11 +196,11 @@ impl ClosureBuilder for Walker {
                         && !target.ends_with(".html")
                         && !target.ends_with(".htm")
                     {
-                        if self.tree.public_digest(&file.absolute).is_err() {
+                        if self.tree.digest(&file.absolute).is_err() {
                             return Err(missing(route, &reference.url));
                         }
-                        self.index.parse(&target, &[])?;
-                        edges.insert(target.clone(), Vec::new());
+                        let urls = self.index.parse(&target, &[])?;
+                        edges.insert(target.clone(), urls);
                         continue;
                     }
                     match self.tree.read_public(&file.absolute) {
@@ -231,4 +239,10 @@ fn missing(route: &str, reference: &str) -> error::GraphError {
         route,
         format!("document links and resources are invalid:\n- {route}: missing target {reference}"),
     )
+}
+
+/// A document-scoped record of lexical resources reached during closure validation.
+pub trait ClosureObserver: Send + Sync {
+    /// Record before validation so missing and dangling targets can be repaired.
+    fn observe(&self, route: &str, path: &str);
 }

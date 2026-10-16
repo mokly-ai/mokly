@@ -50,6 +50,7 @@ fn seed(pool: &Pool, worker: Unimock) {
     state.bundles.insert(
         "g".into(),
         Bundle {
+            evaluation: None,
             entry_files: Vec::new(),
             renderer: None,
             stories_files: Vec::new(),

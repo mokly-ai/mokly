@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use crate::error::Result;
+use crate::operations::Operation;
 use crate::pool_options::Launch;
 use crate::wire::{MethodResult, Request};
 
@@ -11,6 +12,14 @@ use crate::wire::{MethodResult, Request};
 pub trait Diagnostics: Send + Sync {
     /// Forward diagnostic text to the caller's terminal reporter.
     fn emit(&self, message: &str);
+    /// Count actual worker operations without printing product diagnostics.
+    fn operation(&self, operation: Operation, pid: u32) {
+        tracing::info!(
+            operation = operation.label(),
+            worker = pid,
+            "sidecar operation"
+        );
+    }
 }
 
 /// Exclusive ordered request exchange with one sidecar process.

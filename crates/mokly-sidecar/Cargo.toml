@@ -24,6 +24,9 @@ tempfile = "3.27.0"
 [features]
 mock = ["dep:unimock"]
 
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2.190"
+
 
 [dependencies.mokly-model]
 workspace = true

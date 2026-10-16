@@ -7,9 +7,11 @@ use mokly_sidecar::methods::{Call, ModuleResolution};
 use mokly_sidecar::pool::PoolMock;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::leases::ContextLease;
 use crate::postcss::PostCss;
 use crate::postcss_cache::CssCache;
 use crate::side::SideInputs;
+use std::sync::atomic::AtomicBool;
 
 #[test]
 fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
@@ -17,7 +19,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
         "styles/input.css",
         "node_modules/.mokly-roots/1/theme/input.css",
     ] {
-        let pool = Arc::new(Unimock::new(
+        let pool = Arc::new(Unimock::new((
             PoolMock::request
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, call| {
@@ -29,9 +31,18 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                         deadline_ms: 60_000,
                     })
                 })),
-        ));
+            PoolMock::release_context
+                .next_call(matching!("base"))
+                .returns(()),
+        )));
         let postcss = PostCss {
             usage: Arc::new(Unimock::new(())),
+            lease: Arc::new(ContextLease {
+                id: "base".into(),
+                pool: pool.clone(),
+                released: CssCache::default().releases,
+                used: AtomicBool::new(false),
+            }),
             pool,
             tree: Arc::new(Unimock::new(())),
             inventory_tree: Arc::new(Unimock::new(())),

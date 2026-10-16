@@ -18,7 +18,7 @@ fn public_reads_digests_and_prefetch_reach_the_injected_tree() {
         SourceTreeMock::read_public
             .next_call(matching!(_))
             .returns(Ok(b"public".to_vec())),
-        SourceTreeMock::public_digest
+        SourceTreeMock::digest
             .next_call(matching!(_))
             .returns(Ok("streamed digest".into())),
     ));
@@ -32,7 +32,7 @@ fn public_reads_digests_and_prefetch_reach_the_injected_tree() {
         b"public"
     );
     assert_eq!(
-        tree.public_digest(Path::new("/repo/large.bin")).unwrap(),
+        tree.digest(Path::new("/repo/large.bin")).unwrap(),
         "streamed digest"
     );
 }

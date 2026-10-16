@@ -45,6 +45,7 @@ impl WorkerControl for ProcessControl {
         };
         if !self.clock.exited(&receiver, deadline) {
             self.kill()?;
+            self.clock.reaped(&receiver);
         }
         Ok(())
     }

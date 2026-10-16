@@ -74,6 +74,7 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         );
     }
     Arc::new(Snapshot {
+        document_keys: BTreeMap::new(),
         generation: Arc::new(Generation {
             views: routes
                 .iter()

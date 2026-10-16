@@ -57,24 +57,52 @@ for (const layout of [
         : [head];
     const sidecar = startSidecar(context);
     await sidecar.call("hello");
-    const result = await sidecar.call<BundleResult>(
-      "bundle",
-      bundleParams({
-        sourceRoot: head,
-        storiesFiles: [],
-        renderer: null,
-        configurationDirectory:
-          layout === "outside-configuration" ? "apps/web" : ".",
-        entryFiles: ["packages/ui/src/entry.ts"],
-        moduleResolution: settings,
-      }),
-    );
+    const params = bundleParams({
+      sourceRoot: head,
+      storiesFiles: [],
+      renderer: null,
+      configurationDirectory:
+        layout === "outside-configuration" ? "apps/web" : ".",
+      entryFiles: ["packages/ui/src/entry.ts"],
+      moduleResolution: settings,
+    });
+    const result = await sidecar.call<BundleResult>("bundle", params);
     assert.deepEqual(result.unmappedDependencyDirectories, [
       layout === "outside-configuration"
         ? "node_modules"
         : "packages/ui/node_modules",
     ]);
+    const cached = await sidecar.call<BundleResult>("bundle", params);
+    assert.deepEqual(
+      cached.unmappedDependencyDirectories,
+      result.unmappedDependencyDirectories,
+    );
+    assert.ok(result.compiled);
+    assert.equal(
+      sidecar.operations.filter((event) => event.operation === "esbuild")
+        .length,
+      1,
+    );
     await sidecar.call("shutdown");
+    const restored = startSidecar(context);
+    await restored.call("hello");
+    await restored.call("restoreGeneration", {
+      generation: result.generation,
+      params,
+      compiled: result.compiled,
+      modules: result.modules,
+    });
+    const replay = await restored.call<BundleResult>("bundle", params);
+    assert.deepEqual(
+      replay.unmappedDependencyDirectories,
+      result.unmappedDependencyDirectories,
+    );
+    assert.equal(
+      restored.operations.filter((event) => event.operation === "esbuild")
+        .length,
+      0,
+    );
+    await restored.call("shutdown");
   });
 }
 

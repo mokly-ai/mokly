@@ -140,8 +140,8 @@ impl SourceTree for InjectedTree {
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.inner.read_public(path)
     }
-    fn public_digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
-        self.inner.public_digest(path)
+    fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+        self.inner.digest(path)
     }
 
     fn project(&self, path: &Path) -> mokly_source_interface::error::Result<Option<Node>> {

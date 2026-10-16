@@ -5,6 +5,10 @@ import type { ModuleResolution } from "./ModuleResolution.js";
 // prettier-ignore
 export type BundleParams = {
 /**
+ * Core input digest that isolates resolved bindings and CSS Modules lifetimes.
+ */
+evaluation?: string,
+/**
  * Entry module files.
  */
 entryFiles: Array<string>,

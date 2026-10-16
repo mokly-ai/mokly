@@ -18,7 +18,8 @@ JavaScript or mixed catalogue. HTML composition stays in `mokly-html`.
 
 `Runtime` implements `DefinitionProvider` and `GraphFactory`. The CLI injects
 its source readers, sidecar pool, worker scheduler, and byte-bounded render
-cache. Construction starts no sidecar. An HTML-only catalogue with no renderer has
+cache. Construction starts no sidecar. Description is serialized across clones of one
+runtime. Each attempt has fresh source and dependency snapshots. An HTML-only catalogue with no renderer has
 no bundle, class-map exchange, description, or render request. A configured
 renderer is bundled and inventoried even without JavaScript entries. Consumer PostCSS can run
 without a JavaScript bundle.
@@ -45,6 +46,23 @@ adapter-output placement keeps renderer wrappers outside a component's root.
 The graph's `render_props` method serves temporary previews through this path.
 It validates complete props and control bounds before rendering and leaves saved
 documents intact. Returned instance props pass the Rust schema validator.
+Serve supplies one source snapshot to catalogue parsing and graph preparation.
+Bundle reuse compares the actual module digests that the sidecar reports.
+HTML edits reuse bundle definitions. CSS text changes reuse JavaScript when
+class maps remain equal. A changed map uses a separate evaluated lifetime.
+Graph leases retain old maps, bindings, and PostCSS contexts until the final
+request releases them. Final drops enqueue epoch-specific pool release and
+cache cleanup without waiting for worker requests or the PostCSS cache lock.
+Failed candidates release their own contexts. Bundle metadata stamps include
+resolved React manifests, ancestor package and tsconfig candidates, absent
+Storybook previews, and file membership in consumed-module directories.
+The pool restores compatible code before evaluation-only bundles across slots
+and recycling. Metadata invalidation still recomputes class maps before reusing
+an equivalent generation.
+Stylesheet reuse checks source digests, plugin dependency digests, and
+directory-glob membership. Empty directory recipes observe later additions.
+Shared and generation-local stylesheet result caches each have a 64 MiB bound.
+Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet resources rebuild from that generation's captured bytes.
 
@@ -54,7 +72,8 @@ and all repository mappings. Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS
 package loads for base fallback checks. It also keeps unmapped importer
-directories, including package-manager links into a root store. Selected
+directories, including package-manager links into a root store. Compiled recipes
+retain that usage across worker restoration and evaluation reuse. Selected
 logical roots take precedence over source-root names in nested CSS exclusion
 checks.
 Both sides use the current package version and

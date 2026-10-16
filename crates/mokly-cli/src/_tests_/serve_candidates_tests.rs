@@ -1,4 +1,4 @@
-//! Shutdown waits for candidate work before it delegates render cleanup.
+//! Shutdown interrupts provider work before it waits for the active candidate.
 
 use std::future::Future;
 use std::sync::Arc;
@@ -10,7 +10,7 @@ use unimock::{MockFn, Unimock, matching};
 use super::{CandidateWork, ManualCandidates};
 
 #[tokio::test]
-async fn shutdown_stops_admission_and_drains_the_candidate_first() {
+async fn shutdown_stops_admission_cancels_work_and_drains_the_candidate() {
     let hooks = Unimock::new((
         LifecycleMock::stop_watcher
             .next_call(matching!())

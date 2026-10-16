@@ -3,10 +3,12 @@ import { build } from "esbuild";
 import { isEntryPath } from "@mokly/viewer/data";
 
 import { definitionData } from "../authoring/runtime.js";
+import type { Operation } from "../generated/sidecar/Operation.js";
 import type { Request } from "../generated/sidecar/Request.js";
 
 import { bundle } from "./bundle.js";
 import type { Generation } from "./bundle.js";
+import { bundleResult, restore, reuse } from "./compiled.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
 import { finishMarkup } from "./markup.js";
@@ -24,8 +26,9 @@ export class Session {
     private readonly version: string,
     diagnostic: (message: string) => void,
     private readonly compile: typeof build = build,
+    private readonly operation: (operation: Operation) => void = () => {},
   ) {
-    this.workers = new PostcssWorkers(diagnostic);
+    this.workers = new PostcssWorkers(diagnostic, operation);
   }
 
   async call(request: Request): Promise<unknown> {
@@ -58,14 +61,24 @@ export class Session {
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const { generation, result } = await bundle(
-          request.params,
-          this.compile,
-        );
-        if (!this.generations.has(generation.id)) {
-          this.generations.set(generation.id, generation);
-        }
+        const previous = await reuse(this.generations.values(), request.params);
+        const { generation, result } = previous
+          ? { generation: previous, result: bundleResult(previous) }
+          : await bundle(request.params, (options) => {
+              this.operation("esbuild");
+              return this.compile(options);
+            });
+        this.generations.set(generation.id, generation);
         return result;
+      }
+      case "restoreGeneration": {
+        const { generation, params, compiled, modules } = request.params;
+        if (!this.generations.has(generation))
+          this.generations.set(
+            generation,
+            restore(params, compiled, modules, generation),
+          );
+        return null;
       }
       case "describe":
         return describe(this.generation(request.params.generation));

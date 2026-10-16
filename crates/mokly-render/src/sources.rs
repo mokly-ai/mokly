@@ -4,11 +4,13 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::dependency_usage::DependencyUsage;
-use crate::side::BaseSide;
+use crate::runtime::Runtime;
+use crate::side::{BaseSide, SideInputs, dependency_roots};
 
 /// Dependency paths retain logical names while source bytes use their own tree.
 pub(crate) struct SideTree {
@@ -35,8 +37,8 @@ impl SourceTree for LeasedTree {
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.tree.read_public(path)
     }
-    fn public_digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
-        self.tree.public_digest(path)
+    fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+        self.tree.digest(path)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         self.tree.project(path)
@@ -93,9 +95,74 @@ impl SideTree {
             .find_map(|root| identity.strip_prefix(root).ok())
             .map(|relative| self.root.join(relative))
     }
+    fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf)> {
+        if let Some((_, physical, _)) = self.mapped(path) {
+            if let Some(node) = self.dependencies.project(&physical)?
+                && let Some(source) = self.source_alias(&node.identity)
+            {
+                return Ok((self.sources.as_ref(), source));
+            }
+            Ok((self.dependencies.as_ref(), physical))
+        } else {
+            Ok((self.sources.as_ref(), path.into()))
+        }
+    }
+
+    fn record(&self, path: &Path) {
+        if path.extension().is_some_and(|extension| extension == "css")
+            && let Ok(relative) = path.strip_prefix(&self.root)
+        {
+            self.usage.record(
+                &self.aliases,
+                &relative.to_string_lossy().replace('\\', "/"),
+            );
+        }
+    }
 }
 
 impl SourceTree for SideTree {
+    fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
+        let mut sources = Vec::new();
+        let mut dependencies = Vec::new();
+        for path in paths {
+            if let Some((_, physical, _)) = self.mapped(path) {
+                if let Some(node) = self.dependencies.project(&physical)?
+                    && let Some(source) = self.source_alias(&node.identity)
+                {
+                    sources.push(source);
+                } else {
+                    dependencies.push(physical);
+                }
+            } else {
+                sources.push(path.clone());
+            }
+        }
+        if !sources.is_empty() {
+            self.sources.prefetch(&sources)?;
+        }
+        if !dependencies.is_empty() {
+            self.dependencies.prefetch(&dependencies)?;
+        }
+        Ok(())
+    }
+    fn digest(&self, path: &Path) -> Result<String> {
+        let (tree, physical) = self.selected(path)?;
+        let hash = tree.digest(&physical)?;
+        self.record(path);
+        Ok(hash)
+    }
+    fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
+        let (tree, physical) = self.selected(path)?;
+        let bytes = tree.read_public(&physical)?;
+        self.record(path);
+        Ok(bytes)
+    }
+    fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
+        let (tree, physical) = self.selected(path)?;
+        let bytes = tree.read_shared(&physical)?;
+        self.record(path);
+        Ok(bytes)
+    }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         if path == self.root.join("node_modules/.mokly-roots") {
             return Ok(Some(Node {
@@ -124,33 +191,30 @@ impl SourceTree for SideTree {
     }
 
     fn children(&self, path: &Path) -> Result<Vec<Child>> {
-        if let Some((_, physical, _)) = self.mapped(path) {
-            self.dependencies.children(&physical)
-        } else {
-            self.sources.children(path)
-        }
+        let (tree, physical) = self.selected(path)?;
+        tree.children(&physical)
     }
-
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
-        let bytes = if let Some((_, physical, _)) = self.mapped(path) {
-            if let Some(node) = self.dependencies.project(&physical)?
-                && let Some(source) = self.source_alias(&node.identity)
-            {
-                self.sources.read(&source)?
-            } else {
-                self.dependencies.read(&physical)?
-            }
-        } else {
-            self.sources.read(path)?
-        };
-        if path.extension().is_some_and(|extension| extension == "css")
-            && let Ok(relative) = path.strip_prefix(&self.root)
-        {
-            self.usage.record(
-                &self.aliases,
-                &relative.to_string_lossy().replace('\\', "/"),
-            );
-        }
+        let (tree, physical) = self.selected(path)?;
+        let bytes = tree.read(&physical)?;
+        self.record(path);
         Ok(bytes)
     }
+}
+
+pub(crate) fn reader(
+    runtime: &Runtime,
+    config: &ResolvedConfig,
+    side: &SideInputs,
+) -> Arc<dyn SourceTree> {
+    Arc::new(SideTree {
+        _base: runtime.base.clone(),
+        usage: runtime.dependency_usage.clone(),
+        aliases: side.dependency_aliases.clone(),
+        sources: runtime.tree.clone(),
+        dependencies: runtime.dependency_tree.clone(),
+        root: config.repo_root.clone(),
+        dependency_roots: dependency_roots(side),
+        repository_roots: side.repository_roots.clone(),
+    })
 }

@@ -47,9 +47,9 @@ impl SourceTree for CancellableTree {
         self.check(path)?;
         self.inner.read_public(path)
     }
-    fn public_digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+    fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.check(path)?;
-        self.inner.public_digest(path)
+        self.inner.digest(path)
     }
     fn project(&self, path: &Path) -> mokly_source_interface::error::Result<Option<Node>> {
         self.check(path)?;

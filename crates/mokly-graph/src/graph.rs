@@ -12,20 +12,21 @@ use mokly_css::types::StylesheetBundler;
 use mokly_html::composition::Composer;
 use mokly_model::canonical::compare_utf16;
 use mokly_model::catalogue::EntryContent;
-use mokly_model::material::digest;
 use mokly_source_interface::tree::SourceTree;
-use serde_json::json;
 
 use crate::cache::{Artifact, RenderCache};
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{GraphError, Result};
-use crate::key::{NodeKind, data_key, key};
+use crate::key::{NodeKind, key};
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
 use crate::session::{Session, SessionInput};
 use crate::types::{RenderGeneration, RenderGraph, ResourcePlan};
 use crate::workers::{RenderWorkers, check_cancelled};
-use crate::{config_key, error, markdown_assets, markdown_sources, planning, styles};
+use crate::{
+    config_key, error, markdown_assets, markdown_sources, planning, styles, stylesheet_keys,
+    watch_rules,
+};
 
 /// Render graph composition root, reused for working-tree and base-side generations.
 pub struct Graph {
@@ -131,24 +132,8 @@ impl Graph {
                 return Err(GraphError::Css { source });
             }
             names.insert(&bundle.route, false)?;
-            let input_keys: Vec<_> = bundle
-                .inputs
-                .iter()
-                .map(|(path, bytes)| format!("{path}:{}", digest(bytes)))
-                .chain(
-                    bundle
-                        .dependency_digests
-                        .iter()
-                        .map(|(path, digest)| format!("{path}:{digest}")),
-                )
-                .collect();
-            let recipe = data_key(
-                NodeKind::Stylesheet,
-                json!({"path":root.path,"stylesheets":root.stylesheets,"excluded":root.excluded,"localCss":root.local_css}),
-            )?;
-            let mut inputs = vec![config_key.0.as_bytes(), recipe.0.as_bytes()];
-            inputs.extend(input_keys.iter().map(|key| key.as_bytes()));
-            let stylesheet_key = key(NodeKind::Stylesheet, &inputs);
+            let stylesheet_key = stylesheet_keys::input(&config_key, &root, &bundle)?;
+            let document_key = stylesheet_keys::output(&bundle);
             self.cache.insert(
                 stylesheet_key.clone(),
                 Arc::new(Artifact {
@@ -162,6 +147,7 @@ impl Graph {
                 bundle.route,
                 ResourcePlan {
                     key: stylesheet_key,
+                    document_key,
                     content_type: "text/css; charset=utf-8".into(),
                     root: root.clone(),
                     asset: None,
@@ -196,6 +182,7 @@ impl Graph {
                 resources.insert(
                     route.clone(),
                     ResourcePlan {
+                        document_key: asset_key.clone(),
                         key: asset_key,
                         content_type: paths::content_type(&route)
                             .unwrap_or("application/octet-stream")
@@ -227,6 +214,16 @@ impl Graph {
             .sources
             .sort_by(|left, right| compare_utf16(left, right));
         catalogue.model.sources.dedup();
+        let (rebuild, reload) =
+            watch_rules::inputs(&config, self.tree.as_ref(), &catalogue.model.sources)?;
+        let config_key = if rebuild.is_empty() {
+            config_key
+        } else {
+            key(
+                NodeKind::Config,
+                &[config_key.0.as_bytes(), rebuild.as_bytes()],
+            )
+        };
         let plans = planning::documents(
             self,
             &config,
@@ -234,6 +231,7 @@ impl Graph {
             &config_key,
             &resources,
             &matchers,
+            &reload,
         )?;
         for plan in plans.values() {
             names.insert(&plan.route, false)?;

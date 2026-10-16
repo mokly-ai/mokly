@@ -1,6 +1,7 @@
 //! A byte-accounted cache shares generation scans and bounded processor results.
 
 use std::collections::BTreeMap;
+use std::sync::mpsc::{self, Receiver, Sender};
 
 use mokly_css::types::ProcessedCss;
 use mokly_sidecar::results::Css;
@@ -14,6 +15,8 @@ pub(crate) struct CssRecord {
 }
 
 pub(crate) struct CssCache {
+    pub(crate) releases: Sender<String>,
+    pub(crate) released: Receiver<String>,
     pub(crate) records: BTreeMap<String, CssRecord>,
     pub(crate) scans: BTreeMap<String, Scan>,
     pub(crate) limit: usize,
@@ -21,7 +24,10 @@ pub(crate) struct CssCache {
 
 impl Default for CssCache {
     fn default() -> Self {
+        let (releases, released) = mpsc::channel();
         Self {
+            releases,
+            released,
             records: BTreeMap::new(),
             scans: BTreeMap::new(),
             limit: 64 * 1024 * 1024,
@@ -30,7 +36,16 @@ impl Default for CssCache {
 }
 
 impl CssCache {
+    pub(crate) fn purge(&mut self) {
+        for id in self.released.try_iter() {
+            self.scans.remove(&id);
+            let prefix = format!("{id}:");
+            self.records.retain(|key, _| !key.starts_with(&prefix));
+        }
+    }
+
     pub(crate) fn trim(&mut self) {
+        self.purge();
         if self.retained_bytes() > self.limit {
             self.records.clear();
             self.scans.clear();
@@ -38,6 +53,7 @@ impl CssCache {
     }
 
     pub(crate) fn insert(&mut self, key: String, record: CssRecord) {
+        self.purge();
         self.records.insert(key.clone(), record.clone());
         if self.retained_bytes() > self.limit {
             self.records.clear();

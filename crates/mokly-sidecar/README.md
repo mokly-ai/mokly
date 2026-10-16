@@ -23,13 +23,23 @@ result against the pending method. Protocol failures close the session.
 Authoring diagnostics retain their codes and leave a healthy session usable.
 
 `Pool` consumes `dyn WorkerFactory` and `dyn Clock`, and implements
-`SidecarPool`. Constructing it starts no process. FIFO leases bound active
+`SidecarPool`. Constructing it starts no process. FIFO order per eligible slot bounds active
 processes to `PoolOptions::size`. The CLI resolves `--sidecars`, `MOKLY_SIDECARS`, and the core count.
 `PoolOptions` takes the parsed `NonZeroUsize` and timeout override.
 
-The pool retains bundle recipes, CSS Modules maps, and resolved handle tables. A process reloads a requested generation on demand and replays its bindings
-after describe. An epoch identifies each loaded lifetime. Disposing and
-re-bundling the same id invalidates every process's old maps and evaluation.
+The pool retains compiled recipes, CSS Modules maps, and resolved handle
+tables. A new process restores old code without compiling changed sources.
+Epoch-specific releases retain newer lifetimes with the same id. Releases
+record state without waiting for a worker. An idle cleanup worker sends
+disposal to each affected slot; busy slots apply it before their next request.
+PostCSS context affinity prevents duplicate workers. A busy affine request
+does not block independent work on another available slot. Returning slots
+recheck pending releases before becoming idle. `cancel_requests` kills and reaps
+busy sidecars before `shutdown` drains idle sidecars.
+Bundle results include the digests of the bytes consumed by each module.
+An optional evaluation digest isolates CSS Modules and resolved configuration
+lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
+identity includes its module edges, loader inputs, and evaluation digest.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback
@@ -43,9 +53,12 @@ symlinks. A fresh worker gets one request before memory recycling. Repeated
 memory pressure doubles the replacement's check delay up to 500 completed
 requests and emits one notice per pressure episode. A sample at or below the
 bound restores normal checks. The 500-render rule always applies. Recycling
-starts after the in-flight result returns.
+starts after the in-flight request completes.
 
 `NodeFactory` inherits the environment and repository working directory. It
+uses a persistent launch thread for Linux parent-death signals. The Node
+watchdog observes parent death and pipe closure outside the render thread.
+PostCSS children use the same protection, including historical contexts. It
 uses `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for
 transport, `dyn Wait` for monotonic deadlines, `dyn MemoryFactory` for a
 per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and

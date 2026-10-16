@@ -97,6 +97,12 @@ pub(crate) fn complete(
     let mut schemas = UsageSchemas::new(&next.index.components);
     for path in dirty {
         if let Some(detail) = next.details.get_mut(&path) {
+            if let Some(previous) = current.details.get(&path)
+                && **detail == **previous
+            {
+                *detail = previous.clone();
+                continue;
+            }
             let detail = Arc::make_mut(detail);
             detail.revision = Some(revision);
             next.files.insert(

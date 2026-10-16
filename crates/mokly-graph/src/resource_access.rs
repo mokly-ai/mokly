@@ -25,7 +25,7 @@ impl Session {
                 ));
             }
         };
-        match self.state.tree.public_digest(&file.absolute) {
+        match self.state.tree.digest(&file.absolute) {
             Ok(hash) => Ok(Some(hash)),
             Err(source) if source.is_vanished() => Ok(None),
             Err(source) => Err(invalid(

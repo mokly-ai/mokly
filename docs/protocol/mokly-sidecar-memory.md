@@ -23,7 +23,7 @@ After a memory recycle, the slot doubles the completed requests before the
 replacement's first memory check: 4, 8, 16, and so on, with a maximum of 500.
 The schedule survives worker replacement. A sample at or below 1 GiB resets
 it to normal per-request checks and clears the pressure notice. The 500-render
-rule applies independently. Each result returns before recycling starts.
+rule applies independently. Each in-flight request completes before recycling starts.
 
 When a replacement's first check remains over the bound, emit one diagnostic
 line for that pressure episode. Further high checks increase the delay without
@@ -37,3 +37,6 @@ The 64:256 operation-count test covers periodic discovery boundaries.
 Canonicalization remains once per process identity. The mocked alias test
 proves identity matching on every platform. The real symlink test requires
 the hosted macOS and Windows jobs to verify their OS executable metadata.
+
+PostCSS children use the parent-pipe watchdog too. A blocked plugin terminates
+when its sidecar dies. This applies to working and historical source contexts.
