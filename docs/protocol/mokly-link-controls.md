@@ -117,7 +117,8 @@ MockLink child control contains <div role="menu">; the role does not belong insi
 A root's own `href` or `data-nav-href` must either be absent or equal the
 complete logical destination the control supplies. Conflicting destinations
 fail. Native button form attributes are removed during adaptation: a catalogue
-link cannot also submit a form. Ordinary unmarked buttons and metadata-only
+link cannot also submit a form. This applies to active and inactive controls.
+Ordinary unmarked buttons and metadata-only
 `data-nav-href` references keep their behaviour.
 
 ## Adaptation

@@ -675,7 +675,7 @@ from Milestone 12.
       static output.
 - [x] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
-- [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
+- [x] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
   - [x] Replace `examples/basic/mokly.config.ts` with `mokly.config.json`
@@ -684,7 +684,7 @@ from Milestone 12.
         HTML components with variants and slots, a page, a use case, a
         folder record, and a Markdown document.
   - [x] Rewrite `examples/basic/README.md` to the end state.
-  - [ ] Add HTML fixtures and run the gap sweep against the rendering
+  - [x] Add HTML fixtures and run the gap sweep against the rendering
         contracts.
   - [x] Render the example's HTML part and check it at both viewports and in
         both schemes. Its stylesheets pass through the example's PostCSS
@@ -703,6 +703,8 @@ The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
 
 Example port evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m5-example/README.md`.
+HTML fixture sweep and controls evidence: `.context/rust-rebuild/sweeps/m5-html.md`
+and `.context/rust-rebuild/delegation/m8-core/report-9.md`.
 
 ## Milestone 6: Serve
 
@@ -836,6 +838,10 @@ renders again.
         for the core integration gap sweep.
   - [ ] Compare captured example and large scenarios after the example port
         and comparison integration land.
+  - [ ] Add the callback-only regressions from the M5 HTML sweep: conflicting
+        inputs from impure slot replay, renderer mutation isolation, and the
+        page helper call count. Cases 30, 36, and 127 remain assigned here;
+        native templates cannot exercise callback side effects.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every

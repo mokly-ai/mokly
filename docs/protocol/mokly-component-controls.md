@@ -4,20 +4,16 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Scope And User Behaviour
 
-Saved variants work in every catalogue. Local Serve edits the props of a
-screen or component temporarily and renders the edit on the server through
-the same path as the catalogue: an HTML entry in Rust, a JavaScript entry
-through the [sidecar](./mokly-sidecar.md). The static output of `build`
-shows the same saved props with the controls read-only and the secondary
-message `Open this catalogue locally to edit props.`; static frames add no
-interactive control and no consumer JavaScript runtime. The capability comes
-from the [live descriptor](./mokly-shell-delivery.md#live-descriptor), not
-from an environment badge.
+Saved variants work in every catalogue. Serve temporarily edits screen and
+component props through the catalogue render path: HTML in Rust, JavaScript
+through the [sidecar](./mokly-sidecar.md). Static `build` output shows saved
+props with read-only controls and `Open this catalogue locally to edit props.`
+as secondary text. Static frames add no interactive control or consumer
+JavaScript runtime. The [live descriptor](./mokly-shell-delivery.md#live-descriptor)
+grants this capability; an environment badge does not.
 
-The Props tab of the shared inspector lists the entry's controls. Every screen
-and component is a render over props under the
-[entry props contract](./mokly-entry-props.md#one-model), and its controls
-derive from its prop schema: a text control for `string`, a toggle for
+The inspector's Props tab lists controls derived from the
+[entry prop schema](./mokly-entry-props.md#one-model): text for `string`, a toggle for
 `boolean`, a number control for `number` and `integer` whose step is
 `multipleOf` counted from zero, else 1 for `integer`, else none, and a select
 for `enum` and `oneOf` of constants whose options are labelled by `title`,
@@ -57,6 +53,11 @@ and counts from zero, with the first offered value the smallest multiple at
 or above `minimum`. A number control offers only values the schema accepts.
 Select options are non-empty, have non-empty labels, and unique values the
 schema accepts.
+
+The read model stores effective number limits for declared controls. Each
+bound uses the control's own value, else the schema's `minimum` or `maximum`.
+Step uses the control's own value, else the schema's `multipleOf`, else 1 for
+an integer, else no step. Parents and saved variants carry the same limits.
 
 A control starts from the shown entry's props, that is the entry's own props or
 a variant's merged props, updates the preview after validation, and has a label

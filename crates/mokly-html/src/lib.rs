@@ -47,14 +47,23 @@ mod slots;
 mod source_locations;
 
 #[cfg(test)]
+#[path = "_tests_/control_output_sweep_tests.rs"]
+mod control_output_sweep_tests;
+#[cfg(test)]
 #[path = "_tests_/control_tests.rs"]
 mod control_tests;
+#[cfg(test)]
+#[path = "_tests_/control_tier_sweep_tests.rs"]
+mod control_tier_sweep_tests;
 #[cfg(test)]
 #[path = "_tests_/fragment_tests.rs"]
 mod fragment_tests;
 #[cfg(test)]
 #[path = "_tests_/marker_tests.rs"]
 mod marker_tests;
+#[cfg(test)]
+#[path = "_tests_/navigation_sweep_tests.rs"]
+mod navigation_sweep_tests;
 #[cfg(test)]
 #[path = "_tests_/parser_tests.rs"]
 mod parser_tests;
