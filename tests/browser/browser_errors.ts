@@ -20,7 +20,13 @@ export function checkBrowserErrors(): void {
   test.beforeEach(({ page }) => {
     errors.set(page, captureBrowserErrors(page));
   });
-  test.afterEach(({ page }) => {
+  test.afterEach(async ({ page }) => {
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
     expect(errors.get(page)).toEqual([]);
   });
 }

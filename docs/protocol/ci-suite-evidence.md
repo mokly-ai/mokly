@@ -20,9 +20,12 @@ directories. If termination cannot be confirmed, teardown fails and keeps the
 owned directories for diagnosis; concurrent and repeated close calls share that
 same completion or failure.
 
-For the browser suite, confirmed drainage covers registered POSIX groups.
-Forced cleanup relies on sidecars ending with their binary. It cannot
-independently confirm termination of sidecars in separate process groups.
+Browser hosts, served design checks, and packed smoke use the shared Serve
+process module under `scripts/verification`. It registers a suspended worker
+before releasing the shim. Before signalling a registered group, cleanup
+records its process tree and each separate sidecar group. Cleanup drains these
+groups even if the test worker stops or Serve needs a forced kill. The native
+sidecar parent-death rule provides a second safeguard.
 
 A fixture that owns live resources drains them in reverse registration order
 before it deletes its directory. Every registered cleanup runs even if another
@@ -91,7 +94,13 @@ rejects a worker count above the number of servers.
 `MOKLY_PLAYWRIGHT_STATIC_DIR` selects an already-built catalogue directory.
 The same host interface serves its exact files and directory indexes on a free
 port. This mode neither builds the site nor adds fallback routes. The default
-host remains Serve. Fixtures that test private inputs still own their own hosts.
+host remains Serve. `MOKLY_PLAYWRIGHT_FILE_DIR` also selects this static host
+for Browse pages and opens portable design documents from that directory with
+`file://` URLs. Its supported specs are listed in
+[developer commands](./developer-test-commands.md#browser-selection). These
+delivery modes are manual checks; continuous runs and the private file fixture
+belong to M8's copied-static-output TODO. Fixtures that test private inputs
+still own their own hosts.
 
 Browser specs support POSIX systems only. Specs must not depend on an empty Changes set:
 remote Testboxes hold branch edits as working-tree changes against their base.

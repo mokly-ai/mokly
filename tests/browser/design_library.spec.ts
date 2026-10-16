@@ -7,7 +7,11 @@ import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
 import { designCases, designCatalogue } from "./design_catalogue.js";
-import { designFileUrl, designResourceExists } from "./design_fixture.js";
+import {
+  assertDesignResource,
+  designFileUrl,
+  designResourceExists,
+} from "./design_fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const manifest = { entries: designCatalogue() };
@@ -54,7 +58,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
             nodes.map((node) => (node as HTMLAnchorElement).href),
           );
         for (const url of new Set(urls)) {
-          expect(new URL(url).origin).toBe(new URL(page.url()).origin);
+          await assertDesignResource(url, page.url());
           expect(await designResourceExists(page.request, url), url).toBe(true);
         }
         await page.screenshot({

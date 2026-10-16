@@ -133,13 +133,10 @@ export function hostClick(
   context: ShellContext,
   environment: EmbeddedShellEnvironment | undefined,
   request: (route: ShellRoute) => void,
-  setState: Dispatch<SetStateAction<ShellState>>,
   state: ShellState,
 ): void {
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target || !environment) return;
-  if (event.currentTarget instanceof Element)
-    closePickerFromTag(event.currentTarget, target, setState, state);
   if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
     return;
   if (target.closest("[data-mokly-slot]")) return;
@@ -175,24 +172,6 @@ function ownedCatalogueUrl(
       url.origin === ownerDocument.location.origin) &&
     url.hash === "" &&
     (url.pathname === "/" || url.pathname.startsWith("/view/"))
-  );
-}
-
-function closePickerFromTag(
-  root: Element,
-  target: Element,
-  setState: Dispatch<SetStateAction<ShellState>>,
-  state: ShellState,
-): void {
-  if (
-    !state.tagPickerOpen ||
-    !target.closest("[data-mokly-tag]") ||
-    target.closest("[data-mokly-tag-picker]")
-  )
-    return;
-  setState((current) => ({ ...current, tagPickerOpen: false }));
-  queueMicrotask(() =>
-    root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
   );
 }
 

@@ -91,3 +91,15 @@ test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes
     assert.throws(() => validate(reports));
   }
 });
+
+test("aggregate names the failing browser runtime and shard detail", () => {
+  const reports = ciReports(["node-22.14.0"]);
+  reports[1]!.reporterComplete = false;
+  assert.throws(
+    () => validateCiReports(reports, "a".repeat(40), ["node-22.14.0"]),
+    {
+      message:
+        "browser node-22.14.0 evidence failed: reporter did not complete",
+    },
+  );
+});

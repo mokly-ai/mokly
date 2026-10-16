@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { componentDesignFixture } from "./component_design_fixture.js";
+import { unexpectedDesignScripts } from "./design_fixture.js";
 
 const { componentDesignUrl } = componentDesignFixture();
 
@@ -52,9 +53,7 @@ test.describe("portable inspector", () => {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(viewport === "desktop" ? 1440 : 390);
-      await expect(
-        page.locator('script:not([src="/mokly-viewer/client/inspector.js"])'),
-      ).toHaveCount(0);
+      await expect(page.locator(unexpectedDesignScripts())).toHaveCount(0);
     });
   }
 });
@@ -75,8 +74,6 @@ test("the shared inspector opens and closes inside sandboxed Browse frames", asy
     ).toBeVisible();
     await inspector.getByRole("button", { name: "Usage", exact: true }).click();
     await expect(inspector.locator(":scope > details[open]")).toHaveCount(0);
-    await expect(
-      frame.locator('script:not([src="/mokly-viewer/client/inspector.js"])'),
-    ).toHaveCount(0);
+    await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
   }
 });

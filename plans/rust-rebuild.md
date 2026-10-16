@@ -869,7 +869,9 @@ renders again.
 - [ ] Add browser specs against copied static output, including navigation,
       inspection, no live endpoints, and the comparison modes after the M9 join.
       Run the static host against real `mokly build` output with
-      `MOKLY_PLAYWRIGHT_STATIC_DIR`. Port the M8 sweep's static/export/publish
+      `MOKLY_PLAYWRIGHT_STATIC_DIR`. Add continuous runs for
+      `MOKLY_PLAYWRIGHT_FILE_DIR`, including the private slot and variant
+      fixture and the design journeys checked by a manual run. Port the M8 sweep's static/export/publish
       cases: exact-file resources, canonical links, read-only controls,
       deployment changes, public CORS, and historical comparison documents.
 - [x] Restore the browser suite against `mokly serve` of the example: its
@@ -898,8 +900,9 @@ renders again.
   - [x] Restore current design artboards, library samples, the frozen screen
         inventory, shared component consumers and ownership, portable links,
         controls, and both viewport layouts through Serve.
-  - [x] Check portable design links, shared samples, and inspector disclosures
-        directly from real `mokly build` output through `file://` URLs.
+  - [x] Portable design links, shared samples, and inspector disclosures
+        directly from real `mokly build` output through `file://` URLs are
+        checked by a manual run.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
@@ -914,7 +917,7 @@ renders again.
         link from the current-page mark, report non-anchor link markers, match
         every library root by class token, and make reachability one-way with
         the contract's runtime-only states.
-  - [ ] Add the browser checks with the restored browser suite: pointer and
+  - [x] Add the browser checks with the restored browser suite: pointer and
         Tab/Enter activation, history, canonical outer URLs, preserved outer
         viewport selection, active rows, selection semantics, counts, missing
         states, highlighting and mask geometry, editable and read-only
@@ -991,6 +994,8 @@ Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
 Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
 Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
 Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
+Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
+Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 
 - [ ] Commit.
 

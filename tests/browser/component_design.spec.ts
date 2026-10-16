@@ -2,7 +2,10 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { componentDesignFixture } from "./component_design_fixture.js";
-import { designResourceExists } from "./design_fixture.js";
+import {
+  assertDesignResource,
+  designResourceExists,
+} from "./design_fixture.js";
 
 const { componentDesignRoutes, componentDesignUrl } = componentDesignFixture();
 
@@ -44,7 +47,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
             elements.map((element) => (element as HTMLAnchorElement).href),
           );
         for (const href of new Set(links)) {
-          expect(new URL(href).origin).toBe(new URL(page.url()).origin);
+          await assertDesignResource(href, page.url());
           expect(await designResourceExists(page.request, href), href).toBe(
             true,
           );

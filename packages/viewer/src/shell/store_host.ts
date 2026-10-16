@@ -276,7 +276,6 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         input.context,
         environmentRef.current,
         requestRoute,
-        input.setState,
         stateRef.current,
       );
     },

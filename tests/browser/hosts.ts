@@ -1,8 +1,7 @@
-import { EventEmitter, once } from "node:events";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { serveProcess } from "../../scripts/verification/serve-process.mjs";
+import { startServe } from "../../scripts/verification/serve-process.mjs";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
@@ -36,59 +35,24 @@ export async function serveHost(
   cwd: string,
   cancellation?: AbortSignal,
 ): Promise<BrowserHost> {
-  const managed = await serveProcess(args, cwd);
-  const { child } = managed;
-  const events = new EventEmitter();
-  let output = "";
-  let failure: unknown;
-  const closed = new Promise<void>((resolve) => {
-    child.once("error", (error) => {
-      failure = error;
-      events.emit("output");
-      resolve();
-    });
-    child.once("close", () => {
-      events.emit("output");
-      resolve();
-    });
-  });
-  for (const stream of [child.stdout, child.stderr])
-    stream?.on("data", (chunk: Buffer) => {
-      output += chunk.toString();
-      events.emit("output");
-    });
-  let closing: Promise<void> | undefined;
-  const close = () =>
-    (closing ??= (async () => {
-      if (child.exitCode === null && child.signalCode === null)
-        managed.signal("SIGINT");
-      const guard = setTimeout(() => managed.signal("SIGKILL"), 10_000);
-      try {
-        await closed;
-      } finally {
-        clearTimeout(guard);
-      }
-      await managed.drain();
-      if (failure || child.exitCode !== 0)
-        throw new Error(`Example Serve did not stop cleanly:\n${output}`, {
-          cause: failure,
-        });
-    })());
+  const server = await startServe(args, { cwd });
+  const close = async () => {
+    const outcome = await server.stop();
+    if (outcome.code !== 0)
+      throw new Error(
+        `Example Serve did not stop cleanly:\n${server.diagnostics()}`,
+      );
+  };
   try {
-    await managed.start();
     const signal = AbortSignal.any([
       AbortSignal.timeout(180_000),
       ...(cancellation ? [cancellation] : []),
     ]);
-    for (;;) {
-      const url = listeningAddress(output);
-      if (url) return { url, close, diagnostics: () => output };
-      if (failure || child.exitCode !== null || child.signalCode !== null)
-        throw new Error(`Example Serve exited before readiness:\n${output}`, {
-          cause: failure,
-        });
-      await once(events, "output", { signal });
-    }
+    return {
+      url: await server.listening(signal),
+      close,
+      diagnostics: server.diagnostics,
+    };
   } catch (error) {
     try {
       await close();
@@ -122,9 +86,4 @@ export async function requireStaticCatalogue(directory: string): Promise<void> {
   }
 }
 
-/** A partial stdout chunk must not truncate a bound port. */
-export function listeningAddress(output: string): string | undefined {
-  return /(?:^|\n)Mokly listening at (http:\/\/127\.0\.0\.1:\d+)\r?\n/.exec(
-    output,
-  )?.[1];
-}
+export { listeningAddress } from "../../scripts/verification/serve-process.mjs";

@@ -19,14 +19,13 @@ reuse depends on that determinism.
 
 The automated checks for repository inputs are deliberately narrow:
 
+- [`tests/verification_example_servers.test.ts`](../../tests/verification_example_servers.test.ts)
+  requires the browser command to include `--base HEAD` through the exported
+  `exampleServerCommand` builder in `tests/browser/example_servers.ts`. It
+  checks the Playwright configuration, each worker's server, and readiness.
 - [`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
-  requires the browser example server command to include `--base HEAD`,
-  checked through the exported `exampleServerCommand` builder in
-  `tests/browser/example_servers.ts`
-  rather than source text. The Playwright configuration must start every
-  worker's server with that builder. The test also requires the viewer,
-  browser, and native jobs to use the checked-out lockfile and never resolve
-  `origin/main` or a branch-point lockfile.
+  requires viewer, browser, and native jobs to use the checked-out lockfile and
+  never resolve `origin/main` or a branch-point lockfile.
 
 These checks are properties of the workflow, not copies of its text. Review
 owns workflow literals such as job names, step order, matrix values and run

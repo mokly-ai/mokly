@@ -24,6 +24,47 @@ export function designFileUrl(file: string): URL {
   return new URL(`/static/mokly-generated/${route}`, origin);
 }
 
+/** Require a target to stay in the output directory or the served origin. */
+export async function assertDesignResource(
+  href: string,
+  documentUrl: string,
+): Promise<void> {
+  const url = new URL(href);
+  const disk = process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
+  if (disk && new URL(documentUrl).protocol === "file:") {
+    if (url.protocol !== "file:")
+      throw new Error(`Design resource leaves file output: ${href}`);
+    const root = await fs.realpath(path.resolve(disk));
+    const target = fileURLToPath(url);
+    const inside = (value: string) => {
+      const relative = path.relative(root, value);
+      return (
+        relative !== ".." &&
+        !relative.startsWith(`..${path.sep}`) &&
+        !path.isAbsolute(relative)
+      );
+    };
+    if (!inside(target))
+      throw new Error(`Design resource leaves file output: ${href}`);
+    try {
+      if (!inside(await fs.realpath(target)))
+        throw new Error(`Design resource leaves file output: ${href}`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+  } else if (url.origin !== new URL(documentUrl).origin) {
+    throw new Error(`Design resource leaves catalogue origin: ${href}`);
+  }
+}
+
+/** Static output publishes an inspector; Serve design documents have no script. */
+export function unexpectedDesignScripts(): string {
+  return process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ||
+    process.env["MOKLY_PLAYWRIGHT_FILE_DIR"]
+    ? 'script:not([src="/mokly-viewer/client/inspector.js"])'
+    : "script";
+}
+
 /** Check portable resource targets through their actual delivery mode. */
 export async function designResourceExists(
   request: APIRequestContext,
@@ -33,7 +74,12 @@ export async function designResourceExists(
   if (url.protocol === "file:") {
     url.hash = "";
     url.search = "";
-    return (await fs.stat(fileURLToPath(url))).isFile();
+    try {
+      return (await fs.stat(fileURLToPath(url))).isFile();
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+      throw error;
+    }
   }
   return (await request.get(href)).ok();
 }

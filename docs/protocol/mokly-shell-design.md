@@ -110,8 +110,8 @@ scrollable region scrolls internally:
   Details chips keep independent tab stops. Escape closes the panel and
   returns focus to the control without changing the query. An outside click
   closes it and returns focus only if the panel held focus. Selecting a Details
-  tag closes an open picker and focuses its toggle. Without tags, render
-  neither the control nor the panel.
+  tag closes an open picker and focuses its toggle. A catalogue that declares
+  no tags renders neither the control nor the panel.
 - **Navigation** — 248px initial column, `#fbfbfa` background, hairline right
   border. On desktop, an 8px-wide split separator with a centred 2×32px grip
   resizes the column from 192px to 480px without exceeding half the viewport.

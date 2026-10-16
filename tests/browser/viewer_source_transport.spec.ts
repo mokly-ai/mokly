@@ -9,7 +9,12 @@ import type {} from "./viewer_harness.js";
 
 declare global {
   interface Window {
-    sourceProbe: { calls: number; aborted: number; release(): void };
+    sourceProbe: {
+      calls: number;
+      aborted: number;
+      processed: boolean;
+      release(): void;
+    };
   }
 }
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -28,9 +33,10 @@ test("replacing a URL source cancels its stale load and rejects a late success",
   await page.evaluate((serialized) => {
     const index = JSON.parse(serialized) as CatalogueReadModel;
     const original = window.fetch;
-    const probe = (window.sourceProbe = {
+    const probe: Window["sourceProbe"] = (window.sourceProbe = {
       calls: 0,
       aborted: 0,
+      processed: false,
       release: () => {},
     });
     window.fetch = (input, init) => {
@@ -41,7 +47,16 @@ test("replacing a URL source cancels its stale load and rejects a late success",
         probe.aborted++;
       });
       return new Promise((resolve) => {
-        probe.release = () => resolve(Response.json(index));
+        probe.release = () => {
+          const response = Response.json(index);
+          const json = response.json.bind(response);
+          response.json = async () => {
+            const body = await json();
+            probe.processed = true;
+            return body;
+          };
+          resolve(response);
+        };
       });
     };
     window.viewerHarness.start("one", {
@@ -70,13 +85,21 @@ test("replacing a URL source cancels its stale load and rejects a late success",
   await expect
     .poll(() => page.evaluate(() => window.sourceProbe.aborted))
     .toBe(1);
-  await page.evaluate(async () => {
-    window.sourceProbe.release();
-    await new Promise(requestAnimationFrame);
-  });
-  await expect(
-    page.getByRole("heading", { name: "Latest home", exact: true }),
-  ).toBeVisible();
+  await page.evaluate(() => window.sourceProbe.release());
+  await expect
+    .poll(() => page.evaluate(() => window.sourceProbe.processed))
+    .toBe(true);
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  expect(
+    await page
+      .getByRole("heading", { name: "Latest home", exact: true })
+      .isVisible(),
+  ).toBe(true);
   expect(
     await page.evaluate(() =>
       window.viewerHarness
@@ -92,9 +115,10 @@ test("StrictMode starts one URL source transport across effect replay", async ({
   await page.evaluate((serialized) => {
     const index = JSON.parse(serialized) as CatalogueReadModel;
     const original = window.fetch;
-    const probe = (window.sourceProbe = {
+    const probe: Window["sourceProbe"] = (window.sourceProbe = {
       calls: 0,
       aborted: 0,
+      processed: false,
       release: () => {},
     });
     window.fetch = (input, init) => {

@@ -171,8 +171,7 @@ MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/brows
 ```
 
 The host serves exact files and directory indexes. It uses a free loopback port.
-Browser specs support POSIX systems only. Forced cleanup relies on sidecars
-ending with their owning binary. Specs must not assume an empty Changes set:
+Browser specs support POSIX systems only. Specs must not assume an empty Changes set:
 remote Testboxes hold branch edits as working-tree changes against their base.
 `MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
 that open portable documents directly through `file://` URLs.
@@ -182,6 +181,18 @@ For example, after the build above:
 ```bash
 MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser/component_inspector.spec.ts
 ```
+
+File mode is checked by a manual run. Supported specs under `tests/browser/`
+are `comparison_design`, `component_controls`, `component_design`,
+`component_design_inspection`, `component_design_selection`, `component_evidence`,
+`component_inspector`, `component_surfaces`, `component_workspace`,
+`design_comparison_eligibility` (and `_2`, `_3`, `_4`),
+`design_comparison_scrolling`, `design_comparison_stacks`,
+`design_component_stacks`, `design_index_entries`, `design_library`,
+`design_modern_controls`, `design_portable`, `design_scroll_together`,
+`design_stylesheet_evidence`, `design_top_bar`, `example_links`, and
+`phone_chrome`; each name has the `.spec.ts` suffix. Continuous runs and the
+private file fixture belong to M8's copied-static-output TODO.
 
 Browser traces and screenshots stay under `.context/playwright-results/`.
 

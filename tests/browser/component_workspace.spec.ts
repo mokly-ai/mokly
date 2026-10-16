@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { componentDesignFixture } from "./component_design_fixture.js";
+import { unexpectedDesignScripts } from "./design_fixture.js";
 
 const { componentDesignUrl } = componentDesignFixture();
 
@@ -234,7 +235,5 @@ test("view controls and highlighting work inside sandboxed Browse frames", async
   expect(new Set(ids).size).toBe(ids.length);
   await toolbar.getByRole("switch", { name: "Highlight components" }).uncheck();
   await expect(frame.locator(".ce-highlight-layer:visible")).toHaveCount(0);
-  await expect(
-    frame.locator('script:not([src="/mokly-viewer/client/inspector.js"])'),
-  ).toHaveCount(0);
+  await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
 });

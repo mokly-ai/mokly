@@ -266,3 +266,19 @@ test("the wrapper returns the exact cargo exit code", async () => {
     7,
   );
 });
+
+test("only browser accepts shard requests", () => {
+  for (const suite of ["viewer", "repository"])
+    assert.throws(
+      () =>
+        parseTestboxArguments([
+          "--expect",
+          TESTBOX_FINGERPRINT,
+          "--suite",
+          suite,
+          "--shard",
+          "1/4",
+        ]),
+      { message: "only browser supports --shard" },
+    );
+});

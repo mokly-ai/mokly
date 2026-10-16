@@ -13,7 +13,12 @@ const required = [
 ];
 
 test("the static host serves exact files, directory indexes and MIME types without fallbacks", async (context) => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-browser-host-"));
+  const parent = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-browser-host-"),
+  );
+  const root = path.join(parent, "site");
+  await fs.mkdir(root);
+  await fs.writeFile(path.join(parent, "outside.txt"), "outside secret");
   await fs.mkdir(path.join(root, "mokly-viewer"));
   await fs.mkdir(path.join(root, "nested"));
   for (const name of [
@@ -30,7 +35,7 @@ test("the static host serves exact files, directory indexes and MIME types witho
   const host = await browserHost({ kind: "static", directory: root });
   context.after(async () => {
     await host.close();
-    await fs.rm(root, { recursive: true, force: true });
+    await fs.rm(parent, { recursive: true, force: true });
   });
   assert.equal(await (await fetch(host.url)).text(), "index.html");
   assert.equal(
@@ -87,7 +92,7 @@ test("Serve host reports startup failure only after its failed child is gone", a
       assert.equal(error.message, "Example startup and cleanup failed");
       assert.match(
         String(error.errors[0]),
-        /Example Serve exited before readiness:[\s\S]*fixture startup failure/,
+        /Serve stopped before it listened:[\s\S]*fixture startup failure/,
       );
       return true;
     },

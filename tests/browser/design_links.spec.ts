@@ -6,6 +6,7 @@ import {
 } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { unexpectedDesignScripts } from "./design_fixture.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 async function tabTo(page: Page, link: Locator): Promise<void> {
@@ -80,9 +81,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
     await visibleShotLink(frame, "Return to welcome").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await expect(
-      frame.locator('script:not([src="/mokly-viewer/client/inspector.js"])'),
-    ).toHaveCount(0);
+    await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
     const iframe = page.locator(`.mbk-frame-${viewport} iframe`);
     expect((await iframe.getAttribute("sandbox"))?.split(/\s+/)).not.toContain(
       "allow-scripts",

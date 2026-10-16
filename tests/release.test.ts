@@ -109,7 +109,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Audit workspace dependencies",
     "Select verification evidence",
     "Set up Rust",
-    "Install Chromium for consumer smoke",
+    "Install Chromium for verification and smoke",
     "Run complete verification",
     "Prepare exact publish artifacts",
   ];
@@ -138,7 +138,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   );
   assert.equal(
     publish.steps.find(
-      (step) => step.name === "Install Chromium for consumer smoke",
+      (step) => step.name === "Install Chromium for verification and smoke",
     )?.run,
     "npx playwright install --with-deps chromium",
   );
