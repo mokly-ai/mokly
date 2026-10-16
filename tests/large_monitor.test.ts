@@ -89,3 +89,13 @@ test("every individual signal rejects sentinel and self PIDs", () => {
   );
   assert.deepEqual(killed, [20]);
 });
+
+test("a disabled memory stop still samples without sending signals", async () => {
+  const fake = memory(async () => "10 0 10 100\n20 10 20 9000000");
+  const finish = monitor(20, fake.fail, 0, fake.boundary);
+  await Promise.resolve();
+  const result = await finish();
+  assert.equal(result.samples, 1);
+  assert.deepEqual(fake.killed, []);
+  assert.deepEqual(fake.failures, []);
+});

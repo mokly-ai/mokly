@@ -1,5 +1,8 @@
 //! HTML text modes retain their tree after serialization and another parse.
 
+use crate::normalization::Repair;
+use crate::normalization_annotate::annotate;
+use crate::tree::{Node, Region, RegionKind, element};
 use crate::{parse, serialize};
 
 #[test]
@@ -60,9 +63,6 @@ fn plaintext_after_active_formatting_is_stable() {
 
 #[test]
 fn plaintext_serialization_does_not_expose_private_repair_markers() {
-    use crate::normalization::Repair;
-    use crate::normalization_annotate::annotate;
-    use crate::tree::{Node, Region, RegionKind, element};
     let nodes = vec![Node::Region {
         region: Region {
             id: "r-1".into(),

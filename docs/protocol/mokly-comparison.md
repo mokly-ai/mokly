@@ -77,8 +77,8 @@ also loses its region; the repair remains a warning.
 and the end tags of ancestors entered before it. A parser repair pass turns
 formatting clones inside it and nodes moved after it into the literal payload
 that the browser receives. The repaired tree and its bytes stay stable on
-further parse/serialize passes. This repair runs before private annotations;
-normalization markers and attributes cannot appear in that payload. Other
+further parse/serialize passes, including repair of annotated composed content.
+Serialization omits private markers and attributes inside plaintext mode. Other
 HTML text modes keep their escaping rules. `pre`, `textarea`, and `listing`
 preserve the leading line feed that the HTML parser would otherwise remove.
 

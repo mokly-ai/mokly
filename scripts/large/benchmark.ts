@@ -5,8 +5,11 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 
 import { browse } from "./browse.js";
+import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import { start, stop, waitFor } from "./process.js";
+import { finishRun } from "./run_output.js";
 import type { PreparedFixture } from "./setup.js";
+import { startupBudget } from "./startup_budget.js";
 
 export type Scenario = "build" | "serve" | "changes" | "watch";
 export const scenarios: readonly Scenario[] = [
@@ -36,7 +39,9 @@ export async function benchmark(
   fixture: PreparedFixture,
   selected: readonly Scenario[],
   sidecars: number,
+  options: { memoryStopKiB?: number; sidecarTimeoutMs?: number } = {},
 ) {
+  const memoryStopKiB = options.memoryStopKiB ?? DEFAULT_MEMORY_STOP_KIB;
   const cli = path.join(
     fixture.root,
     "node_modules/@mokly/mokly/bin/mokly.mjs",
@@ -53,6 +58,10 @@ export async function benchmark(
     schemaVersion: 1,
     fixture,
     sidecars,
+    memoryStopKiB,
+    sidecarTimeoutMs: options.sidecarTimeoutMs ?? null,
+    sidecarTimeoutEnvironment: process.env.MOKLY_SIDECAR_TIMEOUT_MS ?? null,
+    nodeOptions: process.env.NODE_OPTIONS ?? null,
     goMemoryLimit: process.env.GOMEMLIMIT ?? null,
     goMaxProcs: Number(process.env.GOMAXPROCS) || null,
     nodeHeapLimitMiB: Math.round(
@@ -65,6 +74,7 @@ export async function benchmark(
   try {
     for (const scenario of selected) {
       active = scenario;
+      process.stderr.write(`Benchmark ${scenario}: starting\n`);
       const pending = deferred(scenario);
       if (pending) {
         results.push(pending);
@@ -75,11 +85,13 @@ export async function benchmark(
         const running = start(
           [cli, "build", ...common, "--strict"],
           fixture.root,
+          memoryStopKiB,
+          options.sidecarTimeoutMs,
         );
         let expired = false;
         const timer = setTimeout(() => {
           expired = true;
-          running.kill("SIGTERM");
+          void stop(running).catch(() => {});
         }, 300_000);
         try {
           await running.done;
@@ -93,19 +105,7 @@ export async function benchmark(
           });
         } finally {
           clearTimeout(timer);
-          await fs.writeFile(
-            path.join(fixture.root, ".context/build-memory.json"),
-            JSON.stringify(await running.finishMemory()),
-          );
-          await fs.writeFile(
-            path.join(fixture.root, ".context/build.log"),
-            running.output(),
-          );
-          await fs.writeFile(
-            path.join(fixture.root, ".context/build-timings.json"),
-            JSON.stringify(running.timings),
-          );
-          await stop(running);
+          await finishRun(fixture.root, "build", running);
         }
         continue;
       }
@@ -119,6 +119,8 @@ export async function benchmark(
           const running = start(
             [cli, "serve", ...common, "--port", "0"],
             fixture.root,
+            memoryStopKiB,
+            options.sidecarTimeoutMs,
           );
           try {
             const match = await waitFor(
@@ -133,29 +135,20 @@ export async function benchmark(
               }),
             ]);
             const elapsedMs = performance.now() - beginning;
+            const reason = startupBudget(measured.usableMs);
             results.push({
               scenario,
               state,
-              status: "measured",
+              status: reason ? "failed" : "measured",
+              ...(reason ? { reason } : {}),
               readinessMs,
               ...measured,
               elapsedMs,
               ...(await running.finishMemory()),
             });
+            if (reason) throw new Error(reason);
           } finally {
-            await fs.writeFile(
-              path.join(fixture.root, `.context/serve-${state}-memory.json`),
-              JSON.stringify(await running.finishMemory()),
-            );
-            await fs.writeFile(
-              path.join(fixture.root, `.context/serve-${state}.log`),
-              running.output(),
-            );
-            await fs.writeFile(
-              path.join(fixture.root, `.context/serve-${state}-timings.json`),
-              JSON.stringify(running.timings),
-            );
-            await stop(running);
+            await finishRun(fixture.root, `serve-${state}`, running);
           }
         }
       } finally {
@@ -163,11 +156,16 @@ export async function benchmark(
       }
     }
   } catch (error) {
-    results.push({
-      scenario: active,
-      status: "failed",
-      reason: error instanceof Error ? error.message : String(error),
-    });
+    if (
+      !results.some(
+        (result) => "status" in result && result.status === "failed",
+      )
+    )
+      results.push({
+        scenario: active,
+        status: "failed",
+        reason: error instanceof Error ? error.message : String(error),
+      });
     await fs.writeFile(
       path.join(fixture.root, ".context/measurements.json"),
       JSON.stringify(report, null, 2) + "\n",

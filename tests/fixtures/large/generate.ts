@@ -92,16 +92,20 @@ export async function generateLargeFixture(
   );
   await fs.writeFile(
     path.join(root, ".gitignore"),
-    ".context/\n.mokly-cache/\nnode_modules/\nmokly-static/\n",
+    ".context/\nnode_modules\n.mokly-export-reservations/\nmokly-static/\n",
   );
   for (let i = 1; i <= size.areas; i++) {
     const area = `area-${i}`;
+    const dir = path.join(root, "specs", area);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(
+      path.join(dir, "handbook.md"),
+      `---\ntitle: Activity handbook\n---\n# Activity handbook\n\nUse the [first screen](mock:${area}/screens/activity-group-1/screen-1#summary) to review activity.\n`,
+    );
     if (variant === "html") {
       await htmlArea(root, area, size);
       continue;
     }
-    const dir = path.join(root, "specs", area);
-    await fs.mkdir(dir);
     const exports = ["action", "panel", "guide"].map(
       (key) => `export const ${key} = area.${key};`,
     );

@@ -98,7 +98,7 @@ The repository's large consumer is synthetic and opt-in. Its generator
 produces an HTML variant and a React variant of the same catalogue: nested
 folders, component entries with variants, repeated and nested component usage,
 slots, both viewports and colour schemes, catalogue links, pages, use cases,
-related Markdown, imported CSS, and images, with configurable sizes. A small
+Markdown documents, imported CSS, and images, with configurable sizes. A small
 instance of the generator runs in automated tests; a full-sized instance is
 smoke-tested with the opt-in benchmark. It is a repeatable workload for
 locating scaling costs, not a claim of identical production data or timings.
@@ -129,21 +129,31 @@ count held constant and other heavy work idle:
 
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
-Changes, and reports each measurement as JSON on stdout. A scenario whose integration
-is unavailable reports `status: "deferred"`, its owner, and its reason. It
-reports no success or duration for that scenario. Build and Serve do not wait
-for deferred Changes. A fresh Serve process and browser context define each
-restart; the browser process starts before the measurement.
+Changes, and reports each measurement as JSON on stdout. It writes one progress
+line to stderr when each scenario starts. A fresh Serve process and browser
+context define each restart. The browser process starts before measurement.
 
 The harness samples process RSS every 50 ms. It reports the maximum sum for
 the CLI shim, core, and sidecar descendants across process groups, plus the maximum for the whole harness tree,
-including the browser. The report records the Node heap limit and Go worker limit. Chrome uses at most two renderer processes and disables
-GPU acceleration. These are sampled observations, not exact operating
-system high-water marks. A shared-machine run stops at 1,750,000 KiB of whole
-tree RSS. This safety stop is not an acceptance budget. Fixtures and each run's
-logs, timing records, and JSON report stay in ignored directories. Use the
-[large fixture commands](../../tests/fixtures/large/README.md) to select safe
-dimensions, a variant, and one of the four scenarios.
+including the browser. Chrome uses at most two renderer processes and disables
+GPU acceleration. These are sampled observations, not exact operating system
+high-water marks. `--memory-stop-kib` defaults to 1,750,000 KiB of whole-tree
+RSS. Set a larger limit on a suitable machine, or use 0 to disable the stop.
+The report records the limit. This safety stop is not an acceptance budget.
+
+Sidecar deadlines follow the sidecar contract. `--sidecar-timeout-ms` explicitly
+sets `MOKLY_SIDECAR_TIMEOUT_MS` for the child. Each report records this option,
+the inherited timeout variable, exact `NODE_OPTIONS`, Node heap limit,
+`GOMAXPROCS`, and `GOMEMLIMIT`. Overrides affect measurements and must accompany
+any comparison. Build and listening waits have 300-second liveness deadlines.
+Browser operations allow 60 seconds. A deadline fails the run and preserves
+its diagnostic. Shutdown sends SIGTERM, then SIGKILL after 10 seconds if needed.
+
+Fixtures and logs belong in ignored directories. The CLI checks `git check-ignore`
+and warns when the chosen root is not confirmed ignored. It rejects options
+that do not apply to the selected command. Use the
+[large fixture commands](../../tests/fixtures/large/README.md) to select dimensions,
+a variant, a memory stop, and one of the four scenarios.
 
 CI's small correctness fixtures have
 [no machine-specific wall-clock assertion](./ci-test-timing.md).
@@ -152,7 +162,7 @@ CI's small correctness fixtures have
 
 | Budget                                               | Rule                                                                                                |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `usableMs`                                           | recorded cold and warm per variant; numeric approval pending                                        |
+| `usableMs`                                           | under 5000 ms, cold and warm, on both fixture variants                                              |
 | sidecar deadlines and recycling                      | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                  |
 | dependency install time limit                        | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning |
 | render cache, extraction cache, install cache bounds | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                |
@@ -162,5 +172,6 @@ CI's small correctness fixtures have
 
 This table holds the budgets with the values the user approved. A row whose
 value is a recording rule rather than a number is measured and reported, not
-enforced; a number enters the row when the user approves it. The benchmark does not assert wall-clock performance. The acceptance budgets
-for the rebuilt core require approval before a gate can enforce them.
+enforced; a number enters the row when the user approves it. The benchmark
+enforces every numeric row and fails when one is exceeded. A startup observation
+at or above 5000 ms produces a failed result with its measured values and reason.

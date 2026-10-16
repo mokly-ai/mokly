@@ -20,6 +20,7 @@
     "types": ["node"]
   },
   "include": [
+    "scripts/large/**/*.ts",
     "packages/mokly/src/**/*.ts",
     "packages/mokly/src/**/*.d.mts",
     "tests/**/*.ts",

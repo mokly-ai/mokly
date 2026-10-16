@@ -1,5 +1,7 @@
 //! Arena sink regressions cover foster parenting, templates, foreign content, and text merging.
 
+use mokly_catalogue::template_types::Template;
+
 use crate::tree::Node;
 use crate::{parse, serialize};
 
@@ -66,7 +68,6 @@ fn repeated_html_and_body_tags_keep_first_values_and_merge_new_attributes() {
 
 #[test]
 fn source_locations_count_unicode_columns_and_crlf_lines() {
-    use mokly_catalogue::template_types::Template;
     let body = "<p>é\r\n中<span title=\"x\">leaf</span></p>";
     let header = "---\r\ntitle: Å\r\n---\r\n";
     let nodes = crate::source_locations::template(&Template {

@@ -11,6 +11,7 @@ use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
 use crate::filesystem::Files;
+use crate::fingerprint_walk;
 
 /// Captured source reads. Rechecks include inputs beneath normally excluded directories.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = InputTreeMock))]
@@ -133,7 +134,7 @@ impl Fingerprints for SourceFingerprints {
             .iter()
             .map(|path| self.files.project(path))
             .collect::<Result<Vec<_>>>()?;
-        Ok(crate::fingerprint_walk::capture(
+        Ok(fingerprint_walk::capture(
             self.files.as_ref(),
             &physical,
             root,

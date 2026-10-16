@@ -3,9 +3,9 @@
 Status: In progress under the [Rust rebuild plan](../../../plans/rust-rebuild.md).
 
 The generator makes HTML and React catalogues with the same entry paths,
-viewports, colour schemes, component variants, slots, pages, flows, related
-Markdown, CSS imports, and images. React uses Firna and React Native Web.
-HTML starts no sidecar. Defaults produce 1,590 routes and 5,790 documents.
+viewports, colour schemes, component variants, slots, pages, flows,
+Markdown documents, CSS imports, and images. React uses Firna and React Native Web.
+HTML starts no sidecar. Defaults produce 1,620 routes and 5,850 documents.
 Component parents have their own views as well as three saved variants.
 
 Build the workspace before these opt-in commands. Select small dimensions on
@@ -16,7 +16,7 @@ npm run build
 npm run fixture:large -- --variant html --areas 2 --screens 12 --rows 8 --root .context/large-html
 npm run benchmark:large -- --root .context/large-html --scenario all --sidecars 2
 npm run fixture:large -- --variant react --areas 2 --screens 12 --rows 8 --root .context/large-react
-npm run benchmark:large -- --root .context/large-react --scenario all --sidecars 2
+npm run benchmark:large -- --root .context/large-react --scenario build --sidecars 2
 ```
 
 Generation requires an empty directory. Options are `--areas`, `--screens`
@@ -31,15 +31,28 @@ packs the CLI, viewer, and host native package, pins consumer dependencies,
 and runs an isolated install. Its setup time is separate from the benchmark.
 
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
-select all four. Unavailable Changes and watch integrations return a deferred
-record with their owner. They do not count as successful measurements. Serve
-checks navigation search, real previews, both axes, live props, and a page.
+select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
 Cold and warm runs each use a new Serve process and browser context.
+For ordinary development, reuse a generated configuration with
+`npx mokly serve --config .context/large-html/mokly.config.json`.
 
 The harness needs `ps`, Chrome (or `PLAYWRIGHT_CHANNEL`), and a Unix host.
-It samples aggregate RSS and uses a 1,750,000 KiB safety cutoff. Time and RSS are
-observations. They are not assertions or proposed acceptance budgets.
+It samples aggregate RSS. `--memory-stop-kib` defaults to 1750000; use 0 to
+disable it. React Serve needs a larger stop on a machine with more memory.
+Do not raise the stop on a shared machine without sufficient capacity.
 A safety stop records failure and keeps completed measurements and diagnostics.
+The opt-in benchmark fails if usable startup is at or above 5000 ms.
+
+Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
+set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
+`GOMAXPROCS`, and `GOMEMLIMIT`. These values can change time and memory use.
+Build and listening waits stop after 300 seconds. Browser operations allow
+60 seconds. Shutdown escalates to SIGKILL after 10 seconds.
+
+`generate` accepts variant, toolchain, and size flags. `benchmark` reads those
+from the fixture record and rejects overrides. It accepts scenario, sidecar,
+memory-stop, and sidecar-timeout flags. Each scenario prints a progress line.
+Both commands warn if Git does not confirm that `--root` is ignored.
 Each fixture's `.context/` holds its setup record, logs, timing records, and
 `measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture)
 and [reference capture procedure](../../../docs/protocol/rust-rebuild-procedures.md#reference-capture).

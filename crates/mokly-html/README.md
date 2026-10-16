@@ -40,9 +40,10 @@ ancestor lists or child subtrees while it walks the document.
 The serializer preserves the leading newline in `pre`, `textarea`, and
 `listing`. `plaintext` consumes the rest of the bytes. It has no synthetic end
 tag, and its ancestors have no end tags after it. Parsing applies one extra
-browser repair to documents with `plaintext`, before metadata is attached.
-Formatting clones and later foster-parented nodes become stable literal text.
-Private normalization markers and attributes never become that text.
+browser repair to documents with `plaintext`, including composed content that
+already carries private metadata. Formatting clones and later foster-parented
+nodes become stable literal text. While plaintext mode is active, serialization
+omits private normalization attributes from cloned tags and private markers.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 `serialize::html` writes instance and slot comments for the inspector.

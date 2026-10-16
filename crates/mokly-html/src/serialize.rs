@@ -1,5 +1,6 @@
 //! Deterministic document bytes and inspector markers with an explicit traversal stack.
 
+use crate::normalization::ATTRIBUTE;
 use crate::tree::{Element, Node, Region, RegionKind};
 
 enum Step<'a> {
@@ -47,7 +48,7 @@ pub fn html(nodes: &[Node]) -> String {
             }
             Node::Doctype(name) => output.push_str(&format!("<!doctype {name}>")),
             Node::Element(element) => {
-                start(element, &mut output);
+                start(element, &mut output, plaintext);
                 if !(element.is_html() && void(&element.name)) {
                     pending.push(Step::ElementEnd(&element.name, plaintext));
                 }
@@ -102,10 +103,13 @@ pub fn escape(value: &str) -> String {
         .replace('"', "&quot;")
 }
 
-fn start(element: &Element, output: &mut String) {
+fn start(element: &Element, output: &mut String, plaintext: bool) {
     output.push('<');
     output.push_str(&element.name);
     for attribute in &element.attributes {
+        if plaintext && attribute.name == ATTRIBUTE {
+            continue;
+        }
         output.push_str(&format!(
             " {}=\"{}\"",
             attribute.name,

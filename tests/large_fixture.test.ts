@@ -21,7 +21,7 @@ test("large fixture validates dimensions and retains default route scale", () =>
     stylesheets: 4,
     stylesheetShare: 0.5,
   });
-  assert.deepEqual(counts(largeSize({})), { routes: 1590, documents: 5790 });
+  assert.deepEqual(counts(largeSize({})), { routes: 1620, documents: 5850 });
   for (const field of ["areas", "screens", "rows"])
     for (const value of [0, -1, 1.5, NaN, Infinity])
       assert.throws(() => largeSize({ [field]: value }), /positive integer/);
@@ -114,7 +114,7 @@ test("both generators protect existing files and emit individual definitions", a
     );
     assert.deepEqual(
       { routes: fixture.routes, documents: fixture.documents },
-      { routes: 13, documents: 45 },
+      { routes: 14, documents: 47 },
     );
     const config = JSON.parse(await fs.readFile(fixture.configPath, "utf8"));
     assert.equal(
@@ -139,4 +139,25 @@ test("both generators protect existing files and emit individual definitions", a
     await assert.rejects(generateLargeFixture(root, {}), /empty directory/);
     assert.deepEqual(await fs.readFile(fixture.configPath), before);
   }
+});
+
+test("zero shared stylesheets creates no files or shared selections", async (t) => {
+  const root = await fs.mkdtemp(
+    path.join(repositoryRoot, ".context/large-zero-styles-"),
+  );
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const fixture = await generateLargeFixture(root, {
+    areas: 1,
+    screens: 2,
+    rows: 1,
+    stylesheets: 0,
+  });
+  assert.deepEqual(
+    (await fs.readdir(path.join(root, "assets"))).filter((name) =>
+      name.startsWith("shared-"),
+    ),
+    [],
+  );
+  const config = await fs.readFile(fixture.configPath, "utf8");
+  assert.ok(!config.includes("shared-"));
 });

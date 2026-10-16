@@ -7,6 +7,7 @@ use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::{ParseOpts, QualName, local_name, ns, parse_document, parse_fragment};
 
 use crate::html_arena::Arena;
+use crate::serialize;
 use crate::tree::{self, Node};
 
 fn options() -> ParseOpts {
@@ -23,7 +24,7 @@ fn options() -> ParseOpts {
 pub fn document(source: &str) -> Vec<Node> {
     let nodes = raw_document(source);
     if terminal_text(&nodes) {
-        raw_document(&crate::serialize::html(&nodes))
+        raw_document(&serialize::html(&nodes))
     } else {
         nodes
     }
@@ -33,7 +34,7 @@ pub fn document(source: &str) -> Vec<Node> {
 pub fn fragment(source: &str) -> Vec<Node> {
     let nodes = raw_fragment(source);
     if terminal_text(&nodes) {
-        raw_fragment(&crate::serialize::html(&nodes))
+        raw_fragment(&serialize::html(&nodes))
     } else {
         nodes
     }
@@ -43,9 +44,9 @@ fn raw_document(source: &str) -> Vec<Node> {
     parse_document(Arena::default(), options()).one(source)
 }
 
-// Plaintext consumes every later byte. One browser repair makes formatting
-// clones and foster-parented siblings into the literal payload that will be
-// served, before composition adds any private annotations.
+/// Plaintext consumes every later byte. One browser repair makes formatting
+/// clones and foster-parented siblings into the literal serialized payload.
+/// The serializer removes private annotations from reconstructed literal tags.
 fn terminal_text(nodes: &[Node]) -> bool {
     tree::walk(nodes).any(|node| {
         matches!(node, Node::Element(element) if element.is_html() && element.name == "plaintext")

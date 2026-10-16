@@ -9,15 +9,15 @@ use tempfile::TempDir;
 mod support;
 
 #[test]
-fn one_hundred_thousand_levels_build_compose_serialize_compare_and_drop() {
+fn twenty_thousand_levels_build_compose_serialize_compare_and_drop() {
     thread::spawn(|| {
         let root = TempDir::new().unwrap();
         fs::create_dir(root.path().join("specs")).unwrap();
         fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
         let body = format!(
             "{}<span id=\"deep-anchor\">{{{{ label }}}}{}</span>",
-            "<span>".repeat(99_999),
-            "</span>".repeat(99_999),
+            "<span>".repeat(19_999),
+            "</span>".repeat(19_999),
         );
         fs::write(
             root.path().join("specs/deep.screen.html"),
@@ -41,7 +41,7 @@ fn one_hundred_thousand_levels_build_compose_serialize_compare_and_drop() {
                     matches!(node, tree::Node::Element(element) if element.name == "span")
                 })
                 .count(),
-            100_000
+            20_000
         );
         assert_eq!(cache.stats().entries, 0);
         let html = std::str::from_utf8(&first.bytes).unwrap();

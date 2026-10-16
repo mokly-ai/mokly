@@ -1303,20 +1303,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       four-scenario benchmark harness; record the time and memory budgets, the
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
-  - [x] Port HTML/React generation and build/Serve measurement; preserve
-        explicit Changes and watch deferrals until their integration.
+  - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
+  - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
   - [ ] Verify the comparison engine's tree walks after M9 integration.
-  - [ ] Approve rebuilt-core budgets and measure isolated dependency installs.
+  - [ ] Measure isolated dependency installs and propose additional budgets;
+        retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
-      subtree copies in link controls; recursion remains. Evidence:
+      subtree copies in link controls. Evidence:
       `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
 - [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
+- [ ] Decide whether reconstructed `plaintext` text writes raw characters;
+      keep its escaping rules until approved (M14 review 1a finding 1B).
+- [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
+      CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
+      excludes these paths. New input bounds or wider rewrites need a decision.
+- [ ] Replace the old baseline-output cold reset with M9 leased-cache preparation
+      and delivered Changes measurements in the M14 harness.
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -1329,6 +1337,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
 Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
+Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review

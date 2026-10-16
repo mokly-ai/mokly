@@ -43,6 +43,12 @@ anything beyond local names and the module scope/composition syntax.
 Plugin dependency inputs use digests, separate from CSS and asset bytes.
 They keep source protection and graph invalidation without retaining file bodies.
 
+CSS syntax scanners and the external `lightningcss` parser use recursive
+input traversal. Pathological CSS nesting can exhaust the caller stack.
+The native HTML tree depth guarantee does not cover these parsers.
+The [M14 plan](../../plans/rust-rebuild.md#milestone-14-large-project-acceptance)
+tracks this authored-input recursion separately.
+
 ## Quick Start
 
 ```rust

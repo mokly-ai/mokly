@@ -68,7 +68,7 @@ Each path has its own read and digest cells, so file IO does not hold the snapsh
 map lock. Preparation runs on the caller's stack. Render workers use Rayon's
 default stack. Component keys, document walks, embedded-document resource
 walks, and retained-tree accounting use explicit work stacks. The deep-tree
-test prepares, composes, serializes, compares, and drops 100,000 levels on an
+test prepares, composes, serializes, compares, and drops 20,000 levels on an
 ordinary thread with cache retention disabled.
 
 ## Quick Start

@@ -63,6 +63,7 @@ test(
             "--config",
             fixture.configPath,
             "--strict",
+            "--no-changes",
             "--sidecars",
             "1",
           ],
@@ -93,11 +94,26 @@ test(
         index.screens.length +
           index.components.length +
           index.useCases.length +
-          index.pages.length,
+          index.pages.length +
+          index.documents.length,
         fixture.routes,
       );
       assert.equal(index.screens.length, 3);
       assert.equal(index.components.length, 8);
+      assert.equal(index.documents.length, 1);
+      assert.equal(index.documents[0].path, "area-1/handbook");
+      assert.equal(index.documents[0].documentKeys.length, 2);
+      for (const suffix of ["", ".dark"]) {
+        const html = await fs.readFile(
+          path.join(
+            output,
+            `static/mokly-generated/area-1/handbook/index${suffix}.html`,
+          ),
+          "utf8",
+        );
+        assert.match(html, /Activity handbook/);
+        assert.match(html, /data-mokly-link/);
+      }
       const prefix = "area-1/screens/activity-group-1";
       const detail = JSON.parse(
         await fs.readFile(
@@ -149,6 +165,15 @@ test(
       );
       await build();
       assert.deepEqual(await inventory(output), first);
+      assert.equal(
+        (await run("git", ["ls-files", "--", "node_modules"], { cwd: root }))
+          .stdout,
+        "",
+      );
+      assert.equal(
+        (await run("git", ["status", "--porcelain"], { cwd: root })).stdout,
+        " M assets/shared-1.css\n",
+      );
     }
   },
 );

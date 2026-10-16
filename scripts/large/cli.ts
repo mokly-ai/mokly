@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { benchmark } from "./benchmark.js";
+import { warnUnignored } from "./ignored_root.js";
 import { options } from "./options.js";
 import { prepareFixture, preparedFixture } from "./setup.js";
 
@@ -14,6 +15,7 @@ try {
       ? path.resolve(input.root)
       : await fs.mkdtemp(path.join(repository, ".context/large-"));
     await fs.mkdir(root, { recursive: true });
+    await warnUnignored(repository, root);
     const fixture = await prepareFixture(
       repository,
       input.size,
@@ -25,9 +27,10 @@ try {
   } else {
     if (!input.root) throw new Error("benchmark needs --root from generate");
     const fixture = await preparedFixture(path.resolve(input.root));
+    await warnUnignored(repository, fixture.root);
     process.stdout.write(
       JSON.stringify(
-        await benchmark(fixture, input.selected, input.sidecars),
+        await benchmark(fixture, input.selected, input.sidecars, input),
         null,
         2,
       ) + "\n",

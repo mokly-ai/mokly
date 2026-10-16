@@ -1,11 +1,17 @@
 import { spawn } from "node:child_process";
 import { setTimeout } from "node:timers/promises";
 
-import { monitor } from "./memory.js";
+import { lifetime, stopChild } from "./lifetime.js";
+import { DEFAULT_MEMORY_STOP_KIB, monitor } from "./memory.js";
 import { validPid } from "./signals.js";
 import { timingCollector } from "./timings.js";
 
-export function start(args: string[], cwd: string) {
+export function start(
+  args: string[],
+  cwd: string,
+  memoryStopKiB = DEFAULT_MEMORY_STOP_KIB,
+  sidecarTimeoutMs?: number,
+) {
   const child = spawn(process.execPath, args, {
     cwd,
     detached: true,
@@ -13,7 +19,9 @@ export function start(args: string[], cwd: string) {
     env: {
       ...process.env,
       MOKLY_OUTPUT: "plain",
-      MOKLY_SIDECAR_TIMEOUT_MS: "300000",
+      ...(sidecarTimeoutMs === undefined
+        ? {}
+        : { MOKLY_SIDECAR_TIMEOUT_MS: String(sidecarTimeoutMs) }),
     },
   });
   const timings = timingCollector();
@@ -21,19 +29,8 @@ export function start(args: string[], cwd: string) {
   let stdout = "",
     stderr = "",
     failure: Error | undefined;
-  const kill = (signal: NodeJS.Signals) => {
-    if (
-      !validPid(child.pid) ||
-      child.exitCode !== null ||
-      child.signalCode !== null
-    )
-      return;
-    try {
-      process.kill(-child.pid, signal);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-    }
-  };
+  const owned = lifetime(child);
+  const kill = owned.kill;
   const interrupt = () => {
     failure = new Error("Fixture run was interrupted");
     kill("SIGTERM");
@@ -41,9 +38,13 @@ export function start(args: string[], cwd: string) {
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", interrupt);
   const finishMemory = validPid(child.pid)
-    ? monitor(child.pid, (message) => {
-        failure = new Error(message);
-      })
+    ? monitor(
+        child.pid,
+        (message) => {
+          failure = new Error(message);
+        },
+        memoryStopKiB,
+      )
     : async () => ({
         peakKiB: 0,
         totalPeakKiB: 0,
@@ -73,6 +74,7 @@ export function start(args: string[], cwd: string) {
   });
   void done
     .finally(() => {
+      owned.finish();
       process.off("SIGINT", interrupt);
       process.off("SIGTERM", interrupt);
     })
@@ -88,13 +90,7 @@ export function start(args: string[], cwd: string) {
 }
 export type Running = ReturnType<typeof start>;
 export async function stop(running: Running) {
-  running.kill("SIGTERM");
-  const timer = globalThis.setTimeout(() => running.kill("SIGKILL"), 10_000);
-  try {
-    await running.done;
-  } finally {
-    clearTimeout(timer);
-  }
+  await stopChild(running);
 }
 export async function waitFor(running: Running, pattern: RegExp) {
   const deadline = Date.now() + 300_000;

@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
+import { previewBytes } from "./http.js";
 import type { PreparedFixture } from "./setup.js";
 
 /** Verify browser-visible readiness, axes, live props, cached bytes, and a page. */
@@ -13,6 +14,8 @@ export async function browse(
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
   });
+  context.setDefaultTimeout(60_000);
+  context.setDefaultNavigationTimeout(60_000);
   try {
     const page = await context.newPage();
     const errors: string[] = [];
@@ -71,9 +74,7 @@ export async function browse(
       .getAttribute("src");
     if (!src) throw new Error("Preview has no URL");
     const cached = performance.now();
-    const preview = await fetch(new URL(src, url));
-    if (!preview.ok) throw new Error(`Cached preview: HTTP ${preview.status}`);
-    const bytes = (await preview.arrayBuffer()).byteLength;
+    const bytes = await previewBytes(new URL(src, url));
     const cachedPreviewMs = performance.now() - cached;
     await page.goto(`${url}/view/area-1/components/action/`);
     await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");

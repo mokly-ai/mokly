@@ -154,9 +154,9 @@ foster-parented content. Initial newlines in `pre`, `textarea`, and `listing`
 survive repeated parsing.
 
 The opt-in large fixture has native HTML and React variants. Component parent
-views bring the default count to 5,790 documents across 1,590 routes. Generated
-output is ignored. The harness uses the Rust CLI and reports build and Serve
-measurements, with explicit deferrals for unavailable Changes and watch
-integrations. Workspace dependency reuse and isolated installs are distinct
-modes. Rebuilt-core time budgets require approval; measurements have no
-wall-clock assertions.
+views and Markdown documents give 5,850 documents across 1,620 routes. Generated
+output is ignored. One Markdown document per area exercises Markdown rendering
+in both colour schemes. The harness uses the Rust CLI and records build, Serve,
+Changes, and watch measurements. Workspace reuse and isolated installs are
+distinct modes. The opt-in benchmark enforces the approved startup budget of
+under 5000 ms. Automated correctness tests have no wall-clock assertions.

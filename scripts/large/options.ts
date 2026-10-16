@@ -6,6 +6,7 @@ import type {
 
 import { scenarios } from "./benchmark.js";
 import type { Scenario } from "./benchmark.js";
+import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import type { ToolchainMode } from "./toolchain.js";
 
 export function options(args: string[]) {
@@ -16,16 +17,46 @@ export function options(args: string[]) {
   let variant: Variant = "html",
     toolchain: ToolchainMode = "workspace",
     root: string | undefined;
+  let memoryStopKiB = DEFAULT_MEMORY_STOP_KIB,
+    sidecarTimeoutMs: number | undefined;
   let sidecars = 2,
     selected: readonly Scenario[] = scenarios;
   const input: Partial<LargeSize> = {};
   while (rest.length) {
     const flag = rest.shift()!;
+    const generateFlags = [
+      "--variant",
+      "--toolchain",
+      "--areas",
+      "--screens",
+      "--rows",
+      "--stylesheets",
+      "--stylesheet-share",
+    ];
+    const benchmarkFlags = [
+      "--scenario",
+      "--sidecars",
+      "--memory-stop-kib",
+      "--sidecar-timeout-ms",
+    ];
+    if (
+      (mode === "benchmark" && generateFlags.includes(flag)) ||
+      (mode === "generate" && benchmarkFlags.includes(flag))
+    )
+      throw new Error(`${flag} is not used by ${mode}`);
     const value = rest.shift();
     if (!value || value.startsWith("--"))
       throw new Error(`${flag} needs a value`);
     if (flag === "--root") root = value;
-    else if (flag === "--variant" && (value === "html" || value === "react"))
+    else if (flag === "--memory-stop-kib") {
+      memoryStopKiB = Number(value);
+      if (!Number.isSafeInteger(memoryStopKiB) || memoryStopKiB < 0)
+        throw new Error("--memory-stop-kib needs a non-negative integer");
+    } else if (flag === "--sidecar-timeout-ms") {
+      sidecarTimeoutMs = Number(value);
+      if (!Number.isSafeInteger(sidecarTimeoutMs) || sidecarTimeoutMs < 1)
+        throw new Error("--sidecar-timeout-ms needs a positive integer");
+    } else if (flag === "--variant" && (value === "html" || value === "react"))
       variant = value;
     else if (
       flag === "--toolchain" &&
@@ -63,6 +94,8 @@ export function options(args: string[]) {
     toolchain,
     root,
     sidecars,
+    memoryStopKiB,
+    ...(sidecarTimeoutMs === undefined ? {} : { sidecarTimeoutMs }),
     selected,
     size: largeSize(input),
   };

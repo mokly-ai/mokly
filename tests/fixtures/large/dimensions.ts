@@ -45,8 +45,8 @@ export function areaPaths(area: string, count: number) {
 }
 export function counts(size: LargeSize) {
   return {
-    routes: size.areas * (size.screens + 9 + Math.ceil(size.screens / 10)),
-    documents: size.areas * (size.screens * 4 + 33),
+    routes: size.areas * (size.screens + 10 + Math.ceil(size.screens / 10)),
+    documents: size.areas * (size.screens * 4 + 35),
   };
 }
 export function stylesheetRules(size: LargeSize) {
