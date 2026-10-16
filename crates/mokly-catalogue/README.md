@@ -45,6 +45,9 @@ adapter supplies definitions through that boundary. Private JavaScript
 recipes retain handles separately from source attribution, saved React slots,
 module edges, class-map identity, and the resolved handle table. Declared
 controls pass the Rust validator. Story control hints do not change schemas.
+Declared number controls carry their effective schema bounds and step into
+the read model. Authored bounds win; omitted values fall back to the schema,
+including an integer step of one when no multiple is declared.
 Inference exclusions become warnings only after final path derivation. Runtime
 failures retain typed terminal categories across provider boundaries. JavaScript
 diagnostics retain module and export attribution without invented coordinates. `DeferredDefinitions`

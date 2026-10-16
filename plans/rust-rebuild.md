@@ -682,7 +682,7 @@ from Milestone 12.
       static output.
 - [x] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
-- [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
+- [x] Port the example catalogue's HTML-only parts and add HTML fixtures; run
       the gap sweep against the rendering contracts; the example README
       follows.
   - [x] Replace `examples/basic/mokly.config.ts` with `mokly.config.json`
@@ -691,7 +691,7 @@ from Milestone 12.
         HTML components with variants and slots, a page, a use case, a
         folder record, and a Markdown document.
   - [x] Rewrite `examples/basic/README.md` to the end state.
-  - [ ] Add HTML fixtures and run the gap sweep against the rendering
+  - [x] Add HTML fixtures and run the gap sweep against the rendering
         contracts.
   - [x] Render the example's HTML part and check it at both viewports and in
         both schemes. Its stylesheets pass through the example's PostCSS
@@ -710,6 +710,10 @@ The Git source-tree adapter is part of Milestone 9. The example port remains
 assigned to its separate task.
 
 Example port evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m5-example/README.md`.
+HTML fixture sweep and controls evidence: `.context/rust-rebuild/sweeps/m5-html.md`
+and `.context/rust-rebuild/delegation/m8-core/report-9.md`.
+Final sweep review fixes and static/Serve evidence: `.context/rust-rebuild/delegation/m8-core/report-10.md`;
+merge decisions: `.context/rust-rebuild/delegation/m8-core/merge-decisions.md`.
 
 ## Milestone 6: Serve
 
@@ -843,6 +847,12 @@ renders again.
         for the core integration gap sweep.
   - [ ] Compare captured example and large scenarios after the example port
         and comparison integration land.
+  - [ ] Add the callback-only regressions from the M5 HTML sweep: conflicting
+        inputs from impure slot replay, renderer mutation isolation, and the
+        page helper call count. Cover and document the render-time failure of
+        a component wrapper whose definition is not exported by an entry
+        module. Cases 30, 32, 36, and 127 remain assigned here; native
+        templates cannot exercise callback side effects or wrapper exports.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every
@@ -1217,6 +1227,9 @@ Static release verification and smoke scope comparison:
     until the next generation while the user decision is pending.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
+  - M8 core review 3, finding 2, and review 6, finding 7: settle saved-prop
+    control bounds and declared steps that conflict with schema multiples or
+    integer values. Keep the current validation until the user decides.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout

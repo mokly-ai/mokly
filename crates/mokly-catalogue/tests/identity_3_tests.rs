@@ -84,6 +84,11 @@ fn component_variant_invalid() {
 }
 
 #[test]
+fn component_variant_schemes_and_related_docs_are_unknown_fields() {
+    fixtures::check("component-variant-inherited-fields");
+}
+
+#[test]
 fn folder_invalid_exclude() {
     fixtures::check("folder-invalid-exclude");
 }

@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>\n",
+    "specs/tour.use-case.yaml": "title: Tour\nsteps: [{screenPath: home}]\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-metadata",
+      "message": "use case tour steps through screen home, but the screen does not list the use case",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

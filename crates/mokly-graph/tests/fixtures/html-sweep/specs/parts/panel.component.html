@@ -1,0 +1,43 @@
+---
+title: Panel
+element: ui-panel
+propSchema:
+  type: object
+  additionalProperties: false
+  properties:
+    label: { type: string }
+    amount: { type: number }
+    count: { type: integer }
+    active: { type: boolean }
+    optional: { type: string }
+    meta:
+      type: object
+      additionalProperties: false
+      properties: { tag: { type: string }, note: { type: string } }
+props:
+  {
+    label: Saved panel,
+    amount: 1.5,
+    count: 1,
+    active: false,
+    meta: { tag: own },
+  }
+slots: [children, heading]
+variants:
+  - slug: alternate
+    title: Alternate panel
+    props: { label: Alternate panel, active: true, optional: present }
+    slots: { heading: "<strong>Variant heading {{ label }}</strong>" }
+---
+
+<article class="panel" data-active="{{ active }}" title="{{ optional }}">
+  <h2>{{ label }}</h2>
+  <span>{{ amount }} / {{ count }} / {{ meta.tag }}</span>
+  <slot name="heading"><b>Default heading</b></slot>
+  <slot name="heading"><b>Second default</b></slot>
+  <mokly-ignore id="muted"><time>Receiver clock</time></mokly-ignore>
+  <mokly-ignore-scope enabled="true">
+    <mokly-ignore id="panel-clock"><time>Panel clock</time></mokly-ignore>
+    <slot><em>Default body</em></slot>
+  </mokly-ignore-scope>
+</article>

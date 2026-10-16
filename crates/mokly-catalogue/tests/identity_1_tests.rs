@@ -164,6 +164,22 @@ fn reciprocal_flow() {
 }
 
 #[test]
+fn variant_membership_requires_a_reciprocal_flow_step() {
+    fixtures::check("variant-flow-missing-step");
+}
+
+#[test]
+fn flow_steps_require_reciprocal_screen_membership() {
+    fixtures::check("flow-missing-membership");
+}
+
+#[test]
+fn invalid_flow_peers_do_not_add_reciprocal_errors() {
+    fixtures::check("reciprocal-invalid-flow");
+    fixtures::check("reciprocal-invalid-screen");
+}
+
+#[test]
 fn folder_exclusion() {
     fixtures::check("folder-exclusion");
 }
