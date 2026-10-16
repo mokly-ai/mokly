@@ -2,6 +2,7 @@
 
 mod lifecycle_tests;
 mod support;
+mod warning_tests;
 mod watch_tests;
 
 mod fixture;

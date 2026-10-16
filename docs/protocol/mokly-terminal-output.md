@@ -118,7 +118,7 @@ Catalogue counts include saved variants as entries of their parent's kind.
 Unavailable Changes says `! Changes unavailable` with its reason and keeps
 All browsable. Serve reports each state's
 [build warnings](./mokly-build-warnings.md) immediately before
-`Catalogue ready`; on-demand renders never repeat them, and the `base-dependencies`
+`Catalogue ready`; later renders print only new warnings, and the `base-dependencies`
 warning of the [comparison contract](./mokly-comparison.md#sides) prints before
 `Changes ready`. `Changes ready` reports the
 [Changes count](./mokly-catalogue-changes.md#changes-count) as `<n> changes`,

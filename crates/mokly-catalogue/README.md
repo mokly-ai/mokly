@@ -17,6 +17,10 @@ render graph crates.
 - Keep private source membership separate from public resources.
 - Report structured errors and sorted build warnings with source locations.
 
+Warning identities keep route and named subjects distinct, including equal
+printed locations. Normalization sorts by printed location, message, code,
+and subject kind before removing exact duplicates.
+
 ## What This Crate Does
 
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit

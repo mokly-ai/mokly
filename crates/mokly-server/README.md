@@ -62,6 +62,12 @@ fresh policy check. `ConfinedReader` opens each directory and the final regular
 file without following symlinks. Routes never fall back to repository files.
 The built viewer's browser manifest lists the only client modules served.
 
+Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
+Serve attempt. Saved, background, and temporary renders deliver private
+composition warnings before returning their result, including retained
+warnings on failure. The CLI owns sorting, deduplication, and attempt fences.
+HTTP bodies and public models contain no warning records.
+
 Authored GET responses stream from the confined handle without a file-size
 limit. HEAD opens the same handle and sends no bytes. Preview asset copies use
 the existing preview-store byte budget. Serve delivers document and preview

@@ -8,11 +8,13 @@ use mokly_cli::grammar::Common;
 use mokly_cli::serve::{PreparedServe, ServePreparation};
 use mokly_server::error::{InternalError, Result, ServerError};
 
+use crate::serve_warnings::AttemptWarnings;
 use crate::serve_watch::WatchInputs;
 
 pub(super) async fn initial(
     preparation: Arc<dyn ServePreparation>,
     watching: Option<Arc<dyn WatchInputs>>,
+    attempt: Arc<dyn AttemptWarnings>,
     cwd: &Path,
     options: &Common,
 ) -> Result<std::result::Result<PreparedServe, BuildError>> {
@@ -25,6 +27,7 @@ pub(super) async fn initial(
                 Ok(prepared) => prepared,
                 Err(error) => return Ok(Err(error)),
             };
+            attempt.report(&prepared.summary.warnings, false);
             if let Some(watch) = watching {
                 let mut candidate = watch.candidate(&prepared)?;
                 if candidate.recheck {
@@ -32,6 +35,7 @@ pub(super) async fn initial(
                         Ok(prepared) => prepared,
                         Err(error) => return Ok(Err(error)),
                     };
+                    attempt.report(&prepared.summary.warnings, false);
                     watch.recheck(&mut candidate, &prepared)?;
                 }
                 watch.clone().adopt(candidate, &prepared);

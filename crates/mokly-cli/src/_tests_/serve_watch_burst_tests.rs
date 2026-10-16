@@ -25,7 +25,7 @@ use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
 
-use super::serve_rebuild_tests::initial;
+use super::serve_rebuild_tests::{initial, warning_scopes};
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
@@ -121,8 +121,8 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
                 move |_| current.lock().unwrap().clone()
             })),
         ServeStateFactoryMock::replace
-            .each_call(matching!(_, _, _))
-            .answers(&|_, _, revision, previous| Ok(previous.at_revision(revision)))
+            .each_call(matching!(_, _, _, _))
+            .answers(&|_, _, revision, previous, _| Ok(previous.at_revision(revision)))
             .n_times(2),
         PublicationWriterMock::replace
             .each_call(matching!(_))
@@ -193,7 +193,9 @@ async fn a_watcher_burst_during_an_action_runs_exactly_one_later_action() {
             .returns(())
             .n_times(2),
     ));
+    let (warnings, _warning_terminal) = warning_scopes();
     let action = ManualRebuilds {
+        warnings,
         watching: Some(Arc::new(observer.clone())),
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),
         preparation: Arc::new(CatalogueServe {

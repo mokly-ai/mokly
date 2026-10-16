@@ -11,18 +11,25 @@ use mokly_server::backend::GraphDocuments;
 use mokly_server::error::{Result, ServerError};
 use mokly_server::public_read::ConfinedReader;
 use mokly_server::snapshot::{Snapshot, SnapshotFactory, SnapshotInput};
+use mokly_server::warnings::RenderWarnings;
 use mokly_source_interface::tree::SourceTree;
 
 #[cfg_attr(test, unimock::unimock(api = ServeStateFactoryMock))]
 pub(super) trait ServeStateFactory: Send + Sync {
-    fn create(&self, prepared: &PreparedServe, revision: u64) -> Result<Arc<Snapshot>>;
+    fn create(
+        &self,
+        prepared: &PreparedServe,
+        revision: u64,
+        warnings: Arc<dyn RenderWarnings>,
+    ) -> Result<Arc<Snapshot>>;
     fn replace(
         &self,
         prepared: &PreparedServe,
         revision: u64,
         _previous: &Snapshot,
+        warnings: Arc<dyn RenderWarnings>,
     ) -> Result<Arc<Snapshot>> {
-        self.create(prepared, revision)
+        self.create(prepared, revision, warnings)
     }
 }
 
@@ -34,16 +41,22 @@ pub(super) struct NativeServeState {
 }
 
 impl ServeStateFactory for NativeServeState {
-    fn create(&self, prepared: &PreparedServe, revision: u64) -> Result<Arc<Snapshot>> {
-        self.project(prepared, revision, None)
+    fn create(
+        &self,
+        prepared: &PreparedServe,
+        revision: u64,
+        warnings: Arc<dyn RenderWarnings>,
+    ) -> Result<Arc<Snapshot>> {
+        self.project(prepared, revision, None, warnings)
     }
     fn replace(
         &self,
         prepared: &PreparedServe,
         revision: u64,
         previous: &Snapshot,
+        warnings: Arc<dyn RenderWarnings>,
     ) -> Result<Arc<Snapshot>> {
-        self.project(prepared, revision, Some(previous))
+        self.project(prepared, revision, Some(previous), warnings)
     }
 }
 impl NativeServeState {
@@ -52,6 +65,7 @@ impl NativeServeState {
         prepared: &PreparedServe,
         revision: u64,
         previous: Option<&Snapshot>,
+        warnings: Arc<dyn RenderWarnings>,
     ) -> Result<Arc<Snapshot>> {
         let config = &prepared.config;
         let policy = match FilePolicy::new(
@@ -70,6 +84,7 @@ impl NativeServeState {
                 repo_root: config.repo_root.clone(),
                 policy: Arc::new(policy),
             }),
+            warnings,
         ));
         let base = self
             .base

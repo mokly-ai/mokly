@@ -19,7 +19,7 @@ pub fn path(path: &Path, cwd: &Path, redactor: &Redactor) -> String {
     redactor.safe(&display_path(relative))
 }
 
-pub(crate) fn build(error: &BuildError, cwd: &Path, redactor: &Redactor) -> String {
+pub fn build(error: &BuildError, cwd: &Path, redactor: &Redactor) -> String {
     let mut paths = Vec::new();
     collect_build(error, &mut paths);
     let mut seen = Vec::new();

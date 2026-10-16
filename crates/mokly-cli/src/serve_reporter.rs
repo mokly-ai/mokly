@@ -17,6 +17,7 @@ use mokly_server::error::ServerError;
 use mokly_watch::event::Batch;
 
 use crate::serve_rebuild::RebuildReporter;
+use crate::serve_warnings::AttemptWarnings;
 use crate::terminal::Terminal;
 
 pub(super) struct ServeLines {
@@ -56,15 +57,17 @@ impl RebuildReporter for ServeLines {
         });
     }
 
-    fn watched_catalogue_failure(&self, batch: &Batch, repository: &Path, error: &BuildError) {
+    fn watched_catalogue_failure(
+        &self,
+        batch: &Batch,
+        repository: &Path,
+        warnings: &[Warning],
+        error: &BuildError,
+    ) {
         if self.cancellation.requested() {
             return;
         }
-        let warnings = build_output::warnings(
-            &self.style,
-            &build_output::warning_records(error),
-            &self.redactor,
-        );
+        let warnings = build_output::warnings(&self.style, warnings, &self.redactor);
         let plain = Style {
             mode: Mode::Plain,
             color: false,
@@ -138,16 +141,15 @@ impl RebuildReporter for ServeLines {
         self.terminal
             .stdout(&serve_output::catalogue(&self.style, summary, elapsed));
     }
-    fn catalogue_failure(&self, error: &BuildError) {
+    fn catalogue_failure(&self, warnings: &[Warning], error: &BuildError) {
         if self.cancellation.requested() {
             return;
         }
-        self.terminal.stderr(&build_output::failure(
-            &self.style,
-            error,
-            &self.redactor,
-            &self.cwd,
-        ));
+        self.terminal.stderr(
+            &(build_output::warnings(&self.style, warnings, &self.redactor)
+                + &build_output::failure_diagnostics(&self.style, error, &self.redactor)
+                + &mokly_cli::recovery_output::build(error, &self.cwd, &self.redactor)),
+        );
         if self.style.mode == Mode::Rich {
             self.terminal.stderr(&format!(
                 "{}\n",
@@ -158,12 +160,28 @@ impl RebuildReporter for ServeLines {
             ));
         }
     }
-    fn server_failure(&self, error: &ServerError) {
+    fn server_failure(&self, warnings: &[Warning], error: &ServerError) {
+        if self.cancellation.requested() {
+            return;
+        }
+        self.terminal.stderr(&build_output::warnings(
+            &self.style,
+            warnings,
+            &self.redactor,
+        ));
         Diagnostics::failed(self, error);
     }
 }
 
 impl ServeLines {
+    pub(super) fn preparation_failed(&self, attempt: &dyn AttemptWarnings, error: &BuildError) {
+        attempt.finish(&build_output::warning_records(error), true, &|warnings| {
+            self.terminal.stderr(
+                &(build_output::warnings(&self.style, warnings, &self.redactor)
+                    + &build_output::failure_diagnostics(&self.style, error, &self.redactor)),
+            );
+        });
+    }
     fn failure_line(&self, batch: &Batch, repository: &Path, warnings: &str, diagnostics: &str) {
         let time = chrono::Local::now().format("%H:%M:%S").to_string();
         self.terminal.stderr(&watch_output::failure(
