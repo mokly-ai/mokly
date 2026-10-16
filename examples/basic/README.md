@@ -174,8 +174,12 @@ screen inventory with the screens that only the catalogue tree reaches, the
 family parts of the adoption table, and the link expectations. The test also
 checks the shared components each design screen records, the stylesheets each
 view links, and every link's destination and focus behaviour. A new design
-screen updates the inventory and, when it depicts no part of its family, the
-adoption sets.
+screen updates the inventory. A family part that most screens show lists the
+screens without it, so a new screen without that part joins its `except` set.
+A part that only some screens show, such as the comparison toolbar, a
+comparison pane, an empty state, or the tag picker, lists those screens in its
+`only` set, so the test checks a new screen with that part only after it joins
+the set.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),
@@ -246,8 +250,9 @@ npm run package:smoke
 
 It packs the viewer, the CLI, and the host's native package, installs them
 into a copy of this example outside the repository, opens a React, a design,
-and an HTML screen through the installed `mokly serve` in headless Chrome, and
-builds the copy with `--strict`. The
+and an HTML screen through the installed `mokly serve` in headless Chrome,
+builds the copy with `--strict`, and opens the same screens in the built site.
+The
 [developer test commands](../../docs/protocol/developer-test-commands.md#packed-consumer-smoke)
 own its rules.
 

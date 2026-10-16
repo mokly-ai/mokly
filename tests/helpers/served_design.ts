@@ -75,10 +75,15 @@ export async function serveExample(
     ],
     { cwd: repositoryRoot },
   );
+  let listened = false;
   owner.after(async () => {
-    await server.stop();
+    const { code } = await server.stop();
+    // A Serve that started must also stop cleanly on its interrupt.
+    if (listened) assert.equal(code, 0, server.stderr());
   });
-  return loadCatalogue(await server.listening(signal), signal);
+  const url = await server.listening(signal);
+  listened = true;
+  return loadCatalogue(url, signal);
 }
 
 /**

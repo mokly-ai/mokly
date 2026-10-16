@@ -199,15 +199,25 @@ pages that the example's documents link to, into a scratch consumer outside
 the repository. The copy keeps the repository layout that the example's
 `repoRoot` and its asset outside the catalogue root need. The smoke installs
 the three archives and the example's own dependencies at the versions the
-workspace installed. Through the installed shim it starts
-`mokly serve --no-watch` in its own process group, which it drains on every
-path, as the [fixture lifetime rules](./ci-suite-evidence.md#fixture-lifetime-and-cleanup)
-require. It opens a React screen, a design screen, and an HTML
-screen in the Browse shell in headless Chrome, and waits for each desktop
-frame's text with no page error, failed request, or console error other than
-the viewer's sandbox reports. It then runs
-`mokly build --strict --no-changes` and checks the site's home, not-found, and
-shell route files. The install needs registry access. Set
+workspace installed.
+
+Through the installed shim it starts `mokly serve --no-watch --sidecars 1` in
+its own process group, as the
+[fixture lifetime rules](./ci-suite-evidence.md#fixture-lifetime-and-cleanup)
+require. It drains that group on every path, also on an interrupt, and keeps
+the scratch directory for diagnosis when the drain cannot confirm that every
+process ended. It opens a React screen, a design screen, and an HTML screen in
+the Browse shell in headless Chrome and waits for each desktop frame's text
+with no page error, failed request, or console error other than the viewer's
+sandbox reports. A navigation's cancelled requests, the cancelled event stream,
+and a cancelled index or detail refresh are no failures. It then runs
+`mokly build --strict --no-changes --sidecars 1 --out ../../site`; a relative
+`--out` resolves against the configuration's directory. The site must hold
+its home, not-found, and shell route files. A plain file server then serves
+the site, Chrome opens the same three screens, and the site requests no live
+endpoint.
+
+The smoke runs on Linux and macOS, and its install needs registry access. Set
 `MOKLY_SMOKE_CHROME` to a Chrome executable when Playwright's browser is not
 installed. The smoke stays outside every suite of `cargo xtask check`; the
 release workflow's clean-consumer smokes check the release archives.

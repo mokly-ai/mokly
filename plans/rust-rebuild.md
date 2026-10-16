@@ -938,6 +938,7 @@ Frame inspector marker port and its Serve run: `.context/rust-rebuild/m7-inspect
 Example and design catalogue render and visual check: `.context/rust-rebuild/example-visual/index.md`.
 Design catalogue checks, their mutation proofs, and the packed consumer smoke: `.context/rust-rebuild/m5-example/design-checks/index.md`.
 Review 3 fixes of the design checks and the smoke: `.context/rust-rebuild/m5-example/round8/index.md`.
+Review 4 fixes, the built-site smoke, and its runs on the merged tree: `.context/rust-rebuild/m5-example/round9/index.md`.
 
 Core integration evidence: `.context/rust-rebuild/delegation/m8-core/report-1.md`;
 sweep: `.context/rust-rebuild/sweeps/m8-core.md`; merge decisions:
@@ -1174,7 +1175,7 @@ Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.
-  - [ ] Make `npm run package:smoke` require the built site once Milestone 12
+  - [x] Make `npm run package:smoke` require the built site once Milestone 12
         supplies the writer.
 - [ ] Cover the three paths of the previous packed smoke: zero-install
       `npx --package @mokly/mokly mokly` with an empty cache, configuration
@@ -1194,6 +1195,9 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 Static release verification and smoke scope comparison:
 `.context/rust-rebuild/delegation/m13/report-5.md`.
+Packed example smoke with the built site on the merged tree:
+`.context/rust-rebuild/m5-example/round9/package-smoke.log`; it fails when the
+site is absent: `.context/rust-rebuild/m5-example/round9/package-smoke-no-site.log`.
 
 ## Milestone 14: Large-project acceptance
 
@@ -1237,8 +1241,6 @@ Static release verification and smoke scope comparison:
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Milestone 13 static verification follow-up: the example branch's packed
-    smoke must check the config-relative output and fail when the site is absent.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
@@ -1296,9 +1298,10 @@ Static release verification and smoke scope comparison:
     2. Desktop component canvas width differs. Severity Low, effort Small.
        Recommended: B, the component design and the mockups adopt the shell's
        fixed 1024px desktop canvas.
-    3. The shell stub declares no icon. Severity Low, effort Small.
-       Recommended: A, the stub declares an icon, so no `/favicon.ico`
-       request fails.
+    3. The shell stub declares no icon. Severity Low, effort Small. Settled
+       at `da23c1ce`: the stub declares the packaged Browse icon, so no
+       `/favicon.ico` request fails, and the packed smoke has no icon
+       allowance.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

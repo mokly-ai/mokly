@@ -126,8 +126,10 @@ action already in effect get the mark from `useCurrentPage` in
 `../parts/design_navigation.tsx`, which compares a destination with the
 nearest `DesignNavigation` artboard. The component explorer's narrow shortcuts
 compare with the artboard that their shell renders. Only the top bar's brand
-link on the home screen opens its own artboard without the mark. The device frame's `scheme` flag adds the rendered scheme to its caption,
-as the component explorer previews show it, so no screen draws its own frame
+link on the home screen opens its own artboard without the mark.
+
+The device frame's `scheme` flag adds the rendered scheme to its caption, as
+the component explorer previews show it, so no screen draws its own frame
 caption.
 
 ## Styles And Hosts
@@ -176,7 +178,7 @@ From the repository root:
 
 ```sh
 npm run build
-npx mokly build --config examples/basic/mokly.config.json --strict --out .context/example
+npx mokly build --config examples/basic/mokly.config.json --strict --out ../../.context/example
 npm run typecheck
 npm test -- tests/design_boundaries.test.ts tests/design_appearance.test.ts tests/design_catalogue.test.ts
 cargo xtask check

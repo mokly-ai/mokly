@@ -117,30 +117,47 @@ function treeEntries(nodes: readonly CatalogueNode[]): string[] {
 /**
  * Each design screen has an inbound design link, or the catalogue tree
  * reaches it: the contract's runtime-only states and the frozen screens that
- * no artboard links yet. The rule is one way, so a listed screen that gains
- * a link passes. Every listed path names a design screen, and the tree lists
- * every design screen.
+ * no artboard links yet. The rule is one way for those frozen screens. A
+ * runtime-only state takes a link only as a listed failure state's retry.
+ * Every listed path names a design screen, and the tree lists every design
+ * screen.
  */
 export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
   const screens = catalogue.index.screens
     .map((entry) => entry.path)
     .filter((screen) => screen.startsWith("design/"));
-  const inbound = new Set<string>();
+  const sources = new Map<string, Set<string>>();
   for (const view of catalogue.views)
     if (view.path.startsWith("design/"))
       for (const [element] of withAncestors(view.document)) {
         if (element.tagName !== "a") continue;
         const target = attribute(element, "data-mokly-link")?.split("#")[0];
-        if (target && target !== view.path) inbound.add(target);
+        if (target && target !== view.path)
+          sources.set(
+            target,
+            (sources.get(target) ?? new Set()).add(view.path),
+          );
       }
-  const listed = [...INVENTORY.runtimeOnly, ...INVENTORY.treeReached];
+  const { runtimeOnly, treeReached, retries } = INVENTORY;
+  const listed = [
+    ...runtimeOnly,
+    ...treeReached,
+    ...Object.entries(retries).flat(2),
+  ];
   const tree = new Set(treeEntries(catalogue.index.tree));
   return [
-    ...listed
+    ...[...new Set(listed)]
       .filter((screen) => !screens.includes(screen))
       .map((screen) => `${screen} is listed but is no design screen`),
+    ...runtimeOnly.flatMap((state) =>
+      [...(sources.get(state) ?? [])]
+        .filter((source) => !(retries[state] ?? []).includes(source))
+        .map((source) => `${source} links to the runtime-only ${state}`),
+    ),
     ...screens.flatMap((screen) => [
-      ...(inbound.has(screen) || listed.includes(screen)
+      ...(sources.has(screen) ||
+      runtimeOnly.includes(screen) ||
+      treeReached.includes(screen)
         ? []
         : [`${screen} has no inbound design link`]),
       ...(tree.has(screen) ? [] : [`${screen} is not in the catalogue tree`]),

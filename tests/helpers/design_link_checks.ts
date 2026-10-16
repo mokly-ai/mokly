@@ -39,6 +39,10 @@ export function expectationViolations(catalogue: ServedCatalogue): string[] {
     );
     if (views.length === 0) violations.push(`${expectation.source}: no view`);
     for (const view of views) {
+      const { within } = expectation;
+      // A scope passes only where its container exists.
+      if (within !== undefined && byClass(view, within).length === 0)
+        violations.push(`${view.route}: no ${within} container`);
       const found = named(view, matches, expectation.within);
       const name = expectation.name ?? expectation.namePattern;
       const targets = found.map((link) => attribute(link, "data-mokly-link"));

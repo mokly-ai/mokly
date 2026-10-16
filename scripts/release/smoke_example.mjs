@@ -2,20 +2,18 @@
  * Pack the viewer, the CLI, and the host's native package; install the
  * archives into a scratch copy of the example outside the repository; serve
  * it through the installed shim and open a React, a design, and an HTML
- * screen in headless Chrome; then build it with `--strict`.
+ * screen in headless Chrome; then build it with `--strict` and open the same
+ * screens in the built site.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { chromium } from "@playwright/test";
-
-import { expectedConsoleNotice } from "../../tests/browser/console_notices.js";
-
 import { createPackageArchive } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
 import { spawnServe } from "./serve_process.mjs";
+import { browse, browseSite, SCREENS } from "./smoke_example_browser.mjs";
 import { NATIVE_TARGETS } from "./targets.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
@@ -43,13 +41,6 @@ const EXAMPLE_DEPENDENCIES = [
   "react-native-web",
   "react-native-worklets",
   "tailwindcss",
-];
-
-/** One screen per authoring kind, with text its desktop view shows. */
-const SCREENS = [
-  { path: "example/screens/welcome", text: "View details" },
-  { path: "design/browse/views/screen", text: "Search catalogue…" },
-  { path: "example/team/members", text: "Invite teammate" },
 ];
 
 async function pack(destination) {
@@ -140,119 +131,104 @@ async function install(consumer, packages) {
   return path.join(consumer, "node_modules/@mokly/mokly/bin/mokly.mjs");
 }
 
+/** Serve's process group did not drain; the scratch directory stays. */
+class DrainFailure extends AggregateError {}
+
+const SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"];
+
 /**
  * Serve the copy through the installed shim in its own process group, open
- * the screens, and stop Serve. The group drains on every path, and a normal
- * stop asserts a clean exit.
+ * the screens, and stop Serve. The group drains on every path, also on an
+ * interrupt, and a normal stop asserts a clean exit.
  */
 async function serveAndBrowse(consumer, shim) {
-  const server = spawnServe(shim, [...CONFIG, "--no-watch", "--port", "0"], {
-    cwd: consumer,
-  });
-  let browsed = false;
-  try {
-    await browse(await server.listening(AbortSignal.timeout(600_000)));
-    browsed = true;
-  } finally {
-    const { code } = await server.stop();
-    if (browsed) assert.equal(code, 0, server.stderr());
-  }
-}
-
-/** Open each screen in the Browse shell and wait for its desktop frame. */
-async function browse(url) {
-  const browser = await chromium.launch(
-    process.env.MOKLY_SMOKE_CHROME
-      ? {
-          executablePath: process.env.MOKLY_SMOKE_CHROME,
-          args: ["--no-sandbox"],
-        }
-      : {},
+  const server = spawnServe(
+    shim,
+    [...CONFIG, "--no-watch", "--port", "0", "--sidecars", "1"],
+    { cwd: consumer },
   );
+  const interrupt = (signal) =>
+    server.stop().then(
+      () => process.exit(128 + os.constants.signals[signal]),
+      () => process.exit(1),
+    );
+  for (const signal of SIGNALS) process.once(signal, interrupt);
+  let failure;
   try {
-    const page = await browser.newPage({
-      viewport: { width: 1440, height: 900 },
-    });
-    const problems = [];
-    page.on("pageerror", (error) => problems.push(error.message));
-    // The shell stub names no icon until the plan's open review item "The
-    // shell stub declares no icon" is settled, so the icon request fails.
-    const icon = (url) => /^https?:\/\/[^/]+\/favicon\.ico$/u.test(url);
-    page.on("console", (message) => {
-      if (
-        message.type() === "error" &&
-        !expectedConsoleNotice(message) &&
-        !icon(message.location().url)
-      )
-        problems.push(`${message.text()} ${message.location().url}`);
-    });
-    page.on("response", (response) => {
-      if (response.status() >= 400 && !icon(response.url()))
-        problems.push(`${response.status()} ${response.url()}`);
-    });
-    // A navigation cancels the open event stream, which is no failure.
-    page.on("requestfailed", (request) => {
-      const failure = request.failure()?.errorText;
-      if (failure !== "net::ERR_ABORTED" && !icon(request.url()))
-        problems.push(`${failure} ${request.url()}`);
-    });
-    for (const screen of SCREENS) {
-      await page.goto(`${url}/view/${screen.path}/`, { waitUntil: "load" });
-      const frame = page.frameLocator(
-        `iframe[src*="/${screen.path}/index.desktop.html"]`,
-      );
-      await frame
-        .getByText(screen.text, { exact: true })
-        .first()
-        .waitFor({ timeout: 60_000 });
-      process.stdout.write(`Served ${screen.path} in the Browse shell.\n`);
-    }
-    assert.deepEqual(problems, []);
-  } finally {
-    await browser.close();
+    await browse(
+      await server.listening(AbortSignal.timeout(600_000)),
+      "Served",
+    );
+  } catch (error) {
+    failure = error;
   }
+  let outcome;
+  try {
+    outcome = await server.stop();
+  } catch (error) {
+    throw new DrainFailure(
+      failure ? [failure, error] : [error],
+      "Serve did not drain",
+    );
+  } finally {
+    for (const signal of SIGNALS) process.off(signal, interrupt);
+  }
+  if (failure) throw failure;
+  assert.equal(outcome.code, 0, server.stderr());
 }
 
-/** Build strictly; assert the site once the static writer writes one. */
-async function build(consumer, shim) {
+/**
+ * Build strictly into `site/` beside the copy's `examples/`: a relative
+ * `--out` resolves against the configuration's directory. Check the home,
+ * not-found, and shell route files, then open the screens from the site.
+ */
+async function buildAndBrowse(consumer, shim) {
   const { stdout, stderr } = await runCommand(
     process.execPath,
-    [shim, "build", ...CONFIG, "--strict", "--no-changes", "--out", "site"],
+    [
+      shim,
+      "build",
+      ...CONFIG,
+      "--strict",
+      "--no-changes",
+      "--sidecars",
+      "1",
+      "--out",
+      "../../site",
+    ],
     { cwd: consumer, env: { MOKLY_OUTPUT: "plain" } },
   );
   process.stdout.write(stdout + stderr);
   const site = path.join(consumer, "site");
-  const written = await fs.stat(site).then(
-    () => true,
-    () => false,
-  );
-  if (!written) {
-    process.stdout.write(
-      "mokly build --strict validated the catalogue; it wrote no site, so no static output was checked.\n",
-    );
-    return false;
-  }
   for (const file of [
     "index.html",
     "404.html",
     ...SCREENS.map((screen) => `view/${screen.path}/index.html`),
   ])
     assert.ok((await fs.stat(path.join(site, file))).isFile(), file);
-  return true;
+  await browseSite(site);
 }
 
 const scratch = await fs.mkdtemp(
   path.join(os.tmpdir(), "mokly-example-consumer-"),
 );
+let keep = false;
 try {
   const packages = await pack(path.join(scratch, "archives"));
   const consumer = path.join(scratch, "example");
   const shim = await install(consumer, packages);
   await serveAndBrowse(consumer, shim);
-  const site = await build(consumer, shim);
+  await buildAndBrowse(consumer, shim);
   process.stdout.write(
-    `The packed example served a React, a design, and an HTML screen${site ? " and built its site" : ""}.\n`,
+    "The packed example served and built a React, a design, and an HTML screen.\n",
   );
+} catch (error) {
+  keep = error instanceof DrainFailure;
+  throw error;
 } finally {
-  await fs.rm(scratch, { recursive: true, force: true });
+  if (keep)
+    process.stderr.write(
+      `Kept ${scratch} for diagnosis: Serve did not drain.\n`,
+    );
+  else await fs.rm(scratch, { recursive: true, force: true });
 }

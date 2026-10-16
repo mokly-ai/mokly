@@ -1,15 +1,6 @@
 import type { ChildProcessByStdio } from "node:child_process";
 import type { Readable } from "node:stream";
 
-/** One live process below a Serve shim. */
-export interface ServeProcess {
-  pid: number;
-  ppid: number;
-  pgid: number;
-  zombie: boolean;
-  command: string;
-}
-
 /** Exit state of the shim after its process group drained. */
 export interface ServeOutcome {
   code: number | null;
@@ -25,12 +16,6 @@ export interface ServeGroup {
   /** Interrupt Serve, kill what stays, and confirm that every process ended. */
   stop(): Promise<ServeOutcome>;
 }
-
-/** Every live process below `pid`, from one `ps` listing. */
-export function processTree(pid: number): ServeProcess[];
-
-/** The listed processes that still run; an exited zombie counts as gone. */
-export function running(pids: readonly number[]): number[];
 
 /** Start `node {shim} serve {args}` in its own process group. */
 export function spawnServe(

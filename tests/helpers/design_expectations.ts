@@ -28,6 +28,8 @@ export interface DesignInventory {
   runtimeOnly: string[];
   /** Other screens that no design artboard links to yet; the tree opens them. */
   treeReached: string[];
+  /** The failure states whose retry may open each runtime-only state. */
+  retries: Record<string, string[]>;
 }
 
 export interface LinkExpectation {

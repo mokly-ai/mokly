@@ -186,5 +186,17 @@
     "design/components/states/shared-impact/shared-impact",
     "design/components/states/shared-impact/style-outside",
     "design/components/states/unavailable"
-  ]
+  ],
+  "retries": {
+    "design/browse/loading/catalogue-loading": [
+      "design/browse/loading/catalogue-failed",
+      "design/browse/loading/viewer-version"
+    ],
+    "design/browse/loading/preview-loading": [
+      "design/browse/appearance/status/error"
+    ],
+    "design/components/controls/states/preparing": [
+      "design/components/controls/states/preparing/failed"
+    ]
+  }
 }
