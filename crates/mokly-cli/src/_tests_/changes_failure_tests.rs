@@ -34,6 +34,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
     };
     let (graphs, _guards) = graphs(vec![head.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
+        inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: Arc::new(Unimock::new(
             ConfigLoaderMock::load
@@ -76,6 +77,7 @@ fn strict_counts_head_and_base_preparation_warnings_after_classification() {
 fn an_invalid_internal_review_is_a_fatal_build_error() {
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
+        inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: Arc::new(Unimock::new(
             ConfigLoaderMock::load

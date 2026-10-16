@@ -8,6 +8,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures_util::{StreamExt, stream};
+use tracing::Instrument;
 
 use crate::accounting::{Receipt, count, plan_digests, progress};
 use crate::completion::{Completion, rejection};
@@ -58,6 +59,7 @@ impl Exchange for Client {
         };
         let mut uploaded = plan_digests(prepared);
         for round in 0..2 {
+            self.reporter.round(round);
             let result = self.round(&requests, prepared, round, &mut uploaded).await;
             match result {
                 Ok(completion) => {
@@ -91,19 +93,35 @@ impl Client {
             body: prepared.archive.clone(),
             timeout: Duration::from_secs(120),
         };
-        let response = requests.send(&request, None, None).await?;
-        if response.status != 200 {
-            rejection(response.status)?;
-        }
-        let plan = Plan::parse(&response, requests.settings, &prepared.digests())?;
+        let plan = {
+            let span = tracing::info_span!("upload.plan", status = "error");
+            let response = requests
+                .send(&request, None, None)
+                .instrument(span.clone())
+                .await?;
+            if response.status != 200 {
+                rejection(response.status)?;
+            }
+            let plan = Plan::parse(&response, requests.settings, &prepared.digests())?;
+            span.record("status", "ok");
+            plan
+        };
         let attempted: Vec<_> = plan
             .missing
             .iter()
             .map(|_| Arc::new(AtomicBool::new(false)))
             .collect();
-        let result = self
-            .blobs(requests, prepared, &plan, round, &attempted)
-            .await;
+        let result = {
+            let span = tracing::info_span!("upload.blobs", status = "error");
+            let result = self
+                .blobs(requests, prepared, &plan, round, &attempted)
+                .instrument(span.clone())
+                .await;
+            if result.is_ok() {
+                span.record("status", "ok");
+            }
+            result
+        };
         uploaded.extend(
             plan.missing
                 .iter()
@@ -118,10 +136,14 @@ impl Client {
             body: Bytes::new(),
             timeout: Duration::from_secs(120),
         };
-        Completion::parse(
-            &requests.send(&request, Some(plan.expires_at), None).await?,
-            &requests.settings.token,
-        )
+        let span = tracing::info_span!("upload.complete", status = "error");
+        let response = requests
+            .send(&request, Some(plan.expires_at), None)
+            .instrument(span.clone())
+            .await?;
+        let completion = Completion::parse(&response, &requests.settings.token)?;
+        span.record("status", "ok");
+        Ok(completion)
     }
 
     async fn blobs(

@@ -139,6 +139,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
@@ -152,7 +153,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
 }
 
 #[test]
-fn strict_build_keeps_warnings_and_resolves_explicit_output_from_cwd() {
+fn strict_build_keeps_warnings_and_resolves_output_from_config() {
     let warning = Warning {
         code: "html-unused-props",
         subject: WarningSubject::Entry("home".into()),
@@ -165,12 +166,13 @@ fn strict_build_keeps_warnings_and_resolves_explicit_output_from_cwd() {
     ));
     let builder = Arc::new(Unimock::new(
         CatalogueBuilderMock::prepare
-            .next_call(matching!((_, output) if *output == Some(Path::new("/repo/nested/preview"))))
+            .next_call(matching!((_, output) if *output == Some(Path::new("/repo/preview"))))
             .returns(Ok(prepared(vec![warning.clone()]))),
     ));
     let (graphs, _guards) = graphs(vec![warning.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
@@ -200,6 +202,7 @@ fn a_loader_failure_preserves_the_typed_error_without_preparing_a_catalogue() {
     ));
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: Arc::new(Unimock::new(())),
@@ -231,6 +234,7 @@ fn deferred_definitions_fail_before_graph_creation() {
     ));
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
         catalogue: builder,
@@ -266,6 +270,7 @@ fn an_interrupt_after_html_preparation_cancels_before_graph_creation() {
     ));
     let service: &dyn BuildService = &CatalogueBuild {
         changes: Arc::new(Unimock::new(())),
+        inputs: None,
         config: loader,
         catalogue: builder,
         graphs: Arc::new(Unimock::new(())),

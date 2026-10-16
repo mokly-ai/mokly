@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config::ConfigLoader;
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
@@ -12,13 +13,14 @@ use mokly_compare::base_render::ChangesService;
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::error::Error;
 use mokly_graph::error::{GraphError, InternalError};
-use mokly_graph::types::GraphFactory;
+use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
 use crate::cancellation::Cancellation;
 use crate::changes_output::ChangeDiagnostic;
 use crate::grammar::Build;
+use crate::pre_installation;
 
 /// Validated catalogue counts and warnings for terminal presentation.
 #[derive(Clone, Debug)]
@@ -47,6 +49,52 @@ pub enum BuildError {
         source: Box<Error>,
         /// Current build and base preparation warnings.
         warnings: Vec<Warning>,
+    },
+    /// A signal stopped work before installation; the original diagnostic remains.
+    #[error("[mokly-cli/build] {source}")]
+    Interrupted {
+        /// Primary failure before any earlier output moved.
+        source: Box<BuildError>,
+    },
+    /// The build failed and stopping render workers also failed.
+    #[error("[mokly-cli/build] {primary}; render shutdown failed: {shutdown}")]
+    Shutdown {
+        /// Original failure, including a classified cancellation.
+        primary: Box<BuildError>,
+        /// Independent render shutdown failure.
+        shutdown: Box<BuildError>,
+    },
+    /// Transaction cleanup failed after an earlier command error.
+    #[error("[mokly-cli/build] {primary}; output cleanup failed: {cleanup}")]
+    Cleanup {
+        /// Original typed command failure.
+        primary: Box<BuildError>,
+        /// Typed cleanup failure; never a sidecar error.
+        cleanup: Box<mokly_static::error::Error>,
+        /// Exact retained operation path.
+        path: PathBuf,
+    },
+    /// The selected publication policy refuses warnings without an explicit --strict.
+    #[error(
+        "[mokly-cli/build] The catalogue has build warnings. Fix the reported warnings and retry."
+    )]
+    Warnings,
+    /// The matching viewer package is unavailable.
+    #[error("[mokly-cli/build] Build or reinstall the matching @mokly/viewer package.")]
+    Viewer,
+    /// Static output or its recovery failed.
+    #[error("[mokly-cli/build] {source}")]
+    Static {
+        /// Typed output failure, including both recovery causes.
+        source: mokly_static::error::Error,
+    },
+    /// Comparison history could not be resolved.
+    #[error("[mokly-cli/build] Git information could not be read for {base}: {source}")]
+    Git {
+        /// Selected reference.
+        base: String,
+        /// Bounded Git failure.
+        source: mokly_git::error::Error,
     },
     /// The command was interrupted before successful completion.
     #[error("[mokly-cli/build] build cancelled")]
@@ -81,9 +129,21 @@ pub enum BuildError {
     },
 }
 
+/// Complete render retained for output assembly without reloading the catalogue.
+pub struct PreparedBuild {
+    /// Resolved configuration used by the generation.
+    pub config: ResolvedConfig,
+    /// Render graph with complete documents and authored closure.
+    pub generation: Arc<dyn RenderGeneration>,
+    /// Validation counts, warnings, and retained Changes for the M12/M9 join.
+    pub summary: BuildSummary,
+}
+
 /// Build command service, consumed through `dyn BuildService` at the CLI root.
 #[cfg_attr(test, unimock::unimock(api = BuildServiceMock))]
 pub trait BuildService: Send + Sync {
+    /// Keep the validated generation for static output assembly.
+    fn prepare(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError>;
     /// Discover and validate the catalogue in memory, with no file writes.
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError>;
 }
@@ -92,6 +152,8 @@ pub trait BuildService: Send + Sync {
 pub struct CatalogueBuild {
     /// Shared base preparation and comparison service.
     pub changes: Arc<dyn ChangesService>,
+    /// Static builds capture all explicit inputs before document callbacks run.
+    pub inputs: Option<Arc<dyn mokly_static::fingerprint::InputTree>>,
     /// Cancellation state checked at every build phase.
     pub cancellation: Arc<dyn Cancellation>,
     /// Data-only configuration loader.
@@ -104,11 +166,16 @@ pub struct CatalogueBuild {
 
 impl BuildService for CatalogueBuild {
     fn run(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
+        Ok(self.prepare(cwd, options)?.summary)
+    }
+
+    fn prepare(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError> {
+        let parent = tracing::Span::current();
         let result = std::thread::scope(|scope| {
             let thread = match std::thread::Builder::new()
                 .name("mokly-build".into())
                 .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || self.attempt(cwd, options))
+                .spawn_scoped(scope, || parent.in_scope(|| self.attempt(cwd, options)))
             {
                 Ok(thread) => thread,
                 Err(source) => return Err(runtime(InternalError::PreparationThread { source })),
@@ -118,11 +185,7 @@ impl BuildService for CatalogueBuild {
                 Err(_) => Err(runtime(InternalError::PreparationPanicked)),
             }
         });
-        if self.cancellation.requested() {
-            Err(BuildError::Cancelled)
-        } else {
-            result
-        }
+        pre_installation::settle(result, self.cancellation.as_ref())
     }
 }
 
@@ -140,78 +203,6 @@ impl CatalogueBuild {
         } else {
             Ok(())
         }
-    }
-
-    fn attempt(&self, cwd: &Path, options: &Build) -> Result<BuildSummary, BuildError> {
-        self.checkpoint()?;
-        let config = match self.config.load(cwd, options.common.config.as_deref()) {
-            Ok(config) => config,
-            Err(source) => return Err(BuildError::Catalogue { source }),
-        };
-        self.checkpoint()?;
-        let output: PathBuf = options.out.as_ref().map_or_else(
-            || config.repo_root.join("mokly-static"),
-            |path| cwd.join(path),
-        );
-        let prepared = match self.catalogue.prepare(&config, Some(&output)) {
-            Ok(prepared) => prepared,
-            Err(source) => return Err(BuildError::Catalogue { source }),
-        };
-        self.checkpoint()?;
-        if !prepared.deferred_modules.is_empty() {
-            return Err(BuildError::Deferred {
-                modules: prepared.deferred_modules,
-                warnings: prepared.warnings,
-            });
-        }
-        let graph = match self.graphs.create(&config) {
-            Ok(graph) => graph,
-            Err(source) => {
-                return Err(BuildError::Rendering {
-                    source: Box::new(source),
-                    warnings: prepared.warnings,
-                });
-            }
-        };
-        self.checkpoint()?;
-        let generation = match graph.prepare(config.clone(), prepared.clone(), Some(&output)) {
-            Ok(generation) => generation,
-            Err(source) => {
-                return Err(BuildError::Rendering {
-                    source: Box::new(source),
-                    warnings: prepared.warnings,
-                });
-            }
-        };
-        self.checkpoint()?;
-        let rendered = match generation.render_all() {
-            Ok(summary) => summary,
-            Err(source) => {
-                return Err(BuildError::Rendering {
-                    source: Box::new(source),
-                    warnings: prepared.warnings,
-                });
-            }
-        };
-        self.checkpoint()?;
-        let mut warnings = rendered.warnings;
-        let changes = self.classify_changes(&config, options, generation, &mut warnings)?;
-        self.checkpoint()?;
-        mokly_catalogue::diagnostic::normalize_warnings(&mut warnings);
-        if options.strict && !warnings.is_empty() {
-            return Err(BuildError::Strict { warnings });
-        }
-        let mut counts = BTreeMap::new();
-        for entry in &prepared.model.entries {
-            *counts.entry(entry.content.kind()).or_default() += 1;
-        }
-        Ok(BuildSummary {
-            changes,
-            documents: rendered.documents,
-            counts,
-            warnings,
-            deferred_modules: prepared.deferred_modules,
-        })
     }
 }
 

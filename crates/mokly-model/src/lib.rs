@@ -63,4 +63,5 @@ mod record_validation;
 
 mod snapshot_order;
 
+pub mod shell;
 mod snapshot_source_order;

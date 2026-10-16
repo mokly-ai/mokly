@@ -26,3 +26,14 @@ mod changes_diagnostics;
 
 mod build_changes;
 mod changes_policy;
+pub mod static_build;
+
+pub mod pre_installation;
+
+pub mod static_errors;
+
+pub mod static_admission;
+
+pub mod publication_signals;
+
+mod build_prepare;

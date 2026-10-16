@@ -42,6 +42,8 @@ keep edits in the target runtime; navigating to another entry or entering a
 comparison discards them.
 
 Pending state keeps the last valid preview visible and shows Updating preview.
+On mobile that status is a pill at the top of the preview, above the open
+inspector sheet.
 Rendering failure also retains that preview, with Try again and Reset actions.
 Retry leads back through the pending design state. Comparison shows the saved
 variant and read-only values, with a short secondary explanation. Published

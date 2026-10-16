@@ -46,6 +46,9 @@ pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Ou
         .env("XDG_CACHE_HOME", &cache_root)
         .env("HOME", &cache_root)
         .env("LOCALAPPDATA", &cache_root)
+        .env("TMPDIR", &cache_root)
+        .env("TMP", &cache_root)
+        .env("TEMP", &cache_root)
         .env(
             "MOKLY_PACKAGE_ROOT",
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/mokly"),
@@ -73,6 +76,11 @@ pub fn run_with_node(root: &Path, arguments: &[&str], node: Option<&Path>) -> Ou
 
 pub fn base(files: &[(&str, &str)]) -> TempDir {
     let directory = TempDir::new().unwrap();
+    write(
+        directory.path(),
+        ".gitignore",
+        "node_modules/\nmokly-static/\n.context/\n",
+    );
     write(
         directory.path(),
         "mokly.config.json",

@@ -20,15 +20,15 @@ is installable when released.
 
 ## Keep the checkout clean
 
-Publish requires a clean checkout before export and again before upload.
-Git-ignored files, this run's output directory, and Mokly's own caches and
-temporary files never count. Committed generated files count and must match the
-build. Derived generated output must be ignored by Git.
+Publish requires committed HEAD and a clean checkout before the build and again
+before upload. Commit source changes before the job runs. Keep build products
+ignored by Git. Mokly builds in a private directory outside the checkout and
+prints its location before rendering. Ignored files and operation-owned
+reservations do not count as uncommitted changes.
 
-A build step that changes tracked files or leaves files that Git does not ignore
-stops the publish. Commit generated changes before the job runs. Add build
-products to `.gitignore`. Use `npm ci` to install from the committed lockfile
-without changing it.
+Use `npm ci` to install the committed dependency lockfile. A job that changes
+tracked sources or creates non-ignored files must resolve those changes before
+it publishes.
 
 ## Usage
 
@@ -63,7 +63,7 @@ jobs:
           version: ${{ vars.MOKLY_VERSION }}
           endpoint: ${{ vars.MOKLY_ENDPOINT }}
           token: ${{ secrets.MOKLY_TOKEN }}
-          config: mokly.config.ts
+          config: mokly.config.json
           base: origin/main
 ```
 
@@ -89,14 +89,15 @@ Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`; the action's pin is a tested
 representative, not the lower bound. The action does not check out the consumer,
 install its dependencies, fetch history, publish an npm package or comment on
 pull requests.
-Consumer authoring code runs during export, so only grant upload credentials to
+Consumer authoring code runs during the build, so only grant upload credentials to
 trusted workflows. Use a receiver-scoped token through GitHub secrets; do not
 pass it in a workflow shell command. The receiver controls repository access.
 
 Success means the receiver completed the publication; this action has no
 outputs.
 Errors propagate the CLI's nonzero exit code and typed category. The complete
-local export remains under the config-relative `.context/mokly-publish` path.
+local build remains in the private directory reported by
+`Mokly publish build: {directory}`. A failed upload keeps it for inspection.
 
 ## Development
 

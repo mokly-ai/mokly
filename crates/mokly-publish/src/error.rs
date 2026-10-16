@@ -1,12 +1,8 @@
 //! Safe, typed publication failures. Network details never enter this contract.
 
-use std::path::PathBuf;
-
 use mokly_git::error;
 use mokly_model::output::error::FormatError;
 use thiserror::Error;
-
-use crate::build_failure::BuildFailure;
 
 /// Publication result.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -79,43 +75,6 @@ pub enum Error {
         "[mokly-publish/git-failed] The repository could not be identified. Set --repository to host/owner/name."
     )]
     Repository,
-    /// Publication requires a clean checkout.
-    #[error("[mokly-publish/git-uncommitted] The checkout has uncommitted changes.")]
-    Uncommitted {
-        /// All unique repository-relative changed paths, sorted for display.
-        paths: Vec<String>,
-        /// The final check detected changes after rendering.
-        during_build: bool,
-        /// Known output folders for literal Git ignore guidance.
-        build_directories: Vec<String>,
-    },
-    /// A concurrent checkout changed the revision during rendering.
-    #[error("[mokly-publish/git-failed] HEAD changed during the build. Run mokly publish again.")]
-    HeadChanged,
-    /// The static builder is an explicit later milestone boundary.
-    #[error("[mokly-publish/build-invalid] Static output is not available in this build.")]
-    StaticUnavailable,
-    /// An error owned by the static output transaction retains its category.
-    #[error("[mokly-publish/build] {failure}")]
-    Build {
-        /// Original typed build or recovery error.
-        failure: Box<dyn BuildFailure>,
-    },
-    /// The selected warning policy refused publication.
-    #[error(
-        "[mokly-publish/build-invalid] The catalogue has build warnings. Fix the reported warnings and retry."
-    )]
-    BuildWarnings,
-    /// Private output allocation failed before the static builder started.
-    #[error(
-        "[mokly-publish/export-invalid] Unable to prepare temporary output at {temporary_root:?}. Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout."
-    )]
-    Directory {
-        /// Normalized temporary root, safe to show after terminal redaction.
-        temporary_root: PathBuf,
-        /// Typed reason; raw operating system messages are never printed.
-        reason: DirectoryFailure,
-    },
     /// Safe failures inside adapters retain their source for code inspection.
     #[error(
         "[mokly-publish/upload-failed] The catalogue could not be prepared for publication. Rebuild the catalogue and retry."
@@ -150,18 +109,4 @@ impl<T> OutputResult<T> for std::result::Result<T, FormatError> {
             Err(FormatError::Repository) => Err(Error::Repository),
         }
     }
-}
-
-/// Private-directory failures preserve their reason without exposing raw I/O text.
-#[derive(Debug, Error)]
-pub enum DirectoryFailure {
-    /// The selected temporary root is inside the checkout.
-    #[error("[mokly-publish/directory] temporary root is inside the checkout")]
-    InsideRepository,
-    /// The temporary directory could not be resolved or allocated.
-    #[error("[mokly-publish/directory] temporary root is unavailable")]
-    Unavailable {
-        /// Original operating-system failure, for typed inspection only.
-        source: std::io::Error,
-    },
 }

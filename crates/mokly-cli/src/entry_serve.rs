@@ -2,7 +2,6 @@
 
 use std::env;
 use std::io::IsTerminal;
-use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
@@ -118,7 +117,7 @@ pub(super) fn run(
                 return Ok(ExitCode::SUCCESS);
             }
             let assets: &dyn ViewerAssets = &PackageAssets { tree: tree.clone() };
-            let dist = viewer_dist().ok_or(ServerError::InvalidAssets)?;
+            let dist = crate::viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
             let states: Arc<dyn ServeStateFactory> = Arc::new(NativeServeState {
                 tree: tree.clone(),
                 projector: Arc::new(Projector {
@@ -238,21 +237,4 @@ pub(super) fn run(
             ExitCode::FAILURE
         }
     }
-}
-
-fn viewer_dist() -> Option<PathBuf> {
-    if let Some(path) = env::var_os("MOKLY_VIEWER_DIST") {
-        return Some(PathBuf::from(path));
-    }
-    let executable = env::current_exe().ok()?;
-    executable
-        .ancestors()
-        .skip(1)
-        .flat_map(|parent| {
-            [
-                parent.join("viewer/dist"),
-                parent.join("packages/viewer/dist"),
-            ]
-        })
-        .find(|path| path.join("browser.manifest.json").is_file())
 }

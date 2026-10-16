@@ -118,6 +118,7 @@ impl Harness {
             ("client/inspector.js", "text/javascript; charset=utf-8"),
             ("shell.css", "text/css; charset=utf-8"),
             ("fonts/InterVariable.woff2", "font/woff2"),
+            ("client/brand.svg", "image/svg+xml"),
         ] {
             assets.insert(
                 format!("mokly-viewer/{path}"),

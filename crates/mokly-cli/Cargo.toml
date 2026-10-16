@@ -28,11 +28,11 @@ unicode-width = "0.2.2"
 unimock = { version = "0.6.8", optional = true }
 url = "2.5.8"
 serde_json = "1.0.154"
-ctrlc = { version = "3.5.2", features = ["termination"] }
 
 crossterm = "0.29.0"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
+chrono = "0.4.45"
 
 [dev-dependencies]
 mokly-compare = { workspace = true, features = ["mock"] }
@@ -58,6 +58,12 @@ thiserror = "2.0.21"
 [features]
 mock = ["dep:unimock", "mokly-publish/mock"]
 
+[target."cfg(unix)".dependencies]
+signal-hook = "0.3.18"
+
+[target."cfg(not(unix))".dependencies]
+ctrlc = { version = "3.5.2", features = ["termination"] }
+
 [dependencies.mokly-publish]
 workspace = true
 
@@ -68,5 +74,12 @@ workspace = true
 workspace = true
 
 [dev-dependencies.mokly-publish]
+workspace = true
+features = ["mock"]
+
+[dependencies.mokly-static]
+workspace = true
+
+[dev-dependencies.mokly-static]
 workspace = true
 features = ["mock"]

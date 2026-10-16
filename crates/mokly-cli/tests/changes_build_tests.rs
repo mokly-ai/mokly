@@ -114,7 +114,7 @@ fn base_validation_failure_keeps_the_head_catalogue_and_prints_each_source_diagn
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
-    assert!(stdout.contains("Catalogue ready"));
+    assert!(stdout.contains("Built Mokly to"));
     assert!(stdout.contains("Changes unavailable"));
     assert!(stderr.contains("unexpected"), "{stderr}");
     assert!(stderr.contains("alsoBad"), "{stderr}");

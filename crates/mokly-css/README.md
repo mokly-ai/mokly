@@ -30,6 +30,12 @@ returns plugin provenance and directory watch recipes beside the transformed
 text. The graph protects those inputs and reports plugin-specific recovery
 actions. Selected dependency roots keep their logical `node_modules` names.
 
+Package aliases use the configuration directory's Node ancestor lookup,
+then the configured package roots, as the JavaScript graph does. Imports
+without an alias use the importing stylesheet's directory.
+The core supplies configured package roots as ordered logical dependency
+directories. The resolver applies only one longest-key alias substitution.
+
 A configured root delivers `styles/{repository-path}`. A JavaScript root
 delivers `styles/{module-path}.css`. Assets use `assets/{repository-path}`.
 URLs keep query and fragment suffixes. Public resources never read private

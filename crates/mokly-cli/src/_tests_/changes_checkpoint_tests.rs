@@ -65,6 +65,7 @@ fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
             ))
         };
         let service: &dyn BuildService = &CatalogueBuild {
+            inputs: None,
             cancellation,
             changes,
             graphs: Arc::new(factory),

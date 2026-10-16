@@ -1,7 +1,8 @@
 /**
  * One shell root's data outside React: the installed index, the details its
- * fences accepted, the publications of the event stream, and the live
- * descriptor. The shell store renders from it; tests drive it with fakes.
+ * fences accepted, the publications of the event stream and of stale renders,
+ * and the live descriptor. The shell store renders from it; tests drive it
+ * with fakes.
  */
 
 import { detailKey, type DetailRequest } from "../catalogue/detail_fences.js";
@@ -14,13 +15,14 @@ import {
   type ShellDataSnapshot,
 } from "./data_commit.js";
 import { LiveDescriptor, type LiveEditingStatus } from "./data_descriptor.js";
+import { staleAwareLiveSource } from "./data_live_transport.js";
 import {
   loadFencedDetail,
   loadRefresh,
   routeKey,
   type DetailOutcome,
 } from "./data_requests.js";
-import type { ShellDataSource } from "./data_source.js";
+import type { ShellDataSource, ShellLiveSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
 /** What the controller asks of the shell that owns it. */
@@ -48,6 +50,7 @@ export class ShellDataController {
   #closeStream: (() => void) | undefined;
   #streamWarned = false;
   readonly #descriptor: LiveDescriptor;
+  readonly #live: ShellLiveSource | undefined;
   #refreshing: AbortController | undefined;
   #refreshFailed: string | undefined;
 
@@ -59,6 +62,11 @@ export class ShellDataController {
     this.#snapshot = initial;
     this.#source = source;
     this.#host = host;
+    this.#live =
+      source?.live &&
+      staleAwareLiveSource(source.live, (revision) =>
+        this.#refreshStale(revision),
+      );
     this.#descriptor = new LiveDescriptor(source?.live, {
       generation: () => this.#snapshot.index.live?.generation,
       changed: () => this.#changed(),
@@ -94,8 +102,8 @@ export class ShellDataController {
   }
 
   /** The live transport, present while a descriptor is installed. */
-  get live(): ShellDataSource["live"] {
-    return this.#descriptor.installed ? this.#source?.live : undefined;
+  get live(): ShellLiveSource | undefined {
+    return this.#descriptor.installed ? this.#live : undefined;
   }
 
   /** A counter that changes with every observable change. */
@@ -249,6 +257,17 @@ export class ShellDataController {
         this.#changed();
       }
     });
+  }
+
+  /**
+   * Serve answered a render of the installed revision with 409, so a newer
+   * publication exists. Refresh once, unless a refresh is loading, so the
+   * shell adopts it also while the event stream is down.
+   */
+  #refreshStale(revision: number): void {
+    const installed = this.#snapshot.index.revision;
+    if (!this.#connected || this.#refreshing || revision !== installed) return;
+    this.#refresh(installed + 1);
   }
 
   #disconnect(): void {

@@ -3,12 +3,16 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::redaction::Redactor;
+use mokly_cli::static_build::{Phase, Phases};
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory};
 use mokly_compare::cache_types::Reporter;
 use mokly_compare::comparison::Engine;
+use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::error::Result;
 use mokly_compare::locations::{OnceReporter, plain_line};
 use mokly_compare::moves::Detector;
 use mokly_css::parsed_cache::MemoryParsedCss;
@@ -17,6 +21,7 @@ use mokly_git::disk::SystemDisk;
 use mokly_git::repository::GitRepositories;
 use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
+use mokly_graph::types::RenderGeneration;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::runtime::Runtime;
 
@@ -30,6 +35,7 @@ pub(super) fn service(
     terminal: Arc<dyn Terminal>,
     style: Style,
     redactor: Arc<Redactor>,
+    phases: Arc<dyn Phases>,
 ) -> Arc<dyn ChangesService> {
     let token: Arc<dyn control::Cancellation> = Arc::new(GitCancellation {
         command: cancellation.clone(),
@@ -43,7 +49,7 @@ pub(super) fn service(
             redactor,
         }),
     });
-    Arc::new(Changes {
+    let changes = Arc::new(Changes {
         repositories: Arc::new(GitRepositories {
             runner: Arc::new(SystemRunner {
                 clock: Arc::new(SystemClock::default()),
@@ -68,7 +74,24 @@ pub(super) fn service(
             moves: Arc::new(Detector),
             css: Arc::new(MemoryParsedCss::new(64 * 1024 * 1024)),
         }),
-    })
+    });
+    Arc::new(PhasedChanges { changes, phases })
+}
+
+struct PhasedChanges {
+    changes: Arc<dyn ChangesService>,
+    phases: Arc<dyn Phases>,
+}
+impl ChangesService for PhasedChanges {
+    fn classify(
+        &self,
+        config: &ResolvedConfig,
+        base: Option<&str>,
+        head: Arc<dyn RenderGeneration>,
+    ) -> Result<ComparisonResult> {
+        self.phases.start(Phase::Comparing);
+        self.changes.classify(config, base, head)
+    }
 }
 
 struct GitCancellation {

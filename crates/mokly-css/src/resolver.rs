@@ -1,6 +1,5 @@
 //! Injected stylesheet resolver; source access never reaches ambient files.
 
-use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -34,7 +33,7 @@ impl ImportResolver for SourceResolver {
             stylesheet: importer.into(),
             specifier: specifier.into(),
         };
-        let (specifier, aliased) = self.alias(specifier).ok_or_else(failure)?;
+        let (specifier, aliased) = self.alias(specifier);
         let relative_source = if aliased {
             format!("{}/package.json", self.settings.config_directory)
                 .trim_start_matches('/')
@@ -42,7 +41,8 @@ impl ImportResolver for SourceResolver {
         } else {
             importer.into()
         };
-        if let Some(relative) = paths::resolve(&relative_source, &specifier)
+        if !aliased
+            && let Some(relative) = paths::resolve(&relative_source, &specifier)
             && let Some(path) = self.file(&relative)
         {
             return Ok(path);
@@ -51,12 +51,11 @@ impl ImportResolver for SourceResolver {
             return Err(failure());
         }
         let mut directories = Vec::new();
-        let mut directory = Path::new(importer).parent();
+        let mut directory = Path::new(&relative_source).parent();
         while let Some(base) = directory {
             directories.push(base.to_string_lossy().into_owned());
             directory = base.parent();
         }
-        directories.extend(self.settings.package_roots.clone());
         let parts: Vec<_> = specifier.split('/').collect();
         let package_segments = if specifier.starts_with('@') { 2 } else { 1 };
         if parts.len() < package_segments {
@@ -121,29 +120,22 @@ impl ImportResolver for SourceResolver {
 }
 
 impl SourceResolver {
-    fn alias(&self, specifier: &str) -> Option<(String, bool)> {
-        let mut value = specifier.to_owned();
-        let mut seen = BTreeSet::new();
-        let mut aliased = false;
-        while let Some((name, replacement)) = self
+    fn alias(&self, specifier: &str) -> (String, bool) {
+        if let Some((name, replacement)) = self
             .settings
             .aliases
             .iter()
             .filter(|(name, _)| {
-                value == **name
-                    || value
+                specifier == *name
+                    || specifier
                         .strip_prefix(name.as_str())
                         .is_some_and(|rest| rest.starts_with('/'))
             })
             .max_by_key(|(name, _)| name.len())
         {
-            if !seen.insert(value.clone()) {
-                return None;
-            }
-            value = replacement.clone() + &value[name.len()..];
-            aliased = true;
+            return (replacement.clone() + &specifier[name.len()..], true);
         }
-        Some((value, aliased))
+        (specifier.into(), false)
     }
     fn file(&self, path: &str) -> Option<String> {
         if regular(self.tree.as_ref(), &self.repo_root.join(path)) {

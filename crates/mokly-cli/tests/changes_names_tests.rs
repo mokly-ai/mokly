@@ -7,6 +7,7 @@ use std::process::Command;
 use std::sync::Arc;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::discovery::Discoverer;
 use mokly_catalogue::preparation::Builder;
 use mokly_catalogue::working_tree::WorkingTree;
@@ -15,6 +16,8 @@ use mokly_cli::cancellation::BuildCancellation;
 use mokly_cli::grammar::{Build, Common};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
+use mokly_cli::static_build::{Phase, Phases};
+use mokly_sidecar::workers::Diagnostics;
 use tempfile::TempDir;
 use unimock::Unimock;
 
@@ -126,11 +129,12 @@ fn inspect(root: &Path) {
         root,
         &config.repo_root,
         &common,
-        redactor.clone(),
+        Arc::new(ProbeDiagnostics),
         cancellation.clone(),
     )
     .unwrap();
     let service: &dyn BuildService = &CatalogueBuild {
+        inputs: None,
         changes: changes_runtime::service(
             services.runtime.clone(),
             cancellation.clone(),
@@ -142,6 +146,7 @@ fn inspect(root: &Path) {
                 columns: 120,
             },
             redactor,
+            Arc::new(ProbeDiagnostics),
         ),
         cancellation,
         config: loader,
@@ -195,4 +200,24 @@ fn inspect(root: &Path) {
     if let Some(path) = env::var_os("MOKLY_TEST_REVIEW_OUTPUT") {
         fs::write(path, serde_json::to_vec_pretty(&changes.review).unwrap()).unwrap();
     }
+}
+
+struct ProbeDiagnostics;
+impl Diagnostics for ProbeDiagnostics {
+    fn emit(&self, message: &str) {
+        eprintln!("{message}");
+    }
+}
+
+impl Phases for ProbeDiagnostics {
+    fn start(&self, phase: Phase) {
+        assert_eq!(phase, Phase::Comparing);
+    }
+    fn diagnostic(&self, message: &str) {
+        eprintln!("{message}");
+    }
+    fn warnings(&self, warnings: &[Warning]) {
+        assert!(warnings.is_empty());
+    }
+    fn changes(&self, _: &BuildChanges) {}
 }
