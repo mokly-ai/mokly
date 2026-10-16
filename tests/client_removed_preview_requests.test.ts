@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { requestPreview } from "../packages/viewer/dist/previews/request.js";
-import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewView } from "../packages/viewer/dist/review/types.js";
 
 import {
   COMPARISON,
@@ -106,14 +106,14 @@ test("a reused or stale generation is treated as unavailable", async () => {
   );
 });
 
-test("a historical response must belong to the selected baseline", async () => {
+test("a historical response must belong to the selected base", async () => {
   const generation = `https://catalogue.test${COMPARISON}`;
   const selected = {
     ...removedScreen,
     catalogueIdentity: "c".repeat(64),
-    snapshotId: snapshotId("baseline", "a".repeat(40), removedScreen),
+    snapshotId: snapshotId("a".repeat(40), removedScreen),
   };
-  const views: ReviewResultV7["screens"][number]["views"] = [
+  const views: ReviewView[] = [
     {
       viewport: "mobile",
       colorScheme: "light",
@@ -142,13 +142,13 @@ test("a historical response must belong to the selected baseline", async () => {
   );
 });
 
-test("a generation-backed selection accepts only its immutable generation", async () => {
+test("a snapshot id that names a generation instead of its base is unavailable", async () => {
   const selected = {
     ...removedScreen,
     catalogueIdentity: "c".repeat(64),
-    snapshotId: snapshotId("generation", GENERATION, removedScreen),
+    snapshotId: snapshotId(GENERATION, removedScreen, "generation"),
   };
-  const views: ReviewResultV7["screens"][number]["views"] = [
+  const views: ReviewView[] = [
     {
       viewport: "mobile",
       colorScheme: "light",
@@ -156,8 +156,7 @@ test("a generation-backed selection accepts only its immutable generation", asyn
       ignoredIds: [],
     },
   ];
-  const wrongGeneration = "d".repeat(64);
-  const endpoint = `https://catalogue.test/mokly-viewer/diffs/generations/${wrongGeneration}/review.json`;
+  const endpoint = `https://catalogue.test${COMPARISON}`;
   const response = respond(review(views), endpoint);
 
   await assert.rejects(
@@ -171,24 +170,36 @@ test("a generation-backed selection accepts only its immutable generation", asyn
   );
 });
 
-test("a page response cannot replace its selected baseline or generation", async () => {
-  const selectedBaseline = {
+test("a page response must belong to the selected base", async () => {
+  const selected = {
     ...removedPage,
     catalogueIdentity: "c".repeat(64),
-    snapshotId: snapshotId("baseline", "a".repeat(40), removedPage),
+    snapshotId: snapshotId("a".repeat(40), removedPage),
   };
-  const payload = {
+  const payload = (baseCommit: string) => ({
     schemaVersion: 3,
     baseRef: "origin/main",
-    baseCommit: "d".repeat(40),
+    baseCommit,
     path: removedPage.path,
-  };
+  });
   const endpoint = new URL(`https://catalogue.test/${pagePath}`);
   const generation = new URL(`https://catalogue.test${COMPARISON}`);
-  const stale = respond(payload, endpoint.href);
+  const exact = respond(payload("a".repeat(40)), endpoint.href);
+  const loaded = await requestPreview(
+    selected,
+    { endpoint, generation },
+    exact.win,
+    AbortSignal.timeout(15_000),
+  );
+  assert.equal(
+    loaded.generation,
+    `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/`,
+  );
+
+  const stale = respond(payload("d".repeat(40)), endpoint.href);
   await assert.rejects(
     requestPreview(
-      selectedBaseline,
+      selected,
       { endpoint, generation },
       stale.win,
       AbortSignal.timeout(15_000),
@@ -196,18 +207,15 @@ test("a page response cannot replace its selected baseline or generation", async
     /previous version is unavailable/,
   );
 
-  const selectedGeneration = {
-    ...removedPage,
-    catalogueIdentity: "c".repeat(64),
-    snapshotId: snapshotId("generation", GENERATION, removedPage),
+  const named = {
+    ...selected,
+    snapshotId: snapshotId(GENERATION, removedPage, "generation"),
   };
-  const redirectedUrl = endpoint.href.replace(GENERATION, "e".repeat(64));
-  const redirected = respond(payload, redirectedUrl);
   await assert.rejects(
     requestPreview(
-      selectedGeneration,
+      named,
       { endpoint, generation },
-      redirected.win,
+      exact.win,
       AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,

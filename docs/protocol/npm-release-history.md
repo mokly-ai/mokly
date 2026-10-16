@@ -122,3 +122,65 @@ opaque identity.
 
 Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
 the applicable upgrades above; the release PR owns versions and changelogs.
+
+## Historical Publish Checkout Release Note
+
+`mokly publish` requires a clean checkout before export and before upload.
+Commit, stash or ignore uncommitted files. Git-ignored files, this run's `--out`
+directory, and Mokly caches and temporary files are excluded. Committed generated
+files must match the build; rebuild and commit them when stale. Derived output
+must be ignored by Git. Failures use `git-uncommitted` or `build-stale`.
+`--no-changes` still needs a committed HEAD but needs no comparison history.
+See the [upload contract](./mokly-upload.md). Local export and repository preview
+capture keep their existing checkout rules.
+
+## Historical Removed Options Release Note
+
+The current API has no document transformation bridge. Remove
+`MoklyConfig.compatibility` and `compatibility.transformer`. The
+`CompatibilityConfig`, `CompatibilityTransformer` and
+`CompatibilityTransformInput` exports are removed from `@mokly/mokly`.
+Render portable HTML and links directly in entries or the configured renderer.
+Supplying `compatibility`, including `undefined`, fails with
+`compatibility was removed; author portable links directly`.
+
+Catalogue v6 has one fixed layout. The branch-only `generatedPathPrefix`,
+`GeneratedPathPrefix`, `FrameMount.generatedPathPrefix` and `FrameMount.route`
+never shipped and have no migration API. `currentDocumentPath(route)` and
+`currentDocumentRoute(pathname)` use `GENERATED_DIRECTORY` directly. The
+catalogue schema version is 6. No DOM prefix override is supported.
+
+Export directories require the current v3 ownership marker or must be empty.
+There is no preview-marker migration. Baseline caches accept only complete v10
+output and rebuild invalid entries. Only the current generated notice is
+nonmaterial; its LF and CRLF forms remain accepted. Format version rejection,
+removed-key errors and the service's 426 handling remain unchanged.
+
+Stored `BrowseRecoveryState` requires `changesStatus` and
+`filterBaselineDisclosures`; missing values discard that stored snapshot.
+General shell snapshots keep their optional live status. Removed records require
+`snapshotId` for any non-null `comparisonUrl`. Serve's local comparison endpoint
+is not a public catalogue pointer; published pointers retain the generation-only
+allowlist.
+
+## Historical Portable Namespace Release Note
+
+The viewer namespace is now `mokly-viewer/`, with comparison generations below
+`mokly-viewer/diffs/generations/`. There is no `/__mokly/` alias. Generated HTML,
+CSS, assets and the private manifest share `<mockupsDir>/mokly-generated/`.
+Exported current resources live under `static/mokly-generated/`, with authored
+closure files beside that child under `static/`.
+
+Readers accept source manifest v10, public catalogue v6, delivery v5 and
+bootstrap v2 only. The namespace change advances ownership to v3 and upload to
+v2 while retaining Plan v1 and content deltas. These supersede the intermediate
+format numbers in the earlier upgrade notes below. An older receiver returns
+426 with the documented service-version message; an incompatible viewer fails
+before reading paths. Mokly Cloud requires the separate receiver/viewer update.
+See [namespace compatibility](./mokly-viewer-namespace.md#compatibility-failure).
+
+The historical notes retain coverage for earlier releases: `7aba5ec2`
+(navigation paths), `d227702e` (identity), `40ab4324` (comparison baseline),
+`c16926ba` (baseline and viewer host), and `52ca8548` (delta publishing).
+They describe earlier upgrades, not the current API. The path identity note
+supersedes their identity, navigation and format guidance.

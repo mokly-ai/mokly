@@ -1,25 +1,33 @@
 import assert from "node:assert/strict";
 
 import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
 import type {
-  ChangedEntry,
   EntryChangeReason,
-  Manifest,
-  ReviewResultV7,
-} from "../../packages/viewer/dist/data.js";
+  ReviewEntry,
+  ReviewResult,
+} from "../../packages/viewer/dist/review/types.js";
 
-/** Sorted change paths, retaining duplicates so exact assertions reject them. */
-export function changedEntryPaths(result: ReviewResultV7): string[] {
-  return result.changes.map(changePath).sort();
+/** Every entry record, each component parent followed by its variants. */
+function records(result: ReviewResult): ReviewEntry[] {
+  return result.entries.flatMap((entry) => [entry, ...(entry.variants ?? [])]);
+}
+
+/** Sorted included paths, retaining duplicates so exact assertions reject them. */
+export function changedEntryPaths(result: ReviewResult): string[] {
+  return records(result)
+    .filter((entry) => entry.included)
+    .map(changePath)
+    .sort();
 }
 
 /** Exact reasons for an entry; missing or duplicate entries fail the test. */
 export function reasonsOf(
-  result: ReviewResultV7,
+  result: ReviewResult,
   path: string,
 ): readonly EntryChangeReason[] {
-  const changes = result.changes.filter(
-    (change) => changePath(change) === path,
+  const changes = records(result).filter(
+    (entry) => entry.included && changePath(entry) === path,
   );
   assert.equal(changes.length, 1, `Expected one changed entry for ${path}`);
   const [change] = changes;
@@ -28,18 +36,18 @@ export function reasonsOf(
 }
 
 /** Sorted component identities that actually affect at least one consumer. */
-export function impactingIds(result: ReviewResultV7): string[] {
+export function impactingIds(result: ReviewResult): string[] {
   return [
-    ...new Set(result.affectedConsumers.map((item) => item.changedComponentId)),
+    ...new Set(result.affected.map((item) => item.changedComponentId)),
   ].sort();
 }
 
 /** Sorted screen consumers for one changed component, never another owner. */
 export function screenConsumersOf(
-  result: ReviewResultV7,
+  result: ReviewResult,
   changedComponentId: string,
 ): string[] {
-  return result.affectedConsumers
+  return result.affected
     .flatMap((item) =>
       item.changedComponentId === changedComponentId &&
       item.consumer.kind === "screen"
@@ -49,19 +57,29 @@ export function screenConsumersOf(
     .sort();
 }
 
-/** Saved variants of a named component consumer for one changed component. */
+/**
+ * The views of a named component consumer, its own or its saved variants',
+ * whose usage shows one changed component.
+ */
 export function usageVariantsOf(
-  result: ReviewResultV7,
+  result: ReviewResult,
   changedComponentId: string,
   consumerPath: string,
 ): string[] {
-  const variants = result.affectedConsumers.flatMap((item) =>
+  const parent = result.entries.find(
+    (entry) => entry.kind === "component" && entry.path === consumerPath,
+  );
+  const own = new Set([
+    consumerPath,
+    ...(parent?.variants ?? []).map((variant) => variant.path),
+  ]);
+  const variants = result.affected.flatMap((item) =>
     item.changedComponentId === changedComponentId &&
     item.consumer.kind === "component" &&
     item.consumer.path === consumerPath
       ? item.evidence.flatMap(({ context }) =>
-          context.kind === "component" && context.entry.path === consumerPath
-            ? [context.variantPath]
+          context.kind === "component" && own.has(context.entry.path)
+            ? [context.entry.path]
             : [],
         )
       : [],
@@ -71,11 +89,11 @@ export function usageVariantsOf(
 
 /** Unique component-id chains for one changed component and named consumer. */
 export function usageChainsOf(
-  result: ReviewResultV7,
+  result: ReviewResult,
   changedComponentId: string,
   consumerPath: string,
 ): string[][] {
-  const chains = result.affectedConsumers.flatMap((item) =>
+  const chains = result.affected.flatMap((item) =>
     item.changedComponentId === changedComponentId &&
     item.consumer.path === consumerPath
       ? item.evidence.map(({ via }) =>
@@ -89,17 +107,19 @@ export function usageChainsOf(
     .map(([, chain]) => chain);
 }
 
-/** Sorted entries whose dependency reasons name this exact stylesheet path. */
+/** Sorted included entries whose dependency reasons name this exact route. */
 export function stylesheetScope(
-  result: ReviewResultV7,
+  result: ReviewResult,
   stylesheetPath: string,
 ): string[] {
-  return result.changes
-    .filter((change) =>
-      change.reasons.some(
-        (reason) =>
-          reason.kind === "dependency" && reason.path === stylesheetPath,
-      ),
+  return records(result)
+    .filter(
+      (entry) =>
+        entry.included &&
+        entry.reasons.some(
+          (reason) =>
+            reason.kind === "dependency" && reason.path === stylesheetPath,
+        ),
     )
     .map(changePath)
     .sort();
@@ -124,8 +144,10 @@ export function manifestScreenConsumers(
     .sort();
 }
 
-function changePath(change: ChangedEntry): string {
-  const entry = change.after ?? change.before;
-  assert.ok(entry, "A changed entry must have a before or after side");
+function changePath(entry: ReviewEntry): string {
+  assert.ok(
+    entry.after ?? entry.before,
+    "A changed entry must have a before or after side",
+  );
   return entry.path;
 }
