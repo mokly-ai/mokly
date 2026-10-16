@@ -74,8 +74,9 @@ that component changed. Render, document-style, and non-CSS resource
 attribution keep their own instance rules under the
 [component attribution contract](./mokly-component-changes.md).
 
-Each changed component owns its records, gets a reason, and gets a Changes
-row. A variant gets its own row for this component reason only when X keeps a
+Each own component or variant view with a kept match supplies that entry's
+reason and Changes row. A variant-only match permits the parent identity in
+affected evidence without adding a parent row. A variant gets its own row for this component reason only when X keeps a
 match on that variant's own page; a variant is never added solely because the
 parent changed. The entry-evidence rule below still applies to every page.
 Parent CSS evidence is a direct reason, separate from the navigation
@@ -166,9 +167,9 @@ declarations agree, so a stylesheet rename does not pair additions with
 removals across paths. A link-only change to an unchanged stylesheet is
 document material under the [materiality rule](./mokly-comparison.md#materiality);
 it invents no changed rule. A missing stylesheet counterpart is empty only
-after the verified-deletion check of the
-[Changes contract](./mokly-changes.md#resources); an invalid read never
-becomes an empty stylesheet.
+when that side does not reference the file and its absence is proved by the
+confined source reader. A missing referenced target fails validation; an
+invalid read never becomes an empty stylesheet.
 
 ## Attribution Examples
 

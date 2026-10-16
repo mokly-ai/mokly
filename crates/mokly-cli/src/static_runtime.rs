@@ -15,7 +15,9 @@ use mokly_cli::build::{BuildError, BuildService, CatalogueBuild};
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Build;
+use mokly_cli::output::Style;
 use mokly_cli::pre_installation;
+use mokly_cli::redaction::Redactor;
 use mokly_cli::static_admission::{Admission, OutputAdmission};
 use mokly_cli::static_build::{self, Drain, Phases, Request, StaticBuild, Timestamp};
 use mokly_model::output::artifact::Artifact;
@@ -30,9 +32,11 @@ use mokly_static::transaction::{OutputTransactions, Transaction, Transactions};
 
 #[cfg(debug_assertions)]
 use crate::test_faults;
-use crate::{static_setup, viewer_assets};
+use crate::{changes_runtime, static_setup, viewer_assets};
 
 pub(super) struct Context {
+    pub(super) style: Style,
+    pub(super) redactor: Arc<Redactor>,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
     pub(super) phases: Arc<dyn Phases>,
@@ -109,7 +113,11 @@ fn prepare(
         static_setup::setup(cwd, options, context, config, tree.clone()),
         context.cancellation.as_ref(),
     );
-    let (services, viewer) = match setup {
+    let static_setup::Setup {
+        services,
+        viewer,
+        pinned,
+    } = match setup {
         Ok(value) => value,
         Err(primary) => {
             return match transaction.abandon() {
@@ -132,6 +140,14 @@ fn prepare(
     });
     let render: Arc<dyn BuildService> = Arc::new(CatalogueBuild {
         inputs: Some(captured.clone()),
+        changes: changes_runtime::service(
+            services.runtime.clone(),
+            context.cancellation.clone(),
+            pinned,
+            context.style.clone(),
+            context.redactor.clone(),
+            context.phases.clone(),
+        ),
         cancellation: context.cancellation.clone(),
         graphs: services.runtime.clone(),
         config: Arc::new(LoadedConfig(config.clone())),

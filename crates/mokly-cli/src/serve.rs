@@ -9,7 +9,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::CatalogueBuilder;
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 
-use crate::build::{BuildError, BuildSummary};
+use crate::build::{BuildChanges, BuildError, BuildSummary};
 use crate::grammar::Common;
 
 /// Catalogue state before the listener is reserved; no document has rendered.
@@ -82,6 +82,7 @@ impl ServePreparation for CatalogueServe {
             config,
             generation,
             summary: BuildSummary {
+                changes: BuildChanges::Disabled,
                 documents: 0,
                 counts,
                 warnings: prepared.warnings,

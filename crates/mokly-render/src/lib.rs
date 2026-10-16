@@ -8,6 +8,7 @@ mod bundle_inputs;
 mod declarations;
 mod definition_input;
 mod definitions;
+pub mod dependency_usage;
 mod diagnostics;
 pub mod error;
 mod failures;
@@ -41,3 +42,10 @@ mod postcss_retention_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_snapshot_tests.rs"]
 mod stylesheet_snapshot_tests;
+
+#[cfg(test)]
+#[path = "_tests_/runtime_serialization_tests.rs"]
+mod runtime_serialization_tests;
+#[cfg(test)]
+#[path = "_tests_/source_forwarding_tests.rs"]
+mod source_forwarding_tests;

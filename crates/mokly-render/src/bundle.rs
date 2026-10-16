@@ -11,6 +11,7 @@ use mokly_css::types::{StylesheetBundler, StylesheetRoot};
 use mokly_model::material::digest;
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Bundle, Call, CssModules, Generation};
+use mokly_sidecar::results;
 use mokly_sidecar::wire::MethodResult;
 
 use crate::error::{InternalError, RenderError, Result};
@@ -73,6 +74,7 @@ pub(crate) fn describe(
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
     let (mut result, mut lease) = bundle_attempt::request(runtime, &params)?;
+    record_usage(runtime, &side, &result);
     let mut modules = bundle_attempt::modules(&result);
     let maps = match prepared_maps {
         Some(maps) => maps,
@@ -84,6 +86,7 @@ pub(crate) fn describe(
     {
         params.evaluation = Some(digest(format!("{cache_key}{class_maps_digest}").as_bytes()));
         (result, lease) = bundle_attempt::request(runtime, &params)?;
+        record_usage(runtime, &side, &result);
         modules = bundle_attempt::modules(&result);
     }
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
@@ -235,4 +238,15 @@ fn class_maps(
         }
     }
     Ok(maps)
+}
+
+fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) {
+    for directory in result.unmapped_dependency_directories.iter().flatten() {
+        runtime.dependency_usage.unmapped(directory);
+    }
+    for module in &result.modules {
+        runtime
+            .dependency_usage
+            .record(&side.dependency_aliases, &module.path);
+    }
 }

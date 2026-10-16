@@ -6,7 +6,7 @@ use ts_rs::TS;
 use crate::wire_props::ComponentWireProps;
 
 /// Input ownership, scoped to one view.
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize, TS)]
 #[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
 pub enum ComponentInputOwner {
     /// The entry owns these inputs.

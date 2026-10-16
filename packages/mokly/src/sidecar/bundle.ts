@@ -236,6 +236,7 @@ export async function bundle(
         ]),
       ),
       peers: require.snapshot(),
+      unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
       ...directories,
       inputs: physicalInputs,
       metadataInputs,

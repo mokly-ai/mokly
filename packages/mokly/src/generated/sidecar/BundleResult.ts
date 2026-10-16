@@ -7,6 +7,10 @@ import type { Warning } from "./Warning.js";
 // prettier-ignore
 export type BundleResult = {
 /**
+ * Used repository dependency directories whose importer lookup is not mapped.
+ */
+unmappedDependencyDirectories?: Array<string>,
+/**
  * Immutable code for restoration and evaluation-only reuse.
  */
 compiled?: CompiledGeneration,

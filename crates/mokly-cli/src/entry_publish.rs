@@ -122,6 +122,8 @@ pub(super) fn run(
         }),
         directories: Arc::new(SystemDirectories),
         output: Arc::new(publication_runtime::Output {
+            style: style.clone(),
+            redactor: redactor.clone(),
             common: publish.common.clone(),
             cancellation: interrupts.cancellation.clone(),
             pool: interrupts.pool.clone(),

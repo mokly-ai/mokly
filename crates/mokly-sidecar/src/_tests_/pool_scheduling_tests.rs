@@ -114,6 +114,7 @@ fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::from(["first".into(), "last".into()]),
             renders: 0,
+            requests: 0,
         }),
     )
     .unwrap();

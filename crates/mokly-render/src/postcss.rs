@@ -1,7 +1,7 @@
 //! Consumer PostCSS runs in an explicit side-specific context, before scoping.
 
 use std::collections::BTreeSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
@@ -12,10 +12,11 @@ use mokly_css::types::{CssProcessor, ProcessedCss};
 use mokly_model::material::digest;
 use mokly_sidecar::methods::{Call, ProcessCss};
 use mokly_sidecar::pool::SidecarPool;
-use mokly_sidecar::results::Css;
+use mokly_sidecar::results::{Css, DependencyKind};
 use mokly_sidecar::wire::MethodResult;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::dependency_usage::DependencyUsage;
 use crate::error::{RenderError, Result};
 use crate::leases::ContextLease;
 use crate::postcss_cache::{CssCache, CssRecord};
@@ -23,6 +24,7 @@ use crate::side::SideInputs;
 use crate::{postcss_inventory, postcss_nested};
 
 pub(crate) struct PostCss {
+    pub(crate) usage: Arc<dyn DependencyUsage>,
     pub(crate) lease: Arc<ContextLease>,
     pub(crate) pool: Arc<dyn SidecarPool>,
     pub(crate) tree: Arc<dyn SourceTree>,
@@ -130,6 +132,16 @@ impl PostCss {
             }
             Err(source) => return Err(RenderError::Sidecar { source }),
         };
+        for directory in result.unmapped_dependency_directories.iter().flatten() {
+            self.usage.unmapped(directory);
+        }
+        for dependency in &result.dependencies {
+            if matches!(dependency.kind, DependencyKind::File)
+                && let Some(path) = self.side.logical_dependency(Path::new(&dependency.path))
+            {
+                self.usage.record(&self.side.dependency_aliases, &path);
+            }
+        }
         Ok(result)
     }
 }

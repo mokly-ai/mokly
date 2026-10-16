@@ -12,6 +12,10 @@ use crate::results::Module;
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CompiledGeneration {
+    /// Dependency lookup provenance retained across restored worker generations.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub unmapped_dependency_directories: Option<Vec<String>>,
     /// Compilation identity before evaluation settings.
     pub identity: String,
     /// Compiled CommonJS program.

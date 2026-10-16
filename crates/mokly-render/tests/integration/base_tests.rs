@@ -8,9 +8,7 @@ use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_catalogue::working_tree::WorkingTree;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::{Resolved, Tier};
-use mokly_graph::cache::MemoryCache;
 use mokly_graph::types::GraphFactory;
-use mokly_graph::workers::ThreadWorkers;
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
 use mokly_sidecar::methods::{Call, ModuleResolution};
@@ -24,6 +22,9 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let base = Consumer::new();
     head.replace("specs/screen.mockup.tsx", "\"Hello\"", "\"HeadOnly\"");
     base.replace("specs/screen.mockup.tsx", "\"Hello\"", "\"BaseOnly\"");
+    let head_generation = head.generation(head.prepare().unwrap());
+    let head_document = head_generation.render("screen/index.mobile.html").unwrap();
+    assert!(String::from_utf8_lossy(&head_document.bytes).contains("HeadOnly"));
     let dependencies = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
@@ -53,12 +54,15 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let runtime = Arc::new(Runtime::new(
         Arc::new(WorkingTree),
         Arc::new(WorkingTree),
-        base.pool.clone(),
-        Arc::new(MemoryCache::new(16 * 1024 * 1024)),
-        Arc::new(ThreadWorkers::new(2).unwrap()),
+        head.runtime.pool.clone(),
+        head.runtime.cache.clone(),
+        head.runtime.workers.clone(),
         super::support::package_version::read(),
         Some(leased.clone()),
     ));
+    assert!(Arc::ptr_eq(&runtime.pool, &head.runtime.pool));
+    assert!(Arc::ptr_eq(&runtime.cache, &head.runtime.cache));
+    assert!(Arc::ptr_eq(&runtime.workers, &head.runtime.workers));
     let prepared = {
         let builder: &dyn CatalogueBuilder = &Builder {
             tree: Arc::new(WorkingTree),
@@ -79,10 +83,10 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let html = String::from_utf8(document.bytes.clone()).unwrap();
     assert!(html.contains("BaseOnly"));
     assert!(!html.contains("HeadOnly"));
-    let calls = base.pool.calls.lock().unwrap();
+    let calls = head.pool.calls.lock().unwrap();
     let Call::Bundle(bundle) = calls
         .iter()
-        .find(|call| matches!(call, Call::Bundle(_)))
+        .find(|call| matches!(call, Call::Bundle(bundle) if bundle.source_root == base.root().to_string_lossy()))
         .unwrap()
     else {
         panic!("bundle")
@@ -93,12 +97,22 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
         calls
             .iter()
             .filter_map(|call| match call {
-                Call::ProcessCss(css) => Some(css),
+                Call::ProcessCss(css)
+                    if css.context.starts_with("base-commit:")
+                        || css.source_root == base.root().to_string_lossy() =>
+                {
+                    Some(css)
+                }
                 _ => None,
             })
             .all(|css| css.context.starts_with("base-commit:")
                 && css.source_root == base.root().to_string_lossy())
     );
+    assert!(calls.iter().any(
+        |call| matches!(call, Call::ProcessCss(css) if css.context.starts_with("base-commit:"))
+    ));
+    assert_eq!(head.processes.hellos(), vec![1]);
+    assert!(base.processes.hellos().is_empty());
     drop(calls);
     drop(runtime);
     drop(leased);

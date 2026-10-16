@@ -1,10 +1,12 @@
 //! Side-specific roots and retained base preparation leases.
 
-use std::path::PathBuf;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::ancestor_roots;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::Resolved;
 use mokly_sidecar::methods::ModuleResolution;
@@ -34,6 +36,7 @@ pub struct SideInputs {
     pub configuration_directory: String,
     /// Fresh per-attempt stylesheet context.
     pub context: String,
+    pub(crate) dependency_aliases: BTreeMap<String, String>,
     pub(crate) dependency_roots: Vec<PathBuf>,
 }
 
@@ -53,7 +56,17 @@ pub(crate) fn inputs(
         package_roots: Vec::new(),
         resolve_extensions: authored.resolve_extensions.clone().unwrap_or_default(),
     };
-    resolution.package_roots = std::iter::once(config.repo_root.to_string_lossy().into_owned())
+    resolution.package_roots = ancestor_roots::directories(&configuration_directory)
+        .iter()
+        .map(|root| {
+            if root.is_empty() {
+                config.repo_root.clone()
+            } else {
+                config.repo_root.join(root)
+            }
+            .to_string_lossy()
+            .into_owned()
+        })
         .chain(
             authored
                 .package_roots
@@ -79,6 +92,7 @@ pub(crate) fn inputs(
     let selected_roots = selected_roots(&source_root, &module_resolution);
     Ok(SideInputs {
         dependency_roots: selected_roots,
+        dependency_aliases: BTreeMap::new(),
         source_root,
         repository_roots,
         module_resolution,
@@ -92,7 +106,7 @@ pub(crate) fn dependency_roots(side: &SideInputs) -> Vec<PathBuf> {
     side.dependency_roots.clone()
 }
 
-fn selected_roots(source_root: &std::path::Path, resolution: &ModuleResolution) -> Vec<PathBuf> {
+fn selected_roots(source_root: &Path, resolution: &ModuleResolution) -> Vec<PathBuf> {
     resolution
         .package_roots
         .iter()
@@ -108,6 +122,21 @@ fn selected_roots(source_root: &std::path::Path, resolution: &ModuleResolution) 
 }
 
 impl SideInputs {
+    pub(crate) fn logical_dependency(&self, path: &Path) -> Option<String> {
+        self.dependency_roots
+            .iter()
+            .enumerate()
+            .find_map(|(index, root)| {
+                path.strip_prefix(root).ok().map(|relative| {
+                    format!(
+                        "{}/{}",
+                        ancestor_roots::logical(index),
+                        relative.to_string_lossy().replace('\\', "/")
+                    )
+                })
+            })
+    }
+
     /// Resolve a logical stylesheet source into this side's selected physical inputs.
     pub fn physical_source(&self, path: &str) -> PathBuf {
         if let Some(rest) = path.strip_prefix("node_modules/") {

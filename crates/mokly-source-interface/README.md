@@ -34,8 +34,15 @@ an error code, with `unknown` as the fallback. A Git adapter never follows a
 symbolic-link blob as a regular source file.
 
 The working-tree adapter lives in `mokly-catalogue::working_tree`. Consumers
-inject it as `Arc<dyn SourceTree>`. The Git adapter belongs to the Git source
-boundary and supplies the same operations over commit trees.
+inject it as `Arc<dyn SourceTree>`. The Git adapter is `mokly-compare::git_tree::GitTree`. It uses one commit index
+and bounded blob batches for these operations. It never follows link blobs.
+
+`prefetch` accepts an exact confined read set for batched adapters. Its default
+is a no-op. `read_public` bypasses private source-snapshot retention; the caller
+must first apply the same public-path policy as resource delivery.
+Working and Git adapters implement `digest` with bounded streaming reads.
+Snapshot and static admission wrappers retain the resulting hash without the
+resource bytes. Every digest-only read uses this same method.
 
 ## Quick Start
 

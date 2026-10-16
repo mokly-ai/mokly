@@ -51,6 +51,8 @@ pairing or identical view evidence for every variant, not schema and slugs alone
    by kind, component role, ignore contract and a hash of normalised material.
    Full equality checks run only within equal hash groups, except that different
    ignore-region sets or material-key presence require paired comparison.
+   Disjoint ignore contracts can first group by material with all ignores
+   treated as ordinary content. Overlapping contracts retain paired checks.
    A hash is a prefilter, never proof of equality.
 3. **Same source and title.** Both entries come from the same repository
    source module and have equal titles. Documents never use this signal,

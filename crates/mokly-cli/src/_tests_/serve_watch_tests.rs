@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_cli::build::BuildSummary;
+use mokly_cli::build::{BuildChanges, BuildSummary};
 use mokly_cli::serve::PreparedServe;
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::RenderGenerationMock;
@@ -66,6 +66,7 @@ fn prepared(dir: &str, generation: Unimock) -> PreparedServe {
         config: config(dir),
         generation: Arc::new(generation),
         summary: BuildSummary {
+            changes: BuildChanges::Disabled,
             documents: 0,
             counts: Default::default(),
             warnings: vec![],

@@ -38,6 +38,28 @@ pub fn slot_key(instance: &str, name: &str) -> Result<String> {
     hash_json(&("mokly-slot-v1", instance, name))
 }
 
+/// Hash a historical record identity without metadata, time, or transient generations.
+pub fn historical_snapshot_key(
+    catalogue: &str,
+    commit: &str,
+    kind: &str,
+    path: &str,
+) -> Result<String> {
+    hash_json(&(
+        "mokly-historical-snapshot-v3",
+        catalogue,
+        "base",
+        commit,
+        kind,
+        path,
+    ))
+}
+
+/// Hash the stable origin-scoped configuration identity.
+pub fn catalogue_key(config_path: &str) -> Result<String> {
+    hash_json(&("mokly-catalogue-v1", config_path))
+}
+
 fn hash_json(value: &impl Serialize) -> Result<String> {
     match serde_json::to_vec(value) {
         Ok(bytes) => Ok(digest(&bytes)),

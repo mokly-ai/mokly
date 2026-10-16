@@ -44,14 +44,20 @@ mod boundaries_tests;
 #[cfg(test)]
 #[path = "_tests_/cache_tests.rs"]
 mod cache_tests;
+
+mod resource_access;
+
+mod closure_prefetch;
 #[cfg(test)]
 #[path = "_tests_/rendering_tests.rs"]
 mod rendering_tests;
+pub mod resource_reach;
 #[cfg(test)]
 #[path = "_tests_/snapshot_tests.rs"]
 mod snapshot_tests;
 
 mod document_composition;
+mod planning_resources;
 mod temporary;
 
 #[cfg(test)]

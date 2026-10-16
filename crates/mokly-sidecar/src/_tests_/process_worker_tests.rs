@@ -1,7 +1,7 @@
 //! Deadlines are captured once per call and do not grow with diagnostic traffic.
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use unimock::{MockFn, Unimock, matching};
 
@@ -30,11 +30,12 @@ fn deadline_uses_the_injected_clock_and_the_method_duration() {
             })),
     ));
     let mut worker = ProcessWorker {
+        diagnostics: Arc::new(Unimock::new(())),
         client: Box::new(mock.clone()),
         clock: Arc::new(mock),
-        memory: Arc::new(Unimock::new(())),
+        memory: Box::new(Unimock::new(())),
+        discover_memory: AtomicBool::new(false),
         deadlines,
-        pid: 1,
     };
     worker
         .request(

@@ -236,6 +236,27 @@ fn tree_count_and_archive_total_are_bounded_before_io() {
 }
 
 #[test]
+fn source_byte_reads_keep_their_per_file_limit() {
+    let repo = repository(Unimock::new(()));
+    let entry = Entry {
+        path: RepoPath::parse("asset.bin").unwrap(),
+        object: id(),
+        mode: Mode::File,
+        size: 3,
+    };
+    assert!(matches!(
+        repo.read_many(
+            &[entry],
+            Limits {
+                blob: 2,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::ByteLimit { limit: 2 })
+    ));
+}
+
+#[test]
 fn renames_keep_the_utf8_side_when_the_other_side_is_not_utf8() {
     let added = changes::parse(b"R100\0old-\xff\0new.screen.html\0").unwrap();
     assert_eq!(added.len(), 1);

@@ -44,14 +44,25 @@ PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and
 retries once. Other transport failures replace the process without a fallback
 render. A process recycles after 500 render calls or above 1 GiB resident
-memory. Recycling starts after the in-flight result returns.
+memory across the sidecar and its Node descendants, including PostCSS
+children. Native helper memory is excluded when the sidecar executable is
+known. Parent-only scans use a temporary table at spawn, after `processCss`,
+and every 64 samples. The persistent table retains only owned processes and
+refreshes their memory and executable identities. Canonical paths handle Node
+symlinks. A fresh worker gets one request before memory recycling. Repeated
+memory pressure doubles the replacement's check delay up to 500 completed
+requests and emits one notice per pressure episode. A sample at or below the
+bound restores normal checks. The 500-render rule always applies. Recycling
+starts after the in-flight request completes.
 
 `NodeFactory` inherits the environment and repository working directory. It
 uses a persistent launch thread for Linux parent-death signals. The Node
-watchdog observes parent death and pipe closure outside the render thread. It
+watchdog observes parent death and pipe closure outside the render thread.
+PostCSS children use the same protection, including historical contexts. It
 uses `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for
-transport, `dyn Wait` for monotonic deadlines, `dyn ResidentMemory` for the
-resident set, and `dyn Diagnostics` for events and standard error. Shutdown
+transport, `dyn Wait` for monotonic deadlines, `dyn MemoryFactory` for a
+per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and
+standard error. Shutdown
 wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
 
@@ -71,6 +82,9 @@ cargo test -p mokly-sidecar
 The executable composition root constructs `SystemClock`, `SystemMemory`,
 `SystemProcessGroups`, its diagnostic reporter, and `NodeFactory`. It injects
 that factory into `Pool`, then consumes the pool through `dyn SidecarPool`.
+Direct native runs must set `MOKLY_NODE_EXECUTABLE` to the real Node binary
+when PATH supplies a launcher that starts Node as a child. Such a launcher
+cannot identify Node descendants for memory recycling.
 Pass the installed `dist/sidecar.js` path, repository root, Node executable,
 and binary package version in `Launch`.
 

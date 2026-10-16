@@ -205,7 +205,21 @@ impl FilePolicy {
             cursor.push(part);
             let node = match self.tree.project(&cursor) {
                 Ok(Some(node)) => node,
-                _ => return Err(PublicDenial::Unavailable),
+                Ok(None) => {
+                    let Some(parent) = cursor.parent() else {
+                        return Err(PublicDenial::Unavailable);
+                    };
+                    let children = match self.tree.children(parent) {
+                        Ok(children) => children,
+                        Err(_) => return Err(PublicDenial::Unavailable),
+                    };
+                    return Err(match children.iter().find(|child| child.name == part) {
+                        Some(child) if child.kind == FileKind::Symlink => PublicDenial::Symlink,
+                        Some(_) => PublicDenial::Unavailable,
+                        None => PublicDenial::Missing,
+                    });
+                }
+                Err(_) => return Err(PublicDenial::Unavailable),
             };
             if node.lexical_kind == FileKind::Symlink {
                 if let Some(cause) = self.resolved_denial(path) {

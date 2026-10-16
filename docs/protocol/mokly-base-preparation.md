@@ -9,13 +9,17 @@ This page defines the `mokly-compare` preparation APIs. The
 ## Sources
 
 A source reader pins one commit and one cancellation generation. It loads
-one tree index, with directories, regular files, symbolic links and submodule
-modes. Composition selects separate regular-file and total-node bounds.
+a commit index for configured roots and explicitly requested paths, with
+directories, regular files, symbolic links and submodule modes. Exact path
+queries do not enumerate descendants or unrelated repository files. Composition selects separate regular-file and total-node bounds.
 Repeated root queries use that index. Regular-file listings retain
 actual POSIX spelling, return each file once and apply the selected count
 bound. An empty root list starts no query; an explicit whole-tree root lists
 all regular files. The catalogue applies its root ownership, globs and
-source diagnostics. The later `SourceTree` adapter uses the same index.
+source diagnostics. `GitTree` implements `SourceTree` over that index. Projection and direct-child
+queries reuse cached metadata. Exact catalogue inventories, generation-wide
+planning inputs, and discovered closure targets use bounded blob batches. A byte-bounded file LRU serves repeated reads;
+a miss reads only its requested path, without holding the cache mutex during IO.
 
 Reads by entry use the proved object id and run in bounded cat-file batches.
 Dependency input reads use this batch API. HTML, Markdown, YAML and CSS need
@@ -23,13 +27,69 @@ no extraction. JavaScript, a renderer module and consumer PostCSS acquire an
 extraction lease. Keep that lease while a sidecar uses its root. A source
 archive copies exact regular blobs, including files that export attributes
 would omit or substitute. It writes and releases each batch before reading
-the next. Its total disk bound follows the source cache capacity; memory
-stays bounded by the blob batch, independently of total repository size.
+the next. A blob larger than one batch streams directly to disk. The total
+disk bound follows the source cache capacity; memory stays bounded by the
+blob batch or stream buffer, independently of total repository size.
+
+Opaque public resources use SHA-256 digests. Oversized Git blobs and working
+files are hashed as streams with bounded memory. They need no full byte read
+for planning or comparison. Resource closure checks their confined regular
+file identity; only HTML and CSS files need reference parsing.
+
+If a remaining tree, file, or command budget prevents comparison, Changes is
+unavailable. The diagnostic names the requested path or root and the limit.
+The current build remains valid. Genuine Git command and object failures
+remain fatal `git-failed` errors.
+
+## Shared Render Runtime
+
+The CLI constructs head and base definition and graph factories through
+`mokly-render::Runtime`, with the current npm package `VERSION`. They share
+one sidecar pool, one render cache, and one cancellation state. A base that
+needs JavaScript, a renderer, or PostCSS acquires a `BaseSide`: its source
+lease, dependency `Resolved` value, repository mappings, and commit identity.
+The graph holds these leases while it can request a render. HTML without a
+renderer or PostCSS uses Git sources without extraction or a Node process.
+
+The CLI sets separate disk cache bounds and one shared allowance for
+dependency preparation. Extraction and installation use the
+same cancellation token as Git. Cancellation checkpoints also surround
+comparison and public resource planning. All source wrappers forward exact
+prefetch sets, public reads, and streamed digests.
+
+Each PostCSS context runs in a child process whose working directory is its
+side's source root. This confines relative file reads and automatic Tailwind
+source discovery to that side. The head and base can use the same installed
+third-party dependencies while reading separate repository sources. The child
+puts selected dependency directories before inherited `NODE_PATH` entries. CSS
+package resolvers that read `NODE_PATH` can use those directories without
+links in the source lease. Node's ESM resolver does not read `NODE_PATH`.
+
+Historical runtime failures keep typed diagnostic codes through catalogue,
+HTML, CSS, and graph wrappers. The following policy applies only to Changes;
+current-side failures retain the sidecar's fail-closed command policy.
+
+| Runtime category                     | Historical outcome                                 |
+| ------------------------------------ | -------------------------------------------------- |
+| Configuration, build, bundle, render | Changes unavailable: base validation failed        |
+| Unavailable                          | Changes unavailable: base runtime unavailable      |
+| Version                              | Changes unavailable: base runtime version mismatch |
+| Cancelled                            | Fail the interrupted build                         |
+| Protocol                             | Fail the build with the protocol diagnostic        |
+| Timeout                              | Changes unavailable: base runtime timed out        |
+
+A fatal failure inside a grouped attempt takes precedence over recoverable
+historical validation. Internal failures remain comparison failures. A
+missing base configuration still denotes an empty catalogue. Base diagnostics
+are detail lines that name the full base commit and original terminal code.
+A successful build has no error block. Genuine Git and internal comparison
+failures use error blocks and fail the command.
 
 ## Cache Location And Ownership
 
 Both cache kinds live in a SHA-256 namespace under the operating system's
-cache directory. The key hashes the canonical repository path's OS encoding.
+cache directory. Windows honors an absolute `LOCALAPPDATA` value. The key
+hashes the canonical repository path's OS encoding.
 Resolve the complete namespace path once at composition, including links at
 or above it. A cache location inside the repository is invalid. Below that
 canonical root, directory links are rejected before writes. Dependency links
@@ -77,8 +137,7 @@ publishes completion. Missing, damaged or incomplete receipts and missing
 data roots rebuild under the entry lock. Failed builds remove partial data.
 OS locks release on close; lock files remain. Deleting the cache is safe.
 
-One reporter guard covers both caches. The first
-open reports the directory once per process. Plain stdout is exactly
+One reporter guard covers both caches and reports the directory once per process. Plain stdout is exactly
 `Mokly cache: <directory>` followed by LF. Rich output follows the
 [terminal rule](./mokly-terminal-output.md#cache-directory).
 
@@ -108,11 +167,12 @@ fails closed with `bundle-failed`. This covers repository packages for npm,
 pnpm, Yarn and Bun without a package manifest inventory. Nested
 `node_modules` directories retain the selected third-party dependencies.
 
-Equal dependency identities reuse working third-party dependencies. No
-install validation or warning applies, including for outside `file:` packages.
-Different
-inputs install each npm lockfile root selected by the repository root and
-`moduleResolution.packageRoots`. A nested app with no root lockfile is valid.
+Equal dependency identities reuse working third-party dependencies without
+install validation, including for outside `file:` packages. Lookup warnings
+still apply to unmapped directories.
+Different inputs install each npm lockfile root selected by configuration
+ancestors and `moduleResolution.packageRoots`. A nested app with no root
+lockfile is valid.
 An independent configured package lock gets its own install. Prefer
 `npm-shrinkwrap.json` over `package-lock.json` at each root. Unsupported
 managers and absent supported lockfiles use the fallback tier.
@@ -127,6 +187,22 @@ or absolute path, uses a typed fallback reason when an install is needed.
 No install reads it.
 
 ## Installation And Bundle Settings
+
+Configuration ancestors use Node's order, from the configuration directory
+through the repository root. Every ancestor `node_modules` maps to the same
+relative directory under the selected dependency installation. JavaScript
+`nodePaths` and CSS use this order before explicit package roots. Tiers one
+and three use working directories; tier two uses the directories created by
+its base install. If the head used an ancestor directory absent from tier two,
+select tier three with a `base-dependencies` warning naming that directory.
+JavaScript, stylesheet, and PostCSS package reads establish this usage.
+An unused ancestor directory does not cause a warning.
+
+An importer whose dependency lookup is not mapped selects tier three even
+when dependency inputs are equal. The warning names the used `node_modules`
+directory. Such layouts need explicit `moduleResolution.packageRoots`.
+Conflicting copies can still require the fallback. Unused directories do not
+cause it. Each fallback emits a trace event with its typed reason.
 
 Copy the base sources into the private dependency entry. Run each install
 without a shell using `ci --ignore-scripts --no-audit --no-fund`, with explicit
@@ -146,8 +222,8 @@ use fake time and local offline fixtures without registry access.
 
 The result carries third-party `node_modules`, the install lease when needed,
 the complete sidecar `ModuleResolution`, and typed repository root paths.
-Package roots name the selected third-party root, then configured package
-roots there, in order. Repository roots include the working repository root
+Package roots name configuration ancestors, then explicit package roots,
+all inside the selected tier, in Node's order. Repository roots include the working repository root
 in every tier and the copied base repository root inside a tier-two install.
 The sidecar maps these roots to the side's source root. Other settings keep
 their values. Retain the install and extraction leases while bundling.
@@ -162,6 +238,8 @@ lockfile omit the location clause:
 ```text
 base dependencies at "<lockfile>" could not be installed (time limit); using working-tree dependencies
 base dependencies could not be installed (package manager or lockfile unavailable); using working-tree dependencies
+base dependencies at "<lockfile>" lack "<directory>"; using working-tree dependencies
+base dependency lookup cannot preserve "<directory>"; using working-tree dependencies (configure moduleResolution.packageRoots)
 ```
 
 Other typed reasons are `installation failed`, `cache size limit`,

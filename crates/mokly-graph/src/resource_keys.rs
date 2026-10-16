@@ -1,30 +1,23 @@
 //! Hash statically reachable authored resources before a document render.
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::{BTreeSet, VecDeque};
 use std::iter;
 
-use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_css::syntax;
 use mokly_html::{parse, props};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::data::{DataValue, Props};
-use mokly_model::material::digest;
 use mokly_model::namespace;
-use mokly_source_interface::tree::{FileKind, SourceTree};
 use pulldown_cmark::{Event, Parser, Tag};
 
 use crate::references;
-use crate::urls::local_target;
 
-pub(crate) fn inputs(
-    config: &ResolvedConfig,
+pub(crate) fn seeds(
     catalogue: &PreparedCatalogue,
     entry: &ModelEntry,
     route: &str,
     components: &BTreeSet<String>,
-    tree: &dyn SourceTree,
-) -> BTreeMap<String, String> {
+) -> VecDeque<(String, String)> {
     let mut queue = VecDeque::new();
     let source = namespace::generated(route);
     let parent = entry
@@ -68,46 +61,7 @@ pub(crate) fn inputs(
             }
         }
     }
-    let mut seen = BTreeSet::new();
-    let mut inputs = BTreeMap::new();
-    while let Some((source, url)) = queue.pop_front() {
-        let Ok(Some(target)) = local_target(&source, &url) else {
-            continue;
-        };
-        if target.starts_with(&namespace::generated("")) || !seen.insert(target.clone()) {
-            continue;
-        }
-        let Some(path) = target.strip_prefix("static/") else {
-            continue;
-        };
-        let absolute = config.repo_root.join(path);
-        if !matches!(tree.project(&absolute), Ok(Some(node)) if node.kind == FileKind::File && node.identity.starts_with(&config.repo_root))
-        {
-            continue;
-        }
-        let textual = path.ends_with(".css") || path.ends_with(".html") || path.ends_with(".htm");
-        if !textual {
-            if let Ok(hash) = tree.digest(&absolute) {
-                inputs.insert(path.into(), hash);
-            }
-            continue;
-        }
-        let Ok(bytes) = tree.read_shared(&absolute) else {
-            continue;
-        };
-        inputs.insert(path.into(), digest(&bytes));
-        if path.ends_with(".css") {
-            for reference in syntax::references(&String::from_utf8_lossy(&bytes)) {
-                queue.push_back((target.clone(), reference.value));
-            }
-        } else if path.ends_with(".html") || path.ends_with(".htm") {
-            for reference in references::collect(&parse::document(&String::from_utf8_lossy(&bytes)))
-            {
-                queue.push_back((target.clone(), reference.url));
-            }
-        }
-    }
-    inputs
+    queue
 }
 
 fn strings(props: &Props) -> Vec<String> {

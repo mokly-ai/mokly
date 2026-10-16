@@ -2,13 +2,19 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-`mokly-compare` prepares the base side of Mokly Changes. Use its traits to
-read historical sources, lease an extracted commit, and select dependencies
-for a sidecar bundle. `mokly-git` owns Git IO. `mokly-platform` owns locks
+`mokly-compare` classifies Mokly Changes from two rendered source trees. Use
+its traits to prepare a Git base, compare annotated documents, attribute
+component impact, and retain review v8 and change snapshot v4. Its base
+preparation also leases extracted sources and selects sidecar dependencies. `mokly-git` owns Git IO. `mokly-platform` owns locks
 and process groups. `mokly-sidecar` owns the bundle settings type.
 
 ## Responsibilities
 
+- Project a commit-pinned `dyn SourceTree` with bounded batched blob reads.
+- Compare canonical trees, paired ignores, caller inputs, and component regions.
+- Pair moves, keep removed metadata, and resolve branch-point references.
+- Compare reached resources and use catalogue-wide CSS own-page proof.
+- Produce strict review v8, snapshot v4, and affected-consumer chains.
 - Read regular base files from Git blobs with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
 - Store source and dependency caches outside the repository.
@@ -20,13 +26,19 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 ## What This Crate Does
 
 `GitSources::new` pins a commit and explicit file and metadata-node bounds.
-It indexes every tree mode once. It lists
+It indexes configured roots and exact requested paths, retaining every tree
+mode. `GitTree` implements `dyn SourceTree` over that index. Exact projections
+use cached metadata and bounded path queries. Catalogue inventories and
+planning inputs request generation-wide prefetch sets before reading bytes.
+Reads retain a byte-bounded file LRU. A miss reads only its requested path;
+Git IO holds no cache lock. Unrelated adjacent blobs are not prefetched.
+Links and submodules supply no regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
 
 `SystemLocations` hashes the canonical repository path under the operating
-system's cache directory. `DiskCache` has separate source and dependency
+system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency
 byte bounds. It uses OS locks for namespace mutation and entry leases. A
 durable receipt records completion, an access sequence, and bytes. A hit
 validates the receipt and recounts data size without hashing content or
@@ -45,7 +57,7 @@ compares clean object identities. It reuses base bytes for equal inputs. `Depend
 uses working third-party dependencies when both sets are equal. In every tier,
 the sidecar maps resolved repository-owned paths into that side's sources.
 Different inputs use
-npm's locked install at the root and each configured independent package
+npm's locked install at the root, configuration ancestors, and each explicit package
 root in the dependency cache. They share one deadline. Successful installs
 remove their private npm download cache before publication. The key includes the exact
 lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
@@ -59,14 +71,34 @@ finished using their directories. `Resolved` returns the primary
 `repository_roots` for sidecar mapping. These roots include the working tree
 and the base source copy for tier two. Supply
 repository-relative package roots in the request; the result names absolute
-roots from the selected installation and keeps the other settings.
+roots from the selected installation and keeps the other settings. Ancestor
+roots precede explicit roots in Node's order. Supply the head's observed
+ancestor dependency directories in `Request.used_directories`. If a base
+install lacks one of these directories, the result uses working dependencies
+with a warning that names the missing directory. Used importer directories
+outside the supported lookup also select fallback, including when dependency
+inputs are equal. Each fallback has a typed trace reason. Such workspace layouts
+need explicit package roots; conflicting copies can still require fallback.
 
-## Quick Start
+`Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+It releases parsed documents after collecting canonical and containment proof.
+The retained result holds graph handles, view states, reasons, ownership
+records, and immutable historical metadata. Resource facts and byte proofs
+are reused per route; public resource bytes and stylesheet diffs have explicit
+cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and
+working files are streamed without retaining their bytes. Remaining source
+budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
+pinned base generation. `Lookup` resolves explicit before/after references,
+accepted moves, removed records, counterparts, and variant parents.
 
-```bash
-cargo test -p mokly-compare
-cargo test -p mokly-compare --test dependencies_tests
-```
+`GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
+merge base. Static commands retain that `PinnedBase` before current rendering.
+`Changes` implements `dyn ChangesService` and reuses the pin when supplied. `BaseProvider` supplies the base
+render generation through the common graph. HTML needs no extraction. A
+JavaScript provider uses the same request's source and repository handles
+for extraction and dependency leases. The CLI supplies `mokly-render::Runtime`
+for both sides, sharing its render cache, sidecar pool, and cancellation.
+Historical runtime failures follow the typed policy in base preparation.
 
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
 `dyn Extraction`, `dyn Dependencies`, and `dyn Cache` in the render graph
@@ -74,6 +106,13 @@ and comparison coordinator. Call `InputReader::read` on `GitSources` and
 `WorkingInputs::read` on the same `dyn Repository`, with the base inputs,
 before dependency selection.
 Pass one cancellation token to the caches, Git runner, and install supervisor.
+
+## Quick Start
+
+```bash
+cargo test -p mokly-compare
+cargo test -p mokly-compare --test dependencies_tests
+```
 
 ## Development
 
@@ -90,7 +129,10 @@ run. It needs no registry.
 
 ### Key Code
 
-- [Source reader](./src/sources.rs) and [extraction](./src/extraction.rs).
+- [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
+- [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).
+- [Moves](./src/moves.rs), [branch-point lookup](./src/lookup.rs), and [removal snapshots](./src/snapshots.rs).
+- [Extraction](./src/extraction.rs).
 - [Cache coordinator](./src/cache.rs), [storage](./src/storage.rs), and
   [OS locations](./src/locations.rs).
 - [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and

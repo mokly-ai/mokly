@@ -46,6 +46,12 @@ impl SourceSnapshot {
 }
 
 impl SourceTree for SourceSnapshot {
+    fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
+        self.source.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
+        self.source.read_public(path)
+    }
     fn digest(&self, path: &Path) -> Result<String> {
         let cell = {
             let mut digests = self
@@ -115,3 +121,7 @@ impl SourceTree for SourceSnapshot {
         Ok(bytes)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/public_snapshot_tests.rs"]
+mod public_snapshot_tests;

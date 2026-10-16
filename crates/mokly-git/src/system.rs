@@ -12,7 +12,13 @@ use crate::cancellation::signal;
 use crate::command::{self, DEFAULT_OUTPUT_LIMIT, Output, Request, Runner};
 use crate::control::{Cancellation, Clock, Shutdown};
 use crate::error::{Error, InternalError, IoResult, Result};
-use crate::pipes::capture;
+use crate::pipes::{capture, copy, digest};
+
+enum OutputMode<'a> {
+    Capture,
+    Digest,
+    Copy(&'a mut (dyn Write + Send), usize),
+}
 
 /// Git process adapter composed with tree ownership, cancellation and time.
 pub struct SystemRunner {
@@ -26,7 +32,20 @@ pub struct SystemRunner {
 
 impl Runner for SystemRunner {
     fn run(&self, request: &Request) -> Result<Output> {
-        self.execute(request, None)
+        self.execute(request, None, OutputMode::Capture)
+    }
+
+    fn digest(&self, request: &Request) -> Result<String> {
+        let output = self.execute(request, None, OutputMode::Digest)?;
+        match String::from_utf8(output.stdout) {
+            Ok(digest) => Ok(digest),
+            Err(_) => Err(Error::MalformedOutput),
+        }
+    }
+
+    fn copy(&self, request: &Request, output: &mut (dyn Write + Send), bytes: usize) -> Result<()> {
+        self.execute(request, None, OutputMode::Copy(output, bytes))?;
+        Ok(())
     }
 
     fn run_cancellable(
@@ -34,7 +53,7 @@ impl Runner for SystemRunner {
         request: &Request,
         cancellation: &dyn command::Cancellation,
     ) -> Result<Output> {
-        self.execute(request, Some(cancellation))
+        self.execute(request, Some(cancellation), OutputMode::Capture)
     }
 }
 
@@ -43,6 +62,7 @@ impl SystemRunner {
         &self,
         request: &Request,
         cancellation: Option<&dyn command::Cancellation>,
+        mode: OutputMode<'_>,
     ) -> Result<Output> {
         if request.output_limit > DEFAULT_OUTPUT_LIMIT
             || request.stderr_limit > DEFAULT_OUTPUT_LIMIT
@@ -89,8 +109,14 @@ impl SystemRunner {
         thread::scope(|scope| {
             let output_group = Arc::clone(&group);
             let error_group = Arc::clone(&group);
-            let output =
-                scope.spawn(move || capture(stdout, request.output_limit, output_group.as_ref()));
+            let output = scope.spawn(move || match mode {
+                OutputMode::Digest => digest(stdout, output_group.as_ref()),
+                OutputMode::Capture => capture(stdout, request.output_limit, output_group.as_ref()),
+                OutputMode::Copy(output, bytes) => {
+                    let mut stdout = stdout;
+                    copy(&mut stdout, output, bytes, output_group.as_ref())
+                }
+            });
             let errors =
                 scope.spawn(move || capture(stderr, request.stderr_limit, error_group.as_ref()));
             let input_group = Arc::clone(&group);
@@ -149,11 +175,18 @@ impl SystemRunner {
             if cancelled {
                 return Err(Error::Cancelled);
             }
-            let stdout = joined(stdout)?;
+            let stdout = joined(stdout);
             let stderr = joined(stderr)?;
             let Some(status) = status else {
                 return Err(Error::Internal(InternalError::Worker));
             };
+            if !status.success() && matches!(stdout, Err(Error::MalformedOutput)) {
+                return Err(Error::CommandFailed {
+                    status: status.code(),
+                    stderr,
+                });
+            }
+            let stdout = stdout?;
             if !status.success() {
                 return Err(Error::CommandFailed {
                     status: status.code(),

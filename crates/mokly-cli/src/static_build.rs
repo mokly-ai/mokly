@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::base_render::selected_base;
 use mokly_model::output::artifact::{Artifact, File};
 use mokly_model::output::upload::{BuildInventory, Publication};
 use mokly_static::assembly::{Assembler, Assembly};
@@ -13,7 +14,7 @@ use mokly_static::fingerprint::{Fingerprints, InputTree};
 use mokly_static::input_selection;
 use mokly_static::transaction::{self, Transaction};
 
-use crate::build::{BuildError, BuildService, BuildSummary};
+use crate::build::{BuildChanges, BuildError, BuildService, BuildSummary};
 use crate::cancellation::Cancellation;
 use crate::grammar::Build;
 use crate::pre_installation;
@@ -42,8 +43,12 @@ pub trait Phases: Send + Sync {
     fn start(&self, phase: Phase);
     /// Emit consumer diagnostics through the same terminal owner.
     fn diagnostic(&self, message: &str);
+    /// Emit a formatted stdout note under the phase reporter lock.
+    fn note(&self, message: &str);
     /// Print validation warnings before installation and before a summary.
     fn warnings(&self, warnings: &[mokly_catalogue::diagnostic::Warning]);
+    /// Report the retained comparison result and historical diagnostics.
+    fn changes(&self, changes: &BuildChanges);
 }
 
 /// Render lifecycle drained before installation, even on failure.
@@ -172,29 +177,15 @@ impl Builder {
             .collect();
         static_result(transaction.protect(protected))?;
         self.phases.warnings(&rendered.summary.warnings);
+        if !matches!(rendered.summary.changes, BuildChanges::Disabled) {
+            self.phases.changes(&rendered.summary.changes);
+        }
         if request.warnings_are_fatal && !rendered.summary.warnings.is_empty() {
             return Err(BuildError::Warnings);
         }
-        let base = if request.options.no_changes {
-            None
-        } else {
-            Some(
-                request
-                    .options
-                    .common
-                    .base
-                    .clone()
-                    .or_else(|| {
-                        request
-                            .config
-                            .input
-                            .review
-                            .as_ref()
-                            .and_then(|review| review.base.clone())
-                    })
-                    .unwrap_or_else(|| "origin/main".into()),
-            )
-        };
+        let base = (!request.options.no_changes).then(|| {
+            selected_base(request.config, request.options.common.base.as_deref()).to_owned()
+        });
         self.phases.start(Phase::Writing);
         let metadata = if let Some(publication) = &request.publication {
             let inventory = BuildInventory {

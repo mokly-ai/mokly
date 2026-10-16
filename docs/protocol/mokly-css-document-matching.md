@@ -19,7 +19,8 @@ Stylesheet analysis composes the three stages, parse, diff, and match, for one
 stylesheet on one view, on `lightningcss`; a missing stylesheet side is an
 empty string. The per-stylesheet outcome keeps per-rule matches for
 catalogue-wide attribution; its final wire shape is defined by
-[the evidence schema](./mokly-css-attribution-membership.md). No match means
-excluded, including a resolved empty diff. Callers stay responsible for
-reachability and changed-path eligibility. CSS owner records never filter
+[the evidence schema](./mokly-css-attribution-membership.md). A nonempty diff
+whose rules all match nothing produces one excluded record. A resolved empty
+diff produces no record. Callers prove reachability and changed-byte
+eligibility. CSS owner records never filter
 candidate rules or replace the kept own-page match proof.
