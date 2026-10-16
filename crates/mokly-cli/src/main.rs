@@ -25,5 +25,12 @@ mod terminal;
 mod viewer_assets;
 
 fn main() -> std::process::ExitCode {
+    #[cfg(all(debug_assertions, unix))]
+    if let Some(result) = test_faults::signal_lifecycle() {
+        return result;
+    }
     entry::main()
 }
+
+#[cfg(debug_assertions)]
+mod test_faults;

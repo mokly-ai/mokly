@@ -45,6 +45,11 @@ pub(super) fn main() -> ExitCode {
             |(Width(width), _)| if width > 0 { usize::from(width) } else { 80 },
         ),
     };
+    #[cfg(debug_assertions)]
+    let style = Style {
+        columns: crate::test_faults::columns(style.columns),
+        ..style
+    };
     let mut cli = match parse(&arguments) {
         Ok(cli) => cli,
         Err(ParseError::Help(help)) => {

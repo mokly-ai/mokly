@@ -124,6 +124,15 @@ cargo test -p mokly-cli
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
+Process recovery tests use the [debug fault adapters](./src/test_faults/mod.rs).
+`MOKLY_TEST_STATIC_FAULTS` selects injected filesystem failures or signal gates.
+The optional `MOKLY_TEST_STATIC_READY`, `MOKLY_TEST_STATIC_EVENTS`,
+`MOKLY_TEST_STATIC_PREVIOUS`, and `MOKLY_TEST_STATIC_COLUMNS` values provide
+isolated test paths and terminal width. Release builds compile none of these
+adapters or hooks. The release-erasure probe checks the real module without
+debug assertions. Normal source and output operations still use their injected
+trait boundaries.
+
 ### Key Code
 
 - [Grammar](./src/grammar.rs) and [option validation](./src/options.rs).

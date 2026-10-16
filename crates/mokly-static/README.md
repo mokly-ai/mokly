@@ -55,7 +55,10 @@ cargo clippy -p mokly-static --all-targets -- -D warnings
 ```
 
 Unit tests mock filesystem boundaries with unimock. Integration tests exercise
-real exclusive directory moves and injected installation races.
+real exclusive directory moves and injected installation races, including
+owned substitutions, empty destination conflicts, unowned captured files,
+reservation mutations, Unicode paths, and cancellation. CLI process tests
+exercise retained recovery bytes through debug-only fault adapters.
 
 ### Key Code
 
