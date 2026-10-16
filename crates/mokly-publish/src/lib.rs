@@ -4,7 +4,6 @@
 
 pub mod accounting;
 mod archive;
-pub mod build_failure;
 pub mod checkout;
 pub mod completion;
 pub mod error;

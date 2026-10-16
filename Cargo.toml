@@ -24,4 +24,5 @@ mokly-graph = { path = "crates/mokly-graph" }
 mokly-render = { path = "crates/mokly-render" }
 mokly-server = { path = "crates/mokly-server" }
 
+mokly-static = { path = "crates/mokly-static" }
 mokly-watch = { path = "crates/mokly-watch" }

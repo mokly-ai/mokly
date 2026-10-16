@@ -210,8 +210,8 @@ from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
 ## Cancellation And Timeouts
 
 Deadlines are 120 seconds for `bundle` and `describe`, 60 seconds for
-`processCss`, and 30 seconds for every other request. Each is overridable by
-`MOKLY_SIDECAR_TIMEOUT_MS`. The CLI reads it once and validates a positive
+`processCss`, and 30 seconds for every other request.
+`MOKLY_SIDECAR_TIMEOUT_MS` replaces every deadline. The CLI reads it once and validates a positive
 64-bit integer before command work. An invalid value fails `cli-invalid`
 with the accepted range. When a deadline passes, the binary kills that
 sidecar, retries the request once on a fresh sidecar, and then fails with

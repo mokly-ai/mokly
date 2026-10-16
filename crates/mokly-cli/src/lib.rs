@@ -22,4 +22,13 @@ pub mod serve_output;
 pub mod serve_settings;
 pub mod version;
 
+pub mod static_build;
 pub mod watch_output;
+
+pub mod pre_installation;
+
+pub mod static_errors;
+
+pub mod static_admission;
+
+pub mod publication_signals;

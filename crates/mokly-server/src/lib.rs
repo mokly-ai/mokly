@@ -29,7 +29,6 @@ pub mod runtime;
 mod security;
 pub mod shutdown;
 pub mod snapshot;
-pub mod stub;
 pub mod work;
 
 #[cfg(test)]

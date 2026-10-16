@@ -32,7 +32,6 @@ pub(crate) fn compiler(
             aliases: resolution.aliases.clone(),
             conditions: resolution.conditions.clone(),
             main_fields: resolution.main_fields.clone(),
-            package_roots: Vec::new(),
             dependency_roots: (1..dependency_roots(side).len())
                 .map(|index| format!("node_modules/.mokly-roots/{index}"))
                 .collect(),

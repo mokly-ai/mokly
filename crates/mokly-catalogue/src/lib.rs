@@ -7,6 +7,9 @@ mod config_postcss;
 pub mod config_types;
 pub mod config_validation;
 mod declared_controls;
+#[cfg(test)]
+#[path = "_tests_/declared_controls_tests.rs"]
+mod declared_controls_tests;
 pub mod definition_provider;
 pub mod diagnostic;
 pub mod discovery;

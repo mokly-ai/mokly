@@ -3,10 +3,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::publication::error::Error;
 use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::{CheckoutMock, Inspection};
 use mokly_publish::completion::{Completion, Outcome};
-use mokly_publish::error::Error;
+use mokly_publish::error;
 use mokly_publish::exchange::ExchangeMock;
 use mokly_publish::identity::ActionsContext;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot, OutputSnapshotMock};
@@ -15,9 +16,9 @@ use unimock::{MockFn, Unimock, matching};
 use crate::publication::build::{DirectoriesMock, StaticOutputMock, warnings_are_fatal};
 use crate::publication::command::{BuildReporterMock, Command, Options, Publish};
 
-use super::support::{artifact, publication, settings};
+use super::support::{active, artifact, publication, settings};
 
-fn inspection() -> Inspection {
+pub(super) fn inspection() -> Inspection {
     Inspection {
         root: "/repo".into(),
         head_sha: "a".repeat(40),
@@ -25,7 +26,7 @@ fn inspection() -> Inspection {
         build_directories: Vec::new(),
     }
 }
-fn options() -> Options {
+pub(super) fn options() -> Options {
     Options {
         directory: "/repo/tools".into(),
         version: publication().mokly_version,
@@ -38,7 +39,7 @@ fn options() -> Options {
         owned_paths: Vec::new(),
     }
 }
-fn command(mock: Arc<Unimock>) -> Command {
+pub(super) fn command(mock: Arc<Unimock>) -> Command {
     Command {
         checkout: mock.clone(),
         directories: mock.clone(),
@@ -97,7 +98,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
     let command: &dyn Publish = &command(mock);
     assert_eq!(
         command
-            .run(&options(), &settings(8), &Unimock::new(()))
+            .run(&options(), &settings(8), &active())
             .await
             .unwrap(),
         expected
@@ -117,9 +118,7 @@ async fn a_dirty_checkout_stops_before_build_or_network() {
     ));
     let command: &dyn Publish = &command(mock);
     assert!(matches!(
-        command
-            .run(&options(), &settings(1), &Unimock::new(()))
-            .await,
+        command.run(&options(), &settings(1), &active()).await,
         Err(Error::Uncommitted {
             during_build: false,
             ..
@@ -130,10 +129,13 @@ async fn a_dirty_checkout_stops_before_build_or_network() {
 #[tokio::test]
 async fn a_build_failure_keeps_its_own_error_and_stops_before_recheck_or_network() {
     for error in [
-        Error::StaticUnavailable,
         Error::BuildWarnings,
-        Error::Cancelled,
-        Error::InvalidBundle,
+        Error::Exchange {
+            source: error::Error::Cancelled,
+        },
+        Error::Exchange {
+            source: error::Error::InvalidBundle,
+        },
     ] {
         let expected = std::mem::discriminant(&error);
         let mock = Arc::new(Unimock::new((
@@ -157,7 +159,7 @@ async fn a_build_failure_keeps_its_own_error_and_stops_before_recheck_or_network
         assert_eq!(
             std::mem::discriminant(
                 &command
-                    .run(&options(), &settings(1), &Unimock::new(()))
+                    .run(&options(), &settings(1), &active())
                     .await
                     .unwrap_err()
             ),
@@ -202,7 +204,7 @@ async fn changed_head_or_new_paths_after_the_build_stop_before_plan() {
         )));
         let command: &dyn Publish = &command(mock);
         let error = command
-            .run(&options(), &settings(1), &Unimock::new(()))
+            .run(&options(), &settings(1), &active())
             .await
             .unwrap_err();
         assert!(if changed_head {

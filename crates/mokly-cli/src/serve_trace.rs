@@ -92,6 +92,18 @@ fn stage(name: &str) -> bool {
             | "css.postcss"
             | "index.build"
             | "detail.build"
+            | "build"
+            | "publish"
+            | "output.write"
+            | "output.stage"
+            | "output.install"
+            | "output.capture"
+            | "output.rollback"
+            | "output.cleanup"
+            | "review.base-commit"
+            | "upload.plan"
+            | "upload.blobs"
+            | "upload.complete"
     )
 }
 

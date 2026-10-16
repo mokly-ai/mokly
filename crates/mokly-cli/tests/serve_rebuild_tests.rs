@@ -64,6 +64,7 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         ("viewer/browser/inspector.js", ""),
         ("viewer/shell.css", ""),
         ("viewer/assets/fonts/InterVariable.woff2", ""),
+        ("viewer/assets/brand.svg", "<svg/>"),
     ] {
         let path = root.path().join(path);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -198,6 +199,7 @@ async fn shortcuts_write_carriage_returns_on_a_real_raw_terminal() {
         ("viewer/browser/inspector.js", ""),
         ("viewer/shell.css", ""),
         ("viewer/assets/fonts/InterVariable.woff2", ""),
+        ("viewer/assets/brand.svg", "<svg/>"),
     ] {
         let path = root.path().join(path);
         fs::create_dir_all(path.parent().unwrap()).unwrap();

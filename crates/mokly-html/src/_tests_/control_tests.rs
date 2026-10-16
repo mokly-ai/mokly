@@ -59,6 +59,21 @@ fn inactive_controls_keep_their_element_and_cannot_submit_or_activate() {
     );
     adapt(&mut nodes, "route").unwrap();
     assert!(!serialize::html(&nodes).contains("<a"));
+    for (tag, attributes) in [
+        ("a", "aria-disabled=\"true\" href=\"mock:home\""),
+        ("div", "role=\"button\" aria-busy=\"true\" tabindex=\"0\""),
+    ] {
+        let mut nodes = parse::fragment(&format!(
+            "<{tag} {attributes} to=\"home\">Unavailable</{tag}>"
+        ));
+        assert!(adapt(&mut nodes, "route").unwrap().is_empty());
+        let html = serialize::html(&nodes);
+        assert!(html.starts_with(&format!("<{tag} ")), "{html}");
+        assert!(html.ends_with(&format!(">Unavailable</{tag}>")), "{html}");
+        assert!(html.contains("data-nav-href=\"mock:home\""));
+        assert!(!html.contains(" href="));
+        assert!(!html.contains("data-mokly-link-control"));
+    }
 }
 
 #[test]
@@ -73,6 +88,15 @@ fn duplicate_and_reserved_navigation_attributes_survive_token_validation() {
     }
     assert!(source_checks::validate("<p title=\"a\" title=\"b\">Text</p>", false).is_ok());
     assert!(source_checks::validate("<!--mokly-instance:start id=\"r-0\"-->", false).is_ok());
+    assert_eq!(
+        source_checks::validate(
+            "<a href=\"mock:home\" data-mokly-target=\"_blank\" DATA-MOKLY-TARGET=\"_self\">Go</a>",
+            false
+        )
+        .unwrap_err()
+        .to_string(),
+        "[mokly-html/build-invalid] duplicate navigation attribute data-mokly-target"
+    );
 }
 
 #[test]
@@ -100,6 +124,15 @@ fn ancestor_features_leave_the_stack_before_the_next_sibling() {
 
 #[test]
 fn nearest_error_ancestor_takes_precedence_over_a_closer_warning() {
+    for value in ["", "true", "plaintext-only"] {
+        let mut nodes = parse::fragment(&format!(
+            "<div contenteditable=\"{value}\"><span to=\"home\">Go</span></div>"
+        ));
+        let error = adapt(&mut nodes, "route").unwrap_err();
+        assert!(error.to_string().ends_with(&format!(
+            "MockLink child control is inside <div contenteditable=\"{value}\">; move the control outside it"
+        )));
+    }
     let mut nodes = parse::fragment(
         "<section contenteditable=\"true\"><div contenteditable=\"plaintext-only\"><label><span to=\"home\">Go</span></label></div></section>",
     );

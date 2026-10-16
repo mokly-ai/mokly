@@ -22,6 +22,8 @@ render graph crates.
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
+The working tree uses the shared `dunce` path spelling, including Windows
+repository identities, so output confinement and input rechecks use matching paths.
 PostCSS path, suffix, and regular-file checks use the catalogued
 `config-invalid` diagnostics before a sidecar starts.
 Git root validation belongs to the Git boundary. Config-relative parent
@@ -44,6 +46,9 @@ recipes retain handles separately from source attribution, saved React slots,
 module edges, class-map identity, and the resolved handle table. An opaque
 provider lease keeps the bundle alive while a prepared model or graph uses it. Declared
 controls pass the Rust validator. Story control hints do not change schemas.
+Declared number controls carry their effective schema bounds and step into
+the read model. Authored bounds win; omitted values fall back to the schema,
+including an integer step of one when no multiple is declared.
 Inference exclusions become warnings only after final path derivation. Runtime
 failures retain typed terminal categories across provider boundaries. JavaScript
 diagnostics retain module and export attribution without invented coordinates. `DeferredDefinitions`

@@ -5,6 +5,7 @@ import type { Loader, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import type { VirtualOrigin } from "./bundle-errors.js";
 import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -15,6 +16,7 @@ import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
 export interface BundleInputs {
   files: Map<string, Uint8Array>;
   cssModules: Set<string>;
+  virtualOrigins: Map<string, VirtualOrigin>;
 }
 
 export function consumerPlugins(
@@ -28,7 +30,7 @@ export function consumerPlugins(
   const ownPackage = path.resolve(import.meta.dirname, "../..");
   return [
     require.peerPlugin,
-    styleAdaptersPlugin(params),
+    styleAdaptersPlugin(params, inputs.virtualOrigins),
     {
       name: "mokly-consumer",
       setup(build) {
@@ -95,10 +97,11 @@ export function consumerPlugins(
         }));
         build.onLoad({ filter: /.*/, namespace: "mokly-jsx" }, () => ({
           contents: `import { jsx, jsxs, Fragment } from "react/jsx-runtime";
+        import { resolve } from "node:path";
         export { Fragment };
         export function jsxDEV(type, props, key, staticChildren, source) {
           if (type && type[Symbol.for("mokly.component")] && source)
-            props = {...props, __moklySource: source};
+            props = {...props, __moklySource: {...source, fileName: resolve(${JSON.stringify(path.resolve(root, params.configurationDirectory))}, source.fileName)}};
           return (staticChildren ? jsxs : jsx)(type, props, key);
         }`,
           resolveDir: root,

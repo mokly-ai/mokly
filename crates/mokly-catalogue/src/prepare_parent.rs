@@ -93,7 +93,8 @@ pub(crate) fn prepare(
             parent.visual.prop_schema = validator.schema().clone();
             parent.visual.controls = input
                 .controls
-                .clone()
+                .as_ref()
+                .map(|controls| declared_controls::effective(validator.schema(), controls))
                 .unwrap_or_else(|| controls::derive(validator.schema()));
             parent.validator = Some(validator);
         }

@@ -1,0 +1,36 @@
+---
+source: crates/mokly-static/src/_tests_/inspector_map_tests.rs
+expression: "serde_json::to_string_pretty(&metadata).unwrap()"
+---
+{
+  "ranges": [
+    [
+      null,
+      null
+    ],
+    [
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      0
+    ],
+    [
+      null,
+      1
+    ]
+  ],
+  "links": [
+    {
+      "screenPath": "team",
+      "fragment": "members",
+      "target": {
+        "kind": "named",
+        "name": "named:target"
+      }
+    },
+    {
+      "screenPath": "home",
+      "target": {
+        "kind": "blank"
+      }
+    }
+  ]
+}

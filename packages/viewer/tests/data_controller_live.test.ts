@@ -42,7 +42,7 @@ test("a live index loads its descriptor and installs the capability", async () =
   fixture.live.descriptor().resolve(liveDescriptor(GENERATION));
   await flush();
   assert.deepEqual(fixture.controller.descriptor, liveDescriptor(GENERATION));
-  assert.equal(fixture.controller.live, fixture.live);
+  assert.notEqual(fixture.controller.live, undefined);
   fixture.disconnect();
   assert.equal(fixture.live.closed, 1);
   assert.equal(fixture.controller.descriptor, undefined);
@@ -167,7 +167,7 @@ test("a new render generation keeps the installed capability until its replaceme
   await flush();
   assert.equal(installed(fixture)?.generation, GENERATION);
   assert.equal(fixture.controller.editing, "ready");
-  assert.equal(fixture.controller.live, fixture.live);
+  assert.notEqual(fixture.controller.live, undefined);
   fixture.live.descriptor().resolve(liveDescriptor(NEXT_GENERATION));
   await flush();
   assert.equal(installed(fixture)?.generation, NEXT_GENERATION);

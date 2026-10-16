@@ -1,12 +1,28 @@
+import { createHash } from "node:crypto";
+import path from "node:path";
+
 import type { Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import type { VirtualOrigin } from "./bundle-errors.js";
+
+interface Wrapper {
+  file: string;
+  registry: string;
+  adapter: string;
+  commonjs: boolean;
+}
+
 /** Capture the bundled registry while its consumer import evaluates. */
-export function styleAdaptersPlugin(params: BundleParams): Plugin {
+export function styleAdaptersPlugin(
+  params: BundleParams,
+  origins: Map<string, VirtualOrigin>,
+): Plugin {
   const aliases = Object.entries(params.moduleResolution.aliases).sort(
     ([left], [right]) => right.length - left.length,
   );
+  const wrappers = new Map<string, Wrapper>();
   return {
     name: "mokly-style-adapters",
     setup(builder) {
@@ -45,34 +61,69 @@ export function styleAdaptersPlugin(params: BundleParams): Plugin {
           pluginData: "style-original",
         });
         if (resolved.errors.length || resolved.external) return resolved;
+        const registry =
+          requested === library
+            ? resolved
+            : await builder.resolve(library, {
+                resolveDir: path.dirname(resolved.path),
+                importer: resolved.path,
+                kind: args.kind,
+                pluginData: "style-original",
+              });
+        if (registry.errors.length) return registry;
+        const commonjs =
+          args.kind === "require-call" || args.kind === "require-resolve";
+        const node = !commonjs && /\.(mjs|mts)$/.test(args.importer);
+        const key =
+          createHash("sha256")
+            .update(
+              JSON.stringify([
+                resolved.path,
+                registry.path,
+                args.importer,
+                args.kind,
+              ]),
+            )
+            .digest("hex") + (node ? ".mjs" : ".cjs");
+        wrappers.set(key, {
+          file: resolved.path,
+          registry: registry.path,
+          commonjs,
+          adapter:
+            library === "styled-components"
+              ? "styled"
+              : library === "react-native-web"
+                ? "native"
+                : "emotion",
+        });
+        origins.set(`mokly-style:${key}`, {
+          importer: args.importer,
+          wrapped: resolved.path,
+        });
         return {
-          path: JSON.stringify([resolved.path, library, requested === library]),
+          path: key,
           namespace: "mokly-style",
         };
       });
       builder.onLoad({ filter: /.*/, namespace: "mokly-style" }, (args) => {
-        const [file, library, root] = JSON.parse(args.path) as [
-          string,
-          string,
-          boolean,
-        ];
+        const { file, registry, adapter, commonjs } = wrappers.get(args.path)!;
         const original = JSON.stringify(`mokly:style-source:${file}`);
-        const adapter =
-          library === "styled-components"
-            ? "styled"
-            : library === "react-native-web"
-              ? "native"
-              : "emotion";
+        const capture = JSON.stringify(`mokly:style-source:${registry}`);
         return {
           contents: [
-            `import * as original from ${original};`,
-            `export * from ${original}; export default original.default;`,
-            ...(root
+            commonjs
+              ? `const original = require(${original}); module.exports = original;`
+              : `import * as original from ${original}; export * from ${original}; export default original.default;`,
+            ...(file === registry
               ? []
-              : [`import * as registry from ${JSON.stringify(library)};`]),
-            `require("mokly:runtime").style(${JSON.stringify(adapter)}, ${root ? "original" : "registry"});`,
+              : [
+                  commonjs
+                    ? `const registry = require(${capture});`
+                    : `import * as registry from ${capture};`,
+                ]),
+            `require("mokly:runtime").style(${JSON.stringify(adapter)}, ${file === registry ? "original" : "registry"});`,
           ].join("\n"),
-          resolveDir: params.sourceRoot,
+          resolveDir: path.dirname(file),
           loader: "js",
         };
       });

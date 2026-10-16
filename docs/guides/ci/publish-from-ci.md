@@ -7,13 +7,13 @@ order: 2
 
 ## Keep the checkout clean
 
-Publish requires a clean checkout before export and again before upload.
-Git-ignored files, this run's output directory, and Mokly's own caches and
-temporary files never count. Committed generated files count and must match the
-build. Derived generated output must be ignored by Git.
+Publish requires a clean checkout before the build and again before upload.
+Git-ignored files and Mokly's own caches and temporary files do not count.
+Keep static build output ignored by Git. Publish builds in its own private
+directory outside the checkout.
 
 A build step that changes tracked files or leaves files that Git does not ignore
-stops the publish. Commit generated changes before the job runs. Add build
+stops the publish. Commit source changes before the job runs. Add build
 products to `.gitignore`. Use `npm ci` to install from the committed lockfile
 without changing it.
 
@@ -43,7 +43,7 @@ alone with `--no-changes`. There is then no baseline to fetch or rebuild.
 
 ## Keep the credentials safe
 
-Your authoring code runs during the export, so only grant upload credentials
+Your authoring code runs during the build, so only grant upload credentials
 to workflows you trust. A pull request from a fork should not receive them.
 
 ## What success prints

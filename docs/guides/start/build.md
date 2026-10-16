@@ -1,57 +1,57 @@
 ---
 title: "Build"
-description: "Generate the catalogue and keep it beside your source."
+description: "Write a complete static catalogue that you can deploy."
 section: "start"
 order: 4
 ---
 
-## Generate the catalogue
+## Build the catalogue
 
 ```shell
-npx mokly build
+npx mokly build --no-changes
 ```
 
-Build validates your entries, renders every screen, page and Markdown document and writes the result
-under `<mockupsDir>/mokly-generated/`: documents, `mokly-manifest.json`,
-compiled CSS in `styles/` and copied assets in `assets/`. Writes are transactional, so a failed build leaves the
-previous output in place.
+Build validates the catalogue and renders every saved view. It writes the
+browser shell, entry details, documents, styles, and referenced assets to
+`mokly-static/` at the repository root. A static file server can serve these
+files without the source tree or a Mokly process.
 
-## Ignore the output, or commit it
+Add `/mokly-static/` and `.mokly-export-reservations/` to the root `.gitignore`.
+The reservation namespace stays after a build. Keep source files in Git.
 
-Choose with Git, not a config option. To keep generated output local, add
-`/specs/generated/mokly-generated/` to `.gitignore`; Check
-validates sources but ignores local generated files. To commit output, track
-every file under `mokly-generated/` and commit them after Build. Check then
-compares the entire tree, reporting missing, stale or extra files. Partial
-tracking is an error **to Check only**; Build succeeds when you add a new
-entry, then Check lists its new route under `untracked:` until staged. Baseline
-comparisons independently read complete Git output or rebuild that historical
-commit without inspecting head tracking.
-
-Use `npx mokly build --watch` to update the tree after every successful
-compilation while editing. Plain `serve` and `export` do not write it; use
-`serve --build` if browsing should also update generated files.
-
-A build fails, naming the file and the fix, when two files derive the same
-path, when a file name contains a character that cannot be part of a path,
-when a module exports no definition, or when a link names a path that does
-not exist.
-
-Mokly keeps private state in `.mokly-cache/` at the repository
-root and writes a `.gitignore` file inside it, so Git never shows or adds that
-folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
-such as formatters or linters, read only that file.
-
-## Validate without writing
+## Choose an output directory
 
 ```shell
-npx mokly check
+npx mokly build --no-changes --out .context/site --strict
 ```
 
-Check calculates the same bytes without writing them. Untracked output need
-not exist or match; tracked output must match exactly. Check alone rejects
-indexed cache paths; writers never check the index.
+A relative `--out` path resolves beside the loaded configuration file.
+The directory must be inside the repository and outside the catalogue roots
+and protected source inputs. Use a missing directory, an empty directory, or
+output from an earlier build. Mokly refuses a directory with unowned files.
 
-## Next
+Build replaces the complete output. A failed build preserves the earlier
+site when recovery is safe. If another process creates the destination during
+replacement, Mokly keeps that directory and names the retained backup.
 
-Open the catalogue in your browser.
+## Include Changes
+
+Omit `--no-changes` to include Changes against the configured base.
+Use `--base` to select another reference:
+
+```shell
+npx mokly build --base origin/main
+```
+
+The checkout must contain HEAD, the base, and their common history.
+Build never fetches Git history. A current-only build with `--no-changes`
+needs no Git checkout. Do not combine `--base` with `--no-changes`.
+
+## Validate sources
+
+Use `--strict` to make warnings fail the build. Mokly prints the warnings
+before it stops. To validate without keeping a deployment, build into an
+ignored temporary output directory.
+
+Use [Serve](/docs/start/serve/) while editing. Use
+[static hosting](/docs/catalogue/export-and-host/) to share the built site.
