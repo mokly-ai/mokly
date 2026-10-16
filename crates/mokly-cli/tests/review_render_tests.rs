@@ -199,7 +199,7 @@ fn a_thousand_nested_elements_render_on_the_preparation_and_render_stacks() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(output.stderr.is_empty());
-    assert!(output.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&output.stdout).contains("Built Mokly to mokly-static"));
 }
 
 #[test]
@@ -222,7 +222,7 @@ fn postcss_runs_only_for_styles_and_reports_each_failure_once() {
     );
     let unused = run(root.path());
     assert_eq!(unused.status.code(), Some(0));
-    assert!(unused.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&unused.stdout).contains("Built Mokly to mokly-static"));
     assert!(unused.stderr.is_empty());
     write(
         root.path(),

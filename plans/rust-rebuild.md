@@ -340,6 +340,13 @@ more than re-deriving the behaviour from the requirements.
     `{{name}}` in text and attributes. The catalogue checker and HTML renderer
     use the same rule.
 
+40. Static output parser (2026-10-15): keep Oxc for the module-request rules
+    of `mokly-export-browser.md`. A real parser distinguishes regular
+    expressions, division, comments, and decoded import strings. The added
+    dependency closure has 32 crates. Licence classes are MIT, MIT/Apache-2.0,
+    Unicode-3.0, and Apache-2.0 WITH LLVM-exception OR BSL-1.0 for
+    `dragonbox_ecma`. Review Oxc's 0.x API changes with dependency updates.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -855,6 +862,8 @@ renders again.
         example.
   - [ ] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
+- [ ] Add browser specs against copied static output, including navigation,
+      inspection, no live endpoints, and the comparison modes after the M9 join.
 - [ ] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
@@ -1005,6 +1014,8 @@ Review fixes of the copy and states with their Serve run:
 `.context/rust-rebuild/m10-copy-run-2/log.md`.
 Final review fixes and their check logs:
 `.context/rust-rebuild/delegation/m7/report-9.md`.
+The 409 index refresh, the mobile pending pill, and the frame sandbox message:
+`.context/rust-rebuild/delegation/m7/report-10.md`.
 
 - [ ] Commit.
 
@@ -1021,7 +1032,8 @@ Final review fixes and their check logs:
 - [ ] Implement the watcher with the denial rules, rebuild on change, bundle
       replay for HTML-only edits, and live updates to the viewer through the
       index and entry detail routes under one revision, with frames reloaded
-      by document key and no page reload.
+      by document key and no page reload. Prune build outputs and reservation
+      paths by path, without ownership-marker parsing.
 - [ ] Release PostCSS contexts and replaced sidecar generations when the last
       graph that uses them drops. Design ownership with Serve revision fences,
       cancelled requests, and watch replacement; prevent an old graph from
@@ -1037,6 +1049,28 @@ Final review fixes and their check logs:
       documents, the comparison generation, the shared `mokly-model` ownership
       marker writer, the `--out` option with its default `mokly-static/` output
       directory, and the transaction with backup, exclusive rename, and rollback.
+  - [x] Write deterministic current output, head-only inspector metadata,
+        canonical index and details, exact package assets, and shared ownership.
+        Implement reservations, exclusive installation, rollback, bounded cleanup,
+        input rechecks, and config-relative output selection.
+  - [ ] Join the Milestone 9 comparison generation, removed records, and detail
+        evidence before identity finalization. Repeat the comparison-specific
+        reference scenarios after that integration. The join must replace the
+        premature "Comparing with {base}" success line, populate upload
+        `baseRef` instead of null, and give a reason for Changes unavailable.
+        Nest build review spans under `output.write` with the caller context.
+  - [ ] Add subprocess recovery tests through a test-only fault seam for rollback,
+        backup cleanup, cancellation plus cleanup, and cleanup-only failure.
+        Include process-level configuration and staging signal faults.
+        Keep the recovery page's Status line until these checks pass.
+  - [ ] Add an independent reader of the installed ownership and upload fixtures.
+        Keep ownership, upload exchange, and validation Status lines until this
+        reader and the M9 comparison join are verified.
+  - [ ] Complete the sweep rows owned by M12 static, transaction, and static
+        closure acceptance. Add the remaining exact destination races,
+        reservation mutations, Unicode/NUL rename paths, imported resources,
+        private templates, host-normalized paths, abandoned lock retention,
+        and signal-handler release cases named in the sweep.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
@@ -1052,7 +1086,11 @@ Final review fixes and their check logs:
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
         transitions, source changes, and the deferred gap-sweep scenarios.
-    - [ ] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
+    - [ ] Complete the sweep rows owned by M12 publication acceptance: assigned
+          credentials, checkout variants, interrupted
+          compiler diagnostics, rich summary styling, and every retry status
+          through the real process.
+    - [x] Move `Directory`, `DirectoryFailure`, `StaticUnavailable`,
           `BuildWarnings`, `Build`, `Uncommitted`, and `HeadChanged` from
           `mokly-publish` into the CLI publication error contract when the
           static adapter lands.
@@ -1066,9 +1104,16 @@ Publish client final review and merge decisions:
 `.context/rust-rebuild/delegation/m12-publish/report-3.md` and
 `.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
 
-- [ ] Restore the preview deployment workflow on the new CLI.
-- [ ] Write the build and publish guides.
-- [ ] Commit.
+- [x] Restore the preview deployment workflow on the new CLI.
+- [x] Write the build and publish guides.
+
+Static output evidence: `.context/rust-rebuild/delegation/m12-static/report-1.md`,
+`.context/rust-rebuild/m12-smoke/`, and `.context/rust-rebuild/sweeps/m12-static.md`.
+Round 1 fixes and merge decisions: `.context/rust-rebuild/delegation/m12-static/report-2.md`
+and `.context/rust-rebuild/delegation/m12-static/merge-decisions.md`.
+Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
+
+- [x] Commit.
 
 ## Milestone 13: Release packaging
 
@@ -1114,6 +1159,12 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
 `.context/rust-rebuild/delegation/m13/merge-decisions.md`.
 
 ## Milestone 14: Large-project acceptance
+
+- [ ] Forward sidecar timing records and add core `sidecar.spawn` and
+      `sidecar.recycle` spans under the timings contract.
+
+- [ ] Restrict static fingerprints to configured roots, inventoried sources,
+      and reached closure files. Measure this boundary under the large fixtures.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1168,6 +1219,8 @@ Release integration: `.context/rust-rebuild/delegation/m13/report-4.md` and
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
+  - Milestone 12 static review 2, finding 6: settle forced build exit during
+    install, rollback, and cleanup. Keep the current forced exit until decided.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
     keep the OS trust store until the user decides.
   - Milestone 12 publish review 1, finding 13: decide private-directory retention

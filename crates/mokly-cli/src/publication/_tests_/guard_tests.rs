@@ -3,17 +3,18 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::publication::error::Error;
 use mokly_model::output::artifact::Artifact;
 use mokly_model::output::validation::{MANIFEST, MARKER};
 use mokly_publish::checkout::{CheckoutMock, Inspection};
-use mokly_publish::error::Error;
+use mokly_publish::error;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::publication::build::{DirectoriesMock, StaticOutputMock};
 use crate::publication::command::{BuildReporterMock, Command, Options, Publish};
 
-use super::support::{artifact, inventory, publication, settings};
+use super::support::{active, artifact, inventory, publication, settings};
 
 #[tokio::test]
 async fn directory_and_metadata_mismatches_fail_before_plan() {
@@ -105,8 +106,10 @@ async fn directory_and_metadata_mismatches_fail_before_plan() {
         };
         assert!(
             matches!(
-                command.run(&options, &settings(8), &Unimock::new(())).await,
-                Err(Error::InvalidBundle)
+                command.run(&options, &settings(8), &active()).await,
+                Err(Error::Exchange {
+                    source: error::Error::InvalidBundle
+                })
             ),
             "{mismatch}"
         );

@@ -1,64 +1,59 @@
 ---
-title: "Export and host"
-description: "Deploy the catalogue as static files on your own hosting."
+title: "Build and host"
+description: "Deploy a complete catalogue on a static file host."
 section: "catalogue"
 order: 5
 ---
 
-## Export a complete catalogue
+## Build a static site
 
 ```shell
-npx mokly export --out .context/mokly-site
+npx mokly build --no-changes --out .context/site --strict
 ```
 
-Export compiles in memory, then packages the complete catalogue: one shell page per
-entry at `view/<path>/index.html`, the generated views and documents under
-`static/mokly-generated/`, referenced authored assets under `static/` and Git comparisons. `--out` is required and is resolved
-beside the config, not beside your working directory; an absolute path must
-stay inside the repository root.
+The output contains the browser shell, all saved views, entry details, and
+referenced resources. The output path resolves beside the configuration file.
+It must stay inside the repository and outside protected source locations.
+Git must ignore the output directory.
 
-`--base` overrides the configured base ref for that run. The branch point must
-be present in the checkout. Mokly reads a complete verified v10 inventory from
-that commit or runs the commit's own baseline recipe when output is absent or
-incomplete. Check out full history in CI. Export never fetches history for you.
-A base built by an earlier Mokly version makes Changes unavailable; export
-prints the reason and still packages the current catalogue. Other invalid
-comparison inputs fail the export.
+Omit `--no-changes` to include Changes. Use `--base origin/main` to select
+that reference. The checkout must contain the common history with the base.
+Build does not fetch history.
 
-## Deploy it
+## Deploy the contents
 
-Serve the directory's contents at the root of an HTTP(S) origin, with correct
-MIME types and directory indexes. No Mokly process, Git checkout, source tree
-or rewrite rule is needed there: a host that serves `view/<path>/index.html`
-for `/view/<path>/` serves every entry, and hosts that drop `index.html` or
-the trailing slash still open the same page. Give the catalogue an origin of
-its own: it resolves every address from that root, so keep it off a path
-prefix and reach it over HTTP(S) rather than from a local folder.
+Deploy the directory's contents at an HTTP(S) origin's document root. The host
+needs correct MIME types, directory indexes, and query-insensitive file lookup.
+It needs no Mokly process, source checkout, Node.js, or route rewrite.
+A route such as `/view/home/` loads `view/home/index.html`.
 
-Configure revalidation for the shell and mutable assets, serve comparison
-files with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`,
-and deploy atomically so a reader never meets a mixture of two builds. The
-artifact includes a `404.html` your host can use as its error document.
+Serve JSON as `application/json; charset=utf-8`. Add
+`X-Content-Type-Options: nosniff` to the `static/` and `mokly-viewer/` paths.
+Use `Cache-Control: no-cache` or validators for files that deployments replace.
+Comparison generation paths are immutable and may use immutable caching.
 
-## What a reader gets
+Publish atomically or use immutable host deployments. Configure `404.html`
+as the host's error document if supported. For a separate viewer origin,
+follow the CORS rules in [static delivery](/docs/reference/export-delivery/).
 
-The whole catalogue: navigation, search, tags, viewport and scheme controls,
-use-case flows, whole-document pages and Markdown documents, the details
-inspector and the comparisons. Comparisons load only once a reader selects
-one. A refresh reads the same exported generation; deploy a new export to
-publish new results.
+## Browse the site
 
-## Re-exporting
+Readers can browse, search, inspect, and select saved viewports and schemes.
+Component props are read-only. The static shell makes no live render or update
+request. Comparison content loads when a reader selects a comparison.
 
-Each export has its own content-derived deployment identity, so a reader with
-an old tab reloads fully when the deployed catalogue changes. A re-export
-replaces only the output it owns and restores the previous site if installing
-the new one fails and recovery is safe. Choose a destination that is missing
-or empty and outside your source, generated, dependency and comparison
-directories.
+The catalogue uses origin-root URLs. Use a dedicated origin rather than a
+subpath. Open it through HTTP(S), rather than `file://`.
 
-Exported paths are relative, slash-separated, well-formed Unicode without
-control characters, backslashes, colons, empty segments, `.` or `..`, and at
-most 1,024 UTF-8 bytes. A refusal prints the escaped path so invisible
-characters can be found. Before deleting a destination created by an earlier
-Mokly release, move out any files you added yourself.
+## Replace an earlier build
+
+Mokly accepts missing or empty destinations and output with a valid ownership
+marker. A replacement removes obsolete owned files. Unowned files cause a
+refusal. Keep authored material outside the output directory.
+
+A failed build preserves the earlier site when recovery is safe. If recovery
+cannot restore it, the error names the retained backup. Check those paths
+before removing an abandoned reservation.
+
+Ignore `.mokly-export-reservations/` in Git as well as the selected output.
+The owned reservation namespace stays after cleanup.

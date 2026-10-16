@@ -2,7 +2,8 @@
 
 use std::collections::BTreeSet;
 
-use mokly_publish::build_failure::Category;
+use crate::publication::error;
+use crate::publication::failure::Category;
 use mokly_publish::error::Error;
 
 use crate::codes::Code;
@@ -12,17 +13,6 @@ use crate::redaction::Redactor;
 /// Render publication failures without revealing credentials or transport sources.
 pub fn render(error: &Error, style: &Style, redactor: &Redactor) -> String {
     let (code, detail) = match error {
-        Error::Build { failure } => {
-            let code = match failure.category() {
-                Category::BuildInvalid => Code::BuildInvalid,
-                Category::ConfigInvalid => Code::ConfigInvalid,
-                Category::ConfigMissing => Code::ConfigMissing,
-                Category::ExportInvalid => Code::ExportInvalid,
-                Category::GitFailed => Code::GitFailed,
-                Category::ReviewInvalid => Code::ReviewInvalid,
-            };
-            return style.error(code, &failure.detail(), redactor);
-        }
         Error::UnsupportedVersion if style.mode == Mode::Rich => {
             (Code::UploadUnsupportedVersion, "")
         }
@@ -68,30 +58,57 @@ pub fn render(error: &Error, style: &Style, redactor: &Redactor) -> String {
             Code::GitFailed,
             "Git information could not be read. Check the repository and configured base.",
         ),
-        Error::HeadChanged => (
-            Code::GitFailed,
-            "HEAD changed during the build. Run mokly publish again.",
-        ),
         Error::Repository => (
             Code::GitFailed,
             "The repository could not be identified. Set --repository to host/owner/name.",
         ),
-        Error::Uncommitted {
+        Error::Internal(_) => (
+            Code::UploadFailed,
+            "The catalogue could not be prepared for publication. Rebuild the catalogue and retry.",
+        ),
+    };
+    style.error(code, detail, redactor)
+}
+
+/// Render CLI publication failures while retaining local recovery diagnostics.
+pub fn command(error: &error::Error, style: &Style, redactor: &Redactor) -> String {
+    let (code, detail) = match error {
+        error::Error::Interrupted { .. } => return render(&Error::Cancelled, style, redactor),
+        error::Error::Exchange { source } => return render(source, style, redactor),
+        error::Error::Build { failure } => {
+            if let Some(error) = failure.native() {
+                if crate::pre_installation::cancelled(error) {
+                    return render(&Error::Cancelled, style, redactor);
+                }
+                return crate::build_output::failure(style, error, redactor);
+            }
+            let code = match failure.category() {
+                Category::BuildInvalid => Code::BuildInvalid,
+                Category::ConfigInvalid => Code::ConfigInvalid,
+                Category::ConfigMissing => Code::ConfigMissing,
+                Category::ExportInvalid => Code::ExportInvalid,
+                Category::GitFailed => Code::GitFailed,
+                Category::ReviewInvalid => Code::ReviewInvalid,
+                Category::ServerFailed => Code::ServerFailed,
+            };
+            return style.error(code, &failure.detail(), redactor);
+        }
+        error::Error::HeadChanged => (
+            Code::GitFailed,
+            "HEAD changed during the build. Run mokly publish again.",
+        ),
+        error::Error::Uncommitted {
             paths,
             during_build,
             build_directories,
         } => {
             return uncommitted(paths, *during_build, build_directories, style, redactor);
         }
-        Error::StaticUnavailable => {
-            return "[mokly/build-invalid] Static output is not available in this build.\n"
-                .to_owned();
-        }
-        Error::BuildWarnings => (
+        error::Error::BuildWarnings => (
             Code::BuildInvalid,
             "The catalogue has build warnings. Fix the reported warnings and retry.",
         ),
-        Error::Directory { temporary_root, .. } => {
+        error::Error::Directory { temporary_root, .. } => {
             let (_, headline, hint) = Code::PublishDirectory.presentation();
             return style.error(
                 Code::PublishDirectory,
@@ -102,10 +119,6 @@ pub fn render(error: &Error, style: &Style, redactor: &Redactor) -> String {
                 redactor,
             );
         }
-        Error::Internal(_) => (
-            Code::UploadFailed,
-            "The catalogue could not be prepared for publication. Rebuild the catalogue and retry.",
-        ),
     };
     style.error(code, detail, redactor)
 }

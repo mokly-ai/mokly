@@ -54,4 +54,4 @@ failure. Superseded runs for the same `main` ref or pull request are cancelled.
 The workflow pins Node 24.21.0 and npm 11.21.0, uses immutable action commit
 hashes, and deploys with the lockfile-pinned Wrangler. The
 [dependency security contract](./dependency-security.md) owns the audit gate
-and scoped Miniflare overrides, including their removal conditions.
+and exact tooling pins, including their update conditions.

@@ -20,3 +20,13 @@ pub mod serve;
 pub mod serve_errors;
 pub mod serve_output;
 pub mod version;
+
+pub mod static_build;
+
+pub mod pre_installation;
+
+pub mod static_errors;
+
+pub mod static_admission;
+
+pub mod publication_signals;

@@ -320,8 +320,8 @@ belong to that mount's validated usage. Never silently truncate lists or boxes;
 limit overflow reports unavailable inspection via `limit`, leaving content usable.
 
 Navigation paths follow the [path grammar](./mokly-paths.md), at most 256 ASCII
-characters; fragments use the [logical fragment grammar](./mokly-navigation.md),
-at most 256 characters. Named targets use its target grammar and the same limit;
+characters; wire fragments match `/^[A-Za-z][A-Za-z0-9_:.-]*$/`, at most 256
+characters. Named targets use the [target grammar](./mokly-navigation.md) and the same limit;
 all other target objects contain only `kind`. Navigation contains no URL, href,
 label or HTML. The inspector classifies only authenticated immediate native-link
 activations; the host revalidates paths against its catalogue and resolves URLs.

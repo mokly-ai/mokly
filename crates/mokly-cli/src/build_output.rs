@@ -8,7 +8,10 @@ use mokly_model::axes::EntryKind;
 use crate::build::{BuildError, BuildSummary};
 use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
+use crate::pre_installation;
+use crate::publication::failure::{BuildFailure, Category};
 use crate::redaction::Redactor;
+use crate::static_errors;
 
 /// Format a warning with one exact subject and no change to its diagnostic payload.
 pub fn warnings(style: &Style, warnings: &[Warning], redactor: &Redactor) -> String {
@@ -57,7 +60,33 @@ pub fn summary(style: &Style, summary: &BuildSummary) -> String {
 
 /// Report retained warnings first, then the command's typed failure.
 pub fn failure(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
+    if pre_installation::cancelled(failure) && !matches!(failure, BuildError::Shutdown { .. }) {
+        return style.error(Code::BuildInvalid, "build cancelled", redactor);
+    }
     match failure {
+        BuildError::Interrupted { .. } => style.error(Code::BuildInvalid, "build cancelled", redactor),
+        BuildError::Warnings => style.error(Code::BuildInvalid, "The catalogue has build warnings. Fix the reported warnings and retry.", redactor),
+        BuildError::Shutdown { primary, shutdown } => {
+            let code = if pre_installation::cancelled(primary) { Code::BuildInvalid } else { match primary.category() {
+                Category::BuildInvalid => Code::BuildInvalid,
+                Category::ConfigInvalid => Code::ConfigInvalid,
+                Category::ConfigMissing => Code::ConfigMissing,
+                Category::ExportInvalid => Code::ExportInvalid,
+                Category::GitFailed => Code::GitFailed,
+                Category::ReviewInvalid => Code::ReviewInvalid,
+                Category::ServerFailed => Code::ViewerUnavailable,
+            } };
+            let primary = if pre_installation::cancelled(primary) { "build cancelled".into() } else { static_errors::without_prefixes(&primary.to_string()) };
+            style.error_lines(code, &format!("{primary}\nRender shutdown failed: {}", static_errors::without_prefixes(&shutdown.to_string())), redactor)
+        },
+        BuildError::Cleanup { primary, cleanup, path } => {
+            let message = format!("{}\nRecovery failed: {}\nInspect retained recovery path {}.", static_errors::without_prefixes(&primary.to_string()), static_errors::detail(cleanup), static_errors::display_path(path));
+            style.error_lines(Code::ExportInvalid, &message, redactor)
+        },
+        BuildError::Viewer => style.error(Code::ViewerUnavailable, "Build or reinstall the matching @mokly/viewer package and retry.", redactor),
+        BuildError::Static { source: mokly_static::error::Error::Cancelled } => style.error(Code::BuildInvalid, "build cancelled", redactor),
+        BuildError::Static { source } => style.error_lines(static_errors::code(source), &static_errors::detail(source), redactor),
+        BuildError::Git { base, .. } => style.error(Code::GitFailed, &format!("Git information could not be read for {base}. Check the repository and configured base."), redactor),
         BuildError::Cancelled => style.error(Code::BuildInvalid, "build cancelled", redactor),
         BuildError::Deferred {
             modules,
@@ -183,3 +212,7 @@ fn issue_text(issue: &Issue, outer: Code) -> String {
 #[cfg(test)]
 #[path = "_tests_/build_output_tests.rs"]
 mod build_output_tests;
+
+#[cfg(test)]
+#[path = "_tests_/static_failure_tests.rs"]
+mod static_failure_tests;

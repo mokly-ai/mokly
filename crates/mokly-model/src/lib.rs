@@ -46,3 +46,5 @@ pub mod validation;
 pub mod versions;
 pub mod wire_decode;
 pub mod wire_props;
+
+pub mod shell;

@@ -29,7 +29,7 @@ impl SourceTree for WorkingTree {
                 };
             }
         };
-        let identity = match fs::canonicalize(path) {
+        let identity = match dunce::canonicalize(path) {
             Ok(identity) => identity,
             Err(source) => {
                 let error = SourceError::Io {

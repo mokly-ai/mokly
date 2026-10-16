@@ -1,0 +1,269 @@
+name: Preview
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CLOUDFLARE_PROJECT_NAME: mokabook
+  MOKLY_COMMENT_MARKER: "<!-- mokly-preview -->"
+
+jobs:
+  deploy-main:
+    name: Deploy Main Preview
+    if: github.event_name == 'push'
+    timeout-minutes: 20
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+      - name: Validate Cloudflare configuration
+        run: |
+          missing=0
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
+            echo "::error title=Missing CLOUDFLARE_ACCOUNT_ID::Set repository variable CLOUDFLARE_ACCOUNT_ID."
+            missing=1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error title=Missing Cloudflare API token::Set repository secret CLOUDFLARE_PAGES_API_TOKEN or CLOUDFLARE_API_TOKEN."
+            missing=1
+          fi
+          exit "${missing}"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Mokly preview
+        run: |
+          npm run build
+          node packages/mokly/bin/mokly.mjs build --config examples/basic/mokly.config.json --strict --out ../../.context/mokly-preview --no-changes
+          node scripts/preview/hosting.mjs .context/mokly-preview .context/mokly-preview-deploy
+      - name: Deploy main preview
+        run: npx --no-install wrangler pages deploy .context/mokly-preview-deploy --project-name "${CLOUDFLARE_PROJECT_NAME}" --branch main
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+
+  deploy-pr:
+    permissions:
+      contents: read
+      pull-requests: write
+    name: Deploy PR Preview
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !(
+        startsWith(github.event.pull_request.head.ref, 'release-please--') ||
+        contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
+      )
+    timeout-minutes: 20
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Validate Cloudflare configuration
+        run: |
+          missing=0
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
+            echo "::error title=Missing CLOUDFLARE_ACCOUNT_ID::Set repository variable CLOUDFLARE_ACCOUNT_ID."
+            missing=1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error title=Missing Cloudflare API token::Set repository secret CLOUDFLARE_PAGES_API_TOKEN or CLOUDFLARE_API_TOKEN."
+            missing=1
+          fi
+          exit "${missing}"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Mokly preview
+        run: |
+          npm run build
+          node packages/mokly/bin/mokly.mjs build --config examples/basic/mokly.config.json --strict --out ../../.context/mokly-preview --base origin/main
+          node scripts/preview/hosting.mjs .context/mokly-preview .context/mokly-preview-deploy
+      - name: Deploy Mokly preview
+        id: deploy
+        run: |
+          branch="pr-${{ github.event.pull_request.number }}"
+          npx --no-install wrangler pages deploy .context/mokly-preview-deploy \
+            --project-name "${CLOUDFLARE_PROJECT_NAME}" \
+            --branch "${branch}"
+          echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
+          echo "url=https://${branch}.${CLOUDFLARE_PROJECT_NAME}.pages.dev" >> "${GITHUB_OUTPUT}"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Comment on pull request
+        if: always()
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          DEPLOY_STATUS: ${{ job.status }}
+          PREVIEW_BRANCH: ${{ steps.deploy.outputs.branch }}
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const marker = process.env.MOKLY_COMMENT_MARKER;
+            const lines = [
+              marker,
+              "### Mokly preview",
+              "",
+              "Status: **" + process.env.DEPLOY_STATUS + "**",
+              "- Preview: " + (process.env.PREVIEW_URL || "unavailable"),
+              "- Cloudflare branch: " + (process.env.PREVIEW_BRANCH || "unknown"),
+              "- Commit: " + context.payload.pull_request.head.sha,
+              "- Workflow: " + context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId,
+            ];
+            const body = lines.join("\n");
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body,
+              });
+            }
+
+  close-pr:
+    permissions:
+      contents: read
+      pull-requests: write
+    name: Close PR Preview
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 20
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    steps:
+      - name: Delete Cloudflare Pages PR deployments
+        id: cleanup
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+          PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const account = process.env.CLOUDFLARE_ACCOUNT_ID;
+            const token = process.env.CLOUDFLARE_API_TOKEN;
+            if (!account || !token) {
+              core.setOutput("status", "retained: missing Cloudflare configuration");
+              return;
+            }
+            const root = "https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(account) + "/pages/projects/" + encodeURIComponent(process.env.CLOUDFLARE_PROJECT_NAME);
+            const headers = { Authorization: "Bearer " + token };
+            const ids = [];
+            const safe = value => String(value).replaceAll(token, "[redacted]").replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").slice(0, 300);
+            async function request(url, method = "GET") {
+              let response;
+              try { response = await fetch(url, { method, headers }); }
+              catch { throw new Error(method + " request failed"); }
+              const body = await response.json().catch(() => null);
+              if (!response.ok || !body?.success) {
+                const reason = body?.errors?.map(error => error.message).join("; ");
+                throw new Error(method + " HTTP " + response.status + (reason ? ": " + safe(reason) : ": invalid response"));
+              }
+              return body;
+            }
+            try {
+              for (let page = 1; ; page++) {
+                if (page > 100) throw new Error("deployment pagination exceeded 100 pages; branch deployments retained");
+                const body = await request(root + "/deployments?per_page=100&page=" + page);
+                if (!Array.isArray(body.result)) throw new Error("invalid deployment list");
+                ids.push(...body.result.filter(item => item.deployment_trigger?.metadata?.branch === process.env.PREVIEW_BRANCH).map(item => item.id));
+                const pages = body.result_info?.total_pages;
+                if (Number.isInteger(pages) && pages > 0 ? page >= pages : body.result.length === 0) break;
+              }
+              const failures = [];
+              for (const id of ids) {
+                try { await request(root + "/deployments/" + encodeURIComponent(id) + "?force=true", "DELETE"); }
+                catch (error) { failures.push(safe(id) + ": " + safe(error.message)); }
+              }
+              core.setOutput("status", failures.length ? "retained: " + failures.join("; ") : "deleted: " + ids.length + " branch deployments");
+            } catch (error) {
+              core.setOutput("status", "retained: " + safe(error.message));
+            }
+      - name: Mark preview inactive
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          CLEANUP_STATUS: ${{ steps.cleanup.outputs.status }}
+          PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
+        with:
+          script: |
+            const marker = process.env.MOKLY_COMMENT_MARKER;
+            const lines = [
+              marker,
+              "### Mokly preview",
+              "",
+              "Status: **inactive**",
+              "- Cloudflare branch: " + process.env.PREVIEW_BRANCH,
+              "- Cleanup: " + (process.env.CLEANUP_STATUS || "retained: cleanup status unavailable"),
+              "- PR closed at workflow: " + context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId,
+            ];
+            const body = lines.join("\n");
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find((comment) => comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            }
