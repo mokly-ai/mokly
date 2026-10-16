@@ -1078,9 +1078,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Integrate Changes with the static build pipeline for build and publish.
       Keep warning gates after comparison and retain the result for M12/M9.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
-- [ ] Add the Comparing phase spinner and measured durations to build Changes.
+- [x] Add the Comparing phase spinner and measured durations to build Changes.
   - [x] Connect the Comparing spinner to the static phase reporter.
-  - [ ] Include the comparison duration when the Changes phase settles.
+  - [x] Include the comparison duration when the Changes phase settles.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/d-duration-tests.log`.
 - [ ] Complete the final shared-runtime review: bounded memory sampling,
       canonical Node identity, ancestor dependency tiers, selected NODE_PATH
       priority, and direct base, extraction, timeout, and recycle tests.
