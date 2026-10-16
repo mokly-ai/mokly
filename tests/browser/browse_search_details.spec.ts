@@ -10,7 +10,10 @@ import {
   tourRow,
   welcomeRow,
 } from "./browse_assertions.js";
+import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
+
+checkBrowserErrors();
 
 test("search matches authored entry paths", async ({ page }) => {
   await page.goto("/");
@@ -103,23 +106,33 @@ test("details tag chips enter, keep, and clear their term", async ({
   expect(await hasMarker(page)).toBe(true);
 });
 
-test("Details stays usable when preference storage refuses writes", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    Storage.prototype.setItem = () => {
-      throw new Error("fixture storage refused");
-    };
+for (const failure of ["refuses writes", "getter throws"]) {
+  test(`Details stays usable when preference storage ${failure}`, async ({
+    page,
+  }) => {
+    await page.addInitScript((failure) => {
+      const refused = () => {
+        throw new Error("fixture storage refused");
+      };
+      if (failure === "getter throws")
+        Object.defineProperty(window, "localStorage", { get: refused });
+      else Storage.prototype.setItem = refused;
+    }, failure);
+    await page.goto("/view/example/screens/welcome/");
+    const tab = page.getByRole("tab", { name: "Details", exact: true });
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "false");
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+    await page
+      .locator('a[data-nav-row][data-entry-id="example/screens/details"]')
+      .click();
+    await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    await expect(tab).toHaveAttribute("aria-selected", "true");
   });
-  await page.goto("/view/example/screens/welcome/");
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "false");
-  await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-});
+}
 
 test("direct entry loads disclose saved-closed active ancestry", async ({
   page,
@@ -128,6 +141,7 @@ test("direct entry loads disclose saved-closed active ancestry", async ({
     localStorage.setItem(
       "mokly:nav-disclosure:v4",
       JSON.stringify({
+        "section:specs": false,
         "folder:specs:example": false,
         "folder:specs:example/screens": false,
       }),

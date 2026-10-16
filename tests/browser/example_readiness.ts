@@ -4,20 +4,21 @@ import type { CatalogueReadModel, EntryDetailV1 } from "@mokly/viewer";
 export async function exampleReady(
   url: string,
   signal: AbortSignal,
+  request: typeof fetch = fetch,
 ): Promise<void> {
-  const response = await fetch(`${url}/mokly-viewer/events`, { signal });
+  const response = await request(`${url}/mokly-viewer/events`, { signal });
   if (!response.ok || !response.body)
     throw new Error("Example publication stream is unavailable");
   const stream = response.body.getReader();
   try {
     for (;;) {
       const index = (await (
-        await fetch(`${url}/mokly-viewer/index.json`, { signal })
+        await request(`${url}/mokly-viewer/index.json`, { signal })
       ).json()) as CatalogueReadModel;
       let ready = !["pending", "preparing"].includes(index.changesStatus);
       for (const entry of [...index.screens, ...index.components]) {
         const detail = (await (
-          await fetch(`${url}/mokly-viewer/entries/${entry.path}.json`, {
+          await request(`${url}/mokly-viewer/entries/${entry.path}.json`, {
             signal,
           })
         ).json()) as EntryDetailV1;

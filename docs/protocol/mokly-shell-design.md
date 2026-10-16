@@ -106,12 +106,12 @@ scrollable region scrolls internally:
   panel moves focus to the chip for the entered tag, or to the first chip when
   no tag is entered; the chip row then keeps a single tab stop that ArrowLeft
   and ArrowRight rove and wrap at both ends, Home and End send to its ends, and
-  Enter or Space activates. That chip row is a labelled toolbar carrying the
-  single tab stop, while the details inspector's chips stay independent tab
-  stops. Escape closes the panel and returns focus to the control without
-  changing the query, and a click outside closes it, returning focus to the
-  control only when the closing panel still holds it. A catalogue that declares
-  no tags renders neither the control nor the panel.
+  Enter or Space activates. The row is a labelled toolbar with one tab stop.
+  Details chips keep independent tab stops. Escape closes the panel and
+  returns focus to the control without changing the query. An outside click
+  closes it and returns focus only if the panel held focus. Selecting a Details
+  tag closes an open picker and focuses its toggle. Without tags, render
+  neither the control nor the panel.
 - **Navigation** — 248px initial column, `#fbfbfa` background, hairline right
   border. On desktop, an 8px-wide split separator with a centred 2×32px grip
   resizes the column from 192px to 480px without exceeding half the viewport.

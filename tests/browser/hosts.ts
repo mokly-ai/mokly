@@ -1,4 +1,6 @@
 import { EventEmitter, once } from "node:events";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 import { serveProcess } from "../../scripts/verification/serve-process.mjs";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -19,7 +21,9 @@ export async function browserHost(
     | { kind: "static"; directory: string },
 ): Promise<BrowserHost> {
   if (source.kind === "static") {
-    const host = await serveStaticFiles(source.directory);
+    const directory = path.resolve(source.directory);
+    await requireStaticCatalogue(directory);
+    const host = await serveStaticFiles(directory);
     let closing: Promise<void> | undefined;
     return { url: host.url, close: () => (closing ??= host.close()) };
   }
@@ -77,10 +81,8 @@ export async function serveHost(
       ...(cancellation ? [cancellation] : []),
     ]);
     for (;;) {
-      const match = /Mokly listening at (http:\/\/127\.0\.0\.1:\d+)/.exec(
-        output,
-      );
-      if (match) return { url: match[1]!, close, diagnostics: () => output };
+      const url = listeningAddress(output);
+      if (url) return { url, close, diagnostics: () => output };
       if (failure || child.exitCode !== null || child.signalCode !== null)
         throw new Error(`Example Serve exited before readiness:\n${output}`, {
           cause: failure,
@@ -99,4 +101,30 @@ export async function serveHost(
     }
     throw error;
   }
+}
+
+/** Fail before launching tests when an output path is missing or incomplete. */
+export async function requireStaticCatalogue(directory: string): Promise<void> {
+  const root = path.resolve(directory);
+  for (const name of [
+    "index.html",
+    "mokly-viewer/index.json",
+    ".mokly-export-artifact",
+  ]) {
+    try {
+      if (!(await fs.stat(path.join(root, name))).isFile())
+        throw new Error("not a file");
+    } catch {
+      throw new Error(
+        `Static browser catalogue ${root} is missing required file ${name}`,
+      );
+    }
+  }
+}
+
+/** A partial stdout chunk must not truncate a bound port. */
+export function listeningAddress(output: string): string | undefined {
+  return /(?:^|\n)Mokly listening at (http:\/\/127\.0\.0\.1:\d+)\r?\n/.exec(
+    output,
+  )?.[1];
 }

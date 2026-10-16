@@ -34,12 +34,18 @@ export function validateCiReports(reports, commit, runtimes) {
     const browser = reports.filter(
       (report) => report.runtime === runtime && report.suite === "browser",
     );
-    validateShardReports(browser, {
-      commit,
-      runtime,
-      suite: "browser",
-      total: 4,
-    });
+    try {
+      validateShardReports(browser, {
+        commit,
+        runtime,
+        suite: "browser",
+        total: 4,
+      });
+    } catch (error) {
+      throw new Error(`browser ${runtime} evidence failed: ${error.message}`, {
+        cause: error,
+      });
+    }
     if (browser.some((report) => report.nodeVersion !== group[0].nodeVersion))
       throw new Error("suites used different Node versions");
   }

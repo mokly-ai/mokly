@@ -16,34 +16,31 @@ use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
-    let complete = VerificationSuite::LOCAL
-        .into_iter()
-        .flat_map(|suite| commands_for(suite, None, DependencyAudit::Baseline))
-        .collect::<Vec<_>>();
-
-    assert_eq!(
-        complete
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
-        [
-            "npm run dependencies:check -- --baseline",
-            "npm run format:check",
-            "npm run lint",
-            "node scripts/verification/source-file-length.mjs",
-            "node scripts/verification/repository-ratchets.mjs",
-            "cargo fmt --all -- --check",
-            "cargo clippy --workspace --all-targets -- -D warnings",
-            "npm run build --workspace \"@mokly/viewer\"",
-            "npm run build --workspace \"@mokly/mokly\"",
-            "cargo test --workspace",
-            "npm run build",
-            "npm run typecheck",
-            "npm run test:viewer:prepared",
-            "npm run build",
-            "npm run test:browser:prepared",
-        ]
-    );
+    let command_runner = Arc::new(Unimock::new((
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run format:check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run lint" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo fmt --all -- --check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo clippy --workspace --all-targets -- -D warnings" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/viewer\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build --workspace \"@mokly/mokly\"" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo test --workspace" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run build" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:viewer:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:browser:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+    )));
+    let auditor = Arc::new(Unimock::new(
+        RustFileLengthAuditorRunMock
+            .next_call(matching!((root) if *root == workspace().as_path()))
+            .returns(Ok(())),
+    ));
+    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
+    runner
+        .run(CheckRequest::new(None, None, None).unwrap())
+        .unwrap();
 }
 
 #[test]

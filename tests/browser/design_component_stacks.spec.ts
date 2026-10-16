@@ -1,7 +1,9 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { componentDesignFixture } from "./component_design_fixture.js";
+
+const { componentDesignUrl } = componentDesignFixture();
 
 type Viewport = "desktop" | "mobile";
 

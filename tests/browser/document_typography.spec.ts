@@ -140,6 +140,7 @@ function computedParts(root: Locator, selectors: Record<Part, string>) {
         if (!element) return `missing ${selector}`;
         const style = getComputedStyle(element);
         let surface = element;
+        // Native documents paint the canvas on html; transparent descendants show that same surface.
         while (
           getComputedStyle(surface).backgroundColor === "rgba(0, 0, 0, 0)" &&
           surface.parentElement

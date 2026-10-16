@@ -166,11 +166,23 @@ For static-output checks, build the site first, then set
 `MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
 
 ```bash
-npx mokly build --config examples/basic/mokly.config.json --out .context/example
+npx mokly build --config examples/basic/mokly.config.json --out ../../.context/example
 MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
 ```
 
 The host serves exact files and directory indexes. It uses a free loopback port.
+Browser specs support POSIX systems only. Forced cleanup relies on sidecars
+ending with their owning binary. Specs must not assume an empty Changes set:
+remote Testboxes hold branch edits as working-tree changes against their base.
+`MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
+that open portable documents directly through `file://` URLs.
+
+For example, after the build above:
+
+```bash
+MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser/component_inspector.spec.ts
+```
+
 Browser traces and screenshots stay under `.context/playwright-results/`.
 
 ## Development Workflow And Verification Boundary

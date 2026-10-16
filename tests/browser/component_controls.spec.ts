@@ -1,7 +1,9 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { componentDesignFixture } from "./component_design_fixture.js";
+
+const { componentDesignUrl } = componentDesignFixture();
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: controls keep the saved component canvas width`, async ({
@@ -47,7 +49,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         viewport,
       ),
     );
-    const controls = page.locator(".ce-controls-content");
+    const controls = page.getByRole("region", { name: "Props", exact: true });
     await expect(
       controls.getByRole("textbox", { name: "label", exact: true }),
     ).toHaveValue("Continue");
@@ -157,11 +159,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
         viewport,
       ),
     );
-    await expect(page.locator(".ce-controls-content")).toContainText(
-      "Comparisons show the saved props.",
-    );
     await expect(
-      page.locator(".ce-controls-content").locator("input, select"),
+      page.getByRole("region", { name: "Props", exact: true }),
+    ).toContainText("Comparisons show the saved props.");
+    await expect(
+      page
+        .getByRole("region", { name: "Props", exact: true })
+        .locator("input, select"),
     ).toHaveCount(0);
     await page
       .getByRole("link", { name: "Switch to Current", exact: true })
@@ -178,11 +182,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
         viewport,
       ),
     );
-    await expect(page.locator(".ce-controls-content")).toContainText(
-      "Open this catalogue locally to edit props.",
-    );
     await expect(
-      page.locator(".ce-controls-content").locator("input, select"),
+      page.getByRole("region", { name: "Props", exact: true }),
+    ).toContainText("Open this catalogue locally to edit props.");
+    await expect(
+      page
+        .getByRole("region", { name: "Props", exact: true })
+        .locator("input, select"),
     ).toHaveCount(0);
     await page
       .getByRole("navigation", { name: "Saved variants" })
@@ -196,7 +202,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     );
     await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
     await expect(
-      page.locator(".ce-controls-content").locator("input, select"),
+      page
+        .getByRole("region", { name: "Props", exact: true })
+        .locator("input, select"),
     ).toHaveCount(0);
     await expect(page.locator(".ce-canvas:visible .ce-action")).toBeDisabled();
   });

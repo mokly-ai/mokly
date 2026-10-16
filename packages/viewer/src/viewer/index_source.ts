@@ -54,14 +54,18 @@ export function useIndexSource(
   useEffect(() => {
     if (immediate) return;
     const controller = new AbortController();
-    void loadIndexSource(source, baseUrl, controller.signal).then(
-      (loaded) => {
-        if (!controller.signal.aborted) setResult({ key, loaded });
-      },
-      (cause: unknown) => {
-        if (!controller.signal.aborted) setResult({ key, error: { cause } });
-      },
-    );
+    // StrictMode discards its first effect before this turn. Do not start its transport.
+    queueMicrotask(() => {
+      if (controller.signal.aborted) return;
+      void loadIndexSource(source, baseUrl, controller.signal).then(
+        (loaded) => {
+          if (!controller.signal.aborted) setResult({ key, loaded });
+        },
+        (cause: unknown) => {
+          if (!controller.signal.aborted) setResult({ key, error: { cause } });
+        },
+      );
+    });
     return () => controller.abort();
   }, [immediate, key]);
   const current = immediate ?? (result?.key === key ? result : undefined);

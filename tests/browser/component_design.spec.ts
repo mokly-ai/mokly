@@ -1,10 +1,10 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import {
-  componentDesignRoutes,
-  componentDesignUrl,
-} from "./component_design_fixture.js";
+import { componentDesignFixture } from "./component_design_fixture.js";
+import { designResourceExists } from "./design_fixture.js";
+
+const { componentDesignRoutes, componentDesignUrl } = componentDesignFixture();
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test.describe(`${viewport} component designs`, () => {
@@ -14,10 +14,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
           ? { width: 390, height: 844 }
           : { width: 1440, height: 1000 },
     });
-    test("every owning artboard renders, links to real pages, and fits its width", async ({
-      page,
-    }, testInfo) => {
-      for (const route of componentDesignRoutes) {
+    for (const route of componentDesignRoutes)
+      test(`${route}: owning artboard renders, links to real pages, and fits its width`, async ({
+        page,
+      }, testInfo) => {
         await page.goto(componentDesignUrl(route, viewport));
         await expect(
           page.locator(`.ce-design .mbk-shell--${viewport}`),
@@ -45,14 +45,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
           );
         for (const href of new Set(links)) {
           expect(new URL(href).origin).toBe(new URL(page.url()).origin);
-          expect((await page.request.get(href)).ok(), href).toBe(true);
+          expect(await designResourceExists(page.request, href), href).toBe(
+            true,
+          );
         }
         await page.screenshot({
           path: testInfo.outputPath(`${route.replaceAll("/", "-")}.png`),
           fullPage: true,
         });
-      }
-    });
+      });
     test("saved variants share a page pattern and consuming-screen links work by keyboard", async ({
       page,
     }) => {

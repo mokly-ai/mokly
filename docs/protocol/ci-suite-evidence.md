@@ -20,6 +20,10 @@ directories. If termination cannot be confirmed, teardown fails and keeps the
 owned directories for diagnosis; concurrent and repeated close calls share that
 same completion or failure.
 
+For the browser suite, confirmed drainage covers registered POSIX groups.
+Forced cleanup relies on sidecars ending with their binary. It cannot
+independently confirm termination of sidecars in separate process groups.
+
 A fixture that owns live resources drains them in reverse registration order
 before it deletes its directory. Every registered cleanup runs even if another
 fails; a failure keeps the directory for diagnosis. Servers and child processes
@@ -72,8 +76,9 @@ only a positive decimal integer without a sign or leading zero, up to
 JavaScript's maximum safe integer. Any other value stops the command before
 tests start. Both runners print the value they use.
 
-Each Playwright worker owns one example server. Global setup starts the shim
-with `--base HEAD --no-watch --port 0`. Serve binds a free loopback port and
+Each Playwright worker owns one example server. Global setup starts and readies
+the workers concurrently. It starts the shim
+with `--base HEAD --no-watch --port 0 --sidecars 1`. Serve binds a free loopback port and
 prints its listening address. Setup waits for the initial usage publication
 and for Changes to leave its pending or preparing state. It fails on an
 unavailable example render. It publishes the addresses to workers through
@@ -87,6 +92,9 @@ rejects a worker count above the number of servers.
 The same host interface serves its exact files and directory indexes on a free
 port. This mode neither builds the site nor adds fallback routes. The default
 host remains Serve. Fixtures that test private inputs still own their own hosts.
+
+Browser specs support POSIX systems only. Specs must not depend on an empty Changes set:
+remote Testboxes hold branch edits as working-tree changes against their base.
 
 ## Failure, Cancellation And Cleanup
 

@@ -152,6 +152,15 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
     "absent",
   );
 
+  const wrongBrowser = classifyEvidence(
+    { ...base, liveBrowserFiles: ["tests/browser/missing.spec.ts"] },
+    validateCiReports,
+  );
+  assert.equal(wrongBrowser.outcome, "invalid");
+  assert.equal(
+    wrongBrowser.reason,
+    "browser report inventory does not match the release checkout",
+  );
   const twoCommits = releaseReports();
   twoCommits[0] = { ...twoCommits[0]!, commit: "c".repeat(40) };
   assert.equal(

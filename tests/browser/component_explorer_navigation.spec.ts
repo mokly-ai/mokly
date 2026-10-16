@@ -77,3 +77,43 @@ test("nested selection and frame Escape preserve focus and consumer markup", asy
   ).toBeFocused();
   expect(await frame.locator("body").innerHTML()).toBe(html);
 });
+
+test("a generated MockLink opens a component variant entry", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/home/`);
+  await page
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
+  await expect(
+    page.getByRole("heading", { name: "Action", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .frameLocator('[data-workspace-frame="mobile"]')
+      .getByRole("button", { name: "Continue" }),
+  ).toBeDisabled();
+});
+test("a standalone frame miss keeps navigation available for a later route", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/home/`);
+  const link = page
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true });
+  await link.evaluate((element) =>
+    element.setAttribute("data-mokly-link", "missing-entry"),
+  );
+  await link.click();
+  await expect(page).toHaveURL(/\/view\/missing-entry\/$/);
+  await expect(
+    page.getByRole("heading", { name: "Item not found", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await expect(page).toHaveURL(/\/view\/home\/$/);
+  await expect(
+    page.getByRole("heading", { name: "Home", exact: true }),
+  ).toBeVisible();
+});

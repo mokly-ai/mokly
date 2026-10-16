@@ -6,11 +6,11 @@ import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
-import { designEntries } from "./design_catalogue.js";
-import { designFileUrl } from "./design_fixture.js";
+import { designCases, designCatalogue } from "./design_catalogue.js";
+import { designFileUrl, designResourceExists } from "./design_fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
-const manifest = { entries: designEntries };
+const manifest = { entries: designCatalogue() };
 const fileUrl = (route: string) =>
   designFileUrl(path.join(generated, route)).href;
 
@@ -24,49 +24,45 @@ for (const viewport of ["desktop", "mobile"] as const) {
           : { width: 1440, height: 1000 },
     });
 
-    test("every saved sample loads from Serve with confined styles and links", async ({
-      page,
-    }, testInfo) => {
-      const failed: string[] = [];
-      page.on("requestfailed", (request) => failed.push(request.url()));
-      for (const entry of manifest.entries) {
-        if (
-          entry.kind !== "component" ||
-          !("variantOf" in entry) ||
-          !entry.path.startsWith("design/library/")
-        )
-          continue;
-        {
-          await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
-          await expect(page.locator(".mbk-library-host")).toBeVisible();
-          for (const panel of await page
-            .locator(".ce-workspace details[open] > .ce-inspector-panel")
-            .all()) {
-            await expect(panel).toHaveCSS("overflow-y", "auto");
-          }
-          expect(
-            await page.evaluate(
-              () => document.documentElement.scrollWidth <= innerWidth,
-            ),
-            `${entry.variantOf}/${entry.path} fits`,
-          ).toBe(true);
-          const urls = await page
-            .locator("a[href],link[rel=stylesheet]")
-            .evaluateAll((nodes) =>
-              nodes.map((node) => (node as HTMLAnchorElement).href),
-            );
-          for (const url of new Set(urls)) {
-            expect(new URL(url).origin).toBe(new URL(page.url()).origin);
-            expect((await page.request.get(url)).ok(), url).toBe(true);
-          }
-          await page.screenshot({
-            path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
-            fullPage: true,
-          });
+    for (const entry of designCases.filter(
+      (entry) =>
+        entry.kind === "component" &&
+        entry.variantOf &&
+        entry.path.startsWith("design/library/"),
+    ))
+      test(`${entry.path}: saved sample loads with confined styles and links`, async ({
+        page,
+      }, testInfo) => {
+        const failed: string[] = [];
+        page.on("requestfailed", (request) => failed.push(request.url()));
+        await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
+        await expect(page.locator(".mbk-library-host")).toBeVisible();
+        for (const panel of await page
+          .locator(".ce-workspace details[open] > .ce-inspector-panel")
+          .all()) {
+          await expect(panel).toHaveCSS("overflow-y", "auto");
         }
-      }
-      expect(failed).toEqual([]);
-    });
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          `${entry.variantOf}/${entry.path} fits`,
+        ).toBe(true);
+        const urls = await page
+          .locator("a[href],link[rel=stylesheet]")
+          .evaluateAll((nodes) =>
+            nodes.map((node) => (node as HTMLAnchorElement).href),
+          );
+        for (const url of new Set(urls)) {
+          expect(new URL(url).origin).toBe(new URL(page.url()).origin);
+          expect(await designResourceExists(page.request, url), url).toBe(true);
+        }
+        await page.screenshot({
+          path: testInfo.outputPath(`${entry.variantOf}-${entry.path}.png`),
+          fullPage: true,
+        });
+        expect(failed).toEqual([]);
+      });
 
     test("catalogue section headings keep the in-screen typography in isolation", async ({
       page,

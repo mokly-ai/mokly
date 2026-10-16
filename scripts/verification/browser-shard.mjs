@@ -4,7 +4,7 @@ export function parseShardArgument(args) {
   const value =
     args.length === 2 && args[0] === "--shard" ? args[1] : undefined;
   const match = /^(\d+)\/(\d+)$/.exec(value ?? "");
-  if (!match) throw new Error("usage: run-browser.mjs [--shard INDEX/TOTAL]");
+  if (!match) throw new Error("expected --shard INDEX/TOTAL");
   const index = Number(match[1]);
   const total = Number(match[2]);
   if (

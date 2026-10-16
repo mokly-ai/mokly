@@ -527,6 +527,9 @@ catalogue.
 
 ## Development
 
+URL-source requests start after effect replay. A discarded StrictMode effect
+starts no request. Source replacement aborts the old load and fences its result.
+
 The repository is an npm workspace. The Rust core is a Cargo workspace under
 `crates/`. `packages/mokly` holds the `@mokly/mokly` shim, the render sidecar,
 and the authoring API. `packages/viewer` holds this package; its shared shapes

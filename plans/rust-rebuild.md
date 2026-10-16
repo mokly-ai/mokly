@@ -884,6 +884,12 @@ renders again.
       navigation, and read-only controls while no descriptor is installed.
 - [ ] Complete the M8 viewer cases assigned by the browser sweep, including
       route/detail races, frame handoff, live prop edits, and preserved focus.
+- [ ] M8 browser follow-up: make unexpected console errors and `pageerror`
+      failures automatic for every browser page, with explicit per-test
+      allowances for expected failures. Keep the shared sandbox notice rule.
+- [ ] M8 browser follow-up: add Serve browser specs for the example's HTML
+      screens, slot components, document page, and YAML user flow under
+      `examples/basic/specs/example/team`, including native HTML screen links.
 
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
@@ -892,6 +898,8 @@ renders again.
   - [x] Restore current design artboards, library samples, the frozen screen
         inventory, shared component consumers and ownership, portable links,
         controls, and both viewport layouts through Serve.
+  - [x] Check portable design links, shared samples, and inspector disclosures
+        directly from real `mokly build` output through `file://` URLs.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
@@ -942,11 +950,12 @@ Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report
 CSS integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-7.md`.
 Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8-core/report-8.md`.
 
-- [ ] Commit.
-
 Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
 Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
 Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
+Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
+
+- [ ] Commit.
 
 ## Milestone 9: Changes
 

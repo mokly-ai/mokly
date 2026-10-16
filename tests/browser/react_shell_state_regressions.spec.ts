@@ -1,6 +1,9 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
+
+checkBrowserErrors();
 
 const componentPath = "/view/design/library/inspector/inspector/";
 const variantPath = "/view/design/library/inspector/inspector/props/";

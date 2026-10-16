@@ -80,6 +80,15 @@ fn command_inventory_has_six_unique_commands_and_five_reports() {
             .shell_command("sha256:abc")
             .contains("--dependency-audit")
     }));
+    for (offset, command) in commands[2..].iter().enumerate() {
+        assert_eq!(
+            command.shell_command("sha256:abc"),
+            format!(
+                "node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite browser --shard {}/4",
+                offset + 1
+            )
+        );
+    }
     assert!(
         baseline[0]
             .shell_command("sha256:abc")

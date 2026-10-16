@@ -1,29 +1,35 @@
-import type { CatalogueReadModel } from "@mokly/viewer";
+import path from "node:path";
 
-import { test } from "./browser_test.js";
-import { ownExampleServerUrl } from "./example_servers.js";
+import { repositoryRoot } from "../helpers/fixture.js";
 
-export const componentDesignRoutes: string[] = [];
+import { designCases, designCatalogue } from "./design_catalogue.js";
+import { designFileUrl } from "./design_fixture.js";
 
-test.beforeAll(async ({ request, baseURL }) => {
-  const response = await request.get(`${baseURL}/mokly-viewer/index.json`);
-  const index = (await response.json()) as CatalogueReadModel;
-  componentDesignRoutes.splice(
-    0,
-    componentDesignRoutes.length,
-    ...index.screens
-      .filter((entry) => entry.path.startsWith("design/components/"))
-      .map((entry) => entry.path),
-  );
-  if (!componentDesignRoutes.length)
-    throw new Error("No component design screens");
-});
-
-export function componentDesignUrl(
-  entryPath: string,
-  viewport: string,
-): string {
-  const origin = ownExampleServerUrl();
-  if (!origin) throw new Error("The browser example server is not ready");
-  return `${origin}/static/mokly-generated/${entryPath}/index.${viewport}.html`;
+/** Register independent hooks for every spec and reject an unknown design route. */
+export function componentDesignFixture() {
+  const entries = designCatalogue();
+  const componentDesignRoutes = designCases
+    .filter(
+      (entry) =>
+        entry.kind === "screen" && entry.path.startsWith("design/components/"),
+    )
+    .map((entry) => entry.path);
+  return {
+    componentDesignRoutes,
+    componentDesignUrl(entryPath: string, viewport: string): string {
+      if (
+        !componentDesignRoutes.includes(entryPath) ||
+        !entries.some((entry) => entry.path === entryPath)
+      )
+        throw new Error(`Unknown component design: ${entryPath}`);
+      return designFileUrl(
+        path.join(
+          repositoryRoot,
+          "examples/basic/mokly-generated",
+          entryPath,
+          `index.${viewport}.html`,
+        ),
+      ).href;
+    },
+  };
 }

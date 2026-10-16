@@ -1,8 +1,11 @@
 import { expect, type Page } from "@playwright/test";
 
+import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
 import { readDisclosureStorage } from "./disclosure_storage.js";
+
+checkBrowserErrors();
 let server: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
   server = await serveCatalogue({

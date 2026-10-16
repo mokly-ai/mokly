@@ -8,14 +8,20 @@ import {
   select,
   store,
 } from "./appearance_assertions.js";
+import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
+checkBrowserErrors();
+
 let lightOnlySite: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
   lightOnlySite = await serveCatalogue({
-    "specs/home.screen.html": "---\ntitle: Home\n---\n<h1>Home</h1>",
+    "specs/home.screen.html": `---
+title: Home
+---
+<style>:root { color-scheme: light; } @media (prefers-color-scheme: dark) { :root { color-scheme: dark; } }</style><h1>Home</h1><input aria-label="Date" type="date" />`,
   });
 });
 test.afterAll(async () => lightOnlySite?.close());
@@ -123,3 +129,52 @@ test("a light-only catalogue mounts with a saved Dark appearance", async ({
     /home\/index\.mobile\.html$/,
   );
 });
+
+for (const width of [390, 1280])
+  test(`${width}: light-only previews keep their browser context under a Dark interface`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ colorScheme: null });
+    await page.goto(`${lightOnlySite.url}/view/home/?scheme=dark`);
+    for (const theme of ["dark", "light", "auto"] as const) {
+      await page.locator(select).selectOption(theme);
+      await expect(page.locator("html")).toHaveAttribute(
+        "data-mokly-theme",
+        theme,
+      );
+      for (const viewport of ["mobile", "desktop"]) {
+        const frame = page.locator(`[data-workspace-frame="${viewport}"]`);
+        await expectFrameSource(
+          frame,
+          new RegExp(`home/index\\.${viewport}\\.html$`),
+        );
+        await expect(frame).toHaveCSS("color-scheme", "light");
+        await expect(frame).toHaveCSS("background-color", "rgb(255, 255, 255)");
+        await expect(frame.contentFrame().getByLabel("Date")).toHaveCSS(
+          "color-scheme",
+          "light",
+        );
+        expect(
+          await frame.evaluate(
+            (element: HTMLIFrameElement) =>
+              element.contentWindow!.matchMedia("(prefers-color-scheme: dark)")
+                .matches,
+          ),
+        ).toBe(false);
+      }
+      await expect(page.locator(".phone-screen")).toHaveCSS(
+        "background-color",
+        "rgb(255, 255, 255)",
+      );
+      await expect(page.locator(".phone-status")).toHaveCSS(
+        "color",
+        "rgb(26, 29, 28)",
+      );
+      await expect(page.locator(".browser-viewport")).toHaveCSS(
+        "background-color",
+        "rgb(255, 255, 255)",
+      );
+      await expect(page.locator(".mbk-frame-scheme-note")).toHaveCount(0);
+    }
+  });

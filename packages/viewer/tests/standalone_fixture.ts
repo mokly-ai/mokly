@@ -2,7 +2,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { serveHost } from "../../../tests/browser/hosts.js";
+import { buildStaticCatalogue } from "../../../tests/helpers/build_site.js";
 import { repositoryRoot } from "../../../tests/helpers/fixture.js";
 import { serveStaticFiles } from "../../../tests/helpers/static_server.js";
 import type {
@@ -12,7 +12,7 @@ import type {
 import { viewRoute } from "../src/data.js";
 
 import { ownBrowserCleanup } from "./browser_cleanup.js";
-import { inspectorDocument, writeBrowserFile } from "./browser_documents.js";
+import { writeBrowserFile } from "./browser_documents.js";
 import {
   browserSources,
   type BrowserSourceOptions,
@@ -77,84 +77,22 @@ export async function crossOriginFixture(options: BrowserSourceOptions = {}) {
       path.join(workspace, "node_modules"),
       "junction",
     );
-    const running = await serveHost(
-      [
-        path.join(repositoryRoot, "packages/mokly/bin/mokly.mjs"),
-        "serve",
-        "--port",
-        "0",
-        "--no-watch",
-        "--sidecars",
-        "1",
-      ],
-      workspace,
-    );
-    cleanups.push(running.close);
-    const signal = AbortSignal.timeout(180_000);
-    const stream = (
-      await fetch(`${running.url}/mokly-viewer/events`, { signal })
-    ).body!.getReader();
-    let index: CatalogueReadModel;
+    await buildStaticCatalogue(workspace, root);
+    const index = JSON.parse(
+      await fs.readFile(path.join(root, "mokly-viewer/index.json"), "utf8"),
+    ) as CatalogueReadModel;
     const details: {
       current: Record<string, EntryDetailV1>;
       removed: Record<string, EntryDetailV1>;
     } = { current: {}, removed: {} };
-    try {
-      for (;;) {
-        index = (await (
-          await fetch(`${running.url}/mokly-viewer/index.json`, { signal })
-        ).json()) as CatalogueReadModel;
-        for (const entry of [...index.screens, ...index.components])
-          details.current[entry.path] = (await (
-            await fetch(
-              `${running.url}/mokly-viewer/entries/${entry.path}.json`,
-              { signal },
-            )
-          ).json()) as EntryDetailV1;
-        if (
-          Object.values(details.current).some((detail) =>
-            detail.views.some((view) => view.usage.status === "unavailable"),
-          )
-        )
-          throw new Error("Fixture render failed: " + running.diagnostics?.());
-        if (
-          Object.values(details.current).every(
-            (detail) =>
-              detail.revision === index.revision &&
-              detail.views.every((view) => view.usage.status === "ready"),
-          )
-        )
-          break;
-        const event = await stream.read();
-        if (event.done)
-          throw new Error("Fixture Serve ended before ready details");
-      }
-    } finally {
-      await stream.cancel();
-    }
     for (const entry of [...index.screens, ...index.components]) {
-      for (const view of details.current[entry.path]!.views) {
-        const route = `static/mokly-generated/${viewRoute(entry.path, view.viewport, view.colorScheme)}`;
-        const response = await fetch(`${running.url}/${route}`, { signal });
-        if (!response.ok)
-          throw new Error(`Fixture document ${route}: HTTP ${response.status}`);
-        await writeBrowserFile(
-          root,
-          route,
-          inspectorDocument(await response.text(), view.usage),
-        );
-      }
+      details.current[entry.path] = JSON.parse(
+        await fs.readFile(
+          path.join(root, "mokly-viewer/entries", `${entry.path}.json`),
+          "utf8",
+        ),
+      ) as EntryDetailV1;
     }
-    await running.close();
-    await fs.cp(
-      path.join(repositoryRoot, "packages/viewer/dist"),
-      path.join(root, "mokly-viewer"),
-      { recursive: true },
-    );
-    await fs.copyFile(
-      path.join(repositoryRoot, "packages/viewer/dist/browser/inspector.js"),
-      path.join(root, "mokly-viewer/client/inspector.js"),
-    );
     await writeBrowserFile(
       root,
       "index.html",

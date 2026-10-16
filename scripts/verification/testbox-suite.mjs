@@ -46,9 +46,14 @@ export function parseTestboxArguments(args) {
     throw new Error(
       "dependency audit mode is valid only for the repository suite",
     );
-  const shard = parseShardArgument(
-    values.has("--shard") ? ["--shard", values.get("--shard")] : [],
-  );
+  let shard;
+  try {
+    shard = parseShardArgument(
+      values.has("--shard") ? ["--shard", values.get("--shard")] : [],
+    );
+  } catch (error) {
+    throw new Error(`${error.message}; ${USAGE}`, { cause: error });
+  }
   if (shard && suite !== "browser")
     throw new Error("only browser supports --shard");
   return {

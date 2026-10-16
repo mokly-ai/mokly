@@ -124,7 +124,7 @@ test("the picker chips answer the arrow, Home, and End keys", async ({
     "tabindex",
     "0",
   );
-  for (const tag of ["forms", "guide", "onboarding"])
+  for (const tag of ["forms", "guide", "onboarding", "team"])
     await expect(page.locator(chip(tag))).toHaveAttribute("tabindex", "-1");
 
   const tags = await page
@@ -132,13 +132,20 @@ test("the picker chips answer the arrow, Home, and End keys", async ({
     .evaluateAll((chips) =>
       chips.map((chip) => chip.getAttribute("data-mokly-tag")!),
     );
-  expect(tags).toEqual(
-    expect.arrayContaining(["documents", "forms", "guide", "onboarding"]),
-  );
+  expect(tags).toEqual(["documents", "forms", "guide", "onboarding", "team"]);
+  let previous = tags[0]!;
   for (const tag of [...tags.slice(1), tags[0]!]) {
     await page.keyboard.press("ArrowRight");
     await expect(page.locator(chip(tag))).toBeFocused();
     await expect(page.locator(chip(tag))).toHaveAttribute("tabindex", "0");
+    await expect(page.locator(chip(previous))).toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
+    await expect(
+      page.locator(`${panel} [data-mokly-tag][tabindex="0"]`),
+    ).toHaveCount(1);
+    previous = tag;
   }
   await page.keyboard.press("ArrowLeft");
   await expect(page.locator(chip(tags.at(-1)!))).toBeFocused();
@@ -156,10 +163,7 @@ test("the picker chips answer the arrow, Home, and End keys", async ({
 test("Space activates the focused picker chip natively", async ({ page }) => {
   await page.goto("/");
   await openPicker(page);
-  const last = await page
-    .locator(`${panel} [data-mokly-tag]`)
-    .last()
-    .getAttribute("data-mokly-tag");
+  const last = "team";
   await page.keyboard.press("End");
   await expect(page.locator(chip(last!))).toBeFocused();
 

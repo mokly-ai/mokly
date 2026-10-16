@@ -5,8 +5,10 @@ import { expect, type Locator } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
-import { componentDesignUrl } from "./component_design_fixture.js";
+import { componentDesignFixture } from "./component_design_fixture.js";
 import { designFileUrl } from "./design_fixture.js";
+
+const { componentDesignUrl } = componentDesignFixture();
 
 /** A shell design artboard opened directly from disk. */
 function shellDesignUrl(id: string, viewport: string): string {

@@ -8,11 +8,14 @@ import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
 } from "../helpers/fixture_timing.js";
 
-import { exampleReady } from "./example_readiness.js";
+import { startExampleHosts } from "./example_setup.js";
 import { browserHost, type BrowserHost } from "./hosts.js";
 
 /** Start one isolated example server per parallel worker, without fixed ports. */
-export default async function setup(config: FullConfig) {
+export default async function setup(
+  config: FullConfig,
+  dependencies = { start: startExampleHosts, host: browserHost },
+) {
   const count = browserWorkerCount();
   if (config.workers > count)
     throw new Error("Set MOKLY_PLAYWRIGHT_WORKERS instead of --workers");
@@ -39,22 +42,17 @@ export default async function setup(config: FullConfig) {
       "serve-readiness",
       false,
       async () => {
-        for (let index = 0; index < count; index++) {
-          hosts.push(
-            await browserHost(
-              process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"]
-                ? {
-                    kind: "static",
-                    directory: path.resolve(
-                      process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"]!,
-                    ),
-                  }
-                : { kind: "serve", signal },
-            ),
-          );
-          if (!process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"])
-            await exampleReady(hosts[index]!.url, signal);
-        }
+        const directory =
+          process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ??
+          process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
+        if (directory) {
+          // One plain static host can serve every read-only worker.
+          const host = await dependencies.host({
+            kind: "static",
+            directory: path.resolve(directory),
+          });
+          hosts.push(...Array.from({ length: count }, () => host));
+        } else hosts.push(...(await dependencies.start(count, signal)));
       },
     );
     process.env["MOKLY_PLAYWRIGHT_URLS"] = JSON.stringify(

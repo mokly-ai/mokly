@@ -7,6 +7,7 @@ import { viewRoute, documentRoute } from "@mokly/viewer/data";
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
 import { writeBrowserFile } from "../../packages/viewer/tests/browser_documents.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
 
@@ -43,19 +44,28 @@ export async function serveCatalogue(
       path.join(root, "node_modules"),
       "junction",
     );
-    running = await serveHost(
-      [
-        path.join(repositoryRoot, "packages/mokly/bin/mokly.mjs"),
-        "serve",
-        "--no-watch",
-        "--port",
-        "0",
-        "--sidecars",
-        "1",
-      ],
-      root,
+    running = await timeFixturePhase(
+      "browser-catalogue",
+      "serve-readiness",
+      false,
+      async () => {
+        const host = await serveHost(
+          [
+            path.join(repositoryRoot, "packages/mokly/bin/mokly.mjs"),
+            "serve",
+            "--no-watch",
+            "--port",
+            "0",
+            "--sidecars",
+            "1",
+          ],
+          root,
+        );
+        running = host;
+        await verifyDocuments(host);
+        return host;
+      },
     );
-    await verifyDocuments(running);
     return { root, url: running.url, close, diagnostics: running.diagnostics };
   } catch (error) {
     try {
