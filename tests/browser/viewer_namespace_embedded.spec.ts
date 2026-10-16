@@ -106,7 +106,7 @@ test("released review v6 uses the embedded typed version failure", async ({
       code: "version",
       message,
       details:
-        "Unsupported Mokly review version 6; this viewer supports version 7.",
+        "Unsupported Mokly review version 6; this viewer supports version 8.",
     },
   ]);
   await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
