@@ -26,6 +26,7 @@ fn sibling_controls_keep_attributes_and_add_one_html_head_stylesheet() {
     assert!(html.contains("<span title=\"A &amp; B\">Keep   content</span>"));
     assert_eq!(html.matches("<style>").count(), 1);
     assert_eq!(html.matches("href=\"mock:home\"").count(), 2);
+    assert!(html.contains("</a><hr><a href=\"mock:home\""), "{html}");
     assert!(html.contains("<head><title>Controls</title><style>"));
     assert!(html.contains(&format!("<svg>{foreign}</svg>")), "{html}");
 }

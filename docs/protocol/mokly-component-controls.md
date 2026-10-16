@@ -53,7 +53,6 @@ and counts from zero, with the first offered value the smallest multiple at
 or above `minimum`. A number control offers only values the schema accepts.
 Select options are non-empty, have non-empty labels, and unique values the
 schema accepts.
-
 The read model stores effective number limits for declared controls. Each
 bound uses the control's own value, else the schema's `minimum` or `maximum`.
 Step uses the control's own value, else the schema's `multipleOf`, else 1 for

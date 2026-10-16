@@ -87,7 +87,17 @@ fn html_fixture_renders_all_variants_axes_assets_and_front_matter() {
         assert!(html.contains("{{ never-closes"));
         assert!(html.contains("title=\"$literal\""));
         assert!(html.contains("$$literal"));
+        assert!(html.contains("styles/theme.css"));
+        let input = html
+            .split("<input")
+            .nth(1)
+            .unwrap()
+            .split('>')
+            .next()
+            .unwrap();
+        assert!(!input.contains("title="), "{input}");
         if visible {
+            assert!(!input.contains("disabled="), "{input}");
             assert!(html.contains("&lt;Ada &amp;"));
             assert!(html.contains("&quot;Co&quot;"));
             assert!(html.contains("parent-only"));
@@ -122,7 +132,7 @@ fn html_slots_and_empty_or_multiple_roots_keep_their_logical_inputs() {
     assert!(cash.slot_key.is_some());
     assert_eq!(ranges.iter().filter(|range| matches!(&range.target, ComponentRangeTarget::Instance { instance_key } if instance_key == &cash.key)).count(), 2);
     assert!(slots.iter().any(|slot| slot.name == "heading"));
-    assert_eq!(html.matches("$cash").count(), 2);
+    assert_eq!(html.matches(">$cash<").count(), 2);
     assert!(html.contains("<h2>Receiver</h2>"));
     assert_eq!(html.matches("Supplier &lt;Ada").count(), 2);
     assert!(instances.iter().any(|item| item.id == "empty"));
@@ -177,6 +187,7 @@ fn html_own_pages_saved_slots_and_logical_links_use_effective_views() {
     )
     .unwrap();
     assert!(own.contains("Saved panel") && own.contains("Default body"));
+    assert!(own.contains("styles/theme.css"));
     assert!(own.contains("Default heading") && own.contains("Second default"));
     let variant = String::from_utf8(
         generation

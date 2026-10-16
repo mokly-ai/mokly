@@ -1,0 +1,22 @@
+{
+  "config": {},
+  "files": {
+    "specs/control.component.html": "---\ntitle: Control\nelement: ui-control\ntags: [parent]\npropSchema: {type: object, additionalProperties: false, properties: {}}\nprops: {}\nvariants:\n  - slug: schemes\n    title: Schemes\n    props: {}\n    colorSchemes: [light]\n  - slug: docs\n    title: Docs\n    props: {}\n    relatedDocs: [notes.md]\n---\n<button>Control</button>\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-field",
+      "message": "control/schemes: unknown field colorSchemes",
+      "path": "specs/control.component.html",
+      "line": 11,
+      "column": 5
+    },
+    {
+      "code": "invalid-field",
+      "message": "control/docs: unknown field relatedDocs",
+      "path": "specs/control.component.html",
+      "line": 15,
+      "column": 5
+    }
+  ]
+}

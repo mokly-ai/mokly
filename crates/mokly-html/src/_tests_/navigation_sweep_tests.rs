@@ -4,7 +4,23 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, UseCaseStep};
 
 use crate::error::Result;
-use crate::{links, parse, serialize};
+use crate::{controls, links, parse, serialize};
+
+#[test]
+fn native_controls_keep_fragments_separate_from_paths_and_output_attributes() {
+    let mut invalid = parse::fragment("<button to=\"details#summary\">Bad</button>");
+    let error = controls::adapt(&mut invalid, "route").unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .ends_with("MockLink destination and fragment must be separate unencoded values")
+    );
+    let mut nodes = parse::fragment("<button to=\"details\" fragment=\"summary\">Details</button>");
+    assert!(controls::adapt(&mut nodes, "route").unwrap().is_empty());
+    let html = serialize::html(&nodes);
+    assert!(html.contains("href=\"mock:details#summary\""));
+    assert!(!html.contains("fragment="));
+}
 
 fn rewritten(body: &str, scheme: ColorScheme) -> Result<String> {
     let prepared = super::support::prepared("<p>{{label}}</p>");

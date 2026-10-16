@@ -1,0 +1,16 @@
+{
+  "config": {},
+  "files": {
+    "specs/home.screen.html": "---\ntitle: Home\nuseCasePaths: [tour]\nvariants:\n  - {slug: empty, title: Empty, props: {}, useCasePaths: [tour]}\n---\n<h1>Home</h1>\n",
+    "specs/tour.use-case.yaml": "title: Tour\nsteps: [{screenPath: home}]\n"
+  },
+  "errors": [
+    {
+      "code": "invalid-metadata",
+      "message": "screen home/empty lists use case tour, but its steps do not name the screen",
+      "path": null,
+      "line": null,
+      "column": null
+    }
+  ]
+}

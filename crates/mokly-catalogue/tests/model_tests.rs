@@ -8,6 +8,32 @@ use tempfile::TempDir;
 mod support;
 
 #[test]
+fn component_variant_tags_replace_the_parent_list_or_inherit_when_absent() {
+    let directory = TempDir::new().unwrap();
+    support::write(directory.path(), "mokly.config.json", "{}");
+    support::write(
+        directory.path(),
+        "specs/control.component.html",
+        "---\ntitle: Control\nelement: ui-control\ntags: [parent, shared]\npropSchema: {type: object, additionalProperties: false, properties: {}}\nprops: {}\nvariants:\n  - {slug: own, title: Own, props: {}, tags: [child]}\n  - {slug: empty, title: Empty, props: {}, tags: []}\n  - {slug: inherited, title: Inherited, props: {}}\n---\n<button>Control</button>",
+    );
+    let prepared = support::prepare(directory.path(), None).unwrap();
+    assert_eq!(
+        prepared
+            .model
+            .entries
+            .iter()
+            .map(|entry| (entry.metadata.path.as_str(), entry.metadata.tags.clone()))
+            .collect::<Vec<_>>(),
+        [
+            ("control", vec!["parent".into(), "shared".into()]),
+            ("control/own", vec!["child".into()]),
+            ("control/empty", vec![]),
+            ("control/inherited", vec!["parent".into(), "shared".into()]),
+        ]
+    );
+}
+
+#[test]
 fn variants_replace_props_inherit_metadata_and_do_not_inherit_flow_membership() {
     let directory = TempDir::new().unwrap();
     support::write(

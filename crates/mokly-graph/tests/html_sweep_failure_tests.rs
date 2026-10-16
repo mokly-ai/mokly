@@ -33,15 +33,27 @@ fn logical_links_reject_a_use_case_without_a_first_screen() {
 
 #[test]
 fn component_link_controls_reject_empty_text_multiple_and_unsupported_roots() {
-    for body in [
-        "",
-        "Text",
-        "<span>One</span>extra",
-        "<span>One</span><span>Two</span>",
-        "<p>Unsupported</p>",
-        "<input>",
-        "<button><input></button>",
-        "<div><video controls></video></div>",
+    for (body, reason) in [
+        ("", "must render exactly one root element"),
+        ("Text", "must render exactly one root element"),
+        (
+            "<span>One</span>extra",
+            "must render exactly one root element",
+        ),
+        (
+            "<span>One</span><span>Two</span>",
+            "must render exactly one root element",
+        ),
+        ("<p>Unsupported</p>", "has an unsupported root <p>"),
+        ("<input>", "has an unsupported root <input>"),
+        (
+            "<button><input></button>",
+            "contains <input>; remove the nested interactive element",
+        ),
+        (
+            "<div><video controls></video></div>",
+            "contains <video controls=\"\">; remove the nested interactive element",
+        ),
     ] {
         let root = TempDir::new().unwrap();
         fs::create_dir(root.path().join("specs")).unwrap();
@@ -57,7 +69,10 @@ fn component_link_controls_reject_empty_text_multiple_and_unsupported_roots() {
             .render("home/index.mobile.html")
             .unwrap_err()
             .to_string();
-        assert!(error.contains("MockLink child control"), "{body}: {error}");
+        assert!(
+            error.contains(&format!("MockLink child control {reason}")),
+            "{body}: {error}"
+        );
     }
 }
 
