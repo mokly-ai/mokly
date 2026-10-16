@@ -2,10 +2,11 @@ import { Console } from "node:console";
 import fs from "node:fs";
 
 import { SidecarError, detail } from "./sidecar/errors.js";
+import { parentInput } from "./sidecar/parent-input.js";
 import { requestId } from "./sidecar/request-id.js";
 import { request } from "./sidecar/requests.js";
 import { Session } from "./sidecar/session.js";
-import { encodeResponse, frames } from "./sidecar/transport.js";
+import { encodeFrame, encodeResponse, frames } from "./sidecar/transport.js";
 
 const version = (
   JSON.parse(
@@ -21,11 +22,22 @@ const send = async (id: string, outcome: object) => {
     write(frame, (error) => (error ? reject(error) : resolve())),
   );
 };
-const session = new Session(version, (message) =>
-  process.stderr.write(message),
+const session = new Session(
+  version,
+  (message) => process.stderr.write(message),
+  undefined,
+  (operation) => {
+    write(
+      encodeFrame({
+        event: "operation",
+        params: { operation, pid: process.pid },
+      }),
+    );
+  },
 );
+const input = parentInput();
 try {
-  for await (const value of frames(process.stdin)) {
+  for await (const value of frames(input.stream)) {
     let stop = false;
     const id = requestId(value);
     try {
@@ -50,7 +62,7 @@ try {
       if (stop) process.exitCode = 1;
     }
     if (stop) {
-      process.stdin.destroy();
+      input.stream.destroy();
       break;
     }
   }
@@ -59,4 +71,5 @@ try {
   process.exitCode = 1;
 } finally {
   await session.dispose();
+  await input.close();
 }

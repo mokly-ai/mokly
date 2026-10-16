@@ -14,7 +14,7 @@ use crate::graph::Graph;
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
 use crate::workers::check_cancelled;
-use crate::{error, resource_keys, routing_inputs, styles};
+use crate::{error, resource_digests, resource_keys, routing_inputs, styles};
 
 pub(crate) fn documents(
     graph: &Graph,
@@ -23,6 +23,7 @@ pub(crate) fn documents(
     config_key: &NodeKey,
     resources: &BTreeMap<String, ResourcePlan>,
     matchers: &styles::Matchers,
+    reload: &str,
 ) -> Result<BTreeMap<String, DocumentPlan>> {
     let tree = graph.tree.as_ref();
     let delivery = &graph.inputs;
@@ -33,11 +34,14 @@ pub(crate) fn documents(
         if sources.contains_key(path) {
             continue;
         }
-        let bytes = match tree.read_shared(&config.repo_root.join(path)) {
-            Ok(bytes) => bytes,
+        let digest = match tree.digest(&config.repo_root.join(path)) {
+            Ok(digest) => digest,
             Err(_) => return Err(invalid(path, format!("could not read entry source {path}"))),
         };
-        sources.insert(path.clone(), key(NodeKind::EntrySource, &[&bytes]));
+        sources.insert(
+            path.clone(),
+            key(NodeKind::EntrySource, &[digest.as_bytes()]),
+        );
     }
     let mut component_keys = BTreeMap::new();
     for component in catalogue.elements.values() {
@@ -121,6 +125,9 @@ pub(crate) fn documents(
                 entry.metadata.path.clone(),
                 format!("{viewport:?}/{scheme:?}"),
             ];
+            if !reload.is_empty() {
+                inputs.push(reload.into());
+            }
             if !matches!(entry.content, EntryContent::Document { .. })
                 && (!catalogue.templates.contains_key(parent)
                     || components
@@ -135,6 +142,13 @@ pub(crate) fn documents(
                     .iter()
                     .filter_map(|path| component_keys.get(path).map(|key| key.0.clone())),
             );
+            let encoded = match serde_json::to_vec(entry) {
+                Ok(bytes) => bytes,
+                Err(source) => return Err(error::InternalError::Json { source }.into()),
+            };
+            let mut recipe: Vec<_> = inputs.iter().map(|input| input.as_bytes()).collect();
+            recipe.push(&encoded);
+            let resource_key = key(NodeKind::Document, &recipe).0;
             for (path, digest) in
                 resource_keys::inputs(config, catalogue, entry, &route, &components, tree)
             {
@@ -144,19 +158,28 @@ pub(crate) fn documents(
                 if let Some(path) = routes::resolve(&route, link)
                     && let Some(resource) = resources.get(&path)
                 {
-                    inputs.push(resource.key.0.clone());
+                    inputs.push(resource.document_key.0.clone());
                 }
             }
-            let encoded = match serde_json::to_vec(entry) {
-                Ok(bytes) => bytes,
-                Err(source) => return Err(error::InternalError::Json { source }.into()),
-            };
+
             let mut borrowed: Vec<_> = inputs.iter().map(|input| input.as_bytes()).collect();
             borrowed.push(&encoded);
+            let observed: Vec<_> = delivery
+                .resources
+                .paths(&resource_key)
+                .iter()
+                .filter_map(|(path, baseline)| {
+                    let value = resource_digests::confined(tree, &config.repo_root, path);
+                    (value != *baseline)
+                        .then(|| format!("{path}:{}", value.as_deref().unwrap_or("unavailable")))
+                })
+                .collect();
+            borrowed.extend(observed.iter().map(|value| value.as_bytes()));
             let document_key = key(NodeKind::Document, &borrowed);
             output.insert(
                 route.clone(),
                 DocumentPlan {
+                    resource_key,
                     route,
                     key: document_key,
                     entry: index,

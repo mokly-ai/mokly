@@ -105,8 +105,7 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         serde_json::from_str(&get(&host, "/mokly-viewer/live.json").await).unwrap();
     assert_eq!(first["revision"], 2);
     fs::write(&source, "---\ntitle: Home\n---\n<h1>Second render</h1>").unwrap();
-    input.write_all(b"r").unwrap();
-    let second = ready(&host, Some(&first["live"])).await;
+    let second = ready(&host, Some(&first["revision"])).await;
     assert_eq!(second["revision"], first["revision"].as_u64().unwrap() + 2);
     assert_eq!(first["deploymentId"], second["deploymentId"]);
     assert_ne!(first["live"], second["live"]);
@@ -125,18 +124,31 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         capability["render"]["token"],
         next_capability["render"]["token"]
     );
-    fs::write(&source, "---\ntitle: Broken").unwrap();
     input.write_all(b"r").unwrap();
+    let manual = ready(&host, Some(&second["revision"])).await;
+    assert!(manual["revision"].as_u64().unwrap() > second["revision"].as_u64().unwrap());
+    assert_eq!(manual["deploymentId"], second["deploymentId"]);
+    assert!(
+        get(&host, "/static/mokly-generated/home/index.mobile.html")
+            .await
+            .contains("Second render")
+    );
+    fs::write(&source, "---\ntitle: Broken").unwrap();
     let mut errors = BufReader::new(child.stderr.take().unwrap()).lines();
     let error = tokio::time::timeout(Duration::from_secs(15), errors.next_line())
         .await
         .unwrap()
         .unwrap()
         .unwrap();
-    assert!(error.contains("[mokly/build-invalid]"), "{error}");
+    assert!(error.contains("✖ specs/home.screen.html"), "{error}");
+    let error = errors.next_line().await.unwrap().unwrap();
+    assert!(
+        error.contains("specs/home.screen.html:1:1 [mokly/html-front-matter]"),
+        "{error}"
+    );
     let retained: Value =
         serde_json::from_str(&get(&host, "/mokly-viewer/index.json").await).unwrap();
-    assert_eq!(retained, second);
+    assert_eq!(retained, manual);
     assert!(
         get(&host, "/static/mokly-generated/home/index.mobile.html")
             .await
@@ -160,7 +172,9 @@ async fn ready(host: &str, previous: Option<&Value>) -> Value {
                 serde_json::from_str(&get(host, "/mokly-viewer/entries/home.json").await).unwrap();
             if detail["workspace"].is_object()
                 && detail["revision"] == index["revision"]
-                && previous.is_none_or(|previous| previous != &index["live"])
+                && previous.is_none_or(|previous| {
+                    index["revision"].as_u64().unwrap() >= previous.as_u64().unwrap() + 2
+                })
             {
                 return index;
             }

@@ -106,6 +106,7 @@ impl FailureKind {
     pub(crate) fn for_call(call: &Call) -> Self {
         match call {
             Call::Bundle(_)
+            | Call::RestoreGeneration(_)
             | Call::Describe(_)
             | Call::ProcessCss(_)
             | Call::CssModules(_)

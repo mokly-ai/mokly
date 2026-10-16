@@ -19,6 +19,8 @@ pub trait Wait: Clock {
     ) -> Result<Frame>;
     /// Wait for child exit until a shared absolute shutdown deadline.
     fn exited(&self, receiver: &Receiver<()>, deadline: u64) -> bool;
+    /// Wait for the reaper after forced termination, without another graceful period.
+    fn reaped(&self, receiver: &Receiver<()>);
 }
 
 /// System monotonic clock; construct one shared instance at the composition root.
@@ -52,6 +54,10 @@ impl Clock for SystemClock {
 }
 
 impl Wait for SystemClock {
+    fn reaped(&self, receiver: &Receiver<()>) {
+        let _ = receiver.recv();
+    }
+
     fn frame(
         &self,
         receiver: &Receiver<Result<Frame>>,

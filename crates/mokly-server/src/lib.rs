@@ -21,6 +21,7 @@ mod priority;
 pub mod public_read;
 pub mod publication;
 pub mod render_request;
+mod replacement;
 mod response;
 pub mod revision;
 pub mod revision_file;
@@ -37,3 +38,7 @@ mod publication_support;
 #[cfg(test)]
 #[path = "_tests_/evidence_scale_tests.rs"]
 mod evidence_scale_tests;
+
+#[cfg(test)]
+#[path = "_tests_/replacement_tests.rs"]
+mod replacement_tests;

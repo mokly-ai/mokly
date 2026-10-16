@@ -128,10 +128,10 @@ impl BoundServer for Listener {
         if let Err(error) = lifecycle.stop_watcher().await {
             failure.get_or_insert(error);
         }
-        app.stop_renders().await;
         if let Err(error) = lifecycle.cancel_renders().await {
             failure.get_or_insert(error);
         }
+        app.stop_renders().await;
         if let Err(error) = lifecycle.cancel_git().await {
             failure.get_or_insert(error);
         }

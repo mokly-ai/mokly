@@ -12,7 +12,7 @@ use crate::data::{DataValue, Props};
 pub type ComponentWireProps = BTreeMap<String, ComponentWireValue>;
 
 /// Literal null wire tag.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 pub enum NullTag {
     /// The null tag.
     #[serde(rename = "null")]
@@ -20,7 +20,7 @@ pub enum NullTag {
 }
 
 /// Literal boolean wire tag.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 pub enum BooleanTag {
     /// The boolean tag.
     #[serde(rename = "boolean")]
@@ -28,7 +28,7 @@ pub enum BooleanTag {
 }
 
 /// Literal number wire tag.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 pub enum NumberTag {
     /// The number tag.
     #[serde(rename = "number")]
@@ -36,7 +36,7 @@ pub enum NumberTag {
 }
 
 /// Literal string wire tag.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 pub enum StringTag {
     /// The string tag.
     #[serde(rename = "string")]
@@ -44,7 +44,7 @@ pub enum StringTag {
 }
 
 /// Literal array wire tag.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 pub enum ArrayTag {
     /// The array tag.
     #[serde(rename = "array")]
@@ -52,7 +52,7 @@ pub enum ArrayTag {
 }
 
 /// Literal object wire tag.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 pub enum ObjectTag {
     /// The object tag.
     #[serde(rename = "object")]
@@ -60,7 +60,7 @@ pub enum ObjectTag {
 }
 
 /// Canonical tagged data, decoded and validated before use.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(untagged)]
 pub enum ComponentWireValue {
     /// Null tuple.

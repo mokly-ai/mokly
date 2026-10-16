@@ -69,6 +69,7 @@ fn injected_unsafe_markdown_output_keeps_its_file_and_exact_reason() {
         links: Vec::new(),
     };
     let plan = DocumentPlan {
+        resource_key: "test".into(),
         route: "notes/index.html".into(),
         key: NodeKey("key".into()),
         entry: 0,

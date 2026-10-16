@@ -24,13 +24,14 @@ use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
 
-fn initial() -> Arc<Snapshot> {
+pub(super) fn initial() -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
         "../../../../docs/protocol/fixtures/catalogue-v7.json"
     ))
     .unwrap();
     index.revision = 1;
     Arc::new(Snapshot {
+        document_keys: BTreeMap::new(),
         index,
         details: BTreeMap::new(),
         completed: BTreeMap::new(),
@@ -98,13 +99,13 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
         PublicationsMock::current
             .next_call(matching!())
             .returns(origin),
-        ServeStateFactoryMock::create
-            .next_call(matching!(_, 2))
+        ServeStateFactoryMock::replace
+            .next_call(matching!(_, 2, _))
             .answers_arc(Arc::new({
                 let entered = entered.clone();
                 let release = release.clone();
                 let candidate = candidate.clone();
-                move |_, _, _| {
+                move |_, _, _, _| {
                     entered.notify_one();
                     let (lock, signal) = &*release;
                     let _released = signal
@@ -138,6 +139,7 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
             })),
     ));
     let action = ManualRebuilds {
+        watching: None,
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),
         preparation: Arc::new(CatalogueServe {
             config: Arc::new(mock.clone()),

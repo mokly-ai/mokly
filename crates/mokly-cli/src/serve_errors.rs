@@ -42,6 +42,7 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
 
 fn internal(error: &InternalError) -> String {
     match error {
+        InternalError::Provider { source } => source.to_string(),
         InternalError::Io { source } => source.to_string(),
         InternalError::Json { source } => source.to_string(),
         InternalError::Task { .. } => "A server worker did not finish. Restart Serve.".into(),

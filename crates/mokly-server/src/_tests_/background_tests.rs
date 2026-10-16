@@ -19,6 +19,7 @@ use crate::work::WorkMock;
 
 fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
     Arc::new(Snapshot {
+        document_keys: Default::default(),
         index: readers::index(include_str!(
             "../../../../docs/protocol/fixtures/catalogue-v7.json"
         ))

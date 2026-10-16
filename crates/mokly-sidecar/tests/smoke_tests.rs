@@ -71,6 +71,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
         .unwrap();
     let bundled = pool
         .request(Call::Bundle(Bundle {
+            evaluation: None,
             entry_files: vec![
                 "component.mockup.tsx".into(),
                 "screen.mockup.tsx".into(),

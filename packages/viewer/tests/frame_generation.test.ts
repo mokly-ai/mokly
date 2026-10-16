@@ -8,7 +8,7 @@ import {
   nextFrameGeneration,
   type FrameGeneration,
 } from "../src/shell/frame_source_hook.js";
-import { frameSource } from "../src/shell/stage_sources.js";
+import { frameSource, stageDocumentKey } from "../src/shell/stage_sources.js";
 
 import { indexFixture } from "./catalogue_v7_fixture.js";
 
@@ -98,4 +98,29 @@ test("a page frame follows its key and a document frame its scheme's key", () =>
     document.documentKeys.find((key) => key.colorScheme === "dark")
       ?.documentKey,
   );
+});
+
+test("saved component views supplied by controls reload when their index key changes", () => {
+  const index = dataSnapshot(indexFixture(), new Map()).catalogue.publicModel!;
+  const component = index.components[0]!;
+  const saved = component.views[0]!;
+  const preview = {
+    viewport: saved.viewport,
+    colorScheme: saved.colorScheme,
+    variantPath: component.path,
+    path: "components/button/index.mobile.html",
+  };
+  const first = start(preview.path, stageDocumentKey(saved, preview));
+  const next = nextFrameGeneration(
+    first,
+    preview.path,
+    stageDocumentKey({ ...saved, documentKey: NEXT }, preview),
+  );
+  assert.equal(first.documentKey, saved.documentKey);
+  assert.equal(next.generation, 1);
+  const temporary = {
+    ...preview,
+    path: "/mokly-viewer/components/renders/current/index.html",
+  };
+  assert.equal(stageDocumentKey(saved, temporary), undefined);
 });

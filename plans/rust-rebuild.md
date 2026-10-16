@@ -1012,6 +1012,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Add the part 1 base source reader, leased extraction cache, dependency
       input readers, three dependency tiers, and bounded install cache in
       `mokly-compare`, ready for the render graph connection.
+- [ ] Connect Serve's ordered `cancel_git` hook to active Git work. Add a
+      real-process shutdown test for a Git process that ignores `SIGTERM`.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
@@ -1100,29 +1102,99 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
 
 ## Milestone 11: Watch and incremental rendering
 
-- [ ] Reuse unchanged encoded details across watched generation rebuilds
+- [x] Reuse unchanged encoded details across watched generation rebuilds
       (Milestone 6 review 2, finding 1C).
 
-- [ ] Tie Serve's watching copy to the active watcher and cover its terminal
+- [x] Tie Serve's watching copy to the active watcher and cover its terminal
       output (Milestone 6 review, finding 10).
-- [ ] Implement the content-addressed render graph: inputs hashed per entry,
+- [x] Implement the content-addressed render graph: inputs hashed per entry,
       invalidation from the sidecar's module graph, HTML component
       dependencies, stylesheet dependencies, and PostCSS reports.
-- [ ] Implement the watcher with the denial rules, rebuild on change, bundle
+- [x] Implement the watcher with the denial rules, rebuild on change, bundle
       replay for HTML-only edits, and live updates to the viewer through the
       index and entry detail routes under one revision, with frames reloaded
-      by document key and no page reload. Prune build outputs and reservation
-      paths by path, without ownership-marker parsing.
-- [ ] Release PostCSS contexts and replaced sidecar generations when the last
+      by document key and no page reload.
+- [x] Release PostCSS contexts and replaced sidecar generations when the last
       graph that uses them drops. Design ownership with Serve revision fences,
       cancelled requests, and watch replacement; prevent an old graph from
       using new bindings or class maps under an old fragment key (M8 review 1,
       finding 8).
-- [ ] Behaviour tests that count rebuilds and renders per change.
+- [x] Behaviour tests that count rebuilds and renders per change.
 - [ ] Port the M8 browser sweep's watch and folder-update cases after watcher
       integration. Use publication events and document keys in place of page
       reloads. Keep shutdown, moves, titles, search, and disclosure coverage.
-- [ ] Commit.
+- [x] Preserve saved component frame document keys when controls supply view
+      records. Only temporary preview URLs bypass the saved document key.
+- [x] Bound retained stylesheet results and keep generation source snapshots
+      valid after cache eviction.
+- [x] Keep explicit watch rules subject to directory denials.
+- [x] Observe confined ancestors and recover required inputs after a parent
+      directory moves or is replaced.
+- [x] Sweep the previous watch and runtime rules and test cases at `0bbd737e`.
+- [x] Smoke-test HTML, CSS, and React edits through the shim in Chrome.
+- [x] Verify generated types and pass the complete gate.
+- [x] Commit.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
+`.context/rust-rebuild/m11-smoke/`, and `.context/rust-rebuild/sweeps/m11.md`.
+
+- [x] Verify that watching prunes build outputs and reservation paths by path,
+      without ownership-marker parsing.
+
+- [ ] After the first hosted macOS and Windows runs, make event loss recoverable
+      there: choose a repository-root rescan after each macOS batch and an
+      exact-input stamp check on Windows, or one recursive watch per root on both
+      systems; tests.
+- [ ] Report the composition warnings of every Serve attempt once, including
+      on-demand and background renders, through an attempt-scoped sink with a
+      seen set kept across a failed attempt (`mokly-build-warnings.md`).
+
+## Milestone 11.1: Watch review corrections
+
+- [x] Merge rebuild updates through `09821954` and preserve both branches.
+- [x] Order Serve shutdown and reject changes to running pool settings.
+- [x] Batch native watches, normalize platform events, recover event loss,
+      and extend exact inputs without replacing root observers.
+- [x] Queue resource attachment, close adoption races, and retry failed
+      attempts when newly authored inputs are repaired.
+- [x] Match watched failure layout, bound debounce conversion, and separate
+      filesystem edits from manual rebuild tests.
+- [x] Release pool epochs and PostCSS contexts without blocking graph drops.
+      Give each PostCSS context one worker and release idle workers promptly.
+- [x] Retain compiled code for old-generation replay and reuse compilations
+      when only evaluation settings change.
+- [x] Memoize digest-only reads without retaining bytes, check resource
+      confinement, and cover React and Storybook metadata in bundle reuse.
+- [x] Verify operation counts, failed JavaScript candidates, manual rebuilds,
+      detail usage reuse, watcher bursts, and lifecycle races.
+- [x] Update the watch sweep and specifications. Keep bundle-level CSS
+      invalidation while the user considers review 1b-6.
+- [x] Pass the complete gate, regenerate types without drift, and repeat the
+      Chrome edit smoke without the sidecar timeout override.
+- [x] Commit and write the final round 2 report.
+
+Evidence: `.context/rust-rebuild/delegation/m11/merge-decisions.md` and
+`.context/rust-rebuild/delegation/m11/report-2.md`.
+
+## Milestone 11.2: Final watch corrections
+
+- [x] Merge static output, release, viewer recovery, and HTML sweep changes.
+- [x] Correct native registration recovery, event mapping, and negative debounce.
+- [x] Use one startup and serving lifecycle and prove process shutdown order.
+- [x] Keep sidecars inside their binary lifetime with parent-death protection.
+- [x] Restore shared compilation across slots and recycling, bound recipes,
+      retain failed peer resolution, and hash resolution metadata and membership.
+- [x] Fix pool scheduling, cleanup notices, and per-path digest concurrency.
+- [x] Cover two-sidecar operations, manual rebuild counts, and watcher targets.
+- [x] Align diagnostics, lifecycle docs, and the gap sweep. Record deferred work.
+- [x] Pass the repository suite, affected tests, type generation, and the
+      two-sidecar Chrome smoke without a timeout override.
+- [x] Check the complete-gate disk condition and record the merge-time gate
+      when less than 15 GB is free.
+- [x] Commit and write the final round 3 report.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
 ## Milestone 12: Static build and publish
 
@@ -1291,6 +1363,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
+
+- [ ] Verify that a sidecar emitting a large stderr stream drains safely at
+      shutdown and leaves no process behind (M11 sweep, watched_serve case).
 
 ## Milestone 15: Verification, close-out, and review
 
