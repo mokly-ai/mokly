@@ -30,3 +30,21 @@ test("prepared verification names every missing viewer output", async (t) => {
   }
   await requirePrepared(root);
 });
+
+test("browser preparation also requires the shim, sidecar, shell and native binary", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "mokly-browser-prepared-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  await assert.rejects(requirePrepared(root, { browser: true }), (error) => {
+    assert.ok(error instanceof Error);
+    for (const output of [
+      "packages/mokly/dist/shim.mjs",
+      "packages/mokly/dist/sidecar.js",
+      "packages/viewer/dist/browser/shell.js",
+      "packages/native-",
+    ])
+      assert.ok(error.message.includes(output));
+    return true;
+  });
+});

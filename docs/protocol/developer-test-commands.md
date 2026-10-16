@@ -162,6 +162,17 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 `.only`. Spec discovery is defined in
 [CI verification](./ci-verification.md#gate-ownership).
 
+For static-output checks, build the site first, then set
+`MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
+
+```bash
+npx mokly build --config examples/basic/mokly.config.json --out .context/example
+MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
+```
+
+The host serves exact files and directory indexes. It uses a free loopback port.
+Browser traces and screenshots stay under `.context/playwright-results/`.
+
 ## Development Workflow And Verification Boundary
 
 During development, run only the test files that cover the change: `npm test`

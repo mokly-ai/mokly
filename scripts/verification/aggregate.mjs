@@ -2,24 +2,46 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { readReport } from "./evidence.mjs";
-import { validateUnshardedReport } from "./report-validation.mjs";
+import {
+  validateUnshardedReport,
+  validateShardReports,
+} from "./report-validation.mjs";
 
 const RUNTIME_PROFILES = [["node-22.14.0"], ["node-22.14.0", "node-24"]];
 export function validateCiReports(reports, commit, runtimes) {
   if (!/^[a-f0-9]{40}$/.test(commit))
     throw new Error("expected commit must be a full lowercase Git SHA");
   validateRuntimeProfile(runtimes);
-  if (reports.length !== runtimes.length)
+  if (reports.length !== runtimes.length * 5)
     throw new Error(
-      `missing or extra CI evidence: expected ${runtimes.length} reports`,
+      `missing or extra CI evidence: expected ${runtimes.length * 5} reports`,
     );
+  for (const report of reports)
+    if (
+      !["viewer", "browser"].includes(report.suite) ||
+      !runtimes.includes(report.runtime)
+    )
+      throw new Error("unexpected CI evidence group");
   for (const runtime of runtimes) {
-    const group = reports.filter((report) => report.runtime === runtime);
+    const group = reports.filter(
+      (report) => report.runtime === runtime && report.suite === "viewer",
+    );
     if (group.length !== 1)
       throw new Error(
         `viewer ${runtime} evidence failed: expected exactly one report`,
       );
     validateUnshardedReport(group[0], { commit, runtime, suite: "viewer" });
+    const browser = reports.filter(
+      (report) => report.runtime === runtime && report.suite === "browser",
+    );
+    validateShardReports(browser, {
+      commit,
+      runtime,
+      suite: "browser",
+      total: 4,
+    });
+    if (browser.some((report) => report.nodeVersion !== group[0].nodeVersion))
+      throw new Error("suites used different Node versions");
   }
 }
 

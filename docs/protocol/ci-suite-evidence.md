@@ -72,15 +72,21 @@ only a positive decimal integer without a sign or leading zero, up to
 JavaScript's maximum safe integer. Any other value stops the command before
 tests start. Both runners print the value they use.
 
-Each Playwright worker owns one example server. The browser suite assigns
-consecutive ports from `MOKLY_PLAYWRIGHT_PORT` (default 4517), one per worker,
-and each worker's `baseURL` uses the port at its `TEST_PARALLEL_INDEX`. A
-server renders on demand through its render graph and sidecar pool, so a shared
-server would queue every worker's renders behind each other. Global setup waits
-until every server finishes its initial `HEAD` comparison. These Serve
-processes keep their documents in the render cache and write nothing into the
-repository. Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's
-`--workers`: global setup rejects a worker count above the number of servers.
+Each Playwright worker owns one example server. Global setup starts the shim
+with `--base HEAD --no-watch --port 0`. Serve binds a free loopback port and
+prints its listening address. Setup waits for the initial usage publication
+and for Changes to leave its pending or preparing state. It fails on an
+unavailable example render. It publishes the addresses to workers through
+`MOKLY_PLAYWRIGHT_URLS`; `TEST_PARALLEL_INDEX` selects each worker's address.
+There is no fixed port range and no reuse of an existing server. A server renders
+through its render graph and sidecar pool. Each process keeps its own cache.
+Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
+rejects a worker count above the number of servers.
+
+`MOKLY_PLAYWRIGHT_STATIC_DIR` selects an already-built catalogue directory.
+The same host interface serves its exact files and directory indexes on a free
+port. This mode neither builds the site nor adds fallback routes. The default
+host remains Serve. Fixtures that test private inputs still own their own hosts.
 
 ## Failure, Cancellation And Cleanup
 

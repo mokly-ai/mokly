@@ -76,7 +76,16 @@ impl CheckRunner for DefaultCheckRunner {
             return self.run_suite(suite, request.shard, request.dependency_audit);
         }
         for suite in VerificationSuite::LOCAL {
-            self.run_suite(suite, None, request.dependency_audit)?;
+            if suite == VerificationSuite::Browser {
+                for command in commands_for(suite, None, request.dependency_audit)
+                    .into_iter()
+                    .skip(1)
+                {
+                    self.run_command(command)?;
+                }
+            } else {
+                self.run_suite(suite, None, request.dependency_audit)?;
+            }
         }
         Ok(())
     }

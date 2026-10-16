@@ -45,11 +45,13 @@ pub(crate) enum VerificationSuite {
     Viewer,
     /// Host native artifact and Rust tests for hosted macOS and Windows jobs.
     Native,
+    /// Playwright checks of the served example and viewer hosts.
+    Browser,
 }
 
 impl VerificationSuite {
     /// Local coverage without repeating the native build and workspace tests.
-    pub(crate) const LOCAL: [Self; 2] = [Self::Repository, Self::Viewer];
+    pub(crate) const LOCAL: [Self; 3] = [Self::Repository, Self::Viewer, Self::Browser];
 
     /// Stable CLI name for the suite.
     pub(crate) const fn as_str(self) -> &'static str {
@@ -57,11 +59,12 @@ impl VerificationSuite {
             Self::Repository => "repository",
             Self::Viewer => "viewer",
             Self::Native => "native",
+            Self::Browser => "browser",
         }
     }
 
     fn supports_shards(self) -> bool {
-        false
+        self == Self::Browser
     }
 }
 
@@ -117,7 +120,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Reserved shard option; every reduced suite rejects it.
+    /// Optional whole-file Playwright shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,

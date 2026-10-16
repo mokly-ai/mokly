@@ -1,1 +1,4 @@
-export function requirePrepared(repositoryRoot: string): Promise<void>;
+export function requirePrepared(
+  repositoryRoot: string,
+  options?: { browser?: boolean },
+): Promise<void>;

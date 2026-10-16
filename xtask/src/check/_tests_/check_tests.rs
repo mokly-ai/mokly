@@ -40,6 +40,8 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
             "npm run build",
             "npm run typecheck",
             "npm run test:viewer:prepared",
+            "npm run build",
+            "npm run test:browser:prepared",
         ]
     );
 }
@@ -205,6 +207,28 @@ fn shard_requires_a_supported_selected_suite() {
             Err(Error::UnsupportedShard { .. })
         ));
     }
+}
+
+#[test]
+fn browser_selection_builds_and_forwards_only_validated_shards() {
+    let shard = Shard::from_str("2/4").expect("valid shard");
+    CheckRequest::new(Some(VerificationSuite::Browser), Some(shard), None)
+        .expect("browser supports shards");
+    let commands = commands_for(
+        VerificationSuite::Browser,
+        Some(shard),
+        DependencyAudit::Baseline,
+    );
+    assert_eq!(
+        commands
+            .iter()
+            .map(|command| command.display())
+            .collect::<Vec<_>>(),
+        [
+            "npm run build",
+            "npm run test:browser:prepared -- --shard 2/4"
+        ]
+    );
 }
 
 fn workspace() -> PathBuf {

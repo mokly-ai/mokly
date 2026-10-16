@@ -1,5 +1,5 @@
 /** The independently executable repository suites. */
-export type TestboxSuite = "repository" | "viewer";
+export type TestboxSuite = "repository" | "viewer" | "browser";
 
 /** Workspace audit policy forwarded to the repository suite. */
 export type TestboxDependencyAudit = "baseline" | "strict";
@@ -10,6 +10,7 @@ export interface TestboxArguments {
   suite: TestboxSuite;
   dependencyAudit?: TestboxDependencyAudit;
   commandName: string;
+  shard?: { index: number; total: number };
 }
 
 /** A shell-free subprocess with captured discovery or streamed suite output. */

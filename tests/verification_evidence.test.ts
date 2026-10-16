@@ -18,7 +18,7 @@ test("viewer discovery includes tooling and viewer tests in sorted order", async
   assert.deepEqual(files, [...new Set(files)].sort());
 });
 
-test("aggregate accepts one viewer report per required runtime", () => {
+test("aggregate accepts one viewer and four browser reports per runtime", () => {
   for (const runtimes of [["node-22.14.0"], ["node-22.14.0", "node-24"]])
     validateCiReports(ciReports(runtimes), "a".repeat(40), runtimes);
   const reports = ciReports();
@@ -55,4 +55,39 @@ test("viewer evidence rejects incomplete inventories and unsuccessful test runs"
   ])
     assert.throws(() => validateCompletedReport({ ...report, ...mutation }));
   validateCompletedReport(report);
+});
+
+test("browser evidence rejects missing tests, overlaps, skips and mixed runtimes", () => {
+  const validate = (reports: ReturnType<typeof ciReports>) =>
+    validateCiReports(reports, "a".repeat(40), ["node-22.14.0"]);
+  for (const change of [
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.observedTests!.pop();
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.assignedFiles = reports[2]!.assignedFiles;
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.observedTests![0]!.status = "skipped";
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.nodeVersion = "22.15.0";
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.playwrightFiles!.push("tests/browser/extra.spec.ts");
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.shard = { index: 2, total: 4 };
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.reporterComplete = false;
+    },
+    (reports: ReturnType<typeof ciReports>) => {
+      reports[1]!.observedTests![0]!.errors.push({ message: "frame failed" });
+    },
+  ]) {
+    const reports = structuredClone(ciReports(["node-22.14.0"]));
+    change(reports);
+    assert.throws(() => validate(reports));
+  }
 });

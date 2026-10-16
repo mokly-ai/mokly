@@ -13,6 +13,16 @@ export async function discoverNodeFiles(repositoryRoot) {
   return files.filter((file) => /\.test\.tsx?$/.test(file)).sort();
 }
 
+export async function discoverBrowserFiles(repositoryRoot) {
+  const files = [];
+  await collectFiles(
+    path.join(repositoryRoot, "tests/browser"),
+    repositoryRoot,
+    files,
+  );
+  return files.filter((file) => file.endsWith(".spec.ts")).sort();
+}
+
 export async function verificationIdentity(repositoryRoot) {
   const sourceCommit = (
     await execute("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot })
@@ -30,11 +40,15 @@ export async function verificationIdentity(repositoryRoot) {
   };
 }
 
-export function defaultReportPath(repositoryRoot) {
+export function defaultReportPath(
+  repositoryRoot,
+  suite = "viewer",
+  shard = null,
+) {
   return path.join(
     repositoryRoot,
     ".context/verification-reports",
-    `viewer-${process.versions.node}-full.json`,
+    `${suite}-${process.versions.node}-${shard ? `${shard.index}-of-${shard.total}` : "full"}.json`,
   );
 }
 

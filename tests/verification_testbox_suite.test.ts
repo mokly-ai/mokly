@@ -14,14 +14,20 @@ import {
 } from "./helpers/testbox_suite.js";
 
 const commands = [
-  { suite: "repository", name: "repository" },
-  { suite: "viewer", name: "viewer" },
+  { suite: "repository", name: "repository", shard: undefined },
+  { suite: "viewer", name: "viewer", shard: undefined },
+  ...[1, 2, 3, 4].map((index) => ({
+    suite: "browser",
+    name: `browser-${index}-of-4`,
+    shard: `${index}/4`,
+  })),
 ];
 
-test("both commands derive exact cargo arguments, report names and streamed output", async () => {
-  for (const { suite, name } of commands) {
+test("six commands derive exact cargo arguments, report names and streamed output", async () => {
+  for (const { suite, name, shard } of commands) {
     const harness = testboxHarness();
     const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", suite];
+    if (shard) args.push("--shard", shard);
     assert.equal(parseTestboxArguments(args).commandName, name);
     assert.equal(await runTestboxSuite(args, harness.dependencies), 0);
     assert.deepEqual(
@@ -39,7 +45,15 @@ test("both commands derive exact cargo arguments, report names and streamed outp
         },
         {
           file: "cargo",
-          args: ["xtask", "check", "--executor", "local", "--suite", suite],
+          args: [
+            "xtask",
+            "check",
+            "--executor",
+            "local",
+            "--suite",
+            suite,
+            ...(shard ? ["--shard", shard] : []),
+          ],
           captureOutput: false,
         },
       ],

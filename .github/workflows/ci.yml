@@ -118,6 +118,60 @@ jobs:
           include-hidden-files: true
           overwrite: true
           retention-days: 14
+  browser:
+    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
+    needs: [repository]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
+        shard: [1, 2, 3, 4]
+    env:
+      PLAYWRIGHT_CHANNEL: chromium
+      MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser shard
+        run: cargo xtask check --suite browser --shard ${{ matrix.shard }}/4
+      - name: Retain browser inventory and timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verification-browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}
+          path: ${{ env.MOKLY_VERIFICATION_REPORT }}
+          if-no-files-found: error
+          include-hidden-files: true
+          overwrite: true
+          retention-days: 14
+      - name: Retain browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: browser-failures-node-${{ matrix.node }}-shard-${{ matrix.shard }}-attempt-${{ github.run_attempt }}
+          path: .context/playwright-results/
+          include-hidden-files: true
+          retention-days: 14
   native:
     name: Native (${{ matrix.runner }})
     needs:
@@ -156,6 +210,7 @@ jobs:
     needs:
       - repository
       - viewer
+      - browser
       - native
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
@@ -169,7 +224,7 @@ jobs:
         with:
           node-version: ${{ needs.repository.outputs.node-24-version }}
           package-manager-cache: false
-      - name: Download viewer evidence
+      - name: Download suite evidence
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: verification-*
@@ -178,12 +233,14 @@ jobs:
         env:
           REPOSITORY_RESULT: ${{ needs.repository.result }}
           VIEWER_RESULT: ${{ needs.viewer.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
         run: |
           test "$REPOSITORY_RESULT" = success
           test "$VIEWER_RESULT" = success
+          test "$BROWSER_RESULT" = success
           test "$NATIVE_RESULT" = success
-      - name: Require complete viewer evidence
+      - name: Require complete suite evidence
         env:
           EXPECTED_RUNTIMES: ${{ needs.repository.outputs.verification-runtimes }}
         run: node scripts/verification/aggregate.mjs --reports .context/downloaded-verification --commit "${GITHUB_SHA}" --runtimes "$EXPECTED_RUNTIMES"

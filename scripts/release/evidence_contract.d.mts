@@ -89,6 +89,7 @@ export function classifyEvidence(
     taggedTree: string;
     evidenceTree: string;
     liveNodeFiles: readonly string[];
+    liveBrowserFiles: readonly string[];
   },
   validateReports: (
     reports: readonly unknown[],

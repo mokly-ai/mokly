@@ -29,7 +29,9 @@
     "test:viewer:prepared": "node scripts/verification/run-viewer.mjs --strict",
     "typecheck": "tsc --project packages/mokly/tsconfig.json --noEmit && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations",
     "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit",
-    "dev": "node packages/mokly/bin/mokly.mjs serve --config examples/basic/mokly.config.json"
+    "dev": "node packages/mokly/bin/mokly.mjs serve --config examples/basic/mokly.config.json",
+    "test:browser": "npm run -s build && node scripts/verification/browser-developer.mjs",
+    "test:browser:prepared": "node scripts/verification/run-browser.mjs"
   },
   "devDependencies": {
     "@emotion/cache": "^11.14.0",

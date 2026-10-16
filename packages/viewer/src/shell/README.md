@@ -175,6 +175,10 @@ paths.
 `catalogue.ts` owns pure display indexing. Its `byPath` index contains current and
 removed entries whose paths are unique across both sets; an explicit snapshot
 selects its exact removed record.
+`tags.tsx` captures the open picker before a tag changes the search state.
+An inspector tag then returns focus to the toggle in its own shell. Picker
+chips keep the picker callback's focus handling.
+
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic

@@ -1,0 +1,164 @@
+[
+  {
+    "path": "design/browse/views/screen/dark-scheme"
+  },
+  {
+    "path": "design/browse/states/details"
+  },
+  {
+    "path": "design/browse/views/details-screen"
+  },
+  {
+    "path": "design/browse/views/home"
+  },
+  {
+    "path": "design/browse/views/screen/light-only"
+  },
+  {
+    "path": "design/browse/states/missing-route"
+  },
+  {
+    "path": "design/browse/states/navigation"
+  },
+  {
+    "path": "design/browse/views/screen"
+  },
+  {
+    "path": "design/browse/states/tag-filter"
+  },
+  {
+    "path": "design/browse/views/screen/tag-forms"
+  },
+  {
+    "path": "design/browse/views/screen/tag-onboarding"
+  },
+  {
+    "path": "design/browse/views/screen/tag-onboarding-picker"
+  },
+  {
+    "path": "design/browse/views/screen/tag-picker"
+  },
+  {
+    "path": "design/browse/views/use-case"
+  },
+  {
+    "path": "design/changes/diff-controls/current"
+  },
+  {
+    "path": "design/changes/diff-controls/overlay"
+  },
+  {
+    "path": "design/components/states/additions/added"
+  },
+  {
+    "path": "design/components/pages/affected"
+  },
+  {
+    "path": "design/components/pages/comparison"
+  },
+  {
+    "path": "design/components/controls/controls"
+  },
+  {
+    "path": "design/components/controls/states/comparison"
+  },
+  {
+    "path": "design/components/controls/editing/edited"
+  },
+  {
+    "path": "design/components/controls/states/error"
+  },
+  {
+    "path": "design/components/controls/states/invalid"
+  },
+  {
+    "path": "design/components/controls/states/pending"
+  },
+  {
+    "path": "design/components/controls/published/readonly"
+  },
+  {
+    "path": "design/components/controls/published/readonly-variant"
+  },
+  {
+    "path": "design/components/controls/editing/reset"
+  },
+  {
+    "path": "design/components/controls/editing/unset"
+  },
+  {
+    "path": "design/components/controls/editing/variant"
+  },
+  {
+    "path": "design/components/states/empty"
+  },
+  {
+    "path": "design/components/pages/help"
+  },
+  {
+    "path": "design/components/inspection/inspection-consumer"
+  },
+  {
+    "path": "design/components/inspection/inspection-details"
+  },
+  {
+    "path": "design/components/inspection/inspection-direct-change"
+  },
+  {
+    "path": "design/components/inspection/selection/inspection-help"
+  },
+  {
+    "path": "design/components/inspection/inspection-highlight"
+  },
+  {
+    "path": "design/components/inspection/inspection-nested"
+  },
+  {
+    "path": "design/components/inspection/selection/inspection-toolbar"
+  },
+  {
+    "path": "design/components/inspector/inspector-closed"
+  },
+  {
+    "path": "design/components/overview"
+  },
+  {
+    "path": "design/components/states/removed"
+  },
+  {
+    "path": "design/components/states/removed-consumer"
+  },
+  {
+    "path": "design/components/inspector/screen-inspector-closed"
+  },
+  {
+    "path": "design/components/pages/toolbar"
+  },
+  {
+    "path": "design/components/states/unavailable"
+  },
+  {
+    "path": "design/components/states/unused"
+  },
+  {
+    "path": "design/components/pages/variants"
+  },
+  {
+    "path": "design/changes/outcomes/added"
+  },
+  {
+    "path": "design/changes/outcomes/changed"
+  },
+  {
+    "path": "design/changes/outcomes/difference"
+  },
+  {
+    "path": "design/changes/impact/empty"
+  },
+  {
+    "path": "design/changes/impact/ignored-only"
+  },
+  {
+    "path": "design/changes/outcomes/removed"
+  }
+]

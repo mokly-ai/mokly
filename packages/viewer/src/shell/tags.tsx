@@ -25,9 +25,16 @@ export function TagChip({
       aria-pressed={active}
       className={`mbk-chip tag${active ? " active" : ""}`}
       data-mokly-tag={tag}
-      onClick={() => {
+      onClick={(event) => {
+        const toggle =
+          store?.state.tagPickerOpen && pickerIndex === undefined
+            ? event.currentTarget
+                .closest("[data-mokly-shell]")
+                ?.querySelector<HTMLButtonElement>("[data-mokly-tag-toggle]")
+            : undefined;
         store?.toggleTag(tag);
         afterSelect?.();
+        if (toggle) queueMicrotask(() => toggle.focus());
       }}
       tabIndex={
         pickerIndex === undefined || !store?.interactive

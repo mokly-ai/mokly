@@ -843,13 +843,13 @@ renders again.
   - [ ] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
-- [ ] Restore the example typecheck; validate or replace the viewer browser
+- [x] Restore the example typecheck; validate or replace the viewer browser
       fixtures, including their component paths and cross-origin setup.
   - [x] Restore the example typecheck: the root typecheck includes the
         example.
-  - [ ] Validate or replace the viewer browser fixtures, including their
+  - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
-- [ ] Restore the browser suite against `mokly serve` of the example: its
+- [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
@@ -859,10 +859,22 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Complete the M8 viewer cases assigned by the browser sweep, including
+      route/detail races, frame handoff, live prop edits, and preserved focus.
+
+Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
+Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
+
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+  - [x] Restore current design artboards, library samples, the frozen screen
+        inventory, shared component consumers and ownership, portable links,
+        controls, and both viewport layouts through Serve.
+  - [ ] Complete the remaining design checks with their feature owners:
+        M8 viewer owns live props; M9/M10 own stylesheet attribution and
+        comparison output; M12 owns the static build acceptance checks.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -954,6 +966,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+- [ ] Port the deferred native Changes browser fixtures in the M8 browser
+      sweep: base references, moved/removed entries, comparison requests and
+      renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
+      assertions. Keep the duplicate component-explorer cases in one suite.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
@@ -982,6 +998,9 @@ Tags: ui
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
 - [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Complete the M8 browser sweep's comparison UI cases against review v8
+      and snapshot v4, including filter disclosure, Changed membership,
+      comparison scroll regions, retained focus, and stylesheet Details.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1020,6 +1039,9 @@ Final review fixes and their check logs:
       using new bindings or class maps under an old fragment key (M8 review 1,
       finding 8).
 - [ ] Behaviour tests that count rebuilds and renders per change.
+- [ ] Port the M8 browser sweep's watch and folder-update cases after watcher
+      integration. Use publication events and document keys in place of page
+      reloads. Keep shutdown, moves, titles, search, and disclosure coverage.
 - [ ] Commit.
 
 ## Milestone 12: Static build and publish
@@ -1058,6 +1080,11 @@ Publish client final review and merge decisions:
 `.context/rust-rebuild/delegation/m12-publish/report-3.md` and
 `.context/rust-rebuild/delegation/m12-publish/merge-decisions.md`.
 
+- [ ] Run the browser suite's static host against real `mokly build` output
+      after the writer is integrated. Set `MOKLY_PLAYWRIGHT_STATIC_DIR` to
+      the output directory. Port the M8 sweep's static/export/publish cases,
+      including exact-file resources, canonical links, read-only controls,
+      deployment changes, public CORS, and historical comparison documents.
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
 - [ ] Commit.

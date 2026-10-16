@@ -11,3 +11,6 @@ export function unitTestConcurrency(
   env?: ConcurrencyEnvironment,
   cpus?: number,
 ): number;
+
+/** Playwright workers, each with its own Serve process. */
+export function browserWorkerCount(env?: ConcurrencyEnvironment): number;

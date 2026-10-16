@@ -82,7 +82,7 @@ The following uses can still read a real clock:
 - Timestamps used as test data can come from a clock. For example,
   `new Date(Date.now() - 10_000)` represents an earlier timestamp.
 
-Waiting for the `Catalogue ready` line of `mokly serve`, or for a frame's
+Waiting for the `Mokly listening at` line of `mokly serve`, or for a frame's
 `ready` reply,
 is an expected-state wait. Its test-supplied allowance must allow at least
 10 seconds.

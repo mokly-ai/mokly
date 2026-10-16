@@ -9,6 +9,7 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
+use crate::remote::plan::{COMMAND_COUNT, REPORT_COUNT};
 use crate::remote::preparation::PreparedRun;
 use crate::remote::reporting::warning;
 use crate::remote::snapshot::guard::{SnapshotGuard, SnapshotOwner};
@@ -99,10 +100,11 @@ impl DefaultRemoteRunner {
             .workspace
             .join(".context/verification-reports/remote")
             .join(run);
-        let downloads = 1 - completed
-            .iter()
-            .filter(|completion| completion.report_downloaded)
-            .count();
+        let downloads = REPORT_COUNT
+            - completed
+                .iter()
+                .filter(|completion| completion.report_downloaded)
+                .count();
         let cleanup = cleanup.finish();
         if dependencies.interrupt.requested() {
             return Err(error::Error::Interrupted { cleanup });
@@ -118,7 +120,7 @@ impl DefaultRemoteRunner {
             }
         };
         let changed = self.fingerprint(&dependencies.workspace)? != identity.fingerprint();
-        let failures = 2 - completed.len()
+        let failures = COMMAND_COUNT - completed.len()
             + completed
                 .iter()
                 .filter(|completion| !completion.passed)
@@ -137,9 +139,9 @@ impl DefaultRemoteRunner {
             ));
         }
         dependencies.reporter.progress(&format!(
-            "summary: commands={}/2 reports={}/1 aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
-            2 - failures,
-            1 - downloads,
+            "summary: commands={}/{COMMAND_COUNT} reports={}/{REPORT_COUNT} aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
+            COMMAND_COUNT - failures,
+            REPORT_COUNT - downloads,
             if aggregate_failed { "failed" } else { "passed" },
             !changed,
             identity.base().sha

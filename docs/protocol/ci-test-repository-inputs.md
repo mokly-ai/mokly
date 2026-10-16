@@ -8,7 +8,8 @@ repository, commits its own history there, and asserts against that history. A
 fixture repository may create and read its own remotes because those references
 are fixture-owned inputs inside the test tree. The browser suite's example
 server runs `mokly serve` with `--base HEAD` and compares with the checked-out
-`HEAD`; every worker's server uses that same command.
+`HEAD`; every worker's server uses that same command through the npm shim. Serve
+binds a free port with `--port 0`.
 
 CI's viewer, browser, and native jobs key npm's download cache from the
 checked-out `package-lock.json`. Their cache steps use local data: none
