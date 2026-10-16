@@ -1,7 +1,7 @@
 /**
  * The packed example smoke's browser half: open one screen per authoring kind
- * in the Browse shell in headless Chrome, from Serve or from a plain file
- * server that serves the built site.
+ * and a Markdown document in the Browse shell in headless Chrome, from Serve
+ * or from a plain file server that serves the built site.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -12,10 +12,19 @@ import { chromium } from "@playwright/test";
 
 import { expectedConsoleNotice } from "../../tests/browser/console_notices.js";
 
-/** One screen per authoring kind, with text its desktop view shows. */
+/**
+ * One screen per authoring kind, with text its desktop view shows, and a
+ * Markdown document, whose single view must also load its image.
+ */
 export const SCREENS = [
   { path: "example/screens/welcome", text: "View details" },
   { path: "design/browse/views/screen", text: "Search catalogue…" },
+  {
+    path: "example/workspace-guide",
+    text: "Your first visit",
+    view: "index.html",
+    resource: "workspace.svg",
+  },
   { path: "example/team/members", text: "Invite teammate" },
 ];
 
@@ -34,7 +43,7 @@ function cancellable(url) {
   );
 }
 
-/** Open each screen in the Browse shell at `url` and wait for its desktop frame. */
+/** Open each entry in the Browse shell at `url` and wait for its view's frame. */
 export async function browse(url, label) {
   const browser = await chromium.launch(
     process.env.MOKLY_SMOKE_CHROME
@@ -68,16 +77,29 @@ export async function browse(url, label) {
       if (!cancelled) problems.push(`${failure} ${request.url()}`);
     });
     for (const screen of SCREENS) {
+      const resource =
+        screen.resource &&
+        page
+          .waitForResponse(
+            (response) =>
+              new URL(response.url()).pathname.endsWith(`/${screen.resource}`),
+            { timeout: 60_000 },
+          )
+          .then(
+            (response) => response.status(),
+            (error) => error.message,
+          );
       navigating = true;
       await page.goto(`${url}/view/${screen.path}/`, { waitUntil: "load" });
       navigating = false;
       const frame = page.frameLocator(
-        `iframe[src*="/${screen.path}/index.desktop.html"]`,
+        `iframe[src*="/${screen.path}/${screen.view ?? "index.desktop.html"}"]`,
       );
       await frame
         .getByText(screen.text, { exact: true })
         .first()
         .waitFor({ timeout: 60_000 });
+      if (resource) assert.equal(await resource, 200, screen.resource);
       process.stdout.write(`${label} ${screen.path} in the Browse shell.\n`);
     }
     assert.deepEqual(problems, []);

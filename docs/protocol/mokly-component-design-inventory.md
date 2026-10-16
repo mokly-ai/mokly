@@ -68,7 +68,8 @@ the path-addressed [link contract](./mokly-authoring.md#links) so they work
 both directly from disk and in Browse. State links demonstrate navigation between mockups; static
 depictions of shell controls are not the separate runtime inspector.
 
-The shared shell keeps the [existing design navigation](./mokly-design-links.md)
+The shared shell keeps the
+[existing design navigation](./mokly-design-links-navigation.md#navigation-controls)
 for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
 scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions keep native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.

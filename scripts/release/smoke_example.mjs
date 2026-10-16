@@ -1,9 +1,10 @@
 /**
  * Pack the viewer, the CLI, and the host's native package; install the
  * archives into a scratch copy of the example outside the repository; serve
- * it through the installed shim and open a React, a design, and an HTML
- * screen in headless Chrome; then build it with `--strict` and open the same
- * screens in the built site.
+ * it through the installed shim from a nested directory and open a React, a
+ * design, and an HTML screen and a Markdown document in headless Chrome;
+ * build it with `--strict` and open the same entries in the built site; then
+ * build it again through npx with an empty npm cache.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -14,10 +15,13 @@ import { createPackageArchive } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
 import { spawnServe } from "./serve_process.mjs";
 import { browse, browseSite, SCREENS } from "./smoke_example_browser.mjs";
+import { npxBuild } from "./smoke_example_npx.mjs";
 import { NATIVE_TARGETS } from "./targets.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const CONFIG = ["--config", "examples/basic/mokly.config.json"];
+/** Serve starts here and discovers the configuration three directories up. */
+const NESTED = "examples/basic/specs/example/team";
 
 /**
  * The example's own imports and their peers. The copy installs the versions
@@ -112,7 +116,7 @@ async function install(consumer, packages) {
   );
   await fs.writeFile(
     path.join(consumer, ".gitignore"),
-    "node_modules/\nsite/\n",
+    "node_modules/\nsite/\nnpx-site/\n",
   );
   await runCommand("git", ["init", "--quiet"], { cwd: consumer });
   await runCommand(
@@ -137,15 +141,16 @@ class DrainFailure extends AggregateError {}
 const SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"];
 
 /**
- * Serve the copy through the installed shim in its own process group, open
- * the screens, and stop Serve. The group drains on every path, also on an
- * interrupt, and a normal stop asserts a clean exit.
+ * Serve the copy through the installed shim in its own process group from a
+ * directory below the configuration's, open the entries, and stop Serve. The
+ * group drains on every path, also on an interrupt, and a normal stop asserts
+ * a clean exit.
  */
 async function serveAndBrowse(consumer, shim) {
   const server = spawnServe(
     shim,
-    [...CONFIG, "--no-watch", "--port", "0", "--sidecars", "1"],
-    { cwd: consumer },
+    ["--no-watch", "--port", "0", "--sidecars", "1"],
+    { cwd: path.join(consumer, NESTED) },
   );
   const interrupt = (signal) =>
     server.stop().then(
@@ -178,9 +183,10 @@ async function serveAndBrowse(consumer, shim) {
 }
 
 /**
- * Build strictly into `site/` beside the copy's `examples/`: a relative
- * `--out` resolves against the configuration's directory. Check the home,
- * not-found, and shell route files, then open the screens from the site.
+ * Build strictly with an explicit `--config` into `site/` beside the copy's
+ * `examples/`: a relative `--out` resolves against the configuration's
+ * directory. Check the home, not-found, and shell route files, then open the
+ * entries from the site.
  */
 async function buildAndBrowse(consumer, shim) {
   const { stdout, stderr } = await runCommand(
@@ -219,8 +225,9 @@ try {
   const shim = await install(consumer, packages);
   await serveAndBrowse(consumer, shim);
   await buildAndBrowse(consumer, shim);
+  await npxBuild(consumer, packages, scratch);
   process.stdout.write(
-    "The packed example served and built a React, a design, and an HTML screen.\n",
+    "The packed example served three screens and a document, built them, and built them through npx.\n",
   );
 } catch (error) {
   keep = error instanceof DrainFailure;
