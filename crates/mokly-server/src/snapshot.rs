@@ -15,7 +15,6 @@ use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::readers;
 use mokly_model::shell;
-use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
 use crate::backend::Documents;

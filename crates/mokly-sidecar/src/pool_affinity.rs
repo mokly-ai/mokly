@@ -28,3 +28,12 @@ pub(super) fn acquire(state: &mut State, call: &Call, limit: usize) -> Option<us
     }
     Some(index)
 }
+
+/// Select eligible work without reserving or changing a slot.
+pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bool {
+    if let Some(index) = context.and_then(|id| state.affinity.get(id)) {
+        state.available.contains(index)
+    } else {
+        !state.available.is_empty() || state.slots.len() < limit
+    }
+}

@@ -89,7 +89,7 @@ pub fn warning_records(failure: &BuildError) -> Vec<Warning> {
 pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
         BuildError::RestartRequired { setting } => style.error(
-            Code::ConfigInvalid,
+            Code::BuildInvalid,
             &format!("{setting} changed. Restart Serve to apply this setting."),
             redactor,
         ),

@@ -1,6 +1,7 @@
 //! Bundle only changed JavaScript and isolate class maps across retained graphs.
 
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
@@ -12,15 +13,16 @@ use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Bundle, Call, CssModules, Generation};
 use mokly_sidecar::wire::MethodResult;
 
-use crate::bundle_inputs;
 use crate::error::{InternalError, RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::{BundleLease, PreparedLease};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
+use crate::{bundle_attempt, bundle_inputs};
 use crate::{sources, stylesheets};
 
 pub(crate) struct BundleState {
+    pub(crate) repository: PathBuf,
     pub(crate) settings: String,
     pub(crate) lease: Arc<BundleLease>,
     pub(crate) class_maps_digest: String,
@@ -70,56 +72,34 @@ pub(crate) fn describe(
         evaluation.push_str(&maps_digest(maps)?);
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
-    let result = match runtime.pool.request(Call::Bundle(params.clone())) {
-        Ok(MethodResult::Bundle(result)) => result,
-        Ok(_) => return Err(RenderError::ResultKind { method: "bundle" }),
-        Err(source) => return Err(RenderError::Sidecar { source }),
-    };
-    let existing = runtime
-        .bundles
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .get(&format!("generation:{}", result.generation))
-        .and_then(Weak::upgrade);
-    if let Some(existing) = existing {
-        runtime
-            .pool
-            .release_generation(&result.generation, result.epoch);
-        return finish(runtime, side, compiler, existing);
-    }
-    let lease = Arc::new(BundleLease {
-        epoch: result.epoch,
-        id: result.generation,
-        pool: runtime.pool.clone(),
-    });
-    let mut stamp = InputStamp::default();
-    if let Some(compiled) = &result.compiled {
-        stamp.files.extend(
-            compiled
-                .metadata_inputs
-                .iter()
-                .map(|(path, hash)| (config.repo_root.join(path), hash.clone())),
-        );
-    }
-    for module in result
-        .modules
-        .iter()
-        .filter(|module| !module.path.ends_with(".css"))
-    {
-        stamp
-            .files
-            .insert(config.repo_root.join(&module.path), module.digest.clone());
-    }
-    let modules: BTreeMap<_, _> = result
-        .modules
-        .into_iter()
-        .map(|module| (module.path, module.imports))
-        .collect();
+    let (mut result, mut lease) = bundle_attempt::request(runtime, &params)?;
+    let mut modules = bundle_attempt::modules(&result);
     let maps = match prepared_maps {
         Some(maps) => maps,
         None => class_maps(compiler.as_ref(), &modules, &params)?,
     };
     let class_maps_digest = maps_digest(&maps)?;
+    if bundle_attempt::existing(runtime, &result.generation)
+        .is_some_and(|previous| previous.class_maps_digest != class_maps_digest)
+    {
+        params.evaluation = Some(digest(format!("{cache_key}{class_maps_digest}").as_bytes()));
+        (result, lease) = bundle_attempt::request(runtime, &params)?;
+        modules = bundle_attempt::modules(&result);
+    }
+    let stamp = bundle_attempt::stamp(&result, &config.repo_root);
+    if let Some(existing) = bundle_attempt::existing(runtime, &result.generation) {
+        let existing = Arc::new(BundleState {
+            repository: config.repo_root.clone(),
+            settings: cache_key,
+            lease: existing.lease.clone(),
+            class_maps_digest,
+            definitions: existing.definitions.clone(),
+            modules,
+            stamp,
+        });
+        bundle_attempt::remember(runtime, &existing);
+        return finish(runtime, side, compiler, existing);
+    }
     match runtime.pool.request(Call::CssModules(CssModules {
         generation: lease.id.clone(),
         class_maps: maps,
@@ -140,6 +120,7 @@ pub(crate) fn describe(
         Err(source) => return Err(RenderError::Sidecar { source }),
     };
     let state = Arc::new(BundleState {
+        repository: config.repo_root.clone(),
         settings: cache_key.clone(),
         lease,
         class_maps_digest,
@@ -147,15 +128,7 @@ pub(crate) fn describe(
         modules,
         stamp,
     });
-    {
-        let mut bundles = runtime.bundles.lock().unwrap_or_else(|e| e.into_inner());
-        bundles.retain(|_, value| value.strong_count() > 0);
-        bundles.insert(cache_key, Arc::downgrade(&state));
-        bundles.insert(
-            format!("generation:{}", state.lease.id),
-            Arc::downgrade(&state),
-        );
-    }
+    bundle_attempt::remember(runtime, &state);
     finish(runtime, side, compiler, state)
 }
 
@@ -179,6 +152,33 @@ fn finish(
             class_maps_digest: bundle.class_maps_digest.clone(),
             css_context: lease.side.context.clone(),
             modules: bundle.modules.clone(),
+            resolution_files: bundle
+                .stamp
+                .files
+                .keys()
+                .filter_map(|path| {
+                    path.strip_prefix(&bundle.repository)
+                        .ok()
+                        .map(|path| path.to_string_lossy().replace('\\', "/"))
+                })
+                .collect(),
+            resolution_directories: bundle
+                .stamp
+                .memberships
+                .iter()
+                .filter_map(|(path, names)| {
+                    path.strip_prefix(&bundle.repository).ok().map(|path| {
+                        (
+                            path.to_string_lossy().replace('\\', "/"),
+                            names
+                                .iter()
+                                .flatten()
+                                .map(|name| name.to_string_lossy().into_owned())
+                                .collect(),
+                        )
+                    })
+                })
+                .collect(),
             lease: Some(lease),
         },
         bundle.definitions.clone(),

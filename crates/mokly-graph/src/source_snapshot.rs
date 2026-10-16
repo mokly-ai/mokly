@@ -15,12 +15,17 @@ pub struct SourceSnapshot {
     reads: Mutex<BTreeMap<PathBuf, Arc<ReadCell>>>,
     nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
     directories: Mutex<BTreeMap<PathBuf, Vec<Child>>>,
-    digests: Mutex<BTreeMap<PathBuf, String>>,
+    digests: Mutex<BTreeMap<PathBuf, Arc<DigestCell>>>,
 }
 
 #[cfg(test)]
 #[path = "_tests_/snapshot_digest_tests.rs"]
 mod snapshot_digest_tests;
+
+#[derive(Default)]
+struct DigestCell {
+    value: Mutex<Option<String>>,
+}
 
 #[derive(Default)]
 struct ReadCell {
@@ -42,11 +47,15 @@ impl SourceSnapshot {
 
 impl SourceTree for SourceSnapshot {
     fn digest(&self, path: &Path) -> Result<String> {
-        let mut digests = self
-            .digests
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        if let Some(value) = digests.get(path) {
+        let cell = {
+            let mut digests = self
+                .digests
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            digests.entry(path.into()).or_default().clone()
+        };
+        let mut retained = cell.value.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(value) = &*retained {
             return Ok(value.clone());
         }
         let bytes = self
@@ -65,7 +74,7 @@ impl SourceTree for SourceSnapshot {
             Some(bytes) => digest(&bytes),
             None => self.source.digest(path)?,
         };
-        digests.insert(path.into(), value.clone());
+        *retained = Some(value.clone());
         Ok(value)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {

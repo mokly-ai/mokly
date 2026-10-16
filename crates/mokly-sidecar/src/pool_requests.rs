@@ -17,6 +17,9 @@ impl Pool {
         deadline: u64,
     ) -> Result<MethodResult> {
         self.cleanup(slot)?;
+        if let Call::Bundle(params) = call {
+            self.seed_compilation(slot, params)?;
+        }
         if let Some(generation) = generation(call) {
             self.prepare(
                 slot,
@@ -68,6 +71,9 @@ impl Pool {
                     result.epoch = epoch;
                     state.epochs.insert(result.generation.clone(), epoch);
                     state
+                        .modules
+                        .insert(result.generation.clone(), result.modules.clone());
+                    state
                         .leases
                         .entry(result.generation.clone())
                         .or_default()
@@ -76,7 +82,11 @@ impl Pool {
                         let shared = state
                             .compiled
                             .values()
-                            .find(|value| value.identity == compiled.identity)
+                            .find(|value| {
+                                value.identity == compiled.identity
+                                    && value.inputs == compiled.inputs
+                                    && value.input_directories == compiled.input_directories
+                            })
                             .cloned()
                             .unwrap_or_else(|| Arc::new(compiled.clone()));
                         state.compiled.insert(result.generation.clone(), shared);
@@ -111,6 +121,7 @@ impl Pool {
                 (Call::Dispose(generation), _) => {
                     state.bundles.remove(&generation.generation);
                     state.compiled.remove(&generation.generation);
+                    state.modules.remove(&generation.generation);
                     state.leases.remove(&generation.generation);
                     state.epochs.remove(&generation.generation);
                     state.maps.remove(&generation.generation);

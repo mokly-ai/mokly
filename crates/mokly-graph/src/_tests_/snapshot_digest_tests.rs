@@ -1,7 +1,9 @@
 //! Digest-only inputs retain hashes without retaining source byte arrays.
 
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, mpsc};
+use std::thread;
+use std::time::Duration;
 
 use mokly_model::material::digest;
 use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
@@ -65,4 +67,36 @@ fn binary_resource_validation_keeps_no_snapshot_bytes() {
     assert!(closure.files.contains("assets/image.png"));
     assert!(closure.edges["static/assets/image.png"].is_empty());
     assert!(snapshot.reads.lock().unwrap().is_empty());
+}
+
+#[test]
+fn a_blocked_digest_does_not_block_another_paths_memo_hit() {
+    let (entered, started) = mpsc::channel();
+    let (release, released) = mpsc::channel();
+    let released = Mutex::new(released);
+    let source = Unimock::new((
+        SourceTreeMock::digest
+            .next_call(matching!((path) if *path == Path::new("cached")))
+            .returns(Ok("cached-hash".into())),
+        SourceTreeMock::digest
+            .next_call(matching!((path) if *path == Path::new("slow")))
+            .answers_arc(Arc::new(move |_, _| {
+                entered.send(()).unwrap();
+                released.lock().unwrap().recv().unwrap();
+                Ok("slow-hash".into())
+            })),
+    ));
+    let snapshot = Arc::new(SourceSnapshot::new(Arc::new(source)));
+    assert_eq!(snapshot.digest(Path::new("cached")).unwrap(), "cached-hash");
+    let slow = snapshot.clone();
+    let slow = thread::spawn(move || slow.digest(Path::new("slow")).unwrap());
+    started.recv().unwrap();
+    let (ready, result) = mpsc::channel();
+    let fast = snapshot.clone();
+    let fast = thread::spawn(move || ready.send(fast.digest(Path::new("cached"))).unwrap());
+    let result = result.recv_timeout(Duration::from_secs(10));
+    release.send(()).unwrap();
+    slow.join().unwrap();
+    fast.join().unwrap();
+    assert_eq!(result.unwrap().unwrap(), "cached-hash");
 }

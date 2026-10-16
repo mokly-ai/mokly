@@ -3,6 +3,7 @@
 #![warn(unreachable_pub)]
 
 mod bundle;
+mod bundle_attempt;
 mod bundle_inputs;
 mod declarations;
 mod definition_input;

@@ -212,13 +212,22 @@ impl WatchInputs for WatchedInputs {
 }
 
 fn plan(prepared: &PreparedServe) -> Result<Plan> {
-    watch_result(Plan::new(
+    let catalogue = prepared.generation.catalogue();
+    let mut plan = watch_result(Plan::new(
         &prepared.config,
-        &prepared.generation.catalogue().model.sources,
+        &catalogue.model.sources,
         prepared.generation.stylesheet_directories(),
         &prepared.generation.watch_files(),
-    ))
+    ))?;
+    if let Some(generation) = &catalogue.javascript.generation {
+        plan.resolution(
+            &generation.resolution_files,
+            &generation.resolution_directories,
+        );
+    }
+    Ok(plan)
 }
+
 pub(super) fn failure(source: mokly_watch::error::Error) -> ServerError {
     ServerError::Internal(InternalError::Provider {
         source: Box::new(source),

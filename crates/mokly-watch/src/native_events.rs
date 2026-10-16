@@ -57,9 +57,13 @@ pub(crate) fn kind(kind: EventKind) -> Option<Kind> {
         }
         EventKind::Create(CreateKind::Any | CreateKind::Other)
         | EventKind::Remove(RemoveKind::Any | RemoveKind::Other)
-        | EventKind::Modify(ModifyKind::Name(_) | ModifyKind::Any | ModifyKind::Other)
+        | EventKind::Modify(ModifyKind::Name(_) | ModifyKind::Other)
         | EventKind::Any
         | EventKind::Other => Kind::Rename,
+        EventKind::Create(CreateKind::File) | EventKind::Remove(RemoveKind::File) => {
+            Kind::Membership
+        }
+        EventKind::Modify(ModifyKind::Any) => Kind::Modify,
         _ => Kind::File,
     })
 }
@@ -67,3 +71,7 @@ pub(crate) fn kind(kind: EventKind) -> Option<Kind> {
 #[cfg(test)]
 #[path = "_tests_/native_events_tests.rs"]
 mod native_events_tests;
+
+#[cfg(test)]
+#[path = "_tests_/native_platform_events_tests.rs"]
+mod native_platform_events_tests;

@@ -15,7 +15,7 @@ The actions are, from least to most impact, `reload`, `rebuild`, and
 `config`; a burst takes the strongest action and keeps every observed
 candidate path for the terminal line. The observer keeps one latest descriptor per path while an action runs.
 Access-only notifications schedule no action. Values above one day for
-`watch.debounceMs` use a one-day delay without panicking. The `r` shortcut of the
+`watch.debounceMs` use a one-day delay without panicking. Negative values use zero. The `r` shortcut of the
 [terminal output contract](./mokly-terminal-output.md#interactive-controls)
 enqueues a `rebuild` through the same queue. Shutdown stops the queue first.
 
@@ -46,9 +46,10 @@ validation failure keeps the old configuration, watcher, and model. A changed
 renderer module or module resolution setting produces a new bundle
 generation; the old generation is disposed after adoption. An explicit CLI
 `--base` stays pinned across reloads; without one, the adopted
-configuration's `review.base` applies. The port never changes. `repoRoot`, sidecar count, and the sidecar timeout
-belong to the running pool. A candidate that changes one of these settings
-fails with a typed restart diagnostic before evaluating modules. The accepted
+configuration's `review.base` applies. The port never changes. `repoRoot`
+belongs to the running pool. A candidate that changes it fails with a typed
+restart diagnostic before evaluating modules. Sidecar count and timeout are
+process options fixed at startup; they are not configuration fields. The accepted
 configuration, observer, and model continue serving until Serve restarts.
 
 ## Resource Watches
@@ -100,13 +101,14 @@ completion of every operation a caller groups into one edit.
 
 ## Shutdown
 
-Shutdown stops the queue, discards a candidate watcher whose readiness is
-still pending, cancels active Git classification and background work, waits
-for an active configuration transaction, and then closes the watchers,
-timers, sidecars, HTTP listener, event streams, and port in the order of the
-[runtime contract](./mokly-runtime.md#shutdown). No later action starts.
-Tests prove that no orphan process survives a normal shutdown, a failed
-startup, or an interruption, and that the port is reusable afterwards.
+Shutdown follows the [runtime order](./mokly-runtime.md#shutdown), including
+before readiness. One lifecycle owns the watcher before preparation starts.
+An atomic startup handoff prevents a stopped process from reporting readiness.
+The active observer closes in the watcher step. An unadopted candidate drops
+when cancellation drains its preparation in the work step. The listener stays
+reserved until the sidecars end. No later action starts.
+Tests prove that no orphan process survives normal shutdown, failed startup,
+or interruption, and that the port is reusable afterwards.
 
 ## Terminal Presentation
 

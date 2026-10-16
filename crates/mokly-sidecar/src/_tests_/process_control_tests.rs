@@ -10,15 +10,18 @@ use crate::process_control::ProcessControl;
 use crate::workers::WorkerControl;
 
 #[test]
-fn a_process_that_survives_the_shared_deadline_is_killed() {
+fn a_process_that_survives_the_shared_deadline_is_killed_and_reaped() {
     let mock = Unimock::new((
         WaitMock::exited
             .next_call(matching!(_, 2_100))
             .returns(false),
         ProcessGroupMock::kill
-            .each_call(matching!())
-            .answers(&|_| Ok(()))
-            .n_times(2),
+            .next_call(matching!())
+            .returns(Ok(())),
+        WaitMock::reaped.next_call(matching!(_)).returns(()),
+        ProcessGroupMock::kill
+            .next_call(matching!())
+            .returns(Ok(())),
     ));
     let (sender, receiver) = mpsc::sync_channel(2);
     let (_exited_sender, exited) = mpsc::sync_channel(1);

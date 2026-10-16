@@ -30,6 +30,7 @@ mod process_control;
 pub mod process_factory;
 mod process_io;
 pub mod process_memory;
+mod process_parent;
 mod process_transport;
 mod process_worker;
 pub mod render_records;

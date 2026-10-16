@@ -118,7 +118,9 @@ directory between a root and itself stays an explicit target. A catalogue
 state keeps a constant-time index of exact files and their ancestors for the
 ignore callback. The watcher is replaced only when the set of effective roots
 changes. Added exact files extend its directory registrations without a root
-walk or another full preparation. Native additions and removals use one
+walk or another full preparation. Resolution metadata includes missing manifest and tsconfig candidates. File additions
+and removals in a consumed-module directory invalidate compilation reuse.
+Native additions and removals use one
 `paths_mut()` batch; existing registrations are retained. Linux renews a
 registration after its directory is replaced. Vanished directories are
 skipped. A new matching file in an existing watched directory causes one

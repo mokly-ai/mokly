@@ -1,6 +1,6 @@
 //! Busy sidecars are cancelled only after watcher stop and before idle shutdown.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_server::shutdown::Lifecycle;
@@ -26,7 +26,7 @@ async fn watcher_cancellation_and_idle_shutdown_follow_the_documented_order() {
         PoolMock::shutdown.next_call(matching!()).returns(Ok(())),
     ));
     let lifecycle = ServeLifecycle {
-        watch: Some(Arc::new(mock.clone())),
+        watch: Mutex::new(Some(Arc::new(mock.clone()))),
         pool: Arc::new(mock.clone()),
         cancellation: cancellation.clone(),
     };

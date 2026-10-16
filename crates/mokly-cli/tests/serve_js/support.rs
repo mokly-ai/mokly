@@ -2,7 +2,6 @@
 
 use std::fs::{self, File};
 use std::io::Write;
-use std::os::fd::FromRawFd;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
@@ -26,7 +25,10 @@ pub(super) struct Serve {
     readers: Vec<JoinHandle<()>>,
 }
 impl Serve {
-    pub(super) async fn start(source: &str) -> Self {
+    pub(super) async fn launch(source: &str) -> Self {
+        Self::configured(source, &|_, _| {}).await
+    }
+    pub(super) async fn configured(source: &str, configure: &dyn Fn(&Path, &Path)) -> Self {
         let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../..")
             .canonicalize()
@@ -45,27 +47,12 @@ impl Serve {
             ".card { color: red }",
         )
         .unwrap();
-        let mut master = -1;
-        let mut slave = -1;
-        // SAFETY: openpty initializes two descriptor slots; null options select defaults.
-        assert_eq!(
-            unsafe {
-                libc::openpty(
-                    &mut master,
-                    &mut slave,
-                    std::ptr::null_mut(),
-                    std::ptr::null(),
-                    std::ptr::null(),
-                )
-            },
-            0
-        );
-        // SAFETY: successful openpty creates two distinct owned descriptors.
-        let (input, slave) = unsafe { (File::from_raw_fd(master), File::from_raw_fd(slave)) };
+        let (package, input, slave) = super::fixture::terminal(root.path(), &workspace);
+        configure(root.path(), &package);
         let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
             .args(["serve", "--port", "0", "--sidecars", "1"])
             .current_dir(root.path())
-            .env("MOKLY_PACKAGE_ROOT", workspace.join("packages/mokly"))
+            .env("MOKLY_PACKAGE_ROOT", package)
             .env("MOKLY_VIEWER_DIST", workspace.join("packages/viewer/dist"))
             .env("MOKLY_OUTPUT", "rich")
             .env("NO_COLOR", "1")
@@ -86,7 +73,7 @@ impl Serve {
             read(stdout, lines.clone(), ready.clone()),
             read(stderr, lines.clone(), ready.clone()),
         ];
-        let mut serve = Self {
+        Self {
             root,
             child,
             host: String::new(),
@@ -94,15 +81,21 @@ impl Serve {
             lines,
             ready,
             readers,
-        };
-        let line = serve.wait_line(0, "http://").await;
-        serve.host = line
+        }
+    }
+    pub(super) async fn start(source: &str) -> Self {
+        let mut serve = Self::launch(source).await;
+        serve.listening().await;
+        serve
+    }
+    pub(super) async fn listening(&mut self) {
+        let line = self.wait_line(0, "http://").await;
+        self.host = line
             .split_whitespace()
             .find(|part| part.starts_with("http://"))
             .unwrap()
             .trim_start_matches("http://")
             .into();
-        serve
     }
     pub(super) fn path(&self, path: &str) -> PathBuf {
         self.root.path().join(path)
@@ -112,6 +105,14 @@ impl Serve {
     }
     pub(super) fn log_count(&self) -> usize {
         self.lines.lock().unwrap().len()
+    }
+    pub(super) fn compiles(&self) -> usize {
+        self.lines
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|line| line.as_str() == "fixture-esbuild")
+            .count()
     }
     pub(super) fn evaluations(&self) -> usize {
         self.lines
@@ -153,7 +154,31 @@ impl Serve {
     /// This fixture publishes adoption and then one complete two-view usage pass.
     pub(super) async fn ready(&self, previous: u64, text: &str) -> Value {
         tokio::time::timeout(Duration::from_secs(30), async {
+            let mut socket = TcpStream::connect(&self.host).await.unwrap();
+            socket
+                .write_all(
+                    format!(
+                        "GET /mokly-viewer/events HTTP/1.1\r\nHost: {}\r\n\r\n",
+                        self.host
+                    )
+                    .as_bytes(),
+                )
+                .await
+                .unwrap();
+            let mut events = BufReader::new(socket).lines();
             loop {
+                let Some(line) = events.next_line().await.unwrap() else {
+                    panic!("event stream closed before readiness")
+                };
+                let Some(revision) = line
+                    .strip_prefix("id: ")
+                    .and_then(|id| id.trim().parse::<u64>().ok())
+                else {
+                    continue;
+                };
+                if revision < previous + 2 {
+                    continue;
+                }
                 let index = self.index().await;
                 let detail: Value =
                     serde_json::from_str(&get(&self.host, "/mokly-viewer/entries/home.json").await)
@@ -165,7 +190,6 @@ impl Serve {
                 {
                     return index;
                 }
-                tokio::task::yield_now().await;
             }
         })
         .await
@@ -186,7 +210,9 @@ impl Serve {
         for reader in self.readers.drain(..) {
             reader.await.unwrap();
         }
-        assert!(std::net::TcpListener::bind(&self.host).is_ok());
+        if !self.host.is_empty() {
+            assert!(std::net::TcpListener::bind(&self.host).is_ok());
+        }
     }
 }
 impl Drop for Serve {

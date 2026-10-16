@@ -2,6 +2,7 @@
 
 import type { BundleParams } from "./BundleParams.js";
 import type { CompiledGeneration } from "./CompiledGeneration.js";
+import type { Module } from "./Module.js";
 
 // prettier-ignore
 export type RestoreGeneration = {
@@ -13,6 +14,10 @@ generation: string,
  * Original side and resolution settings.
  */
 params: BundleParams,
+/**
+ * Module graph, stored once outside the compiled program.
+ */
+modules: Array<Module>,
 /**
  * Immutable compilation.
  */

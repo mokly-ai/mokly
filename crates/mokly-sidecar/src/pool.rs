@@ -6,12 +6,12 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
 use crate::error::{Error, InternalError, Result};
 use crate::methods::Call;
-use crate::pool_affinity;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
 use crate::pool_state::{Slot, State};
 use crate::wire::MethodResult;
 use crate::workers::{Clock, WorkerFactory};
+use crate::{pool_affinity, pool_cleanup};
 
 /// Pool boundary consumed by catalogue and rendering services.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PoolMock))]
@@ -22,9 +22,9 @@ pub trait SidecarPool: Send + Sync {
     fn release_generation(&self, generation: &str, epoch: u64);
     /// Record a final PostCSS context release without waiting for a worker.
     fn release_context(&self, context: &str);
-    /// Cancel queued calls and kill busy workers, retaining idle workers for graceful shutdown.
+    /// Cancel queued calls, kill and reap busy workers, and retain idle workers for shutdown.
     fn cancel_requests(&self) -> Result<()>;
-    /// Cancel queued work, drain active requests, and bound shutdown to two seconds.
+    /// Cancel work, allow a two-second exit grace, then kill and reap survivors.
     fn shutdown(&self) -> Result<()>;
     /// Kill every owned process without waiting for the graceful shutdown deadline.
     fn abort(&self) -> Result<()>;
@@ -74,14 +74,28 @@ impl Pool {
         let mut state = self.lock()?;
         let ticket = state.ticket;
         state.ticket += 1;
+        let context = match call {
+            Call::ProcessCss(params) => Some(params.context.clone()),
+            _ => None,
+        };
+        state.waiting.insert(ticket, context);
         self.ready.notify_all();
         loop {
             if state.stopped {
+                state.waiting.remove(&ticket);
                 return Err(Error::Cancelled);
             }
-            if ticket == state.serving {
+            let first = state
+                .waiting
+                .iter()
+                .find(|(_, context)| {
+                    pool_affinity::runnable(&state, context.as_deref(), self.options.size.get())
+                })
+                .map(|(ticket, _)| *ticket);
+            if first == Some(ticket) {
                 let index = pool_affinity::acquire(&mut state, call, self.options.size.get());
                 if let Some(index) = index {
+                    state.waiting.remove(&ticket);
                     state.serving += 1;
                     let slot = state.slots[index].take();
                     self.ready.notify_all();
@@ -141,6 +155,13 @@ impl Pool {
             state.controls.remove(&index);
         }
         state.available.push_back(index);
+        if state.slots[index]
+            .as_ref()
+            .is_some_and(|slot| pool_cleanup::pending(&state, slot))
+            && let Some(sender) = &self.releases
+        {
+            let _ = sender.send(Notice::Work);
+        }
         self.ready.notify_all();
         Ok(())
     }
@@ -185,3 +206,11 @@ mod pool_lease_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_context_tests.rs"]
 mod pool_context_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_scheduling_tests.rs"]
+mod pool_scheduling_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_shutdown_order_tests.rs"]
+mod pool_shutdown_order_tests;

@@ -49,6 +49,8 @@ fn html_and_css_edits_reuse_javascript_and_unchanged_document_nodes() {
     let initial = calls(&consumer);
     assert_eq!(initial.0, 1);
     assert!(initial.1 > 0 && initial.2 > 0);
+    assert_eq!(consumer.processes.count(Operation::PostcssStart), 1);
+    assert_eq!(consumer.processes.count(Operation::PostcssStop), 0);
     consumer.replace(
         "specs/mixed.screen.html",
         "<h1>Mixed</h1>",
@@ -73,6 +75,12 @@ fn html_and_css_edits_reuse_javascript_and_unchanged_document_nodes() {
     let after = calls(&consumer);
     assert_eq!((after.0, after.1), (initial.0, initial.1));
     assert_eq!(after.2, initial.2 + 1);
+    assert_eq!(consumer.processes.count(Operation::PostcssStart), 2);
+    assert_eq!(consumer.processes.count(Operation::PostcssStop), 0);
+    drop(first);
+    drop(second);
+    drop(third);
+    consumer.processes.wait_for(Operation::PostcssStop, 2);
 }
 
 #[test]
@@ -96,6 +104,11 @@ fn javascript_edit_bundles_once_and_leaves_pure_html_documents_cached() {
         &next["plain/index.mobile.html"]
     ));
     assert!(String::from_utf8_lossy(&next["screen/index.mobile.html"].bytes).contains("Changed"));
+    assert_eq!(consumer.processes.count(Operation::PostcssStart), 1);
+    assert_eq!(consumer.processes.count(Operation::PostcssStop), 0);
+    drop(first);
+    drop(second);
+    consumer.processes.wait_for(Operation::PostcssStop, 1);
 }
 
 #[test]
@@ -141,7 +154,7 @@ fn added_and_removed_html_sources_preserve_other_keys() {
     fs::remove_file(path).unwrap();
     let removed = consumer.generation(consumer.prepare().unwrap());
     assert!(!removed.plans().contains_key("added/index.mobile.html"));
-    assert_eq!(calls(&consumer), initial);
+    assert_eq!(calls(&consumer), (initial.0 + 2, initial.1, initial.2));
 }
 
 #[test]

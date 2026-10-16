@@ -9,6 +9,7 @@ async fn missing_import_repair_manual_rebuild_and_pool_setting_rejection_keep_th
     let original = serve.html().await;
     assert!(original.contains("class=\""));
     assert_eq!(serve.evaluations(), 1);
+    assert_eq!(serve.compiles(), 1);
     let marker = serve.log_count();
     serve.key(b"r");
     serve.wait_line(marker, "manual rebuild").await;
@@ -16,6 +17,7 @@ async fn missing_import_repair_manual_rebuild_and_pool_setting_rejection_keep_th
         .ready(first["revision"].as_u64().unwrap(), "Initial")
         .await;
     assert_eq!(serve.evaluations(), 1);
+    assert_eq!(serve.compiles(), 1);
     assert_eq!(manual["screens"][0]["views"], first["screens"][0]["views"]);
     let marker = serve.log_count();
     let missing = format!(

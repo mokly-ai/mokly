@@ -2311,6 +2311,7 @@ name = "mokly-sidecar"
 version = "0.14.0"
 dependencies = [
  "insta",
+ "libc",
  "mokly-model",
  "mokly-platform",
  "serde",

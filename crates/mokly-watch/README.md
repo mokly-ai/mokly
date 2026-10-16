@@ -28,7 +28,9 @@ backend. It attaches nonrecursive directory watches after a confined walk.
 It replaces the native observer only when effective roots change. Exact
 inputs extend registrations without repeating the root walk. `dyn WatchFactory`
 and `dyn DirectoryWatch` own native handle creation and batched updates.
-Existing paths remain attached. Linux renews replaced directories. Unknown
+Existing paths remain attached. Linux and Windows renew replaced directories. Failed attachments recheck
+source projection to detect vanished paths. Unspecified directory writes are
+discarded before classification. Unknown
 platform create and remove kinds use node lookup. Overflow and pathless
 events request a rescan and report one warning per observer. `close` prevents later attachment.
 The observer inbox keeps one latest descriptor per path. Access notifications

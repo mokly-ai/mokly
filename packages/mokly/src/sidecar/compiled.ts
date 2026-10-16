@@ -7,9 +7,12 @@ import { AuthoringRuntime } from "../authoring/runtime.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
+import type { Module } from "../generated/sidecar/Module.js";
 
 import type { Generation } from "./bundle.js";
 import { ModulePaths } from "./module-paths.js";
+import { checkRecipeSize } from "./recipe-size.js";
+import { directoryFiles } from "./resolution-inputs.js";
 
 export function generationId(
   identity: string,
@@ -42,6 +45,7 @@ export async function fileDigest(file: string): Promise<string | null> {
 export function restore(
   params: BundleParams,
   compiled: CompiledGeneration,
+  modules: Module[],
   id = generationId(compiled.identity, params.evaluation),
 ): Generation {
   const native = createRequire(
@@ -51,17 +55,30 @@ export function restore(
       "package.json",
     ),
   );
-  const require = ((name: string) =>
-    native(compiled.peers[name] ?? name)) as NodeJS.Require;
+  const resolve = (
+    name: string,
+    options?: Parameters<NodeJS.RequireResolve>[1],
+  ) => {
+    if (compiled.peers[name] === null)
+      throw Object.assign(
+        new Error(
+          `could not resolve ${name} under the selected dependency policy`,
+        ),
+        { code: "MODULE_NOT_FOUND" },
+      );
+    return compiled.peers[name] ?? native.resolve(name, options);
+  };
+  const require = ((name: string) => native(resolve(name))) as NodeJS.Require;
   Object.assign(require, native);
   require.resolve = Object.assign(
     (name: string, options?: Parameters<NodeJS.RequireResolve>[1]) =>
-      compiled.peers[name] ?? native.resolve(name, options),
+      resolve(name, options),
     { paths: native.resolve.paths },
   );
   return {
     id,
     params,
+    modules,
     compiled,
     code: compiled.code,
     runtimeKey: compiled.runtimeKey,
@@ -79,12 +96,14 @@ export function restore(
 }
 
 export function bundleResult(generation: Generation): BundleResult {
-  return {
+  const result = {
     generation: generation.id,
-    modules: generation.compiled.modules,
+    modules: generation.modules,
     warnings: [],
     compiled: generation.compiled,
   };
+  checkRecipeSize(generation.params, result);
+  return result;
 }
 
 /** A live compilation can serve another evaluation only while its consumed inputs agree. */
@@ -111,6 +130,18 @@ export async function reuse(
         break;
       }
     }
-    if (current) return restore(params, generation.compiled);
+    for (const [directory, names] of Object.entries(
+      generation.compiled.inputDirectories,
+    )) {
+      if (
+        JSON.stringify(await directoryFiles(directory)) !==
+        JSON.stringify(names)
+      ) {
+        current = false;
+        break;
+      }
+    }
+    if (current)
+      return restore(params, generation.compiled, generation.modules);
   }
 }

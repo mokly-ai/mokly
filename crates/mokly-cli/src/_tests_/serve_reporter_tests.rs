@@ -3,10 +3,13 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::diagnostic::{Warning, WarningSubject};
+use mokly_catalogue::diagnostic::{Code, Issue, Warning, WarningSubject};
+use mokly_catalogue::error::CatalogueError;
+use mokly_cli::build::BuildError;
 use mokly_cli::cancellation::ServeCancellation;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
+use mokly_model::catalogue::SourceLocation;
 use mokly_server::error::ServerError;
 use mokly_watch::event::Batch;
 use unimock::{MockFn, Unimock, matching};
@@ -54,4 +57,50 @@ fn server_failures_keep_the_prepared_warning_scope_and_failure_layout() {
         "{text}"
     );
     assert!(text.ends_with("            The last good catalogue is still being served.\n"));
+}
+
+#[test]
+fn catalogue_failures_keep_plain_compatibility_and_rich_source_diagnostics() {
+    for mode in [Mode::Plain, Mode::Rich] {
+        let captured = Arc::new(Mutex::new(String::new()));
+        let written = captured.clone();
+        let terminal = Unimock::new(TerminalMock::stderr.next_call(matching!(_)).answers_arc(
+            Arc::new(move |_, text| *written.lock().unwrap() = text.into()),
+        ));
+        let reporter = ServeLines {
+            cancellation: Arc::new(ServeCancellation::default()),
+            terminal: Arc::new(terminal),
+            style: Style {
+                mode,
+                color: false,
+                ascii: false,
+                columns: 200,
+            },
+            redactor: Arc::new(Redactor::default()),
+        };
+        let error = BuildError::Catalogue {
+            source: CatalogueError::Invalid {
+                warnings: vec![],
+                issues: vec![Issue::new(Code::HtmlElement, "unknown element ui-hero").at(
+                    SourceLocation {
+                        path: "specs/home.screen.html".into(),
+                        line: 12,
+                        column: 5,
+                        export: None,
+                    },
+                )],
+            },
+        };
+        reporter.watched_catalogue_failure(&Batch::default(), Path::new("/repo"), &error);
+        let text = captured.lock().unwrap();
+        if mode == Mode::Plain {
+            assert_eq!(
+                *text,
+                "[mokly/build-invalid] specs/home.screen.html:12:5: [mokly/html-element] unknown element ui-hero\n"
+            );
+        } else {
+            assert!(text.contains("\n            specs/home.screen.html:12:5 [mokly/html-element] unknown element ui-hero\n"), "{text}");
+            assert!(!text.contains("[mokly/build-invalid]"), "{text}");
+        }
+    }
 }

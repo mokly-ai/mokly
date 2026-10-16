@@ -1,6 +1,6 @@
 //! Required paths take precedence over broad root traversal and user rules.
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -25,6 +25,7 @@ pub struct Plan {
     pub ancestors: HashMap<PathBuf, Action>,
     /// Effective recursive roots, including empty PostCSS directories.
     pub roots: BTreeSet<PathBuf>,
+    resolution_directories: BTreeMap<PathBuf, BTreeSet<String>>,
     root_index: HashSet<PathBuf>,
     waypoints: HashSet<PathBuf>,
     source_roots: Vec<(PathBuf, GlobSet)>,
@@ -50,6 +51,7 @@ impl Plan {
                     .as_ref()
                     .and_then(|watch| watch.debounce_ms)
                     .unwrap_or(75.0)
+                    .max(0.0)
                     / 1000.0,
             )
             .unwrap_or(Duration::from_secs(86_400))
@@ -57,6 +59,7 @@ impl Plan {
             exact: HashMap::new(),
             ancestors: HashMap::new(),
             root_index: HashSet::new(),
+            resolution_directories: BTreeMap::new(),
             waypoints: HashSet::new(),
             roots: BTreeSet::new(),
             source_roots: Vec::new(),
@@ -122,6 +125,21 @@ impl Plan {
         Ok(plan)
     }
 
+    /// Resolution metadata and direct file membership extend exact observation only.
+    pub fn resolution(
+        &mut self,
+        files: &BTreeSet<String>,
+        directories: &BTreeMap<String, BTreeSet<String>>,
+    ) {
+        for file in files {
+            self.required(self.repository.join(file), Action::Rebuild);
+        }
+        for (directory, names) in directories {
+            self.resolution_directories
+                .insert(self.repository.join(directory), names.clone());
+        }
+    }
+
     /// Newly rendered closures become observable before the background pass completes.
     pub fn resources(&mut self, paths: &BTreeSet<String>) {
         for path in paths {
@@ -183,6 +201,20 @@ impl Plan {
         if let Some(action) = self.ancestors.get(&event.path) {
             return Some(*action);
         }
+        if let Some(names) = event
+            .path
+            .parent()
+            .and_then(|path| self.resolution_directories.get(path))
+            && (event.kind == Kind::Membership
+                || (event.kind == Kind::File
+                    && event
+                        .path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .is_none_or(|name| !names.contains(name))))
+        {
+            return Some(Action::Rebuild);
+        }
         if self.denied(&event.path, event.kind == Kind::Directory) {
             return None;
         }
@@ -220,6 +252,7 @@ impl Plan {
     /// Required files covered by accepted directories need no separate recursive target.
     pub fn targets(&self) -> BTreeSet<PathBuf> {
         let mut targets = self.roots.clone();
+        targets.extend(self.resolution_directories.keys().cloned());
         for path in self.exact.keys() {
             let covered = self.roots.iter().any(|root| {
                 path.starts_with(root)

@@ -37,7 +37,7 @@ struct State {
 impl NativeObserver {
     /// Attach synchronously before consumer JavaScript evaluates.
     pub fn new(tree: Arc<dyn SourceTree>, plan: &Plan) -> Result<Self> {
-        Self::with_factory(tree, plan, Arc::new(NotifyFactory))
+        Self::with_factory(tree.clone(), plan, Arc::new(NotifyFactory { tree }))
     }
 
     /// Inject native registrations for captured-target and event-order tests.
@@ -113,7 +113,11 @@ impl NativeObserver {
                 .difference(&directories)
                 .cloned()
                 .collect();
-            if cfg!(any(target_os = "linux", target_os = "android")) {
+            if cfg!(any(
+                target_os = "linux",
+                target_os = "android",
+                target_os = "windows"
+            )) {
                 add.extend(state.replaced.intersection(&directories).cloned());
                 remove.extend(state.replaced.iter().cloned());
             }
@@ -140,33 +144,45 @@ impl Observer for NativeObserver {
         self.inbox.changed().await;
     }
     fn take(&self) -> Vec<Result<Event>> {
-        self.inbox
-            .take()
-            .into_iter()
-            .map(|event| {
-                let mut event = event?;
-                if matches!(event.kind, Kind::Rename | Kind::Directory) {
-                    let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
-                    if let Some(state) = state.as_mut() {
-                        state.replaced.extend(
-                            state
-                                .directories
-                                .iter()
-                                .filter(|path| path.starts_with(&event.path))
-                                .cloned(),
-                        );
-                    }
+        let mut events = Vec::new();
+        for result in self.inbox.take() {
+            let mut event = match result {
+                Ok(event) => event,
+                Err(error) => {
+                    events.push(Err(error));
+                    continue;
                 }
-                if event.kind == Kind::Rename {
-                    event.kind = match self.tree.project(&event.path) {
-                        Ok(Some(node)) if node.kind == FileKind::Directory => Kind::Directory,
-                        _ => Kind::File,
-                    };
+            };
+            if event.kind == Kind::Modify {
+                if matches!(self.tree.project(&event.path), Ok(Some(node)) if node.kind == FileKind::Directory)
+                {
+                    continue;
                 }
-                Ok(event)
-            })
-            .collect()
+                event.kind = Kind::File;
+            }
+            if matches!(event.kind, Kind::Rename | Kind::Directory) {
+                let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+                if let Some(state) = state.as_mut() {
+                    state.replaced.extend(
+                        state
+                            .directories
+                            .iter()
+                            .filter(|path| path.starts_with(&event.path))
+                            .cloned(),
+                    );
+                }
+            }
+            if event.kind == Kind::Rename {
+                event.kind = match self.tree.project(&event.path) {
+                    Ok(Some(node)) if node.kind == FileKind::Directory => Kind::Directory,
+                    _ => Kind::Membership,
+                };
+            }
+            events.push(Ok(event));
+        }
+        events
     }
+
     fn replay(&self, events: Vec<Result<Event>>) {
         for event in events {
             self.inbox.send(event);
@@ -182,3 +198,7 @@ impl Observer for NativeObserver {
 #[cfg(test)]
 #[path = "_tests_/native_registration_tests.rs"]
 mod native_registration_tests;
+
+#[cfg(test)]
+#[path = "_tests_/native_recovery_tests.rs"]
+mod native_recovery_tests;

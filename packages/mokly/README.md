@@ -79,10 +79,14 @@ Read the [source guide](../../docs/guides/authoring/screens.md) and
 
 The Rust pool starts `dist/sidecar.js` with inherited environment and piped
 NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
-byte limit. Requests run in order. Consumer logs go to standard error.
+byte limit. Oversized compiled recipes report their size and that limit as
+`bundle-failed`. A separate thread watches the parent pipe and parent identity,
+so a blocked render cannot leave a sidecar behind. Requests run in order. Consumer logs go to standard error.
 
 `bundle` compiles an unevaluated esbuild generation and reports its immutable
-compiled recipe for replay. Evaluation-only changes reuse that compilation.
+compiled recipe for replay. Evaluation-only changes reuse that compilation across slots and recycling.
+Resolution stamps include ancestor manifests, tsconfig candidates, and directory
+membership. Failed peer resolutions remain failures during replay.
 `restoreGeneration` installs retained code in a new sidecar without reading
 current sources. Worker operation events count actual compilations and
 PostCSS worker lifetimes. The result also reports its module

@@ -11,7 +11,7 @@ use mokly_css::dependencies::{DirectoryDependency, PluginInput};
 use crate::event::{Action, Batch, Event, Kind};
 use crate::plan::Plan;
 
-fn config() -> ResolvedConfig {
+pub(super) fn config() -> ResolvedConfig {
     ResolvedConfig {
         input: Config {
             watch: Some(WatchConfig {
@@ -262,4 +262,16 @@ fn unrepresentable_debounce_values_use_a_bounded_duration() {
     config.input.watch.as_mut().unwrap().debounce_ms = Some(1e300);
     let plan = Plan::new(&config, &[], &[], &BTreeSet::new()).unwrap();
     assert_eq!(plan.debounce, std::time::Duration::from_secs(86_400));
+}
+
+#[test]
+fn negative_debounce_is_immediate() {
+    let mut config = config();
+    config.input.watch.as_mut().unwrap().debounce_ms = Some(-75.0);
+    assert_eq!(
+        Plan::new(&config, &[], &[], &BTreeSet::new())
+            .unwrap()
+            .debounce,
+        std::time::Duration::ZERO
+    );
 }

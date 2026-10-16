@@ -96,6 +96,7 @@ test("evaluation-only bundles share compilation and fresh workers restore captur
     generation: old.generation,
     params,
     compiled: old.compiled,
+    modules: old.modules,
   });
   await second.call("cssModules", {
     generation: old.generation,

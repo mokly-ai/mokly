@@ -23,3 +23,5 @@ mod watch_dependencies_tests;
 mod watch_lifetimes_tests;
 mod watch_metadata_tests;
 mod watch_tests;
+
+mod watch_compilation_tests;

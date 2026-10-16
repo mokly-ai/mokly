@@ -27,13 +27,48 @@ async fn shutdown_closes_incomplete_clients_and_a_busy_real_sidecar() {
         closed.is_ok()
             || matches!(closed, Err(ref error) if error.kind() == std::io::ErrorKind::ConnectionReset)
     );
+    released_after_worker(&serve.host, pid).await;
     serve.closed().await;
+}
+
+pub(super) fn alive(pid: i32) -> bool {
+    #[cfg(target_os = "linux")]
+    if let Ok(status) = std::fs::read_to_string(format!("/proc/{pid}/stat"))
+        && status
+            .rsplit_once(") ")
+            .is_some_and(|(_, fields)| fields.starts_with("Z "))
+    {
+        return false;
+    }
+    exists(pid)
+}
+
+pub(super) fn exists(pid: i32) -> bool {
+    // SAFETY: signal zero only probes a sidecar PID recorded by this fixture.
+    unsafe { libc::kill(pid, 0) == 0 }
+}
+
+pub(super) async fn released_after_worker(host: &str, pid: i32) {
     tokio::time::timeout(Duration::from_secs(30), async {
         loop {
-            // SAFETY: signal zero probes only this fixture's recorded sidecar PID.
-            if unsafe { libc::kill(pid, 0) } != 0 {
-                break;
+            if let Ok(listener) = std::net::TcpListener::bind(host) {
+                assert!(
+                    !exists(pid),
+                    "listener released while the sidecar remained live"
+                );
+                drop(listener);
+                return;
             }
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+}
+
+pub(super) async fn ended(pid: i32) {
+    tokio::time::timeout(Duration::from_secs(30), async {
+        while alive(pid) {
             tokio::task::yield_now().await;
         }
     })

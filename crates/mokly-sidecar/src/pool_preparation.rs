@@ -2,12 +2,27 @@
 
 use crate::compiled::RestoreGeneration;
 use crate::error::{Error, Result};
-use crate::methods::{Call, Generation};
+use crate::methods::{Bundle, Call, Generation};
 use crate::pool::Pool;
 use crate::pool_state::Slot;
 use crate::wire::{MethodResult, Request};
 
 impl Pool {
+    pub(super) fn seed_compilation(&self, slot: &mut Slot, params: &Bundle) -> Result<()> {
+        let candidate = {
+            let state = self.lock()?;
+            state.bundles.iter().find_map(|(id, retained)| {
+                let mut settings = retained.clone();
+                settings.evaluation = params.evaluation.clone();
+                (settings == *params && state.compiled.contains_key(id)).then(|| id.clone())
+            })
+        };
+        if let Some(generation) = candidate {
+            self.prepare(slot, &generation, false, false, false)?;
+        }
+        Ok(())
+    }
+
     pub(super) fn prepare(
         &self,
         slot: &mut Slot,
@@ -16,7 +31,7 @@ impl Pool {
         description_needed: bool,
         bindings_needed: bool,
     ) -> Result<()> {
-        let (bundle, maps, bindings, epoch, compiled) = {
+        let (bundle, maps, bindings, epoch, compiled, modules) = {
             let state = self.lock()?;
             (
                 state.bundles.get(generation).cloned(),
@@ -24,6 +39,7 @@ impl Pool {
                 state.bindings.get(generation).cloned(),
                 state.epochs.get(generation).copied().unwrap_or(0),
                 state.compiled.get(generation).cloned(),
+                state.modules.get(generation).cloned().unwrap_or_default(),
             )
         };
         if !slot.generations.contains_key(generation) {
@@ -38,6 +54,7 @@ impl Pool {
                     Call::RestoreGeneration(Box::new(RestoreGeneration {
                         generation: generation.into(),
                         params: bundle,
+                        modules,
                         compiled: (*compiled).clone(),
                     })),
                 )?;

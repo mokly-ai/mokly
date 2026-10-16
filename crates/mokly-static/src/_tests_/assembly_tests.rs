@@ -78,6 +78,7 @@ fn plan(entry: usize) -> BTreeMap<String, DocumentPlan> {
         DocumentPlan {
             route: "home/index.html".into(),
             key: NodeKey("a".repeat(64)),
+            resource_key: "a".repeat(64),
             entry,
             viewport: None,
             color_scheme: ColorScheme::Light,

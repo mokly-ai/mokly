@@ -69,7 +69,11 @@ impl RebuildReporter for ServeLines {
             color: false,
             ..self.style.clone()
         };
-        let diagnostics = build_output::failure_diagnostics(&plain, error, &self.redactor);
+        let diagnostics = if self.style.mode == Mode::Plain {
+            build_output::failure_diagnostics(&plain, error, &self.redactor)
+        } else {
+            mokly_cli::watch_diagnostics::diagnostics(&plain, error, &self.redactor)
+        };
         self.failure_line(batch, repository, &warnings, &diagnostics);
     }
     fn watched_server_failure(

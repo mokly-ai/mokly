@@ -25,7 +25,7 @@ pub struct Generation {
 }
 
 /// Consumer module resolution settings; list order is meaningful.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ModuleResolution {
     /// Module aliases.
@@ -49,7 +49,7 @@ pub struct ModuleResolution {
 }
 
 /// Inputs compiled into one unevaluated bundle.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(rename = "BundleParams")]
 pub struct Bundle {

@@ -17,7 +17,7 @@ const shapes: Record<string, string[]> = {
     "configurationDirectory",
     "repositoryRoots",
   ],
-  restoreGeneration: ["generation", "params", "compiled"],
+  restoreGeneration: ["generation", "params", "compiled", "modules"],
   describe: ["generation"],
   dispose: ["generation"],
   disposeContext: ["context"],
@@ -89,13 +89,22 @@ export function request(value: unknown): Request {
     if (!record(params.params) || !record(params.compiled))
       protocol("restoreGeneration requires params and compiled objects");
     request({ id: value.id, method: "bundle", params: params.params });
+    if (!Array.isArray(params.modules))
+      protocol("restoreGeneration requires modules");
     for (const key of ["identity", "code", "runtimeKey"])
       if (typeof params.compiled[key] !== "string")
         protocol(`compiled.${key} must be a string`);
-    for (const key of ["dependencyRoots", "cssModules", "modules"])
+    for (const key of ["dependencyRoots", "cssModules"])
       if (!Array.isArray(params.compiled[key]))
         protocol(`compiled.${key} must be an array`);
-    for (const key of ["sources", "peers", "inputs", "metadataInputs"])
+    for (const key of [
+      "sources",
+      "peers",
+      "inputs",
+      "metadataInputs",
+      "inputDirectories",
+      "metadataDirectories",
+    ])
       if (!record(params.compiled[key]))
         protocol(`compiled.${key} must be an object`);
   }

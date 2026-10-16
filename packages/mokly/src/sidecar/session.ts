@@ -72,11 +72,11 @@ export class Session {
         return result;
       }
       case "restoreGeneration": {
-        const { generation, params, compiled } = request.params;
+        const { generation, params, compiled, modules } = request.params;
         if (!this.generations.has(generation))
           this.generations.set(
             generation,
-            restore(params, compiled, generation),
+            restore(params, compiled, modules, generation),
           );
         return null;
       }

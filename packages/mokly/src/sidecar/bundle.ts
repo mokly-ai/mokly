@@ -10,6 +10,7 @@ import type { BundleResult } from "../generated/sidecar/BundleResult.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
+import type { Module } from "../generated/sidecar/Module.js";
 import type { Warning } from "../generated/sidecar/Warning.js";
 
 import { bundleDetail } from "./bundle-errors.js";
@@ -21,9 +22,11 @@ import { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
 import { confinedFile, consumerRequire } from "./paths.js";
 import { consumerPlugins } from "./plugins.js";
+import { resolutionInputs } from "./resolution-inputs.js";
 import { resolutionOptions } from "./resolution.js";
 
 export interface Generation {
+  modules: Module[];
   compiled: CompiledGeneration;
   id: string;
   params: BundleParams;
@@ -199,6 +202,12 @@ export async function bundle(
       ))
         throw error;
     }
+    const directories = await resolutionInputs(
+      paths,
+      physical.values(),
+      physicalInputs,
+      metadataInputs,
+    );
     hash.update(JSON.stringify(metadataInputs));
     hash.update(
       JSON.stringify([
@@ -227,11 +236,11 @@ export async function bundle(
         ]),
       ),
       peers: require.snapshot(),
-      modules: graph,
+      ...directories,
       inputs: physicalInputs,
       metadataInputs,
     };
-    const generation = restore(params, compilation);
+    const generation = restore(params, compilation, graph);
     return { generation, result: bundleResult(generation) };
   } catch (error) {
     throw new SidecarError(

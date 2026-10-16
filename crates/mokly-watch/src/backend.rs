@@ -2,9 +2,10 @@
 
 use std::collections::BTreeSet;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use mokly_source_interface::tree::{FileKind, SourceTree};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::error::{Error, Result};
@@ -34,10 +35,14 @@ pub trait WatchFactory: Send + Sync {
 }
 
 /// Platform notify adapter.
-pub struct NotifyFactory;
+pub struct NotifyFactory {
+    /// Source projection checks directory disappearance after a platform error.
+    pub tree: Arc<dyn SourceTree>,
+}
 struct NotifyWatch {
     watcher: RecommendedWatcher,
     attached: BTreeSet<PathBuf>,
+    tree: Arc<dyn SourceTree>,
 }
 
 impl WatchFactory for NotifyFactory {
@@ -46,6 +51,7 @@ impl WatchFactory for NotifyFactory {
             Ok(watcher) => Ok(Box::new(NotifyWatch {
                 watcher,
                 attached: BTreeSet::new(),
+                tree: self.tree.clone(),
             })),
             Err(source) => Err(Error::Observer { source }),
         }
@@ -92,7 +98,7 @@ impl DirectoryWatch for NotifyWatch {
                     self.attached.insert(path.clone());
                     attached.insert(path.clone());
                 }
-                Err(source) if vanished(&source) => {}
+                Err(source) if vanished(&source, self.tree.as_ref(), path) => {}
                 Err(source) => {
                     error.get_or_insert(Error::Observer { source });
                 }
@@ -108,9 +114,10 @@ impl DirectoryWatch for NotifyWatch {
     }
 }
 
-fn vanished(error: &notify::Error) -> bool {
+fn vanished(error: &notify::Error, tree: &dyn SourceTree, path: &Path) -> bool {
     matches!(&error.kind, notify::ErrorKind::PathNotFound)
         || matches!(&error.kind, notify::ErrorKind::Io(source) if matches!(source.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory))
+        || matches!(tree.project(path), Ok(node) if node.as_ref().is_none_or(|node| node.kind != FileKind::Directory))
 }
 
 #[cfg(test)]

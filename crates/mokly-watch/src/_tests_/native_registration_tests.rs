@@ -14,11 +14,11 @@ use crate::plan::Plan;
 
 use super::NativeObserver;
 
-fn paths(values: &[&str]) -> BTreeSet<PathBuf> {
+pub(super) fn paths(values: &[&str]) -> BTreeSet<PathBuf> {
     values.iter().map(PathBuf::from).collect()
 }
 
-fn config() -> ResolvedConfig {
+pub(super) fn config() -> ResolvedConfig {
     ResolvedConfig {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),

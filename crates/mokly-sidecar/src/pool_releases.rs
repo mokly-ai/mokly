@@ -41,8 +41,15 @@ impl Pool {
                     let (Some(state), Some(ready)) = (state.upgrade(), ready.upgrade()) else {
                         break;
                     };
-                    if let Err(error) = clean_idle(&state, &ready, timeout) {
-                        tracing::warn!(%error, "sidecar release failed");
+                    loop {
+                        match clean_idle(&state, &ready, timeout) {
+                            Ok(true) => continue,
+                            Ok(false) => break,
+                            Err(error) => {
+                                tracing::warn!(%error, "sidecar release failed");
+                                break;
+                            }
+                        }
                     }
                 }
             })
@@ -84,6 +91,7 @@ impl Pool {
                     state.leases.remove(&id);
                     state.bundles.remove(&id);
                     state.compiled.remove(&id);
+                    state.modules.remove(&id);
                     state.epochs.remove(&id);
                     state.maps.remove(&id);
                     state.bindings.remove(&id);
@@ -99,11 +107,11 @@ impl Pool {
     }
 }
 
-fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Result<()> {
+fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Result<bool> {
     let slots = {
         let mut state = pool_cleanup::lock(state)?;
         if state.stopped {
-            return Ok(());
+            return Ok(false);
         }
         let available = std::mem::take(&mut state.available);
         let mut slots = Vec::new();
@@ -121,6 +129,7 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
         }
         slots
     };
+    let mut pending = false;
     for (index, mut slot) in slots {
         let slot = match pool_cleanup::cleanup(state, &mut slot, timeout) {
             Ok(()) => Some(slot),
@@ -136,7 +145,10 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
             state.controls.remove(&index);
         }
         state.available.push_back(index);
+        pending |= state.slots[index]
+            .as_ref()
+            .is_some_and(|slot| pool_cleanup::pending(&state, slot));
         ready.notify_all();
     }
-    Ok(())
+    Ok(pending)
 }

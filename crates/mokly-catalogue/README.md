@@ -43,7 +43,9 @@ fragments, the element registry, warnings, and the source inventory. It calls
 join the private source inventory even without a JavaScript entry. The sidecar
 adapter supplies definitions through that boundary. Private JavaScript
 recipes retain handles separately from source attribution, saved React slots,
-module edges, class-map identity, and the resolved handle table. An opaque
+module edges, class-map identity, and the resolved handle table. Resolution
+metadata and consumed-module directories remain private watch inputs, including
+missing manifest and tsconfig candidates. An opaque
 provider lease keeps the bundle alive while a prepared model or graph uses it. Declared
 controls pass the Rust validator. Story control hints do not change schemas.
 Declared number controls carry their effective schema bounds and step into

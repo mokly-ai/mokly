@@ -165,6 +165,12 @@ Comparison works on trees, never on text offsets. The
   only.
 - The render cache, the base-side extraction cache, and the base-side
   dependency cache are bounded by bytes; a dependency install has a time limit.
+- Each live JavaScript generation retains a compiled program and captured entry
+  text in the core and in each loaded sidecar. Equal compatible compilations
+  share core storage. Final epoch release retires these programs. Restore
+  serialization uses temporary frame storage. Each private envelope must fit
+  the 64 MiB frame limit; an oversized recipe returns `bundle-failed` with its
+  byte size and limit before installation.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap; the fragment cache makes a recycle cheap.
 - The [diagnostics contract](../protocol/mokly-timings.md) records the time and

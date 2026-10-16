@@ -1,16 +1,17 @@
 //! Content digests and directory membership validate cached stylesheet recipes.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use mokly_css::dependencies::DirectoryDependency;
-use mokly_source_interface::tree::SourceTree;
+use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::RenderError;
 use crate::postcss_scan::Scan;
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub(crate) struct InputStamp {
+    pub(crate) memberships: BTreeMap<PathBuf, Option<BTreeSet<PathBuf>>>,
     pub(crate) files: BTreeMap<PathBuf, Option<String>>,
     pub(crate) directories: BTreeMap<(PathBuf, String), Option<Vec<PathBuf>>>,
 }
@@ -41,7 +42,20 @@ impl InputStamp {
                     })
             })
             .sum();
-        (files + directories).saturating_mul(2)
+        let memberships: usize = self
+            .memberships
+            .iter()
+            .map(|(path, names)| {
+                path.capacity()
+                    + names.as_ref().map_or(0, |names| {
+                        names
+                            .iter()
+                            .map(|name| size_of_val(name) + name.capacity())
+                            .sum::<usize>()
+                    })
+            })
+            .sum();
+        (files + directories + memberships).saturating_mul(2)
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
@@ -71,6 +85,16 @@ impl InputStamp {
 
     pub(crate) fn current(&self, tree: &dyn SourceTree) -> Self {
         let mut result = Self::default();
+        for path in self.memberships.keys() {
+            let names = tree.children(path).ok().map(|children| {
+                children
+                    .into_iter()
+                    .filter(|child| matches!(child.kind, FileKind::File | FileKind::Symlink))
+                    .map(|child| PathBuf::from(child.name))
+                    .collect()
+            });
+            result.memberships.insert(path.clone(), names);
+        }
         for path in self.files.keys() {
             result.file(tree, path.clone());
         }

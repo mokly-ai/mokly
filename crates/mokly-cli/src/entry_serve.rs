@@ -3,8 +3,7 @@
 use std::env;
 use std::io::IsTerminal;
 use std::process::ExitCode;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use crate::serve_lifecycle::ServeLifecycle;
 use mokly_catalogue::config::relative;
@@ -28,7 +27,7 @@ use mokly_server::snapshot::Projector;
 use mokly_server::work::{Workers, parallelism};
 use tokio::sync::{mpsc, watch};
 
-use crate::serve_candidates::ManualCandidates;
+use crate::serve_candidates::{CandidateWork, ManualCandidates};
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
 use crate::serve_services::ServeServices;
@@ -90,22 +89,37 @@ pub(super) fn run(
             Ok(signals) => signals,
             Err(source) => return Err(ServerError::Internal(InternalError::Io { source })),
         };
-        let serving = Arc::new(AtomicBool::new(false));
-        let shutdown = serve_shutdown::start(
-            receiver.clone(),
-            cancellation.clone(),
-            services.pool.clone(),
-            serving.clone(),
-        );
+        let phase = Arc::new(serve_shutdown::Phase::default());
+        let lifecycle = Arc::new(ServeLifecycle {
+            watch: Mutex::new(None),
+            cancellation: cancellation.clone(),
+            pool: services.pool.clone(),
+        });
+        let candidates = Arc::new(ManualCandidates::new(lifecycle.clone()));
+        let shutdown = serve_shutdown::start(receiver.clone(), candidates.clone(), phase.clone());
+        let mut reserved = None;
         let result = async {
-            let watching: Option<Arc<dyn WatchInputs>> = if options.no_watch {
-                None
-            } else {
-                match WatchedInputs::new(tree.clone(), &services.config) {
-                    Ok(watching) => Some(Arc::new(watching)),
-                    Err(_) if *receiver.borrow() => return Ok(ExitCode::SUCCESS),
-                    Err(error) => return Err(error),
+            let watching: Option<Arc<dyn WatchInputs>> = {
+                let mut slot = lifecycle
+                    .watch
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner());
+                if !phase.starting() || *receiver.borrow() {
+                    return Ok(ExitCode::SUCCESS);
                 }
+                let watching: Option<Arc<dyn WatchInputs>> = if options.no_watch {
+                    None
+                } else {
+                    Some(Arc::new(WatchedInputs::new(
+                        tree.clone(),
+                        &services.config,
+                    )?))
+                };
+                *slot = watching.clone();
+                watching
+            };
+            let Some(preparing) = candidates.enter() else {
+                return Ok(ExitCode::SUCCESS);
             };
             let prepared = match serve_preparation::initial(
                 preparation.clone(),
@@ -126,6 +140,7 @@ pub(super) fn run(
                 Err(_) if *receiver.borrow() => return Ok(ExitCode::SUCCESS),
                 Err(source) => return Err(source),
             };
+            drop(preparing);
             if *receiver.borrow() {
                 return Ok(ExitCode::SUCCESS);
             }
@@ -166,7 +181,6 @@ pub(super) fn run(
             ));
             let transport: &dyn ServerRuntime = &TokioServer;
             let server = transport.bind(options.port.unwrap_or(4173)).await?;
-            serving.store(true, Ordering::SeqCst);
             let url = format!("http://{}", server.address());
             let interactive =
                 style.mode == Mode::Rich && !options.no_watch && std::io::stdin().is_terminal();
@@ -179,32 +193,33 @@ pub(super) fn run(
                 interactive,
                 &redactor,
             );
-            terminal.stdout(&layout);
-            terminal.stderr(&build_output::warnings(
-                style,
-                &prepared.summary.warnings,
-                &redactor,
-            ));
-            terminal.stdout(&serve_output::catalogue(
-                style,
-                &prepared.summary,
-                timing.elapsed(),
-            ));
-            terminal.stdout(&serve_output::changes_unavailable(
-                style,
-                "Git comparison is unavailable in this build.",
-                &redactor,
-            ));
+            if *receiver.borrow()
+                || !phase.serve(&|| {
+                    terminal.stdout(&layout);
+                    terminal.stderr(&build_output::warnings(
+                        style,
+                        &prepared.summary.warnings,
+                        &redactor,
+                    ));
+                    terminal.stdout(&serve_output::catalogue(
+                        style,
+                        &prepared.summary,
+                        timing.elapsed(),
+                    ));
+                    terminal.stdout(&serve_output::changes_unavailable(
+                        style,
+                        "Git comparison is unavailable in this build.",
+                        &redactor,
+                    ));
+                })
+            {
+                reserved = Some(server);
+                return Ok(ExitCode::SUCCESS);
+            }
             timing.ready();
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }
-            let lifecycle = Arc::new(ServeLifecycle {
-                watch: watching.clone(),
-                cancellation: cancellation.clone(),
-                pool: services.pool.clone(),
-            });
-            let candidates = Arc::new(ManualCandidates::new(lifecycle));
             let (rebuild, requests) = mpsc::channel(1);
             let controls = serve_controls::start(
                 interactive,
@@ -247,7 +262,9 @@ pub(super) fn run(
         stop.send_replace(true);
         let shutdown = shutdown.await;
         signals.abort();
-        serve_shutdown::finish(shutdown)?;
+        let finished = serve_shutdown::finish(shutdown);
+        drop(reserved);
+        finished?;
         result
     });
     match result {

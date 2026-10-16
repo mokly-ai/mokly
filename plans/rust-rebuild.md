@@ -944,6 +944,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Add the part 1 base source reader, leased extraction cache, dependency
       input readers, three dependency tiers, and bounded install cache in
       `mokly-compare`, ready for the render graph connection.
+- [ ] Connect Serve's ordered `cancel_git` hook to active Git work. Add a
+      real-process shutdown test for a Git process that ignores `SIGTERM`.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
@@ -1058,8 +1060,16 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
 Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
 `.context/rust-rebuild/m11-smoke/`, and `.context/rust-rebuild/sweeps/m11.md`.
 
-- [ ] Verify that watching prunes build outputs and reservation paths by path,
+- [x] Verify that watching prunes build outputs and reservation paths by path,
       without ownership-marker parsing.
+
+- [ ] After the first hosted macOS and Windows runs, make event loss recoverable
+      there: choose a repository-root rescan after each macOS batch and an
+      exact-input stamp check on Windows, or one recursive watch per root on both
+      systems; tests.
+- [ ] Report the composition warnings of every Serve attempt once, including
+      on-demand and background renders, through an attempt-scoped sink with a
+      seen set kept across a failed attempt (`mokly-build-warnings.md`).
 
 ## Milestone 11.1: Watch review corrections
 
@@ -1087,6 +1097,26 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
 
 Evidence: `.context/rust-rebuild/delegation/m11/merge-decisions.md` and
 `.context/rust-rebuild/delegation/m11/report-2.md`.
+
+## Milestone 11.2: Final watch corrections
+
+- [x] Merge static output, release, viewer recovery, and HTML sweep changes.
+- [x] Correct native registration recovery, event mapping, and negative debounce.
+- [x] Use one startup and serving lifecycle and prove process shutdown order.
+- [x] Keep sidecars inside their binary lifetime with parent-death protection.
+- [x] Restore shared compilation across slots and recycling, bound recipes,
+      retain failed peer resolution, and hash resolution metadata and membership.
+- [x] Fix pool scheduling, cleanup notices, and per-path digest concurrency.
+- [x] Cover two-sidecar operations, manual rebuild counts, and watcher targets.
+- [x] Align diagnostics, lifecycle docs, and the gap sweep. Record deferred work.
+- [x] Pass the repository suite, affected tests, type generation, and the
+      two-sidecar Chrome smoke without a timeout override.
+- [x] Check the complete-gate disk condition and record the merge-time gate
+      when less than 15 GB is free.
+- [x] Commit and write the final round 3 report.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
 ## Milestone 12: Static build and publish
 
@@ -1237,6 +1267,9 @@ Static release verification and smoke scope comparison:
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
+
+- [ ] Verify that a sidecar emitting a large stderr stream drains safely at
+      shutdown and leaves no process behind (M11 sweep, watched_serve case).
 
 ## Milestone 15: Verification, close-out, and review
 

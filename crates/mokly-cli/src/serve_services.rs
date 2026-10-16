@@ -63,7 +63,7 @@ impl ServeServices {
         let preparation = Arc::new(AttemptPreparation {
             tree: tree.clone(),
             runtime: services.runtime,
-            settings: ServeSettings::new(&config, common),
+            settings: ServeSettings::new(&config),
         });
         Ok(Self {
             config,
@@ -87,7 +87,7 @@ impl ServePreparation for AttemptPreparation {
             Ok(config) => config,
             Err(source) => return Err(BuildError::Catalogue { source }),
         };
-        self.settings.validate(&config, options)?;
+        self.settings.validate(&config)?;
         let runtime = Arc::new(self.runtime.with_tree(tree.clone()));
         let preparation: &dyn ServePreparation = &CatalogueServe {
             config: Arc::new(PreparedConfig(config)),

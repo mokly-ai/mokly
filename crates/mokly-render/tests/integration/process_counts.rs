@@ -3,7 +3,7 @@
 use mokly_sidecar::operations::Operation;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Arc, Condvar, Mutex, mpsc};
 use std::time::Duration;
 
 use mokly_sidecar::error::Result;
@@ -18,9 +18,17 @@ pub(super) struct ProcessCounts {
     operations: Mutex<BTreeMap<(u32, Operation), usize>>,
     changed: Condvar,
     recycle: AtomicBool,
+    hold: Mutex<Option<(mpsc::Sender<usize>, mpsc::Receiver<()>)>>,
 }
 
 impl ProcessCounts {
+    pub(super) fn hold_next(&self) -> (mpsc::Receiver<usize>, mpsc::Sender<()>) {
+        let (entered, observed) = mpsc::channel();
+        let (release, released) = mpsc::channel();
+        *self.hold.lock().unwrap() = Some((entered, released));
+        (observed, release)
+    }
+
     pub(super) fn recycle_next(&self) {
         self.recycle.store(true, Ordering::SeqCst);
     }
@@ -112,6 +120,11 @@ impl Worker for CountedWorker {
         self.inner.handshake(deadline_ms)
     }
     fn request(&mut self, request: &Request, deadline_ms: u64) -> Result<MethodResult> {
+        let hold = self.counts.hold.lock().unwrap().take();
+        if let Some((entered, released)) = hold {
+            entered.send(self.index).unwrap();
+            let _ = released.recv();
+        }
         self.inner.request(request, deadline_ms)
     }
     fn resident_bytes(&self) -> Result<u64> {

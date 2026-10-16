@@ -9,7 +9,7 @@ pub enum Error {
         /// Native observer failure.
         source: notify::Error,
     },
-    /// Internal failures preserve their typed cause.
+    /// Native event loss requires a repository rescan.
     #[error("[mokly-watch/observer] notifications were lost; rescanning catalogue inputs")]
     Rescan,
     /// Internal failures preserve their typed cause.

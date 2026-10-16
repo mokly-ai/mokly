@@ -72,6 +72,7 @@ async fn watched_html_css_membership_config_and_failure_recovery_share_one_port(
         ("viewer/browser/shell.js", ""),
         ("viewer/browser/inspector.js", ""),
         ("viewer/shell.css", ""),
+        ("viewer/assets/brand.svg", "<svg/>"),
         ("viewer/assets/fonts/InterVariable.woff2", ""),
     ] {
         let path = root.path().join(path);

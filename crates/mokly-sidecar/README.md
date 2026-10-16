@@ -23,7 +23,7 @@ result against the pending method. Protocol failures close the session.
 Authoring diagnostics retain their codes and leave a healthy session usable.
 
 `Pool` consumes `dyn WorkerFactory` and `dyn Clock`, and implements
-`SidecarPool`. Constructing it starts no process. FIFO leases bound active
+`SidecarPool`. Constructing it starts no process. FIFO order per eligible slot bounds active
 processes to `PoolOptions::size`. The CLI resolves `--sidecars`, `MOKLY_SIDECARS`, and the core count.
 `PoolOptions` takes the parsed `NonZeroUsize` and timeout override.
 
@@ -32,7 +32,9 @@ tables. A new process restores old code without compiling changed sources.
 Epoch-specific releases retain newer lifetimes with the same id. Releases
 record state without waiting for a worker. An idle cleanup worker sends
 disposal to each affected slot; busy slots apply it before their next request.
-PostCSS context affinity prevents duplicate workers. `cancel_requests` kills
+PostCSS context affinity prevents duplicate workers. A busy affine request
+does not block independent work on another available slot. Returning slots
+recheck pending releases before becoming idle. `cancel_requests` kills and reaps
 busy sidecars before `shutdown` drains idle sidecars.
 Bundle results include the digests of the bytes consumed by each module.
 An optional evaluation digest isolates CSS Modules and resolved configuration
@@ -45,6 +47,8 @@ render. A process recycles after 500 render calls or above 1 GiB resident
 memory. Recycling starts after the in-flight result returns.
 
 `NodeFactory` inherits the environment and repository working directory. It
+uses a persistent launch thread for Linux parent-death signals. The Node
+watchdog observes parent death and pipe closure outside the render thread. It
 uses `dyn ProcessGroups` for whole-tree ownership, bounded pipe tasks for
 transport, `dyn Wait` for monotonic deadlines, `dyn ResidentMemory` for the
 resident set, and `dyn Diagnostics` for events and standard error. Shutdown

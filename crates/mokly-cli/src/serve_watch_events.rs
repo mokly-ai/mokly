@@ -33,8 +33,10 @@ pub(super) fn drain(state: Arc<Mutex<State>>) -> (Accepted, Vec<ServerError>, bo
                     || plan.ancestors.contains_key(&event.path)
                     || plan.roots.contains(&event.path);
                 let action = plan.classify(&event).or_else(|| {
-                    (failed && event.kind == Kind::File && !plan.denied(&event.path, false))
-                        .then_some(Action::Rebuild)
+                    (failed
+                        && matches!(event.kind, Kind::File | Kind::Membership)
+                        && !plan.denied(&event.path, false))
+                    .then_some(Action::Rebuild)
                 });
                 if let Some(action) = action {
                     accepted.push((event, action));

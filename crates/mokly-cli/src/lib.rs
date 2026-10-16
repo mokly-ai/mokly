@@ -32,3 +32,5 @@ pub mod static_errors;
 pub mod static_admission;
 
 pub mod publication_signals;
+
+pub mod watch_diagnostics;

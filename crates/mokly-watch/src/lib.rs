@@ -16,3 +16,7 @@ mod observer_tests;
 #[cfg(test)]
 #[path = "_tests_/plan_tests.rs"]
 mod plan_tests;
+
+#[cfg(test)]
+#[path = "_tests_/resolution_tests.rs"]
+mod resolution_tests;

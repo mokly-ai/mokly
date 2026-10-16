@@ -49,7 +49,11 @@ Graph leases retain old maps, bindings, and PostCSS contexts until the final
 request releases them. Final drops enqueue epoch-specific pool release and
 cache cleanup without waiting for worker requests or the PostCSS cache lock.
 Failed candidates release their own contexts. Bundle metadata stamps include
-resolved React manifests and absent Storybook preview candidates.
+resolved React manifests, ancestor package and tsconfig candidates, absent
+Storybook previews, and file membership in consumed-module directories.
+The pool restores compatible code before evaluation-only bundles across slots
+and recycling. Metadata invalidation still recomputes class maps before reusing
+an equivalent generation.
 Stylesheet reuse checks source digests, plugin dependency digests, and
 directory-glob membership. Empty directory recipes observe later additions.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.

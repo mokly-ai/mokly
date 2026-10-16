@@ -88,14 +88,24 @@ cache, or the bundler's implementation path.
 ## Compiled Recipes And Release
 
 The private `bundle` result carries `compiled`: code, runtime import key,
-module graph, captured entry text, resolved peers, physical input digests,
+captured entry text, resolved peers, physical input digests,
 logical metadata digests, and the compilation identity. `restoreGeneration`
-installs that recipe with its original parameters and evaluated generation id.
+installs that recipe with its original parameters, module graph, and evaluated generation id. The bundle result carries the graph once.
 It reads no current source file and invokes no compiler. Peer packages retain
-the selected physical installation. Equal compilations share retained code
+the selected physical installation. Failed peer resolutions remain explicit and
+raise `MODULE_NOT_FOUND`; native fallback cannot bypass that failure. Equal compilations share retained code
 while their maps, bindings, and authoring registrations remain independent.
 
-The reuse stamp includes the resolved `react/package.json` and Storybook
+Before an evaluation-only bundle, the pool restores a compatible live compilation
+on the selected slot, including after recycling. Independent slots therefore
+reuse the same compilation without another esbuild call.
+
+The reuse stamp includes ancestor `package.json` and `tsconfig.json` candidates
+from each consumed module up to its source or selected dependency root, including
+absent files. Added or removed files in a consumed-module directory invalidate
+reuse, so a higher-priority module cannot remain hidden. Manual `r` uses these
+same input checks. Resolution metadata and directory membership remain observable.
+The reuse stamp also includes the resolved `react/package.json` and Storybook
 preview candidates, including absent candidates. Every digest-only source
 read uses `SourceTree::digest`; a source snapshot retains its digest without
 retaining file contents. CSS bytes belong to stylesheet processing rather

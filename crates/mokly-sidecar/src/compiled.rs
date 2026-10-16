@@ -25,13 +25,15 @@ pub struct CompiledGeneration {
     /// Captured entry text used by definition diagnostics.
     pub sources: BTreeMap<String, String>,
     /// Resolved external peers, under the original resolution policy.
-    pub peers: BTreeMap<String, String>,
-    /// Complete logical module graph.
-    pub modules: Vec<Module>,
+    pub peers: BTreeMap<String, Option<String>>,
     /// Physical digest-only compilation and peer inputs, including absent preview candidates.
     pub inputs: BTreeMap<String, Option<String>>,
     /// Logical extra inputs for the Rust reuse check.
     pub metadata_inputs: BTreeMap<String, Option<String>>,
+    /// Physical consumed-module directories and their file membership.
+    pub input_directories: BTreeMap<String, Vec<String>>,
+    /// Logical directory membership for the core reuse stamp.
+    pub metadata_directories: BTreeMap<String, Vec<String>>,
 }
 
 /// Install captured code in a fresh worker without invoking esbuild.
@@ -42,6 +44,8 @@ pub struct RestoreGeneration {
     pub generation: String,
     /// Original side and resolution settings.
     pub params: Bundle,
+    /// Module graph, stored once outside the compiled program.
+    pub modules: Vec<Module>,
     /// Immutable compilation.
     pub compiled: CompiledGeneration,
 }

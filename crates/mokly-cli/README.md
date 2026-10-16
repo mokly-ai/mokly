@@ -29,7 +29,8 @@ restarts the usage pass. Configuration changes attach a candidate observer
 before a second validation pass when roots change. Exact additions extend
 the active observer. Resource callbacks queue their inputs outside render
 tasks. A failed attempt accepts repair events from watched directories.
-Pool-level setting changes require a restart. Failure keeps the active observer and model. A
+`repoRoot` changes require a restart. Sidecar count and timeout are process
+options fixed at startup. Failure keeps the active observer and model. A
 valid candidate replaces the public state and backend with the next revision;
 a failed candidate keeps the last good state. Preparation and projection run
 outside the serving task. A revision race stamps the same candidate again
@@ -37,7 +38,8 @@ without repeating projection. Port 0 requests a free port. An occupied concrete 
 the next available port through 65535. Repeated SIGINT requests coalesce.
 Shutdown closes clients, stops observation, cancels busy pool requests,
 drains render work, closes Git hooks, and shuts down idle sidecars. The
-listener and file locks release last. Startup failures use eager pool cleanup.
+listener and file locks release last. Startup uses the same lifecycle with a watcher slot and an atomic readiness
+handoff. A stop before that handoff suppresses the ready layout.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
 
 One injected terminal writer handles startup, shortcuts, rebuilds, and render

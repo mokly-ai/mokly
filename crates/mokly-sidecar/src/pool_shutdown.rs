@@ -22,9 +22,17 @@ impl Pool {
             controls
         };
         let mut failure = None;
-        for control in controls {
+        let deadline = (!controls.is_empty()).then(|| self.clock.now_ms().saturating_add(2_000));
+        for control in &controls {
             if let Err(error) = control.kill() {
                 failure.get_or_insert(error);
+            }
+        }
+        if let Some(deadline) = deadline {
+            for control in controls {
+                if let Err(error) = control.finish(deadline) {
+                    failure.get_or_insert(error);
+                }
             }
         }
         failure.map_or(Ok(()), Err)

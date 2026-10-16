@@ -1,4 +1,4 @@
-//! Recorded Windows and macOS event forms preserve directory lookup and loss recovery.
+//! Event forms emitted by notify backends preserve lookup, filtering, and loss recovery.
 
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -14,13 +14,16 @@ use crate::observer::Inbox;
 use super::{Receiver, kind};
 
 #[test]
-fn windows_and_macos_unknown_kinds_use_the_rename_lookup() {
+fn unspecified_creation_and_rename_kinds_use_the_node_lookup() {
     for recorded in [
         EventKind::Create(CreateKind::Any),
         EventKind::Remove(RemoveKind::Any),
         EventKind::Create(CreateKind::Other),
         EventKind::Remove(RemoveKind::Other),
         EventKind::Modify(ModifyKind::Name(RenameMode::Any)),
+        EventKind::Modify(ModifyKind::Name(RenameMode::From)),
+        EventKind::Modify(ModifyKind::Name(RenameMode::To)),
+        EventKind::Modify(ModifyKind::Name(RenameMode::Both)),
         EventKind::Other,
     ] {
         assert_eq!(kind(recorded), Some(Kind::Rename));
@@ -29,7 +32,10 @@ fn windows_and_macos_unknown_kinds_use_the_rename_lookup() {
         kind(EventKind::Create(CreateKind::Folder)),
         Some(Kind::Directory)
     );
-    assert_eq!(kind(EventKind::Remove(RemoveKind::File)), Some(Kind::File));
+    assert_eq!(
+        kind(EventKind::Remove(RemoveKind::File)),
+        Some(Kind::Membership)
+    );
 }
 
 #[test]

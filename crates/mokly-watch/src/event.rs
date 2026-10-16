@@ -30,10 +30,14 @@ impl Action {
 pub enum Kind {
     /// Regular-file create, write, or remove.
     File,
+    /// A file create, remove, or rename changes directory membership.
+    Membership,
     /// Directory create, move, or remove.
     Directory,
     /// Raw rename fallback needs a node lookup.
     Rename,
+    /// Unspecified write needs a lookup to discard directory metadata noise.
+    Modify,
 }
 
 /// Latest observed descriptor for one lexical path.
