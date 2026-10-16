@@ -53,6 +53,7 @@ pub mod snapshot;
 pub mod snapshot_records;
 
 pub mod review_order;
+mod review_sides;
 pub mod review_validation;
 
 mod snapshot_validation;

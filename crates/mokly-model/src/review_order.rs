@@ -32,9 +32,13 @@ fn entry_order(entry: &mut ReviewEntry) {
     entry
         .views
         .sort_by_key(|view| (view.viewport, view.color_scheme));
-    entry
-        .reasons
-        .sort_by(|left, right| reason_key(left).cmp(&reason_key(right)));
+    entry.reasons.sort_by(|left, right| {
+        let (left_kind, left_target) = reason_key(left);
+        let (right_kind, right_target) = reason_key(right);
+        left_kind
+            .cmp(right_kind)
+            .then_with(|| compare_utf16(left_target, right_target))
+    });
     entry.reasons.dedup();
     for view in &mut entry.views {
         view.ignored_ids

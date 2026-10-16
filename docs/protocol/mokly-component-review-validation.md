@@ -41,8 +41,8 @@ flattened variants included; a moved entry uses its current path.
 
 Source validation receives the accepted move pairs of classification. It
 requires exact `previousPath` coverage, both original side addresses, and one
-record for every moved screen, component, variant, or use case. Readers reject
-a case-only `previousPath`, duplicate historical identities, and a paired
+record for every moved screen, component, variant, or use case. Readers require
+`previousPath` when paired paths differ beyond case. They reject a case-only `previousPath`, duplicate historical identities, and a paired
 historical identity that is also listed as removed. Catalogue readers
 additionally require ready, included, unmodified-or-changed current records
 for prior paths. Empty reasons are valid only for a paired move. Page and

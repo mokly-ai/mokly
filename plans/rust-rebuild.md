@@ -1096,6 +1096,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       recipes and epoch releases, preserve slot back-off and context affinity,
       and verify base-side parent-death cleanup with PostCSS child processes.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
+- [x] Align the Rust review reader with viewer review 5, finding 10: current
+      variants first, previous paths on moved pairs, and UTF-16 reason targets.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/c-regression-after.log`.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
