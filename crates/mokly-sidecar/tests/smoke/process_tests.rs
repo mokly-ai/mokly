@@ -1,5 +1,8 @@
 //! Version, process failure, and unavailable entry smoke checks.
 
+use std::fs;
+use std::path::PathBuf;
+
 use mokly_sidecar::error::{Error, FailureKind, ProtocolError};
 use mokly_sidecar::methods::{Call, ModuleResolution, ProcessCss};
 use mokly_sidecar::pool::SidecarPool;
@@ -13,7 +16,9 @@ fn wrong_package_version_fails_before_command_traffic() {
         pool.request(Call::ProcessCss(ProcessCss {
             repository_roots: Vec::new(),
             context: "css".into(),
-            source_root: "/repo".into(),
+            source_root: PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .to_string_lossy()
+                .into_owned(),
             module_resolution: ModuleResolution::default(),
             postcss: "unused".into(),
             source_path: "unused".into(),
@@ -29,7 +34,9 @@ fn process_crash_retries_once_and_bad_hello_fails_closed() {
         Call::ProcessCss(ProcessCss {
             repository_roots: Vec::new(),
             context: "css".into(),
-            source_root: "/repo".into(),
+            source_root: PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .to_string_lossy()
+                .into_owned(),
             module_resolution: ModuleResolution::default(),
             postcss: "unused".into(),
             source_path: "unused".into(),
@@ -60,4 +67,27 @@ fn process_crash_retries_once_and_bad_hello_fails_closed() {
         unavailable.request(call()),
         Err(Error::Unavailable { .. })
     ));
+}
+
+#[test]
+fn unavailable_source_directories_name_the_source_root() {
+    let directory = tempfile::tempdir().unwrap();
+    let file = directory.path().join("file");
+    fs::write(&file, "not a directory").unwrap();
+    for root in [directory.path().join("missing"), file] {
+        let pool = pool(&super::super::package_version::read());
+        let error = pool
+            .request(Call::ProcessCss(ProcessCss {
+                repository_roots: Vec::new(),
+                context: "missing-source".into(),
+                source_root: root.to_string_lossy().into_owned(),
+                module_resolution: ModuleResolution::default(),
+                postcss: "unused".into(),
+                source_path: "unused".into(),
+                text: String::new(),
+            }))
+            .unwrap_err();
+        assert!(matches!(error, Error::Unavailable { part } if part == root.to_string_lossy()));
+        pool.shutdown().unwrap();
+    }
 }

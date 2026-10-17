@@ -7,12 +7,17 @@ import {
 } from "./browse_navigation_security_fixture.js";
 import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
+import {
+  nestedScriptNotice,
+  navigationDenials,
+} from "./navigation_error_allowances.js";
 
 test.beforeAll(startSuite);
 
 test.afterAll(stopSuite);
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, allowBrowserError }) => {
+  allowBrowserError(nestedScriptNotice);
   await page.route("https://cross-origin.example.test/nested.html", (route) =>
     route.fulfill({
       body: '<a data-mokly-link="details#section" href="/details" id="cross-marked" target="_top">Marked</a><a href="#ordinary" id="cross-unmarked" target="_top">Ordinary</a><a href="#popup" id="cross-popup" target="_blank">Popup</a><script>parent.__crossScriptRan=true</script>',
@@ -144,7 +149,9 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
 
 test("sandboxed direct and nested content cannot escape or invoke parent enhancement", async ({
   page,
+  allowBrowserError,
 }) => {
+  navigationDenials(allowBrowserError, suiteState.navigation.url);
   await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(

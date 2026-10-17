@@ -174,10 +174,10 @@ first cache opened by the process in both output modes.
 
 ## One-Shot Commands
 
-Rich `build` and `publish` report only the phases the command performs. Phase
-labels are outcome-oriented: `Loading configuration`, `Rendering catalogue`,
+Rich `build` and `publish` report only the phases they perform, with
+outcome-oriented labels: `Loading configuration`, `Rendering catalogue`,
 `Comparing with <base>`, `Writing static output`, `Preparing upload`, and
-`Uploading catalogue`.
+`Uploading catalogue`. Ready and unavailable Changes end with the measured duration.
 
 While `Uploading catalogue` runs an exchange round with a nonempty `missing`
 set, its spinner label becomes

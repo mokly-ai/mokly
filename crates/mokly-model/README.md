@@ -82,6 +82,8 @@ Serve and the static writer.
 `review` and `review_affected` define direct reasons, view states, and complete
 usage chains. `review_order` supplies canonical order for producers and readers.
 `readers::review` gates v8 before validating sides, membership, order, and evidence.
+The reader requires current variants before base-only variants, exact
+`previousPath` on moved pairs, and UTF-16 order for reason targets.
 The classifier also validates source coverage and actual ownership proof.
 `readers::change_snapshot` gates v4 before reading historical records and
 rejects unknown flattened fields, invalid IDs, and snapshot-local order errors.

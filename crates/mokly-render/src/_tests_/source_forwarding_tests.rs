@@ -3,10 +3,14 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use mokly_compare::cache_types::Lease;
+use mokly_compare::dependency_types::{Resolved, Tier};
+
 use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::dependency_usage::DependencyUsageMock;
+use crate::side::BaseSide;
 use crate::sources::SideTree;
 
 #[test]
@@ -47,4 +51,65 @@ fn mapped_public_hashes_bytes_shared_reads_and_prefetch_reach_the_dependency_tre
     tree.prefetch(&[path.into(), "/repo/source.js".into()])
         .unwrap();
     assert!(tree.children(path).unwrap().is_empty());
+}
+
+#[test]
+fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
+    let physical = Path::new("/deps/packages/ui/node_modules/theme.css");
+    let dependency = Unimock::new((
+        SourceTreeMock::project
+            .each_call(matching!(_))
+            .answers(&|_, path| {
+                assert_eq!(path, Path::new("/deps/packages/ui/node_modules/theme.css"));
+                Ok(None)
+            })
+            .n_times(2),
+        SourceTreeMock::digest
+            .next_call(matching!(_))
+            .answers(&|_, path| {
+                assert_eq!(path, Path::new("/deps/packages/ui/node_modules/theme.css"));
+                Ok("base hash".into())
+            }),
+        SourceTreeMock::prefetch
+            .next_call(matching!(_))
+            .answers(&|_, paths| {
+                assert_eq!(
+                    paths,
+                    [Path::new("/deps/packages/ui/node_modules/theme.css")]
+                );
+                Ok(())
+            }),
+    ));
+    let tree: &dyn SourceTree = &SideTree {
+        _base: Some(Arc::new(BaseSide {
+            sources: Lease {
+                directory: "/base".into(),
+                guard: Box::new(Unimock::new(())),
+            },
+            dependencies: Resolved {
+                tier: Tier::Installed,
+                node_modules: "/deps/node_modules".into(),
+                module_resolution: Default::default(),
+                warning: None,
+                lease: None,
+                repository_roots: vec![],
+            },
+            identity: "base".into(),
+        })),
+        sources: Arc::new(Unimock::new(SourceTreeMock::project.each_call(matching!((path) if *path == Path::new("/head/packages/ui/node_modules/theme.css"))).answers(&|_, _| Ok(None)).n_times(2))),
+        dependencies: Arc::new(dependency),
+        usage: Arc::new(Unimock::new(
+            DependencyUsageMock::record
+                .next_call(matching!(_, "packages/ui/node_modules/theme.css"))
+                .returns(()),
+        )),
+        aliases: Default::default(),
+        root: "/head".into(),
+        dependency_roots: vec![],
+        repository_roots: vec![],
+    };
+    let logical = Path::new("/head/packages/ui/node_modules/theme.css");
+    assert_ne!(logical, physical);
+    assert_eq!(tree.digest(logical).unwrap(), "base hash");
+    tree.prefetch(&[logical.into()]).unwrap();
 }

@@ -29,108 +29,135 @@ fn ancestors_are_nearest_first_and_end_at_the_repository() {
 
 #[test]
 fn installed_tier_requires_only_directories_that_the_head_used() {
-    for (used, present, expected) in [
-        (false, false, Tier::Installed),
-        (true, true, Tier::Installed),
-        (true, false, Tier::Fallback),
-    ] {
-        let base = Inputs {
-            objects: BTreeMap::new(),
-            files: BTreeMap::from([
-                (RepoPath::parse("package.json").unwrap(), b"{}".to_vec()),
-                (
-                    RepoPath::parse("package-lock.json").unwrap(),
-                    b"{}".to_vec(),
-                ),
-            ]),
-        };
-        let request = Request {
-            base,
-            head: Inputs {
+    for directory in ["app/node_modules", "packages/ui/node_modules"] {
+        for (used, present, expected) in [
+            (false, false, Tier::Installed),
+            (true, true, Tier::Installed),
+            (true, false, Tier::Fallback),
+        ] {
+            let base = Inputs {
                 objects: BTreeMap::new(),
-                files: BTreeMap::new(),
-            },
-            source_root: "/base".into(),
-            source_identity: "commit".into(),
-            head_root: "/head".into(),
-            configuration: RepoPath::parse("app/nested/mokly.config.json").unwrap(),
-            unmapped_directories: vec![],
-            used_directories: if used {
-                vec!["app/node_modules".into()]
+                files: BTreeMap::from([
+                    (RepoPath::parse("package.json").unwrap(), b"{}".to_vec()),
+                    (
+                        RepoPath::parse("package-lock.json").unwrap(),
+                        b"{}".to_vec(),
+                    ),
+                ]),
+            };
+            let request = Request {
+                base,
+                head: Inputs {
+                    objects: BTreeMap::new(),
+                    files: BTreeMap::new(),
+                },
+                source_root: "/base".into(),
+                source_identity: "commit".into(),
+                head_root: "/head".into(),
+                configuration: RepoPath::parse("app/nested/mokly.config.json").unwrap(),
+                unmapped_directories: vec![],
+                used_directories: if used { vec![directory.into()] } else { vec![] },
+                resolution: ModuleResolution::default(),
+            };
+            let storage =
+                if used {
+                    Unimock::new(StorageMock::directory.next_call(matching!(_)).answers_arc(
+                        Arc::new(move |_, path| {
+                            assert_eq!(path, Path::new("/installed").join(directory));
+                            Ok(present)
+                        }),
+                    ))
+                } else {
+                    Unimock::new(())
+                };
+            let tiers: &dyn Dependencies = &DependencyTiers {
+                cache: Arc::new(Unimock::new(
+                    CacheMock::get
+                        .next_call(matching!(_, _, _))
+                        .returns(Ok(Lease {
+                            directory: "/installed".into(),
+                            guard: Box::new(Unimock::new(())),
+                        })),
+                )),
+                commands: Arc::new(Unimock::new(
+                    CommandsMock::run
+                        .next_call(matching!(_))
+                        .returns(Ok(b"11".to_vec())),
+                )),
+                storage: Arc::new(storage),
+                clock: Arc::new(Unimock::new(
+                    ClockMock::now
+                        .each_call(matching!())
+                        .returns(Duration::ZERO),
+                )),
+                timeout: Duration::from_secs(120),
+                install_bytes: 10000,
+            };
+            let resolved = tiers.resolve(&request).unwrap();
+            assert_eq!(resolved.tier, expected);
+            let root = if expected == Tier::Installed {
+                "/installed"
             } else {
-                vec![]
-            },
-            resolution: ModuleResolution::default(),
-        };
-        let storage = if used {
-            Unimock::new(
-                StorageMock::directory
-                    .next_call(
-                        matching!((path) if *path == Path::new("/installed/app/node_modules")),
-                    )
-                    .returns(Ok(present)),
-            )
-        } else {
-            Unimock::new(())
-        };
-        let tiers: &dyn Dependencies = &DependencyTiers {
-            cache: Arc::new(Unimock::new(
-                CacheMock::get
-                    .next_call(matching!(_, _, _))
-                    .returns(Ok(Lease {
-                        directory: "/installed".into(),
-                        guard: Box::new(Unimock::new(())),
-                    })),
-            )),
-            commands: Arc::new(Unimock::new(
-                CommandsMock::run
-                    .next_call(matching!(_))
-                    .returns(Ok(b"11".to_vec())),
-            )),
-            storage: Arc::new(storage),
-            clock: Arc::new(Unimock::new(
-                ClockMock::now
-                    .each_call(matching!())
-                    .returns(Duration::ZERO),
-            )),
-            timeout: Duration::from_secs(120),
-            install_bytes: 10000,
-        };
-        let resolved = tiers.resolve(&request).unwrap();
-        assert_eq!(resolved.tier, expected);
-        let root = if expected == Tier::Installed {
-            "/installed"
-        } else {
-            "/head"
-        };
-        assert_eq!(
-            resolved
-                .module_resolution
-                .package_roots
-                .iter()
-                .map(PathBuf::from)
-                .collect::<Vec<_>>(),
-            [
-                Path::new(root).join("app/nested"),
-                Path::new(root).join("app"),
-                PathBuf::from(root)
-            ]
-        );
-        if expected == Tier::Fallback {
-            let warning = resolved.warning.unwrap();
+                "/head"
+            };
             assert_eq!(
-                warning.reason,
-                Fallback::MissingDirectory("app/node_modules".into())
+                resolved
+                    .module_resolution
+                    .package_roots
+                    .iter()
+                    .map(PathBuf::from)
+                    .collect::<Vec<_>>(),
+                [
+                    Path::new(root).join("app/nested"),
+                    Path::new(root).join("app"),
+                    PathBuf::from(root)
+                ]
             );
-            assert!(warning.message().contains("\"app/node_modules\""));
-        } else {
-            assert!(resolved.warning.is_none());
+            if expected == Tier::Fallback {
+                let warning = resolved.warning.unwrap();
+                assert_eq!(warning.reason, Fallback::MissingDirectory(directory.into()));
+                assert!(warning.message().contains(directory));
+            } else {
+                assert!(resolved.warning.is_none());
+            }
+            assert_eq!(
+                resolved.module_resolution.dependency_root.as_deref(),
+                Some(root)
+            );
         }
     }
 }
 
 #[test]
-fn unmapped_importer_directories_fall_back_even_with_equal_inputs() {
+fn outside_repository_importer_directories_still_fall_back() {
+    let request = Request {
+        base: Inputs::default(),
+        head: Inputs::default(),
+        source_root: "/base".into(),
+        source_identity: "commit".into(),
+        head_root: "/head".into(),
+        configuration: RepoPath::parse("mokly.config.json").unwrap(),
+        resolution: ModuleResolution::default(),
+        used_directories: vec![],
+        unmapped_directories: vec!["../outside/node_modules".into()],
+    };
+    let tiers: &dyn Dependencies = &DependencyTiers {
+        cache: Arc::new(Unimock::new(())),
+        commands: Arc::new(Unimock::new(())),
+        storage: Arc::new(Unimock::new(())),
+        clock: Arc::new(Unimock::new(())),
+        timeout: Duration::from_secs(120),
+        install_bytes: 10000,
+    };
+    let selected = tiers.resolve(&request).unwrap();
+    assert_eq!(selected.tier, Tier::Fallback);
+    let warning = selected.warning.unwrap();
+    assert_eq!(warning.code(), "base-dependencies");
+    assert!(warning.message().contains("../outside/node_modules"));
+}
+
+#[test]
+fn a_repository_importer_directory_uses_the_working_tier_without_a_warning() {
     let request = Request {
         base: Inputs::default(),
         head: Inputs::default(),
@@ -151,8 +178,10 @@ fn unmapped_importer_directories_fall_back_even_with_equal_inputs() {
         install_bytes: 10000,
     };
     let selected = tiers.resolve(&request).unwrap();
-    assert_eq!(selected.tier, Tier::Fallback);
-    let warning = selected.warning.unwrap();
-    assert_eq!(warning.code(), "base-dependencies");
-    assert!(warning.message().contains("packages/ui/node_modules"));
+    assert_eq!(selected.tier, Tier::Working);
+    assert!(selected.warning.is_none());
+    assert_eq!(
+        selected.module_resolution.dependency_root.as_deref(),
+        Some("/head")
+    );
 }

@@ -9,6 +9,7 @@ import type {
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import { unavailableResourceNotice } from "./document_error_allowance.js";
 import type {} from "./viewer_harness.js";
 import { chooseVariant } from "./workspace_actions.js";
 
@@ -197,7 +198,13 @@ test("flow events preserve the screen key and identify the owning step", async (
 
 test("comparison is lazy, confined, and reports safe failures", async ({
   page,
+  allowBrowserError,
 }) => {
+  allowBrowserError(
+    unavailableResourceNotice(
+      `${fixture.host.url}/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
+    ),
+  );
   const comparisons: string[] = [];
   await page.route("**/mokly-viewer/diffs/**", async (route) => {
     comparisons.push(route.request().url());

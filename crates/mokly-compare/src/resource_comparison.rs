@@ -9,6 +9,7 @@ use mokly_model::review_affected::ReviewSide;
 
 use crate::comparison_resources::css_urls;
 use crate::error::{InternalError, Result};
+use crate::owned_styles;
 use crate::resource_memo::{Memo, ResourceMemo};
 use crate::resource_memo_state::PairKey;
 
@@ -111,7 +112,23 @@ impl Memo {
     }
 
     pub(crate) fn diff_sources(&self, left: &[u8], right: &[u8]) -> Result<Arc<RuleDiff>> {
-        let key = (digest(left), digest(right));
+        self.diff_policy(left, right, false)
+    }
+
+    pub(crate) fn diff_policy(
+        &self,
+        left: &[u8],
+        right: &[u8],
+        owned: bool,
+    ) -> Result<Arc<RuleDiff>> {
+        let key = (
+            if owned {
+                format!("owned:{}", digest(left))
+            } else {
+                digest(left)
+            },
+            digest(right),
+        );
         if let Some(diff) = self
             .state
             .lock()
@@ -121,7 +138,16 @@ impl Memo {
         {
             return Ok(diff);
         }
-        let diff = Arc::new(rules::diff(&self.css.parse(left), &self.css.parse(right)));
+        let before = self.css.parse(left);
+        let after = self.css.parse(right);
+        let diff = Arc::new(if owned {
+            rules::diff(
+                &owned_styles::unique(&before),
+                &owned_styles::unique(&after),
+            )
+        } else {
+            rules::diff(&before, &after)
+        });
         let bytes = match serde_json::to_vec(diff.as_ref()) {
             Ok(bytes) => bytes,
             Err(source) => return Err(InternalError::Json { source }.into()),

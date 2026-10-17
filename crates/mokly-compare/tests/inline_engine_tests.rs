@@ -75,7 +75,7 @@ fn a_screen_style_changes_its_use_case_without_changing_the_component() {
 }
 
 #[test]
-fn owned_head_styles_are_not_collected_as_ownerless_rules() {
+fn authored_owner_attributes_do_not_suppress_inline_rule_evidence() {
     let fixture = Fixture::new(&[
         ("specs/card.component.html", CARD),
         (
@@ -88,12 +88,18 @@ fn owned_head_styles_are_not_collected_as_ownerless_rules() {
         &page(".card-title", "blue", "data-mokly-owners=\"card\""),
     );
     let result = fixture.compare().unwrap();
+    assert_eq!(result.snapshot.changed_entries, ["page"]);
     assert!(
         result
             .entries
             .iter()
+            .filter(|entry| entry.path == "page")
             .flat_map(|entry| &entry.documents)
-            .all(|view| view.evidence.rules.is_empty())
+            .all(|view| view
+                .evidence
+                .rules
+                .iter()
+                .any(|rule| rule.owner == EvidenceOwner::Entry))
     );
     assert!(result.review.affected.is_empty());
 }

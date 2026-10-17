@@ -119,7 +119,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
     await writeBrowserFile(
       root,
       "index.html",
-      '<!doctype html><body><iframe id="frame" style="width:390px;height:300px;border:0"></iframe></body>',
+      '<!doctype html><link rel="icon" href="data:,"><body><iframe id="frame" style="width:390px;height:300px;border:0"></iframe></body>',
     );
     await writeBrowserFile(
       root,

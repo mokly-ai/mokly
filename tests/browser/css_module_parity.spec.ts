@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
 
 const parityCss = `
 .x {
@@ -24,6 +25,9 @@ const parityCss = `
 `;
 
 let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
+test.beforeEach(({ allowBrowserError }) => {
+  documentFavicon(allowBrowserError, fixture.url);
+});
 test.beforeAll(async () => {
   fixture = await serveCatalogue(
     {

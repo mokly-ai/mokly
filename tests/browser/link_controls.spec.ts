@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { documentFavicon } from "./document_error_allowance.js";
 import { startLinkControlFixture } from "./link_controls_fixture.js";
 
 let controls: Awaited<ReturnType<typeof startLinkControlFixture>>;
@@ -109,7 +110,9 @@ test("adapted controls navigate from use-case frames", async ({ page }) => {
 
 test("rendered controls remain native links in direct documents", async ({
   page,
+  allowBrowserError,
 }) => {
+  documentFavicon(allowBrowserError, controls.url);
   await page.goto(
     `${controls.url}/static/mokly-generated/home/index.mobile.html`,
   );

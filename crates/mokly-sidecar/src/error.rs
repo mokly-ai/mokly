@@ -46,10 +46,10 @@ pub enum Error {
     /// The command cancelled its pending and queued sidecar work.
     #[error("[mokly-sidecar/cancelled] sidecar pool is shut down")]
     Cancelled,
-    /// Node or the sidecar entry could not start.
+    /// Node, the sidecar entry, or its source directory is unavailable.
     #[error("[mokly-sidecar/sidecar-unavailable] {part} is unavailable")]
     Unavailable {
-        /// Missing program or sidecar entry.
+        /// Unavailable program, sidecar entry, or source directory.
         part: String,
     },
     /// Hello reported another package version.

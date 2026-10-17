@@ -5,7 +5,11 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 `@mokly/mokly` supplies the `mokly` Node shim, the Node render sidecar, and the
 JavaScript authoring API. The Rust binary owns catalogue decisions, document
 assembly, serving, and file writes. The sidecar bundles and renders consumer
-code in memory.
+code in memory. Base package imports resolve from their importer's matching
+directory in the selected dependency installation. Base source aliases and
+tsconfig paths stay with the base files.
+Tracked base files beneath `node_modules` supply their base bytes and keep
+their dependency role in attribution.
 
 ## Install And Run
 
@@ -119,6 +123,8 @@ A child watchdog stops even a blocked plugin after its sidecar dies.
 Operation events count each fork and its terminal event once.
 The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
+Sidecars and PostCSS children set `PWD` to their source directory and omit
+`INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
 
 ## Development
 

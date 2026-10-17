@@ -67,6 +67,7 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
                         repair.elements.insert(
                             id.clone(),
                             Metadata {
+                                style_owners: element.style_owners.take(),
                                 origin: element.origin.take(),
                                 navigation: element.navigation.take(),
                                 source: element.source.take(),

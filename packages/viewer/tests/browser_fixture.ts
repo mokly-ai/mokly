@@ -21,7 +21,7 @@ export async function viewerFixture(
     });
     await fs.writeFile(
       path.join(fixture.root, "index.html"),
-      `<!doctype html><link rel="stylesheet" href="/viewer.css"><body><script>window.fixture=${JSON.stringify({ index: fixture.index, details: fixture.details, baseUrl: fixture.frames.url }).replaceAll("<", "\\u003c")}</script><script type="module" src="/viewer.js"></script></body>`,
+      `<!doctype html><link rel="icon" href="data:,"><link rel="stylesheet" href="/viewer.css"><body><script>window.fixture=${JSON.stringify({ index: fixture.index, details: fixture.details, baseUrl: fixture.frames.url }).replaceAll("<", "\\u003c")}</script><script type="module" src="/viewer.js"></script></body>`,
     );
     await fs.copyFile(
       "packages/viewer/dist/styles.css",

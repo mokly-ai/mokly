@@ -57,6 +57,7 @@ same cancellation token as Git. Cancellation checkpoints also surround
 comparison and public resource planning. All source wrappers forward exact
 prefetch sets, public reads, and streamed digests.
 
+Sidecar working directories follow the [fixed source-root rule](./mokly-sidecar.md#lifecycle).
 Each PostCSS context runs in a child process whose working directory is its
 side's source root. This confines relative file reads and automatic Tailwind
 source discovery to that side. The head and base can use the same installed
@@ -168,8 +169,8 @@ pnpm, Yarn and Bun without a package manifest inventory. Nested
 `node_modules` directories retain the selected third-party dependencies.
 
 Equal dependency identities reuse working third-party dependencies without
-install validation, including for outside `file:` packages. Lookup warnings
-still apply to unmapped directories.
+install validation, including for outside `file:` packages. Importer lookup
+uses the matching directory in the selected dependency repository.
 Different inputs install each npm lockfile root selected by configuration
 ancestors and `moduleResolution.packageRoots`. A nested app with no root
 lockfile is valid.
@@ -198,11 +199,11 @@ select tier three with a `base-dependencies` warning naming that directory.
 JavaScript, stylesheet, and PostCSS package reads establish this usage.
 An unused ancestor directory does not cause a warning.
 
-An importer whose dependency lookup is not mapped selects tier three even
-when dependency inputs are equal. The warning names the used `node_modules`
-directory. Such layouts need explicit `moduleResolution.packageRoots`.
-Conflicting copies can still require the fallback. Unused directories do not
-cause it. Each fallback emits a trace event with its typed reason.
+Tracked base files supply their bytes before installed copies. Other bare
+imports start at the matching importer directory in the selected installation,
+before configuration and explicit package-root fallback. Source aliases and
+tsconfig paths use base files. Working tsconfig paths cannot remap base package imports.
+An unmappable lookup selects tier three with a `base-dependencies` warning. Each fallback emits its typed trace reason.
 
 Copy the base sources into the private dependency entry. Run each install
 without a shell using `ci --ignore-scripts --no-audit --no-fund`, with explicit
@@ -225,8 +226,8 @@ the complete sidecar `ModuleResolution`, and typed repository root paths.
 Package roots name configuration ancestors, then explicit package roots,
 all inside the selected tier, in Node's order. Repository roots include the working repository root
 in every tier and the copied base repository root inside a tier-two install.
-The sidecar maps these roots to the side's source root. Other settings keep
-their values. Retain the install and extraction leases while bundling.
+Core `moduleResolution.dependencyRoot` names the selected installation repository.
+The sidecar maps repository sources back to its source root. Other settings keep their values. Retain the install and extraction leases while bundling.
 Cancellation stops preparation and never becomes a fallback warning.
 
 A fallback returns a configuration-subject `base-dependencies` warning. Use

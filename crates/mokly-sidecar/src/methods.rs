@@ -28,6 +28,10 @@ pub struct Generation {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ModuleResolution {
+    /// Selected installation repository for per-importer Node lookup.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub dependency_root: Option<String>,
     /// Module aliases.
     #[serde(default)]
     pub aliases: BTreeMap<String, String>,

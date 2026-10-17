@@ -18,7 +18,7 @@ test.beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-presentation-"));
   await fs.writeFile(
     path.join(root, "index.html"),
-    "<!doctype html><title>Presentation</title>",
+    '<!doctype html><link rel="icon" href="data:,"><title>Presentation</title>',
   );
   await build({
     bundle: true,

@@ -1,12 +1,19 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
+import { blankFrameNotice } from "./navigation_error_allowances.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`catalogue guidance includes documents at ${width}px`, async ({
     page,
+    baseURL,
+    allowBrowserError,
   }) => {
+    allowBrowserError(
+      missingResourceNotice(new URL("/view/missing-document/", baseURL).href),
+    );
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     await expect(page.locator("#mb-main")).toContainText(
@@ -106,7 +113,9 @@ for (const width of [390, 1280]) {
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: document designs navigate through their own details and drawer`, async ({
     page,
+    allowBrowserError,
   }) => {
+    if (viewport === "mobile") allowBrowserError(blankFrameNotice);
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto("/view/design/browse/pages/view/");
     await chooseViewport(page, viewport);

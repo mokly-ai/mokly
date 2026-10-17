@@ -24,3 +24,16 @@ pub fn logical(index: usize) -> String {
         format!("node_modules/.mokly-roots/{index}")
     }
 }
+
+/// Lexical repository dependency directory, including a nested importer directory.
+pub fn dependency_directory(path: &str) -> Option<String> {
+    let parts: Vec<_> = path.split('/').collect();
+    if parts
+        .iter()
+        .any(|part| part.is_empty() || matches!(*part, "." | "..") || part.contains('\\'))
+    {
+        return None;
+    }
+    let index = parts.iter().position(|part| *part == "node_modules")?;
+    Some(parts[..=index].join("/"))
+}

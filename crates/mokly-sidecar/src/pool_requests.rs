@@ -142,11 +142,12 @@ impl Pool {
         Ok(result)
     }
     pub(super) fn cleanup(&self, slot: &mut Slot) -> Result<()> {
-        pool_cleanup::cleanup(&self.state, slot, self.options.timeout_ms)
+        pool_cleanup::cleanup(&self.state, slot, self.options.timeout_ms)?;
+        Ok(())
     }
 }
 
-fn generation(call: &Call) -> Option<&str> {
+pub(super) fn generation(call: &Call) -> Option<&str> {
     match call {
         Call::Bindings(value) => Some(&value.generation),
         Call::Describe(value) => Some(&value.generation),

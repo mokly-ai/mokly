@@ -100,6 +100,9 @@ pub mod source_failures;
 
 mod git_prefetch;
 
+mod owned_style_instances;
+mod owned_styles;
+
 mod projection_affected;
 mod projection_context;
 pub mod projection_index;

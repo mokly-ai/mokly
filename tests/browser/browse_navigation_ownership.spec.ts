@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { expectDestination } from "./navigation_destination.js";
+import { nestedScriptNotice } from "./navigation_error_allowances.js";
 import {
   startNavigationFixture,
   type NavigationFixture,
@@ -17,7 +18,8 @@ test.afterAll(async () => {
   await navigation.close();
 });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, allowBrowserError }) => {
+  allowBrowserError(nestedScriptNotice);
   await page.route("https://cross-origin.example.test/nested.html", (route) =>
     route.fulfill({
       body: '<a data-mokly-link="details#section" href="/details" id="cross-marked" target="_top">Marked</a><a href="#ordinary" id="cross-unmarked" target="_top">Ordinary</a><a href="#popup" id="cross-popup" target="_blank">Popup</a><script>parent.__crossScriptRan=true</script>',

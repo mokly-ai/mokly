@@ -18,25 +18,27 @@ pub(super) fn lock(state: &Mutex<State>) -> Result<MutexGuard<'_, State>> {
 pub(super) fn pending(state: &State, slot: &Slot) -> bool {
     slot.generations
         .iter()
-        .any(|(id, epoch)| state.epochs.get(id) != Some(epoch))
+        .any(|(id, epoch)| stale_generation(state, id, *epoch))
         || !slot.contexts.is_subset(&state.contexts)
 }
 
-pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64>) -> Result<()> {
+fn stale_generation(state: &State, id: &str, epoch: u64) -> bool {
+    !state.bundles.contains_key(id) || state.epochs.get(id) != Some(&epoch)
+}
+
+pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64>) -> Result<bool> {
     if lock(state)?.stopped {
-        return Ok(());
+        return Ok(false);
     }
     let stale = {
         let state = lock(state)?;
         slot.generations
             .iter()
-            .filter(|(id, epoch)| {
-                !state.bundles.contains_key(*id)
-                    || state.epochs.get(*id).copied().unwrap_or(0) != **epoch
-            })
+            .filter(|(id, epoch)| stale_generation(&state, id, **epoch))
             .map(|(id, _)| id.clone())
             .collect::<Vec<_>>()
     };
+    let mut changed = !stale.is_empty();
     for generation in stale {
         slot.worker.request(
             &Request {
@@ -59,6 +61,7 @@ pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64
             .cloned()
             .collect::<Vec<_>>()
     };
+    changed |= !stale_contexts.is_empty();
     for context in stale_contexts {
         slot.worker.request(
             &Request {
@@ -71,5 +74,9 @@ pub(super) fn cleanup(state: &Mutex<State>, slot: &mut Slot, timeout: Option<u64
         )?;
         slot.contexts.remove(&context);
     }
-    Ok(())
+    Ok(changed)
 }
+
+#[cfg(test)]
+#[path = "_tests_/pool_cleanup_tests.rs"]
+mod pool_cleanup_tests;

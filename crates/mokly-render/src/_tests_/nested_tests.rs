@@ -50,6 +50,7 @@ fn nested_exclusions_fail_before_a_missing_plugin_dependency() {
     };
     let error = validate(&Input {
         tree: &mock,
+        sources: &mock,
         resolver: &mock,
         root: Path::new("/repo"),
         side: &side,
@@ -109,6 +110,7 @@ fn package_exclusions_use_selected_logical_names_before_repository_names() {
         }];
         let error = validate(&Input {
             tree: &mock,
+            sources: &mock,
             resolver: &mock,
             root: Path::new("/repo"),
             side: &side,
