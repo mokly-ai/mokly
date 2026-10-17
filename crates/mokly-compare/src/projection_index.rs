@@ -2,37 +2,26 @@
 
 use std::collections::BTreeMap;
 
-use mokly_compare::comparison_types::{ComparisonResult, EntryClassification};
 use mokly_graph::types::RenderGeneration;
 use mokly_model::axes::EntryKind;
 use mokly_model::projection::{self, Publication, ViewKey};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::{
-    CatalogueChanges, CatalogueEntry, ChangeKind, ChangesStatus, ComparisonSelection,
+    CatalogueChanges, CatalogueEntry, ChangesStatus, ComparisonSelection,
 };
 use mokly_model::public_records::{CatalogueRecord, CatalogueVisual};
 use mokly_model::review::ReviewState;
 
-use crate::error::{InternalError, Result};
+use crate::comparison_error::CompareResult;
+use crate::comparison_types::{ComparisonResult, EntryClassification};
+use crate::error::Result;
+use crate::projection_context::Context;
 
-pub(crate) fn kind(state: ReviewState) -> ChangeKind {
-    match state {
-        ReviewState::Added => ChangeKind::Added,
-        ReviewState::Removed => ChangeKind::Removed,
-        ReviewState::Changed => ChangeKind::Changed,
-        ReviewState::Unchanged | ReviewState::IgnoredOnly => ChangeKind::Unmodified,
-    }
-}
-
-pub(crate) fn eligible(entry: &EntryClassification) -> bool {
-    entry.documents.iter().any(|view| {
-        view.before_route.is_some()
-            && matches!(view.state, ReviewState::Changed | ReviewState::Removed)
-    }) && matches!(entry.kind, EntryKind::Component | EntryKind::Screen)
-        && !(entry.kind == EntryKind::Screen && entry.state == ReviewState::Removed)
-}
-
-pub(crate) fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
+/// Apply retained entry and view classifications to a current or historical index.
+pub fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
+    index.changes_status = ChangesStatus::Ready;
+    index.base = Some(result.snapshot.base_ref.clone());
+    let context = Context::new(result);
     let entries: BTreeMap<_, _> = result
         .entries
         .iter()
@@ -43,8 +32,8 @@ pub(crate) fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
             .get(&(EntryKind::Screen, entry.entry.path.as_str()))
             .copied()
         {
-            metadata(&mut entry.entry, change);
-            visual(&mut entry.visual, change);
+            metadata(&mut entry.entry, change, &context);
+            visual(&mut entry.visual, change, &context);
         }
     }
     for entry in &mut index.components {
@@ -52,11 +41,11 @@ pub(crate) fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
             .get(&(EntryKind::Component, entry.entry.path.as_str()))
             .copied()
         {
-            metadata(&mut entry.entry, change);
-            visual(&mut entry.visual, change);
+            metadata(&mut entry.entry, change, &context);
+            visual(&mut entry.visual, change, &context);
             entry.comparison = ComparisonSelection::Ready {
-                kind: kind(change.state),
-                eligible: eligible(change),
+                kind: context.comparison_kind(change),
+                eligible: context.eligible(change),
             };
         }
     }
@@ -78,38 +67,28 @@ pub(crate) fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
         )
     {
         if let Some(change) = entries.get(&(kind, metadata.path.as_str())) {
-            self::metadata(metadata, change);
+            self::metadata(metadata, change, &context);
         }
     }
 }
 
-fn metadata(entry: &mut CatalogueEntry, change: &EntryClassification) {
+fn metadata(entry: &mut CatalogueEntry, change: &EntryClassification, context: &Context<'_>) {
     entry.previous_path = change.previous_path.clone();
-    let entry_kind = if change.included
-        && !change.reasons.is_empty()
-        && matches!(
-            change.state,
-            ReviewState::Unchanged | ReviewState::IgnoredOnly
-        ) {
-        ChangeKind::Changed
-    } else {
-        kind(change.state)
-    };
     entry.changes = CatalogueChanges::Ready {
-        kind: entry_kind,
+        kind: context.kind(change),
         included: change.included,
     };
 }
 
-fn visual(visual: &mut CatalogueVisual, change: &EntryClassification) {
+fn visual(visual: &mut CatalogueVisual, change: &EntryClassification, context: &Context<'_>) {
     for view in &mut visual.views {
         if let Some(document) = change.documents.iter().find(|document| {
             document.key.viewport == Some(view.viewport)
                 && document.key.color_scheme == view.color_scheme
         }) {
             view.comparison = ComparisonSelection::Ready {
-                kind: kind(document.state),
-                eligible: eligible(change)
+                kind: Context::view_kind(document.state),
+                eligible: context.eligible(change)
                     && document.before_route.is_some()
                     && matches!(document.state, ReviewState::Changed | ReviewState::Removed),
             };
@@ -117,23 +96,20 @@ fn visual(visual: &mut CatalogueVisual, change: &EntryClassification) {
     }
 }
 
-pub(crate) fn base_index(
-    result: &ComparisonResult,
-    state: &Publication,
-) -> Result<CatalogueReadModel> {
-    let mut index = match projection::index(
+/// Project the pinned base catalogue, including its selected removed records.
+pub fn base_index(result: &ComparisonResult, state: &Publication) -> Result<CatalogueReadModel> {
+    let mut index = projection::index(
         &result.before.catalogue().model,
         &keys(result.before.as_ref()),
         state,
-    ) {
-        Ok(index) => index,
-        Err(source) => return Err(InternalError::Model { source }.into()),
-    };
+    )
+    .compare()?;
     apply(&mut index, result);
     Ok(index)
 }
 
-pub(crate) fn keys(generation: &dyn RenderGeneration) -> Vec<ViewKey> {
+/// Read document keys without rendering or retaining any document bytes.
+pub fn keys(generation: &dyn RenderGeneration) -> Vec<ViewKey> {
     generation
         .plans()
         .values()
@@ -155,7 +131,8 @@ pub(crate) fn keys(generation: &dyn RenderGeneration) -> Vec<ViewKey> {
         .collect()
 }
 
-pub(crate) fn records(index: CatalogueReadModel) -> BTreeMap<String, CatalogueRecord> {
+/// Index previewable public records by their unique catalogue path.
+pub fn records(index: CatalogueReadModel) -> BTreeMap<String, CatalogueRecord> {
     index
         .screens
         .into_iter()
@@ -181,7 +158,8 @@ pub(crate) fn records(index: CatalogueReadModel) -> BTreeMap<String, CatalogueRe
         .collect()
 }
 
-pub(crate) fn publication(config_path: String, base: &str) -> Publication {
+/// Construct the historical index fence used before the generation hash is fixed.
+pub fn publication(config_path: String, base: &str) -> Publication {
     Publication {
         config_path,
         deployment_id: "0".repeat(64),

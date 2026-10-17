@@ -129,7 +129,7 @@ impl ChangesService for Changes {
         let repository = selected.repository.clone();
         let commit = selected.commit.clone();
         let (before, failures) = {
-            let base_span = tracing::info_span!("review.base-tree");
+            let base_span = tracing::info_span!("review.base-tree", status = "error");
             let _scope = base_span.enter();
             let sources =
                 self.sources
@@ -168,6 +168,7 @@ impl ChangesService for Changes {
                     source: Box::new(Error::Graph { source }),
                 });
             }
+            base_span.record("status", "ok");
             (before, failures)
         };
         let result = self.comparison.compare(

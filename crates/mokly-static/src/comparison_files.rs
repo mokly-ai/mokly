@@ -2,10 +2,10 @@
 
 use mokly_graph::error::GraphError;
 use mokly_graph::types::RenderGeneration;
-use mokly_model::namespace;
 use mokly_model::review_affected::ReviewSide;
+use mokly_model::routes;
 
-use crate::error::{Error, Result};
+use crate::error::{Error, InternalError, Result};
 use crate::inventory::Inventory;
 use crate::transaction::Cancellation;
 
@@ -36,7 +36,7 @@ pub(crate) fn side(
         checkpoint(cancellation)?;
         let artifact = graph(generation.render(&plan.route))?;
         inventory.insert(
-            snapshot_path(side, &format!("mokly-generated/{}", plan.route)),
+            routes::comparison_snapshot(side, &format!("mokly-generated/{}", plan.route)),
             artifact.bytes.clone().into(),
         )?;
     }
@@ -46,7 +46,7 @@ pub(crate) fn side(
             path: route.clone(),
         })?;
         inventory.insert(
-            snapshot_path(side, &format!("mokly-generated/{route}")),
+            routes::comparison_snapshot(side, &format!("mokly-generated/{route}")),
             bytes.into(),
         )?;
     }
@@ -55,19 +55,18 @@ pub(crate) fn side(
         let route = format!("static/{path}");
         let bytes = graph(generation.resource_bytes(&route))?
             .ok_or_else(|| Error::Invalid { path: route })?;
-        inventory.insert(snapshot_path(side, &path), bytes.into())?;
+        inventory.insert(routes::comparison_snapshot(side, &path), bytes.into())?;
     }
     Ok(())
 }
 
-pub(crate) fn snapshot_path(side: ReviewSide, route: &str) -> String {
-    let side = match side {
-        ReviewSide::Before => "before",
-        ReviewSide::After => "after",
-    };
-    format!("snapshots/{side}/{route}")
-}
-
-pub(crate) fn review_path(generation: &str) -> String {
-    namespace::viewer(&format!("diffs/generations/{generation}/review.json"))
+pub(crate) fn compare<T>(result: mokly_compare::error::Result<T>) -> Result<T> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(mokly_compare::error::Error::Graph { source }) => graph(Err(source)),
+        Err(source) => Err(InternalError::Comparison {
+            source: Box::new(source),
+        }
+        .into()),
+    }
 }

@@ -86,7 +86,8 @@ Component identity impact can come from an included parent or variant. An
 actual-instance `implementation` reason does not alter own view states.
 
 `material` owns the catalogue, historical snapshot, props, instance, and slot digest preimages.
-`routes` owns Rust artifact routes and portable relative URL operations.
+`routes` owns Rust artifact routes and portable relative URL operations,
+including comparison generation, snapshot-side, and removed-preview paths.
 
 `inference::infer` builds closed schemas from own and merged variant props.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`

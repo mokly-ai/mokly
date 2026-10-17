@@ -58,7 +58,7 @@ pub(super) fn run(
     let result = static_runtime::run(&cwd, options, &context, None);
     lines.clear();
     match result {
-        Ok((artifact, root, _summary)) => {
+        Ok((artifact, root)) => {
             timing.record("status", "ok");
             lines.built(&artifact, &root, started.elapsed());
             ExitCode::SUCCESS

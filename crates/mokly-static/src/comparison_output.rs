@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::{projection_index, projection_workspace};
 use mokly_model::axes::EntryKind;
 use mokly_model::canonical;
 use mokly_model::material::digest;
@@ -11,14 +12,14 @@ use mokly_model::projection;
 use mokly_model::public_detail::EntryDetailV1;
 use mokly_model::public_index::{CatalogueReadModel, RemovedEntry, RemovedPreview};
 use mokly_model::review_affected::ReviewSide;
-use mokly_model::{namespace, readers};
+use mokly_model::{readers, routes};
 use serde::Serialize;
 
-use crate::comparison_files::{checkpoint, review_path, side};
+use crate::comparison_files::{checkpoint, compare, side};
 use crate::error::{Error, Result};
 use crate::inventory::Inventory;
 use crate::transaction::Cancellation;
-use crate::{comparison_details, comparison_index, comparison_workspace, identity};
+use crate::{comparison_details, identity};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,14 +39,14 @@ pub(crate) fn append(
     config_path: &str,
     cancellation: &dyn Cancellation,
 ) -> Result<()> {
-    let state = comparison_index::publication(config_path.into(), &result.snapshot.base_ref);
-    let historical = comparison_index::base_index(result, &state)?;
+    let state = projection_index::publication(config_path.into(), &result.snapshot.base_ref);
+    let historical = compare(projection_index::base_index(result, &state))?;
     let mut details = projection::pending_details(
         &result.before.catalogue().model,
         &historical,
-        &comparison_index::keys(result.before.as_ref()),
+        &projection_index::keys(result.before.as_ref()),
     );
-    let mut records = comparison_index::records(historical);
+    let mut records = projection_index::records(historical);
     let selected: BTreeMap<_, _> = result
         .snapshot
         .removed_entries
@@ -56,10 +57,6 @@ pub(crate) fn append(
     comparison_details::historical(&mut details, result)?;
     let mut inventory = Inventory::default();
     inventory.insert("review.json".into(), identity::json(&result.review)?.into())?;
-    inventory.insert(
-        "snapshot.json".into(),
-        identity::json(&result.snapshot)?.into(),
-    )?;
     side(
         result.before.as_ref(),
         ReviewSide::Before,
@@ -86,7 +83,7 @@ pub(crate) fn append(
         };
         if matches!(removed.entry.kind(), EntryKind::Page | EntryKind::Document) {
             inventory.insert(
-                format!("previews/{path}/index.json"),
+                routes::comparison_preview(path),
                 identity::json(&Preview {
                     schema_version: 3,
                     base_ref: &result.snapshot.base_ref,
@@ -105,10 +102,10 @@ pub(crate) fn append(
         });
         output.insert(format!("view/{path}/index.html"), stub.to_vec().into())?;
     }
-    comparison_workspace::apply(&mut details, index, result)?;
+    compare(projection_workspace::apply(&mut details, result))?;
     let (generation, files) = finalize(inventory, &mut details)?;
-    index.comparison_url = Some(review_path(&generation));
-    let prefix = namespace::viewer(&format!("diffs/generations/{generation}/"));
+    index.comparison_url = Some(routes::comparison_review(&generation));
+    let prefix = routes::comparison_generation(&generation);
     for file in files {
         output.insert(format!("{prefix}{}", file.path), file.bytes)?;
     }

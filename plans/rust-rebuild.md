@@ -1265,6 +1265,11 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
 
 ## Milestone 12: Static build and publish
 
+- [ ] Apply comparison join review 4: shared projection, view membership, private
+      snapshot contract, branch tests, indexed workspaces, timings, and merged verification.
+- [ ] Complete timing records for dependency `tier`, comparison view counts, and
+      `review.changed-paths` in the shared Changes pipeline (review 4, finding 7).
+
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
       documents, the comparison generation, the shared `mokly-model` ownership

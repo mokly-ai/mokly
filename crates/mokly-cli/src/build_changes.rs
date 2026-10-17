@@ -15,6 +15,7 @@ use crate::changes_diagnostics;
 use crate::grammar::Build;
 
 impl CatalogueBuild {
+    #[tracing::instrument(name = "changes.classify", skip_all, fields(status = "error"))]
     pub(crate) fn classify_changes(
         &self,
         config: &ResolvedConfig,
@@ -52,6 +53,7 @@ impl CatalogueBuild {
             }
         };
         self.checkpoint()?;
+        tracing::Span::current().record("status", "ok");
         Ok(changes)
     }
 }

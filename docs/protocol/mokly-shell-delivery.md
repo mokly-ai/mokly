@@ -4,9 +4,10 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 
-The Browse shell renders in the browser from a stub, a catalogue index, and
-one detail per entry. Serve and `build` deliver these resources. Navigation
-fetches the next detail; no process renders shell HTML.
+The browser renders the Browse shell from a stub, an index, and entry
+details. The index holds navigation and entry metadata. Details hold usage,
+comparison evidence and workspace lists. Serve and `build` deliver these
+resources. Navigation fetches the next detail. No process renders shell HTML.
 
 ## Routes
 
@@ -20,7 +21,6 @@ rewrite rules.
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
 | `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v7                                     |
 | `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v1                                        |
-| `/mokly-viewer/diffs/generations/<generation>/snapshot.json`                                 | absent    | file                                    | catalogue change snapshot v4                               |
 | `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live      | file                                    | review result v8, under the comparison contract            |
 | `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v1 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |

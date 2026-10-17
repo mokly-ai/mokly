@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { CatalogueChangeSnapshotV4 } from "../packages/viewer/src/generated/catalogue/CatalogueChangeSnapshotV4.js";
 import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
@@ -27,15 +26,28 @@ test(
         ready.output,
         ready.index.comparisonUrl,
       );
-      const snapshot = await json<CatalogueChangeSnapshotV4>(
-        ready.output,
-        `${prefix}/snapshot.json`,
-      );
       assert.equal(review.schemaVersion, 8);
-      assert.equal(snapshot.schemaVersion, 4);
-      assert.equal(snapshot.baseCommit, base);
+      assert.deepEqual(
+        [
+          ...ready.index.screens,
+          ...ready.index.components,
+          ...ready.index.pages,
+          ...ready.index.documents,
+          ...ready.index.useCases,
+          ...ready.index.removedEntries.map((record) => record.entry),
+        ]
+          .filter(
+            (entry) =>
+              entry.changes.status === "ready" && entry.changes.included,
+          )
+          .map((entry) => entry.path)
+          .sort(),
+        ["home", "old", "old-note", "retired"],
+      );
+      assert.equal(ready.index.base, "fixture-base");
       assert.equal(review.baseCommit, base);
       const output = await files(ready.output);
+      assert.equal(output.has(`${prefix}/snapshot.json`), false);
       await checkIdentity(
         ready.output,
         ready.index.comparisonUrl,
@@ -127,6 +139,7 @@ test(
       );
       for (const stage of [
         "review.base-commit",
+        "changes.classify",
         "review.base-tree",
         "review.compare-views",
         "review.resource-graph",

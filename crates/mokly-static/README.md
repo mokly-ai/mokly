@@ -10,6 +10,7 @@ on the upload client.
 ## Responsibilities
 
 - Write every shell route, current detail, document, and reached resource.
+- Capture comparison documents, resources, removed records, and preview metadata.
 - Insert bounded inspector metadata into current document heads.
 - Validate package module requests against the exact browser inventory.
 - Compute deterministic deployment identities and finalize ownership v3.
@@ -25,8 +26,8 @@ Other ranges and links stay inspectable. Inspector failures carry a typed reason
 and the document route. It builds canonical index v7 and detail
 v1 files with revision zero and no live capability. The shared model writer
 adds publication metadata when requested and writes the ownership marker last.
-Ready Changes supplies review v8, snapshot v4, view evidence, workspace lists,
-and removed records from the same comparison result. Both pinned graph sides
+Ready Changes supplies review v8, view evidence, workspace lists,
+and removed records from the same comparison result. Snapshot v4 stays private. Both pinned graph sides
 supply immutable documents and resources. Removed details carry their historical
 snapshot ID and generation; removed page and document previews carry metadata v3.
 The comparison inventory is finalized before deployment identity. Disabled or
@@ -76,7 +77,8 @@ exercise retained recovery bytes through debug-only fault adapters.
 
 ### Key Code
 
-- [Assembly](./src/assembly.rs) and [deployment identity](./src/identity.rs).
+- [Assembly](./src/assembly.rs), [comparison generation writer](./src/comparison_output.rs),
+  and [deployment identity](./src/identity.rs).
 - [Output transaction](./src/transaction.rs) and [ownership checks](./src/ownership.rs).
 - [Source fingerprints](./src/fingerprint.rs) and [inspector](./src/inspector.rs).
 

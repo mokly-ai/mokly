@@ -99,3 +99,15 @@ mod use_case_impact;
 pub mod source_failures;
 
 mod git_prefetch;
+
+mod projection_affected;
+mod projection_context;
+pub mod projection_index;
+mod projection_inputs;
+pub mod projection_workspace;
+
+#[cfg(test)]
+#[path = "_tests_/projection/mod.rs"]
+mod projection_tests;
+
+pub mod projection_detail;

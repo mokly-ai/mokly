@@ -14,9 +14,7 @@ pub mod assembly;
 pub mod changes;
 mod comparison_details;
 mod comparison_files;
-mod comparison_index;
 mod comparison_output;
-mod comparison_workspace;
 pub mod identity;
 pub mod inspector;
 
@@ -74,3 +72,7 @@ mod assembly_tests;
 #[cfg(test)]
 #[path = "_tests_/reservation_tests.rs"]
 mod reservation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison/mod.rs"]
+mod comparison_tests;

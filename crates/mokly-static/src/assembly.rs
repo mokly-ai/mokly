@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::projection_index;
 use mokly_graph::policy::{FilePolicy, PublicPolicy};
 use mokly_graph::types::RenderGeneration;
 use mokly_model::namespace;
@@ -21,7 +22,7 @@ use crate::inspector;
 use crate::inventory::Inventory;
 use crate::modules;
 use crate::transaction::Cancellation;
-use crate::{comparison_details, comparison_index, comparison_output};
+use crate::{comparison_details, comparison_output};
 
 /// Inputs pinned by the command; the comparison adapter supplies its complete generation.
 pub struct Assembly<'a> {
@@ -192,8 +193,8 @@ impl Assembler for CatalogueAssembler {
             }
         }
         if let Some(changes) = input.changes.ready() {
-            comparison_index::apply(&mut index, changes);
-            comparison_details::current(&mut details, &index, changes)?;
+            projection_index::apply(&mut index, changes);
+            comparison_details::current(&mut details, changes)?;
             comparison_output::append(
                 changes,
                 &mut index,

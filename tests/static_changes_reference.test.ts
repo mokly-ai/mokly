@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { CatalogueChangeSnapshotV4 } from "../packages/viewer/src/generated/catalogue/CatalogueChangeSnapshotV4.js";
 import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
@@ -34,11 +33,21 @@ test(
         included: true,
       });
       const prefix = path.posix.dirname(built.index.comparisonUrl!);
-      const snapshot = await json<CatalogueChangeSnapshotV4>(
-        built.output,
-        `${prefix}/snapshot.json`,
+      assert.deepEqual(
+        [
+          ...built.index.screens,
+          ...built.index.components,
+          ...built.index.pages,
+          ...built.index.documents,
+          ...built.index.useCases,
+        ]
+          .filter(
+            (entry) =>
+              entry.changes.status === "ready" && entry.changes.included,
+          )
+          .map((entry) => entry.path),
+        ["note"],
       );
-      assert.deepEqual(snapshot.changedEntries, ["note"]);
       const review = await json<ReviewResultV8>(
         built.output,
         built.index.comparisonUrl!,

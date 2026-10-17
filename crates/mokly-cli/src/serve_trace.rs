@@ -100,6 +100,7 @@ fn stage(name: &str) -> bool {
             | "output.capture"
             | "output.rollback"
             | "output.cleanup"
+            | "changes.classify"
             | "review.base-commit"
             | "review.base-tree"
             | "review.base-dependencies"

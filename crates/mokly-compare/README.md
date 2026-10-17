@@ -14,7 +14,8 @@ and process groups. `mokly-sidecar` owns the bundle settings type.
 - Compare canonical trees, paired ignores, caller inputs, and component regions.
 - Pair moves, keep removed metadata, and resolve branch-point references.
 - Compare reached resources and use catalogue-wide CSS own-page proof.
-- Produce strict review v8, snapshot v4, and affected-consumer chains.
+- Produce strict review v8, private snapshot v4, and affected-consumer chains.
+- Share public index state, eligibility, workspace lists, and input-change projection.
 - Read regular base files from Git blobs with preserved POSIX paths.
 - Extract JavaScript sources only when a caller requests them.
 - Store source and dependency caches outside the repository.
@@ -100,7 +101,11 @@ for extraction and dependency leases. The CLI supplies `mokly-render::Runtime`
 for both sides, sharing its render cache, sidecar pool, and cancellation.
 Historical runtime failures follow the typed policy in base preparation.
 `mokly-static` consumes the retained result and both graph handles to publish
-one complete comparison. The static writer owns file inventory and identity;
+one complete comparison. `projection_index::apply` projects the retained
+classification onto current or historical public records.
+`projection_workspace::apply` joins ready usage with indexed affected links
+and caller-owned input changes. Both Serve and static output use these
+functions; neither changes the render bytes. The static writer owns file inventory and identity;
 the engine owns classification, removal selection, and historical snapshot IDs.
 
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,
@@ -131,6 +136,8 @@ fixture enables npm's offline mode and checks that lifecycle scripts did not
 run. It needs no registry.
 
 ### Key Code
+
+- [Index projection](./src/projection_index.rs) and [workspace projection](./src/projection_workspace.rs).
 
 - [Comparison](./src/comparison.rs), [result types](./src/comparison_types.rs), and [source validation](./src/source_validation.rs).
 - [Source reader](./src/sources.rs), [Git tree](./src/git_tree.rs), and [base rendering](./src/base_render.rs).

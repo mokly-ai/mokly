@@ -182,6 +182,12 @@ pub enum Error {
 /// Adapter causes retained for diagnostics.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// Shared comparison projection failed.
+    #[error("comparison projection failed: {source}")]
+    Comparison {
+        /// Typed projection cause.
+        source: Box<mokly_compare::error::Error>,
+    },
     /// Filesystem operation failed.
     #[error("{operation} failed at {}: {source}", .path.display())]
     Io {

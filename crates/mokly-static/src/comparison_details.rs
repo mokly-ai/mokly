@@ -3,49 +3,41 @@
 use std::collections::BTreeMap;
 
 use mokly_compare::comparison_types::ComparisonResult;
-use mokly_model::axes::EntryKind;
+use mokly_compare::{projection_detail, projection_workspace};
 use mokly_model::public_detail::EntryDetailV1;
-use mokly_model::public_index::CatalogueReadModel;
 
-use crate::comparison_files::graph;
-use crate::comparison_workspace;
+use crate::comparison_files::{compare, graph};
 use crate::error::{Error, Result};
 
 pub(crate) fn current(
     details: &mut BTreeMap<String, EntryDetailV1>,
-    index: &CatalogueReadModel,
     result: &ComparisonResult,
 ) -> Result<()> {
-    evidence(details, result);
-    comparison_workspace::apply(details, index, result)
-}
-
-pub(crate) fn evidence(details: &mut BTreeMap<String, EntryDetailV1>, result: &ComparisonResult) {
-    for entry in &result.entries {
-        let Some(detail) = details
-            .get_mut(&entry.path)
-            .filter(|detail| detail.entry.kind == entry.kind)
-        else {
-            continue;
-        };
-        for document in &entry.documents {
-            if let Some(view) = detail.views.iter_mut().find(|view| {
-                Some(view.viewport) == document.key.viewport
-                    && view.color_scheme == document.key.color_scheme
-            }) {
-                view.resource_evidence = Some(document.evidence.clone());
-            }
-            if entry.kind == EntryKind::Page {
-                detail.resource_evidence = Some(document.evidence.clone());
-            }
-        }
-    }
+    projection_detail::apply_evidence(details, result);
+    compare(projection_workspace::apply(details, result))
 }
 
 pub(crate) fn historical(
     details: &mut BTreeMap<String, EntryDetailV1>,
     result: &ComparisonResult,
 ) -> Result<()> {
+    let mut plans = BTreeMap::<_, Vec<_>>::new();
+    for plan in result.before.plans().values() {
+        let entry = result
+            .before
+            .catalogue()
+            .model
+            .entries
+            .get(plan.entry)
+            .ok_or_else(|| Error::PlanEntry {
+                route: plan.route.clone(),
+                entry: plan.entry,
+            })?;
+        plans
+            .entry(entry.metadata.path.as_str())
+            .or_default()
+            .push(plan);
+    }
     for removed in &result.snapshot.removed_entries {
         let path = removed.entry.metadata().path.as_str();
         let detail = details
@@ -55,12 +47,7 @@ pub(crate) fn historical(
         detail.revision = None;
         detail.generation = Some("0".repeat(64));
         detail.entry.snapshot_id = Some(removed.snapshot_id.clone());
-        for plan in result.before.plans().values().filter(|plan| {
-            result.before.catalogue().model.entries[plan.entry]
-                .metadata
-                .path
-                == path
-        }) {
+        for plan in plans.get(path).into_iter().flatten() {
             let artifact = graph(result.before.render(&plan.route))?;
             let document = artifact.document.as_ref().ok_or_else(|| Error::Invalid {
                 path: plan.route.clone(),
@@ -72,6 +59,6 @@ pub(crate) fn historical(
             }
         }
     }
-    evidence(details, result);
+    projection_detail::apply_evidence(details, result);
     Ok(())
 }
