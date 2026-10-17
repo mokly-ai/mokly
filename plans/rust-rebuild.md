@@ -1289,7 +1289,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
 - [ ] Complete timing records for dependency `tier`, comparison view counts, and
       `review.changed-paths` in the shared Changes pipeline (review 4, finding 7).
 
-- [ ] Implement the static output of `mokly build` in `mokly-static`: one
+- [x] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
       documents, the comparison generation, the shared `mokly-model` ownership
       marker writer, the `--out` option with its default `mokly-static/` output
@@ -1318,7 +1318,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
         reservation mutations, Unicode/NUL rename paths, imported resources,
         private templates, host-normalized paths, abandoned lock retention,
         and signal-handler release cases named in the sweep.
-- [ ] Implement publish, which builds into its own directory first, through
+- [x] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
       changes rules, and the upload validation fixtures.
@@ -1328,7 +1328,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
   - [x] Add clean-checkout checks, cancellable Git calls, the static-output
         trait, and the pre-build private-directory line. Keep completed
         output after upload failure.
-  - [ ] Connect `mokly-static` to the CLI-owned publish adapter and its rich
+  - [x] Connect `mokly-static` to the CLI-owned publish adapter and its rich
         terminal phases. Both crates use the shared output shapes and marker
         writer in `mokly-model`. Verify real rendering, transaction cancellation,
         and deployment identity. Cover spawned SIGINT/retry uploads, rich phase
@@ -1364,6 +1364,7 @@ and `.context/rust-rebuild/sweeps/m12-static.md`.
 Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md`.
 Comparison join and static browser acceptance: `.context/rust-rebuild/delegation/m12-static/report-6.md`.
 Comparison join review 4: `.context/rust-rebuild/delegation/m12-static/report-7.md`.
+Publication adapter acceptance: `.context/rust-rebuild/delegation/m12-static/report-9.md`.
 
 - [x] Commit.
 

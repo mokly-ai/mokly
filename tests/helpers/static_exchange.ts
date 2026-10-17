@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import http from "node:http";
 import zlib from "node:zlib";
 
+import { verifyInventory } from "./receiver/ownership.js";
+
 interface MarkerEntry {
   path: string;
   sha256: string;
@@ -37,6 +39,7 @@ export async function exchange(
     holdPlan?: () => void;
     holdBlob?: () => void;
     planStatus?: number;
+    replan?: "nonempty" | "empty";
   } = {},
 ) {
   const bodies: Buffer[] = [];
@@ -57,6 +60,9 @@ export async function exchange(
     comparisonPath: string | null;
   }> = [];
   const missingCounts: number[] = [];
+  const missingSets: string[][] = [];
+  const completedInventories: Map<string, Buffer>[] = [];
+  let markerBytes: Buffer | undefined;
   let identity = "";
   let base = "";
   let failure: unknown;
@@ -97,21 +103,24 @@ export async function exchange(
         }
         metadata.push(envelope);
         identity = `${envelope.headSha}:${envelope.configPath}`;
-        const marker = JSON.parse(
-          files.get(".mokly-export-artifact")!.toString(),
-        ) as { files: MarkerEntry[] };
+        markerBytes = files.get(".mokly-export-artifact")!;
+        const marker = JSON.parse(markerBytes.toString()) as {
+          files: MarkerEntry[];
+        };
         entries = marker.files;
         for (const entry of entries) {
           const bytes = files.get(entry.path);
           if (bytes) blobs.set(entry.sha256, bytes);
         }
-        missingCounts.push(
-          new Set(
+        const missing = [
+          ...new Set(
             entries
               .map((entry) => entry.sha256)
               .filter((hash) => !blobs.has(hash)),
-          ).size,
-        );
+          ),
+        ].sort();
+        missingSets.push(missing);
+        missingCounts.push(missing.length);
         if (options.planStatus) {
           response.writeHead(options.planStatus).end();
           return;
@@ -128,13 +137,7 @@ export async function exchange(
           JSON.stringify({
             schemaVersion: 1,
             upload: { id: "local", expiresAt: "2099-01-01T00:00:00.000Z" },
-            missing: [
-              ...new Set(
-                entries
-                  .map((entry) => entry.sha256)
-                  .filter((hash) => !blobs.has(hash)),
-              ),
-            ].sort(),
+            missing,
             blobUrl: `${base}/blobs/{sha256}`,
             completeUrl: `${base}/complete`,
           }),
@@ -166,6 +169,25 @@ export async function exchange(
           response.writeHead(retryStatus, { "Retry-After": "0" }).end();
           return;
         }
+        if (options.replan && completionAttempts === 1) {
+          if (options.replan === "nonempty") {
+            assert.ok(missingSets[0]![0]);
+            blobs.delete(missingSets[0]![0]);
+          }
+          response.writeHead(409).end();
+          return;
+        }
+        assert.ok(markerBytes);
+        const received = new Map(
+          entries.map((entry) => {
+            const bytes = blobs.get(entry.sha256);
+            assert.ok(bytes);
+            return [entry.path, bytes] as const;
+          }),
+        );
+        received.set(".mokly-export-artifact", markerBytes);
+        verifyInventory([...received]);
+        completedInventories.push(received);
         complete++;
         const status = published.has(identity) ? 200 : 201;
         published.add(identity);
@@ -192,6 +214,8 @@ export async function exchange(
     attempts,
     metadata,
     missingCounts,
+    missingSets,
+    completedInventories,
     get maximumBlobConcurrency() {
       return maxBlobs;
     },

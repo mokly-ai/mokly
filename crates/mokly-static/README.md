@@ -1,7 +1,5 @@
 # mokly-static
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 `mokly-static` assembles complete static catalogues from a validated render
 generation. Use it from the CLI for local builds and the private build used
 by publish. It shares output formats with `mokly-model` and has no dependency

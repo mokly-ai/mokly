@@ -276,3 +276,7 @@ impl Drop for Lines {
 #[cfg(test)]
 #[path = "_tests_/one_shot_tests.rs"]
 mod one_shot_tests;
+
+#[cfg(test)]
+#[path = "_tests_/publication_progress_tests.rs"]
+mod publication_progress_tests;

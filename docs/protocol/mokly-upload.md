@@ -1,7 +1,5 @@
 # Catalogue Upload v2
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Boundary
 
 Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
@@ -132,13 +130,12 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 - `headSha` and non-null `baseSha` are full lowercase hexadecimal Git object
   ids, exactly 40 or 64 characters. Resolve HEAD before the build and reject a
   changed HEAD before Plan.
-- With comparisons, `baseRef` is the effective ref, nonempty and at most 255
-  UTF-8 bytes with no category Cc character. `baseSha` is the pinned merge
+- With a ready comparison generation, `baseRef` is the effective ref. It is
+  nonempty, at most 255 UTF-8 bytes, and has no category Cc character. `baseSha` is the pinned merge
   base, never the current tip of `baseRef`. `baseSha` equals the review v8
   `baseCommit`, and `baseRef` is the effective ref of the pinned comparison.
-  Without comparisons,
-  `baseRef`, `baseSha` and `comparisonPath` are all null and no comparison
-  generation is present.
+  With disabled or unavailable Changes, `baseRef`, `baseSha`, and
+  `comparisonPath` are all null and no comparison generation is present.
 - `pullRequest` is null or a positive JavaScript-safe integer.
 - `configPath` is the slash-separated path from the Git repository root to the
   resolved config and follows the ownership marker's portable-path grammar.
