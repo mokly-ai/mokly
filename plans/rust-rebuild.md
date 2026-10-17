@@ -1121,10 +1121,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Connect the Comparing spinner to the static phase reporter.
   - [x] Include the comparison duration when the Changes phase settles.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/d-duration-tests.log`.
-- [ ] Complete the final shared-runtime review: bounded memory sampling,
+- [x] Complete the final shared-runtime review: bounded memory sampling,
       canonical Node identity, ancestor dependency tiers, selected NODE_PATH
       priority, and direct base, extraction, timeout, and recycle tests.
-      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-6.md`.
+      Evidence: accepted reviews `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/review-6a.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/review-7.md`.
 - [x] Implement per-importer Node resolution on the base side (review 5b,
       finding 1 option A). Resolve each bare import from its matching directory
       in the dependency tier and retain tier-two missing-directory fallback.
