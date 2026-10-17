@@ -51,7 +51,8 @@ The snapshot keeps bytes only for actual parsing and delivery.
 Capture walks each configured root with its own discovery file patterns. It
 records matching regular files and folder records, then hashes those files and
 the configured inputs through `CapturedTree`. Inventoried sidecar modules retain the digests of the exact bundled bytes.
-Capture rejects a different digest before document callbacks. Other inventoried
+Capture rejects a different digest before document callbacks. A missing module
+digest is an internal failure. Other inventoried
 sources and reached resources use that same digest path. Unreadable markers
 leave required-input diagnostics to catalogue discovery and validation. The final check compares root
 membership, selected identities, and live digests. It streams selected file

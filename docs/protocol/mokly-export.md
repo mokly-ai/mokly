@@ -136,16 +136,24 @@ Changes; Serve's watcher ignores the same paths.
    participate even beneath excluded directory names. Resolve each selected
    path inside the real repository before hashing its target bytes.
    For inventoried JavaScript bundle modules, use the sidecar's SHA-256 digest
-   of the exact bytes it bundled as the baseline. Compare captured digests with
+   of the exact bytes it bundled as the baseline. A missing module digest is
+   an internal failure; a later source read cannot replace it. Compare captured digests with
    those baselines before document callbacks run. Keep the baseline for the
    final live recheck. Other reached inputs keep their first captured digest.
+   PostCSS plugin file dependencies outside the roots and bundle can receive
+   their first digest after the plugin reads them. This accepted late baseline
+   does not detect an edit between that read and capture. The live recheck
+   still applies after capture. Transitive PostCSS module inputs can also have
+   a late baseline. The PostCSS end state requires digests tied to the exact
+   bytes consumed by module evaluation and plugin file reads. A reported path
+   or a reread after the plugin finishes does not establish those bytes.
    An unreadable input or directory has a fixed unreadable marker. Catalogue
    discovery and validation report required-input failures first. An unreadable
    excluded input does not fail the fingerprint check unless its marker changes.
    Before installation, compare selected root membership, unreadable markers,
    resolved identities, and live streaming digests with the captured values.
-   This recheck reads no file bodies for parsing or delivery. A changed input
-   or a mismatched sidecar digest aborts with `export-invalid` and the instruction
+   This recheck reads no file bodies for parsing or delivery. A change from a
+   captured baseline or a mismatched sidecar digest aborts with `export-invalid` and the instruction
    to build again. It preserves the earlier output instead of mixing generations.
 4. Assemble every route and resource into a private stage inside the
    reservation on the output filesystem. Validate each path against the

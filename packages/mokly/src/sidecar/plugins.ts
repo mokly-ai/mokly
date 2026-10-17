@@ -44,7 +44,9 @@ export function consumerPlugins(
           const extension = path.extname(args.path);
           const loader =
             params.moduleResolution.loaders[extension] ??
-            sourceLoaders[extension];
+            sourceLoaders[extension] ??
+            attributeLoaders[args.with.type ?? ""] ??
+            (extension === ".txt" ? "text" : undefined);
           if (!loader) return undefined;
           const contents =
             inputs.files.get(args.path) ?? (await fs.readFile(args.path));
@@ -208,4 +210,10 @@ const sourceLoaders: Record<string, Loader> = {
   ".cts": "ts",
   ".tsx": "tsx",
   ".json": "json",
+};
+
+const attributeLoaders: Record<string, Loader> = {
+  json: "json",
+  text: "text",
+  bytes: "binary",
 };

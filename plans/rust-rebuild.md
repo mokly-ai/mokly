@@ -1440,8 +1440,12 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       and reached closure files. Measure this boundary under the large fixtures.
   - [x] Verify captured bundle inputs against sidecar module digests before
         document callbacks; retain those baselines through the live recheck.
-- [ ] Report digests for the PostCSS module graph from the sidecar and use them
-      as static fingerprint baselines before graph preparation consumes them.
+- [ ] Report exact consumed-byte digests for the PostCSS module graph and
+      plugin file dependencies, and use them as static fingerprint baselines.
+      Design how to capture the bytes that module evaluation and plugins read,
+      or supply immutable generation inputs. Paths and rereads after a plugin
+      runs cannot establish the consumed bytes. Plugin file dependencies outside
+      roots and bundle modules retain an accepted late baseline until this work.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1495,6 +1499,7 @@ Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
 Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
 Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/report-4.md`.
 Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
+Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review

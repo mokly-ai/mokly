@@ -91,7 +91,10 @@ membership. Failed peer resolutions remain failures during replay.
 `restoreGeneration` installs retained code in a new sidecar without reading
 current sources. Worker operation events count actual compilations and
 PostCSS worker lifetimes. The result also reports its module
-graph with stable names for selected installation files. Repository-owned
+graph with stable names for selected installation files. Module digests
+use the recorded compiler inputs, including text imports and
+files loaded through data import attributes. Unrecorded compiler inputs fail
+the bundle instead of receiving a digest from a later read. Repository-owned
 workspace packages and PostCSS presets use the side's own source copy.
 `cssModules` installs the core's class maps before evaluation and runs no
 compiler. CSS import stubs read that table at evaluation. The default export

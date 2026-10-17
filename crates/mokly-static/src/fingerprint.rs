@@ -25,7 +25,7 @@ pub trait InputTree: SourceTree {
         &self,
         root: &Path,
         paths: &[String],
-        module_digests: &BTreeMap<String, String>,
+        module_digests: &BTreeMap<String, Option<String>>,
     ) -> Result<()>;
     /// Verify every explicitly read source and its resolved identity.
     fn verify(&self) -> Result<()>;
@@ -148,10 +148,13 @@ impl InputTree for CapturedTree {
         &self,
         root: &Path,
         paths: &[String],
-        module_digests: &BTreeMap<String, String>,
+        module_digests: &BTreeMap<String, Option<String>>,
     ) -> Result<()> {
         for path in paths {
             let absolute = root.join(path);
+            if let Some(None) = module_digests.get(path) {
+                return Err(InternalError::MissingModuleDigest { path: absolute }.into());
+            }
             let node = source(self.project(&absolute))?.ok_or_else(|| Error::InputsChanged {
                 path: absolute.clone(),
             })?;
@@ -159,7 +162,7 @@ impl InputTree for CapturedTree {
                 return Err(Error::InputsChanged { path: absolute });
             }
             let captured = Observation::from(&self.digest(&node.identity));
-            if let Some(expected) = module_digests.get(path) {
+            if let Some(Some(expected)) = module_digests.get(path) {
                 let baseline = Observation::Value(expected.clone());
                 let previous = self
                     .reads

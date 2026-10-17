@@ -29,7 +29,7 @@ pub(crate) struct BundleState {
     pub(crate) class_maps_digest: String,
     pub(crate) definitions: Definitions,
     pub(crate) modules: BTreeMap<String, Vec<String>>,
-    pub(crate) module_digests: BTreeMap<String, String>,
+    pub(crate) module_digests: BTreeMap<String, Option<String>>,
     pub(crate) stamp: InputStamp,
 }
 
@@ -94,12 +94,7 @@ pub(crate) fn describe(
     let module_digests = result
         .modules
         .iter()
-        .filter_map(|module| {
-            module
-                .digest
-                .as_ref()
-                .map(|digest| (module.path.clone(), digest.clone()))
-        })
+        .map(|module| (module.path.clone(), module.digest.clone()))
         .collect();
     if let Some(existing) = bundle_attempt::existing(runtime, &result.generation) {
         let existing = Arc::new(BundleState {
