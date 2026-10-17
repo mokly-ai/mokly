@@ -1185,12 +1185,13 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
       assertions. Keep the duplicate component-explorer cases in one suite.
-- [ ] Add the stylesheet attribution tests over the design catalogue that
+- [x] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
       stylesheet links, the exact per-entry rendered-resource and rule
       records, the exact changed-entry union, no affected consumers for
       unresolved shared rules, and the attribution acceptance matrix.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
