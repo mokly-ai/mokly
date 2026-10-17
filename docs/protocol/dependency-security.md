@@ -170,22 +170,28 @@ uses it.
 
 The current maintenance choices are:
 
-- [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
-  / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
-  on 2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only
-  path is `metro-file-map` 0.84.6 → `micromatch` 4.0.8 → `braces` 3.0.3 at the
-  three top-level install locations above. Metro arrives through React Native
-  peers of development packages. Repository code does not run Metro and sends
-  no untrusted patterns to it. The tracking advisory records patched releases.
-  Remove the record when Braces or Micromatch ships a fix that Metro resolves,
-  or when Metro drops Micromatch. Re-run the live audit and complete gate after
-  that dependency update. Remove a stale record; expiry requires removal or
-  a new explicit risk review, not an automatic extension.
+- [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) /
+  CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review on
+  2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only path
+  is `metro-file-map` 0.84.6 → `micromatch` 4.0.8 → `braces` 3.0.3 at the three
+  top-level install locations above. Metro arrives through React Native peers of
+  development packages. Repository code does not run Metro and sends no
+  untrusted patterns to it. The tracking advisory will name the first patched
+  release when one ships. Remove the record when Braces or Micromatch ships a
+  fix that Metro resolves, or when Metro drops Micromatch. Re-run the live audit
+  and complete gate after that dependency update. Remove a stale record; expiry
+  requires removal or a new explicit risk review, not an automatic extension.
 - `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
   versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
-  copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
-  The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
-  whose bundled native image libraries include the librsvg fix for
+  copy under Wrangler. Wrangler 4.149.0 requires `esbuild` 0.28.2 exactly, the
+  version that Mokly uses, but that is not the reason for the pin. Wrangler
+  4.116.0 is the last release on the Miniflare 4 line. Wrangler 4.117.0 and
+  later depend on Miniflare 5 alpha releases. Move Wrangler when a Wrangler
+  release depends on a Miniflare 5 release without a prerelease suffix. Do the
+  move in a reviewed change that runs the preview runtime browser tests and the
+  complete gate, and check the overrides below again. The `miniflare`-scoped
+  overrides select `undici` 7.29.1 and `sharp` 0.35.5, whose bundled native
+  image libraries include the librsvg fix for
   [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
   Remove each override when a deliberately upgraded Wrangler/Miniflare version
   resolves a patched version without it and passes the complete gate. These
