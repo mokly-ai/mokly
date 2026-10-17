@@ -162,6 +162,10 @@ Comparison works on trees, never on text offsets. The
 - Comparison data lives in Rust memory, outside the sidecar's V8 heap. A view's
   trees are discarded when its comparison ends; nothing retains a catalogue-wide
   set of parsed pages.
+  The engine captures each side in one source-root pass. Compressed private
+  inputs preserve render bytes, generated CSS, usage, and trusted annotations for the life of
+  the comparison result. These immutable inputs use process memory; they write
+  no files. Each paired read restores only its requested views.
 - Parsed CSS is cached by content hash with a byte bound; eviction changes time
   only.
 - The render cache, the base-side extraction cache, and the base-side

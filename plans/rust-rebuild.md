@@ -1155,11 +1155,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       comparison and shared projections together, isolate both reader test
       modules, and supply the duration fixture's base ref.
       Decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
-- [ ] Reduce source-root replacements in the shared Changes engine for build,
+- [x] Reduce source-root replacements in the shared Changes engine for build,
       publish, and Serve. Owner: M9 engine delegate (`m9-compare`). Render each
       side's planned views in one pass before pairing, or batch requests by root.
       Acceptance: one worker spawns a small constant per side switch plus
       recycles, independent of the number of paired views. Keep the pool bound.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/final-root-groups.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/comparison-equality.json`.
 - [ ] Decide whether sidecars and PostCSS children remove all `npm_*` variables
       and head `.bin` entries from `PATH` (review 7 finding 5B). Keep other
       inherited values until the user decides.

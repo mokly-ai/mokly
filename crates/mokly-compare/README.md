@@ -83,6 +83,11 @@ outside this mapping keeps the fallback warning, including with equal inputs.
 Each fallback has a typed trace reason.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+It validates and captures each side in one source-root pass. Private compressed
+inputs preserve exact render bytes, generated CSS, and trusted annotations in process memory.
+Move pairing, view comparison, and snapshot reads restore one view at a time.
+The captures live with the comparison result and write no files. They retain no
+parsed page set and do not enlarge the render cache or sidecar pool.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.

@@ -6,6 +6,7 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::ModelEntry;
 use mokly_model::paths::is_entry_path;
 use mokly_model::routes;
+use serde::{Deserialize, Serialize};
 use unicode_general_category::{GeneralCategory, get_general_category};
 
 use crate::diagnostic_code::Code;
@@ -16,7 +17,7 @@ use crate::link_targets::{first_base, request_target};
 use crate::tree::Node;
 
 /// Final logical reference, validated against all destination views by the graph.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Reference {
     /// Referring route retained for final anchor diagnostics.
     pub source_route: String,
