@@ -128,43 +128,49 @@ impl ChangesService for Changes {
         let base = &selected.reference;
         let repository = selected.repository.clone();
         let commit = selected.commit.clone();
-        let sources = self
-            .sources
-            .create(repository.clone(), commit.clone(), &config.repo_root)?;
-        let failures = sources.failures.clone();
-        let prepared = self.provider.prepare(&BaseRequest {
-            working_config: config,
-            repository,
-            commit: commit.clone(),
-            sources,
-        });
-        if let Some(source) = failures.failure() {
-            return Err(Error::Base {
-                commit: commit.to_string(),
-                source: Box::new(Error::SourceFailure { source }),
+        let (before, failures) = {
+            let base_span = tracing::info_span!("review.base-tree", status = "error");
+            let _scope = base_span.enter();
+            let sources =
+                self.sources
+                    .create(repository.clone(), commit.clone(), &config.repo_root)?;
+            let failures = sources.failures.clone();
+            let prepared = self.provider.prepare(&BaseRequest {
+                working_config: config,
+                repository,
+                commit: commit.clone(),
+                sources,
             });
-        }
-        let before = match prepared {
-            Ok(before) => before,
-            Err(source) => {
-                return Err(Error::Base {
-                    commit: commit.to_string(),
-                    source: Box::new(source),
-                });
-            }
-        };
-        if let Err(source) = before.render_all() {
             if let Some(source) = failures.failure() {
                 return Err(Error::Base {
                     commit: commit.to_string(),
                     source: Box::new(Error::SourceFailure { source }),
                 });
             }
-            return Err(Error::Base {
-                commit: commit.to_string(),
-                source: Box::new(Error::Graph { source }),
-            });
-        }
+            let before = match prepared {
+                Ok(before) => before,
+                Err(source) => {
+                    return Err(Error::Base {
+                        commit: commit.to_string(),
+                        source: Box::new(source),
+                    });
+                }
+            };
+            if let Err(source) = before.render_all() {
+                if let Some(source) = failures.failure() {
+                    return Err(Error::Base {
+                        commit: commit.to_string(),
+                        source: Box::new(Error::SourceFailure { source }),
+                    });
+                }
+                return Err(Error::Base {
+                    commit: commit.to_string(),
+                    source: Box::new(Error::Graph { source }),
+                });
+            }
+            base_span.record("status", "ok");
+            (before, failures)
+        };
         let result = self.comparison.compare(
             &ComparisonRequest {
                 base_ref: base.into(),

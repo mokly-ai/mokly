@@ -1,6 +1,7 @@
 //! Catalogue validation and complete in-memory rendering before static output.
 
 use std::collections::BTreeMap;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -141,7 +142,7 @@ pub struct PreparedBuild {
     pub config: ResolvedConfig,
     /// Render graph with complete documents and authored closure.
     pub generation: Arc<dyn RenderGeneration>,
-    /// Validation counts, warnings, and retained Changes for the M12/M9 join.
+    /// Validation counts, warnings, and retained Changes for static output.
     pub summary: BuildSummary,
 }
 
@@ -176,21 +177,10 @@ impl BuildService for CatalogueBuild {
     }
 
     fn prepare(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError> {
-        let parent = tracing::Span::current();
-        let result = std::thread::scope(|scope| {
-            let thread = match std::thread::Builder::new()
-                .name("mokly-build".into())
-                .stack_size(64 * 1024 * 1024)
-                .spawn_scoped(scope, || parent.in_scope(|| self.attempt(cwd, options)))
-            {
-                Ok(thread) => thread,
-                Err(source) => return Err(runtime(InternalError::PreparationThread { source })),
-            };
-            match thread.join() {
-                Ok(result) => result,
-                Err(_) => Err(runtime(InternalError::PreparationPanicked)),
-            }
-        });
+        let result = match catch_unwind(AssertUnwindSafe(|| self.attempt(cwd, options))) {
+            Ok(result) => result,
+            Err(_) => Err(runtime(InternalError::PreparationPanicked)),
+        };
         pre_installation::settle(result, self.cancellation.as_ref())
     }
 }
@@ -225,6 +215,8 @@ pub enum BuildChanges {
     Ready(Arc<ComparisonResult>),
     /// The current catalogue remains usable when historical sources fail validation.
     Unavailable {
+        /// Effective configured or explicit base ref.
+        base_ref: String,
         /// Full immutable historical commit.
         base_commit: String,
         /// Short reason for the unavailable completion line.

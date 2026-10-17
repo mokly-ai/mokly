@@ -1,5 +1,7 @@
 //! Arena sink regressions cover foster parenting, templates, foreign content, and text merging.
 
+use mokly_catalogue::template_types::Template;
+
 use crate::tree::Node;
 use crate::{parse, serialize};
 
@@ -62,4 +64,28 @@ fn repeated_html_and_body_tags_keep_first_values_and_merge_new_attributes() {
         serialize::html(&nodes),
         "<html lang=\"en\" dir=\"rtl\"><head></head><body class=\"one\" id=\"extra\">Text</body></html>"
     );
+}
+
+#[test]
+fn source_locations_count_unicode_columns_and_crlf_lines() {
+    let body = "<p>é\r\n中<span title=\"x\">leaf</span></p>";
+    let header = "---\r\ntitle: Å\r\n---\r\n";
+    let nodes = crate::source_locations::template(&Template {
+        source_path: "specs/home.screen.html".into(),
+        source: format!("{header}{body}"),
+        body: body.into(),
+        body_offset: header.len(),
+        page: false,
+    })
+    .unwrap();
+    let locations: Vec<_> = crate::tree::walk(&nodes)
+        .filter_map(|node| match node {
+            Node::Element(element) => element
+                .source
+                .as_ref()
+                .map(|source| (element.name.as_str(), source.line, source.column)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(locations, [("p", 4, 1), ("span", 5, 2)]);
 }

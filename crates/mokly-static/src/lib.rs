@@ -11,10 +11,15 @@ mod ownership;
 mod reservation;
 
 pub mod assembly;
+pub mod changes;
+mod comparison_details;
+mod comparison_files;
+mod comparison_output;
 pub mod identity;
 pub mod inspector;
 
 pub mod fingerprint;
+mod fingerprint_walk;
 
 pub mod modules;
 
@@ -68,3 +73,7 @@ mod assembly_tests;
 #[cfg(test)]
 #[path = "_tests_/reservation_tests.rs"]
 mod reservation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison/mod.rs"]
+mod comparison_tests;

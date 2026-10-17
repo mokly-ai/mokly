@@ -1,6 +1,8 @@
 //! Portable artifact routes and relative URL operations shared by the core.
 
 use crate::axes::{ColorScheme, Viewport};
+use crate::namespace;
+use crate::review_affected::ReviewSide;
 
 /// One screen or component document route inside the generated namespace.
 pub fn view(path: &str, viewport: Viewport, scheme: ColorScheme) -> String {
@@ -67,3 +69,31 @@ pub fn resolve(source: &str, reference: &str) -> Option<String> {
     }
     Some(parts.join("/"))
 }
+
+/// Generation-relative snapshot address, retaining the graph's relative resource layout.
+pub fn comparison_snapshot(side: ReviewSide, route: &str) -> String {
+    let side = match side {
+        ReviewSide::Before => "before",
+        ReviewSide::After => "after",
+    };
+    format!("snapshots/{side}/{route}")
+}
+
+/// Generation-relative metadata address for a removed page or document.
+pub fn comparison_preview(path: &str) -> String {
+    format!("previews/{path}/index.json")
+}
+
+/// Artifact-root-relative prefix of a complete immutable comparison generation.
+pub fn comparison_generation(generation: &str) -> String {
+    namespace::viewer(&format!("diffs/generations/{generation}/"))
+}
+
+/// Artifact-root-relative review document of a comparison generation.
+pub fn comparison_review(generation: &str) -> String {
+    format!("{}review.json", comparison_generation(generation))
+}
+
+#[cfg(test)]
+#[path = "_tests_/comparison_routes_tests.rs"]
+mod comparison_routes_tests;

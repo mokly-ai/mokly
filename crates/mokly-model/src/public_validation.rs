@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use crate::axes::{ColorScheme, Viewport};
 use crate::diagnostic::{AuthoringKind, Context};
 use crate::paths::is_entry_path;
+use crate::public_comparison;
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::CatalogueEntry;
 use crate::public_metadata::{CatalogueChanges, ChangeKind};
@@ -136,6 +137,7 @@ pub(crate) fn validate(index: &CatalogueReadModel) -> Result<(), ReadError> {
             return Err(invalid(ContractViolation::DocumentKeys));
         }
     }
+    public_comparison::validate(index)?;
     removed_validation::validate(index)?;
     tree_validation::validate(index)?;
     Ok(())

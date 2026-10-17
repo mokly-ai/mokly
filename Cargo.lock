@@ -2370,6 +2370,7 @@ dependencies = [
  "insta",
  "libc",
  "mokly-catalogue",
+ "mokly-compare",
  "mokly-graph",
  "mokly-html",
  "mokly-model",

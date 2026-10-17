@@ -49,7 +49,7 @@ pub fn artifact(directory: PathBuf, comparison: bool) -> Artifact {
         files.push(File {
             path: comparison.path.clone(),
             bytes: format!(
-                "{{\"schemaVersion\":8,\"baseRef\":\"origin/main\",\"baseCommit\":\"{}\"}}",
+                "{{\"schemaVersion\":8,\"baseCommit\":\"{}\"}}",
                 "b".repeat(40)
             )
             .into(),

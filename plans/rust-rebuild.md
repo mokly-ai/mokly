@@ -1285,6 +1285,15 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
 
 ## Milestone 12: Static build and publish
 
+- [x] Apply the final comparison join requests: viewer eligibility in both readers,
+      shared removed records and details, ready raw-byte preservation, and merged checks.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-8.md`.
+
+- [x] Apply comparison join review 4: shared projection, view membership, private
+      snapshot contract, branch tests, indexed workspaces, timings, and merged verification.
+- [ ] Complete timing records for dependency `tier`, comparison view counts, and
+      `review.changed-paths` in the shared Changes pipeline (review 4, finding 7).
+
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
       documents, the comparison generation, the shared `mokly-model` ownership
@@ -1294,7 +1303,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
         canonical index and details, exact package assets, and shared ownership.
         Implement reservations, exclusive installation, rollback, bounded cleanup,
         input rechecks, and config-relative output selection.
-  - [ ] Join the Milestone 9 comparison generation, removed records, and detail
+  - [x] Join the Milestone 9 comparison generation, removed records, and detail
         evidence before identity finalization. Repeat the comparison-specific
         reference scenarios after that integration. The join must populate upload
         `baseRef` instead of null.
@@ -1358,6 +1367,8 @@ Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
 Non-comparison M12 acceptance: `.context/rust-rebuild/delegation/m12-static/report-4.md`
 and `.context/rust-rebuild/sweeps/m12-static.md`.
 Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md`.
+Comparison join and static browser acceptance: `.context/rust-rebuild/delegation/m12-static/report-6.md`.
+Comparison join review 4: `.context/rust-rebuild/delegation/m12-static/report-7.md`.
 
 - [x] Commit.
 
@@ -1437,15 +1448,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       four-scenario benchmark harness; record the time and memory budgets, the
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
+  - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
+  - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
+  - [ ] Connect Changes and watch to their delivered browser events.
+  - [ ] Verify the comparison engine's tree walks after M9 integration.
+  - [ ] Measure isolated dependency installs and propose additional budgets;
+        retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
-- [ ] Make tree conversion, composition, serialization, destruction, and all
+- [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
-      subtree copies in link controls; recursion remains. Evidence:
+      subtree copies in link controls. Evidence:
       `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
-- [ ] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
+- [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
+- [ ] Decide whether reconstructed `plaintext` text writes raw characters;
+      keep its escaping rules until approved (M14 review 1a finding 1B).
+- [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
+      CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
+      excludes these paths. New input bounds or wider rewrites need a decision.
+- [ ] Replace the old baseline-output cold reset with M9 leased-cache preparation
+      and delivered Changes measurements in the M14 harness.
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -1455,6 +1479,12 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 - [ ] Verify that a sidecar emitting a large stderr stream drains safely at
       shutdown and leaves no process behind (M11 sweep, watched_serve case).
+
+Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
+Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
+Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
+Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
+Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -1472,6 +1502,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 14 round 3: reconcile the inherited
+    `resident_set_recycles_only_after_one_gib_is_exceeded` flake with the pending
+    M9 pool-fixture fix. Its isolated rerun passed; missing seeded epoch state
+    can let idle cleanup take the asserted slot. Evidence: M14 `report-3.md`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and

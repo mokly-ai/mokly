@@ -2,7 +2,7 @@
 
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
-use crate::tree::Node;
+use crate::tree::{self, Node};
 
 pub(crate) fn request_target(value: &str) -> Result<Option<String>> {
     let lower = value.to_ascii_lowercase();
@@ -29,12 +29,10 @@ pub(crate) fn request_target(value: &str) -> Result<Option<String>> {
 }
 
 pub(crate) fn first_base(nodes: &[Node], attribute: &str) -> Option<String> {
-    nodes.iter().find_map(|node| match node {
+    tree::walk(nodes).find_map(|node| match node {
         Node::Element(element) if element.name == "base" => {
             element.get(attribute).map(str::to_owned)
         }
-        Node::Element(element) => first_base(&element.children, attribute),
-        Node::Region { children, .. } => first_base(children, attribute),
         _ => None,
     })
 }

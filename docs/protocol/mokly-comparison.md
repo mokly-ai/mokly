@@ -73,6 +73,15 @@ Remaining logical inputs and placements use that repaired ownership and their
 corresponding identity keys. If a re-owned instance key collides, that instance
 also loses its region; the repair remains a warning.
 
+`plaintext` consumes the rest of a document. Serialization omits its end tag
+and the end tags of ancestors entered before it. A parser repair pass turns
+formatting clones inside it and nodes moved after it into the literal payload
+that the browser receives. The repaired tree and its bytes stay stable on
+further parse/serialize passes, including repair of annotated composed content.
+Serialization omits private markers and attributes inside plaintext mode. Other
+HTML text modes keep their escaping rules. `pre`, `textarea`, and `listing`
+preserve the leading line feed that the HTML parser would otherwise remove.
+
 ## Materiality
 
 A view is compared through its canonical form: the tree after ignored regions

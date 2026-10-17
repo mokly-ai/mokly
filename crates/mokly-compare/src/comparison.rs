@@ -34,6 +34,7 @@ pub struct Engine {
 }
 
 impl Comparison for Engine {
+    #[tracing::instrument(name = "review.compare-views", skip_all, err)]
     fn compare(
         &self,
         request: &ComparisonRequest,

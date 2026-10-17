@@ -45,6 +45,7 @@ pub(super) struct NativeDependencies {
 }
 
 impl BaseDependencies for NativeDependencies {
+    #[tracing::instrument(name = "review.base-dependencies", skip_all, err)]
     fn prepare(
         &self,
         request: &BaseRequest<'_>,

@@ -51,7 +51,7 @@ phase returned successfully, not that optional Git evidence was available.
 | `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                         |
 | `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                     |
 | `review.changed-paths`                           | changed-path discovery, deduplication, and sorting                                                                          |
-| `review.base-tree`                               | bounded tree and blob reads of the base commit, and extraction into the base-side cache on a miss                           |
+| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation   |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                           |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                         |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                  |
@@ -107,9 +107,11 @@ The fixture provides a base commit so Changes performs a real comparison:
 after the base commit, setup adds an unrelated rule to the first shared
 stylesheet, so classification exercises real rule evidence and attribution
 excludes the unrelated rule from every linked screen; the benchmark expects
-zero Changes, including use cases. Setup archives a packaged Mokly version
-and a consumer lockfile and installs the head dependencies; setup time is
-reported separately and never repeated during an ordinary run.
+zero Changes, including use cases. `--toolchain install` archives the CLI,
+viewer, native package, and consumer lockfile, then installs head dependencies.
+`--toolchain workspace` reuses the workspace dependencies and saves their
+lockfile for evidence. Every result names the mode. Setup time is separate;
+workspace reuse has no install-time measurement.
 
 The benchmark harness runs four scenarios on each variant, with the sidecar
 count held constant and other heavy work idle:
@@ -127,8 +129,33 @@ count held constant and other heavy work idle:
 
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
-Changes, and reports each measurement as JSON on stdout. CI's small
-correctness fixtures have
+Changes, and reports each measurement as JSON on stdout. It writes one progress
+line to stderr when each scenario starts. A fresh Serve process and browser
+context define each restart. The browser process starts before measurement.
+
+The harness samples process RSS every 50 ms. It reports the maximum sum for
+the CLI shim, core, and sidecar descendants across process groups, plus the maximum for the whole harness tree,
+including the browser. Chrome uses at most two renderer processes and disables
+GPU acceleration. These are sampled observations, not exact operating system
+high-water marks. `--memory-stop-kib` defaults to 1,750,000 KiB of whole-tree
+RSS. Set a larger limit on a suitable machine, or use 0 to disable the stop.
+The report records the limit. This safety stop is not an acceptance budget.
+
+Sidecar deadlines follow the sidecar contract. `--sidecar-timeout-ms` explicitly
+sets `MOKLY_SIDECAR_TIMEOUT_MS` for the child. Each report records this option,
+the inherited timeout variable, exact `NODE_OPTIONS`, Node heap limit,
+`GOMAXPROCS`, and `GOMEMLIMIT`. Overrides affect measurements and must accompany
+any comparison. Build and listening waits have 300-second liveness deadlines.
+Browser operations allow 60 seconds. A deadline fails the run and preserves
+its diagnostic. Shutdown sends SIGTERM, then SIGKILL after 10 seconds if needed.
+
+Fixtures and logs belong in ignored directories. The CLI checks `git check-ignore`
+and warns when the chosen root is not confirmed ignored. It rejects options
+that do not apply to the selected command. Use the
+[large fixture commands](../../tests/fixtures/large/README.md) to select dimensions,
+a variant, a memory stop, and one of the four scenarios.
+
+CI's small correctness fixtures have
 [no machine-specific wall-clock assertion](./ci-test-timing.md).
 
 ## Budgets
@@ -146,4 +173,5 @@ correctness fixtures have
 This table holds the budgets with the values the user approved. A row whose
 value is a recording rule rather than a number is measured and reported, not
 enforced; a number enters the row when the user approves it. The benchmark
-enforces every numeric row and fails when one is exceeded.
+enforces every numeric row and fails when one is exceeded. A startup observation
+at or above 5000 ms produces a failed result with its measured values and reason.

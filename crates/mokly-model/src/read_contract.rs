@@ -50,6 +50,12 @@ pub enum ContractViolation {
     /// Invalid view order or document key.
     #[error("invalid view order or document key")]
     Views,
+    /// Component own comparison eligibility differs from its ready kind.
+    #[error("invalid component comparison eligibility")]
+    ComponentComparisonEligibility,
+    /// View comparison eligibility differs from its ready kind and entry type.
+    #[error("invalid comparison eligibility")]
+    ComparisonEligibility,
     /// Invalid schema encoding.
     #[error("invalid schema encoding")]
     SchemaEncoding,

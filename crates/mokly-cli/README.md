@@ -17,6 +17,10 @@ presentation. The npm shim starts this binary with inherited streams.
 
 ## What This Crate Does
 
+The Windows MSVC binary reserves an 8 MiB main-thread stack through
+`/STACK:8388608`, matching Linux and macOS main-thread headroom. Preparation
+uses the caller's stack. Render workers use default stacks.
+
 Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
 
@@ -145,9 +149,10 @@ The comparison uses that same repository, commit, and ref without another lookup
 The phase owner erases its animated row before cache notes and serializes both
 streams. Warnings precede the colored Changes status. Nested Git failures keep
 the historical commit and Git detail. Changes runs inside the static pipeline before warning gates and output
-installation. `PreparedBuild` retains its result for the comparison-file join.
-Head and
-base use `mokly-render::Runtime` with one shared pool and render cache.
+installation. `PreparedBuild` passes the same result to the terminal, static
+index, generation writer, and publication metadata. The pipeline uses the summary for terminal Changes reporting and warning
+policy before installation. Review timing spans retain their caller context under
+`output.write`, including the one pinned base lookup. Head and base use `mokly-render::Runtime` with one shared pool and render cache.
 JavaScript and PostCSS base inputs hold source and dependency leases.
 Historical sidecars and PostCSS children use the same parent-death protection
 as current rendering, including when consumer code blocks.

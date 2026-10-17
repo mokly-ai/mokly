@@ -40,6 +40,7 @@ fn rich_changes_glyphs_are_colored_and_plain_output_has_no_ansi() {
     };
     assert!(ready(&style, ComparisonCounts::default()).contains("\x1b[32m✔\x1b[0m Changes ready"));
     let unavailable = crate::build::BuildChanges::Unavailable {
+        base_ref: "fixture-base".into(),
         base_commit: "base".into(),
         reason: "base validation failed".into(),
         diagnostics: vec![],

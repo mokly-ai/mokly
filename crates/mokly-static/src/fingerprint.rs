@@ -1,6 +1,6 @@
 //! Confined source fingerprints exclude output while retaining explicit hidden inputs.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -10,7 +10,8 @@ use mokly_source_interface::error;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
-use crate::filesystem::{Entry, Files};
+use crate::filesystem::Files;
+use crate::fingerprint_walk;
 
 /// Captured source reads. Rechecks include inputs beneath normally excluded directories.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = InputTreeMock))]
@@ -145,108 +146,12 @@ impl Fingerprints for SourceFingerprints {
             .iter()
             .map(|path| self.files.project(path))
             .collect::<Result<Vec<_>>>()?;
-        let mut result = BTreeMap::new();
-        self.walk(
-            &physical,
+        Ok(fingerprint_walk::capture(
+            self.files.as_ref(),
             &physical,
             root,
             &excluded,
-            &BTreeSet::new(),
-            &mut result,
-        )?;
-        Ok(result)
-    }
-}
-impl SourceFingerprints {
-    fn walk(
-        &self,
-        root: &Path,
-        physical: &Path,
-        logical: &Path,
-        excluded: &[PathBuf],
-        ancestors: &BTreeSet<PathBuf>,
-        output: &mut BTreeMap<PathBuf, String>,
-    ) -> Result<()> {
-        if excluded.iter().any(|path| physical.starts_with(path)) {
-            return Ok(());
-        }
-        let entry = match self.files.entry(physical) {
-            Ok(entry) => entry,
-            Err(_) => {
-                output.insert(logical.into(), "unreadable".into());
-                return Ok(());
-            }
-        };
-        match entry {
-            Some(Entry::Directory(_)) => {
-                if ancestors.contains(physical) {
-                    return Ok(());
-                }
-                let mut ancestors = ancestors.clone();
-                ancestors.insert(physical.into());
-                let children = match self.files.children(physical) {
-                    Ok(children) => children,
-                    Err(_) => {
-                        output.insert(logical.into(), "unreadable".into());
-                        return Ok(());
-                    }
-                };
-                for child in children {
-                    let Some(name) = child.file_name() else {
-                        continue;
-                    };
-                    if matches!(
-                        name.to_str(),
-                        Some(
-                            ".git"
-                                | ".context"
-                                | ".mokly-export-reservations"
-                                | "node_modules"
-                                | "target"
-                                | "dist"
-                                | "mokly-static"
-                                | "coverage"
-                                | "test-results"
-                                | "playwright-report"
-                        )
-                    ) {
-                        continue;
-                    }
-                    self.walk(
-                        root,
-                        &child,
-                        &logical.join(name),
-                        excluded,
-                        &ancestors,
-                        output,
-                    )?;
-                }
-            }
-            Some(Entry::File(_)) => {
-                output.insert(
-                    logical.into(),
-                    self.files
-                        .hash(physical)
-                        .unwrap_or_else(|_| "unreadable".into()),
-                );
-            }
-            Some(Entry::Unsafe) => {
-                if let Ok(target) = self.files.link(physical) {
-                    let link = format!("link:{target:?}");
-                    output.insert(logical.into(), link.clone());
-                    if let Ok(real) = self.files.project(physical)
-                        && real.starts_with(root)
-                        && real != physical
-                    {
-                        self.walk(root, &real, logical, excluded, ancestors, output)?;
-                        let content = output.remove(logical).unwrap_or_default();
-                        output.insert(logical.into(), format!("{link}:{content}"));
-                    }
-                }
-            }
-            None => {}
-        }
-        Ok(())
+        ))
     }
 }
 

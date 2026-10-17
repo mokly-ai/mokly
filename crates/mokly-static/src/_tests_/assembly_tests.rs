@@ -21,7 +21,23 @@ use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::assembly::{Assembler, Assembly, CatalogueAssembler};
+use crate::changes::ChangeState;
 use crate::error::Error;
+use mokly_compare::comparison_types::ComparisonResult;
+use mokly_model::public_metadata::ChangesStatus;
+
+struct Disabled;
+impl ChangeState for Disabled {
+    fn status(&self) -> ChangesStatus {
+        ChangesStatus::Disabled
+    }
+    fn base(&self) -> Option<&str> {
+        None
+    }
+    fn ready(&self) -> Option<&ComparisonResult> {
+        None
+    }
+}
 use crate::transaction::CancellationMock;
 
 fn config() -> ResolvedConfig {
@@ -96,20 +112,21 @@ fn request<'a>(
         config_path: "mokly.config.json".into(),
         directory: "/repo/site".into(),
         viewer: vec![],
-        base: None,
-        metadata: None,
+        changes: &Disabled,
+        publication: None,
     }
 }
 
-#[test]
-fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() {
-    let graph = Unimock::new((
+fn graph_with_key(key: &str) -> Unimock {
+    let mut plans = plan(0);
+    plans.get_mut("home/index.html").unwrap().key = NodeKey(key.into());
+    Unimock::new((
         RenderGenerationMock::catalogue
             .each_call(matching!())
             .returns(prepared()),
         RenderGenerationMock::plans
             .each_call(matching!())
-            .returns(plan(0)),
+            .returns(plans),
         RenderGenerationMock::render
             .next_call(matching!("home/index.html"))
             .returns(Ok(Arc::new(Artifact {
@@ -135,7 +152,12 @@ fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() 
         RenderGenerationMock::public_files
             .next_call(matching!())
             .returns(BTreeSet::<String>::new()),
-    ));
+    ))
+}
+
+#[test]
+fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() {
+    let graph = graph_with_key(&"a".repeat(64));
     let assembler: &dyn Assembler = &CatalogueAssembler {
         tree: Arc::new(Unimock::new(())),
     };
@@ -207,4 +229,28 @@ fn rejects_empty_and_inconsistent_generations_without_panics_or_side_effects() {
             matches!(error, Error::PlanEntry { entry: 9, .. })
         });
     }
+}
+
+#[test]
+fn malformed_published_index_preserves_the_reader_diagnostic() {
+    let graph = graph_with_key("bad");
+    let assembler: &dyn Assembler = &CatalogueAssembler {
+        tree: Arc::new(Unimock::new(())),
+    };
+    let cancellation = Unimock::new(
+        CancellationMock::requested
+            .each_call(matching!())
+            .returns(false),
+    );
+    let error = assembler
+        .assemble(request(&config(), &graph), &cancellation)
+        .unwrap_err();
+    assert!(
+        error.to_string().contains("invalid page document key"),
+        "{error}"
+    );
+    assert!(
+        error.to_string().contains("mokly-viewer/index.json"),
+        "{error}"
+    );
 }

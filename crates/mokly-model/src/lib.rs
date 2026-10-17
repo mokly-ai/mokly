@@ -25,6 +25,7 @@ mod projection_records;
 mod projection_tree;
 pub mod projection_usage;
 pub mod prop_schema;
+mod public_comparison;
 pub mod public_detail;
 pub mod public_index;
 pub mod public_metadata;
@@ -63,5 +64,6 @@ mod record_validation;
 
 mod snapshot_order;
 
+mod catalogue_tree;
 pub mod shell;
 mod snapshot_source_order;

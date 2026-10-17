@@ -76,6 +76,10 @@ literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
 inputs in that precedence order, including physical aliases.
 
+YAML front-matter construction uses recursive input traversal before
+prop and schema depth validation. Pathological YAML nesting can exhaust the
+caller stack. The native HTML tree depth guarantee does not cover YAML input.
+
 ## Quick Start
 
 Inject a source tree and the JavaScript definition provider:

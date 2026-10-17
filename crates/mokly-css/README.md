@@ -72,6 +72,10 @@ record per innermost changed component owner, plus outside entry evidence.
 Plugin dependency inputs use digests, separate from CSS and asset bytes.
 They keep source protection and graph invalidation without retaining file bodies.
 
+CSS syntax scanners and the external `lightningcss` parser use recursive
+input traversal. Pathological CSS nesting can exhaust the caller stack.
+The native HTML tree depth guarantee does not cover these parsers.
+
 ## Quick Start
 
 ```rust

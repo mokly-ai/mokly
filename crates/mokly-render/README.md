@@ -65,6 +65,8 @@ Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet resources rebuild from that generation's captured bytes.
+Module stylesheet discovery uses an explicit stack and retains import order
+when it crosses shared dependencies or cycles.
 
 `BaseSide` takes the source lease and the complete dependency selection from
 `mokly-compare`. Bundle requests use that extraction, its selected dependencies,

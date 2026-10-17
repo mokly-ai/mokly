@@ -56,7 +56,13 @@ fn walk<'a>(
     folders: &mut BTreeSet<&'a str>,
     own_index: Option<&str>,
 ) -> Result<(), ReadError> {
-    for (position, node) in nodes.iter().enumerate() {
+    let mut pending: Vec<_> = nodes
+        .iter()
+        .enumerate()
+        .rev()
+        .map(|(position, node)| (position, node, parent, own_index))
+        .collect();
+    while let Some((position, node, parent, own_index)) = pending.pop() {
         match node {
             CatalogueNode::Folder {
                 path,
@@ -83,15 +89,11 @@ fn walk<'a>(
                 }) {
                     return Err(invalid(ContractViolation::TreeIndex));
                 }
-                walk(
-                    children,
-                    path,
-                    entries,
-                    variants,
-                    seen,
-                    folders,
-                    index.as_deref(),
-                )?;
+                pending.extend(
+                    children.iter().enumerate().rev().map(|(position, child)| {
+                        (position, child, path.as_str(), index.as_deref())
+                    }),
+                );
             }
             CatalogueNode::Entry {
                 path,
@@ -115,7 +117,13 @@ fn walk<'a>(
                     if children.is_empty() {
                         return Err(invalid(ContractViolation::EmptyChildren));
                     }
-                    walk(children, path, entries, variants, seen, folders, None)?;
+                    pending.extend(
+                        children
+                            .iter()
+                            .enumerate()
+                            .rev()
+                            .map(|(position, child)| (position, child, path.as_str(), None)),
+                    );
                 }
             }
         }

@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 use std::iter;
 
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_html::tree::Node;
+use mokly_html::tree::{self, Node};
 use mokly_html::{parse, props};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::routes;
@@ -116,8 +116,8 @@ fn scan(
     targets: &mut BTreeSet<String>,
     opaque: &mut bool,
 ) {
-    let mut nodes = parse::fragment(body);
-    while let Some(node) = nodes.pop() {
+    let nodes = parse::fragment(body);
+    for node in tree::walk(&nodes) {
         if let Node::Element(element) = node {
             for attribute in &element.attributes {
                 if matches!(attribute.name.as_str(), "href" | "data-nav-href" | "to")
@@ -137,7 +137,6 @@ fn scan(
                     target(logical, source, catalogue, targets);
                 }
             }
-            nodes.extend(element.children);
         }
     }
 }

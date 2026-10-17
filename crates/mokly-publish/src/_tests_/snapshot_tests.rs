@@ -98,7 +98,7 @@ fn output_inventory_requires_every_file_and_rejects_mutated_or_unexpected_bytes(
 fn comparison_path_and_base_are_pinned_and_current_only_has_no_comparison_files() {
     for (field, value) in [
         ("schemaVersion", json!(7)),
-        ("baseRef", json!("other")),
+        ("baseCommit", json!(null)),
         ("baseCommit", json!("d".repeat(40))),
     ] {
         let output = artifact(true);
@@ -218,7 +218,7 @@ fn streaming_review_identity_rejects_duplicate_keys_inside_discarded_fields() {
             .find(|file| file.path.ends_with("/review.json"))
             .unwrap();
         let source = format!(
-            "{{\"schemaVersion\":8,\"baseRef\":\"origin/main\",\"baseCommit\":\"{}\",\"unknown\":{unknown}}}",
+            "{{\"schemaVersion\":8,\"baseCommit\":\"{}\",\"unknown\":{unknown}}}",
             "b".repeat(40)
         );
         review.bytes = source.into();

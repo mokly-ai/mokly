@@ -6,7 +6,7 @@ use mokly_model::catalogue::SourceLocation;
 use crate::control_tiers::{Tier, ancestor, descendant};
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
-use crate::tree::{Element, Node, element};
+use crate::tree::{self, Element, Node, element};
 use crate::{control_tiers, error};
 
 /// Adapt every marked control after composition; return route-scoped warnings.
@@ -38,10 +38,31 @@ fn walk(
     warnings: &mut Vec<Warning>,
 ) -> Result<bool> {
     let mut active = false;
-    for node in nodes {
+    enum Step<'a> {
+        Node(&'a mut Node, bool),
+        Leave,
+    }
+    let mut pending: Vec<_> = nodes
+        .iter_mut()
+        .rev()
+        .map(|node| Step::Node(node, inherited))
+        .collect();
+    while let Some(step) = pending.pop() {
+        let (node, inherited) = match step {
+            Step::Node(node, inherited) => (node, inherited),
+            Step::Leave => {
+                ancestors.pop();
+                continue;
+            }
+        };
         match node {
             Node::Region { children, .. } => {
-                active |= walk(children, ancestors, inherited, route, warnings)?
+                pending.extend(
+                    children
+                        .iter_mut()
+                        .rev()
+                        .map(|node| Step::Node(node, inherited)),
+                );
             }
             Node::Element(root) => {
                 if root
@@ -120,11 +141,15 @@ fn walk(
                 let tier = ancestor(root);
                 let pushed = tier.is_some();
                 ancestors.extend(tier);
-                let nested = walk(&mut root.children, ancestors, inactive, route, warnings);
                 if pushed {
-                    ancestors.pop();
+                    pending.push(Step::Leave);
                 }
-                active |= nested?;
+                pending.extend(
+                    root.children
+                        .iter_mut()
+                        .rev()
+                        .map(|node| Step::Node(node, inactive)),
+                );
             }
             _ => {}
         }
@@ -210,34 +235,30 @@ fn check_descendants(nodes: &[Node], route: &str, warnings: &mut Vec<Warning>) -
 }
 
 fn collect(nodes: &[Node], tiers: &mut Vec<control_tiers::Tier>) {
-    for node in nodes {
-        match node {
-            Node::Element(element) => {
-                if element.get("to").is_some() {
-                    tiers.push(control_tiers::Tier {
-                        error: true,
-                        feature: format!("<{}>", element.name),
-                        reason: "remove the nested interactive element",
-                    });
-                } else if let Some(tier) = descendant(element) {
-                    tiers.push(tier);
-                }
-                collect(&element.children, tiers);
+    for node in tree::walk(nodes) {
+        if let Node::Element(element) = node {
+            if element.get("to").is_some() {
+                tiers.push(control_tiers::Tier {
+                    error: true,
+                    feature: format!("<{}>", element.name),
+                    reason: "remove the nested interactive element",
+                });
+            } else if let Some(tier) = descendant(element) {
+                tiers.push(tier);
             }
-            Node::Region { children, .. } => collect(children, tiers),
-            _ => {}
         }
     }
 }
 
 fn add_style(nodes: &mut [Node]) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         if let Node::Element(root) = node {
             if root.name == "head" {
                 root.children
                     .push(element("style", &[], vec![Node::Text(CONTROL_CSS.into())]));
             } else {
-                add_style(&mut root.children);
+                pending.extend(root.children.iter_mut().rev());
             }
         }
     }
