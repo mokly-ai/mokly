@@ -4,7 +4,10 @@ import path from "node:path";
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { staticRequests } from "./static_delivery_assertions.js";
+import {
+  staticFramesLoaded,
+  staticRequests,
+} from "./static_delivery_assertions.js";
 import { staticEmbeddedFixture } from "./static_embedded_fixture.js";
 import { copiedStaticDirectory } from "./static_test.js";
 
@@ -17,6 +20,7 @@ test("a public embedded viewer fetches copied data without credentials or live e
   page,
   context,
 }) => {
+  await page.clock.install();
   const requests = staticRequests(page);
   await context.addCookies([
     { name: "private", value: "must-not-send", url: fixture.frames.url },
@@ -45,7 +49,10 @@ test("a public embedded viewer fetches copied data without credentials or live e
     .locator('a[data-route="example/screens/details/index.html"]')
     .click();
   await expect(page.locator("#viewer h2")).toHaveText("Details");
-  await page.clock.install();
+  await staticFramesLoaded(
+    page,
+    /\/example\/screens\/details\/index\.(?:mobile|desktop)\.html$/,
+  );
   await page.clock.fastForward(120_000);
   const data = fixture.frames.requests
     .map((route, index) => ({

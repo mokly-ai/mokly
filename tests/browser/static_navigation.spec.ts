@@ -7,7 +7,10 @@ import {
   tourRow,
   welcomeRow,
 } from "./browse_assertions.js";
-import { staticRequests } from "./static_delivery_assertions.js";
+import {
+  staticFramesLoaded,
+  staticRequests,
+} from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
 import {
   chooseScheme,
@@ -142,10 +145,14 @@ test("copied Current never polls revisions, opens events or requests renders", a
   expect(index).not.toHaveProperty("live");
   expect(index.revision).toBe(0);
   expect(index.comparisonUrl).toBeNull();
+  await page.clock.install();
   const requests = staticRequests(page);
   await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  await page.clock.install();
+  await staticFramesLoaded(
+    page,
+    /\/example\/screens\/welcome\/index\.(?:mobile|desktop)\.html$/,
+  );
   await page.clock.fastForward(120_000);
   await page.locator(detailsRow).click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
