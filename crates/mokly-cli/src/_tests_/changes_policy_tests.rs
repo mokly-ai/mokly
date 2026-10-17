@@ -53,7 +53,10 @@ fn every_runtime_category_has_an_explicit_historical_outcome() {
                 commit: "a".repeat(40),
                 source: Box::new(source),
             };
-            match (reason, changes_diagnostics::unavailable(&error)) {
+            match (
+                reason,
+                changes_diagnostics::unavailable(&error, "fixture-base"),
+            ) {
                 (None, None) => assert!(
                     changes_diagnostics::failure_detail(&error).ends_with("authored diagnostic")
                 ),
@@ -106,6 +109,6 @@ fn a_fatal_runtime_failure_takes_precedence_over_historical_validation() {
             },
         }),
     };
-    assert!(changes_diagnostics::unavailable(&error).is_none());
+    assert!(changes_diagnostics::unavailable(&error, "fixture-base").is_none());
     assert!(changes_diagnostics::failure_detail(&error).contains("bad frame"));
 }

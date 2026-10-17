@@ -53,6 +53,8 @@ roots are `CatalogueReadModel` v7, `EntryDetailV1`, and `LiveDescriptorV3`.
 Their readers gate the version before decoding payload fields. Index validation
 checks private fields, paths, variants, trees, schemas, tagged props, flow
 membership, removed metadata, snapshot identities, and generation URLs.
+Ready component and view eligibility follows the same kind rules as the viewer,
+including removed component parents.
 Detail validation checks the current or historical fence, field placement
 by kind, and canonical tagged props in usage and input-change records.
 `ReadError::Contract` carries a typed `ContractViolation`. Version failures
@@ -89,7 +91,8 @@ Component identity impact can come from an included parent or variant. An
 actual-instance `implementation` reason does not alter own view states.
 
 `material` owns the catalogue, historical snapshot, props, instance, and slot digest preimages.
-`routes` owns Rust artifact routes and portable relative URL operations.
+`routes` owns Rust artifact routes and portable relative URL operations,
+including comparison generation, snapshot-side, and removed-preview paths.
 
 `inference::infer` builds closed schemas from own and merged variant props.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`

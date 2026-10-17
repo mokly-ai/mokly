@@ -129,9 +129,10 @@ The comparison uses that same repository, commit, and ref without another lookup
 The phase owner erases its animated row before cache notes and serializes both
 streams. Warnings precede the colored Changes status. Nested Git failures keep
 the historical commit and Git detail. Changes runs inside the static pipeline before warning gates and output
-installation. `PreparedBuild` retains its result for the comparison-file join.
-Head and
-base use `mokly-render::Runtime` with one shared pool and render cache.
+installation. `PreparedBuild` passes the same result to the terminal, static
+index, generation writer, and publication metadata. The pipeline uses the summary for terminal Changes reporting and warning
+policy before installation. Review timing spans retain their caller context under
+`output.write`, including the one pinned base lookup. Head and base use `mokly-render::Runtime` with one shared pool and render cache.
 JavaScript and PostCSS base inputs hold source and dependency leases.
 Historical sidecars and PostCSS children use the same parent-death protection
 as current rendering, including when consumer code blocks.

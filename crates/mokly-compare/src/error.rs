@@ -13,6 +13,27 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Recoverable preparation failures.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// The retained removal has no matching public base record or detail.
+    #[error("[mokly-compare/projection] removed record is missing for {path}")]
+    RemovedRecord {
+        /// Historical entry path.
+        path: String,
+    },
+    /// A base render plan names an absent catalogue entry.
+    #[error("[mokly-compare/projection] historical plan {route} names missing entry {entry}")]
+    HistoricalPlanEntry {
+        /// Historical document route.
+        route: String,
+        /// Missing catalogue entry index.
+        entry: usize,
+    },
+    /// A planned historical render did not retain its composed document.
+    #[error("[mokly-compare/projection] historical document is missing for {route}")]
+    HistoricalDocument {
+        /// Historical document route.
+        route: String,
+    },
+
     /// A bounded source operation cannot classify this path.
     #[error("[mokly-compare/limit] {path}: {source}")]
     Limit {

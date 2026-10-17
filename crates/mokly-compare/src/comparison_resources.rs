@@ -26,6 +26,7 @@ pub(crate) struct Resources {
     pub(crate) aliases: BTreeMap<String, String>,
 }
 
+#[tracing::instrument(name = "review.resource-graph", skip_all, err)]
 pub(crate) fn closures(
     before: Arc<dyn RenderGeneration>,
     after: Arc<dyn RenderGeneration>,
@@ -121,6 +122,7 @@ pub(crate) struct ResourceInput<'a> {
     pub(crate) after_route: &'a str,
 }
 
+#[tracing::instrument(name = "review.css-analysis", skip_all, err)]
 pub(crate) fn evidence(
     input: ResourceInput<'_>,
     observation: &mut PageObservation,

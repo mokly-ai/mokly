@@ -66,12 +66,13 @@ pub(crate) fn warnings(error: &Error) -> Vec<Warning> {
         .collect()
 }
 
-pub(crate) fn unavailable(error: &Error) -> Option<BuildChanges> {
+pub(crate) fn unavailable(error: &Error, base_ref: &str) -> Option<BuildChanges> {
     let Error::Base { commit, source } = error else {
         return None;
     };
     if let Some(detail) = limit_detail(source) {
         return Some(BuildChanges::Unavailable {
+            base_ref: base_ref.into(),
             base_commit: commit.clone(),
             reason: "comparison limit reached".into(),
             diagnostics: vec![ChangeDiagnostic {
@@ -82,6 +83,7 @@ pub(crate) fn unavailable(error: &Error) -> Option<BuildChanges> {
     }
     let reason = changes_policy::unavailable(source)?;
     Some(BuildChanges::Unavailable {
+        base_ref: base_ref.into(),
         base_commit: commit.clone(),
         reason: reason.into(),
         diagnostics: details(source),

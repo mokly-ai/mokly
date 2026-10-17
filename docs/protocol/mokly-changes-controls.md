@@ -15,7 +15,7 @@ Changed, `added` to Added, `removed` to Removed, and `unchanged` or
 Changed when any shown view is Changed, else Added when any is Added, else
 Removed when any is Removed, else Unmodified. Comparison eligibility follows
 that shown status under the kind rule: Changed is eligible, and
-Removed is eligible only for a component variant. Thus an entry with
+Removed is eligible only for a component. Thus an entry with
 changes can show Unmodified with no comparison band while the marks on the view
 controls and the `Changed views` row point to the views that changed.
 

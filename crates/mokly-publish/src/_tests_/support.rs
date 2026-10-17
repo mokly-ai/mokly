@@ -52,7 +52,7 @@ pub(super) fn artifact(comparison: bool) -> Artifact {
         file("static/two.txt", b"two"),
     ];
     if let Some(comparison) = &inventory.comparison {
-        files.push(file(&comparison.path, &serde_json::to_vec(&json!({"schemaVersion":8,"baseRef":comparison.base_ref,"baseCommit":comparison.base_sha})).unwrap()));
+        files.push(file(&comparison.path, &serde_json::to_vec(&json!({"schemaVersion":8,"baseCommit":comparison.base_sha,"entries":[],"affected":[],"diagnostics":[]})).unwrap()));
     }
     Artifact::finalize(
         PathBuf::from("/private/publish"),

@@ -1280,6 +1280,15 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
 
 ## Milestone 12: Static build and publish
 
+- [x] Apply the final comparison join requests: viewer eligibility in both readers,
+      shared removed records and details, ready raw-byte preservation, and merged checks.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-8.md`.
+
+- [x] Apply comparison join review 4: shared projection, view membership, private
+      snapshot contract, branch tests, indexed workspaces, timings, and merged verification.
+- [ ] Complete timing records for dependency `tier`, comparison view counts, and
+      `review.changed-paths` in the shared Changes pipeline (review 4, finding 7).
+
 - [ ] Implement the static output of `mokly build` in `mokly-static`: one
       stub per shell route, the catalogue index, the entry details, the
       documents, the comparison generation, the shared `mokly-model` ownership
@@ -1289,7 +1298,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
         canonical index and details, exact package assets, and shared ownership.
         Implement reservations, exclusive installation, rollback, bounded cleanup,
         input rechecks, and config-relative output selection.
-  - [ ] Join the Milestone 9 comparison generation, removed records, and detail
+  - [x] Join the Milestone 9 comparison generation, removed records, and detail
         evidence before identity finalization. Repeat the comparison-specific
         reference scenarios after that integration. The join must populate upload
         `baseRef` instead of null.
@@ -1353,6 +1362,8 @@ Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
 Non-comparison M12 acceptance: `.context/rust-rebuild/delegation/m12-static/report-4.md`
 and `.context/rust-rebuild/sweeps/m12-static.md`.
 Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md`.
+Comparison join and static browser acceptance: `.context/rust-rebuild/delegation/m12-static/report-6.md`.
+Comparison join review 4: `.context/rust-rebuild/delegation/m12-static/report-7.md`.
 
 - [x] Commit.
 

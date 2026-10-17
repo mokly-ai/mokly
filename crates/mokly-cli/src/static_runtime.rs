@@ -99,6 +99,7 @@ pub(super) fn run(
     result.map(|artifact| (artifact, config.repo_root))
 }
 
+#[tracing::instrument(name = "output.write", skip_all, err)]
 fn prepare(
     cwd: &Path,
     options: &Build,
@@ -187,7 +188,7 @@ fn prepare(
             },
             transaction,
         )
-        .map(|(artifact, _)| artifact)
+        .map(|(artifact, _summary)| artifact)
 }
 
 struct LoadedConfig(ResolvedConfig);

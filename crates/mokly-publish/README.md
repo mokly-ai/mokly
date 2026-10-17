@@ -21,7 +21,9 @@ The CLI adapter constructs `Finalized` once and retains both the artifact and
 its prepared upload. Repeated `OutputSnapshot::capture` calls share parsed
 metadata, hashes, and the compressed Plan body. No directory walk occurs.
 Review identity validation streams through the review JSON and rejects nested
-duplicate keys without constructing its full value tree.
+duplicate keys without constructing its full value tree. It checks review v8's
+`baseCommit` against the upload's `baseSha`. The static writer derives `baseRef`
+from the retained change snapshot v4; review v8 has no base-ref field.
 
 `Client` implements `Exchange`. It consumes `dyn Http`, `dyn Clock`, and
 `dyn Reporter`. The HTTP adapter uses reqwest with rustls and AWS-LC.
