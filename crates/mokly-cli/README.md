@@ -19,8 +19,7 @@ presentation. The npm shim starts this binary with inherited streams.
 
 The Windows MSVC binary reserves an 8 MiB main-thread stack through
 `/STACK:8388608`, matching Linux and macOS main-thread headroom. Preparation
-uses the caller's stack. Render workers use default stacks. The binary has
-no separate 64 MiB preparation thread.
+uses the caller's stack. Render workers use default stacks.
 
 Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.

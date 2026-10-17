@@ -1467,6 +1467,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
 Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
 Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
+Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -1485,6 +1486,10 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 14 round 3: reconcile the inherited
+    `resident_set_recycles_only_after_one_gib_is_exceeded` flake with the pending
+    M9 pool-fixture fix. Its isolated rerun passed; missing seeded epoch state
+    can let idle cleanup take the asserted slot. Evidence: M14 `report-3.md`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and
