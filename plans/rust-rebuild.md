@@ -1141,6 +1141,10 @@ Tags: ui
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
+  - [x] Run the comparison UI in Chrome against `mokly build --base` output
+        and a removed-entry fixture, and fix the viewer defects that it finds.
+  - [ ] Settle how Details shows the review reasons, including
+        `implementation`, before a comparison loads (report 18, decision D1).
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1164,6 +1168,8 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
 The review v8 reader, the base snapshot identity, the `./data` trim, the
 `implementation` wording, and the projection check against Milestone 9 output:
 `.context/rust-rebuild/delegation/m7/report-11.md`.
+The Chrome run against Milestone 9 output, its viewer fixes, and decision D1:
+`.context/rust-rebuild/delegation/m7/report-18.md`.
 
 - [ ] Commit.
 
