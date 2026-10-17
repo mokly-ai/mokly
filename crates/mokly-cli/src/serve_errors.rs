@@ -4,10 +4,10 @@ use mokly_model::error::ModelError;
 use mokly_model::readers::ReadError;
 use mokly_server::error::{InternalError, ServerError};
 
-use crate::build_output;
 use crate::codes::Code;
 use crate::output::Style;
 use crate::redaction::Redactor;
+use crate::{build_output, changes_diagnostics};
 
 /// Format a server failure without library-specific error wrappers.
 pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> String {
@@ -34,6 +34,22 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
         ServerError::Bind { port, source } => (
             Code::ServerFailed,
             format!("Could not listen on 127.0.0.1 starting at port {port}: {source}"),
+        ),
+        ServerError::ChangesUnavailable => (
+            Code::BuildInvalid,
+            "Changes evidence is not ready. Try again.".into(),
+        ),
+        ServerError::ChangesReplaced => (
+            Code::BuildInvalid,
+            "Comparison inputs were replaced. Try again.".into(),
+        ),
+        ServerError::ComparisonCapacity => (
+            Code::BuildInvalid,
+            "Comparison capacity is full. Try again shortly.".into(),
+        ),
+        ServerError::Comparison { source } => (
+            changes_diagnostics::failure_code(source),
+            changes_diagnostics::failure_detail(source),
         ),
         ServerError::Internal(source) => (Code::ServerFailed, internal(source)),
     };
@@ -67,3 +83,11 @@ fn internal(error: &InternalError) -> String {
 #[cfg(test)]
 #[path = "_tests_/serve_errors_tests.rs"]
 mod serve_errors_tests;
+
+/// Retain the historical commit and authored diagnostics in a Changes status reason.
+pub fn changes_reason(error: &ServerError) -> String {
+    match error {
+        ServerError::Comparison { source } => changes_diagnostics::failure_detail(source),
+        _ => error.to_string(),
+    }
+}

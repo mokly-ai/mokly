@@ -11,17 +11,18 @@ use mokly_cli::build::BuildError;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::grammar::Common;
-use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::{CatalogueServe, PreparedServe, ServePreparation};
 use mokly_cli::serve_settings::ServeSettings;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
+use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::render_runtime::Services;
 
 pub(super) struct ServeServices {
+    pub(super) runtime: Arc<Runtime>,
     pub(super) config: mokly_catalogue::config_types::ResolvedConfig,
     pub(super) tree: Arc<dyn SourceTree>,
     pub(super) preparation: Arc<dyn ServePreparation>,
@@ -32,7 +33,7 @@ impl ServeServices {
     pub(super) fn new(
         cwd: &Path,
         common: &Common,
-        redactor: Arc<Redactor>,
+        diagnostics: Arc<dyn Diagnostics>,
         cancellation: Arc<dyn Cancellation>,
     ) -> Result<Self, BuildError> {
         let tree: Arc<dyn SourceTree> = Arc::new(CancellableTree {
@@ -49,7 +50,7 @@ impl ServeServices {
             cwd,
             &config.repo_root,
             common,
-            crate::render_runtime::diagnostics(redactor),
+            diagnostics,
             cancellation,
         ) {
             Ok(services) => services,
@@ -62,10 +63,11 @@ impl ServeServices {
         };
         let preparation = Arc::new(AttemptPreparation {
             tree: tree.clone(),
-            runtime: services.runtime,
+            runtime: services.runtime.clone(),
             settings: ServeSettings::new(&config),
         });
         Ok(Self {
+            runtime: services.runtime,
             config,
             tree,
             preparation,

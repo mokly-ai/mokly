@@ -44,8 +44,28 @@ listener and file locks release last. Startup uses the same lifecycle with a wat
 handoff. A stop before that handoff suppresses the ready layout.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
 
+After `Catalogue ready`, Serve completes current usage and classifies Changes
+against one pinned merge base. Base extraction and dependency installation
+publish `preparing`; rendering and comparison publish `pending`. Only the
+accepted generation reports `Changes ready` and its Changes, moved, and
+ignored-only counts. A failed comparison publishes `unavailable` with its
+diagnostic while All remains available. Base dependency warnings use the
+captured attempt and precede the result. Base composition warnings stay private.
+
+A base-ref change retains the current warning attempt and current render graph.
+Content replacement starts a new attempt and invalidates pending captures.
+The command supplies tracked Git runners to both classification and retained
+historical sources. The ordered Git shutdown hook closes admission, cancels
+process groups, and waits for every command and pipe to drain. Git processes
+that ignore SIGTERM receive SIGKILL after the one-second grace period.
+
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
 diagnostics. It reports listener backoff and recovery in both output modes.
+Comparisons use one progress row with 80 ms animation on a TTY. Every durable
+line erases that row first. A pipe keeps the starting and completion lines
+without animation. A cancelled phase clears its row. The first cache path
+prints once in both modes. Base-ref refresh prints the Git watch action and
+keeps the current warning attempt.
 Serve captures one warning sink per preparation attempt. It sorts and
 deduplicates preparation and composition warnings before the completion line.
 Later on-demand, background, and temporary renders report only new warnings.

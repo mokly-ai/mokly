@@ -1012,7 +1012,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Add the part 1 base source reader, leased extraction cache, dependency
       input readers, three dependency tiers, and bounded install cache in
       `mokly-compare`, ready for the render graph connection.
-- [ ] Connect Serve's ordered `cancel_git` hook to active Git work. Add a
+- [x] Connect Serve's ordered `cancel_git` hook to active Git work. Add a
       real-process shutdown test for a Git process that ignores `SIGTERM`.
 - [x] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
@@ -1096,6 +1096,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+  - [x] Let event streams flush their final chunk before closing the other
+        connections. Bound the grace period and require a clean stream end.
+  - [x] Record reused ready usage as completed, so a metadata-only rebuild
+        publishes no extra usage revision.
+        Serve lifecycle evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/independent-checks.md`.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.

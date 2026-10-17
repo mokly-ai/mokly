@@ -80,9 +80,7 @@ async fn build_warning_first_demand_delivery_and_attempt_fences() {
         .await;
         serve.listening().await;
         if mode == "rich" {
-            serve
-                .wait_line(0, "Git comparison is unavailable in this build.")
-                .await;
+            serve.wait_line(0, "Changes unavailable").await;
         }
         let initial = serve.ready(0, "Initial").await;
         let file = serve.path("specs/home.mockup.tsx");

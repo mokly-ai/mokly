@@ -19,12 +19,14 @@ use crate::work::WorkMock;
 
 fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
     Arc::new(Snapshot {
+        changes: None,
         document_keys: Default::default(),
         index: readers::index(include_str!(
             "../../../../docs/protocol/fixtures/catalogue-v7.json"
         ))
         .unwrap(),
         generation: Arc::new(Generation {
+            changes: None,
             views: Default::default(),
             assets: Default::default(),
             routes: paths
@@ -124,6 +126,7 @@ async fn each_catalogue_route_runs_once_in_order_and_a_replacement_restarts_the_
         ));
         let diagnostics = Unimock::new(());
         let pass = UsagePass {
+            changes: None,
             publications: Arc::new(mock.clone()),
             work: Arc::new(mock.clone()),
             diagnostics: Arc::new(diagnostics.clone()),

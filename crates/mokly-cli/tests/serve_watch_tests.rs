@@ -37,6 +37,10 @@ async fn ready(host: &str, previous: u64, text: &str) -> Value {
             let detail: Value =
                 serde_json::from_str(&get(host, "/mokly-viewer/entries/home.json").await).unwrap();
             if index["revision"].as_u64().unwrap() > previous
+                && !matches!(
+                    index["changesStatus"].as_str(),
+                    Some("pending" | "preparing")
+                )
                 && detail["revision"] == index["revision"]
                 && detail["workspace"].is_object()
                 && get(host, "/static/mokly-generated/home/index.mobile.html")

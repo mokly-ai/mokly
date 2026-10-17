@@ -7,10 +7,14 @@ use axum::body::Bytes;
 
 use crate::assets::File;
 use crate::backend::Documents;
+use crate::changes::ChangeSource;
 use crate::evidence::RenderRoute;
 
 /// Routes, assets, and render services never change during evidence publication.
+#[derive(Clone)]
 pub struct Generation {
+    /// Optional command-owned classifier for this exact head generation.
+    pub changes: Option<Arc<dyn ChangeSource>>,
     /// Matching immutable render and public-file backend.
     pub documents: Arc<dyn Documents>,
     /// Work in catalogue and view order.

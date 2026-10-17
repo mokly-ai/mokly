@@ -39,6 +39,21 @@ pub enum ServerError {
     /// A temporary bundle exceeds the existing preview-store byte budget.
     #[error("[mokly-server/render] preview capacity is full")]
     PreviewCapacity,
+    /// No accepted comparison can satisfy this selection.
+    #[error("[mokly-server/changes] Changes evidence is not ready")]
+    ChangesUnavailable,
+    /// A source replacement fenced pending comparison work.
+    #[error("[mokly-server/changes] comparison inputs were replaced")]
+    ChangesReplaced,
+    /// Retained comparisons fill their count or byte bound.
+    #[error("[mokly-server/changes] comparison capacity is full")]
+    ComparisonCapacity,
+    /// The native comparison failed with its original diagnostic.
+    #[error("[mokly-server/changes] {source}")]
+    Comparison {
+        /// Typed comparison failure.
+        source: Box<mokly_compare::error::Error>,
+    },
     /// Internal IO, task, and serialization failures.
     #[error("[mokly-server/internal] {0}")]
     Internal(#[from] InternalError),

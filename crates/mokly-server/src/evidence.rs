@@ -76,7 +76,8 @@ pub(crate) fn complete(
         };
         next.completed.insert(view.route.clone(), completion);
     }
-    if next.completed.len() == next.views.len()
+    if next.changes.is_none()
+        && next.completed.len() == next.views.len()
         && next
             .completed
             .values()

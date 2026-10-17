@@ -8,10 +8,12 @@ use mokly_server::error::Result;
 use mokly_server::shutdown::Lifecycle;
 use mokly_sidecar::pool::SidecarPool;
 
+use crate::serve_git::GitWork;
 use crate::serve_shutdown;
 use crate::serve_watch::WatchInputs;
 
 pub(super) struct ServeLifecycle {
+    pub(super) git: Arc<dyn GitWork>,
     pub(super) watch: Mutex<Option<Arc<dyn WatchInputs>>>,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) pool: Arc<dyn SidecarPool>,
@@ -38,7 +40,11 @@ impl Lifecycle for ServeLifecycle {
         )
     }
     async fn cancel_git(&self) -> Result<()> {
-        Ok(())
+        let git = self.git.clone();
+        match tokio::task::spawn_blocking(move || git.cancel()).await {
+            Ok(()) => Ok(()),
+            Err(source) => Err(mokly_server::error::InternalError::Task { source }.into()),
+        }
     }
     async fn shutdown_sidecars(&self) -> Result<()> {
         let pool = self.pool.clone();

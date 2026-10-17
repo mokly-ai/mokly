@@ -1,8 +1,12 @@
 //! Atomic public state and ordered event delivery for rebuild integrations.
 
+use std::cell::Cell;
 use std::sync::{Arc, Mutex};
 
+use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::broadcast;
+
+use crate::changes::{self, Accepted, ChangeCancellation, ChangeCommit, Commit};
 
 use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
 use crate::error::Result;
@@ -48,6 +52,20 @@ pub trait Publications: Send + Sync {
     fn completed_many(&self, _origin: &Snapshot, _routes: &[String]) -> Result<()> {
         Ok(())
     }
+    /// Replace all Changes records only while the immutable head is still accepted.
+    fn changes(
+        &self,
+        _origin: &Snapshot,
+        _status: ChangesStatus,
+        _accepted: Option<Arc<Accepted>>,
+        _cancel: &dyn ChangeCancellation,
+    ) -> Result<bool> {
+        Ok(false)
+    }
+    /// Run a short capture installation only while this classification is accepted.
+    fn with_changes(&self, _accepted: &Arc<Accepted>, _commit: &dyn ChangeCommit) -> bool {
+        false
+    }
     /// Fence late evidence before shutdown releases its generation.
     fn close(&self) {}
 }
@@ -67,6 +85,14 @@ impl FixedPublication {
     }
 }
 impl Publications for FixedPublication {
+    fn with_changes(&self, accepted: &Arc<Accepted>, commit: &dyn ChangeCommit) -> bool {
+        self.snapshot
+            .changes
+            .as_ref()
+            .is_some_and(|current| Arc::ptr_eq(current, accepted))
+            && commit.apply()
+    }
+
     fn current(&self) -> Arc<Snapshot> {
         self.snapshot.clone()
     }
@@ -112,6 +138,17 @@ impl SharedPublication {
     }
 }
 impl Publications for SharedPublication {
+    fn with_changes(&self, accepted: &Arc<Accepted>, commit: &dyn ChangeCommit) -> bool {
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        !state.closed
+            && state
+                .snapshot
+                .changes
+                .as_ref()
+                .is_some_and(|current| Arc::ptr_eq(current, accepted))
+            && commit.apply()
+    }
+
     fn completed_many(&self, origin: &Snapshot, routes: &[String]) -> Result<()> {
         let _build = self.build.lock().unwrap_or_else(|error| error.into_inner());
         {
@@ -155,6 +192,49 @@ impl Publications for SharedPublication {
             state.snapshot = next;
             let _ = state.updates.send(event(&state.snapshot));
             return Ok(());
+        }
+    }
+    fn changes(
+        &self,
+        origin: &Snapshot,
+        status: ChangesStatus,
+        accepted: Option<Arc<Accepted>>,
+        cancel: &dyn ChangeCancellation,
+    ) -> Result<bool> {
+        let _build = self.build.lock().unwrap_or_else(|error| error.into_inner());
+        loop {
+            let current = {
+                let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+                if state.closed
+                    || cancel.cancelled()
+                    || !Arc::ptr_eq(&state.snapshot.documents, &origin.documents)
+                {
+                    return Ok(false);
+                }
+                state.snapshot.clone()
+            };
+            if current.index.changes_status == status && accepted.is_none() {
+                return Ok(true);
+            }
+            let next = changes::project(&current, status, accepted.clone())?;
+            let replaced = Cell::new(false);
+            let installed = cancel.commit(&Commit(&|| {
+                let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+                if state.closed {
+                    return false;
+                }
+                if !Arc::ptr_eq(&state.snapshot, &current) {
+                    replaced.set(true);
+                    return false;
+                }
+                state.snapshot.lease.expire();
+                state.snapshot = next.clone();
+                let _ = state.updates.send(event(&state.snapshot));
+                true
+            }));
+            if installed || cancel.cancelled() || !replaced.get() {
+                return Ok(installed);
+            }
         }
     }
     fn close(&self) {

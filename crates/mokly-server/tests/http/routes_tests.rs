@@ -220,6 +220,6 @@ async fn events_send_the_current_identity_at_once_and_shutdown_closes_the_stream
     assert!(head.bytes().await.unwrap().is_empty());
     let address = harness.url.strip_prefix("http://").unwrap().to_owned();
     harness.close().await;
-    assert!(response.chunk().await.is_err() || response.chunk().await.unwrap().is_none());
+    assert!(response.chunk().await.unwrap().is_none());
     assert!(std::net::TcpListener::bind(address).is_ok());
 }
