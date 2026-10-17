@@ -1222,6 +1222,12 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-4.md` and
 Evidence: `.context/rust-rebuild/delegation/m11/report-5.md` and
 `.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
+- [x] Merge comparison-engine updates, apply one cancellation rule to fatal
+      Serve warnings, and prove destination composition.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-6.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
+
 ## Milestone 11.1: Watch review corrections
 
 - [x] Merge rebuild updates through `09821954` and preserve both branches.

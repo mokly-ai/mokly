@@ -175,8 +175,8 @@ can revive the scope of a last-good backend after an attempt fails.
 When preparation repeats after changed watch roots attach, success reports
 only the final pass's warnings. A failure of the second pass or its recheck
 also retains the first pass's warnings. A fatal Serve error flushes the
-current attempt's pending records before its diagnostic, including after
-shutdown cancels render work. Normal cancellation emits no warnings.
+current attempt's pending records before its diagnostic only when
+cancellation has not been requested. Cancelled attempts emit no warnings.
 
 ## Strict Mode
 

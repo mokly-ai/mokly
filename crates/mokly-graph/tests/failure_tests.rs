@@ -46,9 +46,14 @@ fn a_referenced_document_keeps_its_composition_warnings_out_of_the_requesting_do
     );
     let (generation, cache) = support::prepare(directory.path(), 1024 * 1024, 2);
     let generation = generation.unwrap();
+    let misses = cache.stats().misses;
     let source = generation.render("home/index.mobile.html").unwrap();
     assert!(source.document.as_ref().unwrap().warnings.is_empty());
-    assert!(cache.stats().entries > 0);
+    assert_eq!(
+        cache.stats().misses - misses,
+        3,
+        "home must compose itself and both destination views before any direct destination request"
+    );
     for viewport in ["mobile", "desktop"] {
         let route = format!("target/index.{viewport}.html");
         let target = generation.render(&route).unwrap();

@@ -28,7 +28,7 @@ pub trait AttemptWarnings: RenderWarnings {
     /// The output callback must not reenter the warning scope.
     /// Only preparation or adoption failure retains seen records for the next attempt.
     fn finish(&self, warnings: &[Warning], failed: bool, output: &dyn Fn(&[Warning]));
-    /// Flush a fatal Serve error's pending records after render cancellation.
+    /// Flush a fatal Serve error's pending records only before cancellation.
     fn terminate(&self, output: &dyn Fn(&[Warning]));
 }
 
@@ -148,7 +148,7 @@ impl AttemptWarnings for Attempt {
             .state
             .lock()
             .unwrap_or_else(|error| error.into_inner());
-        if state.number == self.number {
+        if state.number == self.number && !self.owner.cancellation.requested() {
             output(&take_new(&mut state));
             state.ready = true;
         }
