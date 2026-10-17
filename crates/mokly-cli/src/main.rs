@@ -18,6 +18,7 @@ mod serve_debounce;
 mod serve_lifecycle;
 mod serve_preparation;
 mod serve_rebuild;
+mod serve_rebuild_action;
 mod serve_reporter;
 mod serve_services;
 mod serve_shutdown;
@@ -25,6 +26,7 @@ mod serve_signals;
 mod serve_state;
 mod serve_timing;
 mod serve_trace;
+mod serve_warnings;
 mod serve_watch;
 mod serve_watch_events;
 mod static_runtime;
@@ -43,3 +45,7 @@ fn main() -> std::process::ExitCode {
 mod phase_format;
 #[cfg(debug_assertions)]
 mod test_faults;
+
+#[cfg(test)]
+#[path = "_tests_/warning_support.rs"]
+mod warning_support;
