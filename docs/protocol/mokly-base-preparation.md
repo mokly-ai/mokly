@@ -199,11 +199,11 @@ select tier three with a `base-dependencies` warning naming that directory.
 JavaScript, stylesheet, and PostCSS package reads establish this usage.
 An unused ancestor directory does not cause a warning.
 
-Every bare import starts at its importer's matching directory in the selected
-installation, before configuration and explicit package-root fallback. Source
-aliases and tsconfig paths use base files. Working tsconfig paths cannot remap
-base package imports. Only a lookup outside the repository mapping selects
-tier three with the interim warning. Each fallback keeps its typed trace reason.
+Tracked base files supply their bytes before installed copies. Other bare
+imports start at the matching importer directory in the selected installation,
+before configuration and explicit package-root fallback. Source aliases and
+tsconfig paths use base files. Working tsconfig paths cannot remap base package imports.
+An unmappable lookup selects tier three with a `base-dependencies` warning. Each fallback emits its typed trace reason.
 
 Copy the base sources into the private dependency entry. Run each install
 without a shell using `ci --ignore-scripts --no-audit --no-fund`, with explicit

@@ -217,7 +217,7 @@ impl Phases for Lines {
         self.terminal.stderr(&format!("{text}\n"));
     }
     fn changes(&self, changes: &BuildChanges) {
-        let elapsed = self.settle();
+        let elapsed = self.settle().map(duration);
         self.terminal.stderr(&changes_output::diagnostics(
             &self.style,
             changes,
@@ -227,7 +227,7 @@ impl Phases for Lines {
             &self.style,
             changes,
             &self.redactor,
-            elapsed,
+            elapsed.as_deref(),
         ));
     }
     fn warnings(&self, warnings: &[Warning]) {

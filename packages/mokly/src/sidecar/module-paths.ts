@@ -7,6 +7,14 @@ import { DependencyUsage } from "./dependency-usage.js";
 import { dependencyDirectory } from "./importer-resolution.js";
 import { inside, logical } from "./path-scope.js";
 import { resolutionOptions } from "./resolution.js";
+import type { SourceDependencyRoot } from "./source-dependencies.js";
+import {
+  INSTALLED_INPUT_PREFIX,
+  sourceDependency,
+  sourceDependencyName,
+  sourceDependencyRoots,
+  sourceDependencySync,
+} from "./source-dependencies.js";
 
 export interface ModuleSources {
   sourceRoot: string;
@@ -26,6 +34,7 @@ export class ModulePaths {
     readonly dependencyRoot: string | undefined,
     readonly repositoryRoots: string[],
     readonly dependencyRoots: string[],
+    readonly sourceDependencyRoots: SourceDependencyRoot[],
     readonly settings: ModuleResolution,
     readonly dependencyUsage: DependencyUsage,
   ) {}
@@ -94,6 +103,7 @@ export class ModulePaths {
       dependencyRoot,
       repositories,
       [...new Set(dependencies)],
+      sourceDependencyRoots(params, root, dependencyRoot, dependencies),
       params.moduleResolution,
       new DependencyUsage(
         root,
@@ -133,6 +143,8 @@ export class ModulePaths {
   }
 
   name(file: string): string {
+    const source = sourceDependencyName(this.sourceDependencyRoots, file);
+    if (source !== undefined) return source;
     const index = this.dependencyRoots.findIndex((root) => inside(root, file));
     if (index >= 0)
       return `node_modules/${index ? `.mokly-roots/${index}/` : ""}${logical(this.dependencyRoots[index]!, file)}`;
@@ -142,6 +154,14 @@ export class ModulePaths {
     throw new Error(
       `module ${path.basename(file)} is outside sourceRoot and selected dependency roots`,
     );
+  }
+
+  /** Installation lookup stamps must not be shadowed by tracked source directories. */
+  metadataName(file: string): string {
+    const name = this.name(file);
+    return !inside(this.sourceRoot, file) && this.dependencyDirectory(file)
+      ? INSTALLED_INPUT_PREFIX + name
+      : name;
   }
 
   dependencyDirectory(file: string): string | undefined {
@@ -208,7 +228,10 @@ export class ModulePaths {
 
   async resolve(file: string): Promise<string> {
     if (!path.isAbsolute(file)) return file;
-    const candidate = this.candidate(await fs.promises.realpath(file));
+    const real = await fs.promises.realpath(file);
+    const candidate = this.candidate(
+      (await sourceDependency(this, real)) ?? real,
+    );
     if (!candidate.mapped) return this.observed(candidate.file);
     try {
       const real = await fs.promises.realpath(candidate.file);
@@ -224,7 +247,8 @@ export class ModulePaths {
 
   resolveSync(file: string): string {
     if (!path.isAbsolute(file)) return file;
-    const candidate = this.candidate(fs.realpathSync(file));
+    const real = fs.realpathSync(file);
+    const candidate = this.candidate(sourceDependencySync(this, real) ?? real);
     if (!candidate.mapped) return this.observed(candidate.file);
     try {
       const real = fs.realpathSync(candidate.file);

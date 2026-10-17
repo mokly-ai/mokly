@@ -50,12 +50,14 @@ export async function resolutionInputs(
   }
   for (const lookup of [...paths.lookupFiles].sort()) {
     const file = await paths.metadata(lookup);
-    metadataInputs[paths.name(file)] = inputs[file] = await fileDigest(file);
+    metadataInputs[paths.metadataName(file)] = inputs[file] =
+      await fileDigest(file);
   }
   for (const directory of [...ancestors].sort()) {
     for (const name of ["package.json", "tsconfig.json"]) {
       const file = path.join(directory, name);
-      metadataInputs[paths.name(file)] = inputs[file] = await fileDigest(file);
+      metadataInputs[paths.metadataName(file)] = inputs[file] =
+        await fileDigest(file);
     }
   }
   const inputDirectories = new Map<string, string[]>();
@@ -63,7 +65,7 @@ export async function resolutionInputs(
   for (const directory of [...directories].sort()) {
     const names = await directoryFiles(directory);
     inputDirectories.set(directory, names);
-    metadataDirectories.set(paths.name(directory), names);
+    metadataDirectories.set(paths.metadataName(directory), names);
   }
   return {
     inputDirectories: Object.fromEntries(inputDirectories),

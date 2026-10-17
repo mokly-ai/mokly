@@ -29,8 +29,8 @@ impl SidecarPool for Pool {
             return Err(Error::Protocol(ProtocolError::Handshake));
         }
         let source_root = self.source_root(&call)?;
-        let (index, mut slot) = self.acquire(&call)?;
-        if let Err(error) = self.isolate(&mut slot, source_root.as_deref()) {
+        let (index, mut slot) = self.acquire(&call, source_root.as_deref())?;
+        if let Err(error) = self.isolate(index, &mut slot, source_root.as_deref()) {
             self.release(index, slot)?;
             return Err(error);
         }

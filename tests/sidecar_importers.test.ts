@@ -65,13 +65,14 @@ for (const tier of ["working", "installed"]) {
     });
     const result = await sidecar.call<BundleResult>("bundle", params);
     for (const name of ["a", "b"])
-      assert.ok(
-        result.modules.some(
-          (module) =>
-            module.path ===
-            `packages/${name}/node_modules/fixture-version/index.mjs`,
-        ),
-      );
+      for (const file of ["index.mjs", "style.css"])
+        assert.ok(
+          result.modules.some(
+            (module) =>
+              module.path ===
+              `packages/${name}/node_modules/fixture-version/${file}`,
+          ),
+        );
     await sidecar.call("cssModules", {
       generation: result.generation,
       classMaps: {},

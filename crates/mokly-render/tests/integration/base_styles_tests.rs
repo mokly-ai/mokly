@@ -122,6 +122,14 @@ fn base_owned_styles_change_the_component_and_saved_variant_without_a_consumer_r
         result
             .entries
             .iter()
+            .filter(|entry| entry.path == "card" || entry.path == "card/other")
+            .flat_map(|entry| &entry.documents)
+            .all(|view| view.evidence.rules.is_empty())
+    );
+    assert!(
+        result
+            .entries
+            .iter()
             .find(|entry| entry.path == "home")
             .unwrap()
             .documents
@@ -191,4 +199,43 @@ fn removing_owned_styles_keeps_historical_component_attribution() {
     let result = compare(&base, &head);
     assert_eq!(result.snapshot.changed_entries, ["card", "card/other"]);
     assert_eq!(result.review.affected[0].consumer.path, "home");
+}
+
+#[test]
+fn identical_owned_styles_follow_a_component_move_and_its_saved_variant() {
+    let base = consumer("'red'");
+    let head = consumer("'red'");
+    fs::rename(
+        head.root().join("owned/card.mockup.tsx"),
+        head.root().join("owned/renamed.mockup.tsx"),
+    )
+    .unwrap();
+    let result = compare(&base, &head);
+    assert_eq!(result.counts.moved, 2);
+    assert!(result.snapshot.removed_entries.is_empty());
+    assert!(
+        result
+            .pairing
+            .entries
+            .iter()
+            .all(|pair| pair.before.is_some() && pair.after.is_some())
+    );
+    let parent = result
+        .review
+        .entries
+        .iter()
+        .find(|entry| entry.path == "renamed")
+        .unwrap();
+    assert_eq!(parent.previous_path.as_deref(), Some("card"));
+    let variants = parent.variants.as_ref().unwrap();
+    assert_eq!(variants.len(), 1);
+    assert_eq!(variants[0].path, "renamed/other");
+    assert_eq!(variants[0].previous_path.as_deref(), Some("card/other"));
+    assert!(
+        parent
+            .views
+            .iter()
+            .chain(&variants[0].views)
+            .all(|view| view.state == ReviewState::Unchanged)
+    );
 }

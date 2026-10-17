@@ -1,14 +1,11 @@
 //! Changes presentation shares the shell's entry, move, and ignored-entry counts.
 
-use std::time::Duration;
-
 use mokly_compare::comparison_types::ComparisonCounts;
 
 use crate::build::BuildChanges;
 use crate::codes::Code;
 use crate::output::{Mode, Style, bounded};
 use crate::redaction::Redactor;
-use crate::serve_output::duration;
 
 /// A historical source diagnostic keeps its terminal category.
 #[derive(Clone, Debug)]
@@ -24,7 +21,7 @@ pub fn ready(style: &Style, counts: ComparisonCounts) -> String {
     ready_timed(style, counts, None)
 }
 
-fn ready_timed(style: &Style, counts: ComparisonCounts, elapsed: Option<Duration>) -> String {
+fn ready_timed(style: &Style, counts: ComparisonCounts, elapsed: Option<&str>) -> String {
     if style.mode == Mode::Plain {
         return String::new();
     }
@@ -59,12 +56,12 @@ pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> St
     summary_with_duration(style, changes, redactor, None)
 }
 
-/// Complete a measured comparison phase without adding duration to plain output.
+/// Complete a comparison with the phase owner's formatted duration; plain output omits it.
 pub fn summary_with_duration(
     style: &Style,
     changes: &BuildChanges,
     redactor: &Redactor,
-    elapsed: Option<Duration>,
+    elapsed: Option<&str>,
 ) -> String {
     match changes {
         BuildChanges::Disabled => String::new(),
@@ -128,8 +125,8 @@ pub fn diagnostics(style: &Style, changes: &BuildChanges, redactor: &Redactor) -
     }
 }
 
-fn suffix(elapsed: Option<Duration>) -> String {
-    elapsed.map_or_else(String::new, |elapsed| format!(" ({})", duration(elapsed)))
+fn suffix(elapsed: Option<&str>) -> String {
+    elapsed.map_or_else(String::new, |elapsed| format!(" ({elapsed})"))
 }
 
 fn glyph(style: &Style, text: &str, color: u8) -> String {

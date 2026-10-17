@@ -24,6 +24,14 @@ pub(super) struct Slot {
     pub(super) requests: u64,
 }
 
+/// A context keeps its source identity even while its recycled slot has no process.
+pub(super) struct Affinity {
+    /// The slot that owns this context's PostCSS process.
+    pub(super) index: usize,
+    /// The source root whose worker may restore the context.
+    pub(super) source_root: PathBuf,
+}
+
 #[derive(Default)]
 pub(super) struct State {
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
@@ -39,7 +47,7 @@ pub(super) struct State {
     pub(super) maps: BTreeMap<String, CssModules>,
     pub(super) bindings: BTreeMap<String, Bindings>,
     pub(super) contexts: BTreeSet<String>,
-    pub(super) affinity: BTreeMap<String, usize>,
+    pub(super) affinity: BTreeMap<String, Affinity>,
     pub(super) waiting: BTreeMap<u64, Option<String>>,
     pub(super) ticket: u64,
     pub(super) serving: u64,

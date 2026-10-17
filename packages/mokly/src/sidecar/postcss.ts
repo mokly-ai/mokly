@@ -13,6 +13,7 @@ import { SidecarError, detail } from "./errors.js";
 import { dependencyDirectory } from "./importer-resolution.js";
 import { jsonText } from "./json.js";
 import { ModulePaths } from "./module-paths.js";
+import { sourceDependency } from "./source-dependencies.js";
 
 /** Children retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
@@ -67,6 +68,9 @@ export class PostcssWorkers {
         cwd: root,
         env: {
           ...process.env,
+          PWD: root,
+          INIT_CWD: undefined,
+          npm_package_json: undefined,
           NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
             .filter(Boolean)
             .join(path.delimiter),
@@ -92,6 +96,8 @@ export class PostcssWorkers {
         repositoryRoots: paths.repositoryRoots,
       });
     }
+    const physical = stylesheetSource(paths, params.sourcePath);
+    const sourcePath = (await sourceDependency(paths, physical)) ?? physical;
     const id = ++this.id;
     return new Promise((resolve, reject) => {
       function cleanup() {
@@ -125,7 +131,7 @@ export class PostcssWorkers {
         id,
         params: {
           ...params,
-          sourcePath: stylesheetSource(paths, params.sourcePath),
+          sourcePath,
         },
       });
     });

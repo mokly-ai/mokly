@@ -71,13 +71,16 @@ Evicted stylesheet resources rebuild from that generation's captured bytes.
 and all repository mappings. Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS
-package loads for base fallback checks. It also keeps unmapped importer
-directories, including package-manager links into a root store. Repository-relative
-lookup maps through the selected dependency repository. Nested dependency
+package loads for base fallback checks. Repository-relative importer directories,
+including package-manager links into a root store, map through the selected
+dependency repository. Only directories outside that mapping need lookup fallback. Nested dependency
 JavaScript and CSS keep the same logical paths on both sides. Compiled recipes
 retain that usage across worker restoration and evaluation reuse. Selected
 logical roots take precedence over source-root names in nested CSS exclusion
 checks.
+Tracked base files beneath `node_modules` supply their Git bytes and keep
+their dependency classification. Installation lookup metadata uses private
+names so tracked directories cannot hide installed package membership.
 Each sidecar worker keeps one source working directory. Head and base module
 evaluation and render callbacks use their own files through `process.cwd()`.
 Both sides forward identical trusted style records into the composed tree

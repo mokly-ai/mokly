@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -45,7 +46,7 @@ export async function resolveImport(
   if (selected === directory || original.external) return original;
   if (!original.errors.length && path.isAbsolute(original.path)) {
     const real = await fs.realpath(original.path);
-    if (paths.repositoryOwned(real)) return original;
+    if (inside(paths.sourceRoot, real)) return original;
   }
   return build.resolve(name, {
     ...options,
@@ -55,11 +56,28 @@ export async function resolveImport(
 
 /** Synchronous runtime requires keep source reads local and map bare package lookups. */
 export function sideRequire(paths: ModulePaths, file: string): NodeJS.Require {
+  file = path.join(realpathSync(path.dirname(file)), path.basename(file));
   const native = createRequire(file);
   const resolve = (
     name: string,
     options?: Parameters<NodeJS.RequireResolve>[1],
   ) => {
+    try {
+      const original = native.resolve(name, options);
+      if (
+        !path.isAbsolute(original) ||
+        inside(paths.sourceRoot, realpathSync(original))
+      )
+        return paths.resolveSync(original);
+    } catch (error) {
+      if (
+        !error ||
+        typeof error !== "object" ||
+        !("code" in error) ||
+        error.code !== "MODULE_NOT_FOUND"
+      )
+        throw error;
+    }
     const directory = importerDirectory(paths, name, path.dirname(file));
     const resolver = createRequire(path.join(directory, path.basename(file)));
     return paths.resolveSync(resolver.resolve(name, options));

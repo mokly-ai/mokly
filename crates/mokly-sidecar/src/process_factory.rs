@@ -54,10 +54,26 @@ impl WorkerFactory for NodeFactory {
                 part: launch.entry.display().to_string(),
             });
         }
+        if !matches!(fs::metadata(&launch.repository), Ok(metadata) if metadata.is_dir()) {
+            return Err(Error::Unavailable {
+                part: launch.repository.display().to_string(),
+            });
+        }
+        let repository = match fs::canonicalize(&launch.repository) {
+            Ok(repository) => repository,
+            Err(_) => {
+                return Err(Error::Unavailable {
+                    part: launch.repository.display().to_string(),
+                });
+            }
+        };
         let mut command = Command::new(&launch.node);
         command
             .arg(&launch.entry)
-            .current_dir(&launch.repository)
+            .current_dir(&repository)
+            .env("PWD", &repository)
+            .env_remove("INIT_CWD")
+            .env_remove("npm_package_json")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());

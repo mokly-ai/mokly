@@ -108,12 +108,11 @@ element belongs to those components. Composition retains trusted owner
 annotations through HTML normalization and graph caching on both sides. An
 authored `data-mokly-owners` attribute does not create that annotation.
 Compare normalized rule sets per owner; formatting and duplicate copies do
-not change material. Owned styles contribute component material on its saved
-views. Consumer-only style differences need a changed selector that reaches
-the exact paired instance with unchanged props and supplied slots; conservative
-selector outcomes retain possible owned instances. This is implementation
-evidence and preserves the component's own view states. Linked stylesheets keep the
-[CSS attribution](./mokly-css-attribution.md) rules.
+not change material. Collected rules use the per-rule records of the
+[membership contract](./mokly-css-attribution-membership.md). Rule evidence
+supplies their material and affected-consumer effects under the
+[component change rules](./mokly-component-changes.md). Linked stylesheets
+use the same [CSS attribution](./mokly-css-attribution.md) rules.
 
 Head `<style>` elements without owners use the same rule identities and
 catalogue-wide own-page proof as linked CSS. Diff their rules between the
@@ -124,7 +123,7 @@ content cannot prove the receiving component. Other matches belong to the
 entry. Unresolved rules belong to the entry.
 
 Collect only ownerless head styles. Body styles and styles with
-`data-mokly-owners` do not enter this analysis. A rule with no match on either
+nonempty trusted owner records do not enter this analysis. A rule with no match on either
 side produces no record. A document whose changed inline rules all match
 nothing has one `excluded` record with an empty selector and the entry owner.
 An excluded record never makes a view material. The `stylesheet` address is

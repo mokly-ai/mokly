@@ -8,7 +8,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::methods::Call;
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
-use crate::pool_state::Slot;
+use crate::pool_state::{Affinity, Slot};
 use crate::wire::MethodResult;
 use crate::workers::{ClockMock, WorkerMock};
 
@@ -51,7 +51,13 @@ fn release_disposes_all_serving_slots_and_never_starts_a_worker_after_shutdown()
             .collect();
         state.available = VecDeque::from([0, 1]);
         state.contexts.insert("used".into());
-        state.affinity.insert("used".into(), 0);
+        state.affinity.insert(
+            "used".into(),
+            Affinity {
+                index: 0,
+                source_root: "/repo".into(),
+            },
+        );
     }
     pool.release_context("used");
     pool.synchronize_releases();

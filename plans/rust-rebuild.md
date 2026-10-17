@@ -1050,6 +1050,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         addresses. Connect page head styles.
   - [x] Connect sidecar style ownership through the base render provider.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/b-regression-final.log`.
+  - [ ] Resolve user item 39 (review 6b finding 2): page-wide CSS-in-JS
+        sheets are owned by the rendered parent in the code, so a child-only
+        rule edit can create a direct parent change. Keep this behaviour until
+        the user chooses the ownership rule.
+  - [ ] Resolve user item 40 (review 6b finding 3): owned styles set material
+        flags without per-rule records in the code. Keep the approved
+        rule-evidence specification and decide the owned-rule evidence contract
+        before adding records or changing the documented view-state rule.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -1090,7 +1098,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       finding 1 option A). Resolve each bare import from its matching directory
       in the dependency tier and retain tier-two missing-directory fallback.
       This follows the merge of the interim warning policy in report 7.
-      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/`.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/e-importer-paths-after.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/e-native-tests.log`.
 - [x] Apply the last integration requests: early base pinning, terminal ownership,
       nested CSS lookup, bounded memory tables, and recycle back-off.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
@@ -1101,8 +1109,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Align the Rust review reader with viewer review 5, finding 10: current
       variants first, previous paths on moved pairs, and UTF-16 reason targets.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/c-regression-after.log`.
+- [x] Apply the approved engine review 6 fixes: tracked dependency sources,
+      bounded worker reuse by source root, cleanup consistency, directory
+      variables, owned-style moves, trusted inline ownership, and phase formatting.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/repository-before-merge-result.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/sidecar-node-all-after-gate.log`.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+  - [ ] Measure interleaved head/base work in Serve background Changes and
+        reduce source-root replacements within the configured pool bound,
+        including the one-worker case. Evaluate rendering each side in one
+        pass before pairing views (review 6a finding 2, option C).
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.

@@ -10,8 +10,10 @@ use mokly_compare::ancestor_roots;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::Resolved;
 use mokly_sidecar::methods::ModuleResolution;
+use mokly_source_interface::tree::SourceTree;
 
 use crate::error::{Result, convert};
+use crate::source_paths;
 
 /// A base extraction and its selected dependency tier stay leased together.
 pub struct BaseSide {
@@ -149,7 +151,18 @@ impl SideInputs {
     }
 
     /// Resolve a logical stylesheet source into this side's selected physical inputs.
-    pub fn physical_source(&self, path: &str) -> PathBuf {
+    pub fn physical_source(
+        &self,
+        path: &str,
+        sources: &dyn SourceTree,
+        root: &Path,
+    ) -> mokly_source_interface::error::Result<PathBuf> {
+        if let Some((source, _)) =
+            source_paths::source_node(sources, root, &self.dependency_aliases, path)?
+            && let Ok(relative) = source.strip_prefix(root)
+        {
+            return Ok(self.source_root.join(relative));
+        }
         if let Some(rest) = path.strip_prefix("node_modules/") {
             let (index, rest) = if let Some(rest) = rest.strip_prefix(".mokly-roots/") {
                 let (index, rest) = rest.split_once('/').unwrap_or(("0", rest));
@@ -158,14 +171,14 @@ impl SideInputs {
                 (0, rest)
             };
             if let Some(root) = dependency_roots(self).get(index) {
-                return root.join(rest);
+                return Ok(root.join(rest));
             }
         }
         if ancestor_roots::dependency_directory(path).is_some()
             && let Some(root) = &self.module_resolution.dependency_root
         {
-            return Path::new(root).join(path);
+            return Ok(Path::new(root).join(path));
         }
-        self.source_root.join(path)
+        Ok(self.source_root.join(path))
     }
 }

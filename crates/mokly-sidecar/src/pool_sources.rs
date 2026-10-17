@@ -25,13 +25,28 @@ impl Pool {
         Ok(source.map(PathBuf::from))
     }
 
-    pub(super) fn isolate(&self, slot: &mut Option<Slot>, root: Option<&Path>) -> Result<()> {
-        if let Some(current) = slot.as_ref()
-            && root.is_some_and(|root| root != current.source_root)
+    pub(super) fn isolate(
+        &self,
+        index: usize,
+        slot: &mut Option<Slot>,
+        root: Option<&Path>,
+    ) -> Result<()> {
+        if let (Some(current), Some(root)) = (slot.as_ref(), root)
+            && root != current.source_root
         {
             current.control.kill()?;
+            tracing::debug!(slot = index, previous_root = %current.source_root.display(), source_root = %root.display(), "sidecar source root replaced");
             *slot = None;
+            self.forget_other_roots(index, root)?;
         }
+        Ok(())
+    }
+
+    pub(super) fn forget_other_roots(&self, index: usize, root: &Path) -> Result<()> {
+        self.lock()?
+            .affinity
+            .retain(|_, affinity| affinity.index != index || affinity.source_root == root);
+        self.ready.notify_all();
         Ok(())
     }
 }

@@ -12,6 +12,7 @@ use mokly_source_interface::tree::{Child, Node, SourceTree};
 use crate::dependency_usage::DependencyUsage;
 use crate::runtime::Runtime;
 use crate::side::{BaseSide, SideInputs, dependency_roots};
+use crate::source_paths::{self, INSTALLED_INPUT_PREFIX};
 
 /// Dependency paths retain logical names while source bytes use their own tree.
 pub(crate) struct SideTree {
@@ -59,14 +60,15 @@ impl SideTree {
     fn mapped(&self, path: &Path) -> Option<(PathBuf, PathBuf, PathBuf)> {
         let relative = path.strip_prefix(&self.root).ok()?;
         let text = relative.to_string_lossy().replace('\\', "/");
+        let text = text.strip_prefix(INSTALLED_INPUT_PREFIX).unwrap_or(&text);
         if !text.starts_with("node_modules/") && text != "node_modules" {
-            let directory = dependency_directory(&text)?;
+            let directory = dependency_directory(text)?;
             let root = self
                 ._base
                 .as_ref()
                 .and_then(|base| base.dependencies.node_modules.parent())
                 .unwrap_or(&self.root);
-            return Some((root.join(directory), root.join(&text), relative.to_owned()));
+            return Some((root.join(directory), root.join(text), relative.to_owned()));
         }
         let rest = if text == "node_modules" {
             ""
@@ -84,6 +86,21 @@ impl SideTree {
         }
         let root = self.dependency_roots.get(index)?;
         Some((root.clone(), root.join(rest), relative.to_owned()))
+    }
+
+    fn source(&self, path: &Path) -> Result<Option<(PathBuf, Node)>> {
+        if self._base.is_none() {
+            return Ok(None);
+        }
+        let Ok(relative) = path.strip_prefix(&self.root) else {
+            return Ok(None);
+        };
+        source_paths::source_node(
+            self.sources.as_ref(),
+            &self.root,
+            &self.aliases,
+            &relative.to_string_lossy().replace('\\', "/"),
+        )
     }
 
     fn source_alias(&self, identity: &Path) -> Option<PathBuf> {
@@ -106,6 +123,9 @@ impl SideTree {
             .map(|relative| self.root.join(relative))
     }
     fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf)> {
+        if let Some((source, _)) = self.source(path)? {
+            return Ok((self.sources.as_ref(), source));
+        }
         if let Some((_, physical, _)) = self.mapped(path) {
             if let Some(node) = self.dependencies.project(&physical)?
                 && let Some(source) = self.source_alias(&node.identity)
@@ -135,7 +155,9 @@ impl SourceTree for SideTree {
         let mut sources = Vec::new();
         let mut dependencies = Vec::new();
         for path in paths {
-            if let Some((_, physical, _)) = self.mapped(path) {
+            if let Some((source, _)) = self.source(path)? {
+                sources.push(source);
+            } else if let Some((_, physical, _)) = self.mapped(path) {
                 if let Some(node) = self.dependencies.project(&physical)?
                     && let Some(source) = self.source_alias(&node.identity)
                 {
@@ -174,6 +196,10 @@ impl SourceTree for SideTree {
         Ok(bytes)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
+        if let Some((_, mut node)) = self.source(path)? {
+            node.identity = path.into();
+            return Ok(Some(node));
+        }
         if path == self.root.join("node_modules/.mokly-roots") {
             return Ok(Some(Node {
                 identity: path.into(),

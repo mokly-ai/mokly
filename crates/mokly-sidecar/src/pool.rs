@@ -71,7 +71,12 @@ impl Pool {
         }
     }
 
-    pub(super) fn acquire(&self, call: &Call) -> Result<(usize, Option<Slot>)> {
+    pub(super) fn acquire(
+        &self,
+        call: &Call,
+        root: Option<&Path>,
+    ) -> Result<(usize, Option<Slot>)> {
+        let root = root.unwrap_or(&self.launch.repository);
         let mut state = self.lock()?;
         let ticket = state.ticket;
         state.ticket += 1;
@@ -94,7 +99,7 @@ impl Pool {
                 })
                 .map(|(ticket, _)| *ticket);
             if first == Some(ticket) {
-                let index = pool_affinity::acquire(&mut state, call, self.options.size.get());
+                let index = pool_affinity::acquire(&mut state, call, root, self.options.size.get());
                 if let Some(index) = index {
                     state.waiting.remove(&ticket);
                     state.serving += 1;
@@ -114,6 +119,7 @@ impl Pool {
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
+        self.forget_other_roots(index, source_root)?;
         self.lock()?.memory.entry(index).or_default().started();
         let launch = Launch {
             repository: source_root.into(),

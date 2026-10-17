@@ -231,7 +231,7 @@ it would emit an undelivered sibling stylesheet. React and React DOM resolve
 from the consumer through the sidecar's bundle, so these options cannot
 introduce a second React runtime. For the base side of a comparison the
 settings name the ancestor and explicit `node_modules` directories that the
-[dependency tiers](./mokly-comparison.md#sides) chose. Imports from outside the
-configuration subtree and nested workspace dependencies need `packageRoots`.
-An unmapped lookup falls back with a `base-dependencies` warning naming its
-directory; conflicting package copies can also cause this warning.
+[dependency tiers](./mokly-comparison.md#sides) chose. Each importer starts at its
+matching directory, including outside-configuration and nested workspace imports.
+Configuration ancestors and explicit package roots provide fallback lookup.
+An unmappable lookup or a used directory missing from the base installation produces a `base-dependencies` warning naming its directory.

@@ -96,7 +96,7 @@ fn nested_dependency_hashes_and_prefetch_use_the_selected_base_installation() {
             },
             identity: "base".into(),
         })),
-        sources: Arc::new(Unimock::new(())),
+        sources: Arc::new(Unimock::new(SourceTreeMock::project.each_call(matching!((path) if *path == Path::new("/head/packages/ui/node_modules/theme.css"))).answers(&|_, _| Ok(None)).n_times(2))),
         dependencies: Arc::new(dependency),
         usage: Arc::new(Unimock::new(
             DependencyUsageMock::record
