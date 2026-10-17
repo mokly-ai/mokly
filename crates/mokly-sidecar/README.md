@@ -32,10 +32,18 @@ tables. A new process restores old code without compiling changed sources.
 Epoch-specific releases retain newer lifetimes with the same id. Releases
 record state without waiting for a worker. An idle cleanup worker sends
 disposal to each affected slot; busy slots apply it before their next request.
+Each worker keeps the request source root as its working directory for its
+whole lifetime. A change of source root replaces the worker before replay.
+Independent requests prefer an idle worker in the same source root, then an
+unspawned slot, then the oldest idle slot. The pool bound covers all roots.
+Replacement drops the old root's affinities for that slot and emits one debug event.
 PostCSS context affinity prevents duplicate workers. A busy affine request
 does not block independent work on another available slot. Returning slots
 recheck pending releases before becoming idle. `cancel_requests` kills and reaps
 busy sidecars before `shutdown` drains idle sidecars.
+Scheduling and cleanup use one staleness rule: a missing bundle or a missing
+or different epoch makes a loaded generation stale. Cleanup stops when a pass
+changes no state.
 Bundle results include the digests of the bytes consumed by each module.
 An optional evaluation digest isolates CSS Modules and resolved configuration
 lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
@@ -55,7 +63,11 @@ requests and emits one notice per pressure episode. A sample at or below the
 bound restores normal checks. The 500-render rule always applies. Recycling
 starts after the in-flight request completes.
 
-`NodeFactory` inherits the environment and repository working directory. It
+`NodeFactory` uses the selected source working directory and sets `PWD` to it.
+It omits `INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
+Other environment values are inherited. The source directory uses
+`dunce::canonicalize` for Windows path compatibility.
+A missing source directory names that directory in the unavailable result. It
 uses a persistent launch thread for Linux parent-death signals. The Node
 watchdog observes parent death and pipe closure outside the render thread.
 PostCSS children use the same protection, including historical contexts. It

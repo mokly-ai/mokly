@@ -23,6 +23,7 @@ mod postcss_nested;
 mod postcss_scan;
 pub mod runtime;
 pub mod side;
+mod source_paths;
 mod sources;
 mod stylesheet_cache;
 mod stylesheet_weight;
@@ -49,3 +50,7 @@ mod runtime_serialization_tests;
 #[cfg(test)]
 #[path = "_tests_/source_forwarding_tests.rs"]
 mod source_forwarding_tests;
+
+#[cfg(test)]
+#[path = "_tests_/source_precedence_tests.rs"]
+mod source_precedence_tests;

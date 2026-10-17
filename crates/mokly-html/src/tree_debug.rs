@@ -27,7 +27,8 @@ impl fmt::Debug for Node {
                 Node::Element(element) => {
                     write!(
                         formatter,
-                        "Element(Element {{ origin: {:?}, navigation: {:?}, source: {:?}, name: {:?}, namespace: {:?}, attributes: {:?}, children: [",
+                        "Element(Element {{ style_owners: {:?}, origin: {:?}, navigation: {:?}, source: {:?}, name: {:?}, namespace: {:?}, attributes: {:?}, children: [",
+                        element.style_owners,
                         element.origin,
                         element.navigation,
                         element.source,

@@ -10,7 +10,7 @@ pub struct Launch {
     pub node: PathBuf,
     /// Installed package's dist/sidecar.js.
     pub entry: PathBuf,
-    /// Repository root used as the child working directory.
+    /// Selected source root used as the worker's fixed working directory.
     pub repository: PathBuf,
     /// Exact package version expected by hello.
     pub version: String,

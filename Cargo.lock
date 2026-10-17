@@ -2337,6 +2337,7 @@ dependencies = [
 name = "mokly-sidecar"
 version = "0.14.0"
 dependencies = [
+ "dunce",
  "insta",
  "libc",
  "mokly-model",

@@ -18,6 +18,10 @@ pub struct ChangeDiagnostic {
 
 /// Rich completion line. Plain commands emit no phase lines.
 pub fn ready(style: &Style, counts: ComparisonCounts) -> String {
+    ready_timed(style, counts, None)
+}
+
+fn ready_timed(style: &Style, counts: ComparisonCounts, elapsed: Option<&str>) -> String {
     if style.mode == Mode::Plain {
         return String::new();
     }
@@ -38,11 +42,27 @@ pub fn ready(style: &Style, counts: ComparisonCounts) -> String {
     if counts.ignored_only > 0 {
         parts.push(format!("{} ignored-only", counts.ignored_only));
     }
-    format!("{}\n", bounded(&parts.join(" · "), style.columns))
+    format!(
+        "{}\n",
+        bounded(
+            &format!("{}{}", parts.join(" · "), suffix(elapsed)),
+            style.columns
+        )
+    )
 }
 
 /// Success and move diagnostics are retained with the accepted comparison only.
 pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> String {
+    summary_with_duration(style, changes, redactor, None)
+}
+
+/// Complete a comparison with the phase owner's formatted duration; plain output omits it.
+pub fn summary_with_duration(
+    style: &Style,
+    changes: &BuildChanges,
+    redactor: &Redactor,
+    elapsed: Option<&str>,
+) -> String {
     match changes {
         BuildChanges::Disabled => String::new(),
         BuildChanges::Unavailable { reason, .. } if style.mode == Mode::Rich => {
@@ -50,9 +70,10 @@ pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> St
                 "{}\n",
                 bounded(
                     &format!(
-                        "  {} Changes unavailable · {}",
+                        "  {} Changes unavailable · {}{}",
                         glyph(style, "!", 33),
-                        redactor.safe(reason)
+                        redactor.safe(reason),
+                        suffix(elapsed)
                     ),
                     style.columns
                 )
@@ -70,7 +91,7 @@ pub fn summary(style: &Style, changes: &BuildChanges, redactor: &Redactor) -> St
                 });
                 output.push('\n');
             }
-            output + &ready(style, result.counts)
+            output + &ready_timed(style, result.counts, elapsed)
         }
     }
 }
@@ -102,6 +123,10 @@ pub fn diagnostics(style: &Style, changes: &BuildChanges, redactor: &Redactor) -
             .collect(),
         _ => String::new(),
     }
+}
+
+fn suffix(elapsed: Option<&str>) -> String {
+    elapsed.map_or_else(String::new, |elapsed| format!(" ({elapsed})"))
 }
 
 fn glyph(style: &Style, text: &str, color: u8) -> String {

@@ -8,6 +8,7 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
 import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
+import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
@@ -123,7 +124,7 @@ export function consumerPlugins(
         );
         build.onResolve({ filter: /\.css$/ }, async (args) => {
           if (args.pluginData === "css-resolved") return;
-          const resolved = await build.resolve(args.path, {
+          const resolved = await resolveImport(paths, build, args.path, {
             resolveDir: args.resolveDir,
             kind: args.kind,
             pluginData: "css-resolved",
@@ -149,7 +150,7 @@ export function consumerPlugins(
             !["file", ""].includes(args.namespace)
           )
             return;
-          const resolved = await build.resolve(args.path, {
+          const resolved = await resolveImport(paths, build, args.path, {
             resolveDir: args.resolveDir,
             importer: args.importer,
             kind: args.kind,

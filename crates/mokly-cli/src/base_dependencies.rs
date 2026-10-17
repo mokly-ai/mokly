@@ -153,6 +153,7 @@ fn resolution(config: &ResolvedConfig) -> Result<ModuleResolution> {
     };
     let directory = config.file.parent().unwrap_or(&config.repo_root);
     Ok(ModuleResolution {
+        dependency_root: None,
         aliases: authored.aliases.unwrap_or_default(),
         conditions: authored.conditions.unwrap_or_default(),
         loaders,

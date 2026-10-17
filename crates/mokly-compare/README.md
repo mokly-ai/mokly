@@ -74,14 +74,18 @@ and the base source copy for tier two. Supply
 repository-relative package roots in the request; the result names absolute
 roots from the selected installation and keeps the other settings. Ancestor
 roots precede explicit roots in Node's order. Supply the head's observed
-ancestor dependency directories in `Request.used_directories`. If a base
+dependency directories in `Request.used_directories`. `ModuleResolution.dependency_root`
+names the selected installation repository for per-importer bare imports. If a base
 install lacks one of these directories, the result uses working dependencies
-with a warning that names the missing directory. Used importer directories
-outside the supported lookup also select fallback, including when dependency
-inputs are equal. Each fallback has a typed trace reason. Such workspace layouts
-need explicit package roots; conflicting copies can still require fallback.
+with a warning that names the missing directory. Repository-relative importer
+directories also map when no package root explicitly lists them. A directory
+outside this mapping keeps the fallback warning, including with equal inputs.
+Each fallback has a typed trace reason.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+Both sides retain trusted sidecar style owners. Owned rule sets are normalized
+and deduplicated. Candidate component moves map their source owner identity
+before testing style equality. Authored owner attributes supply no trusted proof.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds graph handles, view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs

@@ -38,7 +38,9 @@ pub struct DependencyTiers {
 
 impl Dependencies for DependencyTiers {
     fn resolve(&self, request: &Request) -> Result<Resolved> {
-        if let Some(directory) = request.unmapped_directories.first() {
+        if let Some(directory) = request.unmapped_directories.iter().find(|directory| {
+            ancestor_roots::dependency_directory(directory).as_ref() != Some(*directory)
+        }) {
             return Ok(fallback(
                 request,
                 Fallback::UnmappedDirectory(directory.clone()),
@@ -84,7 +86,11 @@ impl Dependencies for DependencyTiers {
         })();
         match attempt {
             Ok(lease) => {
-                for directory in &request.used_directories {
+                for directory in request
+                    .used_directories
+                    .iter()
+                    .chain(&request.unmapped_directories)
+                {
                     if !self.storage.directory(&lease.directory.join(directory))? {
                         return Ok(fallback(
                             request,
@@ -126,6 +132,7 @@ fn resolved(
     warning: Option<Warning>,
 ) -> Resolved {
     let mut resolution = request.resolution.clone();
+    resolution.dependency_root = Some(root.to_string_lossy().into_owned());
     resolution.package_roots = package_roots(request)
         .iter()
         .map(|path| {

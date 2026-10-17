@@ -33,6 +33,7 @@ impl Eq for Node {}
 
 fn element(left: &Element, right: &Element) -> bool {
     left.name == right.name
+        && left.style_owners == right.style_owners
         && left.namespace == right.namespace
         && left.attributes == right.attributes
         && left.origin == right.origin

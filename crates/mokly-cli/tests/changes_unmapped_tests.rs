@@ -1,4 +1,4 @@
-//! Unsupported importer layouts disclose fallback instead of silently selecting another copy.
+//! Per-importer base lookup preserves nested and outside-configuration dependency copies.
 
 use std::path::Path;
 
@@ -6,7 +6,7 @@ mod changes_support;
 use changes_support::{base, run, run_configured, write};
 
 #[test]
-fn imports_outside_the_configuration_and_nested_workspace_dependencies_warn() {
+fn imports_outside_configuration_and_nested_workspace_dependencies_preserve_the_copy() {
     for nested in [false, true] {
         let config = if nested {
             "mokly.config.json"
@@ -14,12 +14,20 @@ fn imports_outside_the_configuration_and_nested_workspace_dependencies_warn() {
             "apps/web/mokly.config.json"
         };
         let text = if nested {
-            r#"{"roots":[{"dir":"packages/ui"}],"review":{"base":"fixture-base"}}"#
+            r#"{"roots":[{"dir":"packages/ui"}],"stylesheets":[{"match":"**","stylesheets":["packages/ui/theme.css"]}],"review":{"base":"fixture-base"}}"#
         } else {
-            r#"{"repoRoot":"../..","roots":[{"dir":"../../packages/ui"}],"review":{"base":"fixture-base"}}"#
+            r#"{"repoRoot":"../..","roots":[{"dir":"../../packages/ui"}],"stylesheets":[{"match":"**","stylesheets":["../../packages/ui/theme.css"]}],"review":{"base":"fixture-base"}}"#
         };
         let root = base(&[
             (config, text),
+            (
+                "packages/ui/theme.css",
+                "@import 'fixture-version/style.css';",
+            ),
+            (
+                "packages/ui/styled.screen.html",
+                "---\ntitle: Styled\n---\n<p class=\"fixture\">Styled</p>",
+            ),
             (
                 "packages/ui/package.json",
                 r#"{"name":"fixture-ui","private":true}"#,
@@ -48,20 +56,15 @@ fn imports_outside_the_configuration_and_nested_workspace_dependencies_warn() {
             "{}",
             String::from_utf8_lossy(&result.stderr)
         );
-        let message = String::from_utf8_lossy(&result.stderr);
-        assert!(message.contains("base dependency lookup"), "{message}");
         assert!(
-            message.contains(if nested {
-                "packages/ui/node_modules"
-            } else {
-                "node_modules"
-            }),
-            "{message}"
+            result.stderr.is_empty(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
         );
         assert!(String::from_utf8_lossy(&result.stdout).contains("Built Mokly to"));
         let rich = run(root.path(), &["build", "--config", config]);
         assert!(
-            String::from_utf8_lossy(&rich.stdout).contains("Changes ready"),
+            String::from_utf8_lossy(&rich.stdout).contains("Changes ready · 0 changes"),
             "{}",
             String::from_utf8_lossy(&rich.stderr)
         );
@@ -72,11 +75,25 @@ fn imports_outside_the_configuration_and_nested_workspace_dependencies_warn() {
             None,
             "plain",
         );
-        assert_eq!(strict.status.code(), Some(1));
-        assert!(String::from_utf8_lossy(&strict.stderr).contains("base dependency lookup"));
+        assert_eq!(
+            strict.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&strict.stderr)
+        );
+        assert!(strict.stderr.is_empty());
     }
 }
 fn package(root: &Path, directory: &str, value: &str) {
+    write(
+        root,
+        &format!("{directory}node_modules/fixture-version/style.css"),
+        if value == "root-v1" {
+            ".fixture{color:red}"
+        } else {
+            ".fixture{color:blue}"
+        },
+    );
     write(
         root,
         &format!("{directory}node_modules/fixture-version/package.json"),

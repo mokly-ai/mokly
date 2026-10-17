@@ -170,5 +170,9 @@ mod review_reader_tests;
 mod snapshot_reader_tests;
 
 #[cfg(test)]
+#[path = "_tests_/review_order_tests.rs"]
+mod review_order_tests;
+
+#[cfg(test)]
 #[path = "_tests_/comparison_eligibility_tests.rs"]
 mod comparison_eligibility_tests;

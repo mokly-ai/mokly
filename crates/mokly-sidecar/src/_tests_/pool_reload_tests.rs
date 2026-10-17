@@ -133,6 +133,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         let mut state = pool.lock().unwrap();
         for mock in [first, second] {
             state.slots.push(Some(Slot {
+                source_root: "/repo".into(),
                 worker: Box::new(mock.clone()),
                 control: Arc::new(mock),
                 generations: BTreeMap::from([("g".into(), 0)]),

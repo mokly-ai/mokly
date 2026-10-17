@@ -4,7 +4,7 @@ use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::diagnostic::Warning;
@@ -20,11 +20,14 @@ use mokly_model::output::artifact::Artifact;
 use mokly_publish::accounting::{Progress, Receipt};
 use mokly_publish::completion::Outcome;
 use mokly_publish::runtime::Reporter;
+use mokly_sidecar::process_clock::SystemClock;
+use mokly_sidecar::workers::Clock;
 
 use crate::phase_format::{duration, frame};
 use crate::terminal::Terminal;
 
 pub(super) struct Lines {
+    clock: Arc<dyn Clock>,
     cwd: PathBuf,
     style: Style,
     redactor: Arc<Redactor>,
@@ -37,7 +40,7 @@ pub(super) struct Lines {
 #[derive(Default)]
 struct State {
     label: Option<String>,
-    started: Option<Instant>,
+    started: Option<u64>,
     frame: usize,
 }
 
@@ -73,6 +76,7 @@ impl Lines {
             None
         };
         Self {
+            clock: Arc::new(SystemClock::new()),
             cwd,
             style,
             redactor,
@@ -84,12 +88,18 @@ impl Lines {
         }
     }
     pub(super) fn clear(&self) {
+        let _ = self.settle();
+    }
+    fn settle(&self) -> Option<Duration> {
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         if self.animate && state.label.is_some() {
             self.terminal.stdout("\r\x1b[2K");
         }
         state.label = None;
-        state.started = None;
+        state
+            .started
+            .take()
+            .map(|started| Duration::from_millis(self.clock.now_ms().saturating_sub(started)))
     }
     pub(super) fn built(&self, artifact: &Artifact, root: &Path, elapsed: Duration) {
         let directory = self.redactor.safe(&relative(&artifact.directory, root));
@@ -164,18 +174,21 @@ impl Phases for Lines {
         if self.animate {
             self.terminal.stdout("\r\x1b[2K");
         }
+        let now = self.clock.now_ms();
         if let Some(previous) = &state.label {
             self.success(&format!(
                 "{previous} ({})",
                 duration(
                     state
                         .started
-                        .map_or(Duration::ZERO, |started| started.elapsed())
+                        .map_or(Duration::ZERO, |started| Duration::from_millis(
+                            now.saturating_sub(started)
+                        ))
                 )
             ));
         }
         state.label = Some(label.clone());
-        state.started = Some(Instant::now());
+        state.started = Some(now);
         state.frame = 0;
         self.terminal.stdout(&if self.animate {
             frame(&self.style, &label, 0)
@@ -204,16 +217,17 @@ impl Phases for Lines {
         self.terminal.stderr(&format!("{text}\n"));
     }
     fn changes(&self, changes: &BuildChanges) {
-        self.clear();
+        let elapsed = self.settle().map(duration);
         self.terminal.stderr(&changes_output::diagnostics(
             &self.style,
             changes,
             &self.redactor,
         ));
-        self.terminal.stdout(&changes_output::summary(
+        self.terminal.stdout(&changes_output::summary_with_duration(
             &self.style,
             changes,
             &self.redactor,
+            elapsed.as_deref(),
         ));
     }
     fn warnings(&self, warnings: &[Warning]) {
@@ -276,3 +290,7 @@ impl Drop for Lines {
 #[cfg(test)]
 #[path = "_tests_/one_shot_tests.rs"]
 mod one_shot_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_duration_tests.rs"]
+mod comparison_duration_tests;

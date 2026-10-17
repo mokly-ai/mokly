@@ -1048,7 +1048,17 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         own-page proof, and a byte-bounded parse cache.
   - [x] Resolve multi-component selector ownership and inline evidence
         addresses. Connect page head styles.
-  - [ ] Connect sidecar style ownership through the base render provider.
+  - [x] Connect sidecar style ownership through the base render provider.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/b-regression-final.log`.
+  - [ ] Resolve user item 39 (review 6b finding 2): page-wide CSS-in-JS
+        sheets are owned by the rendered parent in the code, so a child-only
+        rule edit can create a direct parent change. Keep this behaviour until
+        the user chooses the ownership rule.
+  - [ ] Resolve user item 40 (review 6b finding 3): owned styles set material
+        flags without per-rule records in the code. Consumer-instance matches
+        of owned styles also supply implementation proof without those records.
+        Keep the approved rule-evidence specification. Decide both evidence
+        paths before adding records or changing the documented view-state rule.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -1067,8 +1077,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       and PostCSS source-directory isolation.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-4.md`.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
-- [ ] Isolate base JavaScript working-directory reads: sidecars run in the head
+- [x] Isolate base JavaScript working-directory reads: sidecars run in the head
       repository, so `process.cwd()` reads in base code can read head files.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/a-regression-after.log`.
 - [x] Apply shared-runtime review fixes: PostCSS child memory accounting, unique
       PostCSS contexts, base timeout recovery, streamed extraction, isolated
       test caches, and direct runtime regression tests.
@@ -1076,17 +1087,19 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Integrate Changes with the static build pipeline for build and publish.
       Keep warning gates after comparison and retain the result for M12/M9.
       Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
-- [ ] Add the Comparing phase spinner and measured durations to build Changes.
+- [x] Add the Comparing phase spinner and measured durations to build Changes.
   - [x] Connect the Comparing spinner to the static phase reporter.
-  - [ ] Include the comparison duration when the Changes phase settles.
+  - [x] Include the comparison duration when the Changes phase settles.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/d-duration-tests.log`.
 - [ ] Complete the final shared-runtime review: bounded memory sampling,
       canonical Node identity, ancestor dependency tiers, selected NODE_PATH
       priority, and direct base, extraction, timeout, and recycle tests.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-6.md`.
-- [ ] Implement per-importer Node resolution on the base side (review 5b,
+- [x] Implement per-importer Node resolution on the base side (review 5b,
       finding 1 option A). Resolve each bare import from its matching directory
       in the dependency tier and retain tier-two missing-directory fallback.
       This follows the merge of the interim warning policy in report 7.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/e-importer-paths-after.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/e-native-tests.log`.
 - [x] Apply the last integration requests: early base pinning, terminal ownership,
       nested CSS lookup, bounded memory tables, and recycle back-off.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
@@ -1094,6 +1107,35 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       recipes and epoch releases, preserve slot back-off and context affinity,
       and verify base-side parent-death cleanup with PostCSS child processes.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
+- [x] Align the Rust review reader with viewer review 5, finding 10: current
+      variants first, previous paths on moved pairs, and UTF-16 reason targets.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/c-regression-after.log`.
+- [x] Apply the approved engine review 6 fixes: tracked dependency sources,
+      bounded worker reuse by source root, cleanup consistency, directory
+      variables, owned-style moves, trusted inline ownership, and phase formatting.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/repository-before-merge-result.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/sidecar-node-all-after-gate.log`.
+- [x] Integrate the engine fixes with the iterative rebuild trees, preserving
+      trusted style annotations through cloning, repair, equality, and cache accounting.
+      Decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [x] Apply engine review 7 launch and test fixes: Windows path normalization,
+      npm directory isolation, independent root-selection coverage, and restored
+      rule-evidence wording. Record reserved names and owned follow-ups.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round10/targeted-results.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round10/pool-test-mutation-result.json`.
+- [x] Merge the static Changes join into the engine branch. Keep owned-style
+      comparison and shared projections together, isolate both reader test
+      modules, and supply the duration fixture's base ref.
+      Decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [ ] Reduce source-root replacements in the shared Changes engine for build,
+      publish, and Serve. Owner: M9 engine delegate (`m9-compare`). Render each
+      side's planned views in one pass before pairing, or batch requests by root.
+      Acceptance: one worker spawns a small constant per side switch plus
+      recycles, independent of the number of paired views. Keep the pool bound.
+- [ ] Decide whether sidecars and PostCSS children remove all `npm_*` variables
+      and head `.bin` entries from `PATH` (review 7 finding 5B). Keep other
+      inherited values until the user decides.
+- [ ] Decide enforcement for source or installation paths beneath the reserved
+      `node_modules/.mokly-roots/` prefix (review 7 finding 7). The reservation
+      is documented; a new rejection requires the user's decision.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
   - [x] Let event streams flush their final chunk before closing the other
@@ -1101,6 +1143,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Record reused ready usage as completed, so a metadata-only rebuild
         publishes no extra usage revision.
         Serve lifecycle evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/independent-checks.md`.
+  - [ ] Measure interleaved head/base work in Serve background Changes and
+        reduce source-root replacements within the configured pool bound,
+        including the one-worker case. Integrate shared-engine batching with
+        Serve-only interleaving (review 6a finding 2, option C).
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
@@ -1452,6 +1498,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
   - [ ] Verify the comparison engine's tree walks after M9 integration.
+        Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
+        and `inline_styles::collect` in `mokly-compare`. Also remove the
+        per-element copy of enclosing instances in `owned_style_instances::walk`.
   - [ ] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
@@ -1502,10 +1551,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Milestone 14 round 3: reconcile the inherited
-    `resident_set_recycles_only_after_one_gib_is_exceeded` flake with the pending
-    M9 pool-fixture fix. Its isolated rerun passed; missing seeded epoch state
-    can let idle cleanup take the asserted slot. Evidence: M14 `report-3.md`.
+  - [x] Reconcile the inherited M14 round 3
+        `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
+        The shared fixture seeds its epoch and cleanup uses one staleness rule.
+        The M14 isolated rerun passed; its missing epoch let idle cleanup take
+        the asserted slot. Evidence: M14 `report-3.md` and
+        `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and

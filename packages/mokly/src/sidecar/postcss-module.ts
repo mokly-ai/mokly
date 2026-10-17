@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build, transform } from "esbuild";
 
 import { detail } from "./errors.js";
+import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { moduleContext } from "./postcss-context.js";
 import { resolutionOptions } from "./resolution.js";
@@ -38,7 +39,7 @@ export async function importPostcssModule(
           }));
           builder.onResolve({ filter: /.*/ }, async (args) => {
             if (args.pluginData === "resolved") return;
-            const resolved = await builder.resolve(args.path, {
+            const resolved = await resolveImport(paths, builder, args.path, {
               resolveDir: args.resolveDir,
               kind: args.kind,
               pluginData: "resolved",

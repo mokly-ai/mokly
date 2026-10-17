@@ -10,8 +10,10 @@ import type { PostcssFailure } from "../generated/sidecar/PostcssFailure.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { SidecarError, detail } from "./errors.js";
+import { dependencyDirectory } from "./importer-resolution.js";
 import { jsonText } from "./json.js";
 import { ModulePaths } from "./module-paths.js";
+import { sourceDependency } from "./source-dependencies.js";
 
 /** Children retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
@@ -66,6 +68,10 @@ export class PostcssWorkers {
         cwd: root,
         env: {
           ...process.env,
+          PWD: root,
+          INIT_CWD: undefined,
+          npm_package_json: undefined,
+          npm_config_local_prefix: undefined,
           NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
             .filter(Boolean)
             .join(path.delimiter),
@@ -91,6 +97,8 @@ export class PostcssWorkers {
         repositoryRoots: paths.repositoryRoots,
       });
     }
+    const physical = stylesheetSource(paths, params.sourcePath);
+    const sourcePath = (await sourceDependency(paths, physical)) ?? physical;
     const id = ++this.id;
     return new Promise((resolve, reject) => {
       function cleanup() {
@@ -124,7 +132,7 @@ export class PostcssWorkers {
         id,
         params: {
           ...params,
-          sourcePath: stylesheetSource(paths, params.sourcePath),
+          sourcePath,
         },
       });
     });
@@ -156,6 +164,14 @@ function stylesheetSource(paths: ModulePaths, source: string): string {
     const root = paths.dependencyRoots[Number(dependency[1] ?? 0)];
     if (root) return path.resolve(root, dependency[2]!);
   }
+  if (
+    paths.dependencyRoot &&
+    dependencyDirectory(
+      paths.dependencyRoot,
+      path.resolve(paths.dependencyRoot, source),
+    )
+  )
+    return path.resolve(paths.dependencyRoot, source);
   return path.resolve(paths.sourceRoot, source);
 }
 

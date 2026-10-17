@@ -101,3 +101,7 @@ mod url_safety_tests;
 #[cfg(test)]
 #[path = "_tests_/deep_context_tests.rs"]
 mod deep_context_tests;
+
+#[cfg(test)]
+#[path = "_tests_/style_metadata_tests.rs"]
+mod style_metadata_tests;
