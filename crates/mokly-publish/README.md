@@ -24,6 +24,9 @@ Review identity validation streams through the review JSON and rejects nested
 duplicate keys without constructing its full value tree. It checks review v8's
 `baseCommit` against the upload's `baseSha`. The static writer derives `baseRef`
 from the retained change snapshot v4; review v8 has no base-ref field.
+The installed index and every generation file enter the same upload inventory.
+Disabled or unavailable Changes has no generation and null comparison metadata.
+The index still records unavailable Changes and its selected base ref.
 
 `Client` implements `Exchange`. It consumes `dyn Http`, `dyn Clock`, and
 `dyn Reporter`. The HTTP adapter uses reqwest with rustls and AWS-LC.
@@ -66,7 +69,9 @@ cargo test -p mokly-publish
 ```
 
 Unit tests use unimock and fake timing. Integration tests run a local fake
-exchange and verify the public protocol fixtures. The `mock` feature exposes
+exchange and verify the public protocol fixtures. CLI process tests also compare
+received bytes with the installed artifact, including both comparison sides,
+imported CSS assets, removed entries, and unavailable Changes. The `mock` feature exposes
 trait mocks to downstream tests.
 
 ### Key Code
