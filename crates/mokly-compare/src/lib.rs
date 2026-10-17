@@ -102,3 +102,17 @@ mod git_prefetch;
 
 mod owned_style_instances;
 mod owned_styles;
+
+mod projection_affected;
+mod projection_context;
+pub mod projection_index;
+mod projection_inputs;
+pub mod projection_workspace;
+
+#[cfg(test)]
+#[path = "_tests_/projection/mod.rs"]
+mod projection_tests;
+
+pub mod projection_detail;
+
+pub mod projection_removed;

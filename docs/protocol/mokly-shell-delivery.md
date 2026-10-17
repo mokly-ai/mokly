@@ -4,10 +4,10 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 
-The Browse shell is a browser application. Serve and `build` deliver a shell
-stub, a catalogue index that holds what every page needs, and one detail per
-entry that holds what that entry needs. The shell renders itself from them and
-fetches the next detail on navigation; no process renders shell HTML.
+The browser renders the Browse shell from a stub, an index, and entry
+details. The index holds navigation and entry metadata. Details hold usage,
+comparison evidence and workspace lists. Serve and `build` deliver these
+resources. Navigation fetches the next detail. No process renders shell HTML.
 
 ## Routes
 

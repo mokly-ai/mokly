@@ -1,31 +1,28 @@
 //! Assemble a complete static catalogue from the render graph's immutable bytes.
-//!
-//! TODO(M12/M9): apply the comparison engine's completed index, detail evidence,
-//! removed records, and generation files before deployment identity finalization.
-//! The Assembler boundary receives the exact current render generation for that join.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::projection_index;
 use mokly_graph::policy::{FilePolicy, PublicPolicy};
 use mokly_graph::types::RenderGeneration;
 use mokly_model::namespace;
 use mokly_model::output::artifact::{Artifact, File};
-use mokly_model::output::upload::UploadMetadata;
 use mokly_model::projection::{self, Publication, ViewKey};
-use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::{detail_context, projection_usage, readers, shell};
 use mokly_source_interface::tree::SourceTree;
 
+use crate::changes::{ChangeState, PublicationInput};
 use crate::error::{Error, InternalError, Result};
 use crate::identity;
 use crate::inspector;
 use crate::inventory::Inventory;
 use crate::modules;
 use crate::transaction::Cancellation;
+use crate::{comparison_details, comparison_output};
 
 /// Inputs pinned by the command; the comparison adapter supplies its complete generation.
 pub struct Assembly<'a> {
@@ -39,10 +36,10 @@ pub struct Assembly<'a> {
     pub directory: PathBuf,
     /// Exact built package inventory.
     pub viewer: Vec<File>,
-    /// Selected base; omitted only for --no-changes.
-    pub base: Option<String>,
-    /// Publication envelope, excluded from browser identity.
-    pub metadata: Option<UploadMetadata>,
+    /// The exact comparison state retained by the command.
+    pub changes: &'a dyn ChangeState,
+    /// Publication identity, excluded from browser identity.
+    pub publication: Option<PublicationInput>,
 }
 
 /// Non-pure output assembly boundary, consumed through dyn at the command root.
@@ -82,15 +79,11 @@ impl Assembler for CatalogueAssembler {
             });
         }
         let state = Publication {
-            config_path: input.config_path,
+            config_path: input.config_path.clone(),
             deployment_id: "0".repeat(64),
             revision: 0,
-            changes_status: if input.base.is_some() {
-                ChangesStatus::Unavailable
-            } else {
-                ChangesStatus::Disabled
-            },
-            base: input.base,
+            changes_status: input.changes.status(),
+            base: input.changes.base().map(str::to_owned),
             live_generation: None,
         };
         let mut index = match tracing::info_span!("index.build")
@@ -199,12 +192,31 @@ impl Assembler for CatalogueAssembler {
                 detail.workspace = Some(workspace);
             }
         }
+        if let Some(changes) = input.changes.ready() {
+            projection_index::apply(&mut index, changes);
+            comparison_details::current(&mut details, changes)?;
+            comparison_output::append(
+                changes,
+                &mut index,
+                &mut inventory,
+                &stub,
+                &input.config_path,
+                cancellation,
+            )?;
+        }
+        let metadata = input
+            .publication
+            .as_ref()
+            .map(|publication| publication.metadata(input.changes, index.comparison_url.as_deref()))
+            .transpose()?;
         let mut files = inventory.into_files();
         files.extend(identity::finalize(&mut index, &mut details, &files)?);
-        if readers::index(&String::from_utf8_lossy(&identity::json(&index)?)).is_err() {
-            return Err(Error::Invalid {
+        if let Err(source) = readers::index(&String::from_utf8_lossy(&identity::json(&index)?)) {
+            return Err(InternalError::Index {
                 path: namespace::viewer("index.json"),
-            });
+                source,
+            }
+            .into());
         }
         for (path, detail) in &details {
             if detail_context::validate(detail, &index).is_err() {
@@ -217,11 +229,7 @@ impl Assembler for CatalogueAssembler {
         for file in files {
             final_inventory.insert(file.path, file.bytes)?;
         }
-        match Artifact::finalize(
-            input.directory,
-            final_inventory.into_files(),
-            input.metadata,
-        ) {
+        match Artifact::finalize(input.directory, final_inventory.into_files(), metadata) {
             Ok(artifact) => Ok(artifact),
             Err(source) => Err(InternalError::Format { source }.into()),
         }

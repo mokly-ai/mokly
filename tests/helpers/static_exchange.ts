@@ -14,7 +14,9 @@ function archive(bytes: Buffer): Map<string, Buffer> {
   const files = new Map<string, Buffer>();
   for (let offset = 0; offset + 512 <= tar.length;) {
     const header = tar.subarray(offset, offset + 512);
-    const name = header.subarray(0, 100).toString().replace(/\0.*$/su, "");
+    const leaf = header.subarray(0, 100).toString().replace(/\0.*$/su, "");
+    const prefix = header.subarray(345, 500).toString().replace(/\0.*$/su, "");
+    const name = prefix ? `${prefix}/${leaf}` : leaf;
     if (!name) break;
     const size = Number.parseInt(
       header.subarray(124, 136).toString().replace(/\0.*$/su, "").trim(),
@@ -47,7 +49,13 @@ export async function exchange(
   let maxBlobs = 0;
   const retryStatus = options.retryStatus ?? (options.retry ? 503 : undefined);
   const published = new Set<string>();
-  const metadata: Array<{ configPath: string; headSha: string }> = [];
+  const metadata: Array<{
+    configPath: string;
+    headSha: string;
+    baseRef: string | null;
+    baseSha: string | null;
+    comparisonPath: string | null;
+  }> = [];
   const missingCounts: number[] = [];
   let identity = "";
   let base = "";
@@ -69,13 +77,24 @@ export async function exchange(
       if (request.url === "/plan?key=1=2") {
         bodies.push(bytes);
         const files = archive(bytes);
-        assert.deepEqual(
-          [...files.keys()],
-          ["mokly-upload.json", ".mokly-export-artifact"],
-        );
         const envelope = JSON.parse(
           files.get("mokly-upload.json")!.toString(),
-        ) as { configPath: string; headSha: string };
+        ) as (typeof metadata)[number];
+        assert.deepEqual(
+          [...files.keys()],
+          [
+            "mokly-upload.json",
+            ".mokly-export-artifact",
+            ...(envelope.comparisonPath ? [envelope.comparisonPath] : []),
+          ],
+        );
+        if (envelope.comparisonPath) {
+          const review = JSON.parse(
+            files.get(envelope.comparisonPath)!.toString(),
+          ) as { schemaVersion: number; baseCommit: string };
+          assert.equal(review.schemaVersion, 8);
+          assert.equal(review.baseCommit, envelope.baseSha);
+        }
         metadata.push(envelope);
         identity = `${envelope.headSha}:${envelope.configPath}`;
         const marker = JSON.parse(

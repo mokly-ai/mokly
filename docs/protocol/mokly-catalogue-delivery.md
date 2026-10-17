@@ -34,7 +34,9 @@ state in one publication, and `build` writes both for every entry.
 - A current entry's comparison state is never `removed`; that state is valid
   only inside `removedEntries`. A current entry whose aggregate state is
   `removed` because some of its views were removed projects as `changed`; its
-  per-view states are unchanged.
+  per-view states are unchanged. An entry that exists on both sides and only
+  gains views (aggregate `added`) also projects as `changed`, with its
+  per-view states kept.
 - Use cases keep ordered steps by screen path; a reused frame adds no screen
   use and no duplicate instance record.
 - Component parents carry `propSchema`, their own `props`, their `controls`,

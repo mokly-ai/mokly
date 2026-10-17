@@ -50,6 +50,7 @@ fn ready_and_unavailable_comparisons_settle_once_with_their_measured_duration() 
             (ready(), "  + Changes ready · 0 changes (3.2s)\n"),
             (
                 BuildChanges::Unavailable {
+                    base_ref: "base".into(),
                     base_commit: "base".into(),
                     reason: "base validation failed".into(),
                     diagnostics: vec![],

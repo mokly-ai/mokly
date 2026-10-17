@@ -51,7 +51,7 @@ phase returned successfully, not that optional Git evidence was available.
 | `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                         |
 | `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                     |
 | `review.changed-paths`                           | changed-path discovery, deduplication, and sorting                                                                          |
-| `review.base-tree`                               | bounded tree and blob reads of the base commit, and extraction into the base-side cache on a miss                           |
+| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation   |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                           |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                         |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                  |

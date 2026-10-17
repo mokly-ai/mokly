@@ -137,7 +137,7 @@ fn source_limits_are_unavailable_and_name_the_limit_and_requested_path() {
             reason,
             diagnostics,
             ..
-        }) = changes_diagnostics::unavailable(&error)
+        }) = changes_diagnostics::unavailable(&error, "fixture-base")
         else {
             panic!("limit must be unavailable")
         };

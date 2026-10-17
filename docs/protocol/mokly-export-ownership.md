@@ -1,7 +1,5 @@
 # Export Ownership v3
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 ## Boundary
 
 Every complete [static build](./mokly-export.md) contains a regular root file

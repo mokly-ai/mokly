@@ -142,7 +142,7 @@ pub struct PreparedBuild {
     pub config: ResolvedConfig,
     /// Render graph with complete documents and authored closure.
     pub generation: Arc<dyn RenderGeneration>,
-    /// Validation counts, warnings, and retained Changes for the M12/M9 join.
+    /// Validation counts, warnings, and retained Changes for static output.
     pub summary: BuildSummary,
 }
 
@@ -215,6 +215,8 @@ pub enum BuildChanges {
     Ready(Arc<ComparisonResult>),
     /// The current catalogue remains usable when historical sources fail validation.
     Unavailable {
+        /// Effective configured or explicit base ref.
+        base_ref: String,
         /// Full immutable historical commit.
         base_commit: String,
         /// Short reason for the unavailable completion line.

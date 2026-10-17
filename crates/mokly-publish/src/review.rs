@@ -11,8 +11,6 @@ use crate::review_json::Skip;
 
 /// The only review fields needed by the byte-carrying upload exchange.
 pub(crate) struct ReviewIdentity {
-    /// Effective base ref from the pinned review.
-    pub base_ref: String,
     /// Full pinned merge-base object id.
     pub base_commit: String,
 }
@@ -46,7 +44,6 @@ impl<'de> Visitor<'de> for IdentityVisitor {
     ) -> std::result::Result<ReviewIdentity, A::Error> {
         let mut keys = BTreeSet::new();
         let mut version = None;
-        let mut base_ref = None;
         let mut base_commit = None;
         while let Some(key) = object.next_key::<String>()? {
             if !keys.insert(key.clone()) {
@@ -54,7 +51,6 @@ impl<'de> Visitor<'de> for IdentityVisitor {
             }
             match key.as_str() {
                 "schemaVersion" => version = Some(object.next_value::<f64>()?),
-                "baseRef" => base_ref = Some(object.next_value::<String>()?),
                 "baseCommit" => base_commit = Some(object.next_value::<String>()?),
                 _ => {
                     object.next_value::<Skip>()?;
@@ -65,7 +61,6 @@ impl<'de> Visitor<'de> for IdentityVisitor {
             return Err(de::Error::custom("unsupported review version"));
         }
         Ok(ReviewIdentity {
-            base_ref: base_ref.ok_or_else(|| de::Error::missing_field("baseRef"))?,
             base_commit: base_commit.ok_or_else(|| de::Error::missing_field("baseCommit"))?,
         })
     }
