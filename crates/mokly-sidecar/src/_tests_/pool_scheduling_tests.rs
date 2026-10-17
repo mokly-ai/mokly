@@ -44,10 +44,10 @@ fn css() -> Call {
 #[test]
 fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
     let pool = pool();
-    let (busy, _) = pool.acquire(&css()).unwrap();
+    let (busy, _) = pool.acquire(&css(), None).unwrap();
     let queued = pool.clone();
     let waiting = thread::spawn(move || {
-        let (index, slot) = queued.acquire(&css()).unwrap();
+        let (index, slot) = queued.acquire(&css(), None).unwrap();
         queued.release(index, slot).unwrap();
         index
     });
@@ -61,10 +61,13 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
     let (send, receive) = mpsc::channel();
     let rendering = thread::spawn(move || {
         let (index, slot) = render
-            .acquire(&Call::RenderPage(RenderPage {
-                generation: "g".into(),
-                handle: "page".into(),
-            }))
+            .acquire(
+                &Call::RenderPage(RenderPage {
+                    generation: "g".into(),
+                    handle: "page".into(),
+                }),
+                None,
+            )
             .unwrap();
         send.send(index).unwrap();
         render.release(index, slot).unwrap();
@@ -106,6 +109,7 @@ fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
     pool.release(
         0,
         Some(Slot {
+            source_root: "/repo".into(),
             worker: Box::new(worker.clone()),
             control: Arc::new(worker),
             generations: BTreeMap::new(),

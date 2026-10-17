@@ -23,6 +23,8 @@ uses the caller's stack. Render workers use default stacks.
 
 Help describes configuration discovery through `mokly.config.json`.
 `--help` and `--version` write plain stdout in every output mode.
+Rich build and publish Changes summaries include the measured comparison
+duration for ready and unavailable results. Plain output has no phase duration.
 
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a loopback port. It
 serves its initial state through `mokly-server`, with lazy document rendering,
@@ -88,8 +90,8 @@ shutdown guards.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
 count as one interruption. A later signal kills owned sidecars and exits
-immediately. The interval uses an injected monotonic clock. The pool starts in
-the resolved repository root and uses the embedded npm version for hello and
+immediately. The interval uses an injected monotonic clock. Each worker starts in
+its request source root and uses the embedded npm version for hello and
 graph keys.
 Serve uses its own idempotent stop state. Signals and `q` cancel native work
 and drain sidecars while the HTTP workers stop. Repeated signals cannot

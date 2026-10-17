@@ -22,6 +22,7 @@ mod pool_preparation;
 mod pool_releases;
 mod pool_requests;
 mod pool_shutdown;
+mod pool_sources;
 mod pool_state;
 pub mod postcss_failure;
 mod presentation;

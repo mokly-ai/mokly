@@ -45,7 +45,7 @@ fn collect(nodes: &[Node], head: bool, output: &mut String) {
             Node::Element(element)
                 if head
                     && element.name == "style"
-                    && element.get("data-mokly-owners").is_none() =>
+                    && element.style_owners.as_ref().is_none_or(Vec::is_empty) =>
             {
                 for node in &element.children {
                     if let Node::Text(text) = node {

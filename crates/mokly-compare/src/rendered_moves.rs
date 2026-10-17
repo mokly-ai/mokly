@@ -14,7 +14,7 @@ use crate::material::{self, Projection};
 use crate::move_context::RenderedMoves;
 use crate::move_types::{MoveEvidence, MoveLines, MoveSignature};
 use crate::view_material;
-use crate::{instance_inputs, move_fingerprint};
+use crate::{instance_inputs, matching_tree, move_fingerprint, owned_styles};
 
 impl MoveEvidence for RenderedMoves<'_> {
     fn signature(
@@ -115,6 +115,25 @@ impl MoveEvidence for RenderedMoves<'_> {
     fn equal(&self, left: usize, right: usize, paths: &BTreeMap<String, String>) -> Result<bool> {
         let before = &self.before.catalogue().model.entries[left];
         let after = &self.after.catalogue().model.entries[right];
+        let mut style_paths = paths.clone();
+        if matches!(before.content, EntryContent::Component { .. })
+            && matches!(after.content, EntryContent::Component { .. })
+        {
+            style_paths.insert(
+                before
+                    .metadata
+                    .variant_of
+                    .as_deref()
+                    .unwrap_or(&before.metadata.path)
+                    .to_ascii_lowercase(),
+                after
+                    .metadata
+                    .variant_of
+                    .as_ref()
+                    .unwrap_or(&after.metadata.path)
+                    .clone(),
+            );
+        }
         let left_plans = self.plans(ReviewSide::Before, left);
         let right_plans = self.plans(ReviewSide::After, right);
         if left_plans.keys().ne(right_plans.keys()) {
@@ -143,7 +162,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                 true,
                 self.memo.as_ref(),
             )?;
-            let comparison = view_material::compare(
+            let mut comparison = view_material::compare(
                 left_document,
                 right_document,
                 &format!("static/mokly-generated/{}", left_plan.route),
@@ -151,6 +170,26 @@ impl MoveEvidence for RenderedMoves<'_> {
                 paths,
                 &resources.aliases,
             );
+            let owned = owned_styles::compare(
+                [&left_document.tree, &right_document.tree],
+                [
+                    Some(&matching_tree::document(&left_document.tree, &style_paths)),
+                    Some(&matching_tree::document(
+                        &right_document.tree,
+                        &BTreeMap::new(),
+                    )),
+                ],
+                &style_paths,
+                self.memo.as_ref(),
+            )?;
+            let owner = matches!(after.content, EntryContent::Component { .. }).then_some(
+                after
+                    .metadata
+                    .variant_of
+                    .as_deref()
+                    .unwrap_or(&after.metadata.path),
+            );
+            owned_styles::apply(&mut comparison, owner, &owned);
             if comparison.changed {
                 return Ok(false);
             }

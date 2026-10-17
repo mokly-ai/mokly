@@ -118,6 +118,20 @@ impl Runtime {
         let ancestors = ancestor_roots::directories(&side.configuration_directory);
         for (original, root) in side.dependency_roots.into_iter().enumerate() {
             let root = normalize(&root);
+            let authored = side
+                .module_resolution
+                .dependency_root
+                .as_ref()
+                .and_then(|repository| root.strip_prefix(repository).ok())
+                .map(|path| path.to_string_lossy().replace('\\', "/"))
+                .or_else(|| {
+                    ancestors.get(original).map(|directory| {
+                        PathBuf::from(directory)
+                            .join("node_modules")
+                            .to_string_lossy()
+                            .replace('\\', "/")
+                    })
+                });
             let root = match self.dependency_tree.project(&root) {
                 Ok(Some(node)) => node.identity,
                 _ => root,
@@ -129,11 +143,7 @@ impl Runtime {
             if index == roots.len() {
                 roots.push(root);
             }
-            if let Some(directory) = ancestors.get(original) {
-                let authored = PathBuf::from(directory)
-                    .join("node_modules")
-                    .to_string_lossy()
-                    .replace('\\', "/");
+            if let Some(authored) = authored {
                 side.dependency_aliases
                     .insert(authored, ancestor_roots::logical(index));
             }

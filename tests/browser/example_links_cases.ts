@@ -1,0 +1,148 @@
+import path from "node:path";
+
+import { expect } from "@playwright/test";
+
+import { repositoryRoot } from "../helpers/fixture.js";
+
+import { test as baseTest } from "./browser_test.js";
+import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { focusDesignLink } from "./design_test_helpers.js";
+import { documentFavicon } from "./document_error_allowance.js";
+import { copiedDesignFileUrl } from "./static_test.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  expectFrameLoaded,
+  expectFrameSource,
+} from "./workspace_actions.js";
+
+/** Run the same assertions against each catalogue delivery. */
+export function registerExampleLinks(
+  test = baseTest,
+  mode: "serve" | "static" = "serve",
+) {
+  test.beforeEach(({ allowBrowserError, baseURL }) => {
+    documentFavicon(allowBrowserError, baseURL!);
+  });
+  const designFileUrl =
+    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
+  for (const viewport of ["mobile", "desktop"] as const) {
+    for (const scheme of ["light", "dark"] as const) {
+      test(`${viewport}/${scheme}: the basic example buttons work in Browse and direct served documents`, async ({
+        page,
+      }) => {
+        let release!: () => void;
+        const released = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        let requested = false;
+        if (viewport === "mobile" && scheme === "dark")
+          await page.route(
+            "**/static/mokly-generated/example/screens/welcome/index.mobile.dark.html",
+            async (route) => {
+              requested = true;
+              await released;
+              await route.continue();
+            },
+          );
+        await page.goto("/view/example/screens/welcome/");
+        await chooseViewport(page, viewport);
+        if (scheme === "dark") await chooseScheme(page, "dark");
+        if (viewport === "mobile" && scheme === "dark") {
+          await expect.poll(() => requested).toBe(true);
+          release();
+        }
+        const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+        const frameElement = page.locator(`.mbk-frame-${viewport} iframe`);
+        await expectFrameLoaded(
+          frameElement,
+          new RegExp(
+            `/static/mokly-generated/example/screens/welcome/index\\.${suffix.replaceAll(".", "\\.")}$`,
+          ),
+        );
+        const frame = frameElement.contentFrame();
+        const next = frame.getByRole("link", {
+          name: "View details",
+          exact: true,
+        });
+        await expect(next).toHaveAttribute("data-mokly-link-control", "button");
+        await frame.getByRole("textbox", { name: "Workspace name" }).focus();
+        await page.keyboard.press("Tab");
+        await expect(next).toBeFocused();
+        await expect(next).toHaveCSS("outline-width", "2px");
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(
+          /\/view\/example\/screens\/details\/\?fragment=details$/,
+        );
+        await expectFrameSource(
+          page.locator(`.mbk-frame-${viewport} iframe`),
+          new RegExp(
+            `example/screens/details/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
+          ),
+        );
+        await frame
+          .locator('a[data-mokly-link-control="button"]')
+          .filter({ hasText: "Return to welcome" })
+          .click();
+        await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
+
+        await page.goto(
+          designFileUrl(
+            path.join(
+              repositoryRoot,
+              `examples/basic/mokly-generated/example/screens/welcome/index.${suffix}`,
+            ),
+          ).href,
+        );
+        await page
+          .getByRole("link", { name: "View details", exact: true })
+          .click();
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/example/screens/details/index\\.${suffix.replaceAll(".", "\\.")}#details$`,
+          ),
+        );
+        const back = page
+          .locator('a[data-mokly-link-control="button"]')
+          .filter({ hasText: "Return to welcome" });
+        await page.waitForLoadState("load");
+        await focusDesignLink(back);
+        await expect(back).toBeFocused();
+        await expect(back).toHaveCSS("outline-style", "solid");
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/example/screens/welcome/index\\.${suffix.replaceAll(".", "\\.")}$`,
+          ),
+        );
+      });
+    }
+  }
+
+  test("the real example tour reuses the styled buttons in both owning screens", async ({
+    page,
+  }) => {
+    for (const scheme of ["light", "dark"] as const) {
+      for (const step of [0, 1]) {
+        await page.goto("/view/example/tour/");
+        await chooseScheme(page, scheme);
+        const frame = page.frameLocator(".mbk-flow-screen iframe").nth(step);
+        const button = frame
+          .locator('a[data-mokly-link-control="button"]')
+          .filter({
+            hasText: step === 0 ? "View details" : "Return to welcome",
+          });
+        if (step === 0) await button.click();
+        else {
+          await focusDesignLink(button);
+          await page.keyboard.press("Enter");
+        }
+        await expect(page).toHaveURL(
+          step === 0
+            ? /\/view\/example\/screens\/details\/\?fragment=details$/
+            : /\/view\/example\/screens\/welcome\/$/,
+        );
+      }
+    }
+  });
+}

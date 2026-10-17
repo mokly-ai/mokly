@@ -30,6 +30,7 @@ impl TreeSink for Arena {
 
     fn create_element(&self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Handle {
         let node = Node::Element(Element {
+            style_owners: None,
             origin: None,
             navigation: None,
             source: None,

@@ -3,6 +3,10 @@
 // prettier-ignore
 export type ModuleResolution = {
 /**
+ * Selected installation repository for per-importer Node lookup.
+ */
+dependencyRoot?: string,
+/**
  * Module aliases.
  */
 aliases: { [key in string]: string },

@@ -19,6 +19,8 @@ pub struct Attribute {
 /// An element after the HTML5 tree builder has placed it.
 #[derive(Clone, Debug)]
 pub struct Element {
+    /// Trusted sidecar style owners; authored attributes cannot create this annotation.
+    pub style_owners: Option<Vec<String>>,
     /// Private invocation-site token for repeated placements; excluded from identity keys.
     pub origin: Option<String>,
     /// Package-written logical destination, absent on consumer-authored metadata.
@@ -164,6 +166,7 @@ impl Node {
             return None;
         };
         Some(Element {
+            style_owners: element.style_owners.take(),
             origin: element.origin.take(),
             navigation: element.navigation.take(),
             source: element.source.take(),
@@ -200,6 +203,7 @@ impl<'a> Iterator for Walk<'a> {
 /// Construct a package-owned HTML element.
 pub fn element(name: &str, attributes: &[(&str, &str)], children: Vec<Node>) -> Node {
     Node::Element(Element {
+        style_owners: None,
         origin: None,
         navigation: None,
         source: None,

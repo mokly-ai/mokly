@@ -56,6 +56,7 @@ pub(crate) trait ResourceMemo: Send + Sync {
         aliases: &BTreeMap<String, String>,
     ) -> Result<Arc<RuleDiff>>;
     fn inline_diff(&self, before: &[u8], after: &[u8]) -> Result<Arc<RuleDiff>>;
+    fn owned_diff(&self, before: &[u8], after: &[u8]) -> Result<Arc<RuleDiff>>;
     fn work(&self) -> ResourceWork;
 }
 
@@ -220,6 +221,10 @@ impl ResourceMemo for Memo {
 
     fn inline_diff(&self, before: &[u8], after: &[u8]) -> Result<Arc<RuleDiff>> {
         self.diff_sources(before, after)
+    }
+
+    fn owned_diff(&self, before: &[u8], after: &[u8]) -> Result<Arc<RuleDiff>> {
+        self.diff_policy(before, after, true)
     }
 
     fn work(&self) -> ResourceWork {

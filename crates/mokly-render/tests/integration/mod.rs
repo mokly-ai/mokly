@@ -2,6 +2,7 @@
 
 mod alias_tests;
 mod ancestor_tests;
+mod base_styles_tests;
 mod base_tests;
 mod cache_tests;
 mod declaration_alias_tests;

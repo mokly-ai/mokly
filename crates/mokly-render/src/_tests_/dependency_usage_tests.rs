@@ -33,12 +33,12 @@ fn canonical_duplicates_keep_the_nearest_ancestor() {
 }
 
 #[test]
-fn a_repository_named_dependency_records_its_unmapped_directory() {
+fn a_repository_named_dependency_records_its_importer_directory() {
     let usage: &dyn DependencyUsage = &UsedDependencies::default();
     usage.record(
         &Default::default(),
         "packages/ui/node_modules/theme/index.js",
     );
-    assert_eq!(usage.unmapped_directories(), ["packages/ui/node_modules"]);
-    assert!(usage.directories().is_empty());
+    assert_eq!(usage.directories(), ["packages/ui/node_modules"]);
+    assert!(usage.unmapped_directories().is_empty());
 }

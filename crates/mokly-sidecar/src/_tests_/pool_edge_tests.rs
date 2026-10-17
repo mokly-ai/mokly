@@ -44,6 +44,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
     {
         let mut state = pool.lock().unwrap();
         state.slots.push(Some(Slot {
+            source_root: "/repo".into(),
             worker: Box::new(worker.clone()),
             control: Arc::new(worker),
             generations: BTreeMap::new(),

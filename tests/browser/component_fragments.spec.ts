@@ -6,8 +6,12 @@ import { browserSources } from "../../packages/viewer/tests/browser_sources.js";
 
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
 
 let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
+test.beforeEach(({ allowBrowserError }) => {
+  documentFavicon(allowBrowserError, fixture.url);
+});
 const expectedEntries = [
   "action",
   "action/default",

@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerState,
@@ -24,7 +25,13 @@ for (const cross of [false, true]) {
 
   test(`${adapter} marker states cover hidden, missing, other-screen, comparison and pending views`, async ({
     page,
+    allowBrowserError,
   }) => {
+    allowBrowserError(
+      missingResourceNotice(
+        `${cross ? fixture.frames.url : fixture.host.url}/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
+      ),
+    );
     await openMarkerViewer(page, fixture, cross, { viewport: "mobile" });
     const visible = screenInstance(fixture, "mobile", "action");
     const hidden = screenInstance(fixture, "mobile", "hidden");

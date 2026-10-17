@@ -131,12 +131,12 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
     };
     let mut pending = false;
     for (index, mut slot) in slots {
-        let slot = match pool_cleanup::cleanup(state, &mut slot, timeout) {
-            Ok(()) => Some(slot),
+        let (slot, changed) = match pool_cleanup::cleanup(state, &mut slot, timeout) {
+            Ok(changed) => (Some(slot), changed),
             Err(error) => {
                 tracing::warn!(%error, "sidecar cleanup failed");
                 let _ = slot.control.kill();
-                None
+                (None, true)
             }
         };
         let mut state = pool_cleanup::lock(state)?;
@@ -145,9 +145,10 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
             state.controls.remove(&index);
         }
         state.available.push_back(index);
-        pending |= state.slots[index]
-            .as_ref()
-            .is_some_and(|slot| pool_cleanup::pending(&state, slot));
+        pending |= changed
+            && state.slots[index]
+                .as_ref()
+                .is_some_and(|slot| pool_cleanup::pending(&state, slot));
         ready.notify_all();
     }
     Ok(pending)

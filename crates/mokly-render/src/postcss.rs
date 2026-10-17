@@ -74,6 +74,7 @@ impl PostCss {
         };
         postcss_nested::validate(&postcss_nested::Input {
             tree: self.tree.as_ref(),
+            sources: self.inventory_tree.as_ref(),
             resolver: self.resolver.as_ref(),
             root: &self.root,
             side: &self.side,

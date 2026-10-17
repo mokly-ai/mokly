@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import test from "node:test";
@@ -12,6 +13,7 @@ import {
 import { checkRecipeSize } from "../packages/mokly/src/sidecar/recipe-size.js";
 
 import { bundleParams, startSidecar } from "./helpers/sidecar.js";
+import { dependency, sidecarSources } from "./helpers/sidecar_sources.js";
 
 function compiled(): CompiledGeneration {
   return {
@@ -93,3 +95,50 @@ test("a failed peer lookup remains explicit in a real bundle recipe", async (con
     { code: "MODULE_NOT_FOUND" },
   );
 });
+
+for (const linked of [false, true]) {
+  test(`restored runtime requires map importer directories with linked root=${linked}`, async (context) => {
+    const { root, head, base } = await sidecarSources(context);
+    await dependency(head, "fixture-runtime", "module.exports='root';", "cjs");
+    const selected = await dependency(
+      path.join(head, "packages/ui"),
+      "fixture-runtime",
+      "module.exports='nearer';",
+      "cjs",
+    );
+    for (const [directory, value] of [
+      [head, "head"],
+      [base, "base"],
+    ]) {
+      await fs.mkdir(path.join(directory!, "packages/ui"), { recursive: true });
+      await fs.writeFile(
+        path.join(directory!, "packages/ui/local.cjs"),
+        `module.exports='${value}';`,
+      );
+    }
+    const sourceRoot = linked ? path.join(root, "linked-base") : base;
+    if (linked) await fs.symlink(base, sourceRoot, "junction");
+    const params = bundleParams({
+      sourceRoot,
+      repositoryRoots: [head],
+      configurationDirectory: "packages/ui",
+      entryFiles: [],
+      storiesFiles: [],
+      renderer: null,
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        dependencyRoot: head,
+        packageRoots: [head],
+      },
+    });
+    const recipe = compiled();
+    assert.ok(!Object.hasOwn(recipe.peers, "fixture-runtime"));
+    const generation = restore(params, recipe, []);
+    assert.equal(generation.require("fixture-runtime"), "nearer");
+    assert.equal(
+      generation.require.resolve("fixture-runtime"),
+      await fs.realpath(path.join(selected, "index.cjs")),
+    );
+    assert.equal(generation.require("./local.cjs"), "base");
+  });
+}

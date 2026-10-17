@@ -1,6 +1,7 @@
 //! Lazy bounded sidecar pool, queueing, retry, recycling, and cancellation.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
@@ -70,7 +71,12 @@ impl Pool {
         }
     }
 
-    pub(super) fn acquire(&self, call: &Call) -> Result<(usize, Option<Slot>)> {
+    pub(super) fn acquire(
+        &self,
+        call: &Call,
+        root: Option<&Path>,
+    ) -> Result<(usize, Option<Slot>)> {
+        let root = root.unwrap_or(&self.launch.repository);
         let mut state = self.lock()?;
         let ticket = state.ticket;
         state.ticket += 1;
@@ -93,7 +99,7 @@ impl Pool {
                 })
                 .map(|(ticket, _)| *ticket);
             if first == Some(ticket) {
-                let index = pool_affinity::acquire(&mut state, call, self.options.size.get());
+                let index = pool_affinity::acquire(&mut state, call, root, self.options.size.get());
                 if let Some(index) = index {
                     state.waiting.remove(&ticket);
                     state.serving += 1;
@@ -109,12 +115,17 @@ impl Pool {
         }
     }
 
-    pub(super) fn spawn(&self, index: usize) -> Result<Slot> {
+    pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
+        self.forget_other_roots(index, source_root)?;
         self.lock()?.memory.entry(index).or_default().started();
-        let mut spawned = self.factory.spawn(&self.launch)?;
+        let launch = Launch {
+            repository: source_root.into(),
+            ..self.launch.clone()
+        };
+        let mut spawned = self.factory.spawn(&launch)?;
         {
             let mut state = self.lock()?;
             if state.stopped {
@@ -131,6 +142,7 @@ impl Pool {
             return Err(error);
         }
         Ok(Slot {
+            source_root: source_root.into(),
             worker: spawned.worker,
             control: spawned.control,
             generations: BTreeMap::new(),

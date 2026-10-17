@@ -35,7 +35,12 @@ for (const cross of [false, true]) {
   for (const replacement of ["source", "adapter"] as const) {
     test(`${cross ? "postMessage" : "same-origin"} throwing pick-end cannot interrupt ${replacement} teardown`, async ({
       page,
+      allowBrowserError,
     }) => {
+      allowBrowserError({
+        kind: "pageerror",
+        message: /^Host pick-end failure$/u,
+      });
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await page.goto(fixture.host.url);

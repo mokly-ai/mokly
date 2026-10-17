@@ -22,7 +22,7 @@ use crate::instance_proof::{InstanceProof, ProofInput};
 use crate::move_inventory::PlanIndex;
 use crate::move_types::EntryPair;
 use crate::resource_memo::ResourceMemo;
-use crate::{inline_styles, instance_proof, matching_tree, view_material};
+use crate::{inline_styles, instance_proof, matching_tree, owned_styles, view_material};
 
 pub(crate) struct UsageView {
     pub(crate) side: ReviewSide,
@@ -150,7 +150,7 @@ pub(crate) fn collect(
             },
             &mut observation,
         )?;
-        let comparison = match (before_document, after_document) {
+        let mut comparison = match (before_document, after_document) {
             (Some(left), Some(right)) => Some(view_material::compare(
                 left,
                 right,
@@ -167,6 +167,18 @@ pub(crate) fn collect(
             )),
             _ => None,
         };
+        if let Some(comparison) = &mut comparison {
+            let changes = owned_styles::compare(
+                [
+                    before_document.map_or(&[], |document| document.tree.as_slice()),
+                    after_document.map_or(&[], |document| document.tree.as_slice()),
+                ],
+                [before_tree.as_ref(), after_tree.as_ref()],
+                paths,
+                memo,
+            )?;
+            owned_styles::apply(comparison, component.as_deref(), &changes);
+        }
         let inline = inline_styles::compare(
             before_document.map(|document| document.tree.as_slice()),
             after_document.map(|document| document.tree.as_slice()),

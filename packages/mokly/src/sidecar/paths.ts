@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { Plugin, PluginBuild } from "esbuild";
@@ -7,6 +6,7 @@ import type { Plugin, PluginBuild } from "esbuild";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { detail } from "./errors.js";
+import { resolveImport, sideRequire } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { inside } from "./path-scope.js";
 
@@ -27,7 +27,7 @@ export async function consumerRequire(
   );
   if (!inside(params.sourceRoot, await fs.realpath(directory)))
     throw new Error("configuration directory is outside sourceRoot");
-  const native = createRequire(path.join(directory, "package.json"));
+  const native = sideRequire(paths, path.join(directory, "package.json"));
   const peers = new Map<string, string | Error>();
   let resolver: PluginBuild | undefined;
   const names = [
@@ -45,7 +45,7 @@ export async function consumerRequire(
     if (!builder) throw new Error("peer resolution requires the active bundle");
     await Promise.all(
       names.map(async (name) => {
-        const resolved = await builder.resolve(name, {
+        const resolved = await resolveImport(paths, builder, name, {
           resolveDir: directory,
           kind: "require-call",
           pluginData: "consumer-peer",

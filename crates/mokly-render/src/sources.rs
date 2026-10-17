@@ -5,12 +5,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::ancestor_roots::dependency_directory;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::dependency_usage::DependencyUsage;
 use crate::runtime::Runtime;
 use crate::side::{BaseSide, SideInputs, dependency_roots};
+use crate::source_paths::{self, INSTALLED_INPUT_PREFIX};
 
 /// Dependency paths retain logical names while source bytes use their own tree.
 pub(crate) struct SideTree {
@@ -55,9 +57,19 @@ impl SourceTree for LeasedTree {
 }
 
 impl SideTree {
-    fn mapped(&self, path: &Path) -> Option<(usize, PathBuf, PathBuf)> {
+    fn mapped(&self, path: &Path) -> Option<(PathBuf, PathBuf, PathBuf)> {
         let relative = path.strip_prefix(&self.root).ok()?;
         let text = relative.to_string_lossy().replace('\\', "/");
+        let text = text.strip_prefix(INSTALLED_INPUT_PREFIX).unwrap_or(&text);
+        if !text.starts_with("node_modules/") && text != "node_modules" {
+            let directory = dependency_directory(text)?;
+            let root = self
+                ._base
+                .as_ref()
+                .and_then(|base| base.dependencies.node_modules.parent())
+                .unwrap_or(&self.root);
+            return Some((root.join(directory), root.join(text), relative.to_owned()));
+        }
         let rest = if text == "node_modules" {
             ""
         } else {
@@ -73,7 +85,22 @@ impl SideTree {
             return None;
         }
         let root = self.dependency_roots.get(index)?;
-        Some((index, root.join(rest), relative.to_owned()))
+        Some((root.clone(), root.join(rest), relative.to_owned()))
+    }
+
+    fn source(&self, path: &Path) -> Result<Option<(PathBuf, Node)>> {
+        if self._base.is_none() {
+            return Ok(None);
+        }
+        let Ok(relative) = path.strip_prefix(&self.root) else {
+            return Ok(None);
+        };
+        source_paths::source_node(
+            self.sources.as_ref(),
+            &self.root,
+            &self.aliases,
+            &relative.to_string_lossy().replace('\\', "/"),
+        )
     }
 
     fn source_alias(&self, identity: &Path) -> Option<PathBuf> {
@@ -96,6 +123,9 @@ impl SideTree {
             .map(|relative| self.root.join(relative))
     }
     fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf)> {
+        if let Some((source, _)) = self.source(path)? {
+            return Ok((self.sources.as_ref(), source));
+        }
         if let Some((_, physical, _)) = self.mapped(path) {
             if let Some(node) = self.dependencies.project(&physical)?
                 && let Some(source) = self.source_alias(&node.identity)
@@ -125,7 +155,9 @@ impl SourceTree for SideTree {
         let mut sources = Vec::new();
         let mut dependencies = Vec::new();
         for path in paths {
-            if let Some((_, physical, _)) = self.mapped(path) {
+            if let Some((source, _)) = self.source(path)? {
+                sources.push(source);
+            } else if let Some((_, physical, _)) = self.mapped(path) {
                 if let Some(node) = self.dependencies.project(&physical)?
                     && let Some(source) = self.source_alias(&node.identity)
                 {
@@ -164,6 +196,10 @@ impl SourceTree for SideTree {
         Ok(bytes)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
+        if let Some((_, mut node)) = self.source(path)? {
+            node.identity = path.into();
+            return Ok(Some(node));
+        }
         if path == self.root.join("node_modules/.mokly-roots") {
             return Ok(Some(Node {
                 identity: path.into(),
@@ -171,7 +207,7 @@ impl SourceTree for SideTree {
                 kind: mokly_source_interface::tree::FileKind::Directory,
             }));
         }
-        let Some((index, physical, relative)) = self.mapped(path) else {
+        let Some((root, physical, relative)) = self.mapped(path) else {
             return self.sources.project(path);
         };
         let Some(mut node) = self.dependencies.project(&physical)? else {
@@ -180,10 +216,15 @@ impl SourceTree for SideTree {
         if let Some(source) = self.source_alias(&node.identity) {
             return self.sources.project(&source);
         }
-        let Some(root) = self.dependencies.project(&self.dependency_roots[index])? else {
+        let Some(root) = self.dependencies.project(&root)? else {
             return Ok(None);
         };
-        if !node.identity.starts_with(&root.identity) {
+        if !node.identity.starts_with(&root.identity)
+            && !self
+                .dependency_roots
+                .iter()
+                .any(|root| node.identity.starts_with(root))
+        {
             return Ok(None);
         }
         node.identity = self.root.join(relative);

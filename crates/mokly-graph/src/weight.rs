@@ -94,7 +94,10 @@ fn nodes(values: &Vec<Node>) -> usize {
                 Node::Text(text) | Node::Comment(text) | Node::Doctype(text) => text.capacity(),
                 Node::Element(element) => {
                     pending.push(&element.children);
-                    element.name.capacity()
+                    element.style_owners.as_ref().map_or(0, |owners| {
+                        owners.capacity() * mem::size_of::<String>()
+                            + owners.iter().map(String::capacity).sum::<usize>()
+                    }) + element.name.capacity()
                         + element.namespace.capacity()
                         + element.origin.as_ref().map_or(0, String::capacity)
                         + element.source.as_ref().map_or(0, |source| {

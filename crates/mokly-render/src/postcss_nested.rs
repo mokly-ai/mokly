@@ -14,6 +14,7 @@ use crate::side::SideInputs;
 
 pub(crate) struct Input<'a> {
     pub(crate) tree: &'a dyn SourceTree,
+    pub(crate) sources: &'a dyn SourceTree,
     pub(crate) resolver: &'a dyn ImportResolver,
     pub(crate) root: &'a Path,
     pub(crate) side: &'a SideInputs,
@@ -33,9 +34,14 @@ pub(crate) fn validate(input: &Input<'_>) -> Result<()> {
         let physical = if physical.is_absolute() {
             physical.to_owned()
         } else {
-            input
+            let source = match input
                 .side
-                .physical_source(input.path)
+                .physical_source(input.path, input.sources, input.root)
+            {
+                Ok(source) => source,
+                Err(source) => return Err(InternalError::Source { source }.into()),
+            };
+            source
                 .parent()
                 .unwrap_or(&input.side.source_root)
                 .join(physical)

@@ -6,6 +6,23 @@ This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
 
+## Source Root Workers
+
+Each process keeps one source working directory for its whole lifetime,
+including delayed callbacks. Its `PWD` names that directory. Sidecars and
+PostCSS children omit `INIT_CWD`, `npm_package_json`, and
+`npm_config_local_prefix`. Other environment values are inherited.
+The Rust launcher canonicalizes its directory with `dunce::canonicalize`
+before setting the working directory and `PWD`.
+
+A live PostCSS context keeps its affine slot. Independent eligible work uses
+an idle worker with the same source root, then an unspawned slot within the
+pool bound, then the oldest idle slot. A root change kills the old process
+before replay and removes that slot's affinities for the old root. A debug
+event records the slot and both roots. A recycled slot keeps only affinities
+for the root of its replacement. All roots share the configured pool bound;
+a one-worker pool replaces its process when the source root changes.
+
 ## Source And Dependency Files
 
 A selected dependency root is the `node_modules` directory of a configured
@@ -16,13 +33,23 @@ The first dependency root uses the logical prefix `node_modules/`. Additional
 roots use `node_modules/.mokly-roots/{index}/`, with their zero-based position
 in the selected root list, followed by the path relative to that root.
 Logical names use POSIX separators and contain no absolute or parent path.
-The core maps them back to the selected root when it reads dependency bytes.
+`node_modules/.mokly-roots/` is reserved for Mokly logical names and
+installation metadata. Source and installed package paths must not use it.
+The core applies the base-source precedence below before reading installation bytes.
 
-Files inside the source root use source-relative names. A source-relative
+Other files inside the source root use source-relative names. A source-relative
 name that contains a `node_modules` segment is also a dependency. Dependency
 files contribute to the module graph and stylesheet closure, but never to
 catalogue entry discovery, source attribution, or the catalogue source
-inventory. Their installation is owned by the dependency tier.
+inventory. Git tracking does not change that dependency classification.
+A tracked file in the base Git tree supplies its base bytes before an installed
+copy, including with equal dependency inputs. A source copy beneath a selected
+package-root directory uses that root's logical prefix on both sides.
+The core supplies the installation repository as `moduleResolution.dependencyRoot`.
+After source-side resolution, bare imports start at the matching importer
+directory in that tree. Nested dependencies outside selected roots keep their
+repository-relative names, including `node_modules`. JavaScript, CSS, and
+PostCSS use the same source precedence.
 
 A workspace or local `file:` package can resolve outside `node_modules`
 through a package-manager link. When its real path lies inside a supplied
@@ -39,14 +66,30 @@ dependency inputs, and reads stylesheet order from these edges under the
 [imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
 
 `bundle` and `processCss` results can include `unmappedDependencyDirectories`:
-used repository-relative `node_modules` directories whose importer lookup the
-base cannot preserve. Missing data means an empty list. Lookup observation
-retains package-directory links as well as canonical module paths. It covers
-nested workspace installations and a configuration copy that would shadow an
-outside importer's selected package. The core uses these records only for
-[dependency fallback](./mokly-base-preparation.md#installation-and-bundle-settings).
-They do not enter the catalogue source inventory. The compiled recipe retains
-this lookup provenance so worker restoration and evaluation reuse preserve it.
+used repository-relative `node_modules` directories outside the configured
+root lookup. Missing data means an empty list. Observation retains lexical
+package-directory links as well as canonical module paths, including pnpm
+stores and outside-configuration importers. The core maps repository-relative
+lookup through `dependencyRoot` and checks used directories in tier two.
+Only a directory that cannot map produces the
+[lookup fallback warning](./mokly-base-preparation.md#installation-and-bundle-settings).
+These records never enter source inventory. Compiled recipes retain the records
+through worker restoration and evaluation reuse.
+
+Source-side tsconfig paths take precedence over package lookup. A mapped bare
+package resolves inside its selected package scope, with the same conditions,
+main fields, and extension settings. This prevents working tsconfig paths from
+changing historical imports. Package lookup uses manifest hashes and directory membership, including absent
+candidates. CSS text stays outside the JavaScript recipe. Workspace metadata
+links map to the base source tree. PostCSS static,
+dynamic, record-form, and synchronous requires use the same importer mapping.
+
+Installation lookup metadata outside the source root uses the private prefix
+`node_modules/.mokly-roots/installed/` followed by its logical dependency name.
+These keys identify actual installation files and directory membership, even
+when a tracked source directory has the same logical name. The core reads
+these inputs from the selected installation without a source override.
+They are compiler-input keys, not module or stylesheet names.
 
 ## Authoring And Evaluation
 

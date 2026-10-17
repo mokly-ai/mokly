@@ -9,7 +9,7 @@ use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
 use crate::review::{EntryChangeReason, ReviewEntry, ReviewKind, ReviewResultV8, ReviewState};
 use crate::wire_decode;
-use crate::{review_affected_validation, review_order};
+use crate::{review_affected_validation, review_order, review_sides};
 
 /// Validate ordering, identities, explicit sides, and evidence references without reordering.
 pub fn validate(result: &ReviewResultV8) -> Result<(), ReadError> {
@@ -32,6 +32,9 @@ pub fn validate(result: &ReviewResultV8) -> Result<(), ReadError> {
         entries.push(entry);
         if let Some(variants) = &entry.variants {
             if entry.kind != ReviewKind::Component
+                || variants
+                    .windows(2)
+                    .any(|pair| pair[0].after.is_none() && pair[1].after.is_some())
                 || variants.iter().any(|variant| {
                     variant.kind != ReviewKind::Component || variant.variants.is_some()
                 })
@@ -149,14 +152,7 @@ fn valid_entry(entry: &ReviewEntry, component_owner: &str) -> bool {
     if entry.included != (!entry.reasons.is_empty() || entry.previous_path.is_some()) {
         return false;
     }
-    if let Some(previous) = &entry.previous_path
-        && (entry
-            .before
-            .as_ref()
-            .is_none_or(|before| &before.path != previous)
-            || entry.after.is_none()
-            || previous.eq_ignore_ascii_case(&entry.path))
-    {
+    if !review_sides::valid(entry) {
         return false;
     }
     if (entry.before.is_none() && entry.state != ReviewState::Added)
