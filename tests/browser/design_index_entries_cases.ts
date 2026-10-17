@@ -7,7 +7,6 @@ import { repositoryRoot } from "../helpers/fixture.js";
 import { test as baseTest } from "./browser_test.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { blankFrameNotice } from "./navigation_error_allowances.js";
 import { copiedDesignFileUrl } from "./static_test.js";
 import { chooseViewport } from "./workspace_actions.js";
 
@@ -19,7 +18,6 @@ export function registerDesignIndexEntries(
     mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
-    allowBrowserError(blankFrameNotice);
   });
   const family = "/view/design/browse/index-entries";
 

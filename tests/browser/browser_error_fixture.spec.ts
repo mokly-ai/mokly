@@ -41,11 +41,16 @@ test("the automatic error fixture observes every context and page with exact tes
   ).toHaveLength(4);
 });
 
-test("the automatic error fixture settles a paused fake clock", async ({
+test("the automatic error fixture settles every page of a paused context", async ({
   page,
+  context,
 }) => {
+  const beforePause = await context.newPage();
   await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
-  await page.setContent("<p>Controlled clock</p>");
-  await expect(page.getByText("Controlled clock")).toBeVisible();
+  const afterPause = await context.newPage();
+  for (const target of [page, beforePause, afterPause]) {
+    await target.setContent("<p>Controlled clock</p>");
+    await expect(target.getByText("Controlled clock")).toBeVisible();
+  }
 });

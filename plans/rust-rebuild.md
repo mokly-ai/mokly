@@ -872,8 +872,14 @@ renders again.
         endpoints, read-only props, resources, canonical links, deployment
         replacement, and public CORS. Port the current-only static/export/publish
         sweep cases and the design journeys.
-  - [ ] Add comparison modes and historical comparison documents after the
-        Milestone 12 join of the comparison engine. Keep their sweep rows open.
+  - [x] Add comparison modes and historical documents from a copied native
+        build of an independent two-commit fixture. Cover removed screens,
+        pages, documents, components, and variants, and retain the comparison
+        URL across reload and viewer-only deployment replacement.
+  - [x] Apply browser review 3: start copied builds with Serve readiness,
+        preserve current-only filter omission and resized width on reload,
+        centralize the exact recorder notice, and track clocks per context.
+        Prove automatic console and page-error rejection with isolated probes.
   - [ ] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
         user approves the new job. Include the private slot and variant file
         fixture and the design journeys checked by a manual run.
@@ -1018,6 +1024,7 @@ Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-deci
 Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
 Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browser/report-4.md`.
+Native copied comparisons and browser review 3: `.context/rust-rebuild/delegation/m8-browser/report-5.md`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
 Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.
@@ -1614,6 +1621,10 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         The M14 isolated rerun passed; its missing epoch let idle cleanup take
         the asserted slot. Evidence: M14 `report-3.md` and
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
+  - M8 browser review 3 finding 1, High severity, Medium effort: approve two
+    hosted PR measurements with fresh and restored caches before Required CI.
+    Keep four shards and the current timeouts until the user decides from
+    measured setup, shard, and slow-case durations. Recommended A: measure.
   - M8 browser follow-up, Low severity, Small effort: investigate the existing
     `frame_adapter_navigation.spec.ts` posted-message assertion. It returned
     no navigation event once and passed unchanged after rerun. M8 viewer owns

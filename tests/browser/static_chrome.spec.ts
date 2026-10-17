@@ -24,7 +24,10 @@ test("copied catalogue navigation retains pointer and keyboard resizing", async 
   await page.mouse.down();
   await page.mouse.move(box.x + 80, box.y + box.height / 2, { steps: 6 });
   await page.mouse.up();
-  expect(await width()).toBeGreaterThan(initial + 16);
+  await expect.poll(width).toBeGreaterThan(initial + 16);
+  const resized = await width();
+  await page.reload();
+  await expect.poll(width).toBe(resized);
   await divider.focus();
   await page.keyboard.press("Home");
   await expect.poll(width).toBe(192);
