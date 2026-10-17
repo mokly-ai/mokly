@@ -168,3 +168,7 @@ mod review_reader_tests;
 #[cfg(test)]
 #[path = "_tests_/snapshot_reader_tests.rs"]
 mod snapshot_reader_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_eligibility_tests.rs"]
+mod comparison_eligibility_tests;

@@ -3,32 +3,21 @@
 use std::collections::BTreeMap;
 
 use mokly_compare::comparison_types::ComparisonResult;
-use mokly_compare::{projection_index, projection_workspace};
+use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::axes::EntryKind;
 use mokly_model::canonical;
 use mokly_model::material::digest;
 use mokly_model::output::artifact::File;
-use mokly_model::projection;
-use mokly_model::public_detail::EntryDetailV1;
-use mokly_model::public_index::{CatalogueReadModel, RemovedEntry, RemovedPreview};
+use mokly_model::public_detail::{EntryDetailV1, Workspace};
+use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{readers, routes};
-use serde::Serialize;
 
 use crate::comparison_files::{checkpoint, compare, side};
 use crate::error::{Error, Result};
+use crate::identity;
 use crate::inventory::Inventory;
 use crate::transaction::Cancellation;
-use crate::{comparison_details, identity};
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Preview<'a> {
-    schema_version: u32,
-    base_ref: &'a str,
-    base_commit: &'a str,
-    path: &'a str,
-}
 
 #[tracing::instrument(name = "review.capture", skip_all, err)]
 pub(crate) fn append(
@@ -41,20 +30,22 @@ pub(crate) fn append(
 ) -> Result<()> {
     let state = projection_index::publication(config_path.into(), &result.snapshot.base_ref);
     let historical = compare(projection_index::base_index(result, &state))?;
-    let mut details = projection::pending_details(
-        &result.before.catalogue().model,
+    let mut details = compare(projection_removed::details(
+        result,
         &historical,
-        &projection_index::keys(result.before.as_ref()),
-    );
-    let mut records = projection_index::records(historical);
-    let selected: BTreeMap<_, _> = result
-        .snapshot
-        .removed_entries
-        .iter()
-        .map(|entry| (entry.entry.metadata().path.as_str(), entry))
-        .collect();
-    details.retain(|path, _| selected.contains_key(path.as_str()));
-    comparison_details::historical(&mut details, result)?;
+        &"0".repeat(64),
+    ))?;
+    for detail in details.values_mut() {
+        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
+            detail.workspace = Some(Workspace {
+                comparison_eligible: false,
+                used_by: Vec::new(),
+                affected: Vec::new(),
+                related_components: Vec::new(),
+                input_changes: Vec::new(),
+            });
+        }
+    }
     let mut inventory = Inventory::default();
     inventory.insert("review.json".into(), identity::json(&result.review)?.into())?;
     side(
@@ -69,37 +60,17 @@ pub(crate) fn append(
         &mut inventory,
         cancellation,
     )?;
-    for removed in &result.snapshot.removed_entries {
+    for preview in projection_removed::previews(result) {
+        inventory.insert(
+            routes::comparison_preview(&preview.path),
+            identity::json(&preview)?.into(),
+        )?;
+    }
+    let records = compare(projection_removed::records(result, historical))?;
+    for (removed, record) in result.snapshot.removed_entries.iter().zip(records) {
         checkpoint(cancellation)?;
         let path = &removed.entry.metadata().path;
-        let entry = records
-            .remove(path)
-            .ok_or_else(|| Error::Invalid { path: path.clone() })?;
-        let preview = match removed.entry.kind() {
-            EntryKind::Screen => Some(RemovedPreview::Screen),
-            EntryKind::Page => Some(RemovedPreview::Page),
-            EntryKind::Document => Some(RemovedPreview::Document),
-            _ => None,
-        };
-        if matches!(removed.entry.kind(), EntryKind::Page | EntryKind::Document) {
-            inventory.insert(
-                routes::comparison_preview(path),
-                identity::json(&Preview {
-                    schema_version: 3,
-                    base_ref: &result.snapshot.base_ref,
-                    base_commit: &result.snapshot.base_commit,
-                    path,
-                })?
-                .into(),
-            )?;
-        }
-        index.removed_entries.push(RemovedEntry {
-            entry,
-            folder_titles: removed.folder_titles.clone(),
-            parent_title: removed.parent_title.clone(),
-            snapshot_id: Some(removed.snapshot_id.clone()),
-            preview,
-        });
+        index.removed_entries.push(record);
         output.insert(format!("view/{path}/index.html"), stub.to_vec().into())?;
     }
     compare(projection_workspace::apply(&mut details, result))?;

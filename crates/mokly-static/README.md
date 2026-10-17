@@ -30,8 +30,12 @@ Ready Changes supplies review v8, view evidence, workspace lists,
 and removed records from the same comparison result. Snapshot v4 stays private. Both pinned graph sides
 supply immutable documents and resources. Removed details carry their historical
 snapshot ID and generation; removed page and document previews carry metadata v3.
+`mokly-compare::projection_removed` owns these records, details, and metadata.
+The static caller supplies empty workspaces for removed visual details before
+applying the shared comparison workspace projection.
 The comparison inventory is finalized before deployment identity. Disabled or
 unavailable Changes writes no generation; both states remain explicit in the index.
+The strict index reader runs before installation and retains its diagnostic on failure.
 Publication takes its base ref, commit, and comparison path from that same result.
 
 `OutputTransactions` implements `dyn Transactions` over injected `Files` and

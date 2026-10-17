@@ -7,10 +7,9 @@ use mokly_model::axes::EntryKind;
 use mokly_model::projection::{self, Publication, ViewKey};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::{
-    CatalogueChanges, CatalogueEntry, ChangesStatus, ComparisonSelection,
+    CatalogueChanges, CatalogueEntry, ChangeKind, ChangesStatus, ComparisonSelection,
 };
 use mokly_model::public_records::{CatalogueRecord, CatalogueVisual};
-use mokly_model::review::ReviewState;
 
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{ComparisonResult, EntryClassification};
@@ -19,6 +18,10 @@ use crate::projection_context::Context;
 
 /// Apply retained entry and view classifications to a current or historical index.
 /// Keep deployment, revision, and live fences; the caller sets the URL after capture.
+/// The index must come from the same retained before or after catalogue state.
+/// A current index needs classifications for every published record and view.
+/// A base index is intermediate: publish only its classified removed records.
+/// Apply before adding removed records; the caller installs those with the generation URL.
 pub fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
     index.changes_status = ChangesStatus::Ready;
     index.base = Some(result.snapshot.base_ref.clone());
@@ -34,7 +37,7 @@ pub fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
             .copied()
         {
             metadata(&mut entry.entry, change, &context);
-            visual(&mut entry.visual, change, &context);
+            visual(&mut entry.visual, change);
         }
     }
     for entry in &mut index.components {
@@ -43,7 +46,7 @@ pub fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
             .copied()
         {
             metadata(&mut entry.entry, change, &context);
-            visual(&mut entry.visual, change, &context);
+            visual(&mut entry.visual, change);
             entry.comparison = ComparisonSelection::Ready {
                 kind: context.comparison_kind(change),
                 eligible: context.eligible(change),
@@ -81,7 +84,7 @@ fn metadata(entry: &mut CatalogueEntry, change: &EntryClassification, context: &
     };
 }
 
-fn visual(visual: &mut CatalogueVisual, change: &EntryClassification, context: &Context<'_>) {
+fn visual(visual: &mut CatalogueVisual, change: &EntryClassification) {
     for view in &mut visual.views {
         if let Some(document) = change.documents.iter().find(|document| {
             document.key.viewport == Some(view.viewport)
@@ -89,9 +92,9 @@ fn visual(visual: &mut CatalogueVisual, change: &EntryClassification, context: &
         }) {
             view.comparison = ComparisonSelection::Ready {
                 kind: Context::view_kind(document.state),
-                eligible: context.eligible(change)
-                    && document.before_route.is_some()
-                    && matches!(document.state, ReviewState::Changed | ReviewState::Removed),
+                eligible: Context::view_kind(document.state) == ChangeKind::Changed
+                    || (change.kind == EntryKind::Component
+                        && Context::view_kind(document.state) == ChangeKind::Removed),
             };
         }
     }

@@ -64,6 +64,13 @@ pub(crate) fn compare<T>(result: mokly_compare::error::Result<T>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
         Err(mokly_compare::error::Error::Graph { source }) => graph(Err(source)),
+        Err(mokly_compare::error::Error::RemovedRecord { path }) => Err(Error::Invalid { path }),
+        Err(mokly_compare::error::Error::HistoricalDocument { route }) => {
+            Err(Error::Invalid { path: route })
+        }
+        Err(mokly_compare::error::Error::HistoricalPlanEntry { route, entry }) => {
+            Err(Error::PlanEntry { route, entry })
+        }
         Err(source) => Err(InternalError::Comparison {
             source: Box::new(source),
         }

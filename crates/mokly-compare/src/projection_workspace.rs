@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::EntryKind;
-use mokly_model::public_detail::{EntryDetailV1, Workspace};
+use mokly_model::public_detail::EntryDetailV1;
 
 use crate::comparison_types::ComparisonResult;
 use crate::error::Result;
@@ -13,6 +13,7 @@ use crate::{projection_affected, projection_inputs};
 /// Join current usage with retained comparison evidence without changing document bytes.
 /// The caller supplies settled view usage and current Used by lists.
 /// This updates comparison-owned fields and retains those Used by rows.
+/// An absent workspace stays absent until the caller proves its usage inputs.
 /// Metadata, counterparts, removals, and consumer links are indexed once for the batch.
 pub fn apply(
     details: &mut BTreeMap<String, EntryDetailV1>,
@@ -27,13 +28,9 @@ pub fn apply(
         let Some(classification) = context.classifications.get(path.as_str()) else {
             continue;
         };
-        let mut workspace = detail.workspace.take().unwrap_or_else(|| Workspace {
-            comparison_eligible: false,
-            used_by: Vec::new(),
-            affected: Vec::new(),
-            related_components: Vec::new(),
-            input_changes: Vec::new(),
-        });
+        let Some(mut workspace) = detail.workspace.take() else {
+            continue;
+        };
         workspace.comparison_eligible = context.can_compare(path, detail.entry.kind)
             && (context.eligible(classification) || affected.consumers.contains(path));
         for usage in &mut workspace.used_by {

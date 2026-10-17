@@ -182,6 +182,14 @@ pub enum Error {
 /// Adapter causes retained for diagnostics.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// Index validation failed before publication, with the reader's diagnostic.
+    #[error("Invalid static output at {path}: {source}")]
+    Index {
+        /// Public catalogue index path.
+        path: String,
+        /// Original strict reader failure.
+        source: mokly_model::readers::ReadError,
+    },
     /// Shared comparison projection failed.
     #[error("comparison projection failed: {source}")]
     Comparison {

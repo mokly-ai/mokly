@@ -211,10 +211,12 @@ impl Assembler for CatalogueAssembler {
             .transpose()?;
         let mut files = inventory.into_files();
         files.extend(identity::finalize(&mut index, &mut details, &files)?);
-        if readers::index(&String::from_utf8_lossy(&identity::json(&index)?)).is_err() {
-            return Err(Error::Invalid {
+        if let Err(source) = readers::index(&String::from_utf8_lossy(&identity::json(&index)?)) {
+            return Err(InternalError::Index {
                 path: namespace::viewer("index.json"),
-            });
+                source,
+            }
+            .into());
         }
         for (path, detail) in &details {
             if detail_context::validate(detail, &index).is_err() {

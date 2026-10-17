@@ -119,7 +119,7 @@ fn historical_missing_record_missing_document_and_invalid_plan_are_typed_errors(
                 CancellationMock::requested
                     .next_call(matching!())
                     .returns(false)
-                    .n_times(2),
+                    .once(),
             )
         } else {
             Unimock::new(())

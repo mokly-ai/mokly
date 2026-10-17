@@ -1,7 +1,7 @@
 //! Historical eligibility and deduplicated affected consumers use one shared policy.
 
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
-use mokly_model::public_detail::InputChange;
+use mokly_model::public_detail::{InputChange, UsageLink, VisualKind};
 use mokly_model::review::{ReviewEntryAddress, ReviewState};
 use mokly_model::review_affected::{
     AffectedConsumer, AffectedConsumerAddress, AffectedInstance, AffectedUsageEvidence,
@@ -41,10 +41,10 @@ fn effect(path: &str, kind: ConsumerKind) -> AffectedConsumer {
 }
 
 #[test]
-fn only_removed_component_variants_can_compare_even_when_removals_are_affected() {
+fn removed_components_can_compare_but_removed_screens_cannot() {
     for (kind, parent, eligible) in [
         (EntryKind::Screen, None, false),
-        (EntryKind::Component, None, false),
+        (EntryKind::Component, None, true),
         (EntryKind::Component, Some("button"), true),
     ] {
         let button = entry("button", EntryKind::Component, None);
@@ -71,6 +71,28 @@ fn only_removed_component_variants_can_compare_even_when_removals_are_affected()
             },
         ));
         let mut historical = details(&result.before.catalogue().model);
+        historical
+            .get_mut("button")
+            .unwrap()
+            .workspace
+            .as_mut()
+            .unwrap()
+            .used_by
+            .push(UsageLink {
+                entry_path: path.into(),
+                entry_kind: if kind == EntryKind::Screen {
+                    VisualKind::Screen
+                } else {
+                    VisualKind::Component
+                },
+                title: "Historical consumer".into(),
+                viewport: Viewport::Desktop,
+                color_scheme: ColorScheme::Light,
+                instance_key: "a".repeat(64),
+                direct: true,
+                removed: true,
+                comparison_eligible: !eligible,
+            });
         projection_workspace::apply(&mut historical, &result).unwrap();
         assert_eq!(
             historical[path]
@@ -84,6 +106,9 @@ fn only_removed_component_variants_can_compare_even_when_removals_are_affected()
             historical["button"].workspace.as_ref().unwrap().affected[0].comparison_eligible,
             eligible
         );
+        let usage = &historical["button"].workspace.as_ref().unwrap().used_by[0];
+        assert_eq!(usage.comparison_eligible, eligible);
+        assert_eq!(usage.title, "Historical consumer");
     }
 }
 
@@ -169,4 +194,22 @@ fn affected_only_consumers_are_eligible_and_duplicate_links_keep_first_seen_orde
             .input_changes
             .is_empty()
     );
+}
+
+#[test]
+fn comparison_evidence_does_not_invent_a_workspace_before_usage_is_ready() {
+    let button = entry("button", EntryKind::Component, None);
+    let result = result(
+        vec![button.clone()],
+        vec![button],
+        vec![classified(
+            "button",
+            EntryKind::Component,
+            ReviewState::Changed,
+        )],
+    );
+    let mut current = details(&result.after.catalogue().model);
+    current.get_mut("button").unwrap().workspace = None;
+    projection_workspace::apply(&mut current, &result).unwrap();
+    assert!(current["button"].workspace.is_none());
 }

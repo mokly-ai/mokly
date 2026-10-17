@@ -134,8 +134,9 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
   changed HEAD before Plan.
 - With comparisons, `baseRef` is the effective ref, nonempty and at most 255
   UTF-8 bytes with no category Cc character. `baseSha` is the pinned merge
-  base, never the current tip of `baseRef`. `baseSha` equals the review v8 `baseCommit`, and
-  `baseRef` is the effective ref of the pinned comparison. Without comparisons,
+  base, never the current tip of `baseRef`. `baseSha` equals the review v8
+  `baseCommit`, and `baseRef` is the effective ref of the pinned comparison.
+  Without comparisons,
   `baseRef`, `baseSha` and `comparisonPath` are all null and no comparison
   generation is present.
 - `pullRequest` is null or a positive JavaScript-safe integer.

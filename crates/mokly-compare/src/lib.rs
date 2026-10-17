@@ -111,3 +111,5 @@ pub mod projection_workspace;
 mod projection_tests;
 
 pub mod projection_detail;
+
+pub mod projection_removed;

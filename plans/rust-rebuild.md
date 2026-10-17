@@ -1280,6 +1280,10 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
 
 ## Milestone 12: Static build and publish
 
+- [ ] Apply the final comparison join requests: viewer eligibility in both readers,
+      shared removed records and details, ready raw-byte preservation, and merged checks.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-8.md`.
+
 - [x] Apply comparison join review 4: shared projection, view membership, private
       snapshot contract, branch tests, indexed workspaces, timings, and merged verification.
 - [ ] Complete timing records for dependency `tier`, comparison view counts, and

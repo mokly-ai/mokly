@@ -1,7 +1,7 @@
 //! Entry aggregation does not redefine current identity or saved view states.
 
-use mokly_model::axes::EntryKind;
-use mokly_model::projection;
+use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
+use mokly_model::projection::{self, ViewKey};
 use mokly_model::public_metadata::{
     CatalogueChanges, ChangeKind, ChangesStatus, ComparisonSelection,
 };
@@ -24,17 +24,42 @@ fn surviving_added_and_removed_view_aggregates_project_as_changed_for_all_kinds(
                 vec![classified("entry", kind, state)],
             );
             let publication = projection_index::publication("mokly.config.json".into(), "base");
-            let mut index =
-                projection::index(&result.after.catalogue().model, &[], &publication).unwrap();
+            let mut index = projection::index(
+                &result.after.catalogue().model,
+                &[ViewKey {
+                    path: "entry".into(),
+                    viewport: Some(Viewport::Desktop),
+                    color_scheme: ColorScheme::Light,
+                    key: "c".repeat(64),
+                }],
+                &publication,
+            )
+            .unwrap();
             projection_index::apply(&mut index, &result);
             if kind == EntryKind::Component {
                 assert!(matches!(
                     index.components[0].comparison,
                     ComparisonSelection::Ready {
                         kind: ChangeKind::Changed,
-                        ..
+                        eligible: true
                     }
                 ));
+            }
+            let visual = match kind {
+                EntryKind::Screen => Some(&index.screens[0].visual),
+                EntryKind::Component => Some(&index.components[0].visual),
+                _ => None,
+            };
+            if let Some(visual) = visual {
+                let view = visual
+                    .views
+                    .iter()
+                    .find(|view| view.viewport == Viewport::Desktop)
+                    .unwrap();
+                assert!(
+                    matches!(view.comparison, ComparisonSelection::Ready { eligible, .. }
+                    if eligible == (kind == EntryKind::Component && state == ReviewState::Removed))
+                );
             }
             let records = projection_index::records(index);
             let changes = match &records["entry"] {

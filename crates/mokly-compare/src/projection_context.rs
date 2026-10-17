@@ -86,20 +86,21 @@ impl<'a> Context<'a> {
 
     pub(crate) fn eligible(&self, entry: &EntryClassification) -> bool {
         self.can_compare(&entry.path, entry.kind)
-            && entry.documents.iter().any(|view| {
-                view.before_route.is_some()
-                    && matches!(view.state, ReviewState::Changed | ReviewState::Removed)
-            })
+            && if entry.kind == EntryKind::Component {
+                matches!(
+                    self.comparison_kind(entry),
+                    ChangeKind::Changed | ChangeKind::Removed
+                )
+            } else {
+                entry
+                    .documents
+                    .iter()
+                    .any(|view| view.state == ReviewState::Changed)
+            }
     }
 
     pub(crate) fn can_compare(&self, path: &str, kind: EntryKind) -> bool {
-        matches!(kind, EntryKind::Screen | EntryKind::Component)
-            && (!self.removed.contains(path)
-                || (kind == EntryKind::Component
-                    && self
-                        .metadata
-                        .get(path)
-                        .is_some_and(|metadata| metadata.variant_of.is_some())))
+        kind == EntryKind::Component || (kind == EntryKind::Screen && !self.removed.contains(path))
     }
 
     pub(crate) fn view_kind(state: ReviewState) -> ChangeKind {

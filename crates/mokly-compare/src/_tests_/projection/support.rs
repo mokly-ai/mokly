@@ -9,7 +9,7 @@ use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::catalogue::{CatalogueModel, EntryContent, ModelEntry, VisualEntry};
 use mokly_model::evidence::ViewEvidence;
 use mokly_model::projection;
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::{EntryDetailV1, Workspace};
 use mokly_model::review::{ReviewResultV8, ReviewState};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
@@ -80,8 +80,10 @@ pub(super) fn classified(path: &str, kind: EntryKind, state: ReviewState) -> Ent
                 viewport: Some(Viewport::Desktop),
                 color_scheme: ColorScheme::Light,
             },
-            before_route: Some(format!("{path}/index.desktop.html")),
-            after_route: Some(format!("{path}/index.desktop.html")),
+            before_route: (state != ReviewState::Added)
+                .then(|| format!("{path}/index.desktop.html")),
+            after_route: (state != ReviewState::Removed)
+                .then(|| format!("{path}/index.desktop.html")),
             state,
             ignored_ids: vec![],
             evidence: ViewEvidence {
@@ -163,5 +165,17 @@ pub(super) fn result(
 pub(super) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV1> {
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let index = projection::index(model, &[], &state).unwrap();
-    projection::pending_details(model, &index, &[])
+    let mut details = projection::pending_details(model, &index, &[]);
+    for detail in details.values_mut() {
+        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
+            detail.workspace = Some(Workspace {
+                comparison_eligible: false,
+                used_by: vec![],
+                affected: vec![],
+                related_components: vec![],
+                input_changes: vec![],
+            });
+        }
+    }
+    details
 }
