@@ -4,6 +4,7 @@ import {
   snapshotDocumentPath,
   snapshotViewPath,
 } from "../navigation/routes.js";
+import { reviewEntry } from "../review/entries.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -25,10 +26,8 @@ export function screenContent(
   base: string,
 ): ParsedPreview {
   const result = parseReviewResult(payload);
-  const screen = result.screens.find(
-    (candidate) => candidate.path === data.path,
-  );
-  if (!screen || "after" in screen) unavailable();
+  const screen = reviewEntry(result, "screen", data.path);
+  if (!screen || screen.after) unavailable();
   const views = screen.views.flatMap((view) =>
     view.state === "removed"
       ? [

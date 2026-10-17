@@ -5,12 +5,8 @@ import {
   generatedViews,
   type GeneratedComponentView,
 } from "../components/views.js";
-import type {
-  ChangedEntry,
-  ComponentReview,
-  ScreenReviewV7,
-} from "../review/component_types.js";
-import type { ViewResourceEvidence } from "../review/types.js";
+import { reviewEntry } from "../review/entries.js";
+import type { ReviewEntry, ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -74,8 +70,10 @@ export interface WorkspaceData {
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
   status?: EntryStatus;
-  change?: ChangedEntry;
-  comparison?: ComponentReview | ScreenReviewV7;
+  /** The routed entry's review record while Changes lists it. */
+  change?: ReviewEntry;
+  /** The screen's review record, or the component parent with its variants. */
+  comparison?: ReviewEntry;
   resourceEvidence?: readonly ViewResourceEvidence[];
   base: string;
   comparisons: boolean;
@@ -109,7 +107,7 @@ export function workspaceData(
     component === undefined;
   const componentComparison =
     entry.kind === "component"
-      ? componentReview(result?.components, component, entry)
+      ? componentReview(result, component, entry)
       : undefined;
   const componentId = component?.path ?? componentComparison?.path;
   const evidenceEntry = component ?? entry;
@@ -125,9 +123,8 @@ export function workspaceData(
   const removed = !catalogue.manifest.entries.some(
     (candidate) => candidate.path === entry.path,
   );
-  const change = result?.changes.find(
-    (item) => (item.after ?? item.before)?.path === entry.path,
-  );
+  const record = reviewEntry(result, entry.kind, entry.path);
+  const change = record?.included ? record : undefined;
   /** A pure move is in Changes without changing, so it is not material. */
   const materialChanges = materialChangedEntries(context);
   const pureMove =
@@ -135,7 +132,7 @@ export function workspaceData(
   const comparison =
     entry.kind === "component"
       ? componentComparison
-      : result?.screens.find((item) => item.path === entry.path);
+      : reviewEntry(result, "screen", entry.path);
   const known = snapshot !== undefined || context.changedEntries !== undefined;
   const entryStatus: EntryStatus | undefined = !known
     ? undefined
@@ -189,7 +186,7 @@ export function workspaceData(
     baselineVariants,
   );
   const relatedIds = new Set(
-    result?.affectedConsumers
+    result?.affected
       .filter((item) =>
         item.consumer.kind === "screen"
           ? item.consumer.path === entry.path
@@ -212,10 +209,14 @@ export function workspaceData(
       shownComparisonEligible(status, entry.kind),
     base: context.base,
     inputChanges,
-    relatedComponents: (result?.components ?? [])
+    relatedComponents: (result?.entries ?? [])
       .filter((item) => {
         const routed = catalogue.byPath.get(item.path);
-        return relatedIds.has(item.path) && routed?.kind === "component";
+        return (
+          item.kind === "component" &&
+          relatedIds.has(item.path) &&
+          routed?.kind === "component"
+        );
       })
       .map(({ path, title }) => ({ path, title })),
     components: [...catalogue.manifest.entries, ...catalogue.removedComponents]

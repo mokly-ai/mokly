@@ -47,8 +47,8 @@ function renderComparison(
 
 test("a material change with matched stylesheet evidence reads Screen changed", () => {
   const result = cssSchemaFixture();
-  const view = result.screens[0]!.views[0]!;
-  Object.assign(view, { material: true });
+  const entry = result.entries[0]!;
+  const view = entry.views[0]!;
 
   const markup = renderComparison(result, {
     colorScheme: "light",
@@ -59,7 +59,23 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
 
   assert.match(markup, /<h3>Mobile · Screen changed<\/h3>/);
   assert.doesNotMatch(markup, /Styles this screen uses changed/);
-  assert.equal(isStyleOnlyView(view), false);
+  assert.equal(isStyleOnlyView(view, entry.reasons), false);
+});
+
+test("a change that only stylesheet records prove reads as a style change", () => {
+  const result = cssSchemaFixture();
+  const entry = result.entries[0]!;
+  entry.reasons = entry.reasons.filter((reason) => reason.kind !== "material");
+
+  const markup = renderComparison(result, {
+    colorScheme: "light",
+    mode: "side",
+    requestedColorScheme: "light",
+    viewport: "mobile",
+  });
+
+  assert.match(markup, /<h3>Mobile · Styles this screen uses changed<\/h3>/);
+  assert.equal(isStyleOnlyView(entry.views[0]!, entry.reasons), true);
 });
 
 test("an effective Light comparison retains the requested Dark fallback label", () => {

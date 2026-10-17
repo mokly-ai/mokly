@@ -12,7 +12,8 @@ import {
   ReviewIgnoreScope,
 } from "@mokly/mokly";
 import type { MockLinkProps } from "@mokly/mokly";
-import { reviewMaterialKey as viewerMaterialKey } from "@mokly/viewer/data";
+
+import { reviewMaterialKey as viewerMaterialKey } from "../packages/viewer/dist/data/material_key.js";
 
 test("MockLink keeps fragments separate from paths and rendered props", () => {
   assert.throws(() => MockLink({ to: "details#summary", children: "Bad" }), {

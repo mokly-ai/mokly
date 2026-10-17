@@ -1,22 +1,37 @@
 /** Pure stylesheet path and view facts for the React Details panel. */
 
-import type { EntryChangeReason } from "../review/component_types.js";
-import type { ResourceEvidence, ViewReview } from "../review/types.js";
+import type {
+  ChangeReason,
+  EntryChangeReason,
+  EvidenceReasons,
+  ReviewView,
+} from "../review/types.js";
 
-/** Whether stylesheet analysis is the only reason a changed view was retained. */
-export function isStyleOnlyView(view: ViewReview): boolean {
-  return (
-    view.state === "changed" &&
-    view.material === undefined &&
-    view.reasons !== undefined &&
-    view.reasons.length > 0 &&
-    view.reasons.every((reason) => reason.analysis !== undefined)
+/**
+ * Whether a view reads as a style change: the view is `changed`, every
+ * reason of its entry is a `dependency`, and each named path has a retained
+ * (matched or unresolved) rule on this view. An excluded rule says no changed
+ * style applies, and a resource is no rule, so either keeps the ordinary
+ * label; so does an entry that names no reason.
+ */
+export function isStyleOnlyView(
+  view: ReviewView,
+  reasons: readonly EntryChangeReason[],
+): boolean {
+  if (view.state !== "changed" || !reasons.length) return false;
+  const ruled = new Set(
+    (view.rules ?? []).flatMap((rule) =>
+      rule.status === "excluded" ? [] : [rule.stylesheet],
+    ),
+  );
+  return reasons.every(
+    (reason) => reason.kind === "dependency" && ruled.has(reason.path),
   );
 }
 
 /** Every changed file retained as dependency evidence. */
 export function retainedPaths(
-  reasons: readonly EntryChangeReason[] | undefined,
+  reasons: readonly ChangeReason[] | undefined,
 ): readonly string[] {
   return [
     ...new Set(
@@ -32,7 +47,7 @@ export function retainedPaths(
  * known paths.
  */
 export function excludedStylesheets(
-  views: readonly ResourceEvidence[],
+  views: readonly EvidenceReasons[],
   retained: readonly string[],
 ): readonly string[] {
   const kept = new Set(retained);

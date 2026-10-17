@@ -1,14 +1,28 @@
+/**
+ * The review result v8 that the comparison routes deliver, and the shell's
+ * own presentation of its evidence. The wire shapes are the generated types
+ * of the model crate; the presentation types are views the shell derives.
+ */
+
 import type { ColorScheme, Viewport } from "../data/axes.js";
-import type { ManifestEntry } from "../registry/types.js";
+import type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
+import type { ReviewResultV8 } from "../generated/catalogue/ReviewResultV8.js";
 
-import type { ReviewResultV7 } from "./component_types.js";
+export type { AffectedConsumer } from "../generated/catalogue/AffectedConsumer.js";
+export type { AffectedUsageEvidence } from "../generated/catalogue/AffectedUsageEvidence.js";
+export type { ComponentUsageContext } from "../generated/catalogue/ComponentUsageContext.js";
+export type { EntryChangeReason } from "../generated/catalogue/EntryChangeReason.js";
+export type { RemovedPagePreview } from "../generated/catalogue/RemovedPagePreview.js";
+export type { ReviewDiagnostic } from "../generated/catalogue/ReviewDiagnostic.js";
+export type { ReviewEntry } from "../generated/catalogue/ReviewEntry.js";
+export type { ReviewEntryAddress } from "../generated/catalogue/ReviewEntryAddress.js";
+export type { ReviewKind } from "../generated/catalogue/ReviewKind.js";
+export type { ReviewState } from "../generated/catalogue/ReviewState.js";
+export type { ReviewView } from "../generated/catalogue/ReviewView.js";
 
-/** Text or binary bytes retained in one static Review artifact. */
-export type ReviewArtifactContent = string | Uint8Array;
-
-/** Classification for one view or aggregate screen. */
-export type ReviewState =
-  "added" | "changed" | "ignored-only" | "removed" | "unchanged";
+/** The only accepted comparison payload. */
+export type ReviewResult = ReviewResultV8;
+export type { ReviewResultV8 };
 
 /** Potential impact from the changed rules of one reachable stylesheet. */
 export interface CssRuleAttribution {
@@ -31,12 +45,16 @@ export interface DependencyAnalysis {
   pageEvidence?: CssPageEvidence;
 }
 
-/** A changed resource retained as dependency evidence. */
+/** A changed resource shown as dependency evidence, with its CSS analysis. */
 export interface DependencyReason {
   kind: "dependency";
   path: string;
   analysis?: DependencyAnalysis;
 }
+
+/** A reason as the shell presents it: a stylesheet carries its analysis. */
+export type ChangeReason =
+  Exclude<EntryChangeReason, { kind: "dependency" }> | DependencyReason;
 
 /** A reachable changed stylesheet whose changed rules cannot match this view. */
 export interface ExcludedResource {
@@ -44,60 +62,14 @@ export interface ExcludedResource {
   reason: "no-matching-rule";
 }
 
-/** One view comparison, addressed only by its axes. */
-export interface ResourceEvidence {
+/** The dependency reasons and exclusions one view's or page's records prove. */
+export interface EvidenceReasons {
   reasons?: readonly DependencyReason[];
   excludedResources?: readonly ExcludedResource[];
 }
 
-export interface ViewReview extends ResourceEvidence {
-  colorScheme: ColorScheme;
-  ignoredIds: readonly string[];
-  /** Present exactly when the paired ignore-normalized documents differ. */
-  material?: true;
-  state: ReviewState;
+/** One view's presented evidence, addressed by its axes. */
+export interface ViewResourceEvidence extends EvidenceReasons {
   viewport: Viewport;
+  colorScheme: ColorScheme;
 }
-
-/** Classification evidence available without generating comparison snapshots. */
-export type ViewResourceEvidence = Pick<
-  ViewReview,
-  "viewport" | "colorScheme" | "reasons" | "excludedResources"
->;
-
-/** Screen-only resource evidence retained by live classification. */
-export interface ScreenResourceEvidence {
-  path: string;
-  views: readonly ViewResourceEvidence[];
-}
-
-/** Single-document evidence, outside visual comparison records. */
-export interface PageResourceEvidence extends ResourceEvidence {
-  path: string;
-}
-
-/** One stable screen identity comparison. */
-export interface ScreenReview {
-  path: string;
-  state: ReviewState;
-  title: string;
-  views: readonly ViewReview[];
-}
-
-/** Complete artifact file map plus summary model. */
-export interface ReviewArtifact {
-  files: ReadonlyMap<string, ReviewArtifactContent>;
-  result: ReviewResult;
-  /** Typed comparison metadata; documents and pages add no visual result records. */
-  pairing?: {
-    moves: readonly {
-      kind: ManifestEntry["kind"];
-      path: string;
-      previousPath: string;
-    }[];
-    diagnostics: readonly string[];
-  };
-}
-
-/** The only accepted comparison payload. */
-export type ReviewResult = ReviewResultV7;

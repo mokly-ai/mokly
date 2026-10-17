@@ -5,7 +5,7 @@ import type {
   SnapshotPresentation,
   SnapshotPresentationLoader,
 } from "../src/previews/presentation.js";
-import type { ReviewResult, ViewReview } from "../src/review/types.js";
+import type { ReviewResult, ReviewView } from "../src/review/types.js";
 import { createComparisonDocuments } from "../src/shell/comparison_documents.js";
 import type { LoadedComparison } from "../src/shell/comparison_request.js";
 import {
@@ -20,7 +20,7 @@ function view(
   viewport: "desktop" | "mobile",
   colorScheme: "dark" | "light",
   sides: readonly ("after" | "before")[] = ["before", "after"],
-): ViewReview {
+): ReviewView {
   return {
     colorScheme,
     ignoredIds: [],
@@ -35,37 +35,28 @@ function view(
 }
 
 function comparison(
-  views: readonly ViewReview[],
+  views: readonly ReviewView[],
   generation = GENERATION,
 ): LoadedComparison {
-  const address = { path: "home", title: "Home" };
+  const address = { path: "home", title: "Home", props: {} };
   const result: ReviewResult = {
+    schemaVersion: 8,
     baseCommit: "a".repeat(40),
-    baseRef: "origin/main",
-    changedPaths: [],
-    ignoredImpact: [],
-    schemaVersion: 7 as const,
-    screens: [
+    entries: [
       {
-        after: address,
-        before: address,
-        path: "home",
-        state: "changed",
-        title: "Home",
-        views,
-      },
-    ],
-
-    components: [],
-    changes: [
-      {
-        after: address,
-        before: address,
         kind: "screen",
+        path: "home",
+        title: "Home",
+        before: address,
+        after: address,
+        state: "changed",
+        included: true,
         reasons: [{ kind: "material" }],
+        views: [...views],
       },
     ],
-    affectedConsumers: [],
+    affected: [],
+    diagnostics: [],
   };
   return { result, url: `${generation}review.json` };
 }

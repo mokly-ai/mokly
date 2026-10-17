@@ -84,9 +84,6 @@ export function unique(values: readonly string[]): void {
   if (new Set(values).size !== values.length)
     invalidData("$catalogue", "duplicate reference");
 }
-export function lexical(left: string, right: string): number {
-  return left < right ? -1 : left > right ? 1 : 0;
-}
 
 /** Validate classification tags separately from entry identity. */
 export function tag(value: unknown): string {

@@ -1,5 +1,7 @@
+/** Shared strict decoding steps of the review result v8 reader. */
+
 import { canonicalJson } from "../components/data.js";
-import { isKebabCase, isEntryPath } from "../navigation/logical.js";
+import { isEntryPath, isKebabCase } from "../navigation/logical.js";
 
 export function reviewInvalid(message: string): never {
   throw new Error(
@@ -8,6 +10,11 @@ export function reviewInvalid(message: string): never {
       : `[mokly/review] ${message}`,
   );
 }
+
+/**
+ * One plain object with exactly the allowed keys. A present optional key holds
+ * a value: the canonical form omits an absent field rather than writing null.
+ */
 export function reviewObject(
   value: unknown,
   required: readonly string[],
@@ -32,102 +39,107 @@ export function reviewObject(
   )
     reviewInvalid("unknown or unsafe field");
   if (
-    required.some(
-      (key) => !Object.hasOwn(record, key) || record[key] === undefined,
-    )
+    [...required, ...optional].some(
+      (key) =>
+        Object.hasOwn(record, key) &&
+        (record[key] === undefined || record[key] === null),
+    ) ||
+    required.some((key) => !Object.hasOwn(record, key))
   )
     reviewInvalid("required field is missing");
   return record;
 }
+
 export function reviewArray(value: unknown): unknown[] {
   if (!Array.isArray(value)) reviewInvalid("expected an array");
   return value;
 }
+
 export function reviewString(value: unknown): string {
-  if (typeof value !== "string" || !value.trim())
-    reviewInvalid("expected a nonempty string");
+  if (typeof value !== "string") reviewInvalid("expected a string");
   return value;
 }
+
+/** A title: nonempty after trimming. */
+export function reviewText(value: unknown): string {
+  const text = reviewString(value);
+  if (!text.trim()) reviewInvalid("expected a nonempty string");
+  return text;
+}
+
+export function reviewBoolean(value: unknown): boolean {
+  if (typeof value !== "boolean") reviewInvalid("expected a boolean");
+  return value;
+}
+
+export function reviewChoice<T extends string>(
+  value: unknown,
+  choices: readonly T[],
+): T {
+  if (
+    typeof value !== "string" ||
+    !(choices as readonly string[]).includes(value)
+  )
+    reviewInvalid("unknown value");
+  return value as T;
+}
+
 export function reviewEntryPath(value: unknown): string {
   const path = reviewString(value);
   if (!isEntryPath(path)) reviewInvalid("invalid entry path");
   return path;
 }
+
 export function reviewIgnoreId(value: unknown): string {
   const id = reviewString(value);
   if (!isKebabCase(id)) reviewInvalid("invalid ReviewIgnore id");
   return id;
 }
-export function reviewPath(value: unknown): string {
+
+/** A logical instance key: 64 lowercase hexadecimal digits. */
+export function reviewDigest(value: unknown): string {
+  const digest = reviewString(value);
+  if (!/^[a-f0-9]{64}$/.test(digest)) reviewInvalid("invalid instance key");
+  return digest;
+}
+
+/** A Git commit: 40 or 64 hexadecimal digits. */
+export function reviewCommit(value: unknown): string {
+  const commit = reviewString(value);
+  if (!/^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$/.test(commit))
+    reviewInvalid("invalid base commit");
+  return commit;
+}
+
+/** A public route below `static/`, never a private source path. */
+export function reviewResourcePath(value: unknown): string {
   const path = reviewString(value);
   if (
-    path.startsWith("/") ||
-    path.includes("\\") ||
-    path.includes("\0") ||
-    path.split("/").some((part) => !part || part === "." || part === "..")
+    !path.startsWith("static/") ||
+    path.split("/").some((part) => !part || part === "." || part === "..") ||
+    /[\\\0?#]/.test(path)
   )
-    reviewInvalid("unsafe path");
+    reviewInvalid("invalid public route");
   return path;
 }
-export function reviewStrings(
-  value: unknown,
-  validate = reviewString,
-): string[] {
-  const strings = reviewArray(value).map(validate);
-  requireOrdered(strings, (value) => value);
-  return strings;
+
+/** ASCII case folding, as the producer pairs paths. */
+export function asciiLower(value: string): string {
+  return value.replace(/[A-Z]/g, (letter) => letter.toLowerCase());
 }
+
+/** Require strictly ascending keys: the stated order, with no duplicate. */
 export function requireOrdered<T>(
   items: readonly T[],
   key: (value: T) => string,
 ): void {
   for (let index = 1; index < items.length; index++) {
-    const previous = key(items[index - 1]!);
-    const current = key(items[index]!);
-    if (previous >= current)
-      reviewInvalid(
-        `records must be sorted and unique: ${previous} before ${current}`,
-      );
+    if (key(items[index - 1]!) >= key(items[index]!))
+      reviewInvalid(`records must be sorted and unique at index ${index}`);
   }
 }
+
 export function requireEqual(a: unknown, b: unknown): void {
   if (canonicalJson(a) !== canonicalJson(b))
     reviewInvalid("inconsistent sides or references");
-}
-export function reviewAddress(value: unknown): Record<string, unknown> {
-  const entry = reviewObject(value, ["path", "title"]);
-  reviewEntryPath(entry.path);
-  reviewString(entry.title);
-  return entry;
-}
-export function reviewSides(record: Record<string, unknown>): void {
-  if (!record.before && !record.after)
-    reviewInvalid("at least one side is required");
-  for (const side of ["before", "after"] as const)
-    if (record[side] !== undefined) reviewAddress(record[side]);
-  reviewPreviousPath(record);
-}
-
-/** Different side paths require one explicit prior path; case-only changes do not. */
-export function reviewPreviousPath(record: Record<string, unknown>): void {
-  const before = record.before as Record<string, unknown> | undefined;
-  const after = record.after as Record<string, unknown> | undefined;
-  const moved =
-    before &&
-    after &&
-    reviewEntryPath(before.path).toLowerCase() !==
-      reviewEntryPath(after.path).toLowerCase();
-  if (moved) {
-    if (record.previousPath !== before.path)
-      reviewInvalid("previousPath must match the before side");
-  } else if (record.previousPath !== undefined)
-    reviewInvalid("previousPath requires a paired move");
-}
-export function reviewState(value: unknown): void {
-  if (
-    !["added", "changed", "removed", "ignored-only", "unchanged"].includes(
-      String(value),
-    )
-  )
-    reviewInvalid("unknown review state");
 }
