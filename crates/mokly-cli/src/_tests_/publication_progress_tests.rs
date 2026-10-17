@@ -81,6 +81,7 @@ fn reporter(lines: Arc<Mutex<Vec<String>>>) -> Arc<Lines> {
     ));
     let (stop, _) = mpsc::channel();
     Arc::new(Lines {
+        clock: Arc::new(Unimock::new(())),
         cwd: "/repo".into(),
         style: Style {
             mode: Mode::Rich,

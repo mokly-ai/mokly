@@ -43,15 +43,18 @@ test(
   { timeout: 120_000 },
   async (context) => {
     const root = await publicationFixture();
-    const planned = Promise.withResolvers<void>();
-    const server = await exchange({ holdPlan: planned.resolve });
+    let onPlan!: () => void;
+    const planned = new Promise<void>((resolve) => {
+      onPlan = resolve;
+    });
+    const server = await exchange({ holdPlan: onPlan });
     const controller = new AbortController();
     const running = publish(root, server.endpoint, "plain", {
       signal: AbortSignal.any([context.signal, controller.signal]),
     });
     let output: string | undefined;
     try {
-      await planned.promise;
+      await planned;
       controller.abort();
       const result = await running.result;
       output = directory(result.stdout);
