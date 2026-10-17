@@ -1274,7 +1274,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
         canonical index and details, exact package assets, and shared ownership.
         Implement reservations, exclusive installation, rollback, bounded cleanup,
         input rechecks, and config-relative output selection.
-  - [ ] Join the Milestone 9 comparison generation, removed records, and detail
+  - [x] Join the Milestone 9 comparison generation, removed records, and detail
         evidence before identity finalization. Repeat the comparison-specific
         reference scenarios after that integration. The join must populate upload
         `baseRef` instead of null.
@@ -1338,6 +1338,7 @@ Last fix round: `.context/rust-rebuild/delegation/m12-static/report-3.md`.
 Non-comparison M12 acceptance: `.context/rust-rebuild/delegation/m12-static/report-4.md`
 and `.context/rust-rebuild/sweeps/m12-static.md`.
 Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md`.
+Comparison join and static browser acceptance: `.context/rust-rebuild/delegation/m12-static/report-6.md`.
 
 - [x] Commit.
 
