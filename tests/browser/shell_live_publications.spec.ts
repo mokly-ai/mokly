@@ -1,8 +1,8 @@
 /**
  * Live publications in Serve, under the shell delivery contract: the shell
- * adopts each published state in place, replaces only the frames whose
- * `documentKey` changed, keeps keyboard focus, and loads the page again only
- * for another deployment.
+ * adopts each published state in place, also from an event stream that
+ * connects late, replaces only the frames whose `documentKey` changed, keeps
+ * keyboard focus, and loads the page again only for another deployment.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -16,6 +16,7 @@ import {
   replaceFile,
   screenFile,
   serveLiveCatalogue,
+  settleLive,
   tagFrames,
 } from "./live_shell_fixture.js";
 
@@ -53,6 +54,50 @@ test("a publication updates the shell in place without a page load", async ({
     expect((await liveIndex(server.url)).revision).toBeGreaterThan(
       before.revision,
     );
+    expect(await mounted(page)).toBe(true);
+    expect(loads).toBe(0);
+  } finally {
+    await closeServe(page, server);
+  }
+});
+
+test("an event stream that connects after a publication adopts it without a page load and keeps the search text", async ({
+  page,
+}) => {
+  const server = await serveLiveCatalogue();
+  try {
+    let release!: () => void;
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/mokly-viewer/events", async (route) => {
+      await released;
+      await route.continue();
+    });
+    await page.goto(`${server.url}/view/home/`);
+    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+    await page.evaluate(() => {
+      (window as unknown as { specMounted?: boolean }).specMounted = true;
+    });
+    let loads = 0;
+    page.on("load", () => {
+      loads += 1;
+    });
+    const search = page.getByRole("searchbox", { name: "Search catalogue" });
+    await search.fill("Other");
+    const other = page.locator('a[data-entry-id="other"][data-nav-row]');
+    await expect(other).toContainText("Other");
+    const before = await liveIndex(server.url);
+    await replaceFile(
+      server.root,
+      "specs/other.screen.html",
+      screenFile("Other renamed", "<h1>Other v1</h1>"),
+    );
+    await settleLive(server.url, before.revision);
+    await expect(other).not.toContainText("renamed");
+    release();
+    await expect(other).toContainText("Other renamed");
+    await expect(search).toHaveValue("Other");
     expect(await mounted(page)).toBe(true);
     expect(loads).toBe(0);
   } finally {

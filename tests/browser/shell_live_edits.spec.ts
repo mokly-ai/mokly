@@ -2,8 +2,8 @@
  * Live prop edits in Serve, under the component controls contract: text
  * edits wait for the 150 ms debounce on Playwright's clock, a boolean edit
  * renders at once, an edit renders again after a revision adoption or a
- * `live.generation` change, and a 409 retries after one index refresh even
- * while the event stream is down.
+ * `live.generation` change, and a render that Serve rejects with a 409
+ * retries after one index refresh, even while the event stream is down.
  */
 
 import { expect, type Page, type Request } from "@playwright/test";
@@ -18,6 +18,7 @@ import {
   renderBody,
   replaceFile,
   serveLiveCatalogue,
+  settleLive,
   tourFile,
 } from "./live_shell_fixture.js";
 
@@ -114,11 +115,13 @@ test("an edit renders again after a revision adoption and after a live.generatio
       "specs/tour.use-case.yaml",
       tourFile("Tour v2"),
     );
+    // Serve can publish once more after it settles (a background render
+    // completion carries no marker), so the render may use a later revision.
+    const adopted = await settleLive(server.url, first.revision);
     await expect
       .poll(() => sent.at(-1) && renderBody(sent.at(-1)!).revision)
-      .toBeGreaterThan(first.revision);
-    const adopted = await liveIndex(server.url);
-    expect(adopted.generation).toBe(first.generation);
+      .toBeGreaterThanOrEqual(adopted);
+    expect((await liveIndex(server.url)).generation).toBe(first.generation);
     expect(renderBody(sent.at(-1)!).label).toBe("Kept edit");
 
     const descriptors: string[] = [];
@@ -132,6 +135,7 @@ test("an edit renders again after a revision adoption and after a live.generatio
       "specs/card.component.html",
       cardFile('<i class="marker">v2</i>'),
     );
+    await settleLive(server.url, adopted);
     await expect
       .poll(() => frameTexts(page))
       .toEqual([
@@ -145,8 +149,11 @@ test("an edit renders again after a revision adoption and after a live.generatio
     await expect(props.getByRole("textbox", { name: "label" })).toHaveValue(
       "Kept edit",
     );
-    // A publication that lands during a re-render answers it with 409, and
-    // the shell retries under the newer revision; nothing else may fail.
+    // One edit can publish more than once (the rebuild, then a background
+    // render completion), and the shell renders again after each adoption. A
+    // render that meets a newer revision gets a 409, and the shell retries
+    // under that revision; no wait in the test can prevent it, and nothing
+    // else may fail.
     expect(errors.filter((error) => !/\b409\b/.test(error))).toEqual([]);
   } finally {
     await closeServe(page, server);
@@ -164,9 +171,13 @@ test("a 409 refreshes the index once and retries while the event stream is down"
     const label = props.getByRole("textbox", { name: "label" });
     const sent = renders(page);
     const statuses: number[] = [];
+    const rejected = new Set<number>();
     const indexReads: number[] = [];
     page.on("response", (response) => {
-      if (isRender(response.request())) statuses.push(response.status());
+      if (!isRender(response.request())) return;
+      statuses.push(response.status());
+      if (response.status() === 409)
+        rejected.add(renderBody(response.request()).revision);
     });
     page.on("request", (request) => {
       if (new URL(request.url()).pathname === "/mokly-viewer/index.json")
@@ -181,9 +192,7 @@ test("a 409 refreshes the index once and retries while the event stream is down"
       "specs/tour.use-case.yaml",
       tourFile("Tour v2"),
     );
-    await expect
-      .poll(async () => (await liveIndex(server.url)).revision)
-      .toBeGreaterThan(before.revision);
+    await settleLive(server.url, before.revision);
     await label.fill("After the publication");
     await expect
       .poll(() => frameTexts(page))
@@ -191,11 +200,12 @@ test("a 409 refreshes the index once and retries while the event stream is down"
         expect.stringContaining("After the publication 1"),
         expect.stringContaining("After the publication 1"),
       ]);
-    expect(
-      statuses.slice(2).filter((status) => status === 409).length,
-    ).toBeGreaterThan(0);
+    // The shell reads the index once for each revision that Serve rejected;
+    // a background publication after the wait can add a second round.
+    expect(rejected.size).toBeGreaterThan(0);
+    expect(rejected.has(before.revision)).toBe(true);
     expect(statuses.at(-1)).toBe(200);
-    expect(indexReads).toHaveLength(1);
+    expect(indexReads).toHaveLength(rejected.size);
     expect(renderBody(sent.at(-1)!).revision).toBeGreaterThan(before.revision);
     expect(errors.filter((error) => !/\b409\b|ERR_FAILED/.test(error))).toEqual(
       [],

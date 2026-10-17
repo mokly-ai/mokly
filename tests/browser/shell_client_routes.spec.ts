@@ -101,11 +101,25 @@ test.describe("with a clean console", () => {
     await expect
       .poll(() => stage.evaluate((element) => element.scrollTop))
       .toBe(0);
+    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+    await expect
+      .poll(() =>
+        stage.evaluate((element) => {
+          element.scrollTop = 120;
+          return element.scrollTop;
+        }),
+      )
+      .toBe(120);
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`${route(WELCOME)}$`));
     await expect
       .poll(() => stage.evaluate((element) => element.scrollTop))
       .toBe(160);
+    await page.goForward();
+    await expect(page).toHaveURL(new RegExp(`${route(MEMBERS)}$`));
+    await expect
+      .poll(() => stage.evaluate((element) => element.scrollTop))
+      .toBe(120);
   });
 
   test("the search text stays while the shell navigates", async ({
@@ -136,9 +150,16 @@ test.describe("with a clean console", () => {
     await navLink(page, DETAILS).click();
     await expect(heading(page)).toHaveText(names.get(DETAILS)!);
     await expect(page.getByText("Loading preview…")).toBeVisible();
+    const aborted = page.waitForEvent(
+      "requestfailed",
+      (failed) =>
+        new URL(failed.url()).pathname ===
+        `/mokly-viewer/entries/${DETAILS}.json`,
+    );
     await openFolder(page, "example/team");
     await navLink(page, MEMBERS).click();
     await expect(heading(page)).toHaveText(names.get(MEMBERS)!);
+    await aborted;
     await expect(page.locator("#mb-main iframe")).toHaveCount(2);
     release();
     await page.unrouteAll({ behavior: "wait" });
@@ -200,13 +221,18 @@ test("a detail of another deployment loads the requested URL again", async ({
   expect(errors).toEqual([]);
 });
 
-/** Ways a destination detail can fail; the last two disagree with the index. */
-const FAILURES: readonly [string, (held: Route) => Promise<void>][] = [
-  ["an error status", (held) => held.fulfill({ status: 500, body: "" })],
-  ["a network failure", (held) => held.abort("failed")],
+/**
+ * Ways a destination detail can fail, and the index reads each one makes:
+ * only a detail of another revision reads the index once more before the
+ * shell gives up.
+ */
+const FAILURES: readonly [string, (held: Route) => Promise<void>, number][] = [
+  ["an error status", (held) => held.fulfill({ status: 500, body: "" }), 0],
+  ["a network failure", (held) => held.abort("failed"), 0],
   [
     "a detail of another revision",
     rewritten((body) => ({ ...body, revision: Number(body.revision) + 1000 })),
+    1,
   ],
   [
     "a detail of another catalogue",
@@ -214,10 +240,11 @@ const FAILURES: readonly [string, (held: Route) => Promise<void>][] = [
       ...body,
       identity: { ...(body.identity as object), title: "Another catalogue" },
     })),
+    0,
   ],
 ];
 
-for (const [failure, answer] of FAILURES)
+for (const [failure, answer, indexReads] of FAILURES)
   test(`${failure} shows the unavailable state, and Try again loads the route`, async ({
     page,
     request,
@@ -230,11 +257,15 @@ for (const [failure, answer] of FAILURES)
     await page.route(`**/mokly-viewer/entries/${DETAILS}.json`, (held) =>
       failing ? answer(held) : held.continue(),
     );
+    const reads = readsOf(page);
+    const indexReadsSoFar = () =>
+      reads.filter((path) => path === "/mokly-viewer/index.json").length;
     await navLink(page, DETAILS).click();
     const alert = page
       .getByRole("alert")
       .filter({ hasText: "This screen could not be shown" });
     await expect(alert).toBeVisible();
+    expect(indexReadsSoFar()).toBe(indexReads);
     await expect(heading(page).first()).toHaveText(names.get(DETAILS)!);
     await expect(page.locator("#mb-main iframe")).toHaveCount(0);
     await expect(navLink(page, WELCOME)).toBeVisible();
@@ -243,6 +274,7 @@ for (const [failure, answer] of FAILURES)
     await expect(page.locator("#mb-main iframe")).toHaveCount(2);
     await expect(alert).toHaveCount(0);
     await expect(heading(page)).toHaveText(names.get(DETAILS)!);
+    expect(indexReadsSoFar()).toBe(indexReads);
     await page.unrouteAll({ behavior: "ignoreErrors" });
     expect(errors.filter((error) => !/\b500\b|ERR_FAILED/.test(error))).toEqual(
       [],

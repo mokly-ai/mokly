@@ -896,8 +896,10 @@ renders again.
         inspector tabs; the design library's unset, Reset, and nested styles;
         an older response for the same route; use-case and page frames and
         the Usage loading state while evidence is unavailable; instance deep
-        links; and the review-base sentence while a detail loads, which needs
-        a served catalogue with a Git base.
+        links; focus on an unchanged Usage link while a publication is
+        adopted; a redirected frame source during a scheme swap; and the
+        review-base sentence while a detail loads, which needs a served
+        catalogue with a Git base.
 - [ ] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
@@ -1009,6 +1011,10 @@ Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.
+Client shell review 7 fixes, the merge of `c6e15729`, and the M8 viewer sweep
+rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
+`.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
+`.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
 
 - [ ] Commit.
 

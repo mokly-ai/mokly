@@ -12,6 +12,8 @@ import path from "node:path";
 
 import type { Page, Request } from "@playwright/test";
 
+import type { CatalogueReadModel, EntryDetailV1 } from "@mokly/viewer";
+
 import { serveCatalogue } from "./catalogue_fixture.js";
 
 /** One screen of the fixture; both screens are steps of the use case `tour`. */
@@ -38,9 +40,9 @@ export function tourFile(title: string): string {
   return `title: ${title}\nsteps:\n  - screenPath: home\n  - screenPath: other\n`;
 }
 
-/** Serve the fixture with the watcher; the spec closes it. */
-export function serveLiveCatalogue() {
-  return serveCatalogue(
+/** Serve the fixture with the watcher, once it is settled; the spec closes it. */
+export async function serveLiveCatalogue() {
+  const server = await serveCatalogue(
     {
       "specs/home.screen.html": screenFile(
         "Home",
@@ -53,6 +55,57 @@ export function serveLiveCatalogue() {
     {},
     { watch: true },
   );
+  try {
+    await settleLive(server.url);
+  } catch (error) {
+    await server.close();
+    throw error;
+  }
+  return server;
+}
+
+/**
+ * Wait until Serve has published every state that an edit causes: the index
+ * revision is above `after`, Changes has left its preparing or pending state,
+ * and every screen and component detail is at that revision with no pending
+ * usage. Serve may publish several times for one edit, so a step that counts
+ * requests waits for this first. Each publication on the event stream wakes
+ * the check, so the wait needs no sleep. Returns the settled revision.
+ */
+export async function settleLive(url: string, after = -1): Promise<number> {
+  const response = await fetch(`${url}/mokly-viewer/events`);
+  if (!response.ok || !response.body)
+    throw new Error("The live publication stream is unavailable");
+  const stream = response.body.getReader();
+  try {
+    for (;;) {
+      const revision = await settledRevision(url);
+      if (revision !== undefined && revision > after) return revision;
+      if ((await stream.read()).done)
+        throw new Error(
+          "The live publication stream ended before Serve settled",
+        );
+    }
+  } finally {
+    await stream.cancel();
+  }
+}
+
+/** The index revision when Changes and the usage of every view are settled. */
+async function settledRevision(url: string): Promise<number | undefined> {
+  const read = async <T>(route: string) =>
+    (await (await fetch(`${url}/mokly-viewer/${route}`)).json()) as T;
+  const index = await read<CatalogueReadModel>("index.json");
+  if (["preparing", "pending"].includes(index.changesStatus)) return undefined;
+  for (const entry of [...index.screens, ...index.components]) {
+    const detail = await read<EntryDetailV1>(`entries/${entry.path}.json`);
+    if (
+      detail.revision !== index.revision ||
+      detail.views.some((view) => view.usage.status === "pending")
+    )
+      return undefined;
+  }
+  return index.revision;
 }
 
 /**

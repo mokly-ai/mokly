@@ -2,8 +2,8 @@
  * The states of live prop edits in Serve, under the component controls and
  * shell delivery contracts: an edit through a forwarded port and Reset,
  * navigation cancels a pending edit, fields stay read-only until the live
- * descriptor installs, a failed descriptor offers Try again, and a failed
- * render keeps the last valid preview.
+ * descriptor installs, a failed descriptor offers Try again, a failed render
+ * keeps the last valid preview, and a newer edit replaces a held render.
  */
 
 import { expect, type Page, type Route } from "@playwright/test";
@@ -14,6 +14,7 @@ import {
   closeServe,
   forwardServe,
   isRender,
+  renderBody,
   serveLiveCatalogue,
 } from "./live_shell_fixture.js";
 
@@ -226,6 +227,40 @@ test("a failed render keeps the last valid preview, and Try again renders the ed
       props.getByText("The preview could not be updated"),
     ).toHaveCount(0);
     expect(errors.filter((error) => !/\b422\b/.test(error))).toEqual([]);
+  } finally {
+    await closeServe(page, server);
+  }
+});
+
+test("a newer edit aborts the held render, and both frames show the newest text", async ({
+  page,
+}) => {
+  const errors = captureBrowserErrors(page);
+  const server = await serveLiveCatalogue();
+  try {
+    const props = await openProps(page, server.url);
+    const label = props.getByRole("textbox", { name: "label" });
+    const held: Route[] = [];
+    await page.route("**/mokly-viewer/components/render", (route) => {
+      if (renderBody(route.request()).label === "Hang") held.push(route);
+      else void route.continue();
+    });
+    const aborted: unknown[] = [];
+    page.on("requestfailed", (request) => {
+      if (isRender(request)) aborted.push(renderBody(request).label);
+    });
+    await label.fill("Hang");
+    await expect.poll(() => held.length).toBe(2);
+    await label.fill("Newest");
+    await expect.poll(() => aborted).toEqual(["Hang", "Hang"]);
+    await expect
+      .poll(() => frameTexts(page))
+      .toEqual([
+        expect.stringContaining("Newest 1"),
+        expect.stringContaining("Newest 1"),
+      ]);
+    await expect(label).toHaveValue("Newest");
+    expect(errors).toEqual([]);
   } finally {
     await closeServe(page, server);
   }
