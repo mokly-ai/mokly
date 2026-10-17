@@ -75,10 +75,15 @@ component cycles, template references, and unused props. Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
 inputs in that precedence order, including physical aliases.
+Static input membership uses each root's matcher and the directory-name policy.
 
 YAML front-matter construction uses recursive input traversal before
 prop and schema depth validation. Pathological YAML nesting can exhaust the
 caller stack. The native HTML tree depth guarantee does not cover YAML input.
+
+Private JavaScript generation metadata carries the sidecar module digest map.
+Static builds compare it with captured sources before document callbacks.
+It never enters the public catalogue model.
 
 ## Quick Start
 

@@ -1,112 +1,68 @@
-//! Explicit enter/leave tasks retain fingerprint order and ancestor confinement.
+//! Metadata-only root walks exclude unrelated repository files and output paths.
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::collections::BTreeSet;
+use std::path::PathBuf;
 
-use crate::filesystem::{Entry, Files};
+use mokly_catalogue::protection::SourcePolicy;
+use mokly_source_interface::tree::{FileKind, SourceTree};
 
-enum Work {
-    Enter(PathBuf, PathBuf),
-    Leave(PathBuf),
-    Link(PathBuf, String),
+use crate::error::Result;
+use crate::input_selection;
+use crate::input_selection::Selection;
+
+#[derive(Default)]
+pub(crate) struct Membership {
+    pub(crate) files: BTreeSet<PathBuf>,
+    unreadable: BTreeSet<PathBuf>,
 }
 
-pub(crate) fn capture(
-    files: &dyn Files,
-    root: &Path,
-    logical: &Path,
-    excluded: &[PathBuf],
-) -> BTreeMap<PathBuf, String> {
-    let mut output = BTreeMap::new();
-    let mut ancestors = BTreeSet::new();
-    let mut pending = vec![Work::Enter(root.into(), logical.into())];
-    while let Some(work) = pending.pop() {
-        let (physical, logical) = match work {
-            Work::Enter(physical, logical) => (physical, logical),
-            Work::Leave(path) => {
-                ancestors.remove(&path);
-                continue;
-            }
-            Work::Link(path, link) => {
-                let content = output.remove(&path).unwrap_or_default();
-                output.insert(path, format!("{link}:{content}"));
-                continue;
-            }
-        };
-        if excluded.iter().any(|path| physical.starts_with(path)) {
+impl Membership {
+    pub(crate) fn verify(&self, current: &Self) -> Result<()> {
+        input_selection::verify(&self.unreadable, &current.unreadable)?;
+        input_selection::verify(&self.files, &current.files)
+    }
+}
+
+pub(crate) fn capture(tree: &dyn SourceTree, selection: &Selection) -> Membership {
+    let mut selected = Membership::default();
+    let mut pending: Vec<_> = selection
+        .config
+        .roots
+        .iter()
+        .enumerate()
+        .map(|(index, root)| (index, root.directory.clone(), root.identity.clone()))
+        .collect();
+    while let Some((index, logical, physical)) = pending.pop() {
+        if selection
+            .excluded
+            .iter()
+            .any(|output| physical.starts_with(output) || logical.starts_with(output))
+        {
             continue;
         }
-        let entry = match files.entry(&physical) {
-            Ok(entry) => entry,
+        let children = match tree.children(&physical) {
+            Ok(children) => children,
+            Err(error) if error.is_vanished() => continue,
             Err(_) => {
-                output.insert(logical, "unreadable".into());
+                selected.unreadable.insert(logical);
                 continue;
             }
         };
-        match entry {
-            Some(Entry::Directory(_)) => {
-                if !ancestors.insert(physical.clone()) {
-                    continue;
+        for child in children {
+            let path = logical.join(&child.name);
+            match child.kind {
+                FileKind::Directory
+                    if SourcePolicy::searches_directory(&child.name)
+                        && child.name != ".mokly-export-reservations" =>
+                {
+                    pending.push((index, path, physical.join(child.name)));
                 }
-                pending.push(Work::Leave(physical.clone()));
-                match files.children(&physical) {
-                    Ok(children) => {
-                        for child in children.into_iter().rev() {
-                            let Some(name) = child.file_name() else {
-                                continue;
-                            };
-                            if !skip(name.to_str()) {
-                                let target = logical.join(name);
-                                pending.push(Work::Enter(child, target));
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        output.insert(logical, "unreadable".into());
-                    }
+                FileKind::File if selection.selected(index, &path) => {
+                    selected.files.insert(path);
                 }
+                _ => {}
             }
-            Some(Entry::File(_)) => {
-                output.insert(
-                    logical,
-                    files
-                        .hash(&physical)
-                        .unwrap_or_else(|_| "unreadable".into()),
-                );
-            }
-            Some(Entry::Unsafe) => {
-                if let Ok(target) = files.link(&physical) {
-                    let link = format!("link:{target:?}");
-                    output.insert(logical.clone(), link.clone());
-                    if let Ok(real) = files.project(&physical)
-                        && real.starts_with(root)
-                        && real != physical
-                    {
-                        pending.push(Work::Link(logical.clone(), link));
-                        pending.push(Work::Enter(real, logical));
-                    }
-                }
-            }
-            None => {}
         }
     }
-    output
-}
-
-fn skip(name: Option<&str>) -> bool {
-    matches!(
-        name,
-        Some(
-            ".git"
-                | ".context"
-                | ".mokly-export-reservations"
-                | "node_modules"
-                | "target"
-                | "dist"
-                | "mokly-static"
-                | "coverage"
-                | "test-results"
-                | "playwright-report"
-        )
-    )
+    selected
 }

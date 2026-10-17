@@ -5,6 +5,7 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 
 import { browse } from "./browse.js";
+import { inputProfile } from "./input_profile.js";
 import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import { start, stop, waitFor } from "./process.js";
 import { finishRun } from "./run_output.js";
@@ -39,7 +40,12 @@ export async function benchmark(
   fixture: PreparedFixture,
   selected: readonly Scenario[],
   sidecars: number,
-  options: { memoryStopKiB?: number; sidecarTimeoutMs?: number } = {},
+  options: {
+    memoryStopKiB?: number;
+    sidecarTimeoutMs?: number;
+    buildChanges?: boolean;
+    buildDeadlineMs?: number;
+  } = {},
 ) {
   const memoryStopKiB = options.memoryStopKiB ?? DEFAULT_MEMORY_STOP_KIB;
   const cli = path.join(
@@ -58,6 +64,8 @@ export async function benchmark(
     schemaVersion: 1,
     fixture,
     sidecars,
+    buildChanges: options.buildChanges ?? true,
+    buildDeadlineMs: options.buildDeadlineMs ?? 300_000,
     memoryStopKiB,
     sidecarTimeoutMs: options.sidecarTimeoutMs ?? null,
     sidecarTimeoutEnvironment: process.env.MOKLY_SIDECAR_TIMEOUT_MS ?? null,
@@ -83,7 +91,13 @@ export async function benchmark(
       if (scenario === "build") {
         const beginning = performance.now();
         const running = start(
-          [cli, "build", ...common, "--strict"],
+          [
+            cli,
+            "build",
+            ...common,
+            "--strict",
+            ...(options.buildChanges === false ? ["--no-changes"] : []),
+          ],
           fixture.root,
           memoryStopKiB,
           options.sidecarTimeoutMs,
@@ -92,16 +106,18 @@ export async function benchmark(
         const timer = setTimeout(() => {
           expired = true;
           void stop(running).catch(() => {});
-        }, 300_000);
+        }, options.buildDeadlineMs ?? 300_000);
         try {
           await running.done;
           if (expired || running.child.signalCode !== null)
             throw new Error("Build exceeded the harness liveness deadline");
+          const memory = await running.finishMemory();
           results.push({
             scenario,
             status: "measured",
             elapsedMs: performance.now() - beginning,
-            ...(await running.finishMemory()),
+            ...memory,
+            inputProfile: inputProfile(running.timings, memory.observations),
           });
         } finally {
           clearTimeout(timer);

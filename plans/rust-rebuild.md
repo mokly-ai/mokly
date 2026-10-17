@@ -1523,8 +1523,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 
-- [ ] Restrict static fingerprints to configured roots, inventoried sources,
+- [x] Restrict static fingerprints to configured roots, inventoried sources,
       and reached closure files. Measure this boundary under the large fixtures.
+  - [x] Verify captured bundle inputs against sidecar module digests before
+        document callbacks; retain those baselines through the live recheck.
+- [ ] Report exact consumed-byte digests for the PostCSS module graph and
+      plugin file dependencies, and use them as static fingerprint baselines.
+      Design how to capture the bytes that module evaluation and plugins read,
+      or supply immutable generation inputs. Paths and rereads after a plugin
+      runs cannot establish the consumed bytes. Plugin file dependencies outside
+      roots and bundle modules retain an accepted late baseline until this work.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1558,6 +1566,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
+  - [x] Measure repository snapshot payload and CSS-root preparation with large
+        asset inputs through the guarded build harness.
+  - [x] Review opaque CSS asset retention before a redesign or larger probes.
+        Private source snapshots pin these bytes without a byte bound. Preserve
+        generation consistency when choosing how to limit retained data.
+- [ ] Make opaque CSS assets digest-only inputs: store the route, path, and
+      digest instead of the bytes; use the digest in the cache keys; stream the
+      bytes at delivery and check them against the digest; one entry per asset
+      path across roots; first audit and record the copies of each asset per
+      build with the harness.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
@@ -1569,6 +1587,9 @@ Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
 Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
 Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
 Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
+Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/report-4.md`.
+Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
+Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -1598,6 +1619,15 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     no navigation event once and passed unchanged after rerun. M8 viewer owns
     the suspected message/animation-frame ordering. Recommended A: wait for
     the message event. Evidence is in the browser delegate's `report-4.md`.
+  - [x] Resolve the inherited M14 input fingerprint replay flake
+        `installing_bindings_on_a_fresh_worker_replays_describe_first`.
+        Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
+        All four replay tests passed 50 isolated runs on the merged tree.
+        Evidence: M14 `report-6.md` and `fingerprints-final-replays.json`.
+  - [x] Resolve the inherited M14 fingerprint review replay flake
+        `retired_postcss_contexts_are_disposed_without_resetting_live_contexts`.
+        Fixed by `9962e08c`. The same 50 isolated runs passed all 200 cases.
+        Evidence: M14 `report-6.md` and `fingerprints-final-replays.json`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and

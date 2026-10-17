@@ -13,6 +13,7 @@ function memory(ps: () => Promise<string>) {
     cancellations = 0;
   const boundary: MemorySystem = {
     pid: 10,
+    now: () => 0,
     ps: () => {
       samples++;
       return ps();

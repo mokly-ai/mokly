@@ -61,7 +61,8 @@ impl Visit for Fields {
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
         let name = match field.name() {
-            "worker" | "tier" | "views" | "unchanged" | "changed" => field.name(),
+            "worker" | "tier" | "views" | "unchanged" | "changed" | "input_paths"
+            | "read_bytes" | "retained_bytes" => field.name(),
             "ignored_only" => "ignoredOnly",
             _ => return,
         };
@@ -99,6 +100,10 @@ fn stage(name: &str) -> bool {
             | "build"
             | "publish"
             | "output.write"
+            | "output.fingerprint"
+            | "output.input-digests"
+            | "output.input-read"
+            | "output.recheck"
             | "output.stage"
             | "output.install"
             | "output.capture"
