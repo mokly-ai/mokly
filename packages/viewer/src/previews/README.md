@@ -12,14 +12,14 @@ nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
 [`request.ts`](./request.ts) resolves that descriptor to one metadata address.
-Development uses the stable selected endpoint (`path=` for a screen or component
-variant, `page=` for a page or document); static delivery uses `comparisonUrl` for a screen
-and `previewMetadataPath(path)` for a page, confined to that comparison
-generation. Pages use the light `snapshotDocumentPath`; Markdown documents use
+Serve, static delivery, and embedded hosts use the catalogue's advertised
+`comparisonUrl` for a screen and `previewMetadataPath(path)` for a page or
+document. Every address stays inside that comparison generation. A missing
+advertisement makes the preview unavailable without a request. Pages use the light `snapshotDocumentPath`; Markdown documents use
 each historical scheme. `content.ts` derives these paths, and selection loads
 only the requested document scheme, with a light fallback.
 Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v7 carries no stored before/after paths.
+review state is `removed`; review v8 carries no stored before/after paths.
 Before accepting either kind, the request recomputes the selected historical
 identity from the metadata's baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.
@@ -31,8 +31,7 @@ comparison generation's `snapshots/before/` and `snapshots/after/` directories
 in `prefixes` through the shared `snapshotSidePath` builder. This internal
 helper has no runtime consumer: it models the
 documented embedded fetch set for tests, while each presentation loader enforces
-its own generation and side boundaries. Page-preview metadata files are
-unchanged.
+its own generation and side boundaries. Page and document preview metadata uses version 3.
 
 `presentation.ts` owns the shared snapshot-presentation loader.
 `createSnapshotPresentationLoader(generationAddress, sides, delivery,

@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use mokly_model::axes::EntryKind;
+use mokly_model::catalogue::CatalogueModel;
 use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV1};
 use mokly_model::public_metadata::ComparisonSelection;
 use mokly_model::readers;
@@ -77,6 +78,9 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         changes: None,
         document_keys: BTreeMap::new(),
         generation: Arc::new(Generation {
+            model: Arc::new(empty_model()),
+            view_keys: Vec::new(),
+            config_path: "mokly.config.json".into(),
             changes: None,
             views: routes
                 .iter()
@@ -102,5 +106,14 @@ pub(crate) fn ready() -> CatalogueUsage {
         instances: Vec::new(),
         slots: Vec::new(),
         ranges: Vec::new(),
+    }
+}
+
+pub(crate) fn empty_model() -> CatalogueModel {
+    CatalogueModel {
+        entries: Vec::new(),
+        folders: Vec::new(),
+        sources: Vec::new(),
+        color_schemes: Vec::new(),
     }
 }

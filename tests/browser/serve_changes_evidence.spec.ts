@@ -77,9 +77,9 @@ test("native CSS evidence shares the published base and selected generations rej
       ).status(),
     ).toBe(404);
     await page.goto(`${fixture.url}/view/sample/`);
-    await page.getByRole("button", { name: "Details", exact: true }).click();
+    await page.getByRole("tab", { name: "Details", exact: true }).click();
     await expect(
-      page.getByRole("region", { name: "Details", exact: true }),
+      page.getByRole("tabpanel", { name: "Details", exact: true }),
     ).toContainText("theme.css");
   } finally {
     await fixture.close();

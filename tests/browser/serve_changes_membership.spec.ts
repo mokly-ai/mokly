@@ -14,8 +14,8 @@ test("native Changes publishes moved and removed entries with matching counts", 
       index.screens.find((entry) => entry.path === "moved")?.previousPath,
     ).toBe("old");
     expect(index.removedEntries.map((entry) => entry.entry.path)).toEqual([
-      "removed",
       "retired",
+      "removed",
     ]);
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
@@ -26,17 +26,22 @@ test("native Changes publishes moved and removed entries with matching counts", 
     await page.locator('[data-filter="changed"]').click();
     await expect(
       page.locator('[data-nav-row][data-route="stable/index.html"]'),
-    ).toHaveCount(0);
+    ).toBeHidden();
     await expect(
       page.locator('[data-nav-row][data-route="moved/index.html"]'),
     ).toContainText("Moved");
-    await page.goto(`${fixture.url}/view/removed/`);
+    await page
+      .getByRole("link", { name: "Removed screen · Removed", exact: true })
+      .click();
     await expect(
       page
         .frameLocator("iframe[data-mokly-preview-source]")
+        .first()
         .getByRole("heading", { name: "Historical screen" }),
     ).toBeVisible();
-    await page.goto(`${fixture.url}/view/retired/`);
+    await page
+      .getByRole("link", { name: "Retired page · Removed", exact: true })
+      .click();
     await expect(
       page
         .frameLocator("iframe[data-mokly-preview-source]")
@@ -53,6 +58,11 @@ test("native Changes publishes moved and removed entries with matching counts", 
       index.removedEntries.find((entry) => entry.entry.path === "retired")!
         .snapshotId,
     );
+    expect(
+      requests.filter(
+        (url) => new URL(url).pathname === "/mokly-viewer/diffs/review.json",
+      ),
+    ).toEqual([]);
   } finally {
     await fixture.close();
   }

@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_graph::types::RenderGenerationMock;
 use mokly_model::snapshot::RemovedEntrySnapshot;
 use mokly_model::snapshot_records::{EntryRecord, RecordMetadata};
 use unimock::{MockFn, Unimock, matching};
@@ -12,7 +13,7 @@ use crate::changes::Accepted;
 use crate::clock::ClockMock;
 use crate::comparison_capture::CapturerMock;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
-use crate::comparison_support::{accepted, files, snapshot};
+use crate::comparison_support::{accepted, files, historical_inputs, snapshot};
 use crate::error::ServerError;
 use crate::publication::FixedPublication;
 
@@ -43,7 +44,16 @@ fn historical() -> Arc<Accepted> {
 #[tokio::test]
 async fn an_identical_replacement_uses_its_live_owner_for_historical_capture() {
     let old = historical();
-    let next = historical();
+    let mut next = historical();
+    let (catalogue, plans) = historical_inputs();
+    Arc::get_mut(&mut next).unwrap().result.before = Arc::new(Unimock::new((
+        RenderGenerationMock::catalogue
+            .each_call(matching!())
+            .returns(catalogue),
+        RenderGenerationMock::plans
+            .each_call(matching!())
+            .returns(plans),
+    )));
     let publications = Arc::new(FixedPublication::new(snapshot(Some(next.clone()))));
     let document = "snapshots/before/mokly-generated/sample/index.html";
     let expected = next.clone();

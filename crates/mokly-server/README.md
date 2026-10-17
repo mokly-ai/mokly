@@ -60,6 +60,10 @@ Rebuilds retain ready usage only for equal document keys in the same catalogue
 and deployment. Reused usage is already complete, so later completion callbacks
 publish no extra revision for those views.
 
+`mokly-model` projects every status from retained model inputs. `mokly-compare`
+owns Changes membership, eligibility, workspaces, input changes, and removed
+metadata. Serve uses those shared functions and the shared snapshot route builders.
+
 `ChangesPass` continues after current usage settles. It runs the command's
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
 all current details together. Ready state installs the review pointer, Changes

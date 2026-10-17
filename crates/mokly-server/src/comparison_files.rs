@@ -5,6 +5,8 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use mokly_model::namespace::GENERATED_DIRECTORY;
+use mokly_model::review_affected::ReviewSide;
+use mokly_model::routes;
 
 use crate::assets::File;
 use crate::changes::Accepted;
@@ -51,17 +53,23 @@ impl Comparisons for MemoryComparisons {
             let Some(accepted) = &bundle.accepted else {
                 return Ok(None);
             };
-            let Some(route) =
-                path.strip_prefix(&format!("snapshots/before/{GENERATED_DIRECTORY}/"))
-            else {
+            let Some(route) = path.strip_prefix(&routes::comparison_snapshot(
+                ReviewSide::Before,
+                &format!("{GENERATED_DIRECTORY}/"),
+            )) else {
                 return Ok(None);
             };
-            let Some(entry) = accepted.result.entries.iter().find(|entry| {
-                entry
-                    .documents
-                    .iter()
-                    .any(|document| document.before_route.as_deref() == Some(route))
-            }) else {
+            let Some(plan) = accepted.result.before.plans().get(route) else {
+                return Ok(None);
+            };
+            let Some(entry) = accepted
+                .result
+                .before
+                .catalogue()
+                .model
+                .entries
+                .get(plan.entry)
+            else {
                 return Ok(None);
             };
             if !accepted
@@ -69,12 +77,12 @@ impl Comparisons for MemoryComparisons {
                 .snapshot
                 .removed_entries
                 .iter()
-                .any(|removed| removed.entry.metadata().path == entry.path)
+                .any(|removed| removed.entry.metadata().path == entry.metadata.path)
             {
                 return Ok(None);
             }
             bundle.touched = self.clock.milliseconds();
-            (accepted.clone(), entry.path.clone())
+            (accepted.clone(), entry.metadata.path.clone())
         };
         let pending = match self.begin(capture.0, capture.1, true, false) {
             Ok(pending) => pending,

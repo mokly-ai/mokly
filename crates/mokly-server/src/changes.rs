@@ -6,17 +6,22 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::{projection_index, projection_removed};
 use mokly_model::namespace::viewer;
+use mokly_model::projection::{self, Publication};
 use mokly_model::public_metadata::ChangesStatus;
+use mokly_model::routes;
 use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
+use crate::changes_detail;
+use crate::comparison_metadata;
+use crate::comparison_metadata::compared;
 use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
-use crate::error::{Result, ServerError};
+use crate::error::{InternalError, Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::{Snapshot, checked_index};
-use crate::{changes_detail, changes_index, changes_removed};
 
 /// Cancellation belongs to one classification, not to the shared render pool.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ChangeCancellationMock))]
@@ -131,9 +136,32 @@ pub(crate) fn project(
     next.index.revision += 1;
     next.lease = Arc::new(RevisionLease::default());
     next.changes = accepted;
-    changes_index::apply(&mut next.index, status, next.changes.as_deref());
+    next.index = match projection::index(
+        &current.model,
+        &current.view_keys,
+        &Publication {
+            config_path: current.config_path.clone(),
+            deployment_id: current.index.deployment_id.clone(),
+            revision: next.index.revision,
+            base: current.index.base.clone(),
+            changes_status: status,
+            live_generation: current
+                .index
+                .live
+                .as_ref()
+                .map(|live| live.generation.clone()),
+        },
+    ) {
+        Ok(index) => index,
+        Err(source) => return Err(InternalError::Model { source }.into()),
+    };
+    next.index.identity = current.index.identity.clone();
     if let Some(accepted) = &next.changes {
-        next.index.removed_entries = changes_removed::records(&accepted.result, &next.index)?;
+        projection_index::apply(&mut next.index, &accepted.result);
+        let historical = comparison_metadata::base(accepted, current)?;
+        next.index.removed_entries =
+            compared(projection_removed::records(&accepted.result, historical))?;
+        next.index.comparison_url = Some(routes::comparison_review(&accepted.id));
     }
     changes_detail::apply(&mut next)?;
     let mut schemas = UsageSchemas::new(&next.index.components);
@@ -154,7 +182,7 @@ pub(crate) fn project(
 
 /// Classification metadata contains no snapshots until a historical view is opened.
 pub(crate) fn metadata(accepted: &Accepted, current: &Snapshot) -> Result<BTreeMap<String, File>> {
-    changes_removed::files(accepted, current)
+    comparison_metadata::files(accepted, current)
 }
 
 impl std::fmt::Debug for dyn ChangeCancellation + '_ {

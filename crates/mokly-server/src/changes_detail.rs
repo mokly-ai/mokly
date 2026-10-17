@@ -1,56 +1,45 @@
-//! Current detail evidence follows the classification installed with its index.
+//! Compose shared usage, comparison evidence, and workspace projections for Serve.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use mokly_model::axes::EntryKind;
+use mokly_compare::{projection_detail, projection_workspace};
 use mokly_model::projection_usage;
 
-use crate::changes_workspace;
+use crate::comparison_metadata::compared;
 use crate::error::Result;
 use crate::snapshot::Snapshot;
 
 pub(crate) fn apply(next: &mut Snapshot) -> Result<()> {
-    let classifications: BTreeMap<_, _> = next
-        .changes
-        .iter()
-        .flat_map(|accepted| &accepted.result.entries)
-        .map(|entry| (entry.path.as_str(), entry))
-        .collect();
-    for (path, detail) in &mut next.details {
-        let detail = Arc::make_mut(detail);
-        let entry = classifications.get(path.as_str());
-        for view in &mut detail.views {
-            view.resource_evidence = entry
-                .and_then(|entry| {
-                    entry.documents.iter().find(|document| {
-                        document.key.viewport == Some(view.viewport)
-                            && document.key.color_scheme == view.color_scheme
-                    })
-                })
-                .map(|document| document.evidence.clone());
-        }
-        detail.resource_evidence = if detail.entry.kind == EntryKind::Page {
-            entry
-                .and_then(|entry| entry.documents.first())
-                .map(|document| document.evidence.clone())
-        } else {
-            None
-        };
-        detail.workspace = None;
-    }
-    let details = next
+    let mut details: BTreeMap<_, _> = next
         .details
         .iter()
-        .map(|(path, detail)| (path.clone(), detail.as_ref()))
+        .map(|(path, detail)| {
+            let mut detail = (**detail).clone();
+            for view in &mut detail.views {
+                view.resource_evidence = None;
+            }
+            detail.resource_evidence = None;
+            detail.workspace = None;
+            (path.clone(), detail)
+        })
         .collect();
-    for (path, workspace) in projection_usage::workspaces(&details, &next.index) {
-        if let Some(detail) = next.details.get_mut(&path) {
-            Arc::make_mut(detail).workspace = Some(workspace);
+    let references = details
+        .iter()
+        .map(|(path, detail)| (path.clone(), detail))
+        .collect();
+    for (path, workspace) in projection_usage::workspaces(&references, &next.index) {
+        if let Some(detail) = details.get_mut(&path) {
+            detail.workspace = Some(workspace);
         }
     }
     if let Some(accepted) = &next.changes {
-        changes_workspace::apply(&mut next.details, &next.index, &accepted.result)?;
+        projection_detail::apply_evidence(&mut details, &accepted.result);
+        compared(projection_workspace::apply(&mut details, &accepted.result))?;
     }
+    next.details = details
+        .into_iter()
+        .map(|(path, detail)| (path, Arc::new(detail)))
+        .collect();
     Ok(())
 }

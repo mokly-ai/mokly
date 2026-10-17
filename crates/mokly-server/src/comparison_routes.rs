@@ -4,6 +4,7 @@ use axum::http::{HeaderValue, StatusCode, Uri};
 use axum::response::Response;
 use mokly_model::namespace::viewer;
 use mokly_model::paths::is_entry_path;
+use mokly_model::routes;
 use percent_encoding::percent_decode_str;
 
 use crate::application::Application;
@@ -32,10 +33,9 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
                     "application/json; charset=utf-8",
                     Default::default(),
                 );
-                if let Ok(location) = HeaderValue::from_str(&format!(
-                    "/{}",
-                    viewer(&format!("diffs/generations/{id}/review.json"))
-                )) {
+                if let Ok(location) =
+                    HeaderValue::from_str(&format!("/{}", routes::comparison_review(&id)))
+                {
                     response.headers_mut().insert("location", location);
                 }
                 response

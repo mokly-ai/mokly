@@ -13,6 +13,7 @@ use crate::background::{Background, UsagePass};
 use crate::evidence::RenderRoute;
 use crate::generation::Generation;
 use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
+use crate::publication_support;
 use crate::revision::RevisionLease;
 use crate::snapshot::Snapshot;
 use crate::work::WorkMock;
@@ -26,6 +27,9 @@ fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> 
         ))
         .unwrap(),
         generation: Arc::new(Generation {
+            model: Arc::new(publication_support::empty_model()),
+            view_keys: Vec::new(),
+            config_path: "mokly.config.json".into(),
             changes: None,
             views: Default::default(),
             assets: Default::default(),

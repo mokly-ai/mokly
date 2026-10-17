@@ -17,7 +17,9 @@ export const screen = (title: string, body: string, metadata = "") =>
   `---\ntitle: ${title}\n${metadata}---\n${body}`;
 
 /** A real Git base and watched working catalogue, isolated for each test. */
-export async function serveChanges() {
+export async function serveChanges(
+  options: { removedComponent?: boolean } = {},
+) {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context", "serve-changes-"),
   );
@@ -72,6 +74,16 @@ export async function serveChanges() {
       "specs/stable.screen.html",
       screen("Stable screen", "<div>Stable content</div>"),
     );
+    if (options.removedComponent) {
+      await write(
+        "specs/widget.component.html",
+        screen(
+          "Retired widget",
+          "<div>Historical widget</div>",
+          "element: fixture-widget\npropSchema: { type: object, additionalProperties: false, properties: {} }\n",
+        ),
+      );
+    }
     await git("init", "-b", "main");
     await git("config", "user.name", "Mokly fixture");
     await git("config", "user.email", "fixture@example.invalid");
@@ -93,6 +105,9 @@ export async function serveChanges() {
     );
     await fs.rm(path.join(root, "specs/removed.screen.html"));
     await fs.rm(path.join(root, "specs/retired.page.html"));
+    if (options.removedComponent) {
+      await fs.rm(path.join(root, "specs/widget.component.html"));
+    }
     starting = serveHost(
       [
         path.join(repositoryRoot, "packages/mokly/bin/mokly.mjs"),
@@ -112,17 +127,24 @@ export async function serveChanges() {
         await fetch(`${url}/mokly-viewer/index.json`)
       ).json()) as CatalogueReadModel;
     const ready = async (after = 0) => {
-      await expect
-        .poll(
-          async () => {
-            const current = await index();
-            return (
-              current.revision > after && current.changesStatus === "ready"
-            );
-          },
-          { timeout: 30_000, message: host?.diagnostics?.() },
-        )
-        .toBe(true);
+      try {
+        await expect
+          .poll(
+            async () => {
+              const current = await index();
+              return (
+                current.revision > after && current.changesStatus === "ready"
+              );
+            },
+            { timeout: 30_000 },
+          )
+          .toBe(true);
+      } catch (cause) {
+        throw new Error(
+          `Serve Changes did not become ready:\n${host?.diagnostics?.()}`,
+          { cause },
+        );
+      }
       return index();
     };
     await ready();

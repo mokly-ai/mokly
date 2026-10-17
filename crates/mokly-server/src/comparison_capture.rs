@@ -3,10 +3,11 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use mokly_compare::comparison_types::EntryClassification;
 use mokly_graph::types::RenderGeneration;
+use mokly_model::axes::EntryKind;
 use mokly_model::review::{ReviewEntry, ReviewKind, ReviewResultV8};
-use mokly_model::{namespace, readers};
+use mokly_model::review_affected::ReviewSide;
+use mokly_model::{namespace, readers, routes};
 
 use crate::assets::{File, content_type};
 use crate::changes::{Accepted, ChangeCancellation};
@@ -44,12 +45,8 @@ impl Capturer for SnapshotCapture {
             .as_ref()
             .and_then(|source| source.capture_scope(cancel.clone()));
         let result = &accepted.result;
-        let entry = result
-            .entries
-            .iter()
-            .find(|entry| entry.path == path)
-            .ok_or(ServerError::ChangesUnavailable)?;
         let mut files = BTreeMap::new();
+        let mut selected_kind = None;
         if historical {
             if !result
                 .snapshot
@@ -60,7 +57,8 @@ impl Capturer for SnapshotCapture {
                 return Err(ServerError::ChangesUnavailable);
             }
         } else {
-            let mut selected = find(&result.review.entries, path)
+            let mut selected = find(&result.review.entries, path, true)
+                .or_else(|| find(&result.review.entries, path, false))
                 .filter(|entry| match entry.kind {
                     ReviewKind::Component => true,
                     ReviewKind::Screen => entry.after.is_some(),
@@ -68,6 +66,11 @@ impl Capturer for SnapshotCapture {
                 })
                 .ok_or(ServerError::ChangesUnavailable)?
                 .clone();
+            selected_kind = Some(match selected.kind {
+                ReviewKind::Screen => EntryKind::Screen,
+                ReviewKind::Component => EntryKind::Component,
+                ReviewKind::UseCase => EntryKind::UseCase,
+            });
             selected.variants = None;
             let review = ReviewResultV8 {
                 schema_version: 8,
@@ -82,13 +85,49 @@ impl Capturer for SnapshotCapture {
             }
             files.insert("review.json".into(), file);
         }
+        let (before, after) = if historical {
+            let routes = result
+                .before
+                .plans()
+                .values()
+                .filter_map(|plan| {
+                    result
+                        .before
+                        .catalogue()
+                        .model
+                        .entries
+                        .get(plan.entry)
+                        .filter(|entry| entry.metadata.path == path)
+                        .map(|_| plan.route.clone())
+                })
+                .collect::<Vec<_>>();
+            (routes, Vec::new())
+        } else {
+            let entry = result
+                .entries
+                .iter()
+                .find(|entry| entry.path == path && Some(entry.kind) == selected_kind)
+                .ok_or(ServerError::ChangesUnavailable)?;
+            (
+                entry
+                    .documents
+                    .iter()
+                    .filter_map(|document| document.before_route.clone())
+                    .collect(),
+                entry
+                    .documents
+                    .iter()
+                    .filter_map(|document| document.after_route.clone())
+                    .collect(),
+            )
+        };
         let mut remaining =
             MAX_BYTES.saturating_sub(files.values().map(|file| file.bytes.len()).sum());
         capture_side(
             &mut files,
             &mut remaining,
-            entry,
-            "before",
+            &before,
+            ReviewSide::Before,
             result.before.clone(),
             cancel.as_ref(),
         )?;
@@ -96,8 +135,8 @@ impl Capturer for SnapshotCapture {
             capture_side(
                 &mut files,
                 &mut remaining,
-                entry,
-                "after",
+                &after,
+                ReviewSide::After,
                 result.after.clone(),
                 cancel.as_ref(),
             )?;
@@ -107,13 +146,13 @@ impl Capturer for SnapshotCapture {
     }
 }
 
-fn find<'a>(entries: &'a [ReviewEntry], path: &str) -> Option<&'a ReviewEntry> {
+fn find<'a>(entries: &'a [ReviewEntry], path: &str, current_only: bool) -> Option<&'a ReviewEntry> {
     for entry in entries {
-        if entry.path == path {
+        if entry.path == path && (!current_only || entry.after.is_some()) {
             return Some(entry);
         }
         if let Some(variants) = &entry.variants
-            && let Some(entry) = find(variants, path)
+            && let Some(entry) = find(variants, path, current_only)
         {
             return Some(entry);
         }
@@ -124,21 +163,13 @@ fn find<'a>(entries: &'a [ReviewEntry], path: &str) -> Option<&'a ReviewEntry> {
 fn capture_side(
     files: &mut BTreeMap<String, File>,
     remaining: &mut usize,
-    entry: &EntryClassification,
-    side: &str,
+    documents: &[String],
+    side: ReviewSide,
     graph: Arc<dyn RenderGeneration>,
     cancel: &dyn ChangeCancellation,
 ) -> Result<()> {
-    for document in &entry.documents {
+    for route in documents {
         check(cancel)?;
-        let route = if side == "before" {
-            &document.before_route
-        } else {
-            &document.after_route
-        };
-        let Some(route) = route else {
-            continue;
-        };
         let artifact = match graph.render(route) {
             Ok(artifact) => artifact,
             Err(source) => return Err(ServerError::Render { source }),
@@ -146,9 +177,9 @@ fn capture_side(
         insert(
             files,
             remaining,
-            format!(
-                "snapshots/{side}/{}/{route}",
-                namespace::GENERATED_DIRECTORY
+            routes::comparison_snapshot(
+                side,
+                &format!("{}/{route}", namespace::GENERATED_DIRECTORY),
             ),
             File {
                 bytes: artifact.bytes.clone().into(),
@@ -164,7 +195,7 @@ fn capture_side(
             let relative = route
                 .strip_prefix("static/")
                 .ok_or(ServerError::PreviewResource)?;
-            let target = format!("snapshots/{side}/{relative}");
+            let target = routes::comparison_snapshot(side, relative);
             if files.contains_key(&target) {
                 continue;
             }

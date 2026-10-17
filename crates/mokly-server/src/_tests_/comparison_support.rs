@@ -3,11 +3,16 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_compare::comparison_types::{
     ComparisonResult, DocumentComparison, EntryClassification, ViewKey,
 };
-use mokly_graph::types::RenderGeneration;
+use mokly_graph::key::NodeKey;
+use mokly_graph::types::{DocumentPlan, RenderGeneration};
 use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
+use mokly_model::catalogue::{
+    CatalogueModel, EntryContent, EntryMetadata, ModelEntry, SourceLocation,
+};
 use mokly_model::evidence::ViewEvidence;
 use mokly_model::review::{
     EntryChangeReason, ReviewEntry, ReviewEntryAddress, ReviewKind, ReviewResultV8, ReviewState,
@@ -131,4 +136,59 @@ pub(crate) fn files() -> BTreeMap<String, File> {
             content_type: "application/json; charset=utf-8".into(),
         },
     )])
+}
+
+pub(crate) fn historical_inputs() -> (PreparedCatalogue, BTreeMap<String, DocumentPlan>) {
+    let model = CatalogueModel {
+        entries: vec![ModelEntry {
+            metadata: EntryMetadata {
+                path: "sample".into(),
+                title: "Sample".into(),
+                description: String::new(),
+                tags: Vec::new(),
+                rationale: None,
+                related_docs: Vec::new(),
+                moved_from: None,
+                moved_from_source: None,
+                variant_of: None,
+                is_index: false,
+                root_index: 0,
+                source: SourceLocation {
+                    path: "sample.page.html".into(),
+                    line: 1,
+                    column: 1,
+                    export: None,
+                },
+            },
+            content: EntryContent::Page,
+        }],
+        folders: Vec::new(),
+        sources: Vec::new(),
+        color_schemes: vec![ColorScheme::Light],
+    };
+    let catalogue = PreparedCatalogue {
+        model,
+        inventory: Default::default(),
+        templates: BTreeMap::new(),
+        documents: BTreeMap::new(),
+        slot_fragments: BTreeMap::new(),
+        elements: BTreeMap::new(),
+        deferred_modules: Vec::new(),
+        javascript: Default::default(),
+        warnings: Vec::new(),
+    };
+    let route = "sample/index.html".to_owned();
+    let plans = BTreeMap::from([(
+        route.clone(),
+        DocumentPlan {
+            resource_key: "resources".into(),
+            route,
+            key: NodeKey("a".repeat(64)),
+            entry: 0,
+            viewport: None,
+            color_scheme: ColorScheme::Light,
+            stylesheets: Vec::new(),
+        },
+    )]);
+    (catalogue, plans)
 }

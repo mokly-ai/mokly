@@ -148,3 +148,7 @@ mod comparison_capacity_tests;
 #[cfg(test)]
 #[path = "_tests_/comparison_owner_tests.rs"]
 mod comparison_owner_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_historical_tests.rs"]
+mod comparison_historical_tests;

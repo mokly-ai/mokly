@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use mokly_compare::projection_index;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::canonical;
 use mokly_model::catalogue::CatalogueModel;
@@ -141,19 +142,7 @@ impl Projector {
         input: SnapshotInput,
         previous: Option<&Snapshot>,
     ) -> Result<Arc<Snapshot>> {
-        let keys: Vec<_> = generation
-            .plans()
-            .values()
-            .map(|plan| ViewKey {
-                path: generation.catalogue().model.entries[plan.entry]
-                    .metadata
-                    .path
-                    .clone(),
-                viewport: plan.viewport,
-                color_scheme: plan.color_scheme,
-                key: plan.key.0.clone(),
-            })
-            .collect();
+        let keys = projection_index::keys(generation.as_ref());
         let live_generation = generation.generation_key().to_owned();
         let state = Publication {
             config_path: input.config_path,
@@ -205,6 +194,9 @@ impl Projector {
             .map(|route| (route.route.clone(), route.clone()))
             .collect();
         let shared = Arc::new(Generation {
+            model: Arc::new(generation.catalogue().model.clone()),
+            view_keys: keys,
+            config_path: state.config_path,
             changes: None,
             routes,
             views,

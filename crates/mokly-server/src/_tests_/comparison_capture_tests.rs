@@ -178,3 +178,52 @@ fn removed_components_capture_the_before_side_and_removed_screens_use_previews()
         assert_eq!(review.entries[0].state, ReviewState::Removed);
     }
 }
+
+#[test]
+fn a_current_screen_wins_over_a_removed_component_at_the_same_path() {
+    let mut accepted = accepted(
+        Arc::new(Unimock::new(())),
+        graph(b"<p>current screen</p>", b"new"),
+    );
+    let result = &mut Arc::get_mut(&mut accepted).unwrap().result;
+    let mut removed = result.review.entries[0].clone();
+    removed.kind = ReviewKind::Component;
+    removed.after = None;
+    removed.before.as_mut().unwrap().supplied_slots = Some(vec![]);
+    removed.state = ReviewState::Removed;
+    removed.reasons = vec![EntryChangeReason::Removed];
+    removed.views[0].state = ReviewState::Removed;
+    let current = &mut result.review.entries[0];
+    current.before = None;
+    current.state = ReviewState::Added;
+    current.reasons = vec![EntryChangeReason::Added];
+    current.views[0].state = ReviewState::Added;
+    result.review.entries.insert(0, removed);
+    let mut removed = result.entries[0].clone();
+    removed.kind = EntryKind::Component;
+    removed.state = ReviewState::Removed;
+    removed.reasons = vec![EntryChangeReason::Removed];
+    removed.documents[0].after_route = None;
+    removed.documents[0].state = ReviewState::Removed;
+    result.entries[0].state = ReviewState::Added;
+    result.entries[0].reasons = vec![EntryChangeReason::Added];
+    result.entries[0].documents[0].before_route = None;
+    result.entries[0].documents[0].state = ReviewState::Added;
+    result.entries.insert(0, removed);
+    let capture: &dyn Capturer = &SnapshotCapture;
+    let files = capture
+        .capture(&accepted, "sample", false, Arc::new(ChangeToken::default()))
+        .unwrap();
+    let review =
+        readers::review(std::str::from_utf8(&files["review.json"].bytes).unwrap()).unwrap();
+    assert_eq!(review.entries[0].kind, ReviewKind::Screen);
+    assert_eq!(
+        files["snapshots/after/mokly-generated/sample/index.mobile.html"].bytes,
+        "<p>current screen</p>"
+    );
+    assert!(
+        !files
+            .keys()
+            .any(|path| path.starts_with("snapshots/before/"))
+    );
+}

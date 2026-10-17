@@ -165,9 +165,21 @@ async fn build_warning_first_demand_delivery_and_attempt_fences() {
             let marker = serve.log_count();
             serve.key(b"r");
             serve.wait_line(marker, "manual rebuild").await;
-            serve
+            let manual = serve
                 .ready(repaired["revision"].as_u64().unwrap(), "Repaired")
                 .await;
+            assert!(
+                get(
+                    &serve.host,
+                    "/static/mokly-generated/home/index.desktop.html"
+                )
+                .await
+                .contains("Repaired")
+            );
+            serve
+                .wait_line(marker, "MockLink child control contains")
+                .await;
+            assert_eq!(serve.index().await["revision"], manual["revision"]);
             (4, 2)
         } else {
             (3, 1)
