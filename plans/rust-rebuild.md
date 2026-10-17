@@ -1138,8 +1138,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       is documented; a new rejection requires the user's decision.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+  - [x] Use the shared comparison projection for index, details, removed
+        entries, workspaces, and generation routes in Serve.
+        Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/merge-decisions.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-merge-decisions.md`.
   - [x] Let event streams flush their final chunk before closing the other
         connections. Bound the grace period and require a clean stream end.
+  - [x] Keep idle event-stream transport active with comments during background
+        Changes. Preserve publication messages and clean shutdown.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/browser-setup-probe.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/sse-idle-after.log`.
   - [x] Record reused ready usage as completed, so a metadata-only rebuild
         publishes no extra usage revision.
         Serve lifecycle evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/independent-checks.md`.
@@ -1147,6 +1153,22 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         reduce source-root replacements within the configured pool bound,
         including the one-worker case. Integrate shared-engine batching with
         Serve-only interleaving (review 6a finding 2, option C).
+    - [x] Group foreground sidecar calls before queued base calls. Prove
+          one-worker and three-worker admission bounds and cancellation.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/interleaving-measurement.md`.
+    - [ ] Repeat the combined measurement after shared-engine batching merges.
+    - [ ] Resolve the full browser fixture readiness timeout with the accepted
+          engine integration. Idle SSE transport is fixed; the existing
+          600-second setup guard still expires with one sidecar.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/browser-setup-probe-after.log`.
+  - [x] Install classification metadata after ready projection, so projection
+        cannot consume a new generation's retention window before publication.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/metadata-install-before.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/metadata-server-tests.log`.
+  - [ ] Decide the lifetime of advertised classification metadata for idle
+        removed previews. Severity Medium, effort Medium. Recommended: retain
+        advertised metadata and expire captured snapshot bytes after 60 seconds.
+        Proposal: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/retention-proposal.md`.
+        Serve report and sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-7.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-serve-changes.md`.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
@@ -1155,10 +1177,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
   - [ ] Replay the eleven full references after the sidecar and source
         migration are ready. Every captured catalogue has JavaScript entries.
-- [ ] Port the deferred native Changes browser fixtures in the M8 browser
+- [x] Port the deferred native Changes browser fixtures in the M8 browser
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
       assertions. Keep the duplicate component-explorer cases in one suite.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/browser-shards.json`.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
@@ -1551,6 +1574,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Serve Changes verification: unrelated sidecar `EPIPE` flake. Severity
+    Medium, effort Small. Recommended: fix the shutdown pipe race in a separate
+    change. `postcss_failures_use_exact_catalogued_codes_and_logical_paths`
+    failed with extra `Error: write EPIPE` stderr and passed its isolated rerun.
+    Suspected source: a stdout write races with pipe closure.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/transport-repository.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/postcss-diagnostic-rerun.log`.
   - [x] Reconcile the inherited M14 round 3
         `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
         The shared fixture seeds its epoch and cleanup uses one staleness rule.

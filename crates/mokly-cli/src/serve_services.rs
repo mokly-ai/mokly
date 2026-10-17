@@ -20,8 +20,10 @@ use mokly_sidecar::workers::Diagnostics;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::render_runtime::Services;
+use crate::serve_pool::{PoolScheduling, ServePool};
 
 pub(super) struct ServeServices {
+    pub(super) sidecars: Arc<dyn PoolScheduling>,
     pub(super) runtime: Arc<Runtime>,
     pub(super) config: mokly_catalogue::config_types::ResolvedConfig,
     pub(super) tree: Arc<dyn SourceTree>,
@@ -61,17 +63,24 @@ impl ServeServices {
                 });
             }
         };
+        let sidecars: Arc<dyn PoolScheduling> =
+            Arc::new(ServePool::new(services.pool, common.sidecars.unwrap_or(1)));
+        let pool = sidecars.pool(None);
+        let mut runtime = (*services.runtime).clone();
+        runtime.pool = pool.clone();
+        let runtime = Arc::new(runtime);
         let preparation = Arc::new(AttemptPreparation {
             tree: tree.clone(),
-            runtime: services.runtime.clone(),
+            runtime: runtime.clone(),
             settings: ServeSettings::new(&config),
         });
         Ok(Self {
-            runtime: services.runtime,
+            sidecars,
+            runtime,
             config,
             tree,
             preparation,
-            pool: services.pool,
+            pool,
         })
     }
 }

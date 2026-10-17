@@ -70,6 +70,8 @@ impl Source {
             command: self.services.cancellation.clone(),
             generation: cancel.clone(),
         });
+        let mut runtime = (*self.services.runtime).clone();
+        runtime.pool = self.services.sidecars.pool(Some(cancellation.clone()));
         let changes: &dyn ChangesService = &Changes {
             lookup: Arc::new(GitBaseLookup {
                 repositories: Arc::new(GitRepositories {
@@ -85,7 +87,7 @@ impl Source {
             provider: Arc::new(AttemptBase {
                 warnings: self.pending.clone(),
                 inner: Arc::new(NativeBase {
-                    runtime: self.services.runtime.clone(),
+                    runtime: Arc::new(runtime),
                     cancellation: cancellation.clone(),
                     dependencies: Arc::new(PreparingDependencies {
                         progress: progress.clone(),

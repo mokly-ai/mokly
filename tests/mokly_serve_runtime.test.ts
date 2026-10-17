@@ -107,6 +107,7 @@ test(
       ).json();
       if (
         detail.revision === index.revision &&
+        index.changesStatus === "unavailable" &&
         detail.workspace?.usedBy.some(
           (use: { entryPath: string }) => use.entryPath === "home",
         )
@@ -184,6 +185,6 @@ test(
     child.kill("SIGINT");
     const [code] = await exited;
     assert.equal(code, 0, errors);
-    assert.equal(errors, "");
+    assert.match(errors, /^\[mokly\/git-failed\] [^\n]+\n$/);
   },
 );

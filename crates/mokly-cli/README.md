@@ -58,6 +58,11 @@ ignored-only counts. A failed comparison publishes `unavailable` with its
 diagnostic while All remains available. Base dependency warnings use the
 captured attempt and precede the result. Base composition warnings stay private.
 
+Serve keeps the configured sidecar pool bound for both source roots. A shared
+admission gate lets queued and active foreground requests finish their sidecar
+calls before more base requests start. This groups each foreground burst even
+with one worker. Attempt cancellation wakes queued base calls without polling.
+
 A base-ref change retains the current warning attempt and current render graph.
 Content replacement starts a new attempt and invalidates pending captures.
 The command supplies tracked Git runners to both classification and retained
@@ -228,6 +233,7 @@ still use their injected trait boundaries.
 - [Shared Serve services](./src/serve_services.rs), [Serve shutdown](./src/serve_shutdown.rs),
   [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).
+- [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

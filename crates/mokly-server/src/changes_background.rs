@@ -13,6 +13,7 @@ use crate::background::stopped;
 use crate::changes::{
     self, Accepted, ChangeCancellation, ChangeProgress, ChangeSource, ChangeToken, Commit,
 };
+use crate::changes_install::MetadataInstallation;
 use crate::comparison_store::Comparisons;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
@@ -180,12 +181,16 @@ impl ChangesPass {
             if cancel.cancelled() || !self.current(&origin) {
                 return Err(ServerError::ChangesReplaced);
             }
-            self.comparisons.install(accepted.clone(), files)?;
             if self.publications.changes(
                 &origin,
                 ChangesStatus::Ready,
                 Some(accepted.clone()),
                 cancel.as_ref(),
+                Some(&MetadataInstallation {
+                    store: self.comparisons.as_ref(),
+                    accepted: &accepted,
+                    files: &files,
+                }),
             )? && !cancel.cancelled()
             {
                 cancel.commit(&Commit(&|| {
@@ -207,6 +212,7 @@ impl ChangesPass {
                 ChangesStatus::Unavailable,
                 None,
                 cancel.as_ref(),
+                None,
             ) {
                 Ok(true) => {
                     cancel.commit(&Commit(&|| {
@@ -262,7 +268,7 @@ impl ChangeProgress for Progress {
             return Ok(false);
         }
         self.publications
-            .changes(&self.origin, status, None, self.cancel.as_ref())
+            .changes(&self.origin, status, None, self.cancel.as_ref(), None)
     }
 }
 
@@ -273,3 +279,7 @@ mod changes_background_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_scheduling_tests.rs"]
 mod changes_scheduling_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_install_tests.rs"]
+mod changes_install_tests;

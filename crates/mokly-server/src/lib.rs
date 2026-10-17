@@ -11,6 +11,8 @@ pub mod background;
 pub mod changes;
 pub mod changes_background;
 mod changes_detail;
+pub mod changes_install;
+pub mod changes_signal;
 mod clients;
 pub mod clock;
 pub mod comparison_capture;
@@ -25,6 +27,7 @@ pub mod diagnostics;
 pub mod entropy;
 pub mod error;
 pub mod evidence;
+pub mod foreground;
 pub mod generation;
 mod live;
 pub mod preview;
@@ -42,6 +45,7 @@ pub mod shutdown;
 pub mod snapshot;
 pub mod warnings;
 pub mod work;
+mod work_page;
 
 #[cfg(test)]
 #[path = "_tests_/publication_support.rs"]

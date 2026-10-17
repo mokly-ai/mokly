@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
 
 use mokly_compare::comparison_types::ComparisonResult;
@@ -15,6 +15,7 @@ use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::assets::File;
 use crate::changes_detail;
+use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
 use crate::comparison_metadata::compared;
 use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
@@ -30,6 +31,8 @@ pub trait ChangeCancellation: Send + Sync {
     fn cancel(&self);
     /// Observe replacement or shutdown.
     fn cancelled(&self) -> bool;
+    /// Wake a weak listener on cancellation, including a late registration.
+    fn observe(&self, _signal: Weak<dyn ChangeSignal>) {}
     /// Linearize a short publication against cancellation.
     fn commit(&self, publication: &dyn ChangeCommit) -> bool {
         !self.cancelled() && publication.apply()
@@ -55,17 +58,29 @@ impl ChangeCommit for Commit<'_> {
 pub struct ChangeToken {
     cancelled: AtomicBool,
     commit: Mutex<()>,
+    signals: Signals,
 }
 impl ChangeCancellation for ChangeToken {
     fn cancel(&self) {
-        let _commit = self
-            .commit
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        self.cancelled.store(true, Ordering::Release);
+        {
+            let _commit = self
+                .commit
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            self.cancelled.store(true, Ordering::Release);
+        }
+        self.signals.notify();
     }
     fn cancelled(&self) -> bool {
         self.cancelled.load(Ordering::Acquire)
+    }
+    fn observe(&self, signal: Weak<dyn ChangeSignal>) {
+        self.signals.add(signal.clone());
+        if self.cancelled()
+            && let Some(signal) = signal.upgrade()
+        {
+            signal.notify();
+        }
     }
     fn commit(&self, publication: &dyn ChangeCommit) -> bool {
         let _commit = self

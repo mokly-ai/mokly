@@ -5,13 +5,23 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use tokio::sync::Notify;
 
+use crate::foreground::{Foreground, ForegroundLease};
+
 #[derive(Default)]
 pub(crate) struct Priority {
     foreground: AtomicUsize,
     pub(crate) changed: Notify,
+    shared: Option<Arc<dyn Foreground>>,
 }
 
 impl Priority {
+    pub(crate) fn new(shared: Arc<dyn Foreground>) -> Self {
+        Self {
+            shared: Some(shared),
+            ..Self::default()
+        }
+    }
+
     pub(crate) fn enter(self: &Arc<Self>, foreground: bool) -> Guard {
         if foreground {
             self.foreground.fetch_add(1, Ordering::SeqCst);
@@ -19,6 +29,9 @@ impl Priority {
         Guard {
             priority: self.clone(),
             foreground,
+            _shared: foreground
+                .then(|| self.shared.as_ref().map(|shared| shared.enter()))
+                .flatten(),
         }
     }
     pub(crate) fn idle(&self) -> bool {
@@ -29,6 +42,7 @@ impl Priority {
 pub(crate) struct Guard {
     priority: Arc<Priority>,
     foreground: bool,
+    _shared: Option<Box<dyn ForegroundLease>>,
 }
 impl Drop for Guard {
     fn drop(&mut self) {

@@ -22,6 +22,7 @@ mod serve_debounce;
 mod serve_delivery;
 mod serve_git;
 mod serve_lifecycle;
+mod serve_pool;
 mod serve_preparation;
 mod serve_progress;
 mod serve_rebuild;

@@ -25,6 +25,8 @@ up to 250 ms to flush their final chunk. It then aborts the other connections,
 including incomplete requests, before watcher, render, Git, sidecar, and lock hooks.
 An error in one hook does not skip later hooks. The CLI reporter receives the
 first accept resource failure and the recovery once per backoff period.
+The event stream sends an idle comment every 15 seconds during long background
+work. Comments carry no publication data and do not cause a shell update.
 
 `Projector` implements `dyn SnapshotFactory`. It projects the initial revision
 from graph plans without rendering a document. Every JSON response has canonical
@@ -68,8 +70,13 @@ metadata. Serve uses those shared functions and the shared snapshot route builde
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
 all current details together. Ready state installs the review pointer, Changes
 membership, moved paths, removed records, and per-view evidence in one revision.
+New classification files enter the comparison store after ready-state projection
+and before publication. Their retention window starts after projection.
 An old head cannot publish into a replacement. Watched Serve polls HEAD and the
 base ref once per second. A ref change reuses the accepted current graph.
+HTTP worker leases keep foreground priority for the whole request. The CLI
+shares those leases with base-side sidecar admission. Cancellation listeners
+wake blocked admission without changing the process pool's size or deadlines.
 
 `MemoryComparisons` implements `dyn Comparisons`. Classification generations
 start with review v8 and removed details. Selected captures project that review
@@ -155,6 +162,8 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 - [HTTP application](./src/application.rs) and [atomic state](./src/snapshot.rs).
 - [Graph adapter](./src/backend.rs) and [public reads](./src/public_read.rs).
 - [Request validation](./src/render_request.rs) and [preview memory](./src/preview.rs).
+- [Background Changes](./src/changes_background.rs), [comparison generations](./src/comparison_store.rs),
+  and [foreground request leases](./src/foreground.rs).
 - [Viewer inventory](./src/assets.rs) and [shell stub](../mokly-model/src/shell.rs).
 
 ### Related Docs

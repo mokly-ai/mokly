@@ -74,6 +74,20 @@ documents. Background work is bounded, yields to foreground renders, and
 cannot publish after its state is superseded by a watched change; a
 superseded result is discarded. `--no-watch` runs this work once.
 
+Sidecar admission preserves foreground priority for each whole HTTP render.
+Queued base calls wait until those requests finish their sidecar work. With
+one worker, a foreground burst needs at most one switch to the head root and
+one switch back.
+Active calls finish under their existing deadlines. Both sides share the
+configured worker bound, including when the pool has one worker. Replacement
+and shutdown wake queued calls to check cancellation before pool admission.
+
+The event stream sends a comment after 15 seconds without a publication to
+keep idle connections active during background work. These comments carry no
+revision or data field. EventSource clients ignore comments under the
+[SSE format](https://html.spec.whatwg.org/multipage/server-sent-events.html#authoring-notes).
+Shutdown ends the stream before its next comment.
+
 A source or configuration change replaces the catalogue model and the moved
 graph nodes together under the [watch contract](./mokly-watch.md); a failed
 candidate keeps the last-good state. Replacement invalidates the cached

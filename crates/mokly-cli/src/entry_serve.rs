@@ -194,6 +194,7 @@ pub(super) fn run(
                 entropy.clone(),
                 reporter.clone(),
                 !options.no_watch,
+                services.sidecars.clone(),
             );
             let publications = delivery.publications;
             let background = delivery.background;

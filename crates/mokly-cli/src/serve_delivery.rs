@@ -16,6 +16,7 @@ use mokly_server::comparison_store::MemoryComparisons;
 use mokly_server::diagnostics::Diagnostics;
 use mokly_server::entropy::Entropy;
 use mokly_server::error::{Result, ServerError};
+use mokly_server::foreground::Foreground;
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::publication::SharedPublication;
 use mokly_server::snapshot::{Projector, Snapshot};
@@ -52,6 +53,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
     let dist = viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
     Ok(Arc::new(NativeServeState {
         changes: Arc::new(ServeChanges {
+            sidecars: input.services.sidecars.clone(),
             progress: input.progress,
             refreshes: input.reporter,
             cache_announced: Arc::new(false.into()),
@@ -86,9 +88,10 @@ pub(super) fn create(
     entropy: Arc<dyn Entropy>,
     diagnostics: Arc<dyn Diagnostics>,
     watching: bool,
+    priority: Arc<dyn Foreground>,
 ) -> Delivery {
     let publications = Arc::new(SharedPublication::new(snapshot));
-    let work = Arc::new(Workers::new(workers, diagnostics.clone()));
+    let work = Arc::new(Workers::new(workers, diagnostics.clone()).with_foreground(priority));
     let comparisons = Arc::new(MemoryComparisons::new(
         Arc::new(MonotonicClock::default()),
         entropy.clone(),

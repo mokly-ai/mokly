@@ -24,6 +24,7 @@ use mokly_server::error::{Result, ServerError};
 
 use crate::serve_capture_cancel::{CaptureCancellation, CaptureScopes};
 use crate::serve_git::GitWork;
+use crate::serve_pool::PoolScheduling;
 use crate::serve_progress::{Progress, TerminalEvent};
 use crate::serve_reporter::GitRefresh;
 use crate::serve_warnings::{AttemptWarnings, WarningScopes};
@@ -39,6 +40,7 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    pub(super) sidecars: Arc<dyn PoolScheduling>,
     pub(super) progress: Arc<dyn Progress>,
     pub(super) refreshes: Arc<dyn GitRefresh>,
     pub(super) cache_announced: Arc<AtomicBool>,

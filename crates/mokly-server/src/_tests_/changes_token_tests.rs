@@ -6,9 +6,25 @@ use tokio::sync::oneshot;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::changes::{ChangeCancellation, ChangeCommitMock, ChangeToken};
+use crate::changes_signal::{ChangeSignal, ChangeSignalMock};
 use crate::comparison_support::snapshot;
 use crate::publication::{Publications, SharedPublication};
 use mokly_model::public_metadata::ChangesStatus;
+
+#[test]
+fn cancellation_wakes_existing_and_late_weak_listeners() {
+    let token = ChangeToken::default();
+    let signal: Arc<dyn ChangeSignal> = Arc::new(Unimock::new(
+        ChangeSignalMock::notify.next_call(matching!()).returns(()),
+    ));
+    token.observe(Arc::downgrade(&signal));
+    token.observe(Arc::downgrade(&signal));
+    token.cancel();
+    let late: Arc<dyn ChangeSignal> = Arc::new(Unimock::new(
+        ChangeSignalMock::notify.next_call(matching!()).returns(()),
+    ));
+    token.observe(Arc::downgrade(&late));
+}
 
 #[test]
 fn cancelled_producers_cannot_swap_state_or_publish_an_event() {
@@ -19,7 +35,13 @@ fn cancelled_producers_cannot_swap_state_or_publish_an_event() {
     token.cancel();
     assert!(
         !publications
-            .changes(&origin, ChangesStatus::Pending, None, &token)
+            .changes(
+                &origin,
+                ChangesStatus::Pending,
+                None,
+                &token,
+                Some(&Unimock::new(()))
+            )
             .unwrap()
     );
     assert!(Arc::ptr_eq(&origin, &publications.current()));

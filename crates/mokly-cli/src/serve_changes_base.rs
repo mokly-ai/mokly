@@ -2,7 +2,7 @@
 
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
@@ -17,6 +17,7 @@ use mokly_graph::types::RenderGeneration;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_render::side::BaseSide;
 use mokly_server::changes::{ChangeCancellation, ChangeProgress};
+use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::comparison_graph::FrozenResources;
 
 use crate::base_dependencies::BaseDependencies;
@@ -45,6 +46,10 @@ impl ChangeCancellation for CombinedCancel {
     }
     fn cancelled(&self) -> bool {
         self.requested()
+    }
+    fn observe(&self, signal: Weak<dyn ChangeSignal>) {
+        self.generation.observe(signal.clone());
+        self.operation.observe(signal);
     }
 }
 impl mokly_git::control::Cancellation for CombinedCancel {

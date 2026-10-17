@@ -7,6 +7,7 @@ use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::broadcast;
 
 use crate::changes::{self, Accepted, ChangeCancellation, ChangeCommit, Commit};
+use crate::changes_install::ChangeInstallation;
 
 use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
 use crate::error::Result;
@@ -53,12 +54,14 @@ pub trait Publications: Send + Sync {
         Ok(())
     }
     /// Replace all Changes records only while the immutable head is still accepted.
+    /// Install ready metadata after projection, before its pointer can be observed.
     fn changes(
         &self,
         _origin: &Snapshot,
         _status: ChangesStatus,
         _accepted: Option<Arc<Accepted>>,
         _cancel: &dyn ChangeCancellation,
+        _installation: Option<&dyn ChangeInstallation>,
     ) -> Result<bool> {
         Ok(false)
     }
@@ -200,6 +203,7 @@ impl Publications for SharedPublication {
         status: ChangesStatus,
         accepted: Option<Arc<Accepted>>,
         cancel: &dyn ChangeCancellation,
+        installation: Option<&dyn ChangeInstallation>,
     ) -> Result<bool> {
         let _build = self.build.lock().unwrap_or_else(|error| error.into_inner());
         loop {
@@ -217,6 +221,12 @@ impl Publications for SharedPublication {
                 return Ok(true);
             }
             let next = changes::project(&current, status, accepted.clone())?;
+            if cancel.cancelled() {
+                return Ok(false);
+            }
+            if let Some(installation) = installation {
+                installation.install()?;
+            }
             let replaced = Cell::new(false);
             let installed = cancel.commit(&Commit(&|| {
                 let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
