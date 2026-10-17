@@ -12,14 +12,14 @@ import { cssAnalysis } from "./css/evidence.js";
 import type {
   CssRuleAttribution,
   DependencyReason,
+  EvidenceReasons,
   ExcludedResource,
-  ResourceEvidence,
 } from "./types.js";
 
 const union = (values: readonly string[]) => [...new Set(values)].sort();
 
 /** The reasons and exclusions one view's or page's records prove. */
-export function viewEvidenceReasons(evidence: ViewEvidence): ResourceEvidence {
+export function viewEvidenceReasons(evidence: ViewEvidence): EvidenceReasons {
   const sheets = new Map<string, RuleEvidence[]>();
   for (const rule of evidence.rules) {
     const known = sheets.get(rule.stylesheet) ?? [];

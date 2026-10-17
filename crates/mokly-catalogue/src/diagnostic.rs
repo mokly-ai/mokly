@@ -158,7 +158,7 @@ impl Issue {
 }
 
 /// Private non-fatal warning subject. Exactly one route or subject is encoded.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum WarningSubject {
     /// A rendered document route.
     Route(String),
@@ -173,7 +173,7 @@ pub enum WarningSubject {
 }
 
 /// One normalized, non-fatal build warning.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Warning {
     /// Stable warning code.
     pub code: &'static str,
@@ -205,6 +205,7 @@ pub fn normalize_warnings(warnings: &mut Vec<Warning>) {
             warning.printed_subject(),
             warning.message.clone(),
             warning.code,
+            warning.subject.clone(),
         )
     });
     warnings.dedup();

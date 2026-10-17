@@ -3,12 +3,11 @@ import type {
   HistoricalManifestEntry,
   ManifestV10,
 } from "../registry/types.js";
-import type { ReviewResultV7 } from "../review/component_types.js";
 import type {
-  ScreenResourceEvidence,
-  PageResourceEvidence,
-  ReviewArtifact,
-  ViewReview,
+  EvidenceReasons,
+  ReviewResult,
+  ReviewView,
+  ViewResourceEvidence,
 } from "../review/types.js";
 
 export type CatalogueMetadata =
@@ -34,16 +33,18 @@ export interface RemovedEntrySnapshot {
  */
 export interface ScreenViewChanges {
   path: string;
-  views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
+  views: readonly Pick<ReviewView, "colorScheme" | "state" | "viewport">[];
 }
 export interface ShellEvidence {
   baseline: HistoricalManifest;
   /** Actual material/metadata changes, independent of pure-move membership. */
   changedEntries?: readonly string[];
-  pairing?: NonNullable<ReviewArtifact["pairing"]>;
-  result?: ReviewResultV7;
-  screenEvidence?: readonly ScreenResourceEvidence[];
-  pageEvidence?: readonly PageResourceEvidence[];
+  result?: ReviewResult;
+  screenEvidence?: readonly {
+    path: string;
+    views: readonly ViewResourceEvidence[];
+  }[];
+  pageEvidence?: readonly (EvidenceReasons & { path: string })[];
   screenViews?: readonly ScreenViewChanges[];
 }
 export type LiveChangesStatus =

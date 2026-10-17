@@ -1,6 +1,6 @@
 /** Side by side: one chrome per version, their viewports mirrored. */
 
-import type { ViewReview } from "../review/types.js";
+import type { ReviewView } from "../review/types.js";
 
 import {
   ChromeScheme,
@@ -35,7 +35,7 @@ export function SideBySideComparison({
     before?: PaneDocument | undefined;
   };
   sync: ComparisonScrollSync;
-  view: ViewReview;
+  view: ReviewView;
 }) {
   return (
     <div className="mb-panes" data-compare-mode="side">

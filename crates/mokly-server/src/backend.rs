@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use axum::body::Bytes;
 use mokly_graph::cache::Artifact;
-use mokly_graph::types::RenderGeneration;
+use mokly_graph::types::{RenderGeneration, TemporaryDocument};
 use mokly_model::data::Props;
 use mokly_model::namespace::{GENERATED_DIRECTORY, generated};
 use mokly_model::usage::CatalogueUsage;
@@ -14,6 +14,7 @@ use crate::assets::{File, content_type};
 use crate::error::{Result, ServerError};
 use crate::preview::MAX_BYTES;
 use crate::public_read::{OpenedFile, PublicReader};
+use crate::warnings::RenderWarnings;
 
 /// Encoded preview data before bounded memory admission.
 pub struct PreviewDocument {
@@ -46,12 +47,17 @@ pub struct GraphDocuments {
     pub generation: Arc<dyn RenderGeneration>,
     /// Confined working-tree reads, separate from captured source bytes.
     pub public: Arc<dyn PublicReader>,
+    warnings: Arc<dyn RenderWarnings>,
     locks: BTreeMap<String, Mutex<Option<CatalogueUsage>>>,
 }
 
 impl GraphDocuments {
     /// Construct synchronization without starting any render.
-    pub fn new(generation: Arc<dyn RenderGeneration>, public: Arc<dyn PublicReader>) -> Self {
+    pub fn new(
+        generation: Arc<dyn RenderGeneration>,
+        public: Arc<dyn PublicReader>,
+        warnings: Arc<dyn RenderWarnings>,
+    ) -> Self {
         let locks = generation
             .plans()
             .keys()
@@ -60,6 +66,7 @@ impl GraphDocuments {
         Self {
             generation,
             public,
+            warnings,
             locks,
         }
     }
@@ -70,6 +77,9 @@ impl GraphDocuments {
         let mut usage = lock.lock().unwrap_or_else(|error| error.into_inner());
         match self.generation.render(route) {
             Ok(artifact) => {
+                if let Some(document) = &artifact.document {
+                    self.warnings.report(&document.warnings, false);
+                }
                 if usage.is_none() {
                     *usage = Some(
                         artifact
@@ -83,67 +93,17 @@ impl GraphDocuments {
                 Ok(Some(artifact))
             }
             Err(source) => {
+                self.warnings.report(&source.warnings(), true);
                 usage.get_or_insert(CatalogueUsage::Unavailable);
                 Err(ServerError::Render { source })
             }
         }
     }
-}
-
-impl Documents for GraphDocuments {
-    fn generated(&self, route: &str) -> Result<Option<File>> {
-        if self.locks.contains_key(route) {
-            return Ok(self.render(route)?.map(|artifact| File {
-                bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
-                content_type: artifact.content_type.clone(),
-            }));
-        }
-        if !self
-            .generation
-            .resource_routes()
-            .iter()
-            .any(|known| known == route)
-        {
-            return Ok(None);
-        }
-        match self.generation.resource(route) {
-            Ok(bytes) => Ok(bytes.map(|bytes| File {
-                bytes: bytes.into(),
-                content_type: content_type(route),
-            })),
-            Err(source) => Err(ServerError::Render { source }),
-        }
-    }
-    fn background(&self, route: &str) -> Result<()> {
-        if self.locks.get(route).is_some_and(|state| {
-            state
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .is_some()
-        }) {
-            return Ok(());
-        }
-        self.render(route)?;
-        Ok(())
-    }
-    fn usage(&self, route: &str) -> Option<CatalogueUsage> {
-        self.locks
-            .get(route)?
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clone()
-    }
-    fn authored(&self, path: &str) -> Option<OpenedFile> {
-        if !self.generation.contains_public_file(path) {
-            return None;
-        }
-        self.public.open(path)
-    }
-    fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument> {
-        let rendered = match self.generation.render_props(route, props) {
-            Ok(rendered) => rendered,
-            Err(source) => return Err(ServerError::Render { source }),
-        };
+    fn preview_document(
+        &self,
+        route: &str,
+        rendered: TemporaryDocument,
+    ) -> Result<PreviewDocument> {
         let mut files = BTreeMap::new();
         let document = generated(route);
         files.insert(
@@ -199,9 +159,81 @@ impl Documents for GraphDocuments {
         })
     }
 }
+
+impl Documents for GraphDocuments {
+    fn generated(&self, route: &str) -> Result<Option<File>> {
+        if self.locks.contains_key(route) {
+            return Ok(self.render(route)?.map(|artifact| File {
+                bytes: Bytes::from_owner(ArtifactBytes(artifact.clone())),
+                content_type: artifact.content_type.clone(),
+            }));
+        }
+        if !self
+            .generation
+            .resource_routes()
+            .iter()
+            .any(|known| known == route)
+        {
+            return Ok(None);
+        }
+        match self.generation.resource(route) {
+            Ok(bytes) => Ok(bytes.map(|bytes| File {
+                bytes: bytes.into(),
+                content_type: content_type(route),
+            })),
+            Err(source) => Err(ServerError::Render { source }),
+        }
+    }
+    fn background(&self, route: &str) -> Result<()> {
+        if self.locks.get(route).is_some_and(|state| {
+            state
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .is_some()
+        }) {
+            return Ok(());
+        }
+        self.render(route)?;
+        Ok(())
+    }
+    fn usage(&self, route: &str) -> Option<CatalogueUsage> {
+        self.locks
+            .get(route)?
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone()
+    }
+    fn authored(&self, path: &str) -> Option<OpenedFile> {
+        if !self.generation.contains_public_file(path) {
+            return None;
+        }
+        self.public.open(path)
+    }
+    fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument> {
+        let rendered = match self.generation.render_props(route, props) {
+            Ok(rendered) => rendered,
+            Err(source) => {
+                self.warnings.report(&source.warnings(), true);
+                return Err(ServerError::Render { source });
+            }
+        };
+        let artifact = rendered.artifact.clone();
+        let result = self.preview_document(route, rendered);
+        let warnings = artifact
+            .document
+            .as_ref()
+            .map_or(&[][..], |document| document.warnings.as_slice());
+        self.warnings.report(warnings, result.is_err());
+        result
+    }
+}
 #[cfg(test)]
 #[path = "_tests_/backend_tests.rs"]
 mod backend_tests;
+
+#[cfg(test)]
+#[path = "_tests_/warning_hook_tests.rs"]
+mod warning_hook_tests;
 
 struct ArtifactBytes(Arc<Artifact>);
 impl AsRef<[u8]> for ArtifactBytes {

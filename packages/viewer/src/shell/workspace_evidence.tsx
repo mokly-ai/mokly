@@ -4,8 +4,8 @@ import { Fragment } from "react";
 
 import { decodeProps } from "../components/codec.js";
 import { viewHref } from "../navigation/routes.js";
-import type { EntryChangeReason } from "../review/component_types.js";
-import type { ReviewResult } from "../review/types.js";
+import { componentViewEntry } from "../review/entries.js";
+import type { ChangeReason, ReviewResult } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
 import { ComparisonHeading, StylesheetDetails } from "./evidence_details.js";
@@ -38,8 +38,8 @@ export function WorkspaceEvidence({
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
   const variant =
-    evidence.comparison && "variants" in evidence.comparison
-      ? evidence.comparison.variants.find((item) => item.path === variantPath)
+    evidence.comparison?.kind === "component"
+      ? componentViewEntry(evidence.comparison, variantPath)
       : undefined;
   return (
     <section
@@ -126,12 +126,13 @@ export function WorkspaceEvidence({
   );
 }
 
-function Reason({ reason }: { reason: EntryChangeReason }) {
+function Reason({ reason }: { reason: ChangeReason }) {
   if (reason.kind === "dependency") return null;
   const labels = {
     added: "Added to this branch.",
     removed: "Removed on this branch.",
     material: "Rendered content changed.",
+    implementation: "Rendered content changed where this component is used.",
     inputs: "Supplied props or slots changed.",
     structure: "Component instances changed.",
     metadata: "Page details or saved examples changed.",
@@ -145,7 +146,7 @@ function Reason({ reason }: { reason: EntryChangeReason }) {
   );
 }
 
-function reasonKey(reason: EntryChangeReason): string {
+function reasonKey(reason: ChangeReason): string {
   return reason.kind === "dependency"
     ? `${reason.kind}/${reason.path}`
     : reason.kind === "screen"

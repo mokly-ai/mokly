@@ -19,6 +19,10 @@ render graph crates.
 
 ## What This Crate Does
 
+Warning identities keep route and named subjects distinct, including equal
+printed locations. Normalization sorts by printed location, message, code,
+and subject kind before removing exact duplicates.
+
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.

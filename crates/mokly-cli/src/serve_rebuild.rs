@@ -13,12 +13,13 @@ use mokly_cli::grammar::Common;
 use mokly_cli::serve::ServePreparation;
 use mokly_server::error::{InternalError, Result, ServerError};
 use mokly_server::publication::{PublicationWriter, Publications};
-use mokly_watch::event::Batch;
+use mokly_watch::event::{Action, Batch};
 use tokio::sync::mpsc;
 
 use crate::serve_candidates::CandidateWork;
 use crate::serve_debounce;
 use crate::serve_state::ServeStateFactory;
+use crate::serve_warnings::WarningScopes;
 use crate::serve_watch::WatchInputs;
 
 #[cfg_attr(test, unimock::unimock(api = RebuildReporterMock))]
@@ -37,29 +38,36 @@ pub trait RebuildReporter: Send + Sync {
         elapsed: Duration,
     );
     /// Flush attempt warnings before the watched catalogue failure.
-    fn watched_catalogue_failure(&self, batch: &Batch, repository: &Path, error: &BuildError) {
+    fn watched_catalogue_failure(
+        &self,
+        batch: &Batch,
+        repository: &Path,
+        warnings: &[Warning],
+        error: &BuildError,
+    ) {
         self.watched(batch, repository, None, Duration::ZERO);
-        self.catalogue_failure(error);
+        self.catalogue_failure(warnings, error);
     }
     /// Report attachment or projection failure with the watched action line.
     fn watched_server_failure(
         &self,
         batch: &Batch,
         repository: &Path,
-        _warnings: &[Warning],
+        warnings: &[Warning],
         error: &ServerError,
     ) {
         self.watched(batch, repository, None, Duration::ZERO);
-        self.server_failure(error);
+        self.server_failure(warnings, error);
     }
     /// Report a failed preparation while retaining the accepted state.
-    fn catalogue_failure(&self, error: &BuildError);
+    fn catalogue_failure(&self, warnings: &[Warning], error: &BuildError);
     /// Report a transport or observer failure.
-    fn server_failure(&self, error: &ServerError);
+    fn server_failure(&self, warnings: &[Warning], error: &ServerError);
 }
 
 #[derive(Clone)]
 pub(super) struct ManualRebuilds {
+    pub(super) warnings: Arc<dyn WarningScopes>,
     pub(super) watching: Option<Arc<dyn WatchInputs>>,
     pub(super) candidates: Arc<dyn CandidateWork>,
     pub(super) preparation: Arc<dyn ServePreparation>,
@@ -107,9 +115,15 @@ impl ServeActions for ManualRebuilds {
             let Some(permit) = self.candidates.enter() else {
                 continue;
             };
+            let attempt = if batch.action == Some(Action::Reload) {
+                self.warnings.current()
+            } else {
+                self.warnings.begin()
+            };
             let started = Instant::now();
             let action = self.clone();
             let action_batch = batch.clone();
+            let producer = attempt.clone();
             let mut candidate = tokio::task::spawn_blocking(move || {
                 let _candidate = permit;
                 let span = tracing::info_span!(
@@ -120,7 +134,7 @@ impl ServeActions for ManualRebuilds {
                     status = "ok"
                 );
                 span.in_scope(|| {
-                    let result = action.rebuild(&action_batch);
+                    let result = action.rebuild(&action_batch, producer);
                     if result.is_none() {
                         tracing::Span::current().record("status", "error");
                     }
@@ -132,7 +146,11 @@ impl ServeActions for ManualRebuilds {
                 result = &mut candidate => result,
             };
             match result {
-                Ok(Some(summary)) => {
+                Ok(Some(summary)) => attempt.finish(&summary.warnings, false, &|warnings| {
+                    let summary = BuildSummary {
+                        warnings: warnings.to_vec(),
+                        ..summary.clone()
+                    };
                     if let Some(watch) = &self.watching {
                         self.reporter.watched(
                             &batch,
@@ -143,100 +161,16 @@ impl ServeActions for ManualRebuilds {
                     } else {
                         self.reporter.completed(&summary, started.elapsed());
                     }
-                }
+                }),
                 Ok(None) => {}
                 Err(source) => self.failed_server(
                     &batch,
+                    attempt.as_ref(),
                     &[],
                     &ServerError::Internal(InternalError::Task { source }),
                 ),
             }
         }
-    }
-}
-
-impl ManualRebuilds {
-    fn failed_catalogue(&self, batch: &Batch, error: &BuildError) {
-        if let Some(watch) = &self.watching {
-            watch.failed();
-            self.reporter
-                .watched_catalogue_failure(batch, &watch.plan().repository, error);
-        } else {
-            self.reporter.catalogue_failure(error);
-        }
-    }
-    fn failed_server(&self, batch: &Batch, warnings: &[Warning], error: &ServerError) {
-        if let Some(watch) = &self.watching {
-            watch.failed();
-            self.reporter
-                .watched_server_failure(batch, &watch.plan().repository, warnings, error);
-        } else {
-            self.reporter.server_failure(error);
-        }
-    }
-    fn rebuild(&self, batch: &Batch) -> Option<BuildSummary> {
-        let mut prepared = match self.preparation.prepare(&self.cwd, &self.options) {
-            Ok(prepared) => prepared,
-            Err(error) => {
-                tracing::Span::current().record("status", "error");
-                self.failed_catalogue(batch, &error);
-                return None;
-            }
-        };
-        if !self.candidates.active() {
-            return None;
-        }
-        let mut candidate = if let Some(watch) = &self.watching {
-            match watch.candidate(&prepared) {
-                Ok(candidate) => Some(candidate),
-                Err(error) => {
-                    self.failed_server(batch, &prepared.summary.warnings, &error);
-                    return None;
-                }
-            }
-        } else {
-            None
-        };
-        if let Some(candidate) = &mut candidate
-            && candidate.recheck
-        {
-            prepared = match self.preparation.prepare(&self.cwd, &self.options) {
-                Ok(prepared) => prepared,
-                Err(error) => {
-                    self.failed_catalogue(batch, &error);
-                    return None;
-                }
-            };
-            if let Some(watch) = &self.watching
-                && let Err(error) = watch.recheck(candidate, &prepared)
-            {
-                self.failed_server(batch, &prepared.summary.warnings, &error);
-                return None;
-            }
-        }
-        let previous = self.publications.current();
-        let revision = previous.index.revision.checked_add(1)?;
-        let mut snapshot = match self.states.replace(&prepared, revision, &previous) {
-            Ok(snapshot) => snapshot,
-            Err(error) => {
-                self.failed_server(batch, &prepared.summary.warnings, &error);
-                return None;
-            }
-        };
-        while self.candidates.active() {
-            if self.writer.replace(snapshot.clone()) {
-                if let (Some(watch), Some(candidate)) = (&self.watching, candidate.take()) {
-                    watch.clone().adopt(candidate, &prepared);
-                }
-                return Some(prepared.summary);
-            }
-            let revision = self.publications.current().index.revision.checked_add(1)?;
-            if revision <= snapshot.index.revision {
-                return None;
-            }
-            snapshot = snapshot.at_revision(revision);
-        }
-        None
     }
 }
 
@@ -251,3 +185,7 @@ mod serve_burst_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_watch_burst_tests.rs"]
 mod serve_watch_burst_tests;
+
+#[cfg(test)]
+#[path = "_tests_/rebuild_warning_tests.rs"]
+mod rebuild_warning_tests;

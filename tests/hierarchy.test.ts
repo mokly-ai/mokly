@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { analyzeHierarchy, projectTree } from "@mokly/viewer/data";
+import { projectTree } from "../packages/viewer/dist/catalogue/tree.js";
+import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 
 const entry = (
   path: string,

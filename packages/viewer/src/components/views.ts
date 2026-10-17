@@ -42,7 +42,7 @@ export function orderedInstances(usage?: ComponentViewRecord) {
 }
 
 /** Derive current view artifacts from entry identity and retained axes. */
-export function fragmentViews(
+function fragmentViews(
   entry: ManifestScreen | ManifestComponent,
   variantPath?: string,
 ): GeneratedComponentView[] {

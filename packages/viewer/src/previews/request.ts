@@ -139,49 +139,16 @@ function unavailable(): never {
   throw new Error("The previous version is unavailable.");
 }
 
-function generationFromUrl(value: string | URL): string | undefined {
-  const path = new URL(value).pathname;
-  return new RegExp(
-    `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/`,
-  ).exec(path)?.[1];
-}
-
 function snapshotMatches(
   data: RemovedPreviewData,
-  request: PreviewRequest,
-  responseUrl: string,
   baseCommit: string,
 ): boolean {
   if (data.snapshotId === undefined && data.catalogueIdentity === undefined)
     return true;
   if (!data.snapshotId || !data.catalogueIdentity) return false;
-  if (
-    historicalSnapshotId(
-      data.catalogueIdentity,
-      { kind: "baseline", identity: baseCommit },
-      data,
-    ) === data.snapshotId
-  )
-    return true;
-  const response = new URL(responseUrl);
-  if (response.origin !== request.endpoint.origin) return false;
-  const requestedGeneration = generationFromUrl(
-    request.generation ?? request.endpoint,
-  );
-  const responseGeneration = generationFromUrl(response);
-  if (
-    requestedGeneration !== undefined &&
-    responseGeneration !== requestedGeneration
-  )
-    return false;
-  const generation = requestedGeneration ?? responseGeneration;
   return (
-    generation !== undefined &&
-    historicalSnapshotId(
-      data.catalogueIdentity,
-      { kind: "generation", identity: generation },
-      data,
-    ) === data.snapshotId
+    historicalSnapshotId(data.catalogueIdentity, baseCommit, data) ===
+    data.snapshotId
   );
 }
 
@@ -203,8 +170,7 @@ export async function requestPreview(
     data.kind === "screen"
       ? screenContent(data, payload, base)
       : pageContent(data, payload, base);
-  if (!snapshotMatches(data, request, response.url, parsed.baseCommit))
-    unavailable();
+  if (!snapshotMatches(data, parsed.baseCommit)) unavailable();
   return {
     content: parsed.content,
     generation: new URL(".", base).href,

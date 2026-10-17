@@ -1139,18 +1139,18 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 
 Tags: ui
 
-- [ ] Update the viewer's review and snapshot readers to the generated types;
+- [x] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
-- [ ] Check the shell's projection of the entry detail's review v8 rule and
+- [x] Check the shell's projection of the entry detail's review v8 rule and
       resource records (`packages/viewer/src/review/view_evidence.ts`)
       against Milestone 9 output.
-- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+- [x] Align the viewer's `historicalSnapshotId` with the snapshot identity of
       the serialization contract: `sourceKind` is the literal `base`.
-- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+- [x] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
       package README describe (the path functions, the directory names, the
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
-- [ ] Add user-facing wording for the review v8 `implementation` reason under
+- [x] Add user-facing wording for the review v8 `implementation` reason under
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
@@ -1174,6 +1174,9 @@ Final review fixes and their check logs:
 `.context/rust-rebuild/delegation/m7/report-9.md`.
 The 409 index refresh, the mobile pending pill, and the frame sandbox message:
 `.context/rust-rebuild/delegation/m7/report-10.md`.
+The review v8 reader, the base snapshot identity, the `./data` trim, the
+`implementation` wording, and the projection check against Milestone 9 output:
+`.context/rust-rebuild/delegation/m7/report-11.md`.
 
 - [ ] Commit.
 
@@ -1222,9 +1225,24 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
       there: choose a repository-root rescan after each macOS batch and an
       exact-input stamp check on Windows, or one recursive watch per root on both
       systems; tests.
-- [ ] Report the composition warnings of every Serve attempt once, including
+- [x] Report the composition warnings of every Serve attempt once, including
       on-demand and background renders, through an attempt-scoped sink with a
       seen set kept across a failed attempt (`mokly-build-warnings.md`).
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-4.md` and
+`.context/rust-rebuild/sweeps/m11-warnings.md`.
+
+- [x] Correct Serve warning review findings 1 to 7 and flush the current
+      attempt's pending warnings on fatal server failure.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-5.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
+
+- [x] Merge comparison-engine updates, apply one cancellation rule to fatal
+      Serve warnings, and prove destination composition.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-6.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
 ## Milestone 11.1: Watch review corrections
 
@@ -1450,6 +1468,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
+      Commit `05923728` already moved the Publish Checkout, Removed Public
+      Options, and Portable Namespace notes there.
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
