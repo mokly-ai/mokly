@@ -66,7 +66,7 @@ fn root_selection_excludes_unrelated_files_and_unreached_repository_trees() {
                 child("unused.png", FileKind::File),
             ])),
     ));
-    let paths = fingerprint_walk::capture(&tree, &selection).unwrap();
+    let paths = fingerprint_walk::capture(&tree, &selection).files;
     assert_eq!(
         paths,
         BTreeSet::from([
@@ -94,7 +94,7 @@ fn a_projected_root_keeps_logical_names_and_excludes_physical_output() {
             ])),
     );
     assert_eq!(
-        fingerprint_walk::capture(&tree, &selection).unwrap(),
+        fingerprint_walk::capture(&tree, &selection).files,
         BTreeSet::from(["/repo/specs/home.screen.html".into()]),
     );
 }
@@ -108,7 +108,7 @@ fn an_explicit_root_beneath_a_denied_name_still_participates() {
             .returns(Ok(vec![child("home.screen.html", FileKind::File)])),
     );
     assert_eq!(
-        fingerprint_walk::capture(&tree, &selection).unwrap(),
+        fingerprint_walk::capture(&tree, &selection).files,
         BTreeSet::from(["/repo/target/home.screen.html".into()]),
     );
 }
@@ -158,7 +158,7 @@ fn a_parent_glob_does_not_expand_an_explicit_root_beneath_a_denied_directory() {
             .n_times(1),
     ));
     assert_eq!(
-        fingerprint_walk::capture(&tree, &selection).unwrap(),
+        fingerprint_walk::capture(&tree, &selection).files,
         BTreeSet::from([
             "/repo/guide.md".into(),
             "/repo/target/home.screen.html".into(),

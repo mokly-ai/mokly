@@ -179,6 +179,52 @@ test(
 );
 
 test(
+  "a helper edit after bundling and before capture preserves the earlier output",
+  { timeout: 120_000 },
+  async () => {
+    const root = await fixture();
+    try {
+      const configPath = path.join(root, "mokly.config.json");
+      const config = JSON.parse(await fs.readFile(configPath, "utf8"));
+      config.postcss = "postcss.mjs";
+      await fs.writeFile(configPath, JSON.stringify(config));
+      await fs.writeFile(
+        path.join(root, "postcss.mjs"),
+        `import fs from 'node:fs';
+export default {plugins:[{postcssPlugin:'edit-helper',Once(){
+if(fs.existsSync('.context/edit-helper')) {
+fs.writeFileSync('helper.ts', 'export const message = "Edited catalogue";\\n');
+fs.writeFileSync('.context/helper-edited', 'postcss ran');
+}
+}}]};`,
+      );
+      const first = await build(root);
+      assert.equal(first.code, 0, first.stderr);
+      const previous = await files(path.join(root, ".context/site"));
+      await fs.writeFile(path.join(root, ".context/edit-helper"), "edit");
+      const result = await build(root);
+      assert.equal(
+        await fs.readFile(path.join(root, ".context/helper-edited"), "utf8"),
+        "postcss ran",
+      );
+      assert.match(
+        await fs.readFile(path.join(root, "helper.ts"), "utf8"),
+        /Edited catalogue/u,
+      );
+      assert.equal(result.code, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        /\[mokly\/export-invalid\] Inputs changed during the build:.*helper\.ts/u,
+      );
+      assert.match(result.stderr, /Build again\./u);
+      assert.deepEqual(await files(path.join(root, ".context/site")), previous);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
   "matching root additions and removals during rendering abort installation",
   { timeout: 120_000 },
   async () => {

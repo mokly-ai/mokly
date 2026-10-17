@@ -1,5 +1,6 @@
 //! Captured input hashes share one digest path and ignore unread projections.
 
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -33,7 +34,11 @@ fn captured_digest_inputs_keep_no_byte_reads_and_verify_live_hashes() {
     ));
     let capture = CapturedTree::new(Arc::new(source));
     capture
-        .capture(Path::new("/repo"), &["source.js".into()])
+        .capture(
+            Path::new("/repo"),
+            &["source.js".into()],
+            &Default::default(),
+        )
         .unwrap();
     assert_eq!(
         capture.digest(Path::new("/repo/source.js")).unwrap(),
@@ -86,4 +91,46 @@ fn an_unread_projection_outside_the_input_set_is_not_rechecked() {
     let capture = CapturedTree::new(Arc::new(source));
     capture.project(Path::new("/repo/unrelated.txt")).unwrap();
     capture.verify().unwrap();
+}
+
+#[test]
+fn sidecar_digests_reject_edits_before_capture_and_remain_the_live_baseline() {
+    for changed_before_capture in [false, true] {
+        let captured = if changed_before_capture {
+            "after"
+        } else {
+            "before"
+        };
+        let source = Unimock::new((
+            SourceTreeMock::project
+                .each_call(matching!((path) if *path == Path::new("/repo/helper.ts")))
+                .answers(&|_, path| {
+                    Ok(Some(Node {
+                        identity: path.into(),
+                        kind: FileKind::File,
+                        lexical_kind: FileKind::File,
+                    }))
+                }),
+            SourceTreeMock::digest
+                .next_call(matching!((path) if *path == Path::new("/repo/helper.ts")))
+                .returns(Ok(captured.into())),
+            SourceTreeMock::digest
+                .next_call(matching!((path) if *path == Path::new("/repo/helper.ts")))
+                .returns(Ok("after".into())),
+        ));
+        let tree = CapturedTree::new(Arc::new(source));
+        let result = tree.capture(
+            Path::new("/repo"),
+            &["helper.ts".into()],
+            &BTreeMap::from([("helper.ts".into(), "before".into())]),
+        );
+        if changed_before_capture {
+            assert!(matches!(result, Err(Error::InputsChanged { path })
+                if path == Path::new("/repo/helper.ts")));
+        } else {
+            result.unwrap();
+        }
+        assert!(matches!(tree.verify(), Err(Error::InputsChanged { path })
+            if path == Path::new("/repo/helper.ts")));
+    }
 }

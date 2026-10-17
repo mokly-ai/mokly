@@ -1,48 +1,54 @@
 //! Selected source digests and root membership protect one static generation.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_graph::source_snapshot::{SnapshotMemory, SourceSnapshot};
+use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_model::output::validation::digest;
 use mokly_source_interface::error;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
+use crate::fingerprint_observation::Observation;
+use crate::fingerprint_walk::{self, Membership};
 use crate::input_selection::Selection;
-use crate::{fingerprint_walk, input_selection};
 
 /// Captured source reads. Rechecks include inputs beneath normally excluded directories.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = InputTreeMock))]
 pub trait InputTree: SourceTree {
     /// Select configured root members and authored configuration inputs before callbacks.
     fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()>;
-    /// Capture the complete inventoried sources before document callbacks run.
-    fn capture(&self, root: &Path, paths: &[String]) -> Result<()>;
+    /// Capture inventoried sources and require the sidecar's consumed module digests.
+    fn capture(
+        &self,
+        root: &Path,
+        paths: &[String],
+        module_digests: &BTreeMap<String, String>,
+    ) -> Result<()>;
     /// Verify every explicitly read source and its resolved identity.
     fn verify(&self) -> Result<()>;
 }
 
 /// Generation source wrapper with immutable reads and a final live recheck.
 pub struct CapturedTree {
-    snapshot: Arc<dyn SnapshotMemory>,
+    snapshot: SourceSnapshot,
     live: Arc<dyn SourceTree>,
-    reads: Mutex<BTreeMap<PathBuf, String>>,
-    nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
+    reads: Mutex<BTreeMap<PathBuf, Observation<String>>>,
+    nodes: Mutex<BTreeMap<PathBuf, Observation<Option<Node>>>>,
     roots: Mutex<Option<RootCapture>>,
 }
 
 struct RootCapture {
     selection: Selection,
-    members: BTreeSet<PathBuf>,
+    members: Membership,
 }
 impl CapturedTree {
     /// Capture one build's inputs without retaining a second copy of their bytes.
     pub fn new(tree: Arc<dyn SourceTree>) -> Self {
         Self {
-            snapshot: Arc::new(SourceSnapshot::new(tree.clone())),
+            snapshot: SourceSnapshot::new(tree.clone()),
             live: tree,
             reads: Mutex::new(BTreeMap::new()),
             nodes: Mutex::new(BTreeMap::new()),
@@ -63,27 +69,27 @@ impl SourceTree for CapturedTree {
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .entry(path.into())
-            .or_insert_with(|| digest(&bytes));
+            .or_insert_with(|| Observation::Value(digest(&bytes)));
         Ok(bytes)
     }
     fn digest(&self, path: &Path) -> error::Result<String> {
-        let hash = self.snapshot.digest(path)?;
+        let hash = self.snapshot.digest(path);
         self.reads
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .entry(path.into())
-            .or_insert_with(|| hash.clone());
-        Ok(hash)
+            .or_insert_with(|| Observation::from(&hash));
+        hash
     }
 
     fn project(&self, path: &Path) -> error::Result<Option<Node>> {
-        let result = self.snapshot.project(path)?;
+        let result = self.snapshot.project(path);
         self.nodes
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .entry(path.into())
-            .or_insert(result.clone());
-        Ok(result)
+            .or_insert_with(|| Observation::from(&result));
+        result
     }
     fn children(&self, path: &Path) -> error::Result<Vec<Child>> {
         self.snapshot.children(path)
@@ -100,7 +106,7 @@ impl SourceTree for CapturedTree {
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .entry(path.into())
-            .or_insert_with(|| digest(&bytes));
+            .or_insert_with(|| Observation::Value(digest(&bytes)));
         Ok(bytes)
     }
 }
@@ -109,16 +115,21 @@ impl InputTree for CapturedTree {
     fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()> {
         let selection = Selection::new(config, excluded)?;
         for root in &config.roots {
-            source(self.project(&root.directory))?;
+            let _ = self.project(&root.directory);
         }
-        let members = fingerprint_walk::capture(self, &selection)?;
-        let paths: Vec<_> = members
+        let members = fingerprint_walk::capture(self, &selection);
+        for path in members
+            .files
             .iter()
             .chain(&config.authored_inputs)
             .chain([&config.file])
-            .map(|path| path.to_string_lossy().into_owned())
-            .collect();
-        self.capture(&config.repo_root, &paths)?;
+        {
+            if let Ok(Some(node)) = self.project(path)
+                && node.identity.starts_with(&config.repo_root)
+            {
+                let _ = self.digest(&node.identity);
+            }
+        }
         tracing::Span::current().record(
             "input_paths",
             self.reads
@@ -133,7 +144,12 @@ impl InputTree for CapturedTree {
     }
 
     #[tracing::instrument(name = "output.input-digests", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
-    fn capture(&self, root: &Path, paths: &[String]) -> Result<()> {
+    fn capture(
+        &self,
+        root: &Path,
+        paths: &[String],
+        module_digests: &BTreeMap<String, String>,
+    ) -> Result<()> {
         for path in paths {
             let absolute = root.join(path);
             let node = source(self.project(&absolute))?.ok_or_else(|| Error::InputsChanged {
@@ -142,7 +158,18 @@ impl InputTree for CapturedTree {
             if !node.identity.starts_with(root) {
                 return Err(Error::InputsChanged { path: absolute });
             }
-            source(self.digest(&node.identity))?;
+            let captured = Observation::from(&self.digest(&node.identity));
+            if let Some(expected) = module_digests.get(path) {
+                let baseline = Observation::Value(expected.clone());
+                let previous = self
+                    .reads
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .insert(node.identity, baseline.clone());
+                if captured != baseline || previous.as_ref().is_some_and(|hash| *hash != baseline) {
+                    return Err(Error::InputsChanged { path: absolute });
+                }
+            }
         }
         tracing::Span::current().record(
             "input_paths",
@@ -158,10 +185,10 @@ impl InputTree for CapturedTree {
     fn verify(&self) -> Result<()> {
         let roots = self.roots.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(roots) = roots.as_ref() {
-            input_selection::verify(
-                &roots.members,
-                &fingerprint_walk::capture(self.live.as_ref(), &roots.selection)?,
-            )?;
+            roots.members.verify(&fingerprint_walk::capture(
+                self.live.as_ref(),
+                &roots.selection,
+            ))?;
         }
         let reads = self.reads.lock().unwrap_or_else(|error| error.into_inner());
         tracing::Span::current().record("input_paths", reads.len() as u64);
@@ -174,20 +201,21 @@ impl InputTree for CapturedTree {
         {
             let selected = reads.contains_key(path)
                 || node
-                    .as_ref()
+                    .value()
+                    .and_then(Option::as_ref)
                     .is_some_and(|node| reads.contains_key(&node.identity))
-                || roots
-                    .as_ref()
-                    .is_some_and(|roots| roots.selection.root(path));
+                || roots.as_ref().is_some_and(|roots| {
+                    roots.selection.root(path) || roots.members.files.contains(path)
+                });
             if !selected {
                 continue;
             }
-            if self.live.project(path).ok().as_ref() != Some(node) {
+            if Observation::from(&self.live.project(path)) != *node {
                 return Err(Error::InputsChanged { path: path.clone() });
             }
         }
         for (path, hash) in reads.iter() {
-            if !self.live.digest(path).is_ok_and(|current| current == *hash) {
+            if Observation::from(&self.live.digest(path)) != *hash {
                 return Err(Error::InputsChanged { path: path.clone() });
             }
         }

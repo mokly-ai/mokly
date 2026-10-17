@@ -9,12 +9,6 @@ use mokly_model::material::digest;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
-/// Snapshot payload observations; metadata and external owners are not included.
-pub trait SnapshotMemory: SourceTree {
-    /// Total bytes pinned by successful private reads, counted once per source path.
-    fn retained_bytes(&self) -> usize;
-}
-
 /// Read-once source view for graph inputs, consumed as `dyn SourceTree`.
 /// Public HTTP reads must use the live tree and recheck confinement separately.
 pub struct SourceSnapshot {
@@ -52,10 +46,9 @@ impl SourceSnapshot {
             retained_bytes: AtomicUsize::new(0),
         }
     }
-}
 
-impl SnapshotMemory for SourceSnapshot {
-    fn retained_bytes(&self) -> usize {
+    /// Total private payload bytes pinned once per source path; excludes metadata.
+    pub fn retained_bytes(&self) -> usize {
         self.retained_bytes.load(Ordering::Relaxed)
     }
 }

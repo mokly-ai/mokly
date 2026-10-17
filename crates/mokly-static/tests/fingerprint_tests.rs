@@ -86,7 +86,8 @@ fn every_selected_kind_is_rechecked_while_unrelated_edits_are_ignored() {
         config.authored_inputs = vec![root.join("renderer.ts"), root.join("theme.css")];
         let tree = CapturedTree::new(Arc::new(WorkingTree));
         tree.begin(&config, &[]).unwrap();
-        tree.capture(root, &[".context/import.ts".into()]).unwrap();
+        tree.capture(root, &[".context/import.ts".into()], &Default::default())
+            .unwrap();
         tree.read_public(&root.join("assets/logo.svg")).unwrap();
         tree.project(&root.join("unrelated.txt")).unwrap();
         tree.verify().unwrap();
@@ -152,8 +153,39 @@ fn a_selected_alias_retarget_is_detected_even_when_both_files_have_equal_bytes()
     std::os::unix::fs::symlink(&first, &alias).unwrap();
     let tree = CapturedTree::new(Arc::new(WorkingTree));
     tree.begin(&config, &[]).unwrap();
-    tree.capture(root, &["alias.txt".into()]).unwrap();
+    tree.capture(root, &["alias.txt".into()], &Default::default())
+        .unwrap();
     fs::remove_file(&alias).unwrap();
     std::os::unix::fs::symlink(&second, &alias).unwrap();
     assert!(matches!(tree.verify(), Err(Error::InputsChanged { path }) if path == alias));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_projected_root_detects_changes_at_its_physical_identity() {
+    let (_temporary, mut config) = fixture();
+    let physical = config.repo_root.join("specs/home.screen.html");
+    fs::write(&physical, "before").unwrap();
+    let logical = config.repo_root.join("logical");
+    std::os::unix::fs::symlink(&config.roots[0].identity, &logical).unwrap();
+    config.roots[0].directory = logical;
+    let tree = CapturedTree::new(Arc::new(WorkingTree));
+    tree.begin(&config, &[]).unwrap();
+    tree.verify().unwrap();
+    fs::write(&physical, "after").unwrap();
+    assert!(matches!(tree.verify(), Err(Error::InputsChanged { path }) if path == physical));
+}
+
+#[cfg(unix)]
+#[test]
+fn replacing_a_root_with_a_symlink_aborts_even_with_the_same_members_and_bytes() {
+    let (_temporary, config) = fixture();
+    let root = &config.roots[0].directory;
+    fs::write(root.join("home.screen.html"), "same").unwrap();
+    let tree = CapturedTree::new(Arc::new(WorkingTree));
+    tree.begin(&config, &[]).unwrap();
+    let renamed = config.repo_root.join("renamed");
+    fs::rename(root, &renamed).unwrap();
+    std::os::unix::fs::symlink(&renamed, root).unwrap();
+    assert!(matches!(tree.verify(), Err(Error::InputsChanged { .. })));
 }

@@ -7,11 +7,24 @@ use mokly_catalogue::protection::SourcePolicy;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::Result;
-use crate::fingerprint::source;
+use crate::input_selection;
 use crate::input_selection::Selection;
 
-pub(crate) fn capture(tree: &dyn SourceTree, selection: &Selection) -> Result<BTreeSet<PathBuf>> {
-    let mut selected = BTreeSet::new();
+#[derive(Default)]
+pub(crate) struct Membership {
+    pub(crate) files: BTreeSet<PathBuf>,
+    unreadable: BTreeSet<PathBuf>,
+}
+
+impl Membership {
+    pub(crate) fn verify(&self, current: &Self) -> Result<()> {
+        input_selection::verify(&self.unreadable, &current.unreadable)?;
+        input_selection::verify(&self.files, &current.files)
+    }
+}
+
+pub(crate) fn capture(tree: &dyn SourceTree, selection: &Selection) -> Membership {
+    let mut selected = Membership::default();
     let mut pending: Vec<_> = selection
         .config
         .roots
@@ -28,8 +41,12 @@ pub(crate) fn capture(tree: &dyn SourceTree, selection: &Selection) -> Result<BT
             continue;
         }
         let children = match tree.children(&physical) {
+            Ok(children) => children,
             Err(error) if error.is_vanished() => continue,
-            result => source(result)?,
+            Err(_) => {
+                selected.unreadable.insert(logical);
+                continue;
+            }
         };
         for child in children {
             let path = logical.join(&child.name);
@@ -41,11 +58,11 @@ pub(crate) fn capture(tree: &dyn SourceTree, selection: &Selection) -> Result<BT
                     pending.push((index, path, physical.join(child.name)));
                 }
                 FileKind::File if selection.selected(index, &path) => {
-                    selected.insert(path);
+                    selected.files.insert(path);
                 }
                 _ => {}
             }
         }
     }
-    Ok(selected)
+    selected
 }

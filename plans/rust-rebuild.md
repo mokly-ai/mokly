@@ -1427,6 +1427,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 - [x] Restrict static fingerprints to configured roots, inventoried sources,
       and reached closure files. Measure this boundary under the large fixtures.
+  - [x] Verify captured bundle inputs against sidecar module digests before
+        document callbacks; retain those baselines through the live recheck.
+- [ ] Report digests for the PostCSS module graph from the sidecar and use them
+      as static fingerprint baselines before graph preparation consumes them.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1459,9 +1463,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       the approved acceptance budgets, in addition to the artifact-cache bound.
   - [x] Measure repository snapshot payload and CSS-root preparation with large
         asset inputs through the guarded build harness.
-  - [ ] Review opaque CSS asset retention before a redesign or larger probes.
+  - [x] Review opaque CSS asset retention before a redesign or larger probes.
         Private source snapshots pin these bytes without a byte bound. Preserve
         generation consistency when choosing how to limit retained data.
+- [ ] Make opaque CSS assets digest-only inputs: store the route, path, and
+      digest instead of the bytes; use the digest in the cache keys; stream the
+      bytes at delivery and check them against the digest; one entry per asset
+      path across roots; first audit and record the copies of each asset per
+      build with the harness.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
@@ -1474,6 +1483,7 @@ Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
 Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
 Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
 Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/report-4.md`.
+Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -1500,6 +1510,11 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     `installing_bindings_on_a_fresh_worker_replays_describe_first` flake in M9.
     Its isolated rerun passed. The seed omits the generation epoch, so idle
     cleanup can take the slot before its assertion. Evidence: M14 `report-4.md`.
+  - Milestone 14 fingerprint review: investigate the inherited
+    `retired_postcss_contexts_are_disposed_without_resetting_live_contexts`
+    flake in M9. It unwrapped an empty pool slot; its isolated rerun passed.
+    The shared seed omits epoch ownership, so idle cleanup can remove the slot.
+    Evidence: M14 `report-5.md`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and

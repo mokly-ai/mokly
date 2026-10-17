@@ -29,6 +29,7 @@ pub(crate) struct BundleState {
     pub(crate) class_maps_digest: String,
     pub(crate) definitions: Definitions,
     pub(crate) modules: BTreeMap<String, Vec<String>>,
+    pub(crate) module_digests: BTreeMap<String, String>,
     pub(crate) stamp: InputStamp,
 }
 
@@ -90,6 +91,16 @@ pub(crate) fn describe(
         modules = bundle_attempt::modules(&result);
     }
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
+    let module_digests = result
+        .modules
+        .iter()
+        .filter_map(|module| {
+            module
+                .digest
+                .as_ref()
+                .map(|digest| (module.path.clone(), digest.clone()))
+        })
+        .collect();
     if let Some(existing) = bundle_attempt::existing(runtime, &result.generation) {
         let existing = Arc::new(BundleState {
             repository: config.repo_root.clone(),
@@ -98,6 +109,7 @@ pub(crate) fn describe(
             class_maps_digest,
             definitions: existing.definitions.clone(),
             modules,
+            module_digests,
             stamp,
         });
         bundle_attempt::remember(runtime, &existing);
@@ -129,6 +141,7 @@ pub(crate) fn describe(
         class_maps_digest,
         definitions,
         modules,
+        module_digests,
         stamp,
     });
     bundle_attempt::remember(runtime, &state);
@@ -155,6 +168,7 @@ fn finish(
             class_maps_digest: bundle.class_maps_digest.clone(),
             css_context: lease.side.context.clone(),
             modules: bundle.modules.clone(),
+            module_digests: bundle.module_digests.clone(),
             resolution_files: bundle
                 .stamp
                 .files

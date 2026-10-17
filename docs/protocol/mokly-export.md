@@ -120,17 +120,33 @@ Changes; Serve's watcher ignores the same paths.
 1. Parse the options, load the configuration, validate the output boundary
    and the existing ownership marker, and reserve the resolved output against
    concurrent writers under the [safety contract](./mokly-export-safety.md).
-2. Resolve the base commit without changing the checkout. Validate the
-   catalogue and render every view through the render cache.
+2. Resolve the base commit without changing the checkout.
 3. Record the input fingerprint: the hashes of every inventoried source, the
    configuration, the renderer module, the configured stylesheets, and the
-   authored closure. Render the base side and compute the comparison from
-   those inputs. With `--strict`, a warning fails here, before any write.
+   authored closure. Capture root membership and configured inputs before
+   catalogue preparation. Validate the catalogue and render every view through
+   the render cache. Render the base side and compute the comparison from those
+   inputs. With `--strict`, a warning fails here, before any write.
    Root membership includes matching regular files and folder records under
-   the discovery rules. Each root uses its own file patterns. Output and
-   reservation directories are excluded.
-   Unrelated repository files do not participate. Explicit inventoried inputs
-   and reached closure files participate even beneath excluded directory names.
+   the discovery rules. Each root uses its own file patterns and resolved
+   directory identity. Child symlinks do not add root members or linked-directory
+   walks. Exclude output and reservation
+   directories by both logical and resolved paths. Unrelated repository files
+   do not participate. Explicit inventoried inputs and reached closure files
+   participate even beneath excluded directory names. Resolve each selected
+   path inside the real repository before hashing its target bytes.
+   For inventoried JavaScript bundle modules, use the sidecar's SHA-256 digest
+   of the exact bytes it bundled as the baseline. Compare captured digests with
+   those baselines before document callbacks run. Keep the baseline for the
+   final live recheck. Other reached inputs keep their first captured digest.
+   An unreadable input or directory has a fixed unreadable marker. Catalogue
+   discovery and validation report required-input failures first. An unreadable
+   excluded input does not fail the fingerprint check unless its marker changes.
+   Before installation, compare selected root membership, unreadable markers,
+   resolved identities, and live streaming digests with the captured values.
+   This recheck reads no file bodies for parsing or delivery. A changed input
+   or a mismatched sidecar digest aborts with `export-invalid` and the instruction
+   to build again. It preserves the earlier output instead of mixing generations.
 4. Assemble every route and resource into a private stage inside the
    reservation on the output filesystem. Validate each path against the
    marker's [portable-path rule](./mokly-export-ownership.md#file-contract)
@@ -142,10 +158,7 @@ Changes; Serve's watcher ignores the same paths.
    the exact final bytes of every file, and add the marker last. Verify
    internal references, ownership, every route and directory-prefix collision
    including the marker path, and the complete local dependency closure.
-   Recheck the input fingerprint; a changed input aborts with
-   `export-invalid` and a retry instruction instead of mixing generations.
-   The recheck compares selected membership, resolved identities, and streaming
-   digests. It reads no file bodies for parsing or delivery.
+   Recheck the inputs under step 3 before installation.
 6. Drain render work and stop the sidecars. Replace the owned output with
    rollback protection, then clean the owned temporary resources and release
    the reservation.

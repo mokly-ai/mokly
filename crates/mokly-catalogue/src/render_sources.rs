@@ -27,6 +27,8 @@ pub struct JavaScriptGeneration {
     pub resolution_files: BTreeSet<String>,
     /// Consumed-module directories whose file membership can change resolution.
     pub resolution_directories: BTreeMap<String, BTreeSet<String>>,
+    /// SHA-256 digests of the exact source bytes consumed by the sidecar.
+    pub module_digests: BTreeMap<String, String>,
     /// Logical module paths and ordered imports, including dependencies.
     pub modules: BTreeMap<String, Vec<String>>,
 }
