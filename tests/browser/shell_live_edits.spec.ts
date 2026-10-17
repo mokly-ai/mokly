@@ -12,6 +12,7 @@ import { captureBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
 import {
   cardFile,
+  closeServe,
   isRender,
   liveIndex,
   renderBody,
@@ -88,7 +89,7 @@ test("text edits wait for the 150 ms debounce; a boolean edit renders at once", 
       ]);
     expect(errors).toEqual([]);
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -148,7 +149,7 @@ test("an edit renders again after a revision adoption and after a live.generatio
     // the shell retries under the newer revision; nothing else may fail.
     expect(errors.filter((error) => !/\b409\b/.test(error))).toEqual([]);
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -200,6 +201,6 @@ test("a 409 refreshes the index once and retries while the event stream is down"
       [],
     );
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });

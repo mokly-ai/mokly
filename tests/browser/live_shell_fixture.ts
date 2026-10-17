@@ -1,10 +1,13 @@
 /**
  * A small HTML catalogue that a spec owns, served with the file watcher so an
- * edit publishes, and the frame and request records its live specs read.
+ * edit publishes, a local port forwarder, and the frame and request records
+ * its live specs read.
  */
 
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
+import http from "node:http";
+import type { AddressInfo } from "node:net";
 import path from "node:path";
 
 import type { Page, Request } from "@playwright/test";
@@ -50,6 +53,63 @@ export function serveLiveCatalogue() {
     {},
     { watch: true },
   );
+}
+
+/**
+ * Leave the page before Serve stops. Otherwise the stop cuts the open event
+ * stream, and the browser reports that cut as a console error.
+ */
+export async function closeServe(
+  page: Page,
+  ...servers: { close(): Promise<void> }[]
+): Promise<void> {
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.goto("about:blank");
+  for (const server of servers) await server.close();
+}
+
+/**
+ * Forward another local port to a served catalogue, as a port forwarder
+ * does: each request keeps its `Host`, which the forwarder records.
+ */
+export async function forwardServe(url: string) {
+  const upstream = new URL(url);
+  const hosts: string[] = [];
+  const proxy = http.createServer((incoming, response) => {
+    hosts.push(incoming.headers.host ?? "");
+    const outgoing = http.request(
+      {
+        hostname: upstream.hostname,
+        port: upstream.port,
+        path: incoming.url,
+        method: incoming.method,
+        headers: incoming.headers,
+      },
+      (reply) => {
+        response.writeHead(reply.statusCode!, reply.headers);
+        reply.pipe(response);
+      },
+    );
+    outgoing.on("error", () => {
+      if (!response.headersSent) response.writeHead(502);
+      response.end();
+    });
+    response.on("close", () => outgoing.destroy());
+    incoming.pipe(outgoing);
+  });
+  await new Promise<void>((resolve, reject) => {
+    proxy.once("error", reject);
+    proxy.listen(0, "127.0.0.1", resolve);
+  });
+  return {
+    port: (proxy.address() as AddressInfo).port,
+    hosts,
+    close: () =>
+      new Promise<void>((resolve, reject) => {
+        proxy.close((error) => (error ? reject(error) : resolve()));
+        proxy.closeAllConnections();
+      }),
+  };
 }
 
 /** Replace a catalogue file in one rename, so the watcher never reads half. */

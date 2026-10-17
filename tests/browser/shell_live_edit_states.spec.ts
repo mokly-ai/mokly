@@ -1,15 +1,21 @@
 /**
  * The states of live prop edits in Serve, under the component controls and
- * shell delivery contracts: navigation cancels a pending edit, fields stay
- * read-only until the live descriptor installs, a failed descriptor offers
- * Try again, and a failed render keeps the last valid preview.
+ * shell delivery contracts: an edit through a forwarded port and Reset,
+ * navigation cancels a pending edit, fields stay read-only until the live
+ * descriptor installs, a failed descriptor offers Try again, and a failed
+ * render keeps the last valid preview.
  */
 
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { captureBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
-import { isRender, serveLiveCatalogue } from "./live_shell_fixture.js";
+import {
+  closeServe,
+  forwardServe,
+  isRender,
+  serveLiveCatalogue,
+} from "./live_shell_fixture.js";
 
 /** The text that every stage frame shows, read through the parent page. */
 function frameTexts(page: Page): Promise<string[]> {
@@ -36,6 +42,44 @@ async function openProps(page: Page, url: string, editable = true) {
     await expect(props.getByRole("textbox", { name: "label" })).toBeEditable();
   return props;
 }
+
+for (const hostname of ["127.0.0.1", "localhost"])
+  test(`${hostname}: an edit through a forwarded port renders, and Reset restores the saved props`, async ({
+    page,
+  }) => {
+    const errors = captureBrowserErrors(page);
+    const server = await serveLiveCatalogue();
+    const forwarder = await forwardServe(server.url);
+    try {
+      expect(String(forwarder.port)).not.toBe(new URL(server.url).port);
+      const host = `${hostname}:${forwarder.port}`;
+      const props = await openProps(page, `http://${host}`);
+      const label = props.getByRole("textbox", { name: "label" });
+      const rendered = page.waitForResponse((response) =>
+        isRender(response.request()),
+      );
+      await label.fill("Edited");
+      expect((await rendered).status()).toBe(200);
+      await expect
+        .poll(() => frameTexts(page))
+        .toEqual([
+          expect.stringContaining("Edited 1"),
+          expect.stringContaining("Edited 1"),
+        ]);
+      await props.getByRole("button", { name: "Reset to Card" }).click();
+      await expect(label).toHaveValue("Hello");
+      await expect
+        .poll(() => frameTexts(page))
+        .toEqual([
+          expect.stringContaining("Hello 1"),
+          expect.stringContaining("Hello 1"),
+        ]);
+      expect(new Set(forwarder.hosts)).toEqual(new Set([host]));
+      expect(errors).toEqual([]);
+    } finally {
+      await closeServe(page, forwarder, server);
+    }
+  });
 
 test("navigation cancels a pending edit, and returning shows the saved props", async ({
   page,
@@ -77,8 +121,7 @@ test("navigation cancels a pending edit, and returning shows the saved props", a
       ]);
     expect(errors).toEqual([]);
   } finally {
-    await page.unrouteAll({ behavior: "ignoreErrors" });
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -109,8 +152,7 @@ test("fields stay read-only until the live descriptor installs", async ({
     await expect(props.getByText("Preparing to edit props…")).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {
-    await page.unrouteAll({ behavior: "ignoreErrors" });
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -134,8 +176,7 @@ test("a failed live descriptor offers Try again, which installs it", async ({
     await expect(props.getByText("Editing could not start.")).toHaveCount(0);
     expect(errors.filter((error) => !/\b503\b/.test(error))).toEqual([]);
   } finally {
-    await page.unrouteAll({ behavior: "ignoreErrors" });
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -186,7 +227,6 @@ test("a failed render keeps the last valid preview, and Try again renders the ed
     ).toHaveCount(0);
     expect(errors.filter((error) => !/\b422\b/.test(error))).toEqual([]);
   } finally {
-    await page.unrouteAll({ behavior: "ignoreErrors" });
-    await server.close();
+    await closeServe(page, server);
   }
 });

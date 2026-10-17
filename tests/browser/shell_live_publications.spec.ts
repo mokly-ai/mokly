@@ -10,6 +10,7 @@ import { expect, type Page } from "@playwright/test";
 import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
 import {
+  closeServe,
   frameReport,
   liveIndex,
   replaceFile,
@@ -55,7 +56,7 @@ test("a publication updates the shell in place without a page load", async ({
     expect(await mounted(page)).toBe(true);
     expect(loads).toBe(0);
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -85,7 +86,7 @@ test("a publication replaces only the frames whose document changed", async ({
     expect(home?.text).toContain("Home v1");
     expect(other).toMatchObject({ tag: null, title: "Other — desktop" });
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -119,7 +120,7 @@ test("keyboard focus stays on its element while a publication is adopted", async
       .toContain("Home v2");
     await expect(copy).toBeFocused();
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });
 
@@ -147,6 +148,6 @@ test("a message from another deployment loads the current URL again", async ({
     await expect(page).toHaveURL(`${server.url}/view/other/`);
     await expect(page.locator("#mb-main h2")).toHaveText("Other");
   } finally {
-    await server.close();
+    await closeServe(page, server);
   }
 });
