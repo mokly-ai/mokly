@@ -12,6 +12,11 @@ interface Timing {
   elapsedMs: number;
   durationMs?: number;
   status?: string;
+  tier?: number;
+  views?: number;
+  unchanged?: number;
+  changed?: number;
+  ignoredOnly?: number;
 }
 
 export function timings(stderr: string): Timing[] {
@@ -25,7 +30,7 @@ export function timings(stderr: string): Timing[] {
     assert.equal(typeof record.session, "string");
     assert.ok(record.session.length > 0);
     assert.equal(typeof record.pid, "number");
-    assert.equal(record.role, "core");
+    assert.ok(["core", "sidecar"].includes(record.role));
     assert.equal(typeof record.stage, "string");
     assert.equal(typeof record.id, "number");
     assert.ok(Number.isFinite(record.elapsedMs));

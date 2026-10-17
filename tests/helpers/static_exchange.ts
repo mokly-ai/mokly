@@ -4,6 +4,7 @@ import http from "node:http";
 import zlib from "node:zlib";
 
 import { verifyInventory } from "./receiver/ownership.js";
+import { cleanupAll } from "./static_cleanup.js";
 
 interface MarkerEntry {
   path: string;
@@ -227,10 +228,15 @@ export async function exchange(
     },
     async close() {
       server.closeAllConnections();
-      await new Promise<void>((resolve, reject) =>
-        server.close((error) => (error ? reject(error) : resolve())),
-      );
-      if (failure) throw failure;
+      await cleanupAll([
+        () =>
+          new Promise<void>((resolve, reject) =>
+            server.close((error) => (error ? reject(error) : resolve())),
+          ),
+        async () => {
+          if (failure) throw failure;
+        },
+      ]);
     },
   };
 }

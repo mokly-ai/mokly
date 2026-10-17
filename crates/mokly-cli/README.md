@@ -62,7 +62,9 @@ startup error flushes pending warnings before cancellation. Resource-only
 reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
-counts without source text, props, or error payloads.
+counts without source text, props, or error payloads. Shared Changes timings
+include the numeric dependency tier, final comparison view counts, and
+changed-path collection. A failed phase keeps error status.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
 The composition root constructs a

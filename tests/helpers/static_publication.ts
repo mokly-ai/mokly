@@ -58,6 +58,7 @@ export function publish(
     args?: string[];
     env?: NodeJS.ProcessEnv;
     environmentCredentials?: boolean;
+    signal?: AbortSignal;
   } = {},
 ) {
   return command(
@@ -79,6 +80,7 @@ export function publish(
         : {}),
       ...options.env,
     },
+    options.signal,
   );
 }
 
@@ -88,7 +90,9 @@ export function command(
   args: string[],
   mode = "plain",
   extra: NodeJS.ProcessEnv = {},
+  signal?: AbortSignal,
 ) {
+  signal?.throwIfAborted();
   const child = spawn(
     process.execPath,
     [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
@@ -120,6 +124,13 @@ export function command(
     child.once("error", reject);
     child.once("close", (code) => resolve({ code, stdout, stderr }));
   });
+  const stop = () => {
+    if (process.platform === "win32" && child.pid !== undefined)
+      execFile("taskkill", ["/PID", String(child.pid), "/T", "/F"], () => {});
+    else child.kill("SIGTERM");
+  };
+  signal?.addEventListener("abort", stop, { once: true });
+  child.once("close", () => signal?.removeEventListener("abort", stop));
   return { child, result };
 }
 

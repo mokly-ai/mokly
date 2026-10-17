@@ -16,7 +16,6 @@ use mokly_publish::http::{Body, HttpMock, Response, Step};
 use mokly_publish::runtime::{self, ClockMock};
 use mokly_publish::settings::Settings;
 use mokly_publish::snapshot::Prepared;
-use mokly_sidecar::process_clock::SystemClock;
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
@@ -82,7 +81,7 @@ fn reporter(lines: Arc<Mutex<Vec<String>>>) -> Arc<Lines> {
     ));
     let (stop, _) = mpsc::channel();
     Arc::new(Lines {
-        clock: Arc::new(SystemClock::new()),
+        clock: Arc::new(Unimock::new(())),
         cwd: "/repo".into(),
         style: Style {
             mode: Mode::Rich,

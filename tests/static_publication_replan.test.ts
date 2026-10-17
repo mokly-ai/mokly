@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   directory,
@@ -15,13 +16,14 @@ for (const replan of ["nonempty", "empty"] as const)
   test(
     `real publish re-plans ${replan} missing sets without rebuilding the installed bytes`,
     { timeout: 120_000 },
-    async () => {
+    async (context) => {
       const root = await publicationFixture();
       const server = await exchange({ replan });
       let output: string | undefined;
       try {
         const result = await publish(root, server.endpoint, "rich", {
           args: ["--upload-concurrency=1"],
+          signal: context.signal,
         }).result;
         output = directory(result.stdout);
         assert.equal(result.code, 0, result.stderr);
@@ -49,9 +51,13 @@ for (const replan of ["nonempty", "empty"] as const)
         ])
           assert.equal(result.stdout.split(phase).length - 1, 1, result.stdout);
       } finally {
-        await server.close();
-        if (output) await removeOutput(output);
-        await fs.rm(root, { recursive: true, force: true });
+        await cleanupAll([
+          () => server.close(),
+          async () => {
+            if (output) await removeOutput(output);
+          },
+          () => fs.rm(root, { recursive: true, force: true }),
+        ]);
       }
     },
   );
