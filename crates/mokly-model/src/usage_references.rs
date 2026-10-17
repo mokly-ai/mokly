@@ -136,18 +136,21 @@ fn acyclic(
     active: &mut BTreeSet<String>,
     done: &mut BTreeSet<String>,
 ) -> bool {
-    if done.contains(key) {
-        return true;
-    }
-    if !active.insert(key.into()) {
-        return false;
-    }
-    for next in &graph[key] {
-        if !acyclic(next, graph, active, done) {
+    let mut pending = vec![(key, false)];
+    while let Some((key, leaving)) = pending.pop() {
+        if leaving {
+            active.remove(key);
+            done.insert(key.into());
+            continue;
+        }
+        if done.contains(key) {
+            continue;
+        }
+        if !active.insert(key.into()) {
             return false;
         }
+        pending.push((key, true));
+        pending.extend(graph[key].iter().rev().map(|next| (next.as_str(), false)));
     }
-    active.remove(key);
-    done.insert(key.into());
     true
 }

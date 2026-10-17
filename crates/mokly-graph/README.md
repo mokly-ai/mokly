@@ -76,8 +76,11 @@ Entry-source keys and binary closure validation use digest reads. HTML and
 CSS closure parsing retains the bytes it needs. Resource hash reads require a
 confined regular target before opening it.
 Each path has its own read and digest cells, so file IO does not hold the snapshot
-map lock. Preparation and render workers have 64 MiB stacks while the remaining
-tree operations are converted to iterative walks.
+map lock. Preparation runs on the caller's stack. Render workers use Rayon's
+default stack. Component keys, document walks, embedded-document resource
+walks, and retained-tree accounting use explicit work stacks. The deep-tree
+test prepares, composes, serializes, compares, and drops 20,000 levels on an
+ordinary thread with cache retention disabled.
 
 ## Quick Start
 

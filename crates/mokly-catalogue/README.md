@@ -19,6 +19,10 @@ render graph crates.
 
 ## What This Crate Does
 
+Warning identities keep route and named subjects distinct, including equal
+printed locations. Normalization sorts by printed location, message, code,
+and subject kind before removing exact duplicates.
+
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
 Filesystem checks resolve symlinks and keep local inputs inside `repoRoot`.
@@ -71,6 +75,10 @@ component cycles, template references, and unused props. Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
 inputs in that precedence order, including physical aliases.
+
+YAML front-matter construction uses recursive input traversal before
+prop and schema depth validation. Pathological YAML nesting can exhaust the
+caller stack. The native HTML tree depth guarantee does not cover YAML input.
 
 ## Quick Start
 

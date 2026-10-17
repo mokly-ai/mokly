@@ -13,7 +13,8 @@ pub(crate) fn validate(nodes: &[Node]) -> Result<()> {
 }
 
 fn ignores(nodes: &[Node], active: bool, ids: &mut BTreeSet<String>) -> Result<()> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter().rev().map(|node| (node, active)).collect();
+    while let Some((node, active)) = pending.pop() {
         match node {
             Node::Region { region, children } => {
                 let ignored = matches!(region.kind, RegionKind::Ignore { .. });
@@ -36,9 +37,11 @@ fn ignores(nodes: &[Node], active: bool, ids: &mut BTreeSet<String>) -> Result<(
                         "an ignore region cannot enclose an instance or slot boundary",
                     ));
                 }
-                ignores(children, active || ignored, ids)?;
+                pending.extend(children.iter().rev().map(|node| (node, active || ignored)));
             }
-            Node::Element(element) => ignores(&element.children, active, ids)?,
+            Node::Element(element) => {
+                pending.extend(element.children.iter().rev().map(|node| (node, active)))
+            }
             _ => {}
         }
     }
@@ -52,9 +55,20 @@ pub(crate) fn number(nodes: &mut [Node]) -> Vec<ComponentRangeRecord> {
 }
 
 fn walk(nodes: &mut [Node], parent: Option<&str>, ranges: &mut Vec<ComponentRangeRecord>) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes
+        .iter_mut()
+        .rev()
+        .map(|node| (node, parent.map(str::to_owned)))
+        .collect();
+    while let Some((node, parent)) = pending.pop() {
         match node {
-            Node::Element(element) => walk(&mut element.children, parent, ranges),
+            Node::Element(element) => pending.extend(
+                element
+                    .children
+                    .iter_mut()
+                    .rev()
+                    .map(|node| (node, parent.clone())),
+            ),
             Node::Region { region, children } => {
                 let target = match &region.kind {
                     RegionKind::Instance { key, .. } => Some(ComponentRangeTarget::Instance {
@@ -71,11 +85,16 @@ fn walk(nodes: &mut [Node], parent: Option<&str>, ranges: &mut Vec<ComponentRang
                     ranges.push(ComponentRangeRecord {
                         id: region.id.clone(),
                         target,
-                        parent_id: parent.map(str::to_owned),
+                        parent_id: parent,
                     });
-                    walk(children, Some(&region.id), ranges);
+                    pending.extend(
+                        children
+                            .iter_mut()
+                            .rev()
+                            .map(|node| (node, Some(region.id.clone()))),
+                    );
                 } else {
-                    walk(children, parent, ranges);
+                    pending.extend(children.iter_mut().rev().map(|node| (node, parent.clone())));
                 }
             }
             _ => {}

@@ -86,11 +86,12 @@ fn walk(
     bases: &BTreeMap<&str, String>,
     owners: &BTreeMap<&str, &str>,
 ) -> Result<()> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().map(|node| (node, current)).collect();
+    while let Some((node, current)) = pending.pop() {
         match node {
             Node::Element(node) => {
                 element(node, current)?;
-                walk(&mut node.children, current, root, bases, owners)?;
+                pending.extend(node.children.iter_mut().rev().map(|child| (child, current)));
             }
             Node::Region { region, children } => {
                 let scope = match &region.kind {
@@ -110,7 +111,7 @@ fn walk(
                         .map_or(current, String::as_str),
                     _ => current,
                 };
-                walk(children, scope, root, bases, owners)?;
+                pending.extend(children.iter_mut().rev().map(|child| (child, scope)));
             }
             _ => {}
         }

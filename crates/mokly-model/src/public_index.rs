@@ -10,7 +10,7 @@ use crate::public_records::{
 };
 
 /// Public tree nodes. Entry children hold variants and index-folder members.
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Deserialize, Serialize, TS)]
 #[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
 pub enum CatalogueNode {
     /// A folder with no screen or component own page.

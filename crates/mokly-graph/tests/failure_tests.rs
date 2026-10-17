@@ -39,6 +39,34 @@ fn logical_anchors_must_exist_across_every_destination_view() {
 }
 
 #[test]
+fn a_referenced_document_keeps_its_composition_warnings_out_of_the_requesting_document() {
+    let directory = catalogue(
+        "<a href=\"mock:target#target\">Target</a>",
+        "<h1 id=\"target\">Target</h1><button><span to=\"home\">Home</span></button>",
+    );
+    let (generation, cache) = support::prepare(directory.path(), 1024 * 1024, 2);
+    let generation = generation.unwrap();
+    let misses = cache.stats().misses;
+    let source = generation.render("home/index.mobile.html").unwrap();
+    assert!(source.document.as_ref().unwrap().warnings.is_empty());
+    assert_eq!(
+        cache.stats().misses - misses,
+        3,
+        "home must compose itself and both destination views before any direct destination request"
+    );
+    for viewport in ["mobile", "desktop"] {
+        let route = format!("target/index.{viewport}.html");
+        let target = generation.render(&route).unwrap();
+        let warnings = &target.document.as_ref().unwrap().warnings;
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].code, "link-control-ancestor");
+        assert_eq!(warnings[0].printed_subject(), route);
+    }
+    let source = generation.render("home/index.mobile.html").unwrap();
+    assert!(source.document.as_ref().unwrap().warnings.is_empty());
+}
+
+#[test]
 fn local_anchor_and_resource_failures_keep_the_referring_route() {
     for (body, expected) in [
         ("<a href=\"#missing\">Missing</a>", "missing anchor"),

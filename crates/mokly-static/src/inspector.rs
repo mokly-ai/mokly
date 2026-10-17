@@ -130,7 +130,8 @@ fn links(
     indices: &mut BTreeMap<Navigation, usize>,
     route: &str,
 ) -> Result<()> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) => {
                 for attribute in ["data-mokly-inspector", "data-mokly-inspector-link"] {
@@ -156,7 +157,7 @@ fn links(
                         },
                     };
                     if !wire_link(&navigation) {
-                        links(&mut element.children, output, indices, route)?;
+                        pending.extend(element.children.iter_mut().rev());
                         continue;
                     }
                     let index = *indices.entry(navigation.clone()).or_insert_with(|| {
@@ -166,9 +167,9 @@ fn links(
                     });
                     element.set("data-mokly-inspector-link", index.to_string());
                 }
-                links(&mut element.children, output, indices, route)?;
+                pending.extend(element.children.iter_mut().rev());
             }
-            Node::Region { children, .. } => links(children, output, indices, route)?,
+            Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),
             _ => {}
         }
     }
@@ -176,31 +177,34 @@ fn links(
 }
 
 fn clear_links(nodes: &mut [Node]) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) => {
                 element.take("data-mokly-inspector-link");
-                clear_links(&mut element.children);
+                pending.extend(element.children.iter_mut().rev());
             }
-            Node::Region { children, .. } => clear_links(children),
+            Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),
             _ => {}
         }
     }
 }
 
 fn head(nodes: &mut [Node], additions: &[Node]) -> bool {
-    nodes.iter_mut().any(|node| match node {
-        Node::Element(element) => {
-            if element.is_html() && element.name == "head" {
-                element.children.extend_from_slice(additions);
-                true
-            } else {
-                head(&mut element.children, additions)
-            }
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
+        if let Node::Element(element) = node
+            && element.is_html()
+            && element.name == "head"
+        {
+            element.children.extend_from_slice(additions);
+            return true;
         }
-        Node::Region { children, .. } => head(children, additions),
-        _ => false,
-    })
+        if let Some(children) = node.children_mut() {
+            pending.extend(children.iter_mut().rev());
+        }
+    }
+    false
 }
 
 fn wire_fragment(fragment: &str) -> bool {

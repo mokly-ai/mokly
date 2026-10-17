@@ -59,13 +59,38 @@ pub(crate) fn build(model: &CatalogueModel) -> Vec<CatalogueNode> {
 
 impl Tree<'_> {
     fn children(&self, parent: &str) -> Vec<CatalogueNode> {
-        let mut result: Vec<_> = self
-            .children
-            .get(parent)
-            .into_iter()
-            .flatten()
-            .map(|path| self.node(path))
-            .collect();
+        let mut pending = vec![(parent, false)];
+        let mut built = BTreeMap::new();
+        while let Some((path, visited)) = pending.pop() {
+            if !visited {
+                pending.push((path, true));
+                pending.extend(
+                    self.children
+                        .get(path)
+                        .into_iter()
+                        .flatten()
+                        .rev()
+                        .map(|child| (child.as_str(), false)),
+                );
+                continue;
+            }
+            let mut members: Vec<_> = self
+                .children
+                .get(path)
+                .into_iter()
+                .flatten()
+                .filter_map(|child| built.remove(child.as_str()))
+                .collect();
+            self.sort_children(path, &mut members);
+            if path == parent {
+                return members;
+            }
+            built.insert(path, self.node(path, members));
+        }
+        Vec::new()
+    }
+
+    fn sort_children(&self, parent: &str, result: &mut [CatalogueNode]) {
         let order = self
             .folders
             .get(parent)
@@ -95,17 +120,15 @@ impl Tree<'_> {
                 })
                 .then_with(|| compare_utf16(path(a), path(b)))
         });
-        result
     }
 
-    fn node(&self, path: &str) -> CatalogueNode {
+    fn node(&self, path: &str, mut members: Vec<CatalogueNode>) -> CatalogueNode {
         let entry = self.entries.get(path).copied();
         let folder = self.folders.get(path).copied();
         let hidden = folder
             .filter(|folder| folder.hidden == Some(true))
             .map(|_| True);
         let order = folder.and_then(|folder| folder.order.clone());
-        let mut members = self.children(path);
         if let Some(entry) = entry {
             let mut variants: Vec<_> = self
                 .variants
