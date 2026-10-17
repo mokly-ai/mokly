@@ -896,10 +896,15 @@ renders again.
         inspector tabs; the design library's unset, Reset, and nested styles;
         an older response for the same route; use-case and page frames and
         the Usage loading state while evidence is unavailable; instance deep
-        links; focus on an unchanged Usage link while a publication is
-        adopted; a redirected frame source during a scheme swap; and the
-        review-base sentence while a detail loads, which needs a served
-        catalogue with a Git base.
+        links; focus on an unchanged Usage link while a Changes completion
+        is adopted; a published scheme swap while a redirect replaces a frame
+        source; and the review-base sentence while a detail loads, which needs
+        a served catalogue with a Git base.
+  - [ ] When Serve stops publishing a render completion that changes no
+        detail (review 8 finding 1, for the Serve owner), restore one index
+        read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
+        and the exact revision in the first half of its adoption spec. Until
+        then, the orchestrator accepts one index read per rejected revision.
 - [ ] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
@@ -1015,6 +1020,7 @@ Client shell review 7 fixes, the merge of `c6e15729`, and the M8 viewer sweep
 rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
 `.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
+Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
 
 - [ ] Commit.
 

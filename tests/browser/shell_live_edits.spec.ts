@@ -135,7 +135,13 @@ test("an edit renders again after a revision adoption and after a live.generatio
       "specs/card.component.html",
       cardFile('<i class="marker">v2</i>'),
     );
-    await settleLive(server.url, adopted);
+    // The tour edit can still publish above `adopted`, so the wait also needs
+    // the card edit's own result: a new live generation.
+    await settleLive(
+      server.url,
+      adopted,
+      (index) => index.live?.generation !== first.generation,
+    );
     await expect
       .poll(() => frameTexts(page))
       .toEqual([

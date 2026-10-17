@@ -65,21 +65,29 @@ export async function serveLiveCatalogue() {
 }
 
 /**
- * Wait until Serve has published every state that an edit causes: the index
- * revision is above `after`, Changes has left its preparing or pending state,
- * and every screen and component detail is at that revision with no pending
- * usage. Serve may publish several times for one edit, so a step that counts
- * requests waits for this first. Each publication on the event stream wakes
- * the check, so the wait needs no sleep. Returns the settled revision.
+ * Wait until a served catalogue looks settled: the index revision is above
+ * `after`, `until` holds for the index, Changes has left its preparing or
+ * pending state, and every screen and component detail is at that revision
+ * with no pending usage. Each publication on the event stream wakes the
+ * check, so the wait needs no sleep. Returns the settled revision.
+ *
+ * The state does not show every publication still to come: after an edit,
+ * Serve can publish a render completion that changes only the revision. So a
+ * step after an edit accepts a later revision, and `until` names the result
+ * that the edit must show, so that the wait cannot return before it.
  */
-export async function settleLive(url: string, after = -1): Promise<number> {
+export async function settleLive(
+  url: string,
+  after = -1,
+  until: (index: CatalogueReadModel) => boolean = () => true,
+): Promise<number> {
   const response = await fetch(`${url}/mokly-viewer/events`);
   if (!response.ok || !response.body)
     throw new Error("The live publication stream is unavailable");
   const stream = response.body.getReader();
   try {
     for (;;) {
-      const revision = await settledRevision(url);
+      const revision = await settledRevision(url, until);
       if (revision !== undefined && revision > after) return revision;
       if ((await stream.read()).done)
         throw new Error(
@@ -91,12 +99,19 @@ export async function settleLive(url: string, after = -1): Promise<number> {
   }
 }
 
-/** The index revision when Changes and the usage of every view are settled. */
-async function settledRevision(url: string): Promise<number | undefined> {
+/**
+ * The index revision when `until` holds and Changes and the usage of every
+ * view are settled.
+ */
+async function settledRevision(
+  url: string,
+  until: (index: CatalogueReadModel) => boolean,
+): Promise<number | undefined> {
   const read = async <T>(route: string) =>
     (await (await fetch(`${url}/mokly-viewer/${route}`)).json()) as T;
   const index = await read<CatalogueReadModel>("index.json");
-  if (["preparing", "pending"].includes(index.changesStatus)) return undefined;
+  if (!until(index) || ["preparing", "pending"].includes(index.changesStatus))
+    return undefined;
   for (const entry of [...index.screens, ...index.components]) {
     const detail = await read<EntryDetailV1>(`entries/${entry.path}.json`);
     if (

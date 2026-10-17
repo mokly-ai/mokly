@@ -191,8 +191,8 @@ reload, so repeated edits for one visible context coalesce while
 simultaneous contexts cannot supersede each other; it is a queue key, not
 authority. Each edit owner has one active request and at most one latest
 queued replacement; sequence and revision checks discard stale responses.
-Obsolete requests are cancelled on navigation, reset, entry or context
-change, or disconnect, and cancellation never leaves a loading state.
+Obsolete requests are cancelled on a newer edit, navigation, reset, entry or
+context change, or disconnect, and cancellation never leaves a loading state.
 
 Rendering runs through the render graph's scheduler outside the HTTP event
 loop, with one active job per page and at most eight queued jobs server-wide;
