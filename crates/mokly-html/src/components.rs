@@ -1,5 +1,7 @@
 //! Registered component invocation, props, and logical input identity.
 
+use std::sync::Arc;
+
 use mokly_catalogue::template_types::RegisteredElement;
 use mokly_model::data::Props;
 use mokly_model::material::{instance_key, props_key};
@@ -11,10 +13,11 @@ use crate::composition::Engine;
 use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{HtmlError, Result, invalid};
+use crate::expansion::{After, Expansion};
 use crate::fragment::RenderKind;
 use crate::props::{camel_case, coerce, schema_at, validate, value_at};
-use crate::tree::{Element, Node, Region, RegionKind};
-use crate::{conditions, control_roots, relative_links, source_locations};
+use crate::tree::{Element, Region, RegionKind};
+use crate::{conditions, relative_links, source_locations};
 
 impl Engine<'_> {
     #[tracing::instrument(name = "render.fragment", skip_all, err)]
@@ -23,7 +26,7 @@ impl Engine<'_> {
         mut element: Element,
         component: &RegisteredElement,
         context: &Context,
-    ) -> Result<Vec<Node>> {
+    ) -> Result<Expansion> {
         if self.stack.contains(&component.path) {
             return Err(invalid(
                 Code::HtmlElement,
@@ -165,19 +168,14 @@ impl Engine<'_> {
             declared_slots: component.slots.clone(),
         };
         self.stack.push(component.path.clone());
-        let mut children =
+        let mut expansion =
             if let Some(template) = self.request.catalogue.templates.get(&component.path) {
                 nested.source.path = template.source_path.clone();
-                self.nodes(source_locations::template(template)?, &nested)?
+                Expansion::native(source_locations::template(template)?, Arc::new(nested))
             } else {
-                self.javascript(&component.path, RenderKind::Component, &nested)?
+                self.javascript_expansion(&component.path, RenderKind::Component, Arc::new(nested))?
             };
-        self.stack.pop();
-        if let Some(target) = target {
-            control_roots::mark(&mut children, &target, fragment.as_deref())?;
-            control_roots::source(&mut children, invocation);
-        }
-        Ok(vec![Node::Region {
+        expansion.after.push(After::Component {
             region: Region {
                 id: String::new(),
                 kind: RegionKind::Instance {
@@ -187,8 +185,12 @@ impl Engine<'_> {
                     props_key: props_digest,
                 },
             },
-            children,
-        }])
+            target,
+            fragment,
+            source: invocation,
+        });
+        expansion.span = Some(tracing::Span::current());
+        Ok(expansion)
     }
 }
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
+import type { ChangeReason } from "../packages/viewer/dist/review/types.js";
 import { stylesheetEvidence } from "../packages/viewer/dist/shell/workspace_stylesheet_evidence.js";
 
 import { cssReason, cssRule } from "./helpers/css_evidence.js";
@@ -206,7 +206,7 @@ test("a rule matched on one view and unresolved on another keeps both paragraphs
 });
 
 test("each file appears once in path order and other evidence is a path alone", () => {
-  const reasons: readonly EntryChangeReason[] = [
+  const reasons: readonly ChangeReason[] = [
     { kind: "material" },
     { kind: "dependency", path: "mockups/logo.svg" },
     cssReason("mockups/z.css", [headingRule]),

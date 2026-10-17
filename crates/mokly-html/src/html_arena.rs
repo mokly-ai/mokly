@@ -4,7 +4,7 @@ use std::cell::RefCell;
 
 use html5ever::{QualName, local_name, ns};
 
-use crate::tree::{Element, Node};
+use crate::tree::Node;
 
 #[derive(Clone)]
 pub(crate) struct Handle {
@@ -87,10 +87,10 @@ impl Arena {
             let previous = entries[parent.index].children[index - 1].index;
             if matches!(entries[previous].node, Some(Node::Text(_)))
                 && matches!(entries[child.index].node, Some(Node::Text(_)))
-                && let Some(Node::Text(text)) = entries[child.index].node.take()
+                && let Some(Node::Text(ref text)) = entries[child.index].node.take()
                 && let Some(Node::Text(previous)) = &mut entries[previous].node
             {
-                previous.push_str(&text);
+                previous.push_str(text);
                 return;
             }
         }
@@ -127,11 +127,8 @@ impl Arena {
                 return children;
             }
             let mut node = entries[index].node.take();
-            if let Some(Node::Element(Element {
-                children: target, ..
-            })) = &mut node
-            {
-                *target = children;
+            if let Some(Node::Element(element)) = &mut node {
+                element.children = children;
             }
             built[index] = node;
         }

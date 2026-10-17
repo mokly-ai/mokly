@@ -1,4 +1,4 @@
-//! Input contexts retained by lazy slots during recursive composition.
+//! Input contexts retained by lazy slots during iterative composition.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;

@@ -31,6 +31,7 @@ use mokly_server::publication::SharedPublication;
 use mokly_server::runtime::{ServerRuntime, TokioServer};
 use mokly_server::shutdown::FixedLifecycle;
 use mokly_server::snapshot::{Projector, Snapshot, SnapshotFactory, SnapshotInput};
+use mokly_server::warnings::TracingWarnings;
 use mokly_server::work::Workers;
 use mokly_source_interface::tree::SourceTree;
 use tempfile::TempDir;
@@ -142,6 +143,7 @@ impl Harness {
                 repo_root: config.repo_root,
                 policy: Arc::new(policy),
             }),
+            Arc::new(TracingWarnings),
         ));
         let projector: &dyn SnapshotFactory = &Projector {
             deployment_id: "a".repeat(64),

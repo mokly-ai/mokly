@@ -90,9 +90,10 @@ fn walk(
         base_target,
     } = *context;
     let mut active = false;
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         match node {
-            Node::Region { children, .. } => active |= walk(children, context, references)?,
+            Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),
             Node::Element(element) => {
                 let location = element
                     .source
@@ -178,13 +179,13 @@ fn walk(
                             }
                         }
                     }
-                    active |= walk(&mut element.children, context, references)?;
                     Ok(active)
                 })();
                 match result {
                     Ok(value) => active |= value,
                     Err(source) => return Err(source.at(location)),
                 }
+                pending.extend(element.children.iter_mut().rev());
             }
             _ => {}
         }

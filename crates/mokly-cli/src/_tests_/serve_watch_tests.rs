@@ -261,7 +261,7 @@ async fn resource_attach_failures_reach_the_reporter_once() {
     ));
     let reporter = Unimock::new(
         RebuildReporterMock::server_failure
-            .next_call(matching!(_))
+            .next_call(matching!(_, _))
             .returns(()),
     );
     let watch = watch(Arc::new(observer.clone()), Unimock::new(()));

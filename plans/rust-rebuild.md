@@ -1113,6 +1113,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       bounded worker reuse by source root, cleanup consistency, directory
       variables, owned-style moves, trusted inline ownership, and phase formatting.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/repository-before-merge-result.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/sidecar-node-all-after-gate.log`.
+- [x] Integrate the engine fixes with the iterative rebuild trees, preserving
+      trusted style annotations through cloning, repair, equality, and cache accounting.
+      Decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
   - [ ] Measure interleaved head/base work in Serve background Changes and
@@ -1149,18 +1152,18 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 
 Tags: ui
 
-- [ ] Update the viewer's review and snapshot readers to the generated types;
+- [x] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
-- [ ] Check the shell's projection of the entry detail's review v8 rule and
+- [x] Check the shell's projection of the entry detail's review v8 rule and
       resource records (`packages/viewer/src/review/view_evidence.ts`)
       against Milestone 9 output.
-- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+- [x] Align the viewer's `historicalSnapshotId` with the snapshot identity of
       the serialization contract: `sourceKind` is the literal `base`.
-- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+- [x] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
       package README describe (the path functions, the directory names, the
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
-- [ ] Add user-facing wording for the review v8 `implementation` reason under
+- [x] Add user-facing wording for the review v8 `implementation` reason under
       the `product-ui` rules. Explain actual-instance component impact while
       preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
@@ -1184,6 +1187,9 @@ Final review fixes and their check logs:
 `.context/rust-rebuild/delegation/m7/report-9.md`.
 The 409 index refresh, the mobile pending pill, and the frame sandbox message:
 `.context/rust-rebuild/delegation/m7/report-10.md`.
+The review v8 reader, the base snapshot identity, the `./data` trim, the
+`implementation` wording, and the projection check against Milestone 9 output:
+`.context/rust-rebuild/delegation/m7/report-11.md`.
 
 - [ ] Commit.
 
@@ -1232,9 +1238,24 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
       there: choose a repository-root rescan after each macOS batch and an
       exact-input stamp check on Windows, or one recursive watch per root on both
       systems; tests.
-- [ ] Report the composition warnings of every Serve attempt once, including
+- [x] Report the composition warnings of every Serve attempt once, including
       on-demand and background renders, through an attempt-scoped sink with a
       seen set kept across a failed attempt (`mokly-build-warnings.md`).
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-4.md` and
+`.context/rust-rebuild/sweeps/m11-warnings.md`.
+
+- [x] Correct Serve warning review findings 1 to 7 and flush the current
+      attempt's pending warnings on fatal server failure.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-5.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
+
+- [x] Merge comparison-engine updates, apply one cancellation rule to fatal
+      Serve warnings, and prove destination composition.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-6.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
 ## Milestone 11.1: Watch review corrections
 
@@ -1437,15 +1458,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       four-scenario benchmark harness; record the time and memory budgets, the
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
+  - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
+  - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
+  - [ ] Connect Changes and watch to their delivered browser events.
+  - [ ] Verify the comparison engine's tree walks after M9 integration.
+  - [ ] Measure isolated dependency installs and propose additional budgets;
+        retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
-- [ ] Make tree conversion, composition, serialization, destruction, and all
+- [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
-      subtree copies in link controls; recursion remains. Evidence:
+      subtree copies in link controls. Evidence:
       `.context/rust-rebuild/delegation/m5/memory-report.md` and `report-4.md` there.
-- [ ] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
+- [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
+- [ ] Decide whether reconstructed `plaintext` text writes raw characters;
+      keep its escaping rules until approved (M14 review 1a finding 1B).
+- [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
+      CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
+      excludes these paths. New input bounds or wider rewrites need a decision.
+- [ ] Replace the old baseline-output cold reset with M9 leased-cache preparation
+      and delivered Changes measurements in the M14 harness.
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
@@ -1456,10 +1490,18 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Verify that a sidecar emitting a large stderr stream drains safely at
       shutdown and leaves no process behind (M11 sweep, watched_serve case).
 
+Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
+Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
+Part 1 round 2 evidence: `.context/rust-rebuild/delegation/m14/report-2.md`.
+Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
+Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
+
 ## Milestone 15: Verification, close-out, and review
 
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
+      Commit `05923728` already moved the Publish Checkout, Removed Public
+      Options, and Portable Namespace notes there.
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
@@ -1470,6 +1512,12 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Reconcile the inherited M14 round 3
+        `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
+        The shared fixture seeds its epoch and cleanup uses one staleness rule.
+        The M14 isolated rerun passed; its missing epoch let idle cleanup take
+        the asserted slot. Evidence: M14 `report-3.md` and
+        `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and

@@ -47,12 +47,13 @@ pub(crate) fn document(
 }
 
 pub(crate) fn append_styles(nodes: &mut [Node], styles: &[OwnedStyle]) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
             if element.name == "head" {
                 element.children.extend(collected(styles));
             } else {
-                append_styles(&mut element.children, styles);
+                pending.extend(element.children.iter_mut().rev());
             }
         }
     }

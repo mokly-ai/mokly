@@ -9,11 +9,8 @@ import type {
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import type { ManifestScreen } from "../registry/types.js";
-import type {
-  ComponentReview,
-  ScreenReviewV7,
-} from "../review/component_types.js";
-import type { ReviewState, ViewReview } from "../review/types.js";
+import { componentViewEntry } from "../review/entries.js";
+import type { ReviewEntry, ReviewState, ReviewView } from "../review/types.js";
 
 import type { ShellContext } from "./context.js";
 import { orderChangedViews, type ChangedView } from "./view_marks.js";
@@ -24,7 +21,7 @@ export type ChangedViewsBySelection = Readonly<
   Record<string, readonly ChangedView[]>
 >;
 
-type ReviewedView = Pick<ViewReview, "colorScheme" | "state" | "viewport">;
+type ReviewedView = Pick<ReviewView, "colorScheme" | "state" | "viewport">;
 
 /** States that put a view in front of a reviewer; `ignored-only` does not. */
 const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
@@ -40,7 +37,7 @@ const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
 function changedViews(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV7 | undefined,
+  comparison: ReviewEntry | undefined,
   variantPath?: string,
 ): readonly ChangedView[] {
   return orderChangedViews(
@@ -54,7 +51,7 @@ function changedViews(
 function viewStates(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV7 | undefined,
+  comparison: ReviewEntry | undefined,
   variantPath?: string,
 ): readonly ViewState[] | undefined {
   return evidenceViews(entry, context, comparison, variantPath)?.map(
@@ -69,15 +66,12 @@ function viewStates(
 export function changedViewsBySelection(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV7 | undefined,
+  comparison: ReviewEntry | undefined,
   variantIds: readonly string[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
     return { [entry.path]: changedViews(entry, context, comparison) };
-  const reviewedIds =
-    comparison && "variants" in comparison
-      ? comparison.variants.map(({ path }) => path)
-      : [];
+  const reviewedIds = reviewedPaths(comparison);
   return Object.fromEntries(
     [...new Set([...variantIds, ...reviewedIds])].map((variantPath) => [
       variantPath,
@@ -93,7 +87,7 @@ export function changedViewsBySelection(
 export function viewStatesBySelection(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV7 | undefined,
+  comparison: ReviewEntry | undefined,
   variantIds: readonly string[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
@@ -102,10 +96,7 @@ export function viewStatesBySelection(
       ? (Object.create(null) as Record<string, readonly ViewState[]>)
       : { [entry.path]: states };
   }
-  const reviewedIds =
-    comparison && "variants" in comparison
-      ? comparison.variants.map(({ path }) => path)
-      : [];
+  const reviewedIds = reviewedPaths(comparison);
   const evidence: Record<string, readonly ViewState[]> = Object.create(null);
   for (const variantPath of new Set([...variantIds, ...reviewedIds])) {
     const states = viewStates(entry, context, comparison, variantPath);
@@ -127,15 +118,13 @@ export function selectedChangedViews(
 function evidenceViews(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV7 | undefined,
+  comparison: ReviewEntry | undefined,
   variantPath?: string,
 ): readonly ReviewedView[] | undefined {
   const reviewed =
-    comparison === undefined
-      ? undefined
-      : "variants" in comparison
-        ? comparison.variants.find((item) => item.path === variantPath)?.views
-        : comparison.views;
+    comparison?.kind === "component"
+      ? componentViewEntry(comparison, variantPath)?.views
+      : comparison?.views;
   return (
     reviewed ??
     (entry.kind === "screen"
@@ -144,4 +133,11 @@ function evidenceViews(
         )?.views
       : undefined)
   );
+}
+
+/** A component parent's own path and its variants' paths; none for a screen. */
+function reviewedPaths(comparison: ReviewEntry | undefined): readonly string[] {
+  return comparison?.kind === "component"
+    ? [comparison.path, ...(comparison.variants ?? []).map(({ path }) => path)]
+    : [];
 }

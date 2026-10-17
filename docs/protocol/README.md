@@ -97,6 +97,7 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 - [Removed Preview Acceptance](./mokly-removed-preview-acceptance.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Tree Comparison And Changes](./mokly-comparison.md)
+- [Comparison Tree Model](./mokly-comparison-tree.md)
 - [Git Command Runtime](./mokly-git.md)
 
 ## Read Model And Delivery

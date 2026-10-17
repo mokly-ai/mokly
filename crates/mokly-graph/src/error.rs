@@ -91,14 +91,8 @@ pub enum InternalError {
         /// Original typed provider failure.
         source: Box<dyn std::error::Error + Send + Sync>,
     },
-    /// A large-stack preparation thread could not start.
-    #[error("preparation thread could not start: {source}")]
-    PreparationThread {
-        /// Original thread creation error.
-        source: std::io::Error,
-    },
     /// A preparation task unwound before returning a result.
-    #[error("preparation thread failed")]
+    #[error("preparation failed")]
     PreparationPanicked,
     /// Canonical key input serialization failed.
     #[error("key serialization failed: {source}")]

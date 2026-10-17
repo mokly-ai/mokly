@@ -120,30 +120,45 @@ fn visit(
     issues: &mut Vec<Issue>,
     entries: &[ModelEntry],
 ) {
-    if let Some(index) = stack.iter().position(|ancestor| ancestor == path) {
-        let cycle: Vec<_> = stack[index..]
-            .iter()
-            .map(String::as_str)
-            .chain([path])
-            .map(|path| {
-                entries
-                    .iter()
-                    .find(|entry| entry.metadata.path == path)
-                    .map_or(path, |entry| entry.metadata.source.path.as_str())
-            })
-            .collect();
-        issues.push(Issue::new(
-            Code::HtmlElement,
-            format!("component cycle: {}", cycle.join(" -> ")),
-        ));
-        return;
+    let mut pending = vec![(path, false)];
+    let mut positions = BTreeMap::new();
+    while let Some((path, leaving)) = pending.pop() {
+        if leaving {
+            stack.pop();
+            positions.remove(path);
+            continue;
+        }
+        if let Some(index) = positions.get(path).copied() {
+            let cycle: Vec<_> = stack[index..]
+                .iter()
+                .map(String::as_str)
+                .chain([path])
+                .map(|path| {
+                    entries
+                        .iter()
+                        .find(|entry| entry.metadata.path == path)
+                        .map_or(path, |entry| entry.metadata.source.path.as_str())
+                })
+                .collect();
+            issues.push(Issue::new(
+                Code::HtmlElement,
+                format!("component cycle: {}", cycle.join(" -> ")),
+            ));
+            continue;
+        }
+        if !done.insert(path.into()) {
+            continue;
+        }
+        positions.insert(path, stack.len());
+        stack.push(path.into());
+        pending.push((path, true));
+        pending.extend(
+            edges
+                .get(path)
+                .into_iter()
+                .flatten()
+                .rev()
+                .map(|child| (child.as_str(), false)),
+        );
     }
-    if !done.insert(path.into()) {
-        return;
-    }
-    stack.push(path.into());
-    for child in edges.get(path).into_iter().flatten() {
-        visit(child, edges, stack, done, issues, entries);
-    }
-    stack.pop();
 }

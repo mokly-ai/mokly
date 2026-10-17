@@ -1,6 +1,6 @@
 /** The change status and stylesheet evidence that one page's Details show. */
 
-import type { ResourceEvidence } from "../review/types.js";
+import type { EvidenceReasons } from "../review/types.js";
 import { viewEvidenceReasons } from "../review/view_evidence.js";
 import { publicEntryStatus } from "../viewer/public_workspace.js";
 
@@ -14,7 +14,7 @@ export interface PageComparisonEvidence {
   /** The status beside the page title; absent until Changes is ready. */
   status?: EntryStatus;
   /** The page's own changed files and examined exclusions, when it has any. */
-  resources?: ResourceEvidence;
+  resources?: EvidenceReasons;
 }
 
 /**

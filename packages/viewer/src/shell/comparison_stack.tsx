@@ -1,6 +1,6 @@
 /** Overlay and Difference: both versions stacked inside one chrome. */
 
-import type { ViewReview } from "../review/types.js";
+import type { ReviewView } from "../review/types.js";
 
 import {
   ChromeScheme,
@@ -29,7 +29,7 @@ export function StackedComparison({
   chrome: ComparisonChrome;
   mode: "difference" | "overlay";
   sync: ComparisonScrollSync;
-  view: ViewReview;
+  view: ReviewView;
 }) {
   return (
     <div className="mb-panes" data-compare-mode={mode}>

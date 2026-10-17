@@ -15,6 +15,8 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
     let mut emitter = DefaultEmitter::<usize>::new_with_span();
     emitter.naively_switch_states(true);
     let mut locations: BTreeMap<String, VecDeque<SourceLocation>> = BTreeMap::new();
+    let mut cursor = template.source.char_indices().peekable();
+    let (mut line, mut column) = (1, 1);
     for token in Tokenizer::new_with_emitter(template.body.as_str(), emitter).flatten() {
         if let Token::StartTag(tag) = token {
             let name = String::from_utf8_lossy(&tag.name);
@@ -30,14 +32,20 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
                 .collect();
             let key = format!("{name}:{attributes:?}");
             let end = (template.body_offset + tag.span.start).min(template.source.len());
-            let prefix = &template.source[..end];
+            while cursor.peek().is_some_and(|(index, _)| *index < end) {
+                if let Some((_, character)) = cursor.next() {
+                    if character == '\n' {
+                        line += 1;
+                        column = 1;
+                    } else {
+                        column += 1;
+                    }
+                }
+            }
             locations.entry(key).or_default().push_back(SourceLocation {
                 path: template.source_path.clone(),
-                line: prefix.bytes().filter(|c| *c == b'\n').count() + 1,
-                column: prefix
-                    .rsplit('\n')
-                    .next()
-                    .map_or(1, |line| line.chars().count() + 1),
+                line,
+                column,
                 export: None,
             });
         }
@@ -52,7 +60,8 @@ pub(crate) fn template(template: &Template) -> Result<Vec<Node>> {
 }
 
 fn attach(nodes: &mut [Node], locations: &mut BTreeMap<String, VecDeque<SourceLocation>>) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
             let key = signature(element);
             element.source = locations.get_mut(&key).and_then(VecDeque::pop_front);
@@ -60,7 +69,7 @@ fn attach(nodes: &mut [Node], locations: &mut BTreeMap<String, VecDeque<SourceLo
                 .source
                 .as_ref()
                 .map(|source| format!("{}:{}:{}", source.path, source.line, source.column));
-            attach(&mut element.children, locations);
+            pending.extend(element.children.iter_mut().rev());
         }
     }
 }
@@ -82,11 +91,12 @@ pub(crate) fn slot(body: &str, entry: &str, name: &str) -> Vec<Node> {
 }
 
 fn slot_origins(nodes: &mut [Node], prefix: &str, next: &mut usize) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
             element.origin = Some(format!("{prefix}:{}", *next));
             *next += 1;
-            slot_origins(&mut element.children, prefix, next);
+            pending.extend(element.children.iter_mut().rev());
         }
     }
 }

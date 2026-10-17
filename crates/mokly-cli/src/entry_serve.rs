@@ -5,7 +5,6 @@ use std::io::IsTerminal;
 use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
 
-use crate::serve_lifecycle::ServeLifecycle;
 use mokly_catalogue::config::relative;
 use mokly_cli::build_output;
 use mokly_cli::cancellation::{Cancellation, ServeCancellation};
@@ -28,11 +27,13 @@ use mokly_server::work::{Workers, parallelism};
 use tokio::sync::{mpsc, watch};
 
 use crate::serve_candidates::{CandidateWork, ManualCandidates};
+use crate::serve_lifecycle::ServeLifecycle;
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
 use crate::serve_services::ServeServices;
 use crate::serve_state::{NativeServeState, ServeStateFactory};
 use crate::serve_timing::ServeTiming;
+use crate::serve_warnings::{ServeWarnings, WarningScopes};
 use crate::serve_watch::{WatchInputs, WatchedInputs};
 use crate::terminal::Terminal;
 use crate::{serve_controls, serve_preparation, serve_shutdown, serve_signals, serve_trace};
@@ -62,10 +63,24 @@ pub(super) fn run(
         }
     };
     let cancellation: Arc<dyn Cancellation> = Arc::new(ServeCancellation::default());
+    let warnings: Arc<dyn WarningScopes> = Arc::new(ServeWarnings::new(
+        cancellation.clone(),
+        terminal.clone(),
+        style.clone(),
+        redactor.clone(),
+    ));
+    let attempt = warnings.begin();
+    let reporter = Arc::new(ServeLines {
+        cwd: cwd.clone(),
+        cancellation: cancellation.clone(),
+        terminal: terminal.clone(),
+        style: style.clone(),
+        redactor: redactor.clone(),
+    });
     let services = match ServeServices::new(&cwd, common, redactor.clone(), cancellation.clone()) {
         Ok(services) => services,
         Err(error) => {
-            terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
+            reporter.preparation_failed(attempt.as_ref(), &error);
             return ExitCode::FAILURE;
         }
     };
@@ -124,6 +139,7 @@ pub(super) fn run(
             let prepared = match serve_preparation::initial(
                 preparation.clone(),
                 watching.clone(),
+                attempt.clone(),
                 &cwd,
                 common,
             )
@@ -134,7 +150,7 @@ pub(super) fn run(
                     if *receiver.borrow() {
                         return Ok(ExitCode::SUCCESS);
                     }
-                    terminal.stderr(&build_output::failure(style, &error, &redactor, &cwd));
+                    reporter.preparation_failed(attempt.as_ref(), &error);
                     return Ok(ExitCode::FAILURE);
                 }
                 Err(_) if *receiver.borrow() => return Ok(ExitCode::SUCCESS),
@@ -155,16 +171,9 @@ pub(super) fn run(
                 assets: assets.load(&dist)?,
                 base: common.base.clone(),
             });
-            let snapshot = states.create(&prepared, 1)?;
+            let snapshot = states.create(&prepared, 1, attempt.clone())?;
             let base = snapshot.index.base.clone().unwrap_or_default();
             let publications = Arc::new(SharedPublication::new(snapshot));
-            let reporter = Arc::new(ServeLines {
-                cwd: cwd.clone(),
-                cancellation: cancellation.clone(),
-                terminal: terminal.clone(),
-                style: style.clone(),
-                redactor: redactor.clone(),
-            });
             let work = Arc::new(Workers::new(workers, reporter.clone()));
             let background: Arc<dyn Background> = Arc::new(UsagePass {
                 publications: publications.clone(),
@@ -197,16 +206,14 @@ pub(super) fn run(
             if *receiver.borrow()
                 || !phase.serve(&|| {
                     terminal.stdout(&layout);
-                    terminal.stderr(&build_output::warnings(
-                        style,
-                        &prepared.summary.warnings,
-                        &redactor,
-                    ));
-                    terminal.stdout(&serve_output::catalogue(
-                        style,
-                        &prepared.summary,
-                        timing.elapsed(),
-                    ));
+                    attempt.finish(&prepared.summary.warnings, false, &|warnings| {
+                        terminal.stderr(&build_output::warnings(style, warnings, &redactor));
+                        terminal.stdout(&serve_output::catalogue(
+                            style,
+                            &prepared.summary,
+                            timing.elapsed(),
+                        ));
+                    });
                     terminal.stdout(&serve_output::changes_unavailable(
                         style,
                         "Git comparison is unavailable in this build.",
@@ -235,13 +242,14 @@ pub(super) fn run(
                 },
             );
             let actions: &dyn ServeActions = &ManualRebuilds {
+                warnings: warnings.clone(),
                 watching,
                 candidates: candidates.clone(),
                 preparation: preparation.clone(),
                 states,
                 publications: publications.clone(),
                 writer: publications,
-                reporter,
+                reporter: reporter.clone(),
                 cwd: cwd.clone(),
                 options: common.clone(),
             };
@@ -260,6 +268,9 @@ pub(super) fn run(
             result.map(|()| ExitCode::SUCCESS)
         }
         .await;
+        if result.is_err() {
+            reporter.terminating_failure(warnings.as_ref());
+        }
         stop.send_replace(true);
         let shutdown = shutdown.await;
         signals.abort();

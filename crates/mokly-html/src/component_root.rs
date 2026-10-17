@@ -32,9 +32,20 @@ fn check(
     roots: &mut usize,
     prior_owner: &mut bool,
 ) -> Result<()> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes
+        .iter()
+        .rev()
+        .map(|node| (node, inside_owner))
+        .collect();
+    while let Some((node, inside_owner)) = pending.pop() {
         match node {
-            Node::Element(element) => check(&element.children, inside_owner, roots, prior_owner)?,
+            Node::Element(element) => pending.extend(
+                element
+                    .children
+                    .iter()
+                    .rev()
+                    .map(|node| (node, inside_owner)),
+            ),
             Node::Region { region, children } => {
                 let ownership = matches!(
                     region.kind,
@@ -50,7 +61,12 @@ fn check(
                     *roots += 1;
                 }
                 *prior_owner |= ownership;
-                check(children, inside_owner || ownership, roots, prior_owner)?;
+                pending.extend(
+                    children
+                        .iter()
+                        .rev()
+                        .map(|node| (node, inside_owner || ownership)),
+                );
             }
             _ => {}
         }

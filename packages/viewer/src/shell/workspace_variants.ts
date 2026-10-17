@@ -3,7 +3,8 @@ import type {
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
-import type { ComponentReview } from "../review/component_types.js";
+import { componentViewEntry } from "../review/entries.js";
+import type { ReviewEntry } from "../review/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
@@ -37,7 +38,7 @@ export function workspaceVariants(
   catalogue: Catalogue,
   entry: ManifestComponent,
   snapshot: ShellContext["componentChanges"],
-  comparison: ComponentReview | undefined,
+  comparison: ReviewEntry | undefined,
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
@@ -70,9 +71,7 @@ export function workspaceVariants(
     ...removed,
   ];
   const rows = values.map(({ value, snapshotId }): WorkspaceVariant => {
-    const review = comparison?.variants.find(
-      (item) => item.path === value.path,
-    );
+    const review = comparison && componentViewEntry(comparison, value.path);
     const isRemoved =
       parentRemoved || !current.some((item) => item.path === value.path);
     const status = !known
@@ -106,7 +105,7 @@ export function workspaceVariants(
 export function standaloneWorkspaceVariant(
   entry: ManifestComponentVariant,
   snapshot: ShellContext["componentChanges"],
-  comparison: ComponentReview | undefined,
+  comparison: ReviewEntry | undefined,
   known: boolean,
   removed: boolean,
   entryStatus: EntryStatus | undefined,
@@ -119,9 +118,7 @@ export function standaloneWorkspaceVariant(
       ? [candidate]
       : [],
   ) ?? [entry];
-  const review = comparison?.variants.find(
-    (candidate) => candidate.path === entry.path,
-  );
+  const review = comparison && componentViewEntry(comparison, entry.path);
   const status = !known
     ? undefined
     : removed

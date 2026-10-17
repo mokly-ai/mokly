@@ -13,11 +13,11 @@ use crate::cache::Artifact;
 use crate::closure::Closure;
 use crate::error::{GraphError, InternalError, Result};
 
-/// A document action that can run on a worker's large stack.
+/// A document action scheduled on a standard worker thread.
 pub trait ArtifactWorker: Send + Sync {
     /// Compose and validate one document without scheduling another worker.
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>>;
-    /// Collect a closure on the worker without changing its stack context.
+    /// Collect a closure on the worker without scheduling a second worker.
     fn closure_job(&self, route: &str) -> Result<Closure>;
 }
 
@@ -61,7 +61,7 @@ pub trait RenderWorkers: Send + Sync {
     fn cancelled(&self) -> bool {
         false
     }
-    /// Collect an on-demand closure on the large render stack.
+    /// Collect an on-demand closure on a render worker.
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
         worker.closure_job(route)
     }
@@ -83,7 +83,6 @@ impl ThreadWorkers {
     pub fn new(count: usize) -> Result<Self> {
         match rayon::ThreadPoolBuilder::new()
             .num_threads(count.max(1))
-            .stack_size(64 * 1024 * 1024)
             .thread_name(|index| format!("mokly-render-{index}"))
             .build()
         {

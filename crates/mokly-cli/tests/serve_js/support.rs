@@ -2,6 +2,7 @@
 
 use std::fs::{self, File};
 use std::io::Write;
+use std::os::fd::OwnedFd;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
@@ -29,6 +30,14 @@ impl Serve {
         Self::configured(source, &|_, _| {}).await
     }
     pub(super) async fn configured(source: &str, configure: &dyn Fn(&Path, &Path)) -> Self {
+        Self::options(source, "1", "rich", configure).await
+    }
+    pub(super) async fn options(
+        source: &str,
+        sidecars: &str,
+        mode: &str,
+        configure: &dyn Fn(&Path, &Path),
+    ) -> Self {
         let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../..")
             .canonicalize()
@@ -49,30 +58,31 @@ impl Serve {
         .unwrap();
         let (package, input, slave) = super::fixture::terminal(root.path(), &workspace);
         configure(root.path(), &package);
-        let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
-            .args(["serve", "--port", "0", "--sidecars", "1"])
+        let (output, writer) = std::os::unix::net::UnixStream::pair().unwrap();
+        output.set_nonblocking(true).unwrap();
+        let child = Command::new(env!("CARGO_BIN_EXE_mokly"))
+            .args(["serve", "--port", "0", "--sidecars", sidecars])
             .current_dir(root.path())
             .env("MOKLY_PACKAGE_ROOT", package)
             .env("MOKLY_VIEWER_DIST", workspace.join("packages/viewer/dist"))
-            .env("MOKLY_OUTPUT", "rich")
+            .env("MOKLY_OUTPUT", mode)
             .env("NO_COLOR", "1")
             .env_remove("CI")
             .env_remove("MOKLY_SIDECAR_TIMEOUT_MS")
             .env_remove("MOKLY_SIDECARS")
             .stdin(Stdio::from(slave))
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stdout(Stdio::from(OwnedFd::from(writer.try_clone().unwrap())))
+            .stderr(Stdio::from(OwnedFd::from(writer)))
             .kill_on_drop(true)
             .spawn()
             .unwrap();
         let lines = Arc::new(Mutex::new(Vec::new()));
         let ready = Arc::new(Notify::new());
-        let stdout = child.stdout.take().unwrap();
-        let stderr = child.stderr.take().unwrap();
-        let readers = vec![
-            read(stdout, lines.clone(), ready.clone()),
-            read(stderr, lines.clone(), ready.clone()),
-        ];
+        let readers = vec![read(
+            tokio::net::UnixStream::from_std(output).unwrap(),
+            lines.clone(),
+            ready.clone(),
+        )];
         Self {
             root,
             child,
@@ -248,7 +258,7 @@ fn read<R: tokio::io::AsyncRead + Unpin + Send + 'static>(
         }
     })
 }
-async fn get(host: &str, path: &str) -> String {
+pub(super) async fn get(host: &str, path: &str) -> String {
     let mut socket = TcpStream::connect(host).await.unwrap();
     socket
         .write_all(

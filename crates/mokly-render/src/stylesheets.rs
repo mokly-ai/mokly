@@ -141,15 +141,23 @@ fn visit(
     seen: &mut BTreeSet<String>,
     files: &mut Vec<String>,
 ) {
-    if !seen.insert(path.into()) {
-        return;
-    }
-    if path.ends_with(".css") {
-        files.push(path.into());
-        return;
-    }
-    for dependency in modules.get(path).into_iter().flatten() {
-        visit(dependency, modules, seen, files);
+    let mut pending = vec![path];
+    while let Some(path) = pending.pop() {
+        if !seen.insert(path.into()) {
+            continue;
+        }
+        if path.ends_with(".css") {
+            files.push(path.into());
+        } else {
+            pending.extend(
+                modules
+                    .get(path)
+                    .into_iter()
+                    .flatten()
+                    .rev()
+                    .map(String::as_str),
+            );
+        }
     }
 }
 
@@ -160,3 +168,7 @@ pub(crate) fn ignored(path: &str, loaders: &BTreeMap<String, String>) -> bool {
                 .get(".module.css")
                 .is_some_and(|loader| loader == "empty")
 }
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_walk_tests.rs"]
+mod stylesheet_walk_tests;

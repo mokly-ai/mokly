@@ -11,12 +11,12 @@ use mokly_model::usage::CatalogueUsage;
 use crate::composition::Composed;
 use crate::error::Result;
 use crate::links::{self, Reference};
-use crate::normalized_regions;
 use crate::tree::{Element, Node, Region, RegionKind};
+use crate::{normalization_annotate, normalized_regions};
 use crate::{normalized_usage, parse, regions, serialize};
 
 pub(crate) const ATTRIBUTE: &str = "data-mokly-normalize";
-const PREFIX: &str = "mokly-normalize:";
+pub(crate) const PREFIX: &str = "mokly-normalize:";
 
 pub(crate) struct Metadata {
     pub(crate) style_owners: Option<Vec<String>>,
@@ -82,7 +82,7 @@ fn reparse(
     catalogue: &PreparedCatalogue,
 ) -> (Vec<Node>, Vec<Warning>) {
     let mut repair = Repair::default();
-    let marked = annotate(nodes, "document", "document", None, &mut repair);
+    let marked = normalization_annotate::annotate(nodes, &mut repair);
     let mut parsed = parse::document(&serialize::html(&marked));
     normalized_regions::classify(&parsed, &mut repair);
     parsed = normalized_regions::restore(parsed, &mut repair);
@@ -124,62 +124,6 @@ fn reparse(
         })
         .collect();
     (parsed, warnings)
-}
-
-fn annotate(
-    nodes: Vec<Node>,
-    parent: &str,
-    parent_name: &str,
-    owner: Option<&str>,
-    repair: &mut Repair,
-) -> Vec<Node> {
-    let mut output = Vec::new();
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                let id = repair.regions.len().to_string();
-                repair.regions.insert(
-                    id.clone(),
-                    Placement {
-                        region,
-                        parent: parent.into(),
-                        parent_name: parent_name.into(),
-                        enclosing: owner.map(str::to_owned),
-                    },
-                );
-                output.push(Node::Comment(format!("{PREFIX}{id}:start")));
-                output.extend(annotate(children, parent, parent_name, Some(&id), repair));
-                output.push(Node::Comment(format!("{PREFIX}{id}:end")));
-            }
-            Node::Element(mut element) => {
-                let id = repair.elements.len().to_string();
-                let previous = element.take(ATTRIBUTE);
-                repair.elements.insert(
-                    id.clone(),
-                    Metadata {
-                        style_owners: element.style_owners.take(),
-                        origin: element.origin.take(),
-                        navigation: element.navigation.take(),
-                        source: element.source.take(),
-                        previous,
-                        parent: parent.into(),
-                        owner: owner.map(str::to_owned),
-                    },
-                );
-                element.set(ATTRIBUTE, &id);
-                element.children = annotate(
-                    mem::take(&mut element.children),
-                    &id,
-                    &element.name,
-                    owner,
-                    repair,
-                );
-                output.push(Node::Element(element));
-            }
-            node => output.push(node),
-        }
-    }
-    output
 }
 
 pub(crate) fn marker(node: &Node) -> Option<(&str, bool)> {
