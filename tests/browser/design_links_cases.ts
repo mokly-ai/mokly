@@ -7,6 +7,7 @@ import {
 
 import { test as baseTest } from "./browser_test.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
+import { blankFrameNotice } from "./navigation_error_allowances.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 /** Run the same assertions against each catalogue delivery. */
@@ -104,7 +105,9 @@ export function registerDesignLinks(
 
     test(`${viewport} comparison, tags, and flow links use canonical designs`, async ({
       page,
+      allowBrowserError,
     }) => {
+      allowBrowserError(blankFrameNotice);
       await page.setViewportSize({ width: 1600, height: 1000 });
       await page.goto("/view/design/browse/views/screen/");
       await chooseViewport(page, viewport);

@@ -1000,6 +1000,7 @@ Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
 Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browser/report-4.md`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
+Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
 
 - [ ] Commit.
 
