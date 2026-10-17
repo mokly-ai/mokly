@@ -60,8 +60,17 @@ for (const event of ['start', 'end']) {
     assert.equal(args[0], "build");
     assert.equal(args.includes("--no-changes"), options.buildChanges === false);
     assert.equal(stored.results.length, 1);
-    assert.equal(stored.results[0].status, "measured");
-    const spans = stored.results[0].inputProfile.spans;
+    const measured = stored.results[0];
+    assert.ok(measured && "status" in measured && "inputProfile" in measured);
+    assert.equal(measured.status, "measured");
+    const profile = measured.inputProfile;
+    assert.ok(
+      profile &&
+        typeof profile === "object" &&
+        "spans" in profile &&
+        Array.isArray(profile.spans),
+    );
+    const spans = profile.spans;
     assert.equal(spans.length, 1);
     assert.equal(spans[0].stage, "output.fingerprint");
     assert.equal(spans[0].status, "ok");
