@@ -133,13 +133,14 @@ test("PostCSS children replace inherited head directory variables", async (conte
   await fs.writeFile(path.join(base, "origin.txt"), "base");
   await fs.writeFile(
     path.join(base, "postcss.mjs"),
-    "import {readFileSync} from 'node:fs'; export default {plugins:[{postcssPlugin:'environment',Once(root){if(process.env.INIT_CWD!==undefined||process.env.npm_package_json!==undefined)throw new Error('npm directory variables leaked');root.append({selector:'.env',nodes:[{prop:'--origin',value:readFileSync(process.env.PWD+'/origin.txt','utf8')}]});}}]};",
+    "import {readFileSync} from 'node:fs'; export default {plugins:[{postcssPlugin:'environment',Once(root){if(process.env.INIT_CWD!==undefined||process.env.npm_package_json!==undefined||process.env.npm_config_local_prefix!==undefined)throw new Error('npm directory variables leaked');root.append({selector:'.env',nodes:[{prop:'--origin',value:readFileSync(process.env.PWD+'/origin.txt','utf8')}]});}}]};",
   );
   const sidecar = startSidecar(context, head, {
     ...process.env,
     PWD: head,
     INIT_CWD: head,
     npm_package_json: path.join(head, "package.json"),
+    npm_config_local_prefix: head,
   });
   await sidecar.call("hello");
   const result = await sidecar.call<CssResult>(

@@ -121,7 +121,7 @@ Operation events count each fork and its terminal event once.
 The child puts selected dependency directories before inherited `NODE_PATH` entries. `dispose` releases a bundle, `disposeContext` releases one PostCSS context,
 and `shutdown` releases all state.
 Sidecars and PostCSS children set `PWD` to their source directory and omit
-`INIT_CWD` and `npm_package_json`.
+`INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
 
 ## Development
 

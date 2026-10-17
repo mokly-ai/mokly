@@ -41,7 +41,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
         consumer.replace(
             "specs/screen.mockup.tsx",
             "export default defineScreen({",
-            "import {readFileSync} from 'node:fs';\nconst loaded = readFileSync(process.cwd() + '/cwd.txt', 'utf8');\nconst fromEnvironment = readFileSync(process.env.PWD + '/cwd.txt', 'utf8');\nconst npmRoots = [process.env.INIT_CWD,process.env.npm_package_json].map(value=>value??'unset').join(':');\nfunction exclusive() { try { return readFileSync('head-only.txt','utf8'); } catch (error) { return error.code; } }\nexport default defineScreen({",
+            "import {readFileSync} from 'node:fs';\nconst loaded = readFileSync(process.cwd() + '/cwd.txt', 'utf8');\nconst fromEnvironment = readFileSync(process.env.PWD + '/cwd.txt', 'utf8');\nconst npmRoots = [process.env.INIT_CWD,process.env.npm_package_json,process.env.npm_config_local_prefix].map(value=>value??'unset').join(':');\nfunction exclusive() { try { return readFileSync('head-only.txt','utf8'); } catch (error) { return error.code; } }\nexport default defineScreen({",
         );
         consumer.replace(
             "specs/screen.mockup.tsx",
@@ -53,7 +53,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
             "new URL(\"./tokens.json\", import.meta.url)",
             "process.cwd() + '/tokens.json'",
         );
-        consumer.replace("postcss.mjs", "export default {", "if (process.env.INIT_CWD !== undefined || process.env.npm_package_json !== undefined || JSON.parse(readFileSync(process.env.PWD + '/tokens.json','utf8')).color !== tokens.color) throw new Error('PostCSS inherited another source environment');\nexport default {");
+        consumer.replace("postcss.mjs", "export default {", "if (process.env.INIT_CWD !== undefined || process.env.npm_package_json !== undefined || process.env.npm_config_local_prefix !== undefined || JSON.parse(readFileSync(process.env.PWD + '/tokens.json','utf8')).color !== tokens.color) throw new Error('PostCSS inherited another source environment');\nexport default {");
     }
     head.replace("specs/screen.mockup.tsx", "\"Hello\"", "\"HeadOnly\"");
     base.replace("specs/screen.mockup.tsx", "\"Hello\"", "\"BaseOnly\"");
@@ -61,7 +61,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     let head_document = head_generation.render("screen/index.mobile.html").unwrap();
     assert!(String::from_utf8_lossy(&head_document.bytes).contains("HeadOnly"));
     assert!(String::from_utf8_lossy(&head_document.bytes).contains("head cwd:head cwd"));
-    assert!(String::from_utf8_lossy(&head_document.bytes).contains("head cwd:unset:unset"));
+    assert!(String::from_utf8_lossy(&head_document.bytes).contains("head cwd:unset:unset:unset"));
     let head_css = head_generation
         .resource("styles/specs/components/chip.mockup.tsx.css")
         .unwrap()
@@ -127,7 +127,7 @@ fn base_renders_its_own_sources_and_holds_both_leases_until_the_graph_closes() {
     assert!(!html.contains("HeadOnly"));
     assert!(html.contains("base cwd:base cwd"));
     assert!(!html.contains("head cwd"));
-    assert!(html.contains("base cwd:unset:unset"));
+    assert!(html.contains("base cwd:unset:unset:unset"));
     assert!(!html.contains("environment head secret"));
     assert!(html.contains("ENOENT"));
     assert!(!html.contains("head secret"));
@@ -195,6 +195,7 @@ fn inherited_head_environment() -> bool {
         .env("PWD", directory.path())
         .env("INIT_CWD", directory.path())
         .env("npm_package_json", directory.path().join("package.json"))
+        .env("npm_config_local_prefix", directory.path())
         .output().unwrap();
     assert!(
         output.status.success(),

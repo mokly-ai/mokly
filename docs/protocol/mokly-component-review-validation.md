@@ -34,7 +34,7 @@ supplied slot content. That proof retains the exact instance, view, side,
 referring route, written URL, and resolved target. Inline rules use their
 containing public document route and recorded containment proof.
 An `implementation` reason requires the corresponding actual-instance render
-proof, including trusted sidecar-owned styles that reach that instance. These reasons never alter the component's own view states.
+proof. These reasons never alter the component's own view states.
 Validation uses the recorded classifier evidence, never the
 result's own rows or a fresh path match. Source keys use kind and path,
 flattened variants included; a moved entry uses its current path.

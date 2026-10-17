@@ -1055,9 +1055,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         rule edit can create a direct parent change. Keep this behaviour until
         the user chooses the ownership rule.
   - [ ] Resolve user item 40 (review 6b finding 3): owned styles set material
-        flags without per-rule records in the code. Keep the approved
-        rule-evidence specification and decide the owned-rule evidence contract
-        before adding records or changing the documented view-state rule.
+        flags without per-rule records in the code. Consumer-instance matches
+        of owned styles also supply implementation proof without those records.
+        Keep the approved rule-evidence specification. Decide both evidence
+        paths before adding records or changing the documented view-state rule.
 - [x] Compute and retain HTML Changes in `mokly build`, with base selection,
       disabled Changes, invalid-base diagnostics, and terminal counts.
 - [x] Apply comparison review round 1: exact instance proof, entry state and
@@ -1116,12 +1117,27 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Integrate the engine fixes with the iterative rebuild trees, preserving
       trusted style annotations through cloning, repair, equality, and cache accounting.
       Decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [x] Apply engine review 7 launch and test fixes: Windows path normalization,
+      npm directory isolation, independent root-selection coverage, and restored
+      rule-evidence wording. Record reserved names and owned follow-ups.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round10/targeted-results.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round10/pool-test-mutation-result.json`.
+- [ ] Reduce source-root replacements in the shared Changes engine for build,
+      publish, and Serve. Owner: M9 engine delegate (`m9-compare`). Render each
+      side's planned views in one pass before pairing, or batch requests by root.
+      Acceptance: one worker spawns a small constant per side switch plus
+      recycles, independent of the number of paired views. Keep the pool bound.
+- [ ] Decide whether sidecars and PostCSS children remove all `npm_*` variables
+      and head `.bin` entries from `PATH` (review 7 finding 5B). Keep other
+      inherited values until the user decides.
+- [ ] Decide enforcement for source or installation paths beneath the reserved
+      `node_modules/.mokly-roots/` prefix (review 7 finding 7). The reservation
+      is documented; a new rejection requires the user's decision.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
   - [ ] Measure interleaved head/base work in Serve background Changes and
         reduce source-root replacements within the configured pool bound,
-        including the one-worker case. Evaluate rendering each side in one
-        pass before pairing views (review 6a finding 2, option C).
+        including the one-worker case. Integrate shared-engine batching with
+        Serve-only interleaving (review 6a finding 2, option C).
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
@@ -1462,6 +1478,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
   - [ ] Verify the comparison engine's tree walks after M9 integration.
+        Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
+        and `inline_styles::collect` in `mokly-compare`. Also remove the
+        per-element copy of enclosing instances in `owned_style_instances::walk`.
   - [ ] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue

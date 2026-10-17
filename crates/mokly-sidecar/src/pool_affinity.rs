@@ -58,3 +58,7 @@ pub(super) fn runnable(state: &State, context: Option<&str>, limit: usize) -> bo
         !state.available.is_empty() || state.slots.len() < limit
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/pool_root_selection_tests.rs"]
+mod pool_root_selection_tests;

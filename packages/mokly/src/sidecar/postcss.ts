@@ -71,6 +71,7 @@ export class PostcssWorkers {
           PWD: root,
           INIT_CWD: undefined,
           npm_package_json: undefined,
+          npm_config_local_prefix: undefined,
           NODE_PATH: [...paths.dependencyRoots, process.env.NODE_PATH]
             .filter(Boolean)
             .join(path.delimiter),

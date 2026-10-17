@@ -64,7 +64,9 @@ bound restores normal checks. The 500-render rule always applies. Recycling
 starts after the in-flight request completes.
 
 `NodeFactory` uses the selected source working directory and sets `PWD` to it.
-It omits `INIT_CWD` and `npm_package_json` and inherits other environment values.
+It omits `INIT_CWD`, `npm_package_json`, and `npm_config_local_prefix`.
+Other environment values are inherited. The source directory uses
+`dunce::canonicalize` for Windows path compatibility.
 A missing source directory names that directory in the unavailable result. It
 uses a persistent launch thread for Linux parent-death signals. The Node
 watchdog observes parent death and pipe closure outside the render thread.

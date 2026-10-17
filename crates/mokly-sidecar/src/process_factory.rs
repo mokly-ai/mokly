@@ -59,7 +59,7 @@ impl WorkerFactory for NodeFactory {
                 part: launch.repository.display().to_string(),
             });
         }
-        let repository = match fs::canonicalize(&launch.repository) {
+        let repository = match dunce::canonicalize(&launch.repository) {
             Ok(repository) => repository,
             Err(_) => {
                 return Err(Error::Unavailable {
@@ -74,6 +74,7 @@ impl WorkerFactory for NodeFactory {
             .env("PWD", &repository)
             .env_remove("INIT_CWD")
             .env_remove("npm_package_json")
+            .env_remove("npm_config_local_prefix")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());

@@ -10,8 +10,10 @@ are resolved to real filesystem paths before identity and confinement checks.
 
 Each process keeps one source working directory for its whole lifetime,
 including delayed callbacks. Its `PWD` names that directory. Sidecars and
-PostCSS children omit `INIT_CWD` and `npm_package_json`. Other environment
-values are inherited.
+PostCSS children omit `INIT_CWD`, `npm_package_json`, and
+`npm_config_local_prefix`. Other environment values are inherited.
+The Rust launcher canonicalizes its directory with `dunce::canonicalize`
+before setting the working directory and `PWD`.
 
 A live PostCSS context keeps its affine slot. Independent eligible work uses
 an idle worker with the same source root, then an unspawned slot within the
@@ -31,6 +33,8 @@ The first dependency root uses the logical prefix `node_modules/`. Additional
 roots use `node_modules/.mokly-roots/{index}/`, with their zero-based position
 in the selected root list, followed by the path relative to that root.
 Logical names use POSIX separators and contain no absolute or parent path.
+`node_modules/.mokly-roots/` is reserved for Mokly logical names and
+installation metadata. Source and installed package paths must not use it.
 The core applies the base-source precedence below before reading installation bytes.
 
 Other files inside the source root use source-relative names. A source-relative
