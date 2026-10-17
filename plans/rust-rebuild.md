@@ -866,19 +866,22 @@ renders again.
         example.
   - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
-- [ ] Add browser specs against copied static output, including navigation,
-      inspection, no live endpoints, and the comparison modes after the M9 join.
-      Run the static host against real `mokly build` output with
-      `MOKLY_PLAYWRIGHT_STATIC_DIR`. Add continuous runs for
-      `MOKLY_PLAYWRIGHT_FILE_DIR`, including the private slot and variant
-      fixture and the design journeys checked by a manual run. Port the M8 sweep's static/export/publish
-      cases: exact-file resources, canonical links, read-only controls,
-      deployment changes, public CORS, and historical comparison documents.
+- [ ] Complete browser coverage for copied static output.
+  - [x] Build and copy the example in global setup and run exact-file static
+        checks in the normal four shards: navigation, inspection, no live
+        endpoints, read-only props, resources, canonical links, deployment
+        replacement, and public CORS. Port the current-only static/export/publish
+        sweep cases and the design journeys.
+  - [ ] Add comparison modes and historical comparison documents after the
+        Milestone 12 join of the comparison engine. Keep their sweep rows open.
+  - [ ] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
+        user approves the new job. Include the private slot and variant file
+        fixture and the design journeys checked by a manual run.
 - [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
-- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+- [x] Add browser specs for the client-rendered shell: the stub mount, history
       routing, detail loading and retry, live publications without a page
       load, and the frame reload by `documentKey`; and the live prop edits:
       the 150 ms debounce, the rerender after a revision adoption or a
@@ -886,7 +889,26 @@ renders again.
       navigation, and read-only controls while no descriptor is installed.
 - [ ] Complete the M8 viewer cases assigned by the browser sweep, including
       route/detail races, frame handoff, live prop edits, and preserved focus.
-- [ ] M8 browser follow-up: make unexpected console errors and `pageerror`
+  - [x] Port the route, history, detail fence, mount, publication, and live
+        edit cases.
+  - [ ] Port the cases that stay under the viewer client-shell TODO in the
+        sweep: mount-time frame ownership and the Browse exact-resource
+        handoff; live edit validation, the viewport switch, an expired
+        preview, and a context change during a pending render; the React
+        example components with their Usage consumers, actual contexts, and
+        inspector tabs; the design library's unset, Reset, and nested styles;
+        an older response for the same route; use-case and page frames and
+        the Usage loading state while evidence is unavailable; instance deep
+        links; focus on an unchanged Usage link while a Changes completion
+        is adopted; a published scheme swap while a redirect replaces a frame
+        source; and the review-base sentence while a detail loads, which needs
+        a served catalogue with a Git base.
+  - [ ] When Serve stops publishing a render completion that changes no
+        detail (review 8 finding 1, for the Serve owner), restore one index
+        read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
+        and the exact revision in the first half of its adoption spec. Until
+        then, the orchestrator accepts one index read per rejected revision.
+- [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
 - [ ] M8 browser follow-up: add Serve browser specs for the example's HTML
@@ -933,13 +955,13 @@ renders again.
         Milestone 9: a parent component renders its own views from its own
         props, the stacked frames' structure, every comparison caption tied to
         its recorded change, and the Checklist's Changes.
-  - [ ] Exercise the same journeys in the static output under the M8
+  - [x] Exercise the same journeys in the static output under the M8
         copied-static-output TODO, and cover the Review snapshot link fallback.
   - Keep the three design inventories aligned when a design changes:
     `tests/fixtures/design/inventory.json`,
     `tests/fixtures/design-library/browser-inventory.json`, and
     `tests/fixtures/design-library/screens.json`.
-- [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
+- [x] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
       scrolls to the row's end, and a stage row that fits stays centred.
@@ -995,7 +1017,15 @@ Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-
 Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
 Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
+Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browser/report-4.md`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
+Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
+Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.
+Client shell review 7 fixes, the merge of `c6e15729`, and the M8 viewer sweep
+rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
+`.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
+`.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
+Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
 
 - [ ] Commit.
 
@@ -1552,6 +1582,11 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         The M14 isolated rerun passed; its missing epoch let idle cleanup take
         the asserted slot. Evidence: M14 `report-3.md` and
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
+  - M8 browser follow-up, Low severity, Small effort: investigate the existing
+    `frame_adapter_navigation.spec.ts` posted-message assertion. It returned
+    no navigation event once and passed unchanged after rerun. M8 viewer owns
+    the suspected message/animation-frame ordering. Recommended A: wait for
+    the message event. Evidence is in the browser delegate's `report-4.md`.
   - [x] Milestone 13 integration follow-up: resolve the full example's CSS-module
         startup failure so strict build and `npm run dev` smoke checks pass.
         Evidence: `.context/rust-rebuild/delegation/m8-core/report-6.md` and

@@ -2,8 +2,14 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
+import { blankFrameNotice } from "./navigation_error_allowances.js";
 
 let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
+test.beforeEach(({ allowBrowserError }) => {
+  documentFavicon(allowBrowserError, fixture.url);
+  allowBrowserError(blankFrameNotice);
+});
 test.beforeAll(async () => {
   fixture = await serveCatalogue({
     "specs/payment.md": `---

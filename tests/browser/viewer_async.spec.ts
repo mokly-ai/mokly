@@ -10,6 +10,7 @@ import type {
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import { unavailableResourceNotice } from "./document_error_allowance.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -68,7 +69,13 @@ test("concurrent pick is idempotent and cancellation rejects pending activation"
   expect(cancelled).toBe(true);
 });
 
-test("a failed URL index source can retry", async ({ page }) => {
+test("a failed URL index source can retry", async ({
+  page,
+  allowBrowserError,
+}) => {
+  allowBrowserError(
+    unavailableResourceNotice(`${fixture.host.url}/public-catalogue.json`),
+  );
   await page.evaluate(() => window.viewerHarness.start("one"));
   let attempts = 0;
   await page.route("**/public-catalogue.json", async (route) => {

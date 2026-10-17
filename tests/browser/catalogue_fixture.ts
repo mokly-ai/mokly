@@ -11,10 +11,14 @@ import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
 
-/** An isolated catalogue whose files and process share one cleanup boundary. */
+/**
+ * An isolated catalogue whose files and process share one cleanup boundary.
+ * `watch` serves it with the file watcher, so an edit publishes.
+ */
 export async function serveCatalogue(
   files: Record<string, string>,
   config: Record<string, unknown> = {},
+  { watch = false }: { watch?: boolean } = {},
 ) {
   const root = await fs.mkdtemp(
     path.join(
@@ -53,7 +57,7 @@ export async function serveCatalogue(
           [
             path.join(repositoryRoot, "packages/mokly/bin/mokly.mjs"),
             "serve",
-            "--no-watch",
+            ...(watch ? [] : ["--no-watch"]),
             "--port",
             "0",
             "--sidecars",

@@ -10,10 +10,7 @@ import {
   tourRow,
   welcomeRow,
 } from "./browse_assertions.js";
-import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
-
-checkBrowserErrors();
 
 test("search matches authored entry paths", async ({ page }) => {
   await page.goto("/");

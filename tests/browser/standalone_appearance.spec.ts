@@ -8,12 +8,9 @@ import {
   select,
   store,
 } from "./appearance_assertions.js";
-import { checkBrowserErrors } from "./browser_errors.js";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
 import { expectFrameSource } from "./workspace_actions.js";
-
-checkBrowserErrors();
 
 let lightOnlySite: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {

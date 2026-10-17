@@ -8,9 +8,10 @@ import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test } from "./browser_test.js";
+import { test as baseTest } from "./browser_test.js";
 import { designCases, designCatalogue } from "./design_catalogue.js";
 import { designFileUrl } from "./design_fixture.js";
+import { documentFavicon } from "./document_error_allowance.js";
 type ManifestScreen = CatalogueReadModel["screens"][number];
 
 const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
@@ -41,8 +42,9 @@ async function assertFragmentEligibility(
   entry: ManifestScreen,
   appearance: "light" | "dark",
   fragment: string,
+  documentUrl = designFileUrl,
 ): Promise<void> {
-  await page.goto(designFileUrl(path.join(directory, fragment)).href);
+  await page.goto(documentUrl(path.join(directory, fragment)).href);
   const componentDesign = entry.path.startsWith("design/components/");
   const changedComponentOrScreen =
     componentDesign &&
@@ -86,8 +88,15 @@ async function assertFragmentEligibility(
 }
 
 /** Register bounded design cases for one whole-file shard group. */
-export function comparisonEligibility(group: number) {
-  const entries = designCatalogue();
+export function comparisonEligibility(
+  group: number,
+  test = baseTest,
+  documentUrl = designFileUrl,
+) {
+  test.beforeEach(({ allowBrowserError, baseURL }) =>
+    documentFavicon(allowBrowserError, baseURL!),
+  );
+  const entries = designCatalogue(test);
   const cases = designCases
     .filter((entry) => entry.kind === "screen")
     .filter((_, index) => index % 4 === group);
@@ -112,6 +121,7 @@ export function comparisonEligibility(group: number) {
             entry,
             appearance,
             viewRoute(entry.path, viewport, appearance),
+            documentUrl,
           );
         }
       });

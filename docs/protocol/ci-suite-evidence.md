@@ -94,16 +94,25 @@ through its render graph and sidecar pool. Each process keeps its own cache.
 Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
 rejects a worker count above the number of servers.
 
+Global setup also builds the example with `mokly build --no-changes`, copies
+only its output to an isolated directory, and removes the first output. An
+exact-file host serves that copy for static specs inside the same four shards.
+One shard shares its immutable copy; different runs own different directories.
+Setup publishes `MOKLY_PLAYWRIGHT_COPIED_URL` and `MOKLY_PLAYWRIGHT_COPIED_DIR`
+to the static fixtures. The setup budget also bounds the build. Teardown stops
+the hosts before removing their output, including after a setup failure.
+
 `MOKLY_PLAYWRIGHT_STATIC_DIR` selects an already-built catalogue directory.
 The same host interface serves its exact files and directory indexes on a free
 port. This mode neither builds the site nor adds fallback routes. The default
 host remains Serve. `MOKLY_PLAYWRIGHT_FILE_DIR` also selects this static host
 for Browse pages and opens portable design documents from that directory with
 `file://` URLs. Its supported specs are listed in
-[developer commands](./developer-test-commands.md#browser-selection). These
-delivery modes are manual checks; continuous runs and the private file fixture
-belong to M8's copied-static-output TODO. Fixtures that test private inputs
-still own their own hosts.
+[developer commands](./developer-test-commands.md#browser-selection). An explicit
+directory is also the input of the suite's isolated static copy.
+Direct `file://` delivery is checked by a manual run. A continuous file-mode CI
+job and its private file fixture stay under M8's copied-static-output TODO.
+Fixtures that test private inputs still own their own hosts.
 
 Browser specs support POSIX systems only. Specs must not depend on an empty Changes set:
 remote Testboxes hold branch edits as working-tree changes against their base.
@@ -133,6 +142,19 @@ shared-fixture call in the same scope. A call inside a nested function belongs
 only to that function's scope. Failed browser jobs keep only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite,
 or reuse another job's writable output.
+
+Every browser spec uses the automatic error fixture in `browser_test.ts`.
+It observes console errors and page errors in the default context, extra
+contexts, and popups, including pages closed by a test. The shared
+`expectedConsoleNotice` rule permits only the viewer sandbox notices. A test
+that deliberately causes another error declares its kind, exact message pattern,
+and resource URL through `allowBrowserError` or `expectedBrowserErrors`.
+Portable-document cases permit the absent root favicon on their own origin.
+Manual file delivery also permits the fixed HTTP-only inspector URL to be
+absent on disk. Private sandbox fixtures declare their exact denial notices.
+Test-owned host documents declare a data favicon. Checks settle two animation
+frames, use the controlled clock when it is paused, and use a protocol round
+trip when JavaScript is disabled. No sleep synchronizes an assertion.
 
 A fixture shared across a test file registers its teardown synchronously when
 the file loads and starts setup on first use. Teardown waits for setup to
