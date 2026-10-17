@@ -10,6 +10,7 @@ import type { PostcssFailure } from "../generated/sidecar/PostcssFailure.js";
 import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js";
 
 import { SidecarError, detail } from "./errors.js";
+import { dependencyDirectory } from "./importer-resolution.js";
 import { jsonText } from "./json.js";
 import { ModulePaths } from "./module-paths.js";
 
@@ -156,6 +157,14 @@ function stylesheetSource(paths: ModulePaths, source: string): string {
     const root = paths.dependencyRoots[Number(dependency[1] ?? 0)];
     if (root) return path.resolve(root, dependency[2]!);
   }
+  if (
+    paths.dependencyRoot &&
+    dependencyDirectory(
+      paths.dependencyRoot,
+      path.resolve(paths.dependencyRoot, source),
+    )
+  )
+    return path.resolve(paths.dependencyRoot, source);
   return path.resolve(paths.sourceRoot, source);
 }
 

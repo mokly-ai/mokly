@@ -5,7 +5,9 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 `@mokly/mokly` supplies the `mokly` Node shim, the Node render sidecar, and the
 JavaScript authoring API. The Rust binary owns catalogue decisions, document
 assembly, serving, and file writes. The sidecar bundles and renders consumer
-code in memory.
+code in memory. Base package imports resolve from their importer's matching
+directory in the selected dependency installation. Base source aliases and
+tsconfig paths stay with the base files.
 
 ## Install And Run
 

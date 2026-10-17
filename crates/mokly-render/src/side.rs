@@ -49,6 +49,7 @@ pub(crate) fn inputs(
     let configuration_directory = relative(directory, &config.repo_root);
     let authored = config.input.module_resolution.clone().unwrap_or_default();
     let mut resolution = ModuleResolution {
+        dependency_root: Some(config.repo_root.to_string_lossy().into_owned()),
         aliases: authored.aliases.clone().unwrap_or_default(),
         conditions: authored.conditions.clone().unwrap_or_default(),
         loaders: convert(&authored.loaders.clone().unwrap_or_default())?,
@@ -135,6 +136,16 @@ impl SideInputs {
                     )
                 })
             })
+            .or_else(|| {
+                let root = Path::new(self.module_resolution.dependency_root.as_deref()?);
+                let relative = path
+                    .strip_prefix(root)
+                    .ok()?
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                ancestor_roots::dependency_directory(&relative)?;
+                Some(relative)
+            })
     }
 
     /// Resolve a logical stylesheet source into this side's selected physical inputs.
@@ -149,6 +160,11 @@ impl SideInputs {
             if let Some(root) = dependency_roots(self).get(index) {
                 return root.join(rest);
             }
+        }
+        if ancestor_roots::dependency_directory(path).is_some()
+            && let Some(root) = &self.module_resolution.dependency_root
+        {
+            return Path::new(root).join(path);
         }
         self.source_root.join(path)
     }

@@ -3,12 +3,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Mutex;
 
+use mokly_compare::ancestor_roots::dependency_directory;
+
 /// Observed dependency reads used when selecting a historical installation.
 #[cfg_attr(test, unimock::unimock(api = DependencyUsageMock))]
 pub trait DependencyUsage: Send + Sync {
     /// Record a resolved module or stylesheet in its side's logical namespace.
     fn record(&self, aliases: &BTreeMap<String, String>, path: &str);
-    /// Record a used directory whose importer lookup cannot be preserved.
+    /// Record lookup outside configured roots; retain supported repository directories.
     fn unmapped(&self, directory: &str);
     /// Used directories outside the supported base lookup.
     fn unmapped_directories(&self) -> Vec<String>;
@@ -50,7 +52,12 @@ impl DependencyUsage for UsedDependencies {
     }
 
     fn unmapped(&self, directory: &str) {
-        self.unmapped
+        let directories = if dependency_directory(directory).as_deref() == Some(directory) {
+            &self.mapped
+        } else {
+            &self.unmapped
+        };
+        directories
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .insert(directory.into());

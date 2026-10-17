@@ -48,6 +48,7 @@ fn seed(pool: &Pool, worker: Unimock) {
     }));
     state.available.push_back(0);
     state.controls.insert(0, control);
+    state.epochs.insert("g".into(), 0);
     state.bundles.insert(
         "g".into(),
         Bundle {

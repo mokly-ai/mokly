@@ -57,9 +57,16 @@ export function parameterShapes(params: Record<string, unknown>): void {
       "resolveExtensions",
     ];
     if (
-      Object.keys(resolution).some((key) => ![...maps, ...lists].includes(key))
+      Object.keys(resolution).some(
+        (key) => ![...maps, ...lists, "dependencyRoot"].includes(key),
+      )
     )
       protocol("unknown moduleResolution field");
+    if (
+      resolution.dependencyRoot !== undefined &&
+      typeof resolution.dependencyRoot !== "string"
+    )
+      protocol("dependencyRoot must be a string");
     for (const key of maps) {
       resolution[key] ??= {};
       if (!stringMap(resolution[key])) protocol(`${key} must be a string map`);

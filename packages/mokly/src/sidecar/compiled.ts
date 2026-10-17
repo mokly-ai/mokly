@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
-import { createRequire } from "node:module";
+import { createRequire, isBuiltin } from "node:module";
 import path from "node:path";
 
 import { AuthoringRuntime } from "../authoring/runtime.js";
@@ -10,6 +10,7 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Module } from "../generated/sidecar/Module.js";
 
 import type { Generation } from "./bundle.js";
+import { sideRequire } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
@@ -48,13 +49,13 @@ export function restore(
   modules: Module[],
   id = generationId(compiled.identity, params.evaluation),
 ): Generation {
-  const native = createRequire(
-    path.resolve(
-      params.sourceRoot,
-      params.configurationDirectory,
-      "package.json",
-    ),
+  const file = path.resolve(
+    params.sourceRoot,
+    params.configurationDirectory,
+    "package.json",
   );
+  const native = createRequire(file);
+  let fallback: NodeJS.Require | undefined;
   const resolve = (
     name: string,
     options?: Parameters<NodeJS.RequireResolve>[1],
@@ -66,7 +67,10 @@ export function restore(
         ),
         { code: "MODULE_NOT_FOUND" },
       );
-    return compiled.peers[name] ?? native.resolve(name, options);
+    if (compiled.peers[name] !== undefined) return compiled.peers[name]!;
+    if (isBuiltin(name)) return native.resolve(name, options);
+    fallback ??= sideRequire(ModulePaths.createSync(params), file);
+    return fallback.resolve(name, options);
   };
   const require = ((name: string) => native(resolve(name))) as NodeJS.Require;
   Object.assign(require, native);

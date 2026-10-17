@@ -1086,10 +1086,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       canonical Node identity, ancestor dependency tiers, selected NODE_PATH
       priority, and direct base, extraction, timeout, and recycle tests.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-6.md`.
-- [ ] Implement per-importer Node resolution on the base side (review 5b,
+- [x] Implement per-importer Node resolution on the base side (review 5b,
       finding 1 option A). Resolve each bare import from its matching directory
       in the dependency tier and retain tier-two missing-directory fallback.
       This follows the merge of the interim warning policy in report 7.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/`.
 - [x] Apply the last integration requests: early base pinning, terminal ownership,
       nested CSS lookup, bounded memory tables, and recycle back-off.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.

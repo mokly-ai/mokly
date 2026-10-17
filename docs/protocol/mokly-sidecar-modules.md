@@ -22,7 +22,11 @@ Files inside the source root use source-relative names. A source-relative
 name that contains a `node_modules` segment is also a dependency. Dependency
 files contribute to the module graph and stylesheet closure, but never to
 catalogue entry discovery, source attribution, or the catalogue source
-inventory. Their installation is owned by the dependency tier.
+inventory. Their installation is owned by the dependency tier. The core supplies its
+repository as `moduleResolution.dependencyRoot`. Bare imports start at the
+matching importer directory in that tree. Nested dependency files keep their
+repository-relative names, including the `node_modules` segment. The core
+reads them from that installation, for JavaScript and CSS alike.
 
 A workspace or local `file:` package can resolve outside `node_modules`
 through a package-manager link. When its real path lies inside a supplied
@@ -39,14 +43,23 @@ dependency inputs, and reads stylesheet order from these edges under the
 [imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
 
 `bundle` and `processCss` results can include `unmappedDependencyDirectories`:
-used repository-relative `node_modules` directories whose importer lookup the
-base cannot preserve. Missing data means an empty list. Lookup observation
-retains package-directory links as well as canonical module paths. It covers
-nested workspace installations and a configuration copy that would shadow an
-outside importer's selected package. The core uses these records only for
-[dependency fallback](./mokly-base-preparation.md#installation-and-bundle-settings).
-They do not enter the catalogue source inventory. The compiled recipe retains
-this lookup provenance so worker restoration and evaluation reuse preserve it.
+used repository-relative `node_modules` directories outside the configured
+root lookup. Missing data means an empty list. Observation retains lexical
+package-directory links as well as canonical module paths, including pnpm
+stores and outside-configuration importers. The core maps repository-relative
+lookup through `dependencyRoot` and checks used directories in tier two.
+Only a directory that cannot map retains the
+[interim fallback warning](./mokly-base-preparation.md#installation-and-bundle-settings).
+These records never enter source inventory. Compiled recipes retain the records
+through worker restoration and evaluation reuse.
+
+Source-side tsconfig paths take precedence over package lookup. A mapped bare
+package resolves inside its selected package scope, with the same conditions,
+main fields, and extension settings. This prevents working tsconfig paths from
+changing historical imports. Package lookup uses manifest hashes and directory membership, including absent
+candidates. CSS text stays outside the JavaScript recipe. Workspace metadata
+links map to the base source tree. PostCSS static,
+dynamic, record-form, and synchronous requires use the same importer mapping.
 
 ## Authoring And Evaluation
 

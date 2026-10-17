@@ -72,7 +72,9 @@ and all repository mappings. Configuration ancestor dependency directories
 retain Node's lookup order on each side, for JavaScript and CSS. The runtime
 records the directories actually used by head JavaScript, CSS, and PostCSS
 package loads for base fallback checks. It also keeps unmapped importer
-directories, including package-manager links into a root store. Compiled recipes
+directories, including package-manager links into a root store. Repository-relative
+lookup maps through the selected dependency repository. Nested dependency
+JavaScript and CSS keep the same logical paths on both sides. Compiled recipes
 retain that usage across worker restoration and evaluation reuse. Selected
 logical roots take precedence over source-root names in nested CSS exclusion
 checks.

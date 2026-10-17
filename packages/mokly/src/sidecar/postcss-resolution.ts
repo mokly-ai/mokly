@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { build, transformSync } from "esbuild";
 
 import { detail } from "./errors.js";
+import { importerDirectory, resolveImport } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ModuleSources } from "./module-paths.js";
 import { resolutionOptions } from "./resolution.js";
@@ -46,7 +47,7 @@ export async function resolvePlugin(
         setup(builder) {
           builder.onResolve({ filter: /.*/ }, async (args) => {
             if (args.pluginData === "resolved") return;
-            const resolved = await builder.resolve(args.path, {
+            const resolved = await resolveImport(sources, builder, args.path, {
               resolveDir: args.resolveDir,
               kind: "import-statement",
               pluginData: "resolved",
@@ -95,7 +96,12 @@ function nativePath(
     .sort((a, b) => b.length - a.length)
     .find((key) => name === key || name.startsWith(key + "/"));
   if (alias) name = sources.settings.aliases[alias] + name.slice(alias.length);
-  const native = createRequire(file);
+  const native = createRequire(
+    path.join(
+      importerDirectory(sources, name, path.dirname(file)),
+      path.basename(file),
+    ),
+  );
   let resolved: string;
   try {
     resolved = native.resolve(name, options);

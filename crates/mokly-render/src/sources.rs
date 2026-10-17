@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_compare::ancestor_roots::dependency_directory;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
@@ -55,9 +56,18 @@ impl SourceTree for LeasedTree {
 }
 
 impl SideTree {
-    fn mapped(&self, path: &Path) -> Option<(usize, PathBuf, PathBuf)> {
+    fn mapped(&self, path: &Path) -> Option<(PathBuf, PathBuf, PathBuf)> {
         let relative = path.strip_prefix(&self.root).ok()?;
         let text = relative.to_string_lossy().replace('\\', "/");
+        if !text.starts_with("node_modules/") && text != "node_modules" {
+            let directory = dependency_directory(&text)?;
+            let root = self
+                ._base
+                .as_ref()
+                .and_then(|base| base.dependencies.node_modules.parent())
+                .unwrap_or(&self.root);
+            return Some((root.join(directory), root.join(&text), relative.to_owned()));
+        }
         let rest = if text == "node_modules" {
             ""
         } else {
@@ -73,7 +83,7 @@ impl SideTree {
             return None;
         }
         let root = self.dependency_roots.get(index)?;
-        Some((index, root.join(rest), relative.to_owned()))
+        Some((root.clone(), root.join(rest), relative.to_owned()))
     }
 
     fn source_alias(&self, identity: &Path) -> Option<PathBuf> {
@@ -171,7 +181,7 @@ impl SourceTree for SideTree {
                 kind: mokly_source_interface::tree::FileKind::Directory,
             }));
         }
-        let Some((index, physical, relative)) = self.mapped(path) else {
+        let Some((root, physical, relative)) = self.mapped(path) else {
             return self.sources.project(path);
         };
         let Some(mut node) = self.dependencies.project(&physical)? else {
@@ -180,10 +190,15 @@ impl SourceTree for SideTree {
         if let Some(source) = self.source_alias(&node.identity) {
             return self.sources.project(&source);
         }
-        let Some(root) = self.dependencies.project(&self.dependency_roots[index])? else {
+        let Some(root) = self.dependencies.project(&root)? else {
             return Ok(None);
         };
-        if !node.identity.starts_with(&root.identity) {
+        if !node.identity.starts_with(&root.identity)
+            && !self
+                .dependency_roots
+                .iter()
+                .any(|root| node.identity.starts_with(root))
+        {
             return Ok(None);
         }
         node.identity = self.root.join(relative);
