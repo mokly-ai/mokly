@@ -1,13 +1,13 @@
 //! Each fixture declares only boundaries its scenario can reach.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use mokly_graph::types::RenderGenerationMock;
 use mokly_static::assembly::AssemblerMock;
 use mokly_static::error::Error;
-use mokly_static::fingerprint::{FingerprintsMock, InputTreeMock};
+use mokly_static::fingerprint::InputTreeMock;
 use mokly_static::transaction::TransactionMock;
 use unimock::{MockFn, Unimock, matching};
 
@@ -32,15 +32,6 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
         && !case.input_changes;
     let graph = Arc::new(if !protects {
         Unimock::new(())
-    } else if finished && !case.final_fingerprint_fails {
-        Unimock::new((
-            RenderGenerationMock::catalogue
-                .each_call(matching!())
-                .returns(catalogue()),
-            RenderGenerationMock::public_files
-                .each_call(matching!())
-                .returns(BTreeSet::<String>::new()),
-        ))
     } else {
         Unimock::new(
             RenderGenerationMock::catalogue
@@ -99,48 +90,37 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
                 })),
         )
     };
-    let fingerprints = {
-        let events = events.clone();
-        let calls = std::sync::atomic::AtomicUsize::new(0);
-        Unimock::new(
-            FingerprintsMock::capture
-                .each_call(matching!(_, _))
-                .answers_arc(Arc::new(move |_, _, _| {
-                    record(&events, "fingerprint");
-                    step(case, "fingerprint")?;
-                    let final_pass = calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst) > 0;
-                    if final_pass && case.final_fingerprint_fails {
-                        return Err(Error::Unexpected {
-                            path: "/changed".into(),
-                        });
-                    }
-                    Ok(if case.input_changes {
-                        BTreeMap::from([(
-                            Path::new("/repo/specs/home.screen.html").to_owned(),
-                            if final_pass {
-                                "new".into()
-                            } else {
-                                "old".into()
-                            },
-                        )])
-                    } else {
-                        BTreeMap::new()
-                    })
-                })),
-        )
-    };
+    let capture_events = events.clone();
+    let begin = InputTreeMock::begin
+        .some_call(matching!(_, _))
+        .answers_arc(Arc::new(move |_, _, _| {
+            record(&capture_events, "fingerprint");
+            step(case, "fingerprint")
+        }));
     let inputs = if !verifies {
-        Unimock::new(())
+        Unimock::new(begin)
     } else {
         let events = events.clone();
-        Unimock::new(
+        Unimock::new((
+            begin,
             InputTreeMock::verify
                 .some_call(matching!())
                 .answers_arc(Arc::new(move |_| {
                     record(&events, "verify");
-                    step(case, "verify")
+                    step(case, "verify")?;
+                    if case.final_fingerprint_fails {
+                        return Err(Error::Unexpected {
+                            path: "/changed".into(),
+                        });
+                    }
+                    if case.input_changes {
+                        return Err(Error::InputsChanged {
+                            path: "/repo/specs/home.screen.html".into(),
+                        });
+                    }
+                    Ok(())
                 })),
-        )
+        ))
     };
     let drain = {
         let events = events.clone();
@@ -212,7 +192,6 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
     let builder = Builder {
         render: Arc::new(render),
         assembler: Arc::new(assembler),
-        fingerprints: Arc::new(fingerprints),
         inputs: Arc::new(inputs),
         cancellation: Arc::new(cancellation),
         drain: Arc::new(drain),

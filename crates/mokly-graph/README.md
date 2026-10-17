@@ -72,6 +72,10 @@ Serve must also apply the public policy's read-time confinement rules.
 
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
 storage. Digest-only reads memoize a hash without retaining source bytes.
+`SnapshotMemory` reports the retained private byte payload per captured path.
+The observation excludes map metadata and other owners of the same bytes.
+CSS asset preparation uses private reads and pins those asset bytes for the
+generation. The snapshot has no byte eviction policy.
 Entry-source keys and binary closure validation use digest reads. HTML and
 CSS closure parsing retains the bytes it needs. Resource hash reads require a
 confined regular target before opening it.

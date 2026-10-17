@@ -46,7 +46,7 @@ mod windows_identity;
 #[path = "_tests_/inspector_tests.rs"]
 mod inspector_tests;
 
-pub mod input_selection;
+mod input_selection;
 
 #[cfg(test)]
 #[path = "_tests_/input_selection_tests.rs"]

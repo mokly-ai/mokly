@@ -36,6 +36,15 @@ retains the volume, file index, and creation time.
 
 Input capture and final verification use digest reads for hash-only inputs.
 The snapshot keeps bytes only for actual parsing and delivery.
+Capture walks each configured root with its own discovery file patterns. It
+records matching regular files and folder records, then hashes those files and
+the configured inputs through `CapturedTree`. Later inventoried sources and
+reached resources use that same digest path. The final check compares root
+membership, selected identities, and live digests. It streams selected file
+contents only for hashing and confines directory walks to the configured roots.
+Output and reservation directories
+stay outside root membership. Explicit inputs beneath excluded directory names
+remain protected.
 
 The CLI owns configuration, complete rendering, sidecar shutdown, and publish
 orchestration. The comparison engine supplies generation output at the same assembly boundary.
@@ -43,6 +52,8 @@ orchestration. The comparison engine supplies generation output at the same asse
 Public source reads forward without retaining their bytes. The captured tree
 records their hashes for the final live verification. Digest-only capture uses
 the same streaming adapter and per-path snapshot hash as graph planning.
+Unused projected paths do not become fingerprint inputs. A consumed alias keeps
+its identity check even when both possible targets have equal bytes.
 
 ## Quick Start
 

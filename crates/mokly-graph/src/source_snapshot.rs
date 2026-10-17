@@ -2,11 +2,18 @@
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use mokly_model::material::digest;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
+
+/// Snapshot payload observations; metadata and external owners are not included.
+pub trait SnapshotMemory: SourceTree {
+    /// Total bytes pinned by successful private reads, counted once per source path.
+    fn retained_bytes(&self) -> usize;
+}
 
 /// Read-once source view for graph inputs, consumed as `dyn SourceTree`.
 /// Public HTTP reads must use the live tree and recheck confinement separately.
@@ -16,6 +23,7 @@ pub struct SourceSnapshot {
     nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
     directories: Mutex<BTreeMap<PathBuf, Vec<Child>>>,
     digests: Mutex<BTreeMap<PathBuf, Arc<DigestCell>>>,
+    retained_bytes: AtomicUsize,
 }
 
 #[cfg(test)]
@@ -41,7 +49,14 @@ impl SourceSnapshot {
             nodes: Mutex::new(BTreeMap::new()),
             directories: Mutex::new(BTreeMap::new()),
             digests: Mutex::new(BTreeMap::new()),
+            retained_bytes: AtomicUsize::new(0),
         }
+    }
+}
+
+impl SnapshotMemory for SourceSnapshot {
+    fn retained_bytes(&self) -> usize {
+        self.retained_bytes.load(Ordering::Relaxed)
     }
 }
 
@@ -117,6 +132,8 @@ impl SourceTree for SourceSnapshot {
             return Ok(Arc::clone(bytes));
         }
         let bytes = self.source.read_shared(path)?;
+        self.retained_bytes
+            .fetch_add(bytes.len(), Ordering::Relaxed);
         *value = Some(Arc::clone(&bytes));
         Ok(bytes)
     }

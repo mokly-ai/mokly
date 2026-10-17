@@ -1,21 +1,24 @@
-//! Confined source fingerprints exclude output while retaining explicit hidden inputs.
+//! Selected source digests and root membership protect one static generation.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use mokly_graph::source_snapshot::SourceSnapshot;
+use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_graph::source_snapshot::{SnapshotMemory, SourceSnapshot};
 use mokly_model::output::validation::digest;
 use mokly_source_interface::error;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
-use crate::filesystem::Files;
-use crate::fingerprint_walk;
+use crate::input_selection::Selection;
+use crate::{fingerprint_walk, input_selection};
 
 /// Captured source reads. Rechecks include inputs beneath normally excluded directories.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = InputTreeMock))]
 pub trait InputTree: SourceTree {
+    /// Select configured root members and authored configuration inputs before callbacks.
+    fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()>;
     /// Capture the complete inventoried sources before document callbacks run.
     fn capture(&self, root: &Path, paths: &[String]) -> Result<()>;
     /// Verify every explicitly read source and its resolved identity.
@@ -24,19 +27,26 @@ pub trait InputTree: SourceTree {
 
 /// Generation source wrapper with immutable reads and a final live recheck.
 pub struct CapturedTree {
-    snapshot: SourceSnapshot,
+    snapshot: Arc<dyn SnapshotMemory>,
     live: Arc<dyn SourceTree>,
     reads: Mutex<BTreeMap<PathBuf, String>>,
     nodes: Mutex<BTreeMap<PathBuf, Option<Node>>>,
+    roots: Mutex<Option<RootCapture>>,
+}
+
+struct RootCapture {
+    selection: Selection,
+    members: BTreeSet<PathBuf>,
 }
 impl CapturedTree {
     /// Capture one build's inputs without retaining a second copy of their bytes.
     pub fn new(tree: Arc<dyn SourceTree>) -> Self {
         Self {
-            snapshot: SourceSnapshot::new(tree.clone()),
+            snapshot: Arc::new(SourceSnapshot::new(tree.clone())),
             live: tree,
             reads: Mutex::new(BTreeMap::new()),
             nodes: Mutex::new(BTreeMap::new()),
+            roots: Mutex::new(None),
         }
     }
 }
@@ -44,8 +54,11 @@ impl SourceTree for CapturedTree {
     fn prefetch(&self, paths: &[PathBuf]) -> error::Result<()> {
         self.snapshot.prefetch(paths)
     }
+    #[tracing::instrument(name = "output.input-read", skip_all, err, fields(action = "public", read_bytes = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn read_public(&self, path: &Path) -> error::Result<Vec<u8>> {
         let bytes = self.snapshot.read_public(path)?;
+        tracing::Span::current().record("read_bytes", bytes.len() as u64);
+        tracing::Span::current().record("retained_bytes", self.snapshot.retained_bytes() as u64);
         self.reads
             .lock()
             .unwrap_or_else(|error| error.into_inner())
@@ -78,8 +91,11 @@ impl SourceTree for CapturedTree {
     fn read(&self, path: &Path) -> error::Result<Vec<u8>> {
         Ok(self.read_shared(path)?.to_vec())
     }
+    #[tracing::instrument(name = "output.input-read", skip_all, err, fields(action = "private", read_bytes = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn read_shared(&self, path: &Path) -> error::Result<Arc<[u8]>> {
         let bytes = self.snapshot.read_shared(path)?;
+        tracing::Span::current().record("read_bytes", bytes.len() as u64);
+        tracing::Span::current().record("retained_bytes", self.snapshot.retained_bytes() as u64);
         self.reads
             .lock()
             .unwrap_or_else(|error| error.into_inner())
@@ -89,6 +105,34 @@ impl SourceTree for CapturedTree {
     }
 }
 impl InputTree for CapturedTree {
+    #[tracing::instrument(name = "output.fingerprint", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
+    fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()> {
+        let selection = Selection::new(config, excluded)?;
+        for root in &config.roots {
+            source(self.project(&root.directory))?;
+        }
+        let members = fingerprint_walk::capture(self, &selection)?;
+        let paths: Vec<_> = members
+            .iter()
+            .chain(&config.authored_inputs)
+            .chain([&config.file])
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect();
+        self.capture(&config.repo_root, &paths)?;
+        tracing::Span::current().record(
+            "input_paths",
+            self.reads
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .len() as u64,
+        );
+        tracing::Span::current().record("retained_bytes", self.snapshot.retained_bytes() as u64);
+        *self.roots.lock().unwrap_or_else(|error| error.into_inner()) =
+            Some(RootCapture { selection, members });
+        Ok(())
+    }
+
+    #[tracing::instrument(name = "output.input-digests", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn capture(&self, root: &Path, paths: &[String]) -> Result<()> {
         for path in paths {
             let absolute = root.join(path);
@@ -100,69 +144,55 @@ impl InputTree for CapturedTree {
             }
             source(self.digest(&node.identity))?;
         }
+        tracing::Span::current().record(
+            "input_paths",
+            self.reads
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .len() as u64,
+        );
+        tracing::Span::current().record("retained_bytes", self.snapshot.retained_bytes() as u64);
         Ok(())
     }
+    #[tracing::instrument(name = "output.recheck", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn verify(&self) -> Result<()> {
+        let roots = self.roots.lock().unwrap_or_else(|error| error.into_inner());
+        if let Some(roots) = roots.as_ref() {
+            input_selection::verify(
+                &roots.members,
+                &fingerprint_walk::capture(self.live.as_ref(), &roots.selection)?,
+            )?;
+        }
+        let reads = self.reads.lock().unwrap_or_else(|error| error.into_inner());
+        tracing::Span::current().record("input_paths", reads.len() as u64);
+        tracing::Span::current().record("retained_bytes", self.snapshot.retained_bytes() as u64);
         for (path, node) in self
             .nodes
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .iter()
         {
+            let selected = reads.contains_key(path)
+                || node
+                    .as_ref()
+                    .is_some_and(|node| reads.contains_key(&node.identity))
+                || roots
+                    .as_ref()
+                    .is_some_and(|roots| roots.selection.root(path));
+            if !selected {
+                continue;
+            }
             if self.live.project(path).ok().as_ref() != Some(node) {
                 return Err(Error::InputsChanged { path: path.clone() });
             }
         }
-        for (path, hash) in self
-            .reads
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .iter()
-        {
+        for (path, hash) in reads.iter() {
             if !self.live.digest(path).is_ok_and(|current| current == *hash) {
                 return Err(Error::InputsChanged { path: path.clone() });
             }
         }
         Ok(())
     }
-}
-
-/// Broader source membership fingerprint catches additions and sidecar-owned reads.
-#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = FingerprintsMock))]
-pub trait Fingerprints: Send + Sync {
-    /// Hash a confined tree without output, dependency, and build artifacts.
-    fn capture(&self, root: &Path, excluded: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>>;
-}
-
-/// Host fingerprint adapter through injected filesystem operations.
-pub struct SourceFingerprints {
-    /// Non-following filesystem boundary.
-    pub files: Arc<dyn Files>,
-}
-impl Fingerprints for SourceFingerprints {
-    fn capture(&self, root: &Path, excluded: &[PathBuf]) -> Result<BTreeMap<PathBuf, String>> {
-        let physical = self.files.project(root)?;
-        let excluded = excluded
-            .iter()
-            .map(|path| self.files.project(path))
-            .collect::<Result<Vec<_>>>()?;
-        Ok(fingerprint_walk::capture(
-            self.files.as_ref(),
-            &physical,
-            root,
-            &excluded,
-        ))
-    }
-}
-
-/// Compare two complete memberships and name the first changed input.
-pub fn verify(before: &BTreeMap<PathBuf, String>, after: &BTreeMap<PathBuf, String>) -> Result<()> {
-    for path in before.keys().chain(after.keys()) {
-        if before.get(path) != after.get(path) {
-            return Err(Error::InputsChanged { path: path.clone() });
-        }
-    }
-    Ok(())
 }
 
 /// Preserve typed source errors at the assembly boundary.

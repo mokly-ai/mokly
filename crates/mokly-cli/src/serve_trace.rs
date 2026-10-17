@@ -59,8 +59,11 @@ impl Visit for Fields {
         }
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
-        if field.name() == "worker" {
-            self.values.insert("worker".into(), json!(value));
+        if matches!(
+            field.name(),
+            "worker" | "input_paths" | "read_bytes" | "retained_bytes"
+        ) {
+            self.values.insert(field.name().into(), json!(value));
         }
     }
     fn record_bool(&mut self, field: &Field, value: bool) {
@@ -95,6 +98,10 @@ fn stage(name: &str) -> bool {
             | "build"
             | "publish"
             | "output.write"
+            | "output.fingerprint"
+            | "output.input-digests"
+            | "output.input-read"
+            | "output.recheck"
             | "output.stage"
             | "output.install"
             | "output.capture"

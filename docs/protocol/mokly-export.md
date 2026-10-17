@@ -126,6 +126,11 @@ Changes; Serve's watcher ignores the same paths.
    configuration, the renderer module, the configured stylesheets, and the
    authored closure. Render the base side and compute the comparison from
    those inputs. With `--strict`, a warning fails here, before any write.
+   Root membership includes matching regular files and folder records under
+   the discovery rules. Each root uses its own file patterns. Output and
+   reservation directories are excluded.
+   Unrelated repository files do not participate. Explicit inventoried inputs
+   and reached closure files participate even beneath excluded directory names.
 4. Assemble every route and resource into a private stage inside the
    reservation on the output filesystem. Validate each path against the
    marker's [portable-path rule](./mokly-export-ownership.md#file-contract)
@@ -139,6 +144,8 @@ Changes; Serve's watcher ignores the same paths.
    including the marker path, and the complete local dependency closure.
    Recheck the input fingerprint; a changed input aborts with
    `export-invalid` and a retry instruction instead of mixing generations.
+   The recheck compares selected membership, resolved identities, and streaming
+   digests. It reads no file bodies for parsing or delivery.
 6. Drain render work and stop the sidecars. Replace the owned output with
    rollback protection, then clean the owned temporary resources and release
    the reservation.

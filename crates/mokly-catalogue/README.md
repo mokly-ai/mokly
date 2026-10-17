@@ -75,6 +75,7 @@ component cycles, template references, and unused props. Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
 inputs in that precedence order, including physical aliases.
+Static input membership uses each root's matcher and the directory-name policy.
 
 YAML front-matter construction uses recursive input traversal before
 prop and schema depth validation. Pathological YAML nesting can exhaust the

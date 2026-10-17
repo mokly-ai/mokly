@@ -27,7 +27,7 @@ use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 use mokly_static::assembly::CatalogueAssembler;
 use mokly_static::filesystem::{Files, SystemFiles};
-use mokly_static::fingerprint::{CapturedTree, SourceFingerprints};
+use mokly_static::fingerprint::CapturedTree;
 use mokly_static::transaction::{OutputTransactions, Transaction, Transactions};
 
 #[cfg(debug_assertions)]
@@ -159,11 +159,9 @@ fn prepare(
     });
     #[cfg(debug_assertions)]
     let render = test_faults::render(render);
-    let files = Arc::new(SystemFiles);
     let service: &dyn StaticBuild = &static_build::Builder {
         render,
         assembler: Arc::new(CatalogueAssembler { tree }),
-        fingerprints: Arc::new(SourceFingerprints { files }),
         inputs: captured,
         cancellation: context.cancellation.clone(),
         drain: drain.clone(),
