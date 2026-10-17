@@ -12,15 +12,6 @@ export const nestedScriptNotice: ErrorAllowance = {
   url: /^(?:https:\/\/cross-origin\.example\.test\/nested\.html)?$/u,
 };
 
-/** Trace injection can meet a viewer frame before its document URL is assigned. */
-export const blankFrameNotice: ErrorAllowance = {
-  kind: "console",
-  message: exact(
-    "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
-  ),
-  url: /^$/u,
-};
-
 /** Each denied operation is exercised explicitly by the sandbox security test. */
 export function navigationDenials(
   allow: (rule: ErrorAllowance) => void,

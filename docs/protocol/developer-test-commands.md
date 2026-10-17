@@ -162,16 +162,17 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 `.only`. Spec discovery is defined in
 [CI verification](./ci-verification.md#gate-ownership).
 
-The normal suite builds and copies the example for its `static_*.spec.ts`
-checks in global setup. To supply an existing output for a selected run, set
-`MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
+Global setup copies the current-only example for `static_*.spec.ts`,
+`stage_centring`, and `review_snapshot_links`. A second two-commit fixture
+serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
+To supply current-only output, set `MOKLY_PLAYWRIGHT_STATIC_DIR`. For example:
 
 ```bash
-npx mokly build --config examples/basic/mokly.config.json --out ../../.context/example
+npx mokly build --config examples/basic/mokly.config.json --no-changes --out ../../.context/example
 MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
 ```
 
-The host serves exact files and directory indexes. It uses a free loopback port.
+The host uses exact files and a free port; supplied output must have Changes disabled.
 Browser specs support POSIX systems only. Specs must not assume an empty Changes set:
 remote Testboxes hold branch edits as working-tree changes against their base.
 `MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
@@ -192,8 +193,8 @@ are `comparison_design`, `component_controls`, `component_design`,
 `design_component_stacks`, `design_index_entries`, `design_library`,
 `design_modern_controls`, `design_portable`, `design_scroll_together`,
 `design_stylesheet_evidence`, `design_top_bar`, `example_links`, and
-`phone_chrome`; each name has the `.spec.ts` suffix. Continuous runs and the
-private file fixture belong to M8's copied-static-output TODO.
+`phone_chrome`; each name has the `.spec.ts` suffix. File mode opens exact
+output bytes without an HTTP fallback.
 
 Browser traces and screenshots stay under `.context/playwright-results/`.
 

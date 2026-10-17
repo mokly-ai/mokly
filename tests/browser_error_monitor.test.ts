@@ -6,10 +6,7 @@ import {
   allowedBrowserFailure,
   type ErrorAllowance,
 } from "./browser/error_monitor.js";
-import {
-  nestedScriptNotice,
-  blankFrameNotice,
-} from "./browser/navigation_error_allowances.js";
+import { nestedScriptNotice } from "./browser/navigation_error_allowances.js";
 
 test("browser error allowances match kind, message and optional exact resource", () => {
   const failure = {
@@ -81,25 +78,6 @@ test("sandbox fixture notices accept absent locations without accepting a differ
         url: "",
       },
       [nestedScriptNotice],
-    ),
-    false,
-  );
-  assert.equal(
-    allowedBrowserFailure(
-      {
-        kind: "console",
-        message:
-          "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
-        url: "",
-      },
-      [blankFrameNotice],
-    ),
-    true,
-  );
-  assert.equal(
-    allowedBrowserFailure(
-      { kind: "pageerror", message: "script failed", url: "" },
-      [blankFrameNotice],
     ),
     false,
   );
