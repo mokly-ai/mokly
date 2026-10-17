@@ -881,7 +881,7 @@ renders again.
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
-- [ ] Add browser specs for the client-rendered shell: the stub mount, history
+- [x] Add browser specs for the client-rendered shell: the stub mount, history
       routing, detail loading and retry, live publications without a page
       load, and the frame reload by `documentKey`; and the live prop edits:
       the 150 ms debounce, the rerender after a revision adoption or a
@@ -889,6 +889,25 @@ renders again.
       navigation, and read-only controls while no descriptor is installed.
 - [ ] Complete the M8 viewer cases assigned by the browser sweep, including
       route/detail races, frame handoff, live prop edits, and preserved focus.
+  - [x] Port the route, history, detail fence, mount, publication, and live
+        edit cases.
+  - [ ] Port the cases that stay under the viewer client-shell TODO in the
+        sweep: mount-time frame ownership and the Browse exact-resource
+        handoff; live edit validation, the viewport switch, an expired
+        preview, and a context change during a pending render; the React
+        example components with their Usage consumers, actual contexts, and
+        inspector tabs; the design library's unset, Reset, and nested styles;
+        an older response for the same route; use-case and page frames and
+        the Usage loading state while evidence is unavailable; instance deep
+        links; focus on an unchanged Usage link while a Changes completion
+        is adopted; a published scheme swap while a redirect replaces a frame
+        source; and the review-base sentence while a detail loads, which needs
+        a served catalogue with a Git base.
+  - [ ] When Serve stops publishing a render completion that changes no
+        detail (review 8 finding 1, for the Serve owner), restore one index
+        read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
+        and the exact revision in the first half of its adoption spec. Until
+        then, the orchestrator accepts one index read per rejected revision.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
@@ -1001,6 +1020,12 @@ Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-
 Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browser/report-4.md`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
+Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.
+Client shell review 7 fixes, the merge of `c6e15729`, and the M8 viewer sweep
+rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
+`.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
+`.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
+Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
 
 - [ ] Commit.
 

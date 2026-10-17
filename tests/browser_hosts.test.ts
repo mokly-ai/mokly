@@ -110,4 +110,8 @@ test("listening addresses require the complete port and line", () => {
     listeningAddress(line.replace("\n", "\r\n")),
     "http://127.0.0.1:54321",
   );
+  const watching = "Mokly listening at http://127.0.0.1:54321 (watching)\n";
+  for (let length = 0; length < watching.length; length++)
+    assert.equal(listeningAddress(watching.slice(0, length)), undefined);
+  assert.equal(listeningAddress(watching), "http://127.0.0.1:54321");
 });

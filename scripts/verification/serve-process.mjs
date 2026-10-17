@@ -95,7 +95,7 @@ export async function serveProcess(args, cwd, environment = process.env) {
 
 /** A complete listening line prevents returning a partial port. */
 export function listeningAddress(output) {
-  return /(?:^|\n)Mokly listening at (http:\/\/127\.0\.0\.1:\d+)\r?\n/.exec(
+  return /(?:^|\n)Mokly listening at (http:\/\/127\.0\.0\.1:\d+)(?: \(watching\))?\r?\n/.exec(
     output,
   )?.[1];
 }
