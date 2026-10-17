@@ -148,3 +148,50 @@ fn rich_publication_receipts_style_zero_one_two_counts_and_leave_urls_unstyled()
     assert!(text.contains("2 files uploaded"));
     insta::assert_snapshot!(text);
 }
+
+#[test]
+fn an_animated_cache_note_erases_under_the_reporter_lock_and_keeps_the_phase() {
+    let written = Arc::new(Mutex::new(Vec::new()));
+    let capture = written.clone();
+    let state = Arc::new(Mutex::new(super::State {
+        label: Some("Comparing with base".into()),
+        ..Default::default()
+    }));
+    let observed = state.clone();
+    let terminal = Arc::new(Unimock::new(
+        TerminalMock::stdout
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, text| {
+                assert!(
+                    observed.try_lock().is_err(),
+                    "stdout must stay under the phase lock"
+                );
+                capture.lock().unwrap().push(text.to_owned());
+            })),
+    ));
+    let (stop, _) = mpsc::channel();
+    let output = super::Lines {
+        cwd: "/repo".into(),
+        style: Style {
+            mode: Mode::Rich,
+            color: false,
+            ascii: true,
+            columns: 200,
+        },
+        redactor: Arc::new(Redactor::default()),
+        terminal,
+        state: state.clone(),
+        stop,
+        timer: Mutex::new(None),
+        animate: true,
+    };
+    mokly_cli::static_build::Phases::note(&output, "  cache /cache/repository\n");
+    assert_eq!(
+        written.lock().unwrap().join(""),
+        "\r\x1b[2K  cache /cache/repository\n"
+    );
+    assert_eq!(
+        state.lock().unwrap().label.as_deref(),
+        Some("Comparing with base")
+    );
+}

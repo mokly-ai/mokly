@@ -54,6 +54,11 @@ export async function resolvePlugin(
             if (resolved.errors.length) return { errors: resolved.errors };
             try {
               resolvedPath = await sources.resolve(resolved.path);
+              await sources.dependencyUsage.resolved(
+                name,
+                path.dirname(file),
+                resolvedPath,
+              );
               return { path: resolvedPath, external: true };
             } catch (error) {
               return { errors: [{ text: detail(error) }] };
@@ -85,6 +90,7 @@ function nativePath(
   file: string,
   options?: { paths?: string[] },
 ): string {
+  const authored = name;
   const alias = Object.keys(sources.settings.aliases)
     .sort((a, b) => b.length - a.length)
     .find((key) => name === key || name.startsWith(key + "/"));
@@ -121,7 +127,9 @@ function nativePath(
     if (!found) throw error;
     resolved = found;
   }
-  return sources.resolveSync(resolved);
+  const mapped = sources.resolveSync(resolved);
+  sources.dependencyUsage.resolvedSync(authored, path.dirname(file), mapped);
+  return mapped;
 }
 
 function requireLocal(file: string): unknown {

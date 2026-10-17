@@ -5,6 +5,9 @@ use thiserror::Error;
 /// A specific semantic rule violated by a decoded public payload.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Error)]
 pub enum ContractViolation {
+    /// Invalid review identities, sides, reasons, evidence, or canonical order.
+    #[error("invalid review identities, sides, reasons, evidence, or canonical order")]
+    Review,
     /// Invalid catalogue or deployment identity.
     #[error("invalid catalogue or deployment identity")]
     Identity,

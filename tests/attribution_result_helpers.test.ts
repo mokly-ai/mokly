@@ -2,13 +2,21 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type {
-  AffectedUsageEvidence,
-  ComponentUsageContext,
   Manifest,
   ManifestScreen,
-  ReviewResultV7,
-} from "../packages/viewer/dist/data.js";
+} from "../packages/viewer/dist/registry/types.js";
+import type { ReviewEntry } from "../packages/viewer/dist/review/types.js";
 
+import {
+  bar,
+  chip,
+  chipSheet,
+  other,
+  otherSheet,
+  picker,
+  removedOther,
+  result,
+} from "./helpers/attribution_fixture.js";
 import {
   changedEntryPaths,
   impactingIds,
@@ -19,144 +27,36 @@ import {
   usageChainsOf,
   usageVariantsOf,
 } from "./helpers/attribution_result.js";
-import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
-
-const chip = "library/chip";
-const other = "library/other";
-const bar = "library/bar";
-const picker = "library/picker";
-const chipSheet = "generated/chip.css";
-const otherSheet = "generated/other.css";
-const barContext: ComponentUsageContext = {
-  kind: "component",
-  entry: { path: bar, title: "Bar" },
-  variantPath: `${bar}/selected`,
-  viewport: "mobile",
-  colorScheme: "light",
-};
-const screenContext: ComponentUsageContext = {
-  kind: "screen",
-  entry: { path: "screens/home", title: "Home" },
-  viewport: "desktop",
-  colorScheme: "light",
-};
-
-function evidence(
-  context: ComponentUsageContext,
-  chain: readonly string[],
-  side: "before" | "after" = "after",
-): AffectedUsageEvidence {
-  return {
-    side,
-    context,
-    via: chain.map((componentId, index) => ({
-      componentId,
-      instanceKey: `instance-${index}`,
-    })),
-  };
-}
-
-const result: ReviewResultV7 = {
-  schemaVersion: 7,
-  baseCommit: "a".repeat(40),
-  baseRef: "main",
-  changedPaths: [otherSheet, chipSheet],
-  ignoredImpact: [],
-  screens: [],
-  components: [],
-  changes: [
-    {
-      kind: "component",
-      before: { path: other, title: "Other" },
-      reasons: [{ kind: "dependency", path: otherSheet }],
-    },
-    {
-      kind: "screen",
-      after: { path: "screens/home", title: "Home" },
-      reasons: [{ kind: "dependency", path: chipSheet }],
-    },
-    {
-      kind: "component",
-      before: { path: "library/old-chip", title: "Chip" },
-      after: { path: chip, title: "Chip" },
-      reasons: [
-        {
-          kind: "dependency",
-          path: chipSheet,
-          analysis: fixtureCssAnalysis("unresolved", ["body"]),
-        },
-        { kind: "metadata" },
-      ],
-    },
-  ],
-  affectedConsumers: [
-    {
-      changedComponentId: chip,
-      consumer: { kind: "component", path: bar },
-      evidence: [
-        evidence(barContext, [bar, picker, chip]),
-        evidence(barContext, [bar, picker, chip], "before"),
-        evidence({ ...barContext, variantPath: `${bar}/default` }, [bar, chip]),
-        evidence(screenContext, [bar, picker, chip]),
-      ],
-    },
-    {
-      changedComponentId: other,
-      consumer: { kind: "component", path: bar },
-      evidence: [
-        evidence({ ...barContext, variantPath: `${bar}/other` }, [bar, other]),
-      ],
-    },
-    {
-      changedComponentId: other,
-      consumer: { kind: "screen", path: "screens/unrelated" },
-      evidence: [evidence(screenContext, [other])],
-    },
-    {
-      changedComponentId: chip,
-      consumer: { kind: "screen", path: "screens/second" },
-      evidence: [evidence(screenContext, [chip])],
-    },
-    {
-      changedComponentId: chip,
-      consumer: { kind: "screen", path: "screens/home" },
-      evidence: [evidence(screenContext, [chip])],
-    },
-  ],
-};
 
 test("change paths use current or removed sides without changing the result", () => {
   const snapshot = structuredClone(result);
   assert.deepEqual(changedEntryPaths(result), [chip, other, "screens/home"]);
-  const [removed] = result.changes;
-  assert.ok(removed);
   assert.deepEqual(
-    changedEntryPaths({ ...result, changes: [...result.changes, removed] }),
+    changedEntryPaths({
+      ...result,
+      entries: [...result.entries, removedOther],
+    }),
     [chip, other, other, "screens/home"],
   );
   assert.deepEqual(result, snapshot);
+  const sideless: ReviewEntry = { ...removedOther };
+  delete sideless.before;
   assert.throws(
-    () =>
-      changedEntryPaths({
-        ...result,
-        changes: [{ kind: "component", reasons: [] }],
-      }),
+    () => changedEntryPaths({ ...result, entries: [sideless] }),
     /must have a before or after side/,
   );
 });
 
-test("reasons retain exact dependency analysis and reject missing or duplicate entries", () => {
+test("reasons are exact and reject missing or duplicate entries", () => {
   assert.deepEqual(reasonsOf(result, chip), [
-    {
-      kind: "dependency",
-      path: chipSheet,
-      analysis: fixtureCssAnalysis("unresolved", ["body"]),
-    },
+    { kind: "dependency", path: chipSheet },
     { kind: "metadata" },
   ]);
   assert.deepEqual(reasonsOf(result, other), [
     { kind: "dependency", path: otherSheet },
+    { kind: "removed" },
   ]);
+  assert.throws(() => reasonsOf(result, bar), /Expected one changed entry/);
   assert.throws(
     () => reasonsOf(result, "missing"),
     /Expected one changed entry/,
@@ -164,7 +64,7 @@ test("reasons retain exact dependency analysis and reject missing or duplicate e
   assert.throws(
     () =>
       reasonsOf(
-        { ...result, changes: [...result.changes, ...result.changes] },
+        { ...result, entries: [...result.entries, ...result.entries] },
         chip,
       ),
     /Expected one changed entry/,
@@ -179,7 +79,7 @@ test("impact and screen consumers stay scoped to their changed component", () =>
   ]);
   assert.deepEqual(screenConsumersOf(result, other), ["screens/unrelated"]);
   assert.deepEqual(screenConsumersOf(result, "missing"), []);
-  assert.deepEqual(impactingIds({ ...result, affectedConsumers: [] }), []);
+  assert.deepEqual(impactingIds({ ...result, affected: [] }), []);
 });
 
 test("usage projections isolate owners and consumers and merge repeated sides", () => {
@@ -198,7 +98,7 @@ test("usage projections isolate owners and consumers and merge repeated sides", 
   assert.deepEqual(usageChainsOf(result, chip, "missing"), []);
 });
 
-test("stylesheet scope uses only the exact dependency reason path", () => {
+test("stylesheet scope uses only the exact dependency reason route", () => {
   assert.deepEqual(stylesheetScope(result, chipSheet), [chip, "screens/home"]);
   assert.deepEqual(stylesheetScope(result, otherSheet), [other]);
   assert.deepEqual(stylesheetScope(result, "chip.css"), []);

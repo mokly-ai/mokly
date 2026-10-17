@@ -48,9 +48,11 @@ jobs:
         run: |
           mkdir -p "$HOME/.mokly-testbox"
           sha256sum package-lock.json | cut -d ' ' -f1 > "$HOME/.mokly-testbox/package-lock.sha256"
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
       - name: Expose job environment to Testbox sessions
         run: |
-          sudo sed -i '/^PATH=/d' /etc/environment
-          printf 'PATH=%s\n' "$PATH" | sudo tee -a /etc/environment >/dev/null
+          sudo sed -i '/^PATH=/d; /^PLAYWRIGHT_CHANNEL=/d' /etc/environment
+          printf 'PATH=%s\nPLAYWRIGHT_CHANNEL=chromium\n' "$PATH" | sudo tee -a /etc/environment >/dev/null
       - name: Run Testbox
         uses: useblacksmith/run-testbox@5ca05834db1d3813554d1dd109e5f2087a8d7cbc # v2

@@ -7,13 +7,12 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::access::WorkingFile;
-use crate::blob_batches;
 use crate::changes::{self, Change, ChangedPath, Kind};
 use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, Request, Runner};
-use crate::disk::{ArchiveFile, Disk};
+use crate::disk::Disk;
 use crate::error::{Error, Result};
 use crate::identity::{ObjectId, RepoPath};
-use crate::tree::{self, Entry, Limits, Mode, text};
+use crate::tree::{self, Entry, Limits, text};
 
 /// Immutable-base operations for a validated repository root.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RepositoryMock))]
@@ -29,6 +28,10 @@ pub trait Repository: Send + Sync {
         root: Option<&RepoPath>,
         limits: Limits,
     ) -> Result<Vec<Entry>>;
+    /// Look up exact paths without enumerating their descendants.
+    fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>>;
+    /// Hash an immutable blob through a bounded streaming reader.
+    fn digest(&self, entry: &Entry) -> Result<String>;
     /// Read an exact regular blob by path, without filters or symlink traversal.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
     /// Read regular entries in bounded batches using their already-proved object ids.
@@ -193,6 +196,14 @@ impl Repository for GitRepository {
         tree::parse(&self.command(&args, vec![], DEFAULT_OUTPUT_LIMIT)?, limits)
     }
 
+    fn lookup(&self, commit: &ObjectId, paths: &[RepoPath], limits: Limits) -> Result<Vec<Entry>> {
+        self.lookup_paths(commit, paths, limits)
+    }
+
+    fn digest(&self, entry: &Entry) -> Result<String> {
+        self.digest_blob(entry)
+    }
+
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>> {
         let entry = self
             .list(commit, Some(path), Limits::default())?
@@ -237,39 +248,7 @@ impl Repository for GitRepository {
     }
 
     fn extract(&self, commit: &ObjectId, destination: &Path, limits: Limits) -> Result<()> {
-        let entries: Vec<_> = self
-            .list(commit, None, limits)?
-            .into_iter()
-            .filter(|entry| entry.mode.regular())
-            .collect();
-        let mut bytes = 0usize;
-        for entry in &entries {
-            if entry.size > limits.blob {
-                return Err(Error::ByteLimit { limit: limits.blob });
-            }
-            bytes = bytes.saturating_add(entry.size);
-            if bytes > limits.bytes {
-                return Err(Error::ByteLimit {
-                    limit: limits.bytes,
-                });
-            }
-        }
-        let mut archive = self.disk.archive(destination)?;
-        for range in blob_batches::split(&entries, blob_batches::BYTES, blob_batches::COUNT)? {
-            let batch = &entries[range];
-            let contents = self.load(batch, limits.bytes)?;
-            let files = batch
-                .iter()
-                .zip(contents)
-                .map(|(entry, bytes)| ArchiveFile {
-                    path: entry.path.clone(),
-                    bytes,
-                    executable: entry.mode == Mode::Executable,
-                })
-                .collect::<Vec<_>>();
-            archive.write(&files)?;
-        }
-        archive.finish()
+        self.extract_sources(commit, destination, limits)
     }
 }
 

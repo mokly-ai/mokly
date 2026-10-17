@@ -38,13 +38,25 @@ export async function serveStaticFiles(
       if ((await fs.promises.stat(filename)).isDirectory())
         filename = path.join(filename, "index.html");
       const types: Record<string, string> = {
-        ".html": "text/html",
-        ".css": "text/css",
-        ".js": "text/javascript",
-        ".json": "application/json",
+        ".html": "text/html; charset=utf-8",
+        ".htm": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".mjs": "text/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".txt": "text/plain; charset=utf-8",
+        ".svg": "image/svg+xml; charset=utf-8",
         ".png": "image/png",
-        ".svg": "image/svg+xml",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+        ".avif": "image/avif",
+        ".ico": "image/x-icon",
+        ".woff": "font/woff",
         ".woff2": "font/woff2",
+        ".ttf": "font/ttf",
+        ".otf": "font/otf",
       };
       response.setHeader(
         "Content-Type",

@@ -133,7 +133,8 @@ version only. The [format inventory](./mokly-format-versions.md) owns all number
 
 Use the viewer's root, `./browser`, `./data`, and `./styles.css` entries. The
 `./server` and `./runtime` entries, `renderViewer`, shell hydration, and embedded
-bootstrap data are absent. `MoklyViewer` takes index and detail sources.
+bootstrap data are absent. `./data` exports only the path functions, the
+directory names, the path and link grammar, and the prop schema validators. `MoklyViewer` takes index and detail sources.
 `readCatalogueIndex` and `readEntryDetail` read those boundaries.
 `resolveInstance` and `InstanceResolution` are available only from
 `@mokly/viewer`; remove imports of them from `@mokly/mokly`. The index has

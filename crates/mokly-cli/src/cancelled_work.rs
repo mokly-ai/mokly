@@ -1,7 +1,7 @@
 //! Cancellation checkpoints at source IO and between independently scheduled views.
 
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_graph::cache::Artifact;
@@ -37,6 +37,16 @@ impl CancellableTree {
 }
 
 impl SourceTree for CancellableTree {
+    fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
+        for path in paths {
+            self.check(path)?;
+        }
+        self.inner.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
+        self.check(path)?;
+        self.inner.read_public(path)
+    }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.check(path)?;
         self.inner.digest(path)

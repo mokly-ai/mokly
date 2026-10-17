@@ -13,6 +13,8 @@ presentation. The npm shim starts this binary with inherited streams.
 - Keep success and failure exit statuses at 0 and 1.
 - Load JSON configuration, validate the catalogue, and render every HTML or JavaScript view.
 
+- Compute Changes from a pinned Git base and keep its validated result in memory.
+
 ## What This Crate Does
 
 The Windows MSVC binary reserves an 8 MiB main-thread stack through
@@ -49,6 +51,14 @@ The browser bundle comes from the matching installed `@mokly/viewer` package.
 
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
 diagnostics. It reports listener backoff and recovery in both output modes.
+Serve captures one warning sink per preparation attempt. It sorts and
+deduplicates preparation and composition warnings before the completion line.
+Later on-demand, background, and temporary renders report only new warnings.
+A repair inherits the failed preparation attempt's seen set. Render and preview
+failures do not change that scope's preparation status. Replaced or cancelled
+producers cannot print warnings, including when shutdown fails. A fatal
+startup error flushes pending warnings before cancellation. Resource-only
+reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
 counts without source text, props, or error payloads.
@@ -114,6 +124,35 @@ only when it equals the command's outer code. Configuration locations are
 repository-relative, or use the basename when the root does not contain
 the configuration file.
 
+The build service computes Changes unless `--no-changes` is set. After output
+admission, it pins the selected base before catalogue validation and rendering.
+The comparison uses that same repository, commit, and ref without another lookup.
+The phase owner erases its animated row before cache notes and serializes both
+streams. Warnings precede the colored Changes status. Nested Git failures keep
+the historical commit and Git detail. Changes runs inside the static pipeline before warning gates and output
+installation. `PreparedBuild` retains its result for the comparison-file join.
+Head and
+base use `mokly-render::Runtime` with one shared pool and render cache.
+JavaScript and PostCSS base inputs hold source and dependency leases.
+Historical sidecars and PostCSS children use the same parent-death protection
+as current rendering, including when consumer code blocks.
+CLI cancellation reaches Git, cache waits, installation, source reads,
+planning, comparison, and document workers. `--base`
+overrides `review.base`; the default ref is `origin/main`. It retains review v8,
+snapshot v4, and the two graph generations in memory for static output.
+A base source validation failure reports the historical commit and makes
+Changes unavailable while the current catalogue remains valid. A missing base configuration means an empty base catalogue, so every current
+entry is added. A remaining comparison budget makes Changes unavailable with
+the path and limit. A Git failure
+aborts the build with `git-failed` and the selected ref. Historical runtime
+unavailability and version mismatch make Changes unavailable with typed
+diagnostics. A historical runtime timeout makes Changes unavailable with
+`base runtime timed out`. Cancellation and protocol failures fail the build. An internal comparison
+failure aborts with `review-invalid`. Strict mode counts current-build and
+base preparation warnings after comparison; it omits base authoring warnings. Rich output reports
+Changes, moved, and ignored-only counts from the classifier. Plain output
+keeps its phase-free contract. The static writer consumes the retained generations for catalogue output.
+
 Publish validates credentials and the committed clean checkout before it calls
 the CLI-owned `StaticOutput` adapter. It passes the invocation directory for
 configuration discovery. It reports a child output path inside a private
@@ -136,6 +175,10 @@ cargo run -p mokly-cli --bin mokly -- build --help
 ```
 
 ## Development
+
+Changes integration tests isolate cache directories for each child process.
+They check exact entry names through the native build composition, including
+HTML, React, and stylesheet edits.
 
 ```bash
 cargo test -p mokly-cli
@@ -162,6 +205,7 @@ still use their injected trait boundaries.
   and [static output adapter](./src/publication/mod.rs).
 - [Shared Serve services](./src/serve_services.rs), [Serve shutdown](./src/serve_shutdown.rs),
   [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
+- [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

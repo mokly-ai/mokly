@@ -1,4 +1,5 @@
 import type { LegacyScenario } from "./legacy-adapter.mjs";
+import type { RustScenario } from "./rust-adapter.mjs";
 
 export interface EntryAddress {
   kind: string;
@@ -79,3 +80,5 @@ export function behaviourTable<Input>(
   adapter: BehaviourAdapter<Input>,
 ): BehaviourTable;
 export function readScenario(directory: string): Promise<LegacyScenario>;
+
+export function readRustScenario(directory: string): Promise<RustScenario>;

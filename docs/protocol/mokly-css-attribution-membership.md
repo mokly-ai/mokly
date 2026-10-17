@@ -20,9 +20,10 @@ Every independent Changes signal keeps its meaning.
 
 Rule evidence is read from the delivered stylesheets that the composed
 documents link. The analysis compares bytes, so a stylesheet needs no changed
-Git path to be evidence. A stylesheet that one side links and the other does
-not is a difference in the composed documents under the
-[materiality rule](./mokly-comparison.md#materiality), not a rule record.
+Git path to be evidence. A link added or removed without a byte change is document material under the
+[materiality rule](./mokly-comparison.md#materiality) and invents no rule.
+When the bytes change, reachability on either side admits both available
+documents for rule matching, including a side without that link.
 
 A variant's view states follow the matches on its own view; no synthetic
 variant is created for a consumer's props. Non-CSS resources keep their
@@ -35,15 +36,16 @@ owns the record: `RuleEvidence` with `stylesheet`, `selector`, `status`, and
 `owner`, in the `rules` list of a review view. This section states how the
 analysis fills it.
 
-- One record exists per stylesheet, changed rule, and selector that the
-  analysis keeps on this view. A rule with several selectors produces one
+- One record exists per stylesheet, changed rule, selector, and owner that
+  the analysis keeps on this view. A rule with several selectors produces one
   record per selector that matched or is unresolved; a selector that matched
   nothing produces none. A rule that matches no element on either side
   produces no record. A stylesheet whose changed rules all match nothing on
   this view has one record with status `excluded`.
 - `stylesheet` is the public route of the delivered stylesheet, relative to
   the artifact root, including a bundle under `static/mokly-generated/`. It never names
-  a private source.
+  a private source. An inline or head style uses the containing public
+  document route; no synthetic stylesheet file is required.
 - `selector` is the serialized selector as the parser wrote it, including `&`
   before nesting substitution. A selector-less at-rule's record carries the
   at-rule name and its prelude. An excluded stylesheet's record and a
@@ -53,12 +55,14 @@ analysis fills it.
   parse failure, or an analysis failure, and `excluded` on the one record of
   a stylesheet whose changed rules all match nothing. For one selector of one
   rule on one view, `unresolved` takes precedence over `matched`.
-- `owner` is `{ kind: "component", path }` when the rule changes exactly one
-  registered component and every match of this selector on this view lies
-  inside that component's regions after nested filtering. Otherwise it is
-  `{ kind: "entry" }`: a match outside every changed component, matches that
-  span several changed components, an unresolved rule, a parse failure, a
-  component page's renderer wrapper, or an `excluded` record.
+- Each linked-CSS match belongs to the innermost containing component
+  changed by that rule. Emit one `{ kind: "component", path }` record for
+  each such owner. Emit `{ kind: "entry" }` only for matches outside every
+  changed component. A selector can have component and entry records on the
+  same view. Unresolved rules, parse failures, and excluded records have
+  only the entry owner. Ownerless head rules use the same own-page proof,
+  with matches restricted to their input owner under
+  [style ownership](./mokly-comparison.md#style-ownership).
 - Records of equal rules in different stylesheets stay separate records,
   because `stylesheet` differs; the rule identity joins their proof, not their
   records.
@@ -100,14 +104,15 @@ changed-component set from the selected entry alone.
 
 ## Validation
 
-- Every `stylesheet` is a changed public stylesheet that the view's composed
-  document reaches on at least one side. An embedded document uses its own
+- Every `stylesheet` names a changed public stylesheet reached on either
+  side, or the containing public document of changed inline style rules. An embedded document uses its own
   tree.
 - Records are sorted and unique as stated above. A stylesheet with a
   `matched` or `unresolved` record on a view has no `excluded` record on that
   view.
-- A component owner names a registered component whose own pages keep at
-  least one match for the rule after nested filtering. The producer checks
+- A component owner names a registered component whose own pages keep a
+  match for the same rule identity after nested filtering. Inline slot
+  matches follow their input owner. The producer checks
   each owner against the recorded own-page match sets, never against the
   result's own rows and never against consumer-instance matches.
 - An `unresolved` record is owned by the entry.
@@ -120,9 +125,13 @@ changed-component set from the selected entry alone.
 
 ## Read And Analysis Reuse
 
-Both sides' stylesheet bytes and composed documents come from the render
-cache and the base-side render; the analysis reads no file again and renders
-nothing. Parsed stylesheets are cached by content hash with a byte bound, so a
+Both sides' composed documents come from the render cache. A comparison-scoped
+route map reuses resource digests, byte proofs, and changed-byte state. Public
+asset reads and planning digests do not enter the private source snapshot.
+Planning batches the generation's known read set before digest reads. Opaque
+resources use streamed digests when they exceed the blob read budget. Resource bytes
+and content-keyed stylesheet diffs have byte-bounded caches; eviction changes
+work only. The analysis renders no document. Parsed stylesheets are cached by content hash with a byte bound, so a
 stylesheet shared across paths and sides parses once, and eviction changes
 time only. Own-page matches are collected and filtered catalogue-wide before
 any entry's evidence is decided, without rendering a consumer again or

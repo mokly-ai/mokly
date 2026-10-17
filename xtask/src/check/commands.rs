@@ -7,7 +7,7 @@ use super::request::{DependencyAudit, Shard, VerificationSuite};
 /// Commands in dependency order for one validated suite.
 pub(super) fn commands_for(
     suite: VerificationSuite,
-    _shard: Option<Shard>,
+    shard: Option<Shard>,
     dependency_audit: DependencyAudit,
 ) -> Vec<CommandSpec> {
     match suite {
@@ -17,6 +17,7 @@ pub(super) fn commands_for(
             npm(&["run", "typecheck"]),
             npm(&["run", "test:viewer:prepared"]),
         ],
+        VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],
         VerificationSuite::Native => vec![
             cargo(&["xtask", "build-native"]),
             cargo(&["fmt", "--all", "--", "--check"]),
@@ -26,6 +27,15 @@ pub(super) fn commands_for(
             cargo(&["test", "--workspace"]),
         ],
     }
+}
+
+/// Run the already-built browser suite, optionally selecting one shard.
+pub(super) fn browser_test_command(shard: Option<Shard>) -> CommandSpec {
+    let mut test = npm(&["run", "test:browser:prepared"]);
+    if let Some(shard) = shard {
+        test = test.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]);
+    }
+    test
 }
 
 fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {

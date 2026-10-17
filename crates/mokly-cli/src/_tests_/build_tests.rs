@@ -27,7 +27,7 @@ use crate::build::{BuildError, BuildService, CatalogueBuild};
 use crate::cancellation::{BuildCancellation, Cancellation};
 use crate::grammar::{Build, Common};
 
-fn config() -> ResolvedConfig {
+pub(super) fn config() -> ResolvedConfig {
     ResolvedConfig {
         input: Config::default(),
         file: "/repo/mokly.config.json".into(),
@@ -37,7 +37,7 @@ fn config() -> ResolvedConfig {
     }
 }
 
-fn options() -> Build {
+pub(super) fn options() -> Build {
     Build {
         common: Common::default(),
         out: None,
@@ -46,7 +46,7 @@ fn options() -> Build {
     }
 }
 
-fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
+pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
     let entries = ["home", "home/one"]
         .into_iter()
         .map(|path| ModelEntry {
@@ -99,7 +99,7 @@ fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
     }
 }
 
-fn graphs(warnings: Vec<Warning>) -> (Arc<dyn GraphFactory>, Vec<Unimock>) {
+pub(super) fn graphs(warnings: Vec<Warning>) -> (Arc<dyn GraphFactory>, Vec<Unimock>) {
     let generation_mock = Unimock::new(
         RenderGenerationMock::render_all
             .next_call(matching!())
@@ -138,6 +138,7 @@ fn build_passes_the_default_output_and_counts_validated_variants() {
         .returns(Ok(prepared(Vec::new())))));
     let (graphs, _guards) = graphs(Vec::new());
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
@@ -170,6 +171,7 @@ fn strict_build_keeps_warnings_and_resolves_output_from_config() {
     ));
     let (graphs, _guards) = graphs(vec![warning.clone()]);
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
@@ -199,6 +201,7 @@ fn a_loader_failure_preserves_the_typed_error_without_preparing_a_catalogue() {
             )))),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
@@ -230,6 +233,7 @@ fn deferred_definitions_fail_before_graph_creation() {
             .returns(Ok(prepared)),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         inputs: None,
         cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
         config: loader,
@@ -265,6 +269,7 @@ fn an_interrupt_after_html_preparation_cancels_before_graph_creation() {
             })),
     ));
     let service: &dyn BuildService = &CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         inputs: None,
         config: loader,
         catalogue: builder,

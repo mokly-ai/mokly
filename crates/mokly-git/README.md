@@ -45,10 +45,13 @@ Untracked additions never infer a rename.
 Tree queries use literal pathspecs and NUL records. Blob batches use stdin,
 at most 4,096 objects, and at most 48 MiB including framing. Tree listings retain directory and link modes. Regular files and all metadata
 nodes have independent count bounds.
-The commit source reader indexes that metadata once. Working inputs compare
+The commit source reader indexes requested roots and exact paths. Nonrecursive
+path lookups avoid enumerating unrelated directories. `digest` streams blob
+stdout through SHA-256 with bounded memory and the same cancellation and exit
+checks; stderr retains its capture limit. Working inputs compare
 bytes first and hash changed confined paths in one stdin-paths command. `read_many` accepts
-proved entries and reads their blobs through bounded batches. Extraction also has total and per-file byte bounds.
-It writes one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
+proved entries and reads their blobs through bounded batches. Extraction has a total disk byte bound.
+It streams oversized files to disk and writes smaller files one batch at a time, copies regular blobs, preserves executable mode, and omits symbolic links
 and submodules. Unsupported host names and non-UTF-8 candidates are traced
 and skipped. Ordinary colons and backslashes remain in Git path identities. Export attributes never change source bytes. A destination
 must be fresh; a failed extraction removes its partial directory.
@@ -77,7 +80,8 @@ cargo clippy -p mokly-git --all-targets -- -D warnings
 ```
 
 Unit tests assert argument order, budgets, and command counts. Integration
-tests execute Git and verify output limits and failed exit statuses.
+tests execute Git and verify output limits, failed exit statuses, and partial
+extraction cleanup after cancellation during a streamed copy.
 
 ### Key Code
 

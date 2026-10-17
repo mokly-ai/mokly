@@ -85,8 +85,8 @@ Node 24 for a Release Please pull request, under the
 The [test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
 sets the limits. Node runs at most half of the available CPUs' worth of test
 files at once, never fewer than two. Playwright uses one worker. Each
-Playwright worker owns one example server on a consecutive port from
-`MOKLY_PLAYWRIGHT_PORT` (default 4517). `MOKLY_UNIT_CONCURRENCY` replaces the
+Playwright worker owns one example server on a free loopback port. The shim
+uses `--base HEAD --no-watch --port 0 --sidecars 1`. `MOKLY_UNIT_CONCURRENCY` replaces the
 Node file limit and `MOKLY_PLAYWRIGHT_WORKERS` replaces the worker count. Each
 accepts only a positive decimal integer.
 

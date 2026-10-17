@@ -36,6 +36,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
                 .returns(()),
         )));
         let postcss = PostCss {
+            usage: Arc::new(Unimock::new(())),
             lease: Arc::new(ContextLease {
                 id: "base".into(),
                 pool: pool.clone(),
@@ -47,6 +48,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
             inventory_tree: Arc::new(Unimock::new(())),
             root: "/head".into(),
             side: SideInputs {
+                dependency_aliases: Default::default(),
                 source_root: "/base".into(),
                 repository_roots: vec!["/head".into()],
                 module_resolution: ModuleResolution::default(),

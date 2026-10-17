@@ -24,6 +24,7 @@ fn build_preparation_retains_the_failure_when_a_signal_arrives_before_join() {
             .returns(true),
     )));
     let build = CatalogueBuild {
+        changes: Arc::new(Unimock::new(())),
         inputs: None,
         cancellation,
         config: Arc::new(Unimock::new(

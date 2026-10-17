@@ -17,6 +17,8 @@ pub struct ResourceReference {
     pub owner: EvidenceOwner,
     /// Ignored references require delivery but supply no change evidence.
     pub ignored: bool,
+    /// Exact logical supplier instance, absent on an entry or own component root.
+    pub instance_key: Option<String>,
 }
 
 /// Collect URL-bearing attributes, style URLs, and embedded documents.
@@ -24,7 +26,14 @@ pub fn collect(nodes: &[Node]) -> Vec<ResourceReference> {
     let mut output = Vec::new();
     let mut instances = BTreeMap::new();
     instance_paths(nodes, &mut instances);
-    walk(nodes, &EvidenceOwner::Entry, false, &instances, &mut output);
+    walk(
+        nodes,
+        &EvidenceOwner::Entry,
+        None,
+        false,
+        &instances,
+        &mut output,
+    );
     output
 }
 
@@ -42,13 +51,14 @@ impl NodeRef<'_> {
 }
 
 enum Step<'a> {
-    Node(NodeRef<'a>, EvidenceOwner, bool),
+    Node(NodeRef<'a>, EvidenceOwner, Option<String>, bool),
     Reference(ResourceReference),
 }
 
 fn walk(
     nodes: &[Node],
     owner: &EvidenceOwner,
+    instance_key: Option<&str>,
     ignored: bool,
     instances: &BTreeMap<String, String>,
     output: &mut Vec<ResourceReference>,
@@ -56,15 +66,22 @@ fn walk(
     let mut pending: Vec<_> = nodes
         .iter()
         .rev()
-        .map(|node| Step::Node(NodeRef::Borrowed(node), owner.clone(), ignored))
+        .map(|node| {
+            Step::Node(
+                NodeRef::Borrowed(node),
+                owner.clone(),
+                instance_key.map(str::to_owned),
+                ignored,
+            )
+        })
         .collect();
     while let Some(step) = pending.pop() {
-        let (node, mut owner, mut ignored) = match step {
+        let (node, mut owner, mut instance_key, mut ignored) = match step {
             Step::Reference(reference) => {
                 output.push(reference);
                 continue;
             }
-            Step::Node(node, owner, ignored) => (node, owner, ignored),
+            Step::Node(node, owner, instance_key, ignored) => (node, owner, instance_key, ignored),
         };
         let mut next = Vec::new();
         match node.as_ref() {
@@ -84,17 +101,28 @@ fn walk(
                     RegionKind::Slot { .. } => EvidenceOwner::Entry,
                     _ => owner,
                 };
+                instance_key = match &region.kind {
+                    RegionKind::Instance { key, .. } => Some(key.clone()),
+                    RegionKind::Root { .. } => None,
+                    RegionKind::Slot {
+                        owner: ComponentInputOwner::Instance { instance_key },
+                        ..
+                    } => Some(instance_key.clone()),
+                    RegionKind::Slot { .. } => None,
+                    _ => instance_key,
+                };
                 ignored |= matches!(region.kind, RegionKind::Ignore { .. });
             }
             Node::Element(element) => {
-                element_references(element, &owner, ignored, &mut next);
+                ignored |= speculative(element);
+                element_references(element, &owner, instance_key.as_deref(), ignored, &mut next);
             }
             _ => {}
         }
         next.extend(
             children(node)
                 .into_iter()
-                .map(|node| Step::Node(node, owner.clone(), ignored)),
+                .map(|node| Step::Node(node, owner.clone(), instance_key.clone(), ignored)),
         );
         pending.extend(next.into_iter().rev());
     }
@@ -114,6 +142,7 @@ fn children(node: NodeRef<'_>) -> Vec<NodeRef<'_>> {
 fn element_references(
     element: &Element,
     owner: &EvidenceOwner,
+    instance_key: Option<&str>,
     ignored: bool,
     output: &mut Vec<Step<'_>>,
 ) {
@@ -122,6 +151,7 @@ fn element_references(
             url,
             owner: owner.clone(),
             ignored,
+            instance_key: instance_key.map(str::to_owned),
         })
     };
     for attribute in &element.attributes {
@@ -138,11 +168,14 @@ fn element_references(
                     .into_iter()
                     .map(|value| reference(value.value)),
             ),
-            "srcdoc" => output.extend(
-                parse::document(&attribute.value)
-                    .into_iter()
-                    .map(|node| Step::Node(NodeRef::Owned(Box::new(node)), owner.clone(), ignored)),
-            ),
+            "srcdoc" => output.extend(parse::document(&attribute.value).into_iter().map(|node| {
+                Step::Node(
+                    NodeRef::Owned(Box::new(node)),
+                    owner.clone(),
+                    instance_key.map(str::to_owned),
+                    ignored,
+                )
+            })),
             _ => {}
         }
     }
@@ -157,6 +190,21 @@ fn element_references(
             }
         }
     }
+}
+
+fn speculative(element: &Element) -> bool {
+    let rel: Vec<_> = element
+        .get("rel")
+        .unwrap_or("")
+        .split_ascii_whitespace()
+        .collect();
+    element.name == "link"
+        && rel.iter().any(|value| {
+            value.eq_ignore_ascii_case("preload") || value.eq_ignore_ascii_case("prefetch")
+        })
+        && !rel
+            .iter()
+            .any(|value| value.eq_ignore_ascii_case("stylesheet"))
 }
 
 fn instance_paths(nodes: &[Node], paths: &mut BTreeMap<String, String>) {

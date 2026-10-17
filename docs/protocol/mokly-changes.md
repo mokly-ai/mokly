@@ -2,6 +2,13 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
+A base commit without the selected configuration file has an empty catalogue.
+Every current entry is added. A malformed configuration or a failed Git read
+keeps its validation or Git failure. A comparison size or command budget
+makes Changes unavailable with a diagnostic naming the path and limit. The
+current build remains usable. Runtime failure outcomes follow
+[base preparation](./mokly-base-preparation.md#shared-render-runtime).
+
 ## Changes membership
 
 The [comparison contract](./mokly-comparison.md#changes-membership) owns the
@@ -85,10 +92,10 @@ It is a reason to review, never a pixel measurement.
   changed rules match nothing on a view supplies no reason for that view. A
   newline-only edit has no changed rules and lists nothing. Fonts, images,
   and embedded documents keep file-level attribution.
-- A resource that was a regular file in the base commit, is missing from the
-  working tree, and is still referenced by a current document is a verified
-  deletion. It marks every view that references it `changed` and never makes
-  Changes unavailable. A resource missing on both sides is not a deletion.
+- A referenced resource missing from either side fails that side's closure
+  validation. A missing head target is `build-invalid`; the comparison never
+  substitutes historical bytes into current output. An absent unreferenced
+  counterpart can participate as an addition or removal.
 - Resource references compare by their resolved route. An accepted move maps
   the moved entry's resources under the
   [move normalisation rule](./mokly-moves.md#normalisation); equal mapped
@@ -96,8 +103,7 @@ It is a reason to review, never a pixel measurement.
 - Every reachable resource is validated on both sides, images and fonts
   included. Finding one changed resource does not skip the references after
   it. A dangling or escaping symlink, a path outside the public closure, or a
-  missing resource that is not a verified deletion makes Changes unavailable
-  with that diagnostic.
+  missing referenced resource fails validation with that diagnostic.
 
 ## Changes in Serve
 
@@ -113,8 +119,7 @@ publishes it, because the configuration always has a base. A
 content change clears the result, publishes `pending`, and publishes a
 terminal status only for the latest generation; a result from a superseded
 generation is discarded. A change to the base ref alone reclassifies the
-current trees without rendering the head side again. Apart from a verified
-deletion, an unavailable or invalid input makes Changes `unavailable` while
+current trees without rendering the head side again. An unavailable or invalid base input makes Changes `unavailable` while
 All stays browsable, and a classifier failure is reported through the
 ordinary diagnostic path. The [on-demand Serve contract](./mokly-on-demand.md)
 owns the shell's presentation of each status.

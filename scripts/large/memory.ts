@@ -92,12 +92,13 @@ export function monitor(
     if (stopped) return;
     stopped = true;
     cancel();
+    // Signal the owned group while its leader is unreaped and its ID reserved.
+    failed(message);
     try {
       killProcesses(pids, boundary.kill, boundary.pid);
     } catch (error) {
-      message += `; shutdown failed: ${String(error)}`;
+      failed(`${message}; shutdown failed: ${String(error)}`);
     }
-    failed(message);
   };
   const sample = async () => {
     let rows: ProcessRow[];

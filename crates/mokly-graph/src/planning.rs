@@ -13,7 +13,7 @@ use crate::graph::Graph;
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
 use crate::workers::check_cancelled;
-use crate::{component_keys, error, resource_digests, resource_keys, routing_inputs, styles};
+use crate::{component_keys, error, planning_resources, resource_digests, routing_inputs, styles};
 
 pub(crate) fn documents(
     graph: &Graph,
@@ -26,6 +26,8 @@ pub(crate) fn documents(
 ) -> Result<BTreeMap<String, DocumentPlan>> {
     let tree = graph.tree.as_ref();
     let delivery = &graph.inputs;
+    let public =
+        planning_resources::Resources::prepare(config, catalogue, tree, graph.workers.as_ref())?;
     let mut sources = BTreeMap::new();
     for entry in &catalogue.model.entries {
         check_cancelled(graph.workers.as_ref())?;
@@ -148,9 +150,7 @@ pub(crate) fn documents(
             let mut recipe: Vec<_> = inputs.iter().map(|input| input.as_bytes()).collect();
             recipe.push(&encoded);
             let resource_key = key(NodeKind::Document, &recipe).0;
-            for (path, digest) in
-                resource_keys::inputs(config, catalogue, entry, &route, &components, tree)
-            {
+            for (path, digest) in public.inputs(catalogue, entry, &route, &components) {
                 inputs.push(format!("{path}:{digest}"));
             }
             for link in &links {
@@ -192,7 +192,7 @@ pub(crate) fn documents(
     Ok(output)
 }
 
-fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
+pub(crate) fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
     let mut found = BTreeSet::new();
     let mut stack = vec![path.to_owned()];
     while let Some(path) = stack.pop() {

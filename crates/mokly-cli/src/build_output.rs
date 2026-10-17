@@ -36,7 +36,13 @@ pub fn warnings(style: &Style, warnings: &[Warning], redactor: &Redactor) -> Str
 }
 
 /// Discovery-only success. Plain mode adds no phase line and names no output.
-pub fn summary(style: &Style, summary: &BuildSummary) -> String {
+pub fn summary(style: &Style, summary: &BuildSummary, redactor: &Redactor) -> String {
+    catalogue_summary(style, summary)
+        + &crate::changes_output::summary(style, &summary.changes, redactor)
+}
+
+/// Catalogue counts shared by build and Serve without comparison status.
+pub fn catalogue_summary(style: &Style, summary: &BuildSummary) -> String {
     if style.mode == Mode::Plain {
         return String::new();
     }
@@ -77,7 +83,9 @@ fn failure_detail(style: &Style, failure: &BuildError, redactor: &Redactor) -> S
 /// Retained warnings from one failed preparation attempt.
 pub fn warning_records(failure: &BuildError) -> Vec<Warning> {
     let mut records = match failure {
-        BuildError::Deferred { warnings, .. } | BuildError::Strict { warnings } => warnings.clone(),
+        BuildError::Deferred { warnings, .. }
+        | BuildError::Strict { warnings }
+        | BuildError::Comparison { warnings, .. } => warnings.clone(),
         BuildError::Catalogue {
             source: CatalogueError::Invalid { warnings, .. },
         } => warnings.clone(),
@@ -95,6 +103,23 @@ pub fn warning_records(failure: &BuildError) -> Vec<Warning> {
 /// Format only typed failure details, so watched actions can own warning order.
 pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redactor) -> String {
     match failure {
+        BuildError::Comparison {
+            base_ref,
+            source,
+            ..
+        } => {
+            if matches!(source.as_ref(), mokly_compare::error::Error::Git { .. }) {
+                return style.error(Code::GitFailed, &format!("Git information could not be read for {base_ref}. Check the repository and configured base."), redactor);
+            }
+            style.error(
+                    crate::changes_diagnostics::failure_code(source),
+                    &format!(
+                        "comparison against base ref {base_ref:?} failed: {}",
+                        crate::changes_diagnostics::failure_detail(source)
+                    ),
+                    redactor,
+                )
+        }
         BuildError::RestartRequired { setting } => style.error(
             Code::BuildInvalid,
             &format!("{setting} changed. Restart Serve to apply this setting."),
@@ -210,7 +235,7 @@ pub fn render_diagnostics(style: &Style, error: &GraphError, redactor: &Redactor
         .collect()
 }
 
-fn issue_text(issue: &Issue, outer: Code) -> String {
+pub(crate) fn issue_text(issue: &Issue, outer: Code) -> String {
     if issue.message_has_location {
         return format!("[mokly/{}] {}", issue.code.as_str(), issue.message);
     }

@@ -98,6 +98,8 @@ export function restore(
 export function bundleResult(generation: Generation): BundleResult {
   const result = {
     generation: generation.id,
+    unmappedDependencyDirectories:
+      generation.compiled.unmappedDependencyDirectories ?? [],
     modules: generation.modules,
     warnings: [],
     compiled: generation.compiled,

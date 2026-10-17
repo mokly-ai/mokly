@@ -20,7 +20,7 @@ pub enum Tier {
 }
 
 /// Why base third-party dependencies could not be installed.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Fallback {
     /// Manager, executable or lockfile is unavailable.
     Unavailable,
@@ -34,6 +34,10 @@ pub enum Fallback {
     LocalOutside,
     /// Malformed input cannot be installed safely.
     InvalidInput,
+    /// An ancestor directory used by the head is absent from the base installation.
+    MissingDirectory(String),
+    /// Importer lookup uses a directory outside the supported base mapping.
+    UnmappedDirectory(String),
     /// Cache preparation failed.
     Cache,
 }
@@ -62,7 +66,7 @@ impl Warning {
             .as_ref()
             .map(|path| format!(" at {}", quoted(path.as_str())))
             .unwrap_or_default();
-        let reason = match self.reason {
+        let reason = match &self.reason {
             Fallback::Unavailable => "package manager or lockfile unavailable",
             Fallback::Failed => "installation failed",
             Fallback::Timeout => "time limit",
@@ -70,6 +74,18 @@ impl Warning {
             Fallback::LocalOutside => "local package outside the repository",
             Fallback::InvalidInput => "invalid dependency input",
             Fallback::Cache => "cache unavailable",
+            Fallback::UnmappedDirectory(directory) => {
+                return format!(
+                    "base dependency lookup{location} cannot preserve {}; using working-tree dependencies (configure moduleResolution.packageRoots)",
+                    quoted(directory)
+                );
+            }
+            Fallback::MissingDirectory(directory) => {
+                return format!(
+                    "base dependencies{location} lack {}; using working-tree dependencies",
+                    quoted(directory)
+                );
+            }
         };
         format!(
             "base dependencies{location} could not be installed ({reason}); using working-tree dependencies"
@@ -91,6 +107,10 @@ pub struct Request {
     pub head_root: PathBuf,
     /// Build warning subject.
     pub configuration: RepoPath,
+    /// Ancestor node_modules directories actually used by the current side.
+    pub used_directories: Vec<String>,
+    /// Used directories whose importer lookup the base cannot preserve.
+    pub unmapped_directories: Vec<String>,
     /// Normalized repository-relative package roots and other settings.
     pub resolution: ModuleResolution,
 }

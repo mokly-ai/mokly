@@ -121,7 +121,7 @@ test("Testbox sessions receive the job PATH only", async (context) => {
   assert.equal(output.stderr, "");
   assert.equal(
     await fs.readFile(file, "utf8"),
-    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\n`,
+    `LANG=en_US.UTF-8\nKEEP=value\nPATH=${process.env.PATH}\nPLAYWRIGHT_CHANNEL=chromium\n`,
   );
 });
 

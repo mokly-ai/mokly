@@ -74,6 +74,7 @@ pub(super) struct Case {
     pub(super) abandon_fails: bool,
     pub(super) cancelled: bool,
     pub(super) warnings: bool,
+    pub(super) ready: bool,
     pub(super) publication: bool,
     pub(super) final_fingerprint_fails: bool,
     pub(super) input_changes: bool,

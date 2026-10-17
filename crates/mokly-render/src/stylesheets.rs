@@ -29,11 +29,12 @@ pub(crate) fn compiler(
         repo_root: config.repo_root.clone(),
         settings: Resolution {
             config_directory: side.configuration_directory.clone(),
+            dependency_aliases: side.dependency_aliases.clone(),
             aliases: resolution.aliases.clone(),
             conditions: resolution.conditions.clone(),
             main_fields: resolution.main_fields.clone(),
-            dependency_roots: (1..dependency_roots(side).len())
-                .map(|index| format!("node_modules/.mokly-roots/{index}"))
+            dependency_roots: (0..dependency_roots(side).len())
+                .map(mokly_compare::ancestor_roots::logical)
                 .collect(),
             extensions: resolution.resolve_extensions.clone(),
         },
@@ -41,6 +42,7 @@ pub(crate) fn compiler(
 
     let processor = match &config.input.postcss {
         Some(module) => Arc::new(PostCss {
+            usage: runtime.dependency_usage.clone(),
             lease: Arc::new(ContextLease {
                 id: side.context.clone(),
                 pool: runtime.pool.clone(),

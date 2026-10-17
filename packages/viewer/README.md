@@ -194,6 +194,9 @@ Keep the `index` object, the URL value, the `detail` function, and the frame
 adapter identities stable while the viewer is mounted. Replacing one remounts
 the viewer and cancels pending work.
 
+URL-source requests start after effect replay. A discarded StrictMode effect
+starts no request. Source replacement aborts the old load and fences its result.
+
 ### Selection
 
 `screenPath` names one catalogue entry by its path, such as
@@ -399,13 +402,17 @@ The embedded viewer reports the same failure through `onError` with code
 [version gates](../../docs/protocol/mokly-viewer-namespace.md#version-matrix)
 list every boundary.
 
-`@mokly/viewer/data` exports the path functions and `GENERATED_DIRECTORY` of
-the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md), the
+`@mokly/viewer/data` exports the path functions and the directory names
+`GENERATED_DIRECTORY` and `VIEWER_DIRECTORY` of the
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md), the
 grammar functions `isPathSegment`, `isEntryPath`, and `isWindowsDeviceName` of
-the [path contract](../../docs/protocol/mokly-paths.md), and the profile
-validators `validatePropSchema` and `validateProps` of the
+the [path contract](../../docs/protocol/mokly-paths.md), the link grammar
+functions `isLinkPath` and `isLogicalFragment` of the
+[authoring links](../../docs/protocol/mokly-authoring.md#links), and the
+profile validators `validatePropSchema` and `validateProps` of the
 [entry props contract](../../docs/protocol/mokly-entry-props.md#prop-schema-profile),
-which generate no code; it has no React dependency.
+which generate no code; it has no React dependency. The review result types
+and reader are internal to the viewer.
 
 ## Theming
 
@@ -561,7 +568,7 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index and
   the entry detail, and the public catalogue types
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,
-  directory names, the path grammar, and the prop schema validators
+  directory names, the path and link grammar, and the prop schema validators
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — entry, view,
   snapshot, preview, and shell URL derivation
 - [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and
@@ -584,8 +591,9 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
   [`src/shell/workspace_usage_data.ts`](./src/shell/workspace_usage_data.ts) —
   the routed workspace data and its usage and affected-consumer projection
-- [`src/review/order.ts`](./src/review/order.ts) — the canonical
-  affected-consumer order
+- [`src/review/result_validation.ts`](./src/review/result_validation.ts) and
+  [`src/review/result_order.ts`](./src/review/result_order.ts) — the strict
+  review result v8 reader and the canonical record order it requires
 - [`tests`](./tests) — package-level conformance tests
 
 ### Related Docs

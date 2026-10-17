@@ -7,6 +7,12 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
+mokly-source-interface = { workspace = true }
+mokly-model = { workspace = true }
+mokly-catalogue = { workspace = true }
+mokly-html = { workspace = true }
+mokly-css = { workspace = true }
+mokly-graph = { workspace = true }
 directories = "6.0.0"
 mokly-git = { workspace = true }
 mokly-platform = { workspace = true }
@@ -22,6 +28,7 @@ unimock = { version = "0.6.8", optional = true }
 mock = ["dep:unimock"]
 
 [dev-dependencies]
+mokly-source-interface = { workspace = true, features = ["mock"] }
 tempfile = "3.27.0"
 unimock = "0.6.8"
 
@@ -35,3 +42,7 @@ features = ["mock"]
 
 [target."cfg(windows)".dependencies]
 windows-sys = { version = "0.61.2", features = ["Win32_Storage_FileSystem"] }
+
+[dev-dependencies.mokly-graph]
+workspace = true
+features = ["mock"]

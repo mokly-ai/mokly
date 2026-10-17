@@ -20,6 +20,16 @@ directories. If termination cannot be confirmed, teardown fails and keeps the
 owned directories for diagnosis; concurrent and repeated close calls share that
 same completion or failure.
 
+Browser hosts, served design checks, and packed smoke use the shared Serve
+process module under `scripts/verification`. It registers a suspended worker
+before releasing the shim. Before signalling a registered group, cleanup
+records its process tree and each separate sidecar group. Cleanup drains these
+groups even if the test worker stops or Serve needs a forced kill. This tree
+drain is the first safeguard. Sidecar parent-death protection is the second:
+Linux uses `PR_SET_PDEATHSIG` with `SIGKILL`; a parent-pipe watchdog runs on
+every platform. A killed Serve binary therefore ends its sidecars even before
+the host begins its drain.
+
 A fixture that owns live resources drains them in reverse registration order
 before it deletes its directory. Every registered cleanup runs even if another
 fails; a failure keeps the directory for diagnosis. Servers and child processes
@@ -72,15 +82,31 @@ only a positive decimal integer without a sign or leading zero, up to
 JavaScript's maximum safe integer. Any other value stops the command before
 tests start. Both runners print the value they use.
 
-Each Playwright worker owns one example server. The browser suite assigns
-consecutive ports from `MOKLY_PLAYWRIGHT_PORT` (default 4517), one per worker,
-and each worker's `baseURL` uses the port at its `TEST_PARALLEL_INDEX`. A
-server renders on demand through its render graph and sidecar pool, so a shared
-server would queue every worker's renders behind each other. Global setup waits
-until every server finishes its initial `HEAD` comparison. These Serve
-processes keep their documents in the render cache and write nothing into the
-repository. Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's
-`--workers`: global setup rejects a worker count above the number of servers.
+Each Playwright worker owns one example server. Global setup starts and readies
+the workers concurrently. It starts the shim
+with `--base HEAD --no-watch --port 0 --sidecars 1`. Serve binds a free loopback port and
+prints its listening address. Setup waits for the initial usage publication
+and for Changes to leave its pending or preparing state. It fails on an
+unavailable example render. It publishes the addresses to workers through
+`MOKLY_PLAYWRIGHT_URLS`; `TEST_PARALLEL_INDEX` selects each worker's address.
+There is no fixed port range and no reuse of an existing server. A server renders
+through its render graph and sidecar pool. Each process keeps its own cache.
+Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
+rejects a worker count above the number of servers.
+
+`MOKLY_PLAYWRIGHT_STATIC_DIR` selects an already-built catalogue directory.
+The same host interface serves its exact files and directory indexes on a free
+port. This mode neither builds the site nor adds fallback routes. The default
+host remains Serve. `MOKLY_PLAYWRIGHT_FILE_DIR` also selects this static host
+for Browse pages and opens portable design documents from that directory with
+`file://` URLs. Its supported specs are listed in
+[developer commands](./developer-test-commands.md#browser-selection). These
+delivery modes are manual checks; continuous runs and the private file fixture
+belong to M8's copied-static-output TODO. Fixtures that test private inputs
+still own their own hosts.
+
+Browser specs support POSIX systems only. Specs must not depend on an empty Changes set:
+remote Testboxes hold branch edits as working-tree changes against their base.
 
 ## Failure, Cancellation And Cleanup
 

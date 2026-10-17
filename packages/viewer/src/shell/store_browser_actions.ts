@@ -56,19 +56,11 @@ function handleShellClick(
   const target = event.target instanceof Element ? event.target : undefined;
   if (!target) return;
   const state = input.state();
-  const outsidePickerTag =
-    target.closest("[data-mokly-tag]") &&
-    !target.closest("[data-mokly-tag-picker]");
   if (
     state.tagPickerOpen &&
     !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
   ) {
     input.setState((current) => ({ ...current, tagPickerOpen: false }));
-    const root = event.currentTarget;
-    if (outsidePickerTag && root instanceof Element)
-      queueMicrotask(() =>
-        root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
-      );
   }
   if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
     return;

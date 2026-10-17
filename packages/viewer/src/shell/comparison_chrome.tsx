@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import type { SnapshotPresentation } from "../previews/presentation.js";
-import type { ViewReview } from "../review/types.js";
+import type { ReviewView } from "../review/types.js";
 
 import type { ComparisonSide } from "./comparison_scroll_owner.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
@@ -46,7 +46,7 @@ export function ChromeScheme({
   view,
 }: {
   children: ReactNode;
-  view: ViewReview;
+  view: ReviewView;
 }) {
   return (
     <div

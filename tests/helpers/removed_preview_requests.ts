@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 
-import type { ReviewResultV7 } from "../../packages/viewer/dist/review/component_types.js";
+import type {
+  ReviewResult,
+  ReviewView,
+} from "../../packages/viewer/dist/review/types.js";
 import type { RemovedPreviewData } from "../../packages/viewer/dist/shell/previews.js";
 
 export const GENERATION = "b".repeat(64);
@@ -21,38 +24,45 @@ export const removedScreen: RemovedPreviewData = {
 
 export const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
 
+/**
+ * A review v8 result whose screen `removed-screen` has these views: removed
+ * when every view is removed, else changed with a current side.
+ */
 export function review(
-  views: ReviewResultV7["screens"][number]["views"],
+  views: ReviewView[],
   baseCommit = "a".repeat(40),
-) {
+): ReviewResult {
+  const side = { path: "removed-screen", title: "Removed screen", props: {} };
+  const removed = views.every((view) => view.state === "removed");
   return {
-    schemaVersion: 7 as const,
-    baseRef: "origin/main",
+    schemaVersion: 8,
     baseCommit,
-    changedPaths: [],
-    ignoredImpact: [],
-    affectedConsumers: [],
-    changes: [],
-    components: [],
-    screens: [
+    entries: [
       {
-        before: { path: "removed-screen", title: "Removed screen" },
-        ...(views.some((view) => view.state !== "removed")
-          ? { after: { path: "removed-screen", title: "Removed screen" } }
-          : {}),
+        kind: "screen",
         path: "removed-screen",
         title: "Removed screen",
-        state: "removed",
+        before: side,
+        ...(removed ? {} : { after: side }),
+        state: removed ? "removed" : "changed",
+        included: true,
+        reasons: [{ kind: removed ? "removed" : "material" }],
         views,
       },
     ],
-  } satisfies ReviewResultV7;
+    affected: [],
+    diagnostics: [],
+  };
 }
 
+/**
+ * The historical snapshot id of an entry at a base commit, or under another
+ * source kind that the identity contract does not define.
+ */
 export function snapshotId(
-  sourceKind: "baseline" | "generation",
   sourceIdentity: string,
   data: RemovedPreviewData,
+  sourceKind = "base",
 ): string {
   return createHash("sha256")
     .update(

@@ -50,11 +50,19 @@ test("RSS threshold stops only the owned descendants across groups", async () =>
   assert.match(fake.failures[0]!, /exceeded/);
 });
 
-test("RSS sampling failure signals only the valid child PID", async () => {
+test("RSS sampling failure notifies the owner before individual cleanup", async () => {
   const fake = memory(async () => {
     throw new Error("ps unavailable");
   });
-  const finish = monitor(20, fake.fail, 500, fake.boundary);
+  const finish = monitor(
+    20,
+    (message) => {
+      assert.deepEqual(fake.killed, []);
+      fake.fail(message);
+    },
+    500,
+    fake.boundary,
+  );
   await Promise.resolve();
   await finish();
   assert.deepEqual(fake.killed, [20]);

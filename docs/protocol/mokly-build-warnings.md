@@ -108,6 +108,11 @@ Each command reports the diagnostics of exactly one build or attempt:
 | `publish` | Its build, before any upload                                                      |
 | `serve`   | Each attempt, once, under [Watched Serve Generations](#watched-serve-generations) |
 
+Base catalogue and composition warnings are not current-build warnings.
+Report and count only base preparation warnings such as `base-dependencies`.
+Collect current-build and base preparation warnings before applying `--strict`,
+so an earlier head warning cannot hide a preparation warning.
+
 Publish applies the [checkout rules](./mokly-upload.md) before it builds. A
 checkout refusal can prevent the build; diagnostics already produced still
 flush. Configuration, registry, and render warnings discovered before a
@@ -139,7 +144,7 @@ both lines. For example:
 
 ## Watched Serve Generations
 
-Serve numbers its attempts. Startup, a rebuild, and a reconfiguration each
+Serve numbers its attempts. Startup, a rebuild, manual `r`, and a reconfiguration each
 start a new attempt before they prepare inputs, and every producer captures
 the current attempt. The sink accepts only the current attempt: starting a
 newer attempt discards pending older records at once, and a late record from
@@ -154,6 +159,24 @@ reported document repeats nothing. Reconfiguration follows the same rules.
 Snapshot Serve (`--no-watch`) has one lifetime scope, and a one-shot command
 has one invocation scope. The base side's preparation reports through the
 same sink.
+
+Each document backend captures its attempt's sink before publication.
+On-demand, background, and temporary renders deliver warnings from their
+artifacts or retained failure records through that handle. Cache hits use
+the same path. The sink serializes delivery with attempt replacement and
+completion output. A render or preview failure flushes pending records before
+its diagnostic. It does not make a successful preparation attempt failed.
+Each repair gets a new number and inherits the failed attempt's seen set.
+The next attempt after a successful repair starts with an empty seen set.
+Resource-only reloads retain the current scope. Evidence publications retain
+the scope their backend captured, including an older fenced scope. Neither
+can revive the scope of a last-good backend after an attempt fails.
+
+When preparation repeats after changed watch roots attach, success reports
+only the final pass's warnings. A failure of the second pass or its recheck
+also retains the first pass's warnings. A fatal Serve error flushes the
+current attempt's pending records before its diagnostic only when
+cancellation has not been requested. Cancelled attempts emit no warnings.
 
 ## Strict Mode
 
@@ -175,4 +198,6 @@ Behaviour tests cover record validation and sorting, both reporter formats,
 option acceptance per command, a warning-tier structure that renders
 identical bytes with one sorted diagnostic, the plain stderr line with
 unchanged stdout and exit `0`, the strict failure before any write, and one
-report per attempt in Serve with none per on-demand request.
+report per attempt in Serve, including first on-demand and background
+warnings, with no repeats for an already reported view. Tests also cover
+temporary renders, failed-attempt repair, and cancelled or superseded work.

@@ -41,6 +41,18 @@ impl CapturedTree {
     }
 }
 impl SourceTree for CapturedTree {
+    fn prefetch(&self, paths: &[PathBuf]) -> error::Result<()> {
+        self.snapshot.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> error::Result<Vec<u8>> {
+        let bytes = self.snapshot.read_public(path)?;
+        self.reads
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .entry(path.into())
+            .or_insert_with(|| digest(&bytes));
+        Ok(bytes)
+    }
     fn digest(&self, path: &Path) -> error::Result<String> {
         let hash = self.snapshot.digest(path)?;
         self.reads

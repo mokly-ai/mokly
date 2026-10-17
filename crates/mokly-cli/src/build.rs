@@ -10,18 +10,24 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilder;
+use mokly_compare::base_render::ChangesService;
+use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::error::Error;
 use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_model::axes::EntryKind;
 use thiserror::Error;
 
 use crate::cancellation::Cancellation;
+use crate::changes_output::ChangeDiagnostic;
 use crate::grammar::Build;
 use crate::pre_installation;
 
 /// Validated catalogue counts and warnings for terminal presentation.
 #[derive(Clone, Debug)]
 pub struct BuildSummary {
+    /// In-memory Changes result retained for static output.
+    pub changes: BuildChanges,
     /// Complete rendered view, page, and document count.
     pub documents: usize,
     /// Counts come only from the validated catalogue model, including variants.
@@ -35,6 +41,16 @@ pub struct BuildSummary {
 /// Typed build failure; warning records survive both error paths.
 #[derive(Debug, Error)]
 pub enum BuildError {
+    /// Git or internal comparison failure aborts output publication.
+    #[error("[mokly-cli/build] comparison against {base_ref:?} failed: {source}")]
+    Comparison {
+        /// Selected authored or default ref.
+        base_ref: String,
+        /// Original comparison failure.
+        source: Box<Error>,
+        /// Current build and base preparation warnings.
+        warnings: Vec<Warning>,
+    },
     /// A watched candidate changes settings owned by the running sidecar pool.
     #[error("[mokly-cli/serve] {setting} changed. Restart Serve to apply this setting.")]
     RestartRequired {
@@ -126,7 +142,7 @@ pub struct PreparedBuild {
     pub config: ResolvedConfig,
     /// Render graph with complete documents and authored closure.
     pub generation: Arc<dyn RenderGeneration>,
-    /// Validation counts and warnings.
+    /// Validation counts, warnings, and retained Changes for the M12/M9 join.
     pub summary: BuildSummary,
 }
 
@@ -141,6 +157,8 @@ pub trait BuildService: Send + Sync {
 
 /// Build coordinator with injected config and catalogue boundaries.
 pub struct CatalogueBuild {
+    /// Shared base preparation and comparison service.
+    pub changes: Arc<dyn ChangesService>,
     /// Static builds capture all explicit inputs before document callbacks run.
     pub inputs: Option<Arc<dyn mokly_static::fingerprint::InputTree>>,
     /// Cancellation state checked at every build phase.
@@ -175,91 +193,41 @@ fn runtime(source: InternalError) -> BuildError {
 }
 
 impl CatalogueBuild {
-    fn checkpoint(&self) -> Result<(), BuildError> {
+    pub(crate) fn checkpoint(&self) -> Result<(), BuildError> {
         if self.cancellation.requested() {
             Err(BuildError::Cancelled)
         } else {
             Ok(())
         }
     }
-
-    fn attempt(&self, cwd: &Path, options: &Build) -> Result<PreparedBuild, BuildError> {
-        self.checkpoint()?;
-        let config = match self.config.load(cwd, options.common.config.as_deref()) {
-            Ok(config) => config,
-            Err(source) => return Err(BuildError::Catalogue { source }),
-        };
-        self.checkpoint()?;
-        let output = mokly_static::location::output(&config, options.out.as_deref());
-        let prepared = match self.catalogue.prepare(&config, Some(&output)) {
-            Ok(prepared) => prepared,
-            Err(source) => return Err(BuildError::Catalogue { source }),
-        };
-        self.checkpoint()?;
-        if !prepared.deferred_modules.is_empty() {
-            return Err(BuildError::Deferred {
-                modules: prepared.deferred_modules,
-                warnings: prepared.warnings,
-            });
-        }
-        let graph = match self.graphs.create(&config) {
-            Ok(graph) => graph,
-            Err(source) => {
-                return Err(BuildError::Rendering {
-                    source: Box::new(source),
-                    warnings: prepared.warnings,
-                });
-            }
-        };
-        self.checkpoint()?;
-        let generation = match graph.prepare(config.clone(), prepared.clone(), Some(&output)) {
-            Ok(generation) => generation,
-            Err(source) => {
-                return Err(BuildError::Rendering {
-                    source: Box::new(source),
-                    warnings: prepared.warnings,
-                });
-            }
-        };
-        self.checkpoint()?;
-        if let Some(inputs) = &self.inputs
-            && let Err(source) =
-                inputs.capture(&config.repo_root, &generation.catalogue().model.sources)
-        {
-            return Err(BuildError::Static { source });
-        }
-        let rendered = match generation.render_all() {
-            Ok(summary) => summary,
-            Err(source) => {
-                return Err(BuildError::Rendering {
-                    source: Box::new(source),
-                    warnings: prepared.warnings,
-                });
-            }
-        };
-        self.checkpoint()?;
-        if options.strict && !rendered.warnings.is_empty() {
-            return Err(BuildError::Strict {
-                warnings: rendered.warnings,
-            });
-        }
-        let mut counts = BTreeMap::new();
-        for entry in &prepared.model.entries {
-            *counts.entry(entry.content.kind()).or_default() += 1;
-        }
-        Ok(PreparedBuild {
-            config,
-            generation,
-            summary: BuildSummary {
-                documents: rendered.documents,
-                counts,
-                warnings: rendered.warnings,
-                deferred_modules: prepared.deferred_modules,
-            },
-        })
-    }
 }
 
 #[cfg(test)]
 #[path = "_tests_/build_tests.rs"]
 mod build_tests;
+
+/// Build computes Changes once and keeps the result for the static writer.
+#[derive(Clone, Debug)]
+pub enum BuildChanges {
+    /// --no-changes starts no Git or comparison work.
+    Disabled,
+    /// Complete validated result and the same historical generation.
+    Ready(Arc<ComparisonResult>),
+    /// The current catalogue remains usable when historical sources fail validation.
+    Unavailable {
+        /// Full immutable historical commit.
+        base_commit: String,
+        /// Short reason for the unavailable completion line.
+        reason: String,
+        /// Preserved base validation diagnostic.
+        diagnostics: Vec<ChangeDiagnostic>,
+    },
+}
+
+#[cfg(test)]
+#[path = "_tests_/changes_failure_tests.rs"]
+mod changes_failure_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_checkpoint_tests.rs"]
+mod changes_checkpoint_tests;

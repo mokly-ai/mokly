@@ -1,16 +1,15 @@
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { createVerificationProcessOwner } from "../scripts/verification/process-owner.mjs";
 import {
   processTree,
   running,
   type TreeProcess,
-} from "../scripts/release/process_tree.mjs";
-import { spawnServe } from "../scripts/release/serve_process.mjs";
+} from "../scripts/verification/process-tree.mjs";
+import { spawnServe } from "../scripts/verification/serve-process.mjs";
 
 import { fileFixture } from "./helpers/file_fixture.js";
 import { consumer, shim } from "./helpers/mokly_serve.js";
@@ -34,7 +33,7 @@ test(
     let recorded: TreeProcess[] = [];
     const served = fileFixture(
       async (owner) => {
-        const server = spawnServe(
+        const server = await spawnServe(
           shim,
           ["--no-watch", "--port", "0", "--sidecars", "1"],
           { cwd: root },
@@ -79,35 +78,75 @@ test(
     const root = await consumer(context, {
       "specs/home.screen.html": "---\ntitle: Home\n---\n<main>Home</main>\n",
     });
-    const registry = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-owner-"));
-    context.after(() => fs.rm(registry, { recursive: true, force: true }));
-    const ownerId = randomUUID();
-    const server = spawnServe(shim, ["--no-watch", "--port", "0"], {
+    const owner = await createVerificationProcessOwner({ cwd: root });
+    const env = owner.environment();
+    const registry = env.MOKLY_VERIFICATION_PROCESS_REGISTRY!;
+    const server = await spawnServe(shim, ["--no-watch", "--port", "0"], {
       cwd: root,
-      env: {
-        MOKLY_VERIFICATION_PROCESS_REGISTRY: registry,
-        MOKLY_VERIFICATION_OWNER_ID: ownerId,
-      },
+      env,
     });
     let outcome: Awaited<ReturnType<typeof server.stop>> | undefined;
     try {
-      const files = await fs.readdir(registry);
-      assert.equal(files.length, 1);
-      assert.match(files[0]!, /^process-[0-9a-f-]{36}\.json$/u);
-      assert.deepEqual(
-        JSON.parse(await fs.readFile(path.join(registry, files[0]!), "utf8")),
-        {
-          schemaVersion: 1,
-          type: "process",
-          ownerId,
-          processGroupId: server.child.pid,
-        },
+      const records = await Promise.all(
+        (await fs.readdir(registry))
+          .filter(
+            (name) => name.startsWith("process-") && name.endsWith(".json"),
+          )
+          .map(async (name) =>
+            JSON.parse(await fs.readFile(path.join(registry, name), "utf8")),
+          ),
       );
+      const registered = records.filter(
+        (record) => record.processGroupId === server.child.pid,
+      );
+      assert.equal(registered.length, 1);
+      assert.equal(registered[0].schemaVersion, 1);
+      assert.notEqual(registered[0].ownerId, env.MOKLY_VERIFICATION_OWNER_ID);
       await server.listening(AbortSignal.timeout(60_000));
     } finally {
       outcome = await server.stop();
+      await owner.dispose();
     }
     assert.equal(outcome.code, 0, server.stderr());
-    assert.deepEqual(await fs.readdir(registry), []);
+  },
+);
+
+test(
+  "forced owner cleanup drains Serve and its separate sidecar groups",
+  posixOnly,
+  async (context) => {
+    const root = await consumer(context, {
+      "specs/entries.mockup.ts": entries,
+    });
+    const owner = await createVerificationProcessOwner({ cwd: root });
+    const server = await spawnServe(
+      shim,
+      ["--no-watch", "--port", "0", "--sidecars", "1"],
+      {
+        cwd: root,
+        env: owner.environment(),
+      },
+    );
+    let tree: TreeProcess[];
+    try {
+      const url = await server.listening(AbortSignal.timeout(60_000));
+      assert.equal(
+        (await fetch(`${url}/static/mokly-generated/home/index.mobile.html`))
+          .status,
+        200,
+      );
+      tree = processTree(server.child.pid!);
+      assert.ok(
+        tree.some(
+          ({ command, pgid }) =>
+            command.includes("sidecar") && pgid !== server.child.pid,
+        ),
+      );
+      await owner.terminate("SIGKILL");
+    } finally {
+      await server.stop();
+      await owner.dispose();
+    }
+    assert.deepEqual(running(tree), []);
   },
 );

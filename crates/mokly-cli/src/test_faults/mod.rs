@@ -134,6 +134,16 @@ struct InjectedTree {
     faults: Faults,
 }
 impl SourceTree for InjectedTree {
+    fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
+        self.inner.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
+        self.inner.read_public(path)
+    }
+    fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+        self.inner.digest(path)
+    }
+
     fn project(&self, path: &Path) -> mokly_source_interface::error::Result<Option<Node>> {
         self.inner.project(path)
     }
@@ -209,3 +219,7 @@ pub(super) fn columns(fallback: usize) -> usize {
         .and_then(|value| value.parse().ok())
         .unwrap_or(fallback)
 }
+
+#[cfg(test)]
+#[path = "_tests_/tree_tests.rs"]
+mod tree_tests;

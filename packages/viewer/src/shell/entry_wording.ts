@@ -19,6 +19,8 @@ export interface EntryWording {
   /** A rule that gives the page its own row because it can reach anything. */
   readonly pageUnresolvedWithSelectors: string;
   readonly pageUnresolvedWithoutSelectors: string;
+  /** The pane heading of a changed view that only its stylesheets prove. */
+  readonly stylesChanged: string;
   readonly unresolvedStylesWithSelectors: string;
   readonly unresolvedStylesWithoutSelectors: string;
 }
@@ -41,6 +43,7 @@ const WORDING: Record<EntryKind, EntryWording> = {
       "This change can apply anywhere on the screen, so the screen stays in Changes:",
     pageUnresolvedWithoutSelectors:
       "This change can apply anywhere on the screen, so the screen stays in Changes.",
+    stylesChanged: "Styles this screen uses changed",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the screen, so the screen stays in Changes:",
     unresolvedStylesWithoutSelectors:
@@ -65,6 +68,7 @@ const WORDING: Record<EntryKind, EntryWording> = {
       "This change can apply anywhere on the saved view, so the saved view stays in Changes:",
     pageUnresolvedWithoutSelectors:
       "This change can apply anywhere on the saved view, so the saved view stays in Changes.",
+    stylesChanged: "Styles this variant uses changed",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the component, so the component stays in Changes:",
     unresolvedStylesWithoutSelectors:
@@ -87,6 +91,7 @@ const WORDING: Record<EntryKind, EntryWording> = {
       "This change can apply anywhere on the page, so the page stays in Changes:",
     pageUnresolvedWithoutSelectors:
       "This change can apply anywhere on the page, so the page stays in Changes.",
+    stylesChanged: "Styles this page uses changed",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the page, so the page stays in Changes:",
     unresolvedStylesWithoutSelectors:

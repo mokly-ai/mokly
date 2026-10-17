@@ -15,6 +15,8 @@ pub struct Resolution {
     pub main_fields: Vec<String>,
     /// Configured package roots mapped to ordered logical node_modules directories.
     pub dependency_roots: Vec<String>,
+    /// Ancestor node_modules directories mapped to their selected logical roots.
+    pub dependency_aliases: BTreeMap<String, String>,
     /// Extension lookup order, or the consumer bundler defaults.
     pub extensions: Vec<String>,
 }

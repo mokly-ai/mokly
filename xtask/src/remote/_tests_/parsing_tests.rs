@@ -46,17 +46,24 @@ fn completed_status_requires_one_matching_table_row() {
 }
 
 #[test]
-fn command_inventory_has_two_unique_commands_and_one_report() {
+fn command_inventory_has_six_unique_commands_and_five_reports() {
     let baseline = commands(DependencyAudit::Baseline);
     let commands = commands(DependencyAudit::Strict);
-    assert_eq!(commands.len(), 2);
-    assert_eq!(commands.iter().filter(|command| command.report).count(), 1);
+    assert_eq!(commands.len(), 6);
+    assert_eq!(commands.iter().filter(|command| command.report).count(), 5);
     assert_eq!(
         commands
             .iter()
             .map(|command| command.name.as_str())
             .collect::<Vec<_>>(),
-        ["repository", "viewer"]
+        [
+            "repository",
+            "viewer",
+            "browser-1-of-4",
+            "browser-2-of-4",
+            "browser-3-of-4",
+            "browser-4-of-4"
+        ]
     );
     assert!(
         commands[1]
@@ -73,6 +80,15 @@ fn command_inventory_has_two_unique_commands_and_one_report() {
             .shell_command("sha256:abc")
             .contains("--dependency-audit")
     }));
+    for (offset, command) in commands[2..].iter().enumerate() {
+        assert_eq!(
+            command.shell_command("sha256:abc"),
+            format!(
+                "node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite browser --shard {}/4",
+                offset + 1
+            )
+        );
+    }
     assert!(
         baseline[0]
             .shell_command("sha256:abc")

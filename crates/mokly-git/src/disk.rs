@@ -25,6 +25,8 @@ pub struct ArchiveFile {
 pub trait Archive: Send + Sync {
     /// Write one batch without retaining previous batch contents.
     fn write(&mut self, files: &[ArchiveFile]) -> Result<()>;
+    /// Open a new regular blob sink; unsupported host paths return none.
+    fn file(&mut self, path: &RepoPath, executable: bool) -> Result<Option<Box<dyn Write + Send>>>;
     /// Keep the complete extraction.
     fn finish(&mut self) -> Result<()>;
 }
@@ -119,38 +121,47 @@ impl Disk for SystemDisk {
 impl Archive for Extraction {
     fn write(&mut self, files: &[ArchiveFile]) -> Result<()> {
         for file in files {
-            if file
-                .path
-                .as_str()
-                .split('/')
-                .any(|part| part.eq_ignore_ascii_case(".git"))
-            {
-                return Err(Error::InvalidPath {
-                    path: file.path.to_string(),
-                });
+            if let Some(mut output) = self.file(&file.path, file.executable)? {
+                output.write_all(&file.bytes).git()?;
             }
-            if !host_path(&file.path) {
-                tracing::trace!(path = %file.path, "skipping a name unsupported by the host");
-                continue;
-            }
-            let path = self.destination.join(file.path.as_str());
-            if let Some(parent) = path.parent() {
-                fs::create_dir_all(parent).git()?;
-            }
-            let mut output = fs::OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(&path)
-                .git()?;
-            output.write_all(&file.bytes).git()?;
-            #[cfg(unix)]
-            fs::set_permissions(
-                &path,
-                fs::Permissions::from_mode(if file.executable { 0o755 } else { 0o644 }),
-            )
-            .git()?;
         }
         Ok(())
+    }
+
+    fn file(&mut self, path: &RepoPath, executable: bool) -> Result<Option<Box<dyn Write + Send>>> {
+        if path
+            .as_str()
+            .split('/')
+            .any(|part| part.eq_ignore_ascii_case(".git"))
+        {
+            return Err(Error::InvalidPath {
+                path: path.to_string(),
+            });
+        }
+        if !host_path(path) {
+            tracing::trace!(%path, "skipping a name unsupported by the host");
+            return Ok(None);
+        }
+        let path = self.destination.join(path.as_str());
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).git()?;
+        }
+        let output = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .git()?;
+        #[cfg(unix)]
+        output
+            .set_permissions(fs::Permissions::from_mode(if executable {
+                0o755
+            } else {
+                0o644
+            }))
+            .git()?;
+        #[cfg(not(unix))]
+        let _ = executable;
+        Ok(Some(Box::new(output)))
     }
 
     fn finish(&mut self) -> Result<()> {

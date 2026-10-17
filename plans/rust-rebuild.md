@@ -860,15 +860,21 @@ renders again.
   - [x] Add the packed consumer smoke.
 - [x] Update commands and test names in `examples/basic/README.md` and
       `examples/basic/specs/design/library/README.md` for the restored CLI.
-- [ ] Restore the example typecheck; validate or replace the viewer browser
+- [x] Restore the example typecheck; validate or replace the viewer browser
       fixtures, including their component paths and cross-origin setup.
   - [x] Restore the example typecheck: the root typecheck includes the
         example.
-  - [ ] Validate or replace the viewer browser fixtures, including their
+  - [x] Validate or replace the viewer browser fixtures, including their
         component paths and cross-origin setup.
 - [ ] Add browser specs against copied static output, including navigation,
       inspection, no live endpoints, and the comparison modes after the M9 join.
-- [ ] Restore the browser suite against `mokly serve` of the example: its
+      Run the static host against real `mokly build` output with
+      `MOKLY_PLAYWRIGHT_STATIC_DIR`. Add continuous runs for
+      `MOKLY_PLAYWRIGHT_FILE_DIR`, including the private slot and variant
+      fixture and the design journeys checked by a manual run. Port the M8 sweep's static/export/publish
+      cases: exact-file resources, canonical links, read-only controls,
+      deployment changes, public CORS, and historical comparison documents.
+- [x] Restore the browser suite against `mokly serve` of the example: its
       four shards, the six remote Testbox commands, and the five-report
       aggregate that the CI verification and remote verification contracts
       define.
@@ -878,10 +884,28 @@ renders again.
       the 150 ms debounce, the rerender after a revision adoption or a
       `live.generation` change, the retry after a 409, cancellation on
       navigation, and read-only controls while no descriptor is installed.
+- [ ] Complete the M8 viewer cases assigned by the browser sweep, including
+      route/detail races, frame handoff, live prop edits, and preserved focus.
+- [ ] M8 browser follow-up: make unexpected console errors and `pageerror`
+      failures automatic for every browser page, with explicit per-test
+      allowances for expected failures. Keep the shared sandbox notice rule.
+- [ ] M8 browser follow-up: add Serve browser specs for the example's HTML
+      screens, slot components, document page, and YAML user flow under
+      `examples/basic/specs/example/team`, including native HTML screen links.
+
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
       `mokly-design-component-library.md`, `mokly-component-design.md`, and
       `mokly-design-links.md` define.
+  - [x] Restore current design artboards, library samples, the frozen screen
+        inventory, shared component consumers and ownership, portable links,
+        controls, and both viewport layouts through Serve.
+  - [x] Portable design links, shared samples, and inspector disclosures
+        directly from real `mokly build` output through `file://` URLs are
+        checked by a manual run.
+  - [ ] Complete the remaining design checks with their feature owners:
+        M8 viewer owns live props; M9/M10 own stylesheet attribution and
+        comparison output; M8 browser owns the static build acceptance checks.
   - [x] Check one served example in `tests/design_catalogue.test.ts`: the
         frozen inventory, the shared components and their consumers, family
         adoption, owner chains, stylesheet links and scopes, scripts, link
@@ -893,7 +917,7 @@ renders again.
         link from the current-page mark, report non-anchor link markers, match
         every library root by class token, and make reachability one-way with
         the contract's runtime-only states.
-  - [ ] Add the browser checks with the restored browser suite: pointer and
+  - [x] Add the browser checks with the restored browser suite: pointer and
         Tab/Enter activation, history, canonical outer URLs, preserved outer
         viewport selection, active rows, selection semantics, counts, missing
         states, highlighting and mask geometry, editable and read-only
@@ -909,8 +933,12 @@ renders again.
         Milestone 9: a parent component renders its own views from its own
         props, the stacked frames' structure, every comparison caption tied to
         its recorded change, and the Checklist's Changes.
-  - [ ] Exercise the same journeys in the static output after Milestone 12,
-        and cover the Review snapshot link fallback.
+  - [ ] Exercise the same journeys in the static output under the M8
+        copied-static-output TODO, and cover the Review snapshot link fallback.
+  - Keep the three design inventories aligned when a design changes:
+    `tests/fixtures/design/inventory.json`,
+    `tests/fixtures/design-library/browser-inventory.json`, and
+    `tests/fixtures/design-library/screens.json`.
 - [ ] Add a browser spec for safe stage centring (Milestone 6 review 1,
       finding 7): at a narrow width, for example 1000 x 800, the component
       stage with both viewports starts its row at the stage's left edge and
@@ -962,6 +990,13 @@ Serve integration review fixes: `.context/rust-rebuild/delegation/m8-core/report
 CSS integration review fixes: `.context/rust-rebuild/delegation/m8-core/report-7.md`.
 Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8-core/report-8.md`.
 
+Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
+Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
+Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
+Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
+Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
+Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
+
 - [ ] Commit.
 
 ## Milestone 9: Changes
@@ -979,7 +1014,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       `mokly-compare`, ready for the render graph connection.
 - [ ] Connect Serve's ordered `cancel_git` hook to active Git work. Add a
       real-process shutdown test for a Git process that ignores `SIGTERM`.
-- [ ] Implement base-side rendering: the base commit's Git tree as a source
+- [x] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, the
@@ -991,25 +1026,88 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       rename encoding, warning locations, and concurrent cache misses.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/logs/m9-git/round3-targeted-tests.log`.
       Integration choices: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-git/merge-decisions.md`.
-- [ ] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
+- [x] Milestone 9 part 2: implement `mokly-source-interface::SourceTree` over
       the commit-pinned Git index and batched blob reader. Cover projection,
       direct children, every mode, and typed IO errors.
-- [ ] Implement branch-point entry lookup and its shared verification cases:
+- [x] Implement branch-point entry lookup and its shared verification cases:
       kind/case identity, accepted-pair precedence, removed destinations,
       counterparts, variant parents, stored titles, and generation isolation.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
       affected consumers, and review result v8.
+  - [x] Implement the HTML comparison engine, strict review v8 and snapshot v4
+        readers, metadata, move pairing, and historical records.
+  - [x] Resolve variant-only affected identity and actual-instance resource
+        proof contracts before closing the engine.
 - [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
       selector matching with the keep list, own-page membership, the inline
       rule for whole-screen React entries, and a content-addressed parsed-CSS
       cache.
+  - [x] Implement linked-rule collection, diffing, matching, catalogue-wide
+        own-page proof, and a byte-bounded parse cache.
+  - [x] Resolve multi-component selector ownership and inline evidence
+        addresses. Connect page head styles.
+  - [ ] Connect sidecar style ownership through the base render provider.
+- [x] Compute and retain HTML Changes in `mokly build`, with base selection,
+      disabled Changes, invalid-base diagnostics, and terminal counts.
+- [x] Apply comparison review round 1: exact instance proof, entry state and
+      counts, strict failures, base warning scope, bounded resource reads,
+      indexed attribution, move exclusions, and snapshot admission.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-2.md`.
+- [x] Merge the renderer, viewer, and sidecar integration into the comparison
+      branch after the first comparison review fixes.
+      Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [x] Apply final comparison review requests: inline own-page proof, input-owned
+      slots, scoped Git metadata, streamed large-resource digests, planning
+      batches, empty-base catalogues, and named limit diagnostics.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-3.md`.
+- [x] Integrate the shared sidecar runtime into comparison: leased base sources,
+      dependency tiers, one pool and cache, cancellation, typed diagnostics,
+      and PostCSS source-directory isolation.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-4.md`.
+      Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [ ] Isolate base JavaScript working-directory reads: sidecars run in the head
+      repository, so `process.cwd()` reads in base code can read head files.
+- [x] Apply shared-runtime review fixes: PostCSS child memory accounting, unique
+      PostCSS contexts, base timeout recovery, streamed extraction, isolated
+      test caches, and direct runtime regression tests.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-5.md`.
+- [x] Integrate Changes with the static build pipeline for build and publish.
+      Keep warning gates after comparison and retain the result for M12/M9.
+      Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
+- [ ] Add the Comparing phase spinner and measured durations to build Changes.
+  - [x] Connect the Comparing spinner to the static phase reporter.
+  - [ ] Include the comparison duration when the Changes phase settles.
+- [ ] Complete the final shared-runtime review: bounded memory sampling,
+      canonical Node identity, ancestor dependency tiers, selected NODE_PATH
+      priority, and direct base, extraction, timeout, and recycle tests.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-6.md`.
+- [ ] Implement per-importer Node resolution on the base side (review 5b,
+      finding 1 option A). Resolve each bare import from its matching directory
+      in the dependency tier and retain tier-two missing-directory fallback.
+      This follows the merge of the interim warning policy in report 7.
+- [x] Apply the last integration requests: early base pinning, terminal ownership,
+      nested CSS lookup, bounded memory tables, and recycle back-off.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
+- [x] Integrate M11 with Changes: unify streaming digests, retain compiled
+      recipes and epoch releases, preserve slot back-off and context affinity,
+      and verify base-side parent-death cleanup with PostCSS child processes.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-7.md`.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
+  - [x] Add the index v7/detail v1/review v8 adapter and HTML behavior fixtures.
+  - [x] Run the bounded previous-contract and test-title sweep.
+        Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
+  - [ ] Replay the eleven full references after the sidecar and source
+        migration are ready. Every captured catalogue has JavaScript entries.
+- [ ] Port the deferred native Changes browser fixtures in the M8 browser
+      sweep: base references, moved/removed entries, comparison requests and
+      renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
+      assertions. Keep the duplicate component-explorer cases in one suite.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
@@ -1020,24 +1118,32 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
       prove large-scale Changes with the Rust implementation.
+  - [x] Prove bounded full-comparison work at 128 and 512 component parents
+        with variants, and shared before/after CSS parse reuse.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
 
 Tags: ui
 
-- [ ] Update the viewer's review and snapshot readers to the generated types;
+- [x] Update the viewer's review and snapshot readers to the generated types;
       comparison panes and Changes presentation do not change.
-- [ ] Check the shell's projection of the entry detail's review v8 rule and
+- [x] Check the shell's projection of the entry detail's review v8 rule and
       resource records (`packages/viewer/src/review/view_evidence.ts`)
       against Milestone 9 output.
-- [ ] Align the viewer's `historicalSnapshotId` with the snapshot identity of
+- [x] Align the viewer's `historicalSnapshotId` with the snapshot identity of
       the serialization contract: `sourceKind` is the literal `base`.
-- [ ] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
+- [x] Trim `@mokly/viewer/data` to the surface that `mokly-viewer.md` and the
       package README describe (the path functions, the directory names, the
       path grammar, and the prop schema validators) when review v8 replaces
       the review v7 and manifest types that it still exports.
+- [x] Add user-facing wording for the review v8 `implementation` reason under
+      the `product-ui` rules. Explain actual-instance component impact while
+      preserving the component's own view states.
 - [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Complete the M8 browser sweep's comparison UI cases against review v8
+      and snapshot v4, including filter disclosure, Changed membership,
+      comparison scroll regions, retained focus, and stylesheet Details.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1055,6 +1161,9 @@ Final review fixes and their check logs:
 `.context/rust-rebuild/delegation/m7/report-9.md`.
 The 409 index refresh, the mobile pending pill, and the frame sandbox message:
 `.context/rust-rebuild/delegation/m7/report-10.md`.
+The review v8 reader, the base snapshot identity, the `./data` trim, the
+`implementation` wording, and the projection check against Milestone 9 output:
+`.context/rust-rebuild/delegation/m7/report-11.md`.
 
 - [ ] Commit.
 
@@ -1078,6 +1187,9 @@ The 409 index refresh, the mobile pending pill, and the frame sandbox message:
       using new bindings or class maps under an old fragment key (M8 review 1,
       finding 8).
 - [x] Behaviour tests that count rebuilds and renders per change.
+- [ ] Port the M8 browser sweep's watch and folder-update cases after watcher
+      integration. Use publication events and document keys in place of page
+      reloads. Keep shutdown, moves, titles, search, and disclosure coverage.
 - [x] Preserve saved component frame document keys when controls supply view
       records. Only temporary preview URLs bypass the saved document key.
 - [x] Bound retained stylesheet results and keep generation source snapshots
@@ -1100,9 +1212,24 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
       there: choose a repository-root rescan after each macOS batch and an
       exact-input stamp check on Windows, or one recursive watch per root on both
       systems; tests.
-- [ ] Report the composition warnings of every Serve attempt once, including
+- [x] Report the composition warnings of every Serve attempt once, including
       on-demand and background renders, through an attempt-scoped sink with a
       seen set kept across a failed attempt (`mokly-build-warnings.md`).
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-4.md` and
+`.context/rust-rebuild/sweeps/m11-warnings.md`.
+
+- [x] Correct Serve warning review findings 1 to 7 and flush the current
+      attempt's pending warnings on fatal server failure.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-5.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
+
+- [x] Merge comparison-engine updates, apply one cancellation rule to fatal
+      Serve warnings, and prove destination composition.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-6.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
 ## Milestone 11.1: Watch review corrections
 
@@ -1164,9 +1291,8 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
         input rechecks, and config-relative output selection.
   - [ ] Join the Milestone 9 comparison generation, removed records, and detail
         evidence before identity finalization. Repeat the comparison-specific
-        reference scenarios after that integration. The join must replace the
-        premature "Comparing with {base}" success line, populate upload
-        `baseRef` instead of null, and give a reason for Changes unavailable.
+        reference scenarios after that integration. The join must populate upload
+        `baseRef` instead of null.
         Nest build review spans under `output.write` with the caller context.
         Repeat the Changes-enabled build-directory entry delivery cases;
         their current-only acceptance is complete.
@@ -1293,6 +1419,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [ ] Obtain user approval for the current 2 GiB per repository cache namespace
+      and the shared 120-second dependency preparation allowance before adding
+      these values to the timings contract.
 - [ ] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 
@@ -1344,6 +1473,8 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
 
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
+      Commit `05923728` already moved the Publish Checkout, Removed Public
+      Options, and Portable Namespace notes there.
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
@@ -1369,6 +1500,9 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     until the next generation while the user decision is pending.
   - M8 sidecar review D2: the user must settle schema validation of dynamic
     wrapper props before the adapter runs; add no validator or callback yet.
+  - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
+    HTML-only catalogues that import package CSS; retain working dependencies
+    until the user decides.
   - M8 core review 3, finding 2, and review 6, finding 7: settle saved-prop
     control bounds and declared steps that conflict with schema multiples or
     integer values. Keep the current validation until the user decides.

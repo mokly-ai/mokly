@@ -12,6 +12,7 @@ import {
   TESTED_NODE_VERSIONS,
 } from "../packages/mokly/src/version.mjs";
 
+import { exampleServerCommand } from "./browser/example_servers.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CI_WORKFLOW = ".github/workflows/ci.yml";
@@ -195,6 +196,12 @@ test("the Testbox toolchain matches the CI toolchain", async () => {
       `the Testbox "${name}" step must match the CI repository job`,
     );
   }
+});
+
+test("example servers compare with the checked-out tree", () => {
+  const args = exampleServerCommand();
+  assert.equal(args[args.indexOf("--base") + 1], "HEAD");
+  assert.equal(args[0], "packages/mokly/bin/mokly.mjs");
 });
 
 async function automationFiles(): Promise<string[]> {

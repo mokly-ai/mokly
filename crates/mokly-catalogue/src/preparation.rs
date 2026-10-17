@@ -72,6 +72,18 @@ impl CatalogueBuilder for Builder {
 impl Builder {
     #[tracing::instrument(name = "catalogue.validate", skip_all, err)]
     fn validate(&self, config: &ResolvedConfig, inventory: Inventory) -> Result<PreparedCatalogue> {
+        let paths: Vec<_> = inventory
+            .files
+            .iter()
+            .filter(|file| !file.excluded)
+            .map(|file| file.absolute.clone())
+            .collect();
+        if let Err(source) = self.tree.prefetch(&paths) {
+            return Err(CatalogueError::Config(Issue::new(
+                Code::ConfigInvalid,
+                format!("source prefetch failed: {}", source.code()),
+            )));
+        }
         let schemes = config
             .input
             .color_schemes

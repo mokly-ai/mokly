@@ -35,6 +35,8 @@ fn request() -> Request {
         head: inputs,
         source_root: "/cache/base".into(),
         head_root: "/repo".into(),
+        unmapped_directories: vec![],
+        used_directories: Vec::new(),
         source_identity: "commit".into(),
         configuration: RepoPath::parse("mokly.config.json").unwrap(),
         resolution: ModuleResolution {
@@ -75,8 +77,13 @@ fn identical_inputs_use_head_without_cache_or_package_manager() {
     assert_eq!(result.tier, Tier::Working);
     assert_eq!(result.node_modules, PathBuf::from("/repo/node_modules"));
     assert_eq!(
-        result.module_resolution.package_roots,
-        ["/repo", "/repo/packages/ui"]
+        result
+            .module_resolution
+            .package_roots
+            .iter()
+            .map(PathBuf::from)
+            .collect::<Vec<_>>(),
+        [PathBuf::from("/repo"), PathBuf::from("/repo/packages/ui")]
     );
     assert_eq!(result.module_resolution.conditions, ["browser"]);
     assert!(result.warning.is_none());

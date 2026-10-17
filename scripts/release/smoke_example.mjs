@@ -11,9 +11,10 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { spawnServe } from "../verification/serve-process.mjs";
+
 import { createPackageArchive } from "./archive.mjs";
 import { runCommand } from "./command.mjs";
-import { spawnServe } from "./serve_process.mjs";
 import { browse, browseSite, SCREENS } from "./smoke_example_browser.mjs";
 import { npxBuild } from "./smoke_example_npx.mjs";
 import { NATIVE_TARGETS } from "./targets.mjs";
@@ -147,7 +148,7 @@ const SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"];
  * a clean exit.
  */
 async function serveAndBrowse(consumer, shim) {
-  const server = spawnServe(
+  const server = await spawnServe(
     shim,
     ["--no-watch", "--port", "0", "--sidecars", "1"],
     { cwd: path.join(consumer, NESTED) },

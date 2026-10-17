@@ -6,7 +6,7 @@ import type { RuleStatus } from "./RuleStatus.js";
 // prettier-ignore
 export type RuleEvidence = {
 /**
- * Rendered stylesheet route.
+ * Public stylesheet route, or containing document route for ownerless head rules.
  */
 stylesheet: string,
 /**

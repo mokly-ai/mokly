@@ -5,9 +5,11 @@ use std::sync::{Arc, Mutex};
 
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::{Build, Common};
+use mokly_cli::output::Style;
 use mokly_cli::publication::build::{BuildRequest, StaticOutput};
 use mokly_cli::publication::error::{ExchangeResult, Result};
 use mokly_cli::publication::mapping;
+use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
 use mokly_publish::runtime;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot};
@@ -16,6 +18,8 @@ use mokly_sidecar::pool::SidecarPool;
 use crate::static_runtime::{self, Context, PublicationInput};
 
 pub(super) struct Output {
+    pub(super) style: Style,
+    pub(super) redactor: Arc<Redactor>,
     pub(super) common: Common,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) pool: Arc<Mutex<Option<Arc<dyn SidecarPool>>>>,
@@ -41,6 +45,8 @@ impl StaticOutput for Output {
             no_changes: request.no_changes,
         };
         let context = Context {
+            style: self.style.clone(),
+            redactor: self.redactor.clone(),
             cancellation: self.cancellation.clone(),
             pool: self.pool.clone(),
             phases: self.phases.clone(),

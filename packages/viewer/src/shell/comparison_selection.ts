@@ -1,10 +1,12 @@
 /** Pure selection of the views and pane documents one comparison shows. */
 
 import { snapshotViewPath, type ViewRouteKind } from "../navigation/routes.js";
-import type { ViewReview } from "../review/types.js";
+import { reviewEntry } from "../review/entries.js";
+import type { ReviewView } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
 import type { ComparisonPresentation } from "./use_comparison.js";
+import { isStyleOnlyView } from "./workspace_style_evidence.js";
 
 /** One viewport section's view and the snapshot addresses of its sides. */
 export interface SelectedComparisonView {
@@ -12,27 +14,14 @@ export interface SelectedComparisonView {
   documents: { after?: string; before?: string };
   /** The mode this view shows; one-sided views fall back to Side by side. */
   mode: ComparisonPresentation["mode"];
-  view: ViewReview;
+  /**
+   * The view is changed, its entry has a reason, every reason is a
+   * dependency, and each named path has a matched or unresolved rule on this
+   * view.
+   */
+  styleOnly: boolean;
+  view: ReviewView;
   viewport: "desktop" | "mobile";
-}
-
-/** Find the path-addressed v7 result record for one routed screen or variant. */
-function comparisonEntry(
-  loaded: LoadedComparison,
-  kind: ViewRouteKind,
-  id: string,
-):
-  | {
-      views: readonly ViewReview[];
-      before?: { path: string };
-      after?: { path: string };
-    }
-  | undefined {
-  if (kind === "screen")
-    return loaded.result.screens.find((candidate) => candidate.path === id);
-  return loaded.result.components
-    .flatMap((component) => component.variants)
-    .find((candidate) => candidate.path === id);
 }
 
 /** Resolve a derived snapshot path beneath its comparison's generation. */
@@ -40,7 +29,7 @@ function snapshotUrl(
   base: string,
   side: "after" | "before",
   id: string,
-  view: ViewReview,
+  view: ReviewView,
 ): string {
   const source = snapshotViewPath(side, id, view.viewport, view.colorScheme);
   return new URL(source.split("/").map(encodeURIComponent).join("/"), base)
@@ -57,7 +46,7 @@ export function selectedComparisonViews(
   kind: ViewRouteKind,
   id: string,
 ): readonly SelectedComparisonView[] | undefined {
-  const entry = comparisonEntry(loaded, kind, id);
+  const entry = reviewEntry(loaded.result, kind, id);
   if (!entry) return;
   return (["mobile", "desktop"] as const).flatMap((viewport) => {
     if (presentation.viewport !== "both" && presentation.viewport !== viewport)
@@ -100,6 +89,7 @@ export function selectedComparisonViews(
             : {}),
         },
         mode: before && after ? presentation.mode : "side",
+        styleOnly: isStyleOnlyView(view, entry.reasons),
         view,
         viewport,
       },

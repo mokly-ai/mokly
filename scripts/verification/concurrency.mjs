@@ -14,6 +14,11 @@ export function unitTestConcurrency(
   );
 }
 
+/** Playwright workers, each with its own Serve process. */
+export function browserWorkerCount(env = process.env) {
+  return configuredCount(env, "MOKLY_PLAYWRIGHT_WORKERS") ?? 1;
+}
+
 function configuredCount(env, name) {
   const value = env[name];
   if (value === undefined) return undefined;

@@ -4,18 +4,23 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
+import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
+import type {
+  ReviewEntry,
+  ReviewView,
+} from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
-import {
-  cssReason,
-  cssRule,
-  fixtureCssAnalysis,
-} from "./helpers/css_evidence.js";
-
-const SHARED = "mockups/shared.css";
-const TOKENS = "mockups/tokens.css";
+const SHARED = "static/shared.css";
+const TOKENS = "static/tokens.css";
+const PAGE = { kind: "entry" } as const;
+const record = (
+  stylesheet: string,
+  selector: string,
+  status: RuleEvidence["status"] = "matched",
+  owner: RuleEvidence["owner"] = PAGE,
+): RuleEvidence => ({ stylesheet, selector, status, owner });
 
 const EVIDENCE_COPY = {
   screen: {
@@ -35,10 +40,11 @@ const EVIDENCE_COPY = {
     files: "Changes to these files may affect this component:",
     matched: "Changed styles that apply to this component:",
     matchedWithoutSelectors: "Changed styles that apply to this component.",
+    /** An unresolved record belongs to the saved view's own page. */
     unresolved:
-      "This change can apply anywhere on the component, so the component stays in Changes:",
+      "This change can apply anywhere on the saved view, so the saved view stays in Changes:",
     unresolvedWithoutSelectors:
-      "This change can apply anywhere on the component, so the component stays in Changes.",
+      "This change can apply anywhere on the saved view, so the saved view stays in Changes.",
     oneExcluded:
       "This stylesheet changed, but none of the changed styles apply to this variant.",
     severalExcluded:
@@ -47,48 +53,21 @@ const EVIDENCE_COPY = {
 } as const;
 
 test("the inspector lists changed files, applying styles, then exclusions", () => {
+  const home = entry(
+    "screen",
+    "home",
+    "Home",
+    [{ kind: "dependency", path: SHARED }, { kind: "material" }],
+    [
+      view("mobile", "changed", [record(SHARED, ".auth")]),
+      view("desktop", "unchanged", [record(TOKENS, "", "excluded")]),
+    ],
+  );
   const markup = renderEvidence({
     base: "main",
     status: "Changed",
-    change: {
-      kind: "screen",
-      after: { path: "home", title: "Home" },
-      reasons: [
-        { kind: "material" },
-        {
-          kind: "dependency",
-          path: SHARED,
-          analysis: fixtureCssAnalysis("matched", [".auth"]),
-        },
-      ],
-    },
-    comparison: {
-      path: "home",
-      state: "changed",
-      title: "Home",
-      views: [
-        {
-          colorScheme: "light",
-          ignoredIds: [],
-          state: "changed",
-          viewport: "mobile",
-          reasons: [
-            {
-              kind: "dependency",
-              path: SHARED,
-              analysis: fixtureCssAnalysis("matched", [".auth"]),
-            },
-          ],
-        },
-        {
-          colorScheme: "light",
-          ignoredIds: [],
-          state: "unchanged",
-          viewport: "desktop",
-          excludedResources: [{ path: TOKENS, reason: "no-matching-rule" }],
-        },
-      ],
-    },
+    change: home,
+    comparison: home,
     components: [],
     comparisonEligible: true,
     comparisons: true,
@@ -161,10 +140,10 @@ for (const kind of ["screen", "component"] as const) {
     const markup = renderKindEvidence(
       kind,
       [
-        entryReason(kind, SHARED, "matched", [".action"]),
-        entryReason(kind, TOKENS, "unresolved", [":root"]),
+        ...entryRules(kind, SHARED, "matched", [".action"]),
+        ...entryRules(kind, TOKENS, "unresolved", [":root"]),
       ],
-      ["mockups/excluded.css"],
+      ["static/excluded.css"],
     );
     for (const sentence of [
       copy.files,
@@ -181,8 +160,8 @@ for (const kind of ["screen", "component"] as const) {
   test(`${kind} Details names unresolved styles without selectors and several exclusions`, () => {
     const markup = renderKindEvidence(
       kind,
-      [entryReason(kind, SHARED, "unresolved", [])],
-      ["mockups/excluded-a.css", "mockups/excluded-b.css"],
+      entryRules(kind, SHARED, "unresolved", []),
+      ["static/excluded-a.css", "static/excluded-b.css"],
     );
     for (const sentence of [
       copy.files,
@@ -199,81 +178,102 @@ for (const kind of ["screen", "component"] as const) {
   });
 
   test(`${kind} Details closes matched styles without selectors with a full stop`, () => {
-    const markup = renderKindEvidence(kind, [
-      {
-        kind: "dependency",
-        path: SHARED,
-        analysis: fixtureCssAnalysis("matched", []),
-      },
-    ]);
+    const markup = renderKindEvidence(
+      kind,
+      entryRules(kind, SHARED, "matched", [""]),
+    );
     assert.ok(markup.includes(`<p>${copy.matchedWithoutSelectors}</p>`));
     if (kind === "component") assert.doesNotMatch(markup, /\bscreen\b/i);
   });
 }
 
-/** Screen page evidence, or a rule that changed the component on its own pages. */
-function entryReason(
+/**
+ * Screen page records, or records that changed the component on its own
+ * pages. An unresolved record is the page's own; no selector is one record.
+ */
+function entryRules(
   kind: "screen" | "component",
-  path: string,
+  stylesheet: string,
   status: "matched" | "unresolved",
   selectors: readonly string[],
-): EntryChangeReason {
-  const analysis = fixtureCssAnalysis(status, selectors);
-  return kind === "screen"
-    ? { kind: "dependency", path, analysis }
-    : cssReason(path, [
-        cssRule({ status, selectors, changedComponentPaths: ["action"] }),
-      ]);
+): RuleEvidence[] {
+  const owner =
+    kind === "component" && status === "matched"
+      ? ({ kind: "component", path: "action" } as const)
+      : PAGE;
+  return (selectors.length ? selectors : [""]).map((selector) =>
+    record(stylesheet, selector, status, owner),
+  );
+}
+
+function view(
+  viewport: "mobile" | "desktop",
+  state: ReviewView["state"],
+  rules: RuleEvidence[],
+): ReviewView {
+  return { viewport, colorScheme: "light", state, ignoredIds: [], rules };
+}
+
+/** One changed entry record: a screen, or a component with these props. */
+function entry(
+  kind: "screen" | "component",
+  path: string,
+  title: string,
+  reasons: ReviewEntry["reasons"],
+  views: ReviewView[],
+): ReviewEntry {
+  const side = {
+    path,
+    title,
+    props: {},
+    ...(kind === "component" ? { suppliedSlots: [] } : {}),
+  };
+  const state = "changed";
+  return {
+    kind,
+    path,
+    title,
+    before: side,
+    after: side,
+    state,
+    included: true,
+    reasons,
+    views,
+  };
 }
 
 function renderKindEvidence(
   kind: "screen" | "component",
-  reasons: readonly EntryChangeReason[],
+  kept: readonly RuleEvidence[],
   excluded: readonly string[] = [],
 ): string {
-  const address =
-    kind === "component"
-      ? { path: "action", title: "Action" }
-      : { path: "home", title: "Home" };
-  const view = {
-    colorScheme: "light",
-    ignoredIds: [],
-    state: "changed",
-    viewport: "mobile",
-    excludedResources: excluded.map((path) => ({
-      path,
-      reason: "no-matching-rule",
-    })),
-  };
-  const comparison = {
-    ...address,
-    before: address,
-    after: address,
-    state: "changed",
-    ...(kind === "component"
-      ? {
-          variants: [
-            {
-              path: "action/default",
-              title: "Default",
-              state: "changed",
-              views: [view],
-            },
-          ],
-        }
-      : { views: [view] }),
-  };
+  const rules = [
+    ...kept,
+    ...excluded.map((path) => record(path, "", "excluded")),
+  ].sort((a, b) => (a.stylesheet < b.stylesheet ? -1 : 1));
+  const reasons = [...new Set(kept.map((rule) => rule.stylesheet))]
+    .sort()
+    .map((path) => ({ kind: "dependency" as const, path }));
+  const views = [view("mobile", "changed", rules)];
+  const comparison: ReviewEntry =
+    kind === "screen"
+      ? entry(kind, "home", "Home", reasons, views)
+      : {
+          ...entry(kind, "action", "Action", reasons, views),
+          variants: [entry(kind, "action/default", "Default", reasons, views)],
+        };
+  const { path, title } = comparison;
   return renderEvidence(
     {
       base: "origin/main",
       status: "Changed",
-      change: { kind, after: address, reasons },
+      change: comparison,
       comparison,
-      ...(kind === "component" ? { component: { ...address, kind } } : {}),
+      ...(kind === "component" ? { component: { path, title, kind } } : {}),
       components: [],
       comparisonEligible: true,
       comparisons: true,
-      entry: { ...address, kind },
+      entry: { path, title, kind },
       inputChanges: [],
       relatedComponents: [],
       usedBy: [],

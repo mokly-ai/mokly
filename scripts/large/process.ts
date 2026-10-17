@@ -2,8 +2,8 @@ import { spawn } from "node:child_process";
 import { setTimeout } from "node:timers/promises";
 
 import { lifetime, stopChild } from "./lifetime.js";
-import { DEFAULT_MEMORY_STOP_KIB, monitor } from "./memory.js";
-import { validPid } from "./signals.js";
+import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
+import { monitorChild } from "./memory_lifecycle.js";
 import { timingCollector } from "./timings.js";
 
 export function start(
@@ -37,20 +37,14 @@ export function start(
   };
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", interrupt);
-  const finishMemory = validPid(child.pid)
-    ? monitor(
-        child.pid,
-        (message) => {
-          failure = new Error(message);
-        },
-        memoryStopKiB,
-      )
-    : async () => ({
-        peakKiB: 0,
-        totalPeakKiB: 0,
-        samples: 0,
-        sampleIntervalMs: 50,
-      });
+  const finishMemory = monitorChild(
+    child,
+    kill,
+    (message) => {
+      failure = new Error(message);
+    },
+    memoryStopKiB,
+  );
   child.stdout.on("data", (chunk) => {
     stdout = (stdout + String(chunk)).slice(-512 * 1024);
   });

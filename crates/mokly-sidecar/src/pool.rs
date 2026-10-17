@@ -113,6 +113,7 @@ impl Pool {
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
+        self.lock()?.memory.entry(index).or_default().started();
         let mut spawned = self.factory.spawn(&self.launch)?;
         {
             let mut state = self.lock()?;
@@ -138,6 +139,7 @@ impl Pool {
             bindings: BTreeMap::new(),
             contexts: BTreeSet::new(),
             renders: 0,
+            requests: 0,
         })
     }
 
@@ -200,6 +202,10 @@ mod pool_reload_tests;
 mod pool_abort_tests;
 
 #[cfg(test)]
+#[path = "_tests_/pool_pressure_tests.rs"]
+mod pool_pressure_tests;
+
+#[cfg(test)]
 #[path = "_tests_/pool_lease_tests.rs"]
 mod pool_lease_tests;
 
@@ -214,3 +220,7 @@ mod pool_scheduling_tests;
 #[cfg(test)]
 #[path = "_tests_/pool_shutdown_order_tests.rs"]
 mod pool_shutdown_order_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_provenance_tests.rs"]
+mod pool_provenance_tests;

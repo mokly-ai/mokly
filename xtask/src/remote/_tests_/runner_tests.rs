@@ -104,7 +104,7 @@ fn every_failed_run_cleans_all_recoverable_boxes() {
                     .iter()
                     .filter(|event| event.starts_with("download:"))
                     .count(),
-                1
+                5
             );
         }
     }

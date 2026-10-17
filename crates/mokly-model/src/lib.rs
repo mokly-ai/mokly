@@ -47,6 +47,22 @@ pub mod versions;
 pub mod wire_decode;
 pub mod wire_props;
 
-pub mod shell;
+pub mod review;
+pub mod review_affected;
+pub mod snapshot;
+pub mod snapshot_records;
+
+pub mod review_order;
+pub mod review_validation;
+
+mod snapshot_validation;
+
+mod review_affected_validation;
+
+mod record_validation;
+
+mod snapshot_order;
 
 mod catalogue_tree;
+pub mod shell;
+mod snapshot_source_order;
