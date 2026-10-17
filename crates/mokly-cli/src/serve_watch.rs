@@ -160,7 +160,8 @@ impl WatchInputs for WatchedInputs {
         let (accepted, errors, rescan) = match result {
             Ok(result) => result,
             Err(source) => {
-                reporter.server_failure(&ServerError::Internal(InternalError::Task { source }));
+                reporter
+                    .server_failure(&[], &ServerError::Internal(InternalError::Task { source }));
                 return false;
             }
         };
@@ -172,7 +173,7 @@ impl WatchInputs for WatchedInputs {
             batch.insert(event, action);
         }
         for error in errors {
-            reporter.server_failure(&error);
+            reporter.server_failure(&[], &error);
         }
         changed
     }

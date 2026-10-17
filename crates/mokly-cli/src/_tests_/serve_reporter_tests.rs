@@ -93,7 +93,7 @@ fn catalogue_failures_keep_plain_compatibility_and_rich_source_diagnostics() {
                 )],
             },
         };
-        reporter.watched_catalogue_failure(&Batch::default(), Path::new("/repo"), &error);
+        reporter.watched_catalogue_failure(&Batch::default(), Path::new("/repo"), &[], &error);
         let text = captured.lock().unwrap();
         if mode == Mode::Plain {
             assert_eq!(

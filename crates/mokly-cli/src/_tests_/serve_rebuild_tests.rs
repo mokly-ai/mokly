@@ -7,7 +7,10 @@ use std::time::Duration;
 use mokly_catalogue::config::ConfigLoaderMock;
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::preparation::{CatalogueBuilderMock, PreparedCatalogue};
+use mokly_cli::cancellation::ServeCancellation;
 use mokly_cli::grammar::Common;
+use mokly_cli::output::{Mode, Style};
+use mokly_cli::redaction::Redactor;
 use mokly_cli::serve::CatalogueServe;
 use mokly_graph::types::{GraphFactoryMock, RenderGeneration, RenderGraph, RenderGraphMock};
 use mokly_model::catalogue::CatalogueModel;
@@ -23,6 +26,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::serve_candidates::ManualCandidates;
 use crate::serve_rebuild::{ManualRebuilds, RebuildReporterMock, ServeActions};
 use crate::serve_state::ServeStateFactoryMock;
+use crate::serve_warnings::{ServeWarnings, WarningScopes};
 
 pub(super) fn initial() -> Arc<Snapshot> {
     let mut index = readers::index(include_str!(
@@ -100,12 +104,12 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
             .next_call(matching!())
             .returns(origin),
         ServeStateFactoryMock::replace
-            .next_call(matching!(_, 2, _))
+            .next_call(matching!(_, 2, _, _))
             .answers_arc(Arc::new({
                 let entered = entered.clone();
                 let release = release.clone();
                 let candidate = candidate.clone();
-                move |_, _, _, _| {
+                move |_, _, _, _, _| {
                     entered.notify_one();
                     let (lock, signal) = &*release;
                     let _released = signal
@@ -138,7 +142,9 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
                 }
             })),
     ));
+    let (warnings, _warning_terminal) = warning_scopes();
     let action = ManualRebuilds {
+        warnings,
         watching: None,
         candidates: Arc::new(ManualCandidates::new(Arc::new(FixedLifecycle))),
         preparation: Arc::new(CatalogueServe {
@@ -180,4 +186,20 @@ async fn serving_is_polled_during_projection_and_a_revision_race_does_not_recrea
         "server future was not polled while projection was blocked"
     );
     task.await.unwrap().unwrap();
+}
+
+pub(super) fn warning_scopes() -> (Arc<dyn WarningScopes>, Unimock) {
+    let terminal = Unimock::new(());
+    let scopes: Arc<dyn WarningScopes> = Arc::new(ServeWarnings::new(
+        Arc::new(ServeCancellation::default()),
+        Arc::new(terminal.clone()),
+        Style {
+            mode: Mode::Plain,
+            color: false,
+            ascii: false,
+            columns: 200,
+        },
+        Arc::new(Redactor::default()),
+    ));
+    (scopes, terminal)
 }

@@ -50,8 +50,9 @@ under the [imported styles contract](./mokly-imported-styles.md), and an
 authored asset from the roots under the
 [public closure policy](./mokly-public-closure.md). Resource validation
 accepts a route whose node has not rendered yet. A document carries its
-[build warnings](./mokly-build-warnings.md) beside its HTML; Serve reports a
-state's warnings once, before `Catalogue ready`, never per request.
+[build warnings](./mokly-build-warnings.md) beside its HTML. Serve reports
+new warnings under the [attempt-scoped reporting rule](./mokly-build-warnings.md#watched-serve-generations),
+including a view first rendered on demand. Repeated requests repeat no warning.
 
 Live prop edits of the [controls contract](./mokly-component-controls.md)
 render through this same path with the edited props. Their temporary documents

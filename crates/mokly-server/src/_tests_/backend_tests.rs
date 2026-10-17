@@ -8,6 +8,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{Documents, GraphDocuments};
 use crate::public_read::PublicReaderMock;
+use crate::warnings::TracingWarnings;
 
 #[test]
 fn authored_reads_check_one_membership_and_open_one_handle_per_request() {
@@ -28,8 +29,11 @@ fn authored_reads_check_one_membership_and_open_one_handle_per_request() {
                 .n_times(count),
         );
         {
-            let documents =
-                GraphDocuments::new(Arc::new(generation.clone()), Arc::new(reader.clone()));
+            let documents = GraphDocuments::new(
+                Arc::new(generation.clone()),
+                Arc::new(reader.clone()),
+                Arc::new(TracingWarnings),
+            );
             for _ in 0..count {
                 assert!(documents.authored("assets/large.bin").is_none());
             }

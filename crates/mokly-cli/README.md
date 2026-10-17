@@ -46,6 +46,14 @@ The browser bundle comes from the matching installed `@mokly/viewer` package.
 
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
 diagnostics. It reports listener backoff and recovery in both output modes.
+Serve captures one warning sink per preparation attempt. It sorts and
+deduplicates preparation and composition warnings before the completion line.
+Later on-demand, background, and temporary renders report only new warnings.
+A repair inherits the failed preparation attempt's seen set. Render and preview
+failures do not change that scope's preparation status. Replaced or cancelled
+producers cannot print warnings, including when shutdown fails. A fatal
+startup error flushes pending warnings before cancellation. Resource-only
+reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
 counts without source text, props, or error payloads.
@@ -193,6 +201,7 @@ still use their injected trait boundaries.
   and [static output adapter](./src/publication/mod.rs).
 - [Shared Serve services](./src/serve_services.rs), [Serve shutdown](./src/serve_shutdown.rs),
   [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
+- [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 
 ### Related Docs

@@ -1212,9 +1212,24 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-1.md`,
       there: choose a repository-root rescan after each macOS batch and an
       exact-input stamp check on Windows, or one recursive watch per root on both
       systems; tests.
-- [ ] Report the composition warnings of every Serve attempt once, including
+- [x] Report the composition warnings of every Serve attempt once, including
       on-demand and background renders, through an attempt-scoped sink with a
       seen set kept across a failed attempt (`mokly-build-warnings.md`).
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-4.md` and
+`.context/rust-rebuild/sweeps/m11-warnings.md`.
+
+- [x] Correct Serve warning review findings 1 to 7 and flush the current
+      attempt's pending warnings on fatal server failure.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-5.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
+
+- [x] Merge comparison-engine updates, apply one cancellation rule to fatal
+      Serve warnings, and prove destination composition.
+
+Evidence: `.context/rust-rebuild/delegation/m11/report-6.md` and
+`.context/rust-rebuild/delegation/m11/merge-decisions.md`.
 
 ## Milestone 11.1: Watch review corrections
 
