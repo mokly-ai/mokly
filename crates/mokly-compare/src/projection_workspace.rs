@@ -11,6 +11,8 @@ use crate::projection_context::Context;
 use crate::{projection_affected, projection_inputs};
 
 /// Join current usage with retained comparison evidence without changing document bytes.
+/// The caller supplies settled view usage and current Used by lists.
+/// This updates comparison-owned fields and retains those Used by rows.
 /// Metadata, counterparts, removals, and consumer links are indexed once for the batch.
 pub fn apply(
     details: &mut BTreeMap<String, EntryDetailV1>,

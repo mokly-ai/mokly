@@ -1280,7 +1280,7 @@ Evidence: `.context/rust-rebuild/delegation/m11/report-3.md` and
 
 ## Milestone 12: Static build and publish
 
-- [ ] Apply comparison join review 4: shared projection, view membership, private
+- [x] Apply comparison join review 4: shared projection, view membership, private
       snapshot contract, branch tests, indexed workspaces, timings, and merged verification.
 - [ ] Complete timing records for dependency `tier`, comparison view counts, and
       `review.changed-paths` in the shared Changes pipeline (review 4, finding 7).
@@ -1359,6 +1359,7 @@ Non-comparison M12 acceptance: `.context/rust-rebuild/delegation/m12-static/repo
 and `.context/rust-rebuild/sweeps/m12-static.md`.
 Final acceptance fixes: `.context/rust-rebuild/delegation/m12-static/report-5.md`.
 Comparison join and static browser acceptance: `.context/rust-rebuild/delegation/m12-static/report-6.md`.
+Comparison join review 4: `.context/rust-rebuild/delegation/m12-static/report-7.md`.
 
 - [x] Commit.
 

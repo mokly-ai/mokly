@@ -91,14 +91,17 @@ fn only_removed_component_variants_can_compare_even_when_removals_are_affected()
 fn affected_only_consumers_are_eligible_and_duplicate_links_keep_first_seen_order() {
     let button = entry("button", EntryKind::Component, None);
     let home = entry("home", EntryKind::Screen, None);
+    let mut home_change = classified("home", EntryKind::Screen, ReviewState::Unchanged);
+    home_change.included = false;
     let mut result = result(
         vec![button.clone(), home.clone()],
         vec![button, home],
         vec![
             classified("button", EntryKind::Component, ReviewState::Changed),
-            classified("home", EntryKind::Screen, ReviewState::Unchanged),
+            home_change,
         ],
     );
+    assert_eq!(result.snapshot.changed_entries, vec!["button"]);
     let mut first = effect("home", ConsumerKind::Screen);
     let mut after = first.evidence[0].clone();
     after.side = ReviewSide::After;

@@ -18,6 +18,7 @@ use crate::error::Result;
 use crate::projection_context::Context;
 
 /// Apply retained entry and view classifications to a current or historical index.
+/// Keep deployment, revision, and live fences; the caller sets the URL after capture.
 pub fn apply(index: &mut CatalogueReadModel, result: &ComparisonResult) {
     index.changes_status = ChangesStatus::Ready;
     index.base = Some(result.snapshot.base_ref.clone());
