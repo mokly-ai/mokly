@@ -1,0 +1,44 @@
+@import url("./tokens.css");
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font:
+    15px system-ui,
+    sans-serif;
+}
+a {
+  color: var(--accent);
+}
+.scale-screen {
+  padding: 24px;
+  max-width: 1080px;
+  margin: auto;
+}
+.scale-screen.compact {
+  padding: 16px;
+}
+.scale-screen header,
+.scale-screen footer {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.scale-panel {
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.scale-record {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.scale-screen footer {
+  margin-top: 24px;
+}

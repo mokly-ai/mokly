@@ -38,57 +38,79 @@ impl Walk<'_> {
         directory: &Path,
         inherited: &[(PathBuf, GlobSet)],
     ) -> Result<()> {
-        let suffix = directory
-            .strip_prefix(&self.root.directory)
-            .unwrap_or(directory);
-        let scan_path = self.root.identity.join(suffix);
-        let mut children = match self.tree.children(&scan_path) {
-            Ok(children) => children,
-            Err(error) if error.is_vanished() => {
-                self.not_searched
-                    .push(relative(directory, &self.config.repo_root));
-                return Ok(());
-            }
-            Err(error) => {
-                return Err(invalid(format!(
-                    "{}: {}",
-                    relative(directory, &self.config.repo_root),
-                    error.code()
-                )));
-            }
-        };
-        children.sort_by(|a, b| compare_utf16(&a.name, &b.name));
-        let mut exclusions = inherited.to_vec();
-        if children
-            .iter()
-            .any(|child| child.name == "_folder.json" && child.kind == FileKind::File)
-        {
-            self.folder(directory, &mut exclusions)?;
+        enum Work {
+            Directory(PathBuf),
+            Child(PathBuf, FileKind),
+            Leave(usize),
         }
-        for child in children {
-            let path = directory.join(&child.name);
-            match child.kind {
-                FileKind::Directory => {
-                    if denied_directory(&child.name) || self.output == Some(path.as_path()) {
+        let mut exclusions = inherited.to_vec();
+        let mut pending = vec![Work::Directory(directory.into())];
+        while let Some(work) = pending.pop() {
+            match work {
+                Work::Leave(length) => exclusions.truncate(length),
+                Work::Child(path, FileKind::Directory) => {
+                    let name = path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .unwrap_or("");
+                    if denied_directory(name) || self.output == Some(path.as_path()) {
                         self.not_searched
                             .push(relative(&path, &self.config.repo_root));
                     } else {
-                        self.directory(&path, &exclusions)?;
+                        pending.push(Work::Directory(path));
                     }
                 }
-                FileKind::File
-                    if child.name != "_folder.json"
+                Work::Child(path, FileKind::File) => {
+                    if path.file_name().is_none_or(|name| name != "_folder.json")
                         && self
                             .globs
-                            .is_match(path.strip_prefix(&self.root.directory).unwrap_or(&path)) =>
-                {
-                    self.file(&path, &exclusions)?
+                            .is_match(path.strip_prefix(&self.root.directory).unwrap_or(&path))
+                    {
+                        self.file(&path, &exclusions)?;
+                    }
                 }
-                _ => {}
+                Work::Child(_, _) => {}
+                Work::Directory(directory) => {
+                    let suffix = directory
+                        .strip_prefix(&self.root.directory)
+                        .unwrap_or(&directory);
+                    let scan_path = self.root.identity.join(suffix);
+                    let mut children = match self.tree.children(&scan_path) {
+                        Ok(children) => children,
+                        Err(error) if error.is_vanished() => {
+                            self.not_searched
+                                .push(relative(&directory, &self.config.repo_root));
+                            continue;
+                        }
+                        Err(error) => {
+                            return Err(invalid(format!(
+                                "{}: {}",
+                                relative(&directory, &self.config.repo_root),
+                                error.code()
+                            )));
+                        }
+                    };
+                    children.sort_by(|a, b| compare_utf16(&a.name, &b.name));
+                    let length = exclusions.len();
+                    if children
+                        .iter()
+                        .any(|child| child.name == "_folder.json" && child.kind == FileKind::File)
+                    {
+                        self.folder(&directory, &mut exclusions)?;
+                    }
+                    pending.push(Work::Leave(length));
+                    pending.extend(
+                        children
+                            .into_iter()
+                            .rev()
+                            .map(|child| Work::Child(directory.join(child.name), child.kind)),
+                    );
+                }
             }
         }
         Ok(())
     }
+
     fn project_file(&mut self, path: &Path) -> Result<Option<PathBuf>> {
         let node = if let Some(node) = self.candidates.get(path) {
             node.clone()

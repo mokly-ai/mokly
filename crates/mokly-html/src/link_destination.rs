@@ -1,6 +1,6 @@
 //! Resolve a logical destination's effective viewport, scheme, and first flow step.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
@@ -15,34 +15,44 @@ pub(crate) fn route(
     viewport: Viewport,
     scheme: ColorScheme,
 ) -> Result<String> {
-    let path = &entry.metadata.path;
-    Ok(match &entry.content {
-        EntryContent::Screen { visual, .. } | EntryContent::Component { visual, .. } => {
-            routes::view(
+    let mut entry = entry;
+    let mut visited = BTreeSet::new();
+    loop {
+        let path = &entry.metadata.path;
+        if !visited.insert(path) {
+            return Err(invalid(Code::BuildInvalid, "cyclic use case link"));
+        }
+        return Ok(match &entry.content {
+            EntryContent::Screen { visual, .. } | EntryContent::Component { visual, .. } => {
+                routes::view(
+                    path,
+                    viewport,
+                    if visual.color_schemes.contains(&scheme) {
+                        scheme
+                    } else {
+                        ColorScheme::Light
+                    },
+                )
+            }
+            EntryContent::Page => routes::document(path, ColorScheme::Light),
+            EntryContent::Document { color_schemes, .. } => routes::document(
                 path,
-                viewport,
-                if visual.color_schemes.contains(&scheme) {
+                if color_schemes.contains(&scheme) {
                     scheme
                 } else {
                     ColorScheme::Light
                 },
-            )
-        }
-        EntryContent::Page => routes::document(path, ColorScheme::Light),
-        EntryContent::Document { color_schemes, .. } => routes::document(
-            path,
-            if color_schemes.contains(&scheme) {
-                scheme
-            } else {
-                ColorScheme::Light
-            },
-        ),
-        EntryContent::UseCase { steps } => {
-            let screen = steps
-                .first()
-                .and_then(|step| entries.get(&step.screen_path.to_ascii_lowercase()))
-                .ok_or_else(|| invalid(Code::BuildInvalid, "use case link has no first screen"))?;
-            route(screen, entries, viewport, scheme)?
-        }
-    })
+            ),
+            EntryContent::UseCase { steps } => {
+                let screen = steps
+                    .first()
+                    .and_then(|step| entries.get(&step.screen_path.to_ascii_lowercase()))
+                    .ok_or_else(|| {
+                        invalid(Code::BuildInvalid, "use case link has no first screen")
+                    })?;
+                entry = screen;
+                continue;
+            }
+        });
+    }
 }

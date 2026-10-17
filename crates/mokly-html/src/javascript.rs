@@ -1,7 +1,9 @@
 //! Graft sidecar fragments through authenticated marker and slot boundaries.
 
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
-use std::mem;
+use std::rc::Rc;
+use std::sync::Arc;
 
 use mokly_catalogue::render_sources::RenderMethod;
 use mokly_model::axes::EntryKind;
@@ -12,17 +14,18 @@ use crate::composition::Engine;
 use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
+use crate::expansion::{After, Expansion, Mode, Placeholders};
 use crate::fragment::{FragmentRequest, RenderKind};
 use crate::tree::Node;
 use crate::{fragment_rebase, fragment_validation, markers, parse, relative_links, source_checks};
 
 impl Engine<'_> {
-    pub(crate) fn javascript(
+    pub(crate) fn javascript_expansion(
         &mut self,
         path: &str,
         kind: RenderKind,
-        context: &Context,
-    ) -> Result<Vec<Node>> {
+        context: Arc<Context>,
+    ) -> Result<Expansion> {
         let entry = self
             .request
             .catalogue
@@ -125,7 +128,7 @@ impl Engine<'_> {
             &mut nodes,
             &mut result.instances,
             &mut result.slots,
-            context,
+            &context,
         )?;
         for instance in result.instances {
             if let Some(existing) = self.instances.get(&instance.key) {
@@ -146,77 +149,28 @@ impl Engine<'_> {
         for slot in result.slots {
             self.slots.entry(slot.key.clone()).or_insert(slot);
         }
-        let mut seen = BTreeSet::new();
-        let nodes = self.placeholders(nodes, context, &tokens, &mut seen)?;
-        if tokens.keys().any(|name| !seen.contains(name)) {
-            return Err(invalid(
-                Code::HtmlSlot,
-                "a supplied JavaScript slot placeholder was not rendered",
-            ));
-        }
-        if matches!(entry.content, EntryContent::Component { .. })
-            && !self.components.contains(&path.to_owned())
-        {
-            self.components.push(path.into());
-        }
-        if page {
-            self.nodes(nodes, context)
-        } else {
-            Ok(nodes)
-        }
+        let placeholders = Rc::new(RefCell::new(Placeholders {
+            tokens,
+            seen: BTreeSet::new(),
+        }));
+        let mut expansion = Expansion::native(nodes, context);
+        expansion.mode = Mode::Foreign(placeholders.clone());
+        expansion.after.push(After::JavaScript {
+            placeholders,
+            component: matches!(entry.content, EntryContent::Component { .. })
+                .then(|| path.to_owned()),
+            page,
+        });
+        Ok(expansion)
     }
 
-    fn placeholders(
+    pub(crate) fn javascript(
         &mut self,
-        nodes: Vec<Node>,
+        path: &str,
+        kind: RenderKind,
         context: &Context,
-        tokens: &BTreeMap<String, String>,
-        seen: &mut BTreeSet<String>,
     ) -> Result<Vec<Node>> {
-        let mut output = Vec::new();
-        for mut node in nodes {
-            match &mut node {
-                Node::Element(element) if element.name == "mokly-slot" => {
-                    let name = element
-                        .get("name")
-                        .ok_or_else(|| invalid(Code::HtmlSlot, "slot placeholder has no name"))?
-                        .to_owned();
-                    if element.get("token") != tokens.get(&name).map(String::as_str)
-                        || !element.children.is_empty()
-                    {
-                        return Err(invalid(
-                            Code::HtmlSlot,
-                            "unknown or forged slot placeholder",
-                        ));
-                    }
-                    let mut nested = context.clone();
-                    nested.ignore = match element.get("ignore-scope") {
-                        Some("enabled") => true,
-                        Some("disabled") => false,
-                        _ => {
-                            return Err(invalid(
-                                Code::HtmlSlot,
-                                "slot placeholder has an invalid ignore scope",
-                            ));
-                        }
-                    };
-                    let mut placeholder = element.clone();
-                    placeholder.name = "slot".into();
-                    output.extend(self.slot(placeholder, &nested)?);
-                    seen.insert(name);
-                    continue;
-                }
-                Node::Element(element) => {
-                    element.children =
-                        self.placeholders(mem::take(&mut element.children), context, tokens, seen)?
-                }
-                Node::Region { children, .. } => {
-                    *children = self.placeholders(mem::take(children), context, tokens, seen)?
-                }
-                _ => {}
-            }
-            output.push(node);
-        }
-        Ok(output)
+        let expansion = self.javascript_expansion(path, kind, Arc::new(context.clone()))?;
+        self.expand(expansion)
     }
 }

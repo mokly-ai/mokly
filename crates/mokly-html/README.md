@@ -30,8 +30,20 @@ A re-owned instance with a colliding identity also loses its region. The
 `html-foster-parented` warning names the component element and parent; shared
 body warnings use the parent entry once across its variants.
 
+Tree conversion, composition, serialization, metadata repair, cloning,
+structural equality, debugging, and destruction use explicit work stacks.
+A 100,000-level document uses an ordinary caller or worker thread. Prop data
+and schemas retain their separate bounded validation contract.
 Link-control adaptation keeps one stack of ancestor features. It copies no
 ancestor lists or child subtrees while it walks the document.
+
+The serializer preserves the leading newline in `pre`, `textarea`, and
+`listing`. `plaintext` consumes the rest of the bytes. It has no synthetic end
+tag, and its ancestors have no end tags after it. Parsing applies one extra
+browser repair to documents with `plaintext`, including composed content that
+already carries private metadata. Formatting clones and later foster-parented
+nodes become stable literal text. While plaintext mode is active, serialization
+omits private normalization attributes from cloned tags and private markers.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 `serialize::html` writes instance and slot comments for the inspector.

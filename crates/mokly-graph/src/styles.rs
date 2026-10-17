@@ -197,7 +197,8 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
 }
 
 pub(crate) fn install(nodes: &mut [Node], stylesheets: &[String]) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
             if element.name == "head" {
                 element.children.retain(|node| !matches!(node, Node::Element(element) if element.name == "link" && element.get("rel") == Some("stylesheet")));
@@ -205,7 +206,7 @@ pub(crate) fn install(nodes: &mut [Node], stylesheets: &[String]) {
                     tree::element("link", &[("rel", "stylesheet"), ("href", href)], Vec::new())
                 }));
             } else {
-                install(&mut element.children, stylesheets);
+                pending.extend(element.children.iter_mut().rev());
             }
         }
     }

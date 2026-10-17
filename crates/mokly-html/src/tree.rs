@@ -1,5 +1,7 @@
 //! Owned, thread-safe HTML5 trees with explicit composition regions.
 
+use std::mem;
+
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::usage::ComponentInputOwner;
 
@@ -115,7 +117,6 @@ pub enum RegionKind {
 }
 
 /// Parsed node. Region nodes contain annotations, never source markers.
-#[derive(Clone, Debug)]
 pub enum Node {
     /// HTML5 element.
     Element(Element),
@@ -132,6 +133,68 @@ pub enum Node {
         /// Annotated children.
         children: Vec<Node>,
     },
+}
+
+impl Node {
+    /// Immediate children; leaf nodes return an empty slice.
+    pub fn children(&self) -> &[Node] {
+        match self {
+            Self::Element(element) => &element.children,
+            Self::Region { children, .. } => children,
+            _ => &[],
+        }
+    }
+
+    /// Mutable child storage, present only for elements and regions.
+    pub fn children_mut(&mut self) -> Option<&mut Vec<Node>> {
+        match self {
+            Self::Element(element) => Some(&mut element.children),
+            Self::Region { children, .. } => Some(children),
+            _ => None,
+        }
+    }
+
+    /// Detach children before processing or releasing a node.
+    pub fn take_children(&mut self) -> Vec<Node> {
+        self.children_mut().map_or_else(Vec::new, mem::take)
+    }
+
+    pub(crate) fn take_element(&mut self) -> Option<Element> {
+        let Self::Element(element) = self else {
+            return None;
+        };
+        Some(Element {
+            origin: element.origin.take(),
+            navigation: element.navigation.take(),
+            source: element.source.take(),
+            name: mem::take(&mut element.name),
+            namespace: mem::take(&mut element.namespace),
+            attributes: mem::take(&mut element.attributes),
+            children: mem::take(&mut element.children),
+        })
+    }
+}
+
+/// Document-order traversal over elements, regions, and leaf nodes.
+pub struct Walk<'a> {
+    pending: Vec<&'a Node>,
+}
+
+/// Walk every descendant with an explicit stack, including region children.
+pub fn walk(nodes: &[Node]) -> Walk<'_> {
+    Walk {
+        pending: nodes.iter().rev().collect(),
+    }
+}
+
+impl<'a> Iterator for Walk<'a> {
+    type Item = &'a Node;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let node = self.pending.pop()?;
+        self.pending.extend(node.children().iter().rev());
+        Some(node)
+    }
 }
 
 /// Construct a package-owned HTML element.

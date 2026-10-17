@@ -170,7 +170,8 @@ pub fn render(
 }
 
 fn table_alignment(nodes: &mut [Node]) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
+    while let Some(node) = pending.pop() {
         if let Node::Element(element) = node {
             if matches!(element.name.as_str(), "th" | "td")
                 && let Some(style) = element.take("style")
@@ -179,7 +180,7 @@ fn table_alignment(nodes: &mut [Node]) {
             {
                 element.set("align", alignment);
             }
-            table_alignment(&mut element.children);
+            pending.extend(element.children.iter_mut().rev());
         }
     }
 }

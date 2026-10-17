@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_html::composition::Composed;
 use mokly_html::markdown::LinkResolver;
-use mokly_html::tree::Node;
+use mokly_html::tree::{self, Node};
 use mokly_html::{controls, links, markdown, normalization, safety, serialize, url_safety};
 use mokly_model::axes::Viewport;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
@@ -67,39 +67,34 @@ pub(crate) fn finish(
 }
 
 fn check_anchors(nodes: &[Node], anchors: &BTreeSet<String>, route: &str) -> Result<()> {
-    for node in nodes {
-        match node {
-            Node::Element(element) => {
-                for attribute in ["href", "data-nav-href"] {
-                    if let Some(fragment) = element
-                        .get(attribute)
-                        .and_then(|url| url.strip_prefix('#'))
-                        .filter(|fragment| !fragment.is_empty())
-                    {
-                        let fragment = match urls::decode_fragment(fragment) {
-                            Ok(fragment) => fragment,
-                            Err(source) => {
-                                return Err(error::invalid(
-                                    route,
-                                    format!(
-                                        "{route}: invalid fragment URL #{fragment}: {}",
-                                        source.reason()
-                                    ),
-                                ));
-                            }
-                        };
-                        if !anchors.contains(&fragment) {
+    for node in tree::walk(nodes) {
+        if let Node::Element(element) = node {
+            for attribute in ["href", "data-nav-href"] {
+                if let Some(fragment) = element
+                    .get(attribute)
+                    .and_then(|url| url.strip_prefix('#'))
+                    .filter(|fragment| !fragment.is_empty())
+                {
+                    let fragment = match urls::decode_fragment(fragment) {
+                        Ok(fragment) => fragment,
+                        Err(source) => {
                             return Err(error::invalid(
                                 route,
-                                format!("{route}: missing anchor {fragment:?}"),
+                                format!(
+                                    "{route}: invalid fragment URL #{fragment}: {}",
+                                    source.reason()
+                                ),
                             ));
                         }
+                    };
+                    if !anchors.contains(&fragment) {
+                        return Err(error::invalid(
+                            route,
+                            format!("{route}: missing anchor {fragment:?}"),
+                        ));
                     }
                 }
-                check_anchors(&element.children, anchors, route)?;
             }
-            Node::Region { children, .. } => check_anchors(children, anchors, route)?,
-            _ => {}
         }
     }
     Ok(())

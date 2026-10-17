@@ -18,11 +18,11 @@ use mokly_model::usage::{
 use crate::context::Context;
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
+use crate::expansion::Expansion;
 use crate::fragment::{FragmentRenderer, OwnedStyle, RenderKind};
 use crate::tree::Node;
 use crate::{
-    assembly, component_root, error, links, props, raw_markers, regions, relative_links,
-    source_locations,
+    assembly, component_root, error, links, raw_markers, regions, relative_links, source_locations,
 };
 
 /// One effective document view. Pages ignore the axes.
@@ -217,30 +217,6 @@ impl Composer for HtmlComposer {
 
 impl Engine<'_> {
     pub(crate) fn nodes(&mut self, nodes: Vec<Node>, context: &Context) -> Result<Vec<Node>> {
-        let mut output = Vec::new();
-        for node in nodes {
-            match node {
-                Node::Text(text) => output.push(Node::Text(if context.raw_text {
-                    props::substitute_raw(&text, &context.schema, &context.props)?
-                } else {
-                    props::substitute(&text, &context.schema, &context.props)?
-                })),
-                Node::Element(element) => {
-                    let location = element
-                        .source
-                        .clone()
-                        .unwrap_or_else(|| context.source.clone());
-                    match self.element(element, context) {
-                        Ok(nodes) => output.extend(nodes),
-                        Err(source) => {
-                            return Err(source.at(location));
-                        }
-                    }
-                }
-                Node::Comment(text) if text.trim_start().starts_with("mokly-") => {}
-                node => output.push(node),
-            }
-        }
-        Ok(output)
+        self.expand(Expansion::native(nodes, Arc::new(context.clone())))
     }
 }

@@ -83,7 +83,8 @@ fn head(nodes: &[Node], styles: &mut usize) -> Result<()> {
 }
 
 fn body(nodes: &[Node], direct: bool) -> Result<()> {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter().rev().map(|node| (node, direct)).collect();
+    while let Some((node, direct)) = pending.pop() {
         let Node::Element(element) = node else {
             continue;
         };
@@ -148,7 +149,7 @@ fn body(nodes: &[Node], direct: bool) -> Result<()> {
             }
             _ => return Err(element_error(element)),
         }
-        body(&element.children, false)?;
+        pending.extend(element.children.iter().rev().map(|node| (node, false)));
     }
     Ok(())
 }

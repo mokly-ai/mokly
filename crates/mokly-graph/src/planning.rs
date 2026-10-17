@@ -4,7 +4,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
-use mokly_html::{parse, tree};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::routes;
@@ -14,7 +13,7 @@ use crate::graph::Graph;
 use crate::key::{NodeKey, NodeKind, key};
 use crate::types::{DocumentPlan, ResourcePlan};
 use crate::workers::check_cancelled;
-use crate::{error, planning_resources, resource_digests, routing_inputs, styles};
+use crate::{component_keys, error, planning_resources, resource_digests, routing_inputs, styles};
 
 pub(crate) fn documents(
     graph: &Graph,
@@ -48,7 +47,7 @@ pub(crate) fn documents(
     let mut component_keys = BTreeMap::new();
     for component in catalogue.elements.values() {
         check_cancelled(graph.workers.as_ref())?;
-        component_key(
+        component_keys::resolve(
             &component.path,
             catalogue,
             &sources,
@@ -217,75 +216,11 @@ pub(crate) fn components(path: &str, catalogue: &PreparedCatalogue) -> BTreeSet<
                     .flat_map(|slots| slots.values().map(String::as_str)),
             );
         for body in bodies {
-            for component in direct_components(body, catalogue) {
+            for component in component_keys::direct(body, catalogue) {
                 if found.insert(component.clone()) {
                     stack.push(component);
                 }
             }
-        }
-    }
-    found
-}
-
-fn component_key(
-    path: &str,
-    catalogue: &PreparedCatalogue,
-    sources: &BTreeMap<String, NodeKey>,
-    keys: &mut BTreeMap<String, NodeKey>,
-    visiting: &mut BTreeSet<String>,
-) -> Result<NodeKey> {
-    if let Some(key) = keys.get(path) {
-        return Ok(key.clone());
-    }
-    if !visiting.insert(path.into()) {
-        return Err(invalid(path, "component dependency cycle"));
-    }
-    let source = catalogue
-        .model
-        .entries
-        .iter()
-        .find(|entry| entry.metadata.path == path)
-        .and_then(|entry| sources.get(&entry.metadata.source.path))
-        .ok_or_else(|| invalid(path, "component source key is missing"))?;
-    let mut inputs = vec![source.0.clone(), path.into()];
-    inputs.extend(
-        catalogue
-            .elements
-            .iter()
-            .filter(|(_, element)| element.path == path)
-            .map(|(name, _)| name.clone()),
-    );
-    for child in catalogue
-        .templates
-        .get(path)
-        .map(|template| direct_components(&template.body, catalogue))
-        .unwrap_or_default()
-    {
-        if child != path {
-            inputs.push(component_key(&child, catalogue, sources, keys, visiting)?.0);
-        }
-    }
-    let result = key(
-        NodeKind::HtmlComponent,
-        &inputs
-            .iter()
-            .map(|input| input.as_bytes())
-            .collect::<Vec<_>>(),
-    );
-    keys.insert(path.into(), result.clone());
-    visiting.remove(path);
-    Ok(result)
-}
-
-fn direct_components(body: &str, catalogue: &PreparedCatalogue) -> BTreeSet<String> {
-    let mut found = BTreeSet::new();
-    let mut nodes = parse::fragment(body);
-    while let Some(node) = nodes.pop() {
-        if let tree::Node::Element(element) = node {
-            if let Some(component) = catalogue.elements.get(&element.name) {
-                found.insert(component.path.clone());
-            }
-            nodes.extend(element.children);
         }
     }
     found

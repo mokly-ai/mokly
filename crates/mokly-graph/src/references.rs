@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_css::syntax;
 use mokly_html::parse;
-use mokly_html::tree::{Element, Node, RegionKind};
+use mokly_html::tree::{self, Element, Node, RegionKind};
 use mokly_model::evidence::EvidenceOwner;
 use mokly_model::usage::ComponentInputOwner;
 
@@ -37,6 +37,24 @@ pub fn collect(nodes: &[Node]) -> Vec<ResourceReference> {
     output
 }
 
+enum NodeRef<'a> {
+    Borrowed(&'a Node),
+    Owned(Box<Node>),
+}
+impl NodeRef<'_> {
+    fn as_ref(&self) -> &Node {
+        match self {
+            Self::Borrowed(node) => node,
+            Self::Owned(node) => node,
+        }
+    }
+}
+
+enum Step<'a> {
+    Node(NodeRef<'a>, EvidenceOwner, Option<String>, bool),
+    Reference(ResourceReference),
+}
+
 fn walk(
     nodes: &[Node],
     owner: &EvidenceOwner,
@@ -45,10 +63,30 @@ fn walk(
     instances: &BTreeMap<String, String>,
     output: &mut Vec<ResourceReference>,
 ) {
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                let nested = match &region.kind {
+    let mut pending: Vec<_> = nodes
+        .iter()
+        .rev()
+        .map(|node| {
+            Step::Node(
+                NodeRef::Borrowed(node),
+                owner.clone(),
+                instance_key.map(str::to_owned),
+                ignored,
+            )
+        })
+        .collect();
+    while let Some(step) = pending.pop() {
+        let (node, mut owner, mut instance_key, mut ignored) = match step {
+            Step::Reference(reference) => {
+                output.push(reference);
+                continue;
+            }
+            Step::Node(node, owner, instance_key, ignored) => (node, owner, instance_key, ignored),
+        };
+        let mut next = Vec::new();
+        match node.as_ref() {
+            Node::Region { region, .. } => {
+                owner = match &region.kind {
                     RegionKind::Instance { path, .. } | RegionKind::Root { path } => {
                         EvidenceOwner::Component { path: path.clone() }
                     }
@@ -61,150 +99,132 @@ fn walk(
                             path: path.clone(),
                         }),
                     RegionKind::Slot { .. } => EvidenceOwner::Entry,
-                    _ => owner.clone(),
+                    _ => owner,
                 };
-                let nested_instance = match &region.kind {
-                    RegionKind::Instance { key, .. } => Some(key.as_str()),
+                instance_key = match &region.kind {
+                    RegionKind::Instance { key, .. } => Some(key.clone()),
                     RegionKind::Root { .. } => None,
                     RegionKind::Slot {
                         owner: ComponentInputOwner::Instance { instance_key },
                         ..
-                    } => Some(instance_key.as_str()),
+                    } => Some(instance_key.clone()),
                     RegionKind::Slot { .. } => None,
                     _ => instance_key,
                 };
-                walk(
-                    children,
-                    &nested,
-                    nested_instance,
-                    ignored || matches!(region.kind, RegionKind::Ignore { .. }),
-                    instances,
-                    output,
-                );
+                ignored |= matches!(region.kind, RegionKind::Ignore { .. });
             }
             Node::Element(element) => {
-                let rel: Vec<_> = element
-                    .get("rel")
-                    .unwrap_or("")
-                    .split_ascii_whitespace()
-                    .collect();
-                let speculative = element.name == "link"
-                    && rel.iter().any(|value| {
-                        value.eq_ignore_ascii_case("preload")
-                            || value.eq_ignore_ascii_case("prefetch")
-                    })
-                    && !rel
-                        .iter()
-                        .any(|value| value.eq_ignore_ascii_case("stylesheet"));
-                let ignored = ignored || speculative;
-                for attribute in &element.attributes {
-                    if element.name == "base" && attribute.name == "href" {
-                        continue;
-                    }
-                    if matches!(
-                        attribute.name.as_str(),
-                        "src" | "href" | "xlink:href" | "data-nav-href" | "poster" | "data"
-                    ) {
-                        output.push(ResourceReference {
-                            url: attribute.value.clone(),
-                            owner: owner.clone(),
-                            ignored,
-                            instance_key: instance_key.map(str::to_owned),
-                        });
-                    } else if attribute.name == "srcset" {
-                        for url in srcset(&attribute.value) {
-                            output.push(ResourceReference {
-                                url,
-                                owner: owner.clone(),
-                                ignored,
-                                instance_key: instance_key.map(str::to_owned),
-                            });
-                        }
-                    } else if attribute.name == "style" {
-                        for reference in syntax::references(&format!("x{{{}}}", attribute.value)) {
-                            output.push(ResourceReference {
-                                url: reference.value,
-                                owner: owner.clone(),
-                                ignored,
-                                instance_key: instance_key.map(str::to_owned),
-                            });
-                        }
-                    } else if attribute.name == "srcdoc" {
-                        walk(
-                            &parse::document(&attribute.value),
-                            owner,
-                            instance_key,
-                            ignored,
-                            instances,
-                            output,
-                        );
-                    }
-                }
-                if element.name == "style" {
-                    for node in &element.children {
-                        if let Node::Text(css) = node {
-                            for reference in syntax::references(css) {
-                                output.push(ResourceReference {
-                                    url: reference.value,
-                                    owner: owner.clone(),
-                                    ignored,
-                                    instance_key: instance_key.map(str::to_owned),
-                                });
-                            }
-                        }
-                    }
-                }
-                walk(
-                    &element.children,
-                    owner,
-                    instance_key,
-                    ignored,
-                    instances,
-                    output,
-                );
+                ignored |= speculative(element);
+                element_references(element, &owner, instance_key.as_deref(), ignored, &mut next);
             }
             _ => {}
+        }
+        next.extend(
+            children(node)
+                .into_iter()
+                .map(|node| Step::Node(node, owner.clone(), instance_key.clone(), ignored)),
+        );
+        pending.extend(next.into_iter().rev());
+    }
+}
+
+fn children(node: NodeRef<'_>) -> Vec<NodeRef<'_>> {
+    match node {
+        NodeRef::Borrowed(node) => node.children().iter().map(NodeRef::Borrowed).collect(),
+        NodeRef::Owned(mut node) => node
+            .take_children()
+            .into_iter()
+            .map(|node| NodeRef::Owned(Box::new(node)))
+            .collect(),
+    }
+}
+
+fn element_references(
+    element: &Element,
+    owner: &EvidenceOwner,
+    instance_key: Option<&str>,
+    ignored: bool,
+    output: &mut Vec<Step<'_>>,
+) {
+    let reference = |url| {
+        Step::Reference(ResourceReference {
+            url,
+            owner: owner.clone(),
+            ignored,
+            instance_key: instance_key.map(str::to_owned),
+        })
+    };
+    for attribute in &element.attributes {
+        if element.name == "base" && attribute.name == "href" {
+            continue;
+        }
+        match attribute.name.as_str() {
+            "src" | "href" | "xlink:href" | "data-nav-href" | "poster" | "data" => {
+                output.push(reference(attribute.value.clone()));
+            }
+            "srcset" => output.extend(srcset(&attribute.value).into_iter().map(reference)),
+            "style" => output.extend(
+                syntax::references(&format!("x{{{}}}", attribute.value))
+                    .into_iter()
+                    .map(|value| reference(value.value)),
+            ),
+            "srcdoc" => output.extend(parse::document(&attribute.value).into_iter().map(|node| {
+                Step::Node(
+                    NodeRef::Owned(Box::new(node)),
+                    owner.clone(),
+                    instance_key.map(str::to_owned),
+                    ignored,
+                )
+            })),
+            _ => {}
+        }
+    }
+    if element.name == "style" {
+        for child in &element.children {
+            if let Node::Text(css) = child {
+                output.extend(
+                    syntax::references(css)
+                        .into_iter()
+                        .map(|value| reference(value.value)),
+                );
+            }
         }
     }
 }
 
+fn speculative(element: &Element) -> bool {
+    let rel: Vec<_> = element
+        .get("rel")
+        .unwrap_or("")
+        .split_ascii_whitespace()
+        .collect();
+    element.name == "link"
+        && rel.iter().any(|value| {
+            value.eq_ignore_ascii_case("preload") || value.eq_ignore_ascii_case("prefetch")
+        })
+        && !rel
+            .iter()
+            .any(|value| value.eq_ignore_ascii_case("stylesheet"))
+}
+
 fn instance_paths(nodes: &[Node], paths: &mut BTreeMap<String, String>) {
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                if let RegionKind::Instance { key, path, .. } = &region.kind {
-                    paths.insert(key.clone(), path.clone());
-                }
-                instance_paths(children, paths);
-            }
-            Node::Element(element) => instance_paths(&element.children, paths),
-            _ => {}
+    for node in tree::walk(nodes) {
+        if let Node::Region { region, .. } = node
+            && let RegionKind::Instance { key, path, .. } = &region.kind
+        {
+            paths.insert(key.clone(), path.clone());
         }
     }
 }
 
 /// Index every decoded HTML id for final fragment validation.
 pub fn anchors(nodes: &[Node]) -> BTreeSet<String> {
-    let mut output = BTreeSet::new();
-    visit(nodes, &mut |element| {
-        if let Some(id) = element.get("id") {
-            output.insert(id.into());
-        }
-    });
-    output
-}
-
-fn visit(nodes: &[Node], callback: &mut dyn FnMut(&Element)) {
-    for node in nodes {
-        match node {
-            Node::Element(element) => {
-                callback(element);
-                visit(&element.children, callback);
-            }
-            Node::Region { children, .. } => visit(children, callback),
-            _ => {}
-        }
-    }
+    tree::walk(nodes)
+        .filter_map(|node| match node {
+            Node::Element(element) => element.get("id").map(str::to_owned),
+            _ => None,
+        })
+        .collect()
 }
 
 fn srcset(value: &str) -> Vec<String> {
