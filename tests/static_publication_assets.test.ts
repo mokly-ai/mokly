@@ -6,6 +6,7 @@ import test from "node:test";
 import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reader.js";
 
 import { git, write } from "./helpers/static_changes.js";
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   command,
@@ -21,7 +22,7 @@ import { verifyReceived } from "./helpers/static_received.js";
 test(
   "ready publications upload CSS and binary deltas and reuse a comparison after an unrelated commit",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const { root, config } = await comparisonPublication();
     const server = await exchange();
     const outputs: string[] = [];
@@ -46,13 +47,20 @@ test(
           await git(root, "commit", "-qm", `publication ${change}`);
         }
         const attempts = new Map(server.attempts);
-        const result = await command(root, "publish", [
-          `--config=${config}`,
-          "--base=requested-base",
-          "--repository=example.com/team/site",
-          `--endpoint=${server.endpoint}`,
-          "--token=private/a==",
-        ]).result;
+        const result = await command(
+          root,
+          "publish",
+          [
+            `--config=${config}`,
+            "--base=requested-base",
+            "--repository=example.com/team/site",
+            `--endpoint=${server.endpoint}`,
+            "--token=private/a==",
+          ],
+          "plain",
+          {},
+          context.signal,
+        ).result;
         const output = directory(result.stdout);
         outputs.push(output);
         assert.equal(result.code, 0, result.stderr);
@@ -100,9 +108,11 @@ test(
       }
       assert.equal(server.completed, 3);
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );

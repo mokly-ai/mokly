@@ -25,22 +25,28 @@ pub(crate) fn create(
     pairing: &Pairing,
     entries: &[EntryClassification],
 ) -> Result<CatalogueChangeSnapshotV4> {
-    let mut changed: Vec<_> = entries
-        .iter()
-        .filter(|entry| {
-            entry.included
-                && !(entry.kind == EntryKind::UseCase
-                    && pairing.entries.iter().any(|pair| {
-                        pair.after.is_none()
-                            && pair.before.is_some_and(|index| {
-                                before.entries[index].metadata.path == entry.path
-                            })
-                    }))
-        })
-        .map(|entry| entry.path.clone())
-        .collect();
-    changed.sort_by(|left, right| canonical::compare_utf16(left, right));
-    changed.dedup();
+    let changed = {
+        let span = tracing::info_span!("review.changed-paths", status = "error");
+        let _scope = span.enter();
+        let mut changed: Vec<_> = entries
+            .iter()
+            .filter(|entry| {
+                entry.included
+                    && !(entry.kind == EntryKind::UseCase
+                        && pairing.entries.iter().any(|pair| {
+                            pair.after.is_none()
+                                && pair.before.is_some_and(|index| {
+                                    before.entries[index].metadata.path == entry.path
+                                })
+                        }))
+            })
+            .map(|entry| entry.path.clone())
+            .collect();
+        changed.sort_by(|left, right| canonical::compare_utf16(left, right));
+        changed.dedup();
+        span.record("status", "ok");
+        changed
+    };
     let selected: BTreeSet<_> = pairing
         .entries
         .iter()

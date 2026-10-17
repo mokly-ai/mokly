@@ -82,6 +82,8 @@ inputs are equal. Each fallback has a typed trace reason. Such workspace layouts
 need explicit package roots; conflicting copies can still require fallback.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+Its timing spans count final view states and measure changed-path collection,
+deduplication, and sorting without recording source data.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds graph handles, view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs

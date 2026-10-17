@@ -7,6 +7,7 @@ import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reade
 import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 
 import { upload } from "./helpers/receiver/upload.js";
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import { checkIdentity } from "./helpers/static_identity.js";
 import {
@@ -24,7 +25,7 @@ import { verifyReceived } from "./helpers/static_received.js";
 test(
   "publish delivers a ready generation with the pinned merge base and exact scoped binary bytes",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const { root, config, base, head, tip } = await comparisonPublication();
     const server = await exchange();
     let output: string | undefined;
@@ -40,6 +41,8 @@ test(
           "--token=private/a==",
         ],
         "rich",
+        {},
+        context.signal,
       ).result;
       output = directory(result.stdout);
       assert.equal(result.code, 0, result.stderr);
@@ -123,9 +126,13 @@ test(
         previous = position;
       }
     } finally {
-      await server.close();
-      if (output) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        async () => {
+          if (output) await removeOutput(output);
+        },
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );

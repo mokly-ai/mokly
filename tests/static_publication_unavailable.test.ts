@@ -6,6 +6,7 @@ import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reade
 
 import { upload } from "./helpers/receiver/upload.js";
 import { git, write } from "./helpers/static_changes.js";
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   command,
@@ -18,7 +19,7 @@ import { verifyReceived } from "./helpers/static_received.js";
 test(
   "publish with unavailable Changes uploads only current files and null comparison metadata",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange();
     const outputs: string[] = [];
@@ -43,6 +44,8 @@ test(
             "--token=private/a==",
           ],
           mode,
+          {},
+          context.signal,
         ).result;
         const output = directory(result.stdout);
         outputs.push(output);
@@ -66,6 +69,7 @@ test(
             name.startsWith("mokly-viewer/diffs/"),
           ),
         );
+        assert.ok(index.screens.length > 0);
         assert.ok(
           index.screens.every(
             (entry) =>
@@ -84,15 +88,26 @@ test(
             result.stdout.indexOf("Changes unavailable") <
               result.stdout.indexOf("Preparing upload"),
           );
-        } else
+        } else {
+          assert.match(
+            result.stderr,
+            /^base [a-f0-9]+: \[mokly\/config-invalid\] .*historical\.json/mu,
+          );
+          assert.doesNotMatch(
+            result.stdout,
+            /Changes ready|Changes unavailable|Comparing with/u,
+          );
           assert.match(result.stdout, /already published for this commit/u);
+        }
       }
       assert.equal(server.completed, 2);
       assert.equal(server.completedInventories.length, 2);
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );

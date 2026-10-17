@@ -68,6 +68,14 @@ identity is a defect. A contained parse or selector failure in
 escaping error ends the span with `error`. The spans log no paths,
 selectors, CSS, or document text.
 
+Dependency `tier` is numeric: 1 for working dependencies, 2 for the base
+installation, and 3 for fallback. A successful fallback has status `ok`.
+Comparison counts cover the final view and document union. `changed` includes
+added and removed views; `unchanged` and `ignoredOnly` are separate totals.
+Only a completed comparison emits these counts. `review.base-dependencies`,
+`review.compare-views`, and `review.changed-paths` start with error status and
+record `ok` only after successful work.
+
 `sidecar.operation` carries `event: "counts"`, `count: 1`, `operation`, and
 `worker`, the sidecar PID. Operations are `esbuild`, `postcss-start`, and
 `postcss-stop`. The worker emits each event at the actual operation boundary,
