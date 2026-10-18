@@ -1548,7 +1548,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
-  - [ ] Verify the comparison engine's tree walks after M9 integration.
+  - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
         per-element copy of enclosing instances in `owned_style_instances::walk`.
@@ -1597,6 +1597,7 @@ Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
 Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/report-4.md`.
 Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
 Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
+Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review

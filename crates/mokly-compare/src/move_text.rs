@@ -13,7 +13,24 @@ pub(crate) fn page(nodes: &[Material]) -> Vec<String> {
 }
 
 fn walk(nodes: &[Material], pre: bool, output: &mut String) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes
+        .iter()
+        .rev()
+        .map(|node| Step::Node(node, pre))
+        .collect();
+    while let Some(step) = pending.pop() {
+        let (node, pre) = match step {
+            Step::Node(node, pre) => (node, pre),
+            Step::End(block, cell) => {
+                if block {
+                    output.push('\n');
+                }
+                if cell {
+                    output.push(' ');
+                }
+                continue;
+            }
+        };
         match node {
             Material::Element(_, name, attributes, children) => {
                 let name = name.as_str();
@@ -63,13 +80,13 @@ fn walk(nodes: &[Material], pre: bool, output: &mut String) {
                 if block {
                     output.push('\n');
                 }
-                walk(children, pre || name == "pre", output);
-                if block {
-                    output.push('\n');
-                }
-                if matches!(name, "td" | "th") {
-                    output.push(' ');
-                }
+                pending.push(Step::End(block, matches!(name, "td" | "th")));
+                pending.extend(
+                    children
+                        .iter()
+                        .rev()
+                        .map(|node| Step::Node(node, pre || name == "pre")),
+                );
             }
             Material::Text(text) if pre => output.push_str(text),
             Material::Text(text) => {
@@ -83,8 +100,19 @@ fn walk(nodes: &[Material], pre: bool, output: &mut String) {
                     }
                 }
             }
-            Material::Slot(_, children) => walk(children, pre, output),
+            Material::Slot(_, children) => {
+                pending.extend(children.iter().rev().map(|node| Step::Node(node, pre)))
+            }
             _ => {}
         }
     }
 }
+
+enum Step<'a> {
+    Node(&'a Material, bool),
+    End(bool, bool),
+}
+
+#[cfg(test)]
+#[path = "_tests_/move_text_tests.rs"]
+mod move_text_tests;

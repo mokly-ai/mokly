@@ -35,12 +35,13 @@ pub(crate) fn compare(
 }
 
 fn collect(nodes: &[Node], head: bool, output: &mut String) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter().rev().map(|node| (node, head)).collect();
+    while let Some((node, head)) = pending.pop() {
         match node {
             Node::Region { region, children }
                 if !matches!(region.kind, RegionKind::Ignore { .. }) =>
             {
-                collect(children, head, output)
+                pending.extend(children.iter().rev().map(|node| (node, head)))
             }
             Node::Element(element)
                 if head
@@ -54,10 +55,18 @@ fn collect(nodes: &[Node], head: bool, output: &mut String) {
                 }
                 output.push('\n');
             }
-            Node::Element(element) if element.name != "template" => {
-                collect(&element.children, head || element.name == "head", output)
-            }
+            Node::Element(element) if element.name != "template" => pending.extend(
+                element
+                    .children
+                    .iter()
+                    .rev()
+                    .map(|node| (node, head || element.name == "head")),
+            ),
             _ => {}
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/inline_styles_tests.rs"]
+mod inline_styles_tests;
