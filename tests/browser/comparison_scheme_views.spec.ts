@@ -174,6 +174,10 @@ test("component comparisons follow changed variants while added variants stay cu
       .contentFrame()
       .getByRole("heading", { name: "Featured After" }),
   ).toBeVisible();
+  // The loaded comparison adds the variant's own reasons to Details.
+  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
+    "Rendered content changed.",
+  );
   await modeButton(page, "Current").click();
   await expect(
     page

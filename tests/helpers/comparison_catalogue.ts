@@ -86,10 +86,11 @@ async function writeSide(root: string, side: Side): Promise<void> {
     "theme.css",
     `.accent { color: ${before ? "rgb(180, 30, 30)" : "rgb(30, 60, 180)"}; }\n`,
   );
+  // Only the custom property changes; the canvas colour is the same on both sides.
   await write(
     root,
     "changed.css",
-    `:root { --page-tint: ${before ? "rgb(250, 250, 250)" : "rgb(244, 246, 250)"}; }\n`,
+    `:root { --page-tint: ${before ? "rgb(250, 250, 250)" : "rgb(244, 246, 250)"}; }\nhtml { background: rgb(250, 240, 230); }\n`,
   );
   await write(
     root,

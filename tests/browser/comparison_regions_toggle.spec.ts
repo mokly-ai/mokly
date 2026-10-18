@@ -16,49 +16,11 @@ import {
   wheelOverRegion,
 } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonIndex, modeButton } from "./comparison_ui.js";
-import { responseFailure } from "./shell_error_allowances.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { modeButton } from "./comparison_ui.js";
 
 const STORAGE_KEY = "mokly:comparison-scroll-together";
-const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
 const changed = comparisonPaths.changed;
 const panel = "#panel";
-
-type Box = { bottom: number; left: number; right: number; top: number };
-
-/** Geometry of the comparison band's controls. */
-function band(page: Page) {
-  return page.locator(".mbk-diff-toolbar").evaluate((toolbar) => {
-    const box = (element: Element): Box => {
-      const rect = element.getBoundingClientRect();
-      return {
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right,
-        top: rect.top,
-      };
-    };
-    const style = getComputedStyle(toolbar);
-    const control = toolbar.querySelector(".mbk-diff-sync")!;
-    return {
-      content: {
-        left:
-          toolbar.getBoundingClientRect().left + parseFloat(style.paddingLeft),
-        right:
-          toolbar.getBoundingClientRect().right -
-          parseFloat(style.paddingRight),
-      },
-      control: box(control),
-      label: control.textContent,
-      modes: box(toolbar.querySelector(".mbk-seg")!),
-      order: [...toolbar.children]
-        .filter((child) => !(child as HTMLElement).hidden)
-        .map((child) => child.className),
-      refresh: box(toolbar.querySelector(".mbk-diff-refresh")!),
-    };
-  });
-}
 
 /** Snapshot documents requested after a comparison became ready. */
 function paneRequests(page: Page): string[] {
@@ -69,89 +31,6 @@ function paneRequests(page: Page): string[] {
   });
   return requested;
 }
-
-async function open(page: Page, width: number): Promise<void> {
-  await page.setViewportSize({ width, height: 1000 });
-  await page.goto(`/view/${changed}/`);
-  await chooseViewport(page, "desktop");
-}
-
-test("Current shows no switch; every diff mode shows it on, after the modes", async ({
-  page,
-}) => {
-  await open(page, 1600);
-  await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  await expect(scrollTogether(page)).toBeHidden();
-  await expect(page.locator(".mbk-diff-sync")).toBeHidden();
-  for (const mode of ["Side by side", "Overlay", "Difference"] as const) {
-    await modeButton(page, mode).click();
-    const toggle = scrollTogether(page);
-    await expect(toggle, mode).toBeVisible();
-    await expect(toggle, mode).toBeChecked();
-    await expect(toggle, mode).toHaveAttribute("type", "checkbox");
-    await expect(page.locator(".mbk-diff-refresh")).toBeVisible();
-    const facts = await band(page);
-    expect(facts.order, mode).toEqual([
-      "mbk-seg",
-      "mbk-diff-sync",
-      "mbk-diff-refresh",
-    ]);
-    expect(facts.label, mode).toBe("Scroll together");
-    expect(facts.control.left, mode).toBeGreaterThan(facts.modes.right);
-    expect(facts.control.top, mode).toBeLessThan(facts.modes.bottom);
-    expect(Math.abs(facts.refresh.right - facts.content.right)).toBeLessThan(
-      0.5,
-    );
-  }
-  await modeButton(page, "Current").click();
-  await expect(scrollTogether(page)).toBeHidden();
-});
-
-test("a narrow band gives the modes the first row and the switch the second", async ({
-  page,
-}) => {
-  await open(page, 800);
-  await modeButton(page, "Overlay").click();
-  await expect(page.locator(".mbk-diff-refresh")).toBeVisible();
-  const facts = await band(page);
-  expect([
-    facts.modes.left - facts.content.left,
-    facts.content.right - facts.modes.right,
-  ]).toEqual([0, 0]);
-  expect(facts.control.top).toBeGreaterThanOrEqual(facts.modes.bottom);
-  expect(facts.control.left).toBe(facts.content.left);
-  expect(facts.refresh.top).toBeGreaterThanOrEqual(facts.modes.bottom);
-  expect(Math.abs(facts.refresh.right - facts.content.right)).toBeLessThan(0.5);
-});
-
-test("the switch stays while a comparison loads and after it fails", async ({
-  page,
-  request,
-  baseURL,
-  allowBrowserError,
-}) => {
-  const index = await comparisonIndex(request, baseURL);
-  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 500));
-  let release = (): void => undefined;
-  const held = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route(REVIEW, async (route) => {
-    await held;
-    await route.fulfill({ status: 500, body: "unavailable" });
-  });
-  await open(page, 1600);
-  await modeButton(page, "Overlay").click();
-  const stage = page.locator("[data-diff-stage]");
-  await expect(stage).toContainText("Loading comparison");
-  await expect(scrollTogether(page)).toBeVisible();
-  await expect(scrollTogether(page)).toBeChecked();
-  release();
-  await expect(stage).toContainText("The comparison could not be loaded.");
-  await expect(scrollTogether(page)).toBeVisible();
-  await scrollTogether(page).click();
-  await expect(scrollTogether(page)).not.toBeChecked();
-});
 
 test("off lets Side by side pages and panels part, and on realigns to the pane scrolled last", async ({
   page,

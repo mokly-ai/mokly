@@ -1237,7 +1237,7 @@ Tags: ui
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
-  - [x] Port the cases that the shared copied comparison output supports,
+  - [ ] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
   - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
@@ -1245,8 +1245,7 @@ Tags: ui
         Changes browser fixtures.
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
-  - [ ] Port the remaining cases that need more fixture entries, embedded
-        hosts, or design references (report 19 lists them).
+  - [ ] Port the remaining cases (report 20 lists them).
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1272,6 +1271,10 @@ The Chrome run against Milestone 9 output, its viewer fixes, and decision D1:
 The comparison UI specs on the shared copied comparison output, the fixture
 entries, the removed-variant heading fix, and the sweep inputs:
 `.context/rust-rebuild/delegation/m7/report-19.md`.
+The review 9 fixes, the specs under their documented names, the sweep reasons
+and drops, and the merge of the rebuild tip:
+`.context/rust-rebuild/delegation/m7/report-20.md`. Merge decisions:
+`.context/rust-rebuild/delegation/m7/merge-decisions-round20.md`.
 
 - [ ] Commit.
 
@@ -1674,6 +1677,14 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     hosted PR measurements with fresh and restored caches before Required CI.
     Keep four shards and the current timeouts until the user decides from
     measured setup, shard, and slow-case durations. Recommended A: measure.
+  - M10 shard follow-up, Low severity, Small effort: both cases of
+    `design_modern_controls.spec.ts` "every selected screen uses one icon
+    footer and one view toolbar" failed once in browser shard 2 with "Test
+    timeout of 60000ms exceeded" while the load average was 16 to 25 on 8
+    CPUs. Both passed in the complete gate and in the shard rerun on the same
+    commit. Suspected source: one test walks every selected design screen
+    inside one 60-second limit, so CPU load from other suites can use it up.
+    Separate branch. Evidence: m7 `report-20.md`.
   - M8 browser follow-up, Low severity, Small effort: investigate the existing
     `frame_adapter_navigation.spec.ts` posted-message assertion. It returned
     no navigation event once and passed unchanged after rerun. M8 viewer owns
