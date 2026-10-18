@@ -65,11 +65,19 @@ impl DiagnosticInput for StderrInput {
     }
 }
 
-pub(super) fn read_diagnostics(stderr: ChildStderr, diagnostics: Arc<dyn Diagnostics>) {
-    forward_diagnostics(&mut StderrInput(stderr), diagnostics.as_ref());
+pub(super) fn read_diagnostics(
+    stderr: ChildStderr,
+    diagnostics: Arc<dyn Diagnostics>,
+    timings: bool,
+) {
+    forward_diagnostics(&mut StderrInput(stderr), diagnostics.as_ref(), timings);
 }
 
-fn forward_diagnostics(reader: &mut dyn DiagnosticInput, diagnostics: &dyn Diagnostics) {
+fn forward_diagnostics(
+    reader: &mut dyn DiagnosticInput,
+    diagnostics: &dyn Diagnostics,
+    timings: bool,
+) {
     let mut buffer = [0; 4096];
     let mut carry = Vec::new();
     loop {
@@ -77,20 +85,28 @@ fn forward_diagnostics(reader: &mut dyn DiagnosticInput, diagnostics: &dyn Diagn
             Ok(0) => break,
             Ok(size) => {
                 carry.extend_from_slice(&buffer[..size]);
-                while let Some(end) = carry.iter().position(|byte| *byte == b'\n') {
-                    diagnostics.emit(&String::from_utf8_lossy(&carry[..end]));
-                    carry.drain(..=end);
-                }
-                while carry.len() > 65_536 {
-                    let mut end = 65_536;
-                    while end > 0 && carry[end] & 0xc0 == 0x80 {
-                        end -= 1;
+                loop {
+                    let newline = carry.iter().position(|byte| *byte == b'\n');
+                    if let Some(end) = newline.filter(|end| *end <= 65_536) {
+                        forward_piece(
+                            &String::from_utf8_lossy(&carry[..end]),
+                            diagnostics,
+                            timings,
+                        );
+                        carry.drain(..=end);
+                    } else if carry.len() > 65_536 {
+                        let mut end = 65_536;
+                        while end > 0 && carry[end] & 0xc0 == 0x80 {
+                            end -= 1;
+                        }
+                        if end == 0 {
+                            end = 65_536;
+                        }
+                        forward_piece(&String::from_utf8_lossy(&carry[..end]), diagnostics, false);
+                        carry.drain(..end);
+                    } else {
+                        break;
                     }
-                    if end == 0 {
-                        end = 65_536;
-                    }
-                    diagnostics.emit(&String::from_utf8_lossy(&carry[..end]));
-                    carry.drain(..end);
                 }
             }
             Err(error) => {
@@ -100,7 +116,28 @@ fn forward_diagnostics(reader: &mut dyn DiagnosticInput, diagnostics: &dyn Diagn
         }
     }
     if !carry.is_empty() {
-        diagnostics.emit(&String::from_utf8_lossy(&carry));
+        forward_piece(&String::from_utf8_lossy(&carry), diagnostics, timings);
+    }
+}
+
+fn forward_piece(text: &str, diagnostics: &dyn Diagnostics, timings: bool) {
+    if timings
+        && let Some(payload) = text.strip_prefix("[mokly:timing] ")
+        && let Ok(record) = serde_json::from_str::<serde_json::Value>(payload)
+        && record["schemaVersion"] == 1
+        && record["role"] == "sidecar"
+        && record["pid"].as_u64().is_some()
+        && record["id"].as_u64().is_some()
+        && record["session"]
+            .as_str()
+            .is_some_and(|session| !session.is_empty())
+        && record["stage"].is_string()
+        && record["elapsedMs"].is_number()
+        && matches!(record["event"].as_str(), Some("start" | "end" | "counts"))
+    {
+        diagnostics.timing(text);
+    } else {
+        diagnostics.emit(text);
     }
 }
 

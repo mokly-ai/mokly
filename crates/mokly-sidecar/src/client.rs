@@ -1,7 +1,7 @@
 //! Ordered client requests and exact-version hello handshake.
 
 use crate::error::{Error, ProtocolError, Result};
-use crate::methods::{Call, Empty};
+use crate::methods::{Call, Hello};
 use crate::wire::{Event, Frame, MethodResult, Request};
 
 /// Framed transport provided by the process pool.
@@ -35,6 +35,7 @@ pub struct Client {
     events: Box<dyn Events>,
     version: String,
     state: State,
+    timings: bool,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -53,7 +54,14 @@ impl Client {
             events,
             version,
             state: State::New,
+            timings: false,
         }
+    }
+
+    /// Select opt-in timing delivery through the first hello request.
+    pub fn with_timings(mut self, enabled: bool) -> Self {
+        self.timings = enabled;
+        self
     }
 }
 
@@ -68,7 +76,9 @@ impl SidecarClient for Client {
         self.state = State::Closed;
         let request = Request {
             id: 0,
-            call: Call::Hello(Empty {}),
+            call: Call::Hello(Hello {
+                timings: self.timings,
+            }),
         };
         self.transport.send(&request)?;
         let Frame::Response(response) = self.transport.receive()? else {

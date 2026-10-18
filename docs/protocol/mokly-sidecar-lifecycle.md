@@ -19,6 +19,9 @@ Render labels split the last `#` as `{module} export {name}`.
 
 Forced termination waits for the owned process reaper before lifecycle release.
 This wait adds no graceful period for consumer code.
+Process completion also waits for stderr to drain. Diagnostics are forwarded
+in pieces of at most 64 KiB of input, split at UTF-8 boundaries. A terminating
+newline does not bypass this bound.
 
 A closed parent output pipe or IPC channel ends the sidecar or PostCSS child
 with exit code 0. Late response, operation-count, and diagnostic writes emit

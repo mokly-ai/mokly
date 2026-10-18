@@ -48,19 +48,48 @@ test(
           {
             XDG_CACHE_HOME: location,
             LOCALAPPDATA: location,
+            HOME: location,
           },
           context.signal,
         ).result;
         assert.equal(result.code, tier === undefined ? 1 : 0, result.stderr);
-        const records = timings(result.stderr).filter(
+        const all = timings(result.stderr).filter(
+          (record) => record.role === "core",
+        );
+        const records = all.filter(
           (record) => record.stage === "review.base-dependencies",
         );
+        if (tier === undefined) {
+          assert.deepEqual(records, []);
+          assert.equal(
+            all.find(
+              (record) =>
+                record.stage === "review.base-tree" && record.event === "end",
+            )!.status,
+            "error",
+          );
+          continue;
+        }
         assert.deepEqual(
           records.map((record) => record.event),
           ["start", "end"],
         );
         assert.equal(records[1]!.tier, tier);
-        assert.equal(records[1]!.status, tier === undefined ? "error" : "ok");
+        assert.equal(records[1]!.status, "ok");
+        const starts = new Map(
+          all
+            .filter((record) => record.event === "start")
+            .map((record) => [record.id, record]),
+        );
+        const ancestors: string[] = [];
+        let parent = records[0]!.parentId;
+        while (parent !== undefined) {
+          const record = starts.get(parent)!;
+          ancestors.push(record.stage);
+          parent = record.parentId;
+        }
+        assert.ok(ancestors.includes("review.base-tree"));
+        assert.ok(ancestors.includes("output.write"));
         for (const record of records)
           assert.deepEqual(
             Object.keys(record).filter(

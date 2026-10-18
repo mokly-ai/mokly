@@ -44,12 +44,15 @@ impl Services {
             .and_then(NonZeroUsize::new)
             .unwrap_or(NonZeroUsize::MIN);
         let pool: Arc<dyn SidecarPool> = Arc::new(Pool::new(
-            Arc::new(NodeFactory::new(
-                Arc::new(SystemProcessGroups),
-                clock.clone(),
-                diagnostics.clone(),
-                Arc::new(SystemMemory),
-            )),
+            Arc::new(
+                NodeFactory::new(
+                    Arc::new(SystemProcessGroups),
+                    clock.clone(),
+                    diagnostics.clone(),
+                    Arc::new(SystemMemory),
+                )
+                .with_timings(common.debug_timings),
+            ),
             clock,
             Launch {
                 node: env::var_os("MOKLY_NODE_EXECUTABLE")
