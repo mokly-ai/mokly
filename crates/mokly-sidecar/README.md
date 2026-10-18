@@ -77,6 +77,11 @@ per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and
 standard error. Shutdown
 wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
+Completion waits for stderr drain, including long lines split into 64 KiB pieces.
+`NodeFactory::with_timings` enables timing through hello and forwards complete
+sidecar records through `Diagnostics::timing`. The default leaves timings off.
+Core spawn and replacement spans include the version handshake and retain
+error status until it succeeds.
 
 Expected PostCSS errors carry typed configuration, plugin, or dependency data.
 The core presents their catalogued code and text. Request diagnostics use

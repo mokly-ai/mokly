@@ -12,6 +12,10 @@ use crate::wire::{MethodResult, Request};
 pub trait Diagnostics: Send + Sync {
     /// Forward diagnostic text to the caller's terminal reporter.
     fn emit(&self, message: &str);
+    /// Forward one complete sidecar timing line without diagnostic formatting.
+    fn timing(&self, line: &str) {
+        tracing::info!(sidecar_timing = line, "sidecar timing");
+    }
     /// Count actual worker operations without printing product diagnostics.
     fn operation(&self, operation: Operation, pid: u32) {
         tracing::info!(

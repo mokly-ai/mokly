@@ -11,7 +11,7 @@ use mokly_platform::rename::{Rename, RenameMock};
 use mokly_sidecar::client::{
     ClientMock, Events, EventsMock, SidecarClient, Transport, TransportMock,
 };
-use mokly_sidecar::methods::{Call, Empty};
+use mokly_sidecar::methods::{Call, Hello};
 use mokly_sidecar::wire::{self, Event, Frame, MethodResult, Response};
 use unimock::{MockFn, Unimock, matching};
 
@@ -74,7 +74,7 @@ fn git_and_sidecar_mocks_are_usable_from_a_downstream_crate() {
     batches.run(Path::new("/fixture"), &[], &[]).unwrap();
     let request = wire::Request {
         id: 0,
-        call: Call::Hello(Empty {}),
+        call: Call::Hello(Hello::default()),
     };
     let mut transport = Unimock::new((
         TransportMock::send.next_call(matching!(_)).returns(Ok(())),

@@ -1541,7 +1541,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Obtain user approval for the current 2 GiB per repository cache namespace
       and the shared 120-second dependency preparation allowance before adding
       these values to the timings contract.
-- [ ] Forward sidecar timing records and add core `sidecar.spawn` and
+- [x] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 
 - [x] Restrict static fingerprints to configured roots, inventoried sources,
@@ -1601,8 +1601,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       as an accepted difference for the release note.
 - [ ] Commit.
 
-- [ ] Verify that a sidecar emitting a large stderr stream drains safely at
+- [x] Verify that a sidecar emitting a large stderr stream drains safely at
       shutdown and leaves no process behind (M11 sweep, watched_serve case).
+
+Sidecar timing and stderr acceptance: `.context/rust-rebuild/delegation/m12-static/report-11.md`.
 
 Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
 Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.

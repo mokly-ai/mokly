@@ -49,6 +49,7 @@ struct Fields {
     counts: Map<String, Value>,
     error: bool,
     cache_hit: bool,
+    sidecar_timing: Option<String>,
 }
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
@@ -57,6 +58,7 @@ impl Visit for Fields {
                 self.values.insert(field.name().into(), json!(value));
             }
             "status" => self.error = value == "error",
+            "sidecar_timing" => self.sidecar_timing = Some(value.to_owned()),
             _ => {}
         }
     }
@@ -127,6 +129,8 @@ fn stage(name: &str) -> bool {
             | "review.resource-graph"
             | "review.css-analysis"
             | "review.capture"
+            | "sidecar.spawn"
+            | "sidecar.recycle"
             | "upload.plan"
             | "upload.blobs"
             | "upload.complete"
@@ -206,6 +210,10 @@ where
     fn on_event(&self, event: &Event<'_>, context: Context<'_, S>) {
         let mut fields = Fields::default();
         event.record(&mut fields);
+        if let Some(line) = fields.sidecar_timing {
+            self.terminal.stderr(&format!("{line}\n"));
+            return;
+        }
         if let Some(operation) = fields.values.get("operation") {
             let record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),"role":"core","stage":"sidecar.operation","event":"counts","id":self.next.fetch_add(1, Ordering::SeqCst),"elapsedMs":self.elapsed(),"operation":operation,"worker":fields.values.get("worker"),"count":1});
             self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
@@ -253,3 +261,7 @@ where
 #[cfg(test)]
 #[path = "_tests_/serve_trace_tests.rs"]
 mod serve_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/sidecar_trace_tests.rs"]
+mod sidecar_trace_tests;
