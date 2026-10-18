@@ -1239,7 +1239,9 @@ Tags: ui
         Changes browser fixtures.
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
-  - [ ] Port the remaining cases (report 20 lists them).
+  - [ ] Port the cases that need an embedded viewer host through both frame
+        adapters; `.context/rust-rebuild/delegation/m7/sweep-overrides-comparisons.json`
+        names each row.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
