@@ -905,7 +905,7 @@ renders again.
       route/detail races, frame handoff, live prop edits, and preserved focus.
   - [x] Port the route, history, detail fence, mount, publication, and live
         edit cases.
-  - [ ] Port the cases that stay under the viewer client-shell TODO in the
+  - [x] Port the cases that stay under the viewer client-shell TODO in the
         sweep: mount-time frame ownership and the Browse exact-resource
         handoff; live edit validation, the viewport switch, an expired
         preview, and a context change during a pending render; the React
@@ -913,10 +913,12 @@ renders again.
         inspector tabs; the design library's unset, Reset, and nested styles;
         an older response for the same route; use-case and page frames and
         the Usage loading state while evidence is unavailable; instance deep
-        links; focus on an unchanged Usage link while a Changes completion
-        is adopted; a published scheme swap while a redirect replaces a frame
-        source; and the review-base sentence while a detail loads, which needs
-        a served catalogue with a Git base.
+        links; and a published scheme swap while a redirect replaces a frame
+        source.
+  - [ ] After the Serve merge, with D1, port the two cases that need Serve
+        Changes: focus on an unchanged Usage link while a Changes completion
+        is adopted, and the review-base sentence while a detail loads, which
+        needs a served catalogue with a Git base.
   - [ ] When Serve stops publishing a render completion that changes no
         detail (review 8 finding 1, for the Serve owner), restore one index
         read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
@@ -1042,6 +1044,9 @@ rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
 `.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
 Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
+The remaining client-shell cases of the sweep and their generator inputs:
+`.context/rust-rebuild/delegation/m7/report-22.md` and
+`.context/rust-rebuild/delegation/m7/sweep-overrides-shell-2.json`.
 
 - [ ] Commit.
 
