@@ -1286,6 +1286,11 @@ The review 9 fixes, the specs under their documented names, the sweep reasons
 and drops, and the merge of the rebuild tip:
 `.context/rust-rebuild/delegation/m7/report-20.md`. Merge decisions:
 `.context/rust-rebuild/delegation/m7/merge-decisions-round20.md`.
+The review 10 fixes (the held-request waits, the Before-only canvas, and the
+embedded host sub-TODO), the sweep halves and part rows, and the merge of the
+rebuild tip `fa06c3fd`: `.context/rust-rebuild/delegation/m7/report-21.md`.
+Merge decisions:
+`.context/rust-rebuild/delegation/m7/merge-decisions-round21.md`.
 
 - [ ] Commit.
 
