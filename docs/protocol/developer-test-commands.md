@@ -159,22 +159,22 @@ npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
 After a build, the same selection can use
 `npx playwright test tests/browser/pages.spec.ts -g "retain metadata"`. The
 browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
-`.only`. Spec discovery is defined in
-[CI verification](./ci-verification.md#gate-ownership).
+`.only`. [CI verification](./ci-verification.md#gate-ownership) defines spec discovery.
 
-The shared example uses the unresolved base `refs/mokly/browser-suite-no-base`.
-It waits for settled usage and unavailable Changes with one `git-failed` line.
-Real Changes specs own Git fixtures. The guard is 600 seconds with one sidecar.
+Shared Serve uses `refs/mokly/browser-suite-no-base` and waits for settled usage and unavailable Changes.
+It requires one `git-failed` line. Real Changes specs own separate Git fixtures.
 
-For static-output checks, build the site first, then set
-`MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
+Global setup copies the current-only example for `static_*.spec.ts`,
+`stage_centring`, and `review_snapshot_links`. A second two-commit fixture
+serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
+To supply current-only output, set `MOKLY_PLAYWRIGHT_STATIC_DIR`. For example:
 
 ```bash
-npx mokly build --config examples/basic/mokly.config.json --out ../../.context/example
+npx mokly build --config examples/basic/mokly.config.json --no-changes --out ../../.context/example
 MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
 ```
 
-The host serves exact files and directory indexes on a free loopback port.
+The host uses exact files and a free port. Supplied output must have Changes disabled.
 Browser specs support POSIX only. Do not assume empty Changes in remote Testboxes.
 `MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
 that open portable documents directly through `file://` URLs.
@@ -194,8 +194,8 @@ are `comparison_design`, `component_controls`, `component_design`,
 `design_component_stacks`, `design_index_entries`, `design_library`,
 `design_modern_controls`, `design_portable`, `design_scroll_together`,
 `design_stylesheet_evidence`, `design_top_bar`, `example_links`, and
-`phone_chrome`; each name has the `.spec.ts` suffix. Continuous runs and the
-private file fixture belong to M8's copied-static-output TODO.
+`phone_chrome`; each name has the `.spec.ts` suffix. File mode opens exact
+output bytes without an HTTP fallback.
 
 Browser traces and screenshots stay under `.context/playwright-results/`.
 

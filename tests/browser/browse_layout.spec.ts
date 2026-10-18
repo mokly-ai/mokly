@@ -6,6 +6,7 @@ import {
   welcomeRow,
 } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 
 test("desktop catalogue navigation resizes and remembers its width", async ({
   page,
@@ -113,7 +114,14 @@ test("the explicit not-found document keeps a usable shell", async ({
   await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
 });
 
-test("missing routes keep the catalogue available", async ({ page }) => {
+test("missing routes keep the catalogue available", async ({
+  page,
+  baseURL,
+  allowBrowserError,
+}) => {
+  allowBrowserError(
+    missingResourceNotice(new URL("/view/unknown/", baseURL).href),
+  );
   await page.goto("/view/unknown/");
   await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
   await expect(page.locator("[data-mokly-nav]")).toBeVisible();

@@ -60,18 +60,18 @@ The index is the read model v7 of the
 [catalogue contract](./mokly-catalogue.md), which owns its fields and the tree
 rules: `schemaVersion: 7`, `identity`, `deploymentId`, one integer `revision`,
 the `base` ref when Changes is configured, `changesStatus`, `comparisonUrl`,
-`tree`, every current entry record, and `removedEntries`. Each view of a
-screen or component carries `viewport`, `colorScheme`, `comparison`, and
-`documentKey`; a page record carries one `documentKey`, a document record one
-per colour scheme. `documentKey` is the document node's key in the
+`tree`, every current entry record, and `removedEntries`. Each view of a screen
+or component carries `viewport`, `colorScheme`, `comparison`, and `documentKey`;
+a page record carries one `documentKey`, a document record one per colour
+scheme. `documentKey` is the document node's key in the
 [render graph](../architecture/rust-core.md#render-graph), the hash of the
-document's inputs: it exists before the render and changes exactly when an
-input changes. No record carries `usage` or `resourceEvidence`; the reader
-rejects either anywhere. In Serve the index carries `live: { generation }`,
-the render generation: the hash of every input a live prop render depends on,
-the config, the stylesheet bundles, the HTML component sources, and the
-consumer bundle generation when the catalogue has JavaScript. A static build
-has no `live` field. The index is canonical JSON.
+document's inputs: it exists before the render and changes exactly when an input
+changes. No record carries `usage` or `resourceEvidence`; the reader rejects
+either anywhere. In Serve the index carries `live: { generation }`, the render
+generation: the hash of the config, every `documentKey`, every stylesheet bundle
+and its assets, and any consumer bundle generation. It is wider than a live prop
+render needs, on purpose: a narrower hash could miss an input and keep a stale
+descriptor. A static build has no `live` field. The index is canonical JSON.
 
 ## Entry Detail
 

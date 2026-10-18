@@ -1,7 +1,5 @@
 # Static Build Safety And Public Files
 
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
-
 This document supplements the [static build contract](./mokly-export.md)
 with output confinement and ownership reservations.
 

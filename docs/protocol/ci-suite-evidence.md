@@ -97,16 +97,32 @@ through its render graph and sidecar pool. Each process keeps its own cache.
 Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
 rejects a worker count above the number of servers.
 
+Global setup starts Serve readiness and both copied builds concurrently under
+one cancellation signal and setup budget. It builds the example with
+`mokly build --no-changes`. It builds native Changes from a separate temporary
+Git repository with two commits, independent of checkout depth. It copies only
+build output, removes the original build and fixture sources, and serves each
+copy through an exact-file host inside the same four shards. A shard shares
+its immutable copies; different runs own different directories.
+`MOKLY_PLAYWRIGHT_COPIED_URL` and `MOKLY_PLAYWRIGHT_COPIED_DIR` name the
+current-only example. `MOKLY_PLAYWRIGHT_COMPARISON_URL` and
+`MOKLY_PLAYWRIGHT_COMPARISON_DIR` name the comparison fixture.
+A setup failure cancels sibling work, waits for every task to settle, then
+drains all created hosts before removing output. Teardown attempts every
+cleanup and restores every fixture environment variable.
+
 `MOKLY_PLAYWRIGHT_STATIC_DIR` selects an already-built catalogue directory.
 The same host interface serves its exact files and directory indexes on a free
 port. This mode neither builds the site nor adds fallback routes. The default
 host remains Serve. `MOKLY_PLAYWRIGHT_FILE_DIR` also selects this static host
 for Browse pages and opens portable design documents from that directory with
 `file://` URLs. Its supported specs are listed in
-[developer commands](./developer-test-commands.md#browser-selection). These
-delivery modes are manual checks; continuous runs and the private file fixture
-belong to M8's copied-static-output TODO. Fixtures that test private inputs
-still own their own hosts.
+[developer commands](./developer-test-commands.md#browser-selection). An explicit
+directory is also the input of the suite's isolated current-only copy. Its
+index must have `changesStatus: "disabled"`; otherwise setup rejects it with
+an instruction to build with `--no-changes`. The comparison fixture always
+owns a fresh build. Direct `file://` delivery supports manual selected runs.
+Fixtures that test private inputs still own their own hosts.
 
 Browser specs support POSIX systems only. Specs must not depend on an empty Changes set:
 remote Testboxes hold branch edits as working-tree changes against their base.
@@ -136,6 +152,23 @@ shared-fixture call in the same scope. A call inside a nested function belongs
 only to that function's scope. Failed browser jobs keep only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite,
 or reuse another job's writable output.
+
+Every browser spec uses the automatic error fixture in `browser_test.ts`.
+It observes console errors and page errors in the default context, extra
+contexts, and popups, including pages closed by a test. The shared
+`expectedConsoleNotice` rule permits viewer sandbox notices and the recorder's
+exact `about:blank` script-denial message with an empty source location.
+A test that causes another error declares its kind and exact message pattern
+through `allowBrowserError` or `expectedBrowserErrors`. Console resource
+failures also require the exact resource URL. Sandbox denials, synthetic
+console sentinels, and page errors can omit the URL when their location is
+unstable or absent; their exact message must identify the expected failure.
+Portable-document cases permit the absent root favicon on their own origin.
+Manual file delivery also permits the fixed HTTP-only inspector URL to be
+absent on disk. Private sandbox fixtures declare their exact denial notices.
+Test-owned host documents declare a data favicon. Checks settle two animation
+frames, track pauses on the shared context clock (including new pages), and
+use a protocol round trip when JavaScript is disabled. No sleep synchronizes an assertion.
 
 A fixture shared across a test file registers its teardown synchronously when
 the file loads and starts setup on first use. Teardown waits for setup to

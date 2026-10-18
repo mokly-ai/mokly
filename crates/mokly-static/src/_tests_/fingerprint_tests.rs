@@ -1,124 +1,15 @@
-//! Unrelated disappearance and unreadable children do not fail source capture.
+//! Captured input hashes share one digest path and ignore unread projections.
 
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_model::output::validation::digest;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::error::Error;
-use crate::filesystem::{Entry, FilesMock, Identity};
-use crate::fingerprint::{CapturedTree, Fingerprints, InputTree, SourceFingerprints};
-use crate::input_selection;
-
-#[test]
-fn vanished_and_unreadable_children_have_stable_membership() {
-    let mocks = Unimock::new((
-        FilesMock::project
-            .next_call(matching!(_))
-            .returns(Ok("/repo".into())),
-        FilesMock::entry
-            .next_call(matching!((path) if *path == Path::new("/repo")))
-            .returns(Ok(Some(Entry::Directory(Identity {
-                native: (1, 1),
-                created: None,
-            })))),
-        FilesMock::children.next_call(matching!(_)).returns(Ok(vec![
-            "/repo/vanished".into(),
-            "/repo/locked".into(),
-            "/repo/private".into(),
-            "/repo/stat-denied".into(),
-        ])),
-        FilesMock::entry
-            .next_call(matching!((path) if *path == Path::new("/repo/vanished")))
-            .returns(Ok(None)),
-        FilesMock::entry
-            .next_call(matching!((path) if *path == Path::new("/repo/locked")))
-            .returns(Ok(Some(Entry::File(1)))),
-        FilesMock::hash
-            .next_call(matching!(_))
-            .returns(Err(Error::Unexpected {
-                path: "/repo/locked".into(),
-            })),
-        FilesMock::entry
-            .next_call(matching!((path) if *path == Path::new("/repo/private")))
-            .returns(Ok(Some(Entry::Directory(Identity {
-                native: (1, 2),
-                created: None,
-            })))),
-        FilesMock::children
-            .next_call(matching!(_))
-            .returns(Err(Error::Unexpected {
-                path: "/repo/private".into(),
-            })),
-        FilesMock::entry
-            .next_call(matching!((path) if *path == Path::new("/repo/stat-denied")))
-            .returns(Err(Error::Unexpected {
-                path: "/repo/stat-denied".into(),
-            })),
-    ));
-    let result = SourceFingerprints {
-        files: Arc::new(mocks),
-    }
-    .capture(Path::new("/repo"), &[])
-    .unwrap();
-    assert!(!result.contains_key(Path::new("/repo/vanished")));
-    assert_eq!(result[Path::new("/repo/locked")], "unreadable");
-    assert_eq!(result[Path::new("/repo/private")], "unreadable");
-    assert_eq!(result[Path::new("/repo/stat-denied")], "unreadable");
-}
-
-#[test]
-fn a_projected_root_spelling_keeps_selected_changes_in_the_logical_namespace() {
-    let capture = |digest: &'static str| {
-        let files = Unimock::new((
-            FilesMock::project
-                .next_call(matching!((path) if *path == Path::new("/logical")))
-                .returns(Ok("/physical".into())),
-            FilesMock::entry
-                .next_call(matching!((path) if *path == Path::new("/physical")))
-                .returns(Ok(Some(Entry::Directory(Identity {
-                    native: (1, 1),
-                    created: None,
-                })))),
-            FilesMock::children
-                .next_call(matching!(_))
-                .returns(Ok(vec!["/physical/logo.svg".into()])),
-            FilesMock::entry
-                .next_call(matching!((path) if *path == Path::new("/physical/logo.svg")))
-                .returns(Ok(Some(Entry::File(3)))),
-            FilesMock::hash
-                .next_call(matching!(_))
-                .returns(Ok(digest.into())),
-        ));
-        SourceFingerprints {
-            files: Arc::new(files),
-        }
-        .capture(Path::new("/logical"), &[])
-        .unwrap()
-    };
-    let config = ResolvedConfig {
-        input: Config::default(),
-        file: "/logical/mokly.config.json".into(),
-        repo_root: "/logical".into(),
-        roots: vec![],
-        authored_inputs: vec![],
-    };
-    let error = input_selection::verify(
-        &config,
-        &[],
-        &BTreeSet::from(["logo.svg".into()]),
-        &capture("before"),
-        &capture("after"),
-    )
-    .unwrap_err();
-    assert!(
-        matches!(error, Error::InputsChanged { path } if path == Path::new("/logical/logo.svg"))
-    );
-}
+use crate::error::{Error, InternalError};
+use crate::fingerprint::{CapturedTree, InputTree};
 
 #[test]
 fn captured_digest_inputs_keep_no_byte_reads_and_verify_live_hashes() {
@@ -143,7 +34,11 @@ fn captured_digest_inputs_keep_no_byte_reads_and_verify_live_hashes() {
     ));
     let capture = CapturedTree::new(Arc::new(source));
     capture
-        .capture(Path::new("/repo"), &["source.js".into()])
+        .capture(
+            Path::new("/repo"),
+            &["source.js".into()],
+            &Default::default(),
+        )
         .unwrap();
     assert_eq!(
         capture.digest(Path::new("/repo/source.js")).unwrap(),
@@ -180,4 +75,108 @@ fn captured_public_reads_forward_and_verify_hashes_without_private_byte_retentio
         b"a{}"
     );
     capture.verify().unwrap();
+}
+
+#[test]
+fn an_unread_projection_outside_the_input_set_is_not_rechecked() {
+    let source = Unimock::new(
+        SourceTreeMock::project
+            .next_call(matching!((path) if *path == Path::new("/repo/unrelated.txt")))
+            .returns(Ok(Some(Node {
+                identity: "/repo/unrelated.txt".into(),
+                kind: FileKind::File,
+                lexical_kind: FileKind::File,
+            }))),
+    );
+    let capture = CapturedTree::new(Arc::new(source));
+    capture.project(Path::new("/repo/unrelated.txt")).unwrap();
+    capture.verify().unwrap();
+}
+
+#[test]
+fn sidecar_digests_reject_edits_before_capture_and_remain_the_live_baseline() {
+    for changed_before_capture in [false, true] {
+        let captured = if changed_before_capture {
+            "after"
+        } else {
+            "before"
+        };
+        let source = Unimock::new((
+            SourceTreeMock::project
+                .each_call(matching!((path) if *path == Path::new("/repo/helper.ts")))
+                .answers(&|_, path| {
+                    Ok(Some(Node {
+                        identity: path.into(),
+                        kind: FileKind::File,
+                        lexical_kind: FileKind::File,
+                    }))
+                }),
+            SourceTreeMock::digest
+                .next_call(matching!((path) if *path == Path::new("/repo/helper.ts")))
+                .returns(Ok(captured.into())),
+            SourceTreeMock::digest
+                .next_call(matching!((path) if *path == Path::new("/repo/helper.ts")))
+                .returns(Ok("after".into())),
+        ));
+        let tree = CapturedTree::new(Arc::new(source));
+        let result = tree.capture(
+            Path::new("/repo"),
+            &["helper.ts".into()],
+            &BTreeMap::from([("helper.ts".into(), Some("before".into()))]),
+        );
+        if changed_before_capture {
+            assert!(matches!(result, Err(Error::InputsChanged { path })
+                if path == Path::new("/repo/helper.ts")));
+        } else {
+            result.unwrap();
+        }
+        assert!(matches!(tree.verify(), Err(Error::InputsChanged { path })
+            if path == Path::new("/repo/helper.ts")));
+    }
+}
+
+#[test]
+fn an_inventoried_module_without_a_sidecar_digest_fails_internally() {
+    let source = Unimock::new(());
+    let tree = CapturedTree::new(Arc::new(source));
+    let result = tree.capture(
+        Path::new("/repo"),
+        &["helper.ts".into()],
+        &BTreeMap::from([("helper.ts".into(), None)]),
+    );
+    assert!(
+        matches!(result, Err(Error::Internal(InternalError::MissingModuleDigest { path }))
+        if path == Path::new("/repo/helper.ts"))
+    );
+}
+
+#[test]
+fn an_earlier_public_read_cannot_be_replaced_by_a_matching_late_digest() {
+    let source = Unimock::new((
+        SourceTreeMock::read_public
+            .next_call(matching!((path) if *path == Path::new("/repo/helper.txt")))
+            .returns(Ok(b"before".to_vec())),
+        SourceTreeMock::project
+            .next_call(matching!((path) if *path == Path::new("/repo/helper.txt")))
+            .returns(Ok(Some(Node {
+                identity: "/repo/helper.txt".into(),
+                kind: FileKind::File,
+                lexical_kind: FileKind::File,
+            }))),
+        SourceTreeMock::digest
+            .next_call(matching!((path) if *path == Path::new("/repo/helper.txt")))
+            .returns(Ok(digest(b"after"))),
+    ));
+    let tree = CapturedTree::new(Arc::new(source));
+    assert_eq!(
+        tree.read_public(Path::new("/repo/helper.txt")).unwrap(),
+        b"before"
+    );
+    let result = tree.capture(
+        Path::new("/repo"),
+        &["helper.txt".into()],
+        &BTreeMap::from([("helper.txt".into(), Some(digest(b"after")))]),
+    );
+    assert!(matches!(result, Err(Error::InputsChanged { path })
+        if path == Path::new("/repo/helper.txt")));
 }

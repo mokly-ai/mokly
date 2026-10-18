@@ -11,7 +11,7 @@ use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Reporter, Storage};
 use mokly_compare::commands::TimedCommands;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
-use mokly_compare::dependency_types::Request;
+use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::error::{Error, InternalError, Result};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_compare::inputs::{InputReader, SourceInputs};
@@ -45,7 +45,7 @@ pub(super) struct NativeDependencies {
 }
 
 impl BaseDependencies for NativeDependencies {
-    #[tracing::instrument(name = "review.base-dependencies", skip_all, err)]
+    #[tracing::instrument(name = "review.base-dependencies", skip_all, fields(status = "error", tier = tracing::field::Empty))]
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
@@ -53,19 +53,33 @@ impl BaseDependencies for NativeDependencies {
         used_directories: &[String],
         unmapped_directories: &[String],
     ) -> Result<Arc<BaseSide>> {
-        match self.prepare_side(request, config, used_directories, unmapped_directories) {
-            Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
-                path: ".".into(),
-                source,
-            }),
-            Err(Error::CacheLimit { limit }) => Err(Error::Limit {
-                path: ".".into(),
-                source: mokly_git::error::Error::ByteLimit {
-                    limit: limit as usize,
+        let result =
+            match self.prepare_side(request, config, used_directories, unmapped_directories) {
+                Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
+                    path: ".".into(),
+                    source,
+                }),
+                Err(Error::CacheLimit { limit }) => Err(Error::Limit {
+                    path: ".".into(),
+                    source: mokly_git::error::Error::ByteLimit {
+                        limit: limit as usize,
+                    },
+                }),
+                result => result,
+            };
+        if let Ok(side) = &result {
+            let span = tracing::Span::current();
+            span.record(
+                "tier",
+                match side.dependencies.tier {
+                    Tier::Working => 1u64,
+                    Tier::Installed => 2,
+                    Tier::Fallback => 3,
                 },
-            }),
-            result => result,
+            );
+            span.record("status", "ok");
         }
+        result
     }
 }
 

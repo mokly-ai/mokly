@@ -8,6 +8,7 @@ import {
   select,
 } from "./appearance_assertions.js";
 import { test } from "./browser_test.js";
+import { missingResourceNotice } from "./document_error_allowance.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 test("the appearance keeps working when storage refuses", async ({ page }) => {
@@ -51,7 +52,14 @@ test("Appearance can be set from the keyboard alone", async ({ page }) => {
     });
 });
 
-test("an unavailable route still offers Appearance", async ({ page }) => {
+test("an unavailable route still offers Appearance", async ({
+  page,
+  baseURL,
+  allowBrowserError,
+}) => {
+  allowBrowserError(
+    missingResourceNotice(new URL("/view/missing/", baseURL).href),
+  );
   await page.goto("/view/missing/");
   await expect(page.locator(control)).toBeVisible();
   await page.locator(select).selectOption("dark");

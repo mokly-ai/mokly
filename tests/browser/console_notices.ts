@@ -4,13 +4,16 @@
  * previous versions (`about:srcdoc`) in frames sandboxed without
  * `allow-scripts`, so Chrome reports every script that tries to run there.
  * That includes a previous version's own scripts and Playwright's trace
- * recorder. Each such report is expected; every other console error is not.
+ * recorder. Its exact notice for a transient about:blank frame with an empty
+ * location is also expected. Every other console error is not.
  */
 
 import type { ConsoleMessage } from "@playwright/test";
 
 const SANDBOX_NOTICE =
   /^Blocked script execution in '([^']*)' because the document's frame is sandboxed and the 'allow-scripts' permission is not set\./u;
+const RECORDER_NOTICE =
+  "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.";
 
 /** Whether a frame document URL belongs to one of the viewer's sandboxed frames. */
 function viewerSandboxedDocument(url: string): boolean {
@@ -37,6 +40,7 @@ export function viewerSandboxNotice(
   text: string,
   locationUrl: string,
 ): boolean {
+  if (text === RECORDER_NOTICE && locationUrl === "") return true;
   const named = SANDBOX_NOTICE.exec(text)?.[1];
   return (
     named !== undefined &&

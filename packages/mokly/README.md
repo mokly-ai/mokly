@@ -86,6 +86,8 @@ NDJSON. Hello reports this package's exact version. Frames have a 64 MiB JSON
 byte limit. Oversized compiled recipes report their size and that limit as
 `bundle-failed`. A separate thread watches the parent pipe and parent identity,
 so a blocked render cannot leave a sidecar behind. Requests run in order. Consumer logs go to standard error.
+Closed parent output pipes and IPC channels stop the sidecar and PostCSS child
+quietly. Late writes do not add a crash stack to consumer diagnostics.
 
 `bundle` compiles an unevaluated esbuild generation and reports its immutable
 compiled recipe for replay. The recipe keeps dependency-lookup provenance
@@ -95,7 +97,10 @@ membership. Failed peer resolutions remain failures during replay.
 `restoreGeneration` installs retained code in a new sidecar without reading
 current sources. Worker operation events count actual compilations and
 PostCSS worker lifetimes. The result also reports its module
-graph with stable names for selected installation files. Repository-owned
+graph with stable names for selected installation files. Module digests
+use the recorded compiler inputs, including text imports and
+files loaded through data import attributes. Unrecorded compiler inputs fail
+the bundle instead of receiving a digest from a later read. Repository-owned
 workspace packages and PostCSS presets use the side's own source copy.
 `cssModules` installs the core's class maps before evaluation and runs no
 compiler. CSS import stubs read that table at evaluation. The default export

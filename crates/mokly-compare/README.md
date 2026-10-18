@@ -86,6 +86,8 @@ Each fallback has a typed trace reason.
 the caller proves base usage. Static output and Serve share this policy.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+Its timing spans count final view states and measure changed-path collection,
+deduplication, and sorting without recording source data.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.

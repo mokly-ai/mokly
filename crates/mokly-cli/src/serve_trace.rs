@@ -2,8 +2,9 @@
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Instant;
 
+use mokly_sidecar::process_clock::SystemClock;
+use mokly_sidecar::workers::Clock;
 use serde_json::{Map, Value, json};
 use tracing::field::{Field, Visit};
 use tracing::span::{Attributes, Id, Record};
@@ -17,7 +18,7 @@ use crate::terminal::Terminal;
 pub(super) struct Timings {
     terminal: Arc<dyn Terminal>,
     session: String,
-    started: Instant,
+    clock: Arc<dyn Clock>,
     next: AtomicU64,
 }
 
@@ -25,7 +26,7 @@ pub(super) fn install(terminal: Arc<dyn Terminal>, session: String) -> bool {
     let layer = Timings {
         terminal,
         session,
-        started: Instant::now(),
+        clock: Arc::new(SystemClock::default()),
         next: AtomicU64::new(1),
     };
     tracing::subscriber::set_global_default(tracing_subscriber::registry().with(layer)).is_ok()
@@ -59,9 +60,13 @@ impl Visit for Fields {
         }
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
-        if field.name() == "worker" {
-            self.values.insert("worker".into(), json!(value));
-        }
+        let name = match field.name() {
+            "worker" | "tier" | "views" | "unchanged" | "changed" | "input_paths"
+            | "read_bytes" | "retained_bytes" => field.name(),
+            "ignored_only" => "ignoredOnly",
+            _ => return,
+        };
+        self.values.insert(name.into(), json!(value));
     }
     fn record_bool(&mut self, field: &Field, value: bool) {
         if field.name() == "cache_hit" {
@@ -95,6 +100,10 @@ fn stage(name: &str) -> bool {
             | "build"
             | "publish"
             | "output.write"
+            | "output.fingerprint"
+            | "output.input-digests"
+            | "output.input-read"
+            | "output.recheck"
             | "output.stage"
             | "output.install"
             | "output.capture"
@@ -104,6 +113,7 @@ fn stage(name: &str) -> bool {
             | "review.base-commit"
             | "review.base-tree"
             | "review.base-dependencies"
+            | "review.changed-paths"
             | "review.compare-views"
             | "review.resource-graph"
             | "review.css-analysis"
@@ -116,11 +126,7 @@ fn stage(name: &str) -> bool {
 
 impl Timings {
     fn elapsed(&self) -> u64 {
-        self.started
-            .elapsed()
-            .as_millis()
-            .try_into()
-            .unwrap_or(u64::MAX)
+        self.clock.now_ms()
     }
     fn emit(&self, span: &SpanTiming, event: &str) {
         let elapsed = self.elapsed();
@@ -135,7 +141,7 @@ impl Timings {
         if event == "end" {
             record["durationMs"] = json!(elapsed.saturating_sub(span.started));
             record["status"] = json!(if span.fields.error { "error" } else { "ok" });
-        } else if event == "counts" {
+        } else if event == "counts" && span.stage == "serve.background" {
             record["documents"] = json!(span.documents);
             record["fragments"] = json!(span.fragments);
             record["cacheHits"] = json!(span.cache_hits);
@@ -220,9 +226,16 @@ where
                 break;
             }
         }
-        if timing.stage == "serve.background" {
+        if timing.stage == "serve.background"
+            || (timing.stage == "review.compare-views"
+                && timing.fields.values.contains_key("views"))
+        {
             self.emit(&timing, "counts");
         }
         self.emit(&timing, "end");
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/serve_trace_tests.rs"]
+mod serve_trace_tests;

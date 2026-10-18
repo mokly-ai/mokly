@@ -19,6 +19,7 @@ pub mod identity;
 pub mod inspector;
 
 pub mod fingerprint;
+mod fingerprint_observation;
 mod fingerprint_walk;
 
 pub mod modules;
@@ -50,7 +51,7 @@ mod windows_identity;
 #[path = "_tests_/inspector_tests.rs"]
 mod inspector_tests;
 
-pub mod input_selection;
+mod input_selection;
 
 #[cfg(test)]
 #[path = "_tests_/input_selection_tests.rs"]
@@ -59,6 +60,14 @@ mod input_selection_tests;
 #[cfg(test)]
 #[path = "_tests_/fingerprint_tests.rs"]
 mod fingerprint_tests;
+
+#[cfg(test)]
+#[path = "_tests_/fingerprint_boundary_tests.rs"]
+mod fingerprint_boundary_tests;
+
+#[cfg(test)]
+#[path = "_tests_/fingerprint_discovery_tests.rs"]
+mod fingerprint_discovery_tests;
 
 pub mod inspector_error;
 

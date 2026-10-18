@@ -83,23 +83,8 @@ document, the bundled CSS, the opaque assets, the catalogue model, and the
 authored closure, all from the render cache. Nothing on disk is read back. The
 stylesheet freshness pass and the scoped npm URL checks apply.
 
-Fingerprint the [inventoried](./mokly-source-protection.md#complete-source-inventory) inputs before rendering: the sources, the
-configuration, the renderer module, the configured stylesheets, and the
-authored closure, including every inventoried helper even beneath an otherwise
-excluded `.context` directory. Use the shared confined file enumeration for
-that fingerprint, not public copying. Resolve each logical path inside the
-real repository before reading target bytes or traversing a linked directory.
-Hash symlink text; unrelated escaping, dangling, and cyclic links contribute
-only that metadata and do not abort the build. Explicit authoring inputs must
-resolve to confined regular files before their bytes are read. Directory walks
-end when a target repeats in the current ancestor chain; independent aliases
-to the same directory still contribute their own logical fingerprint paths.
-
-Exclude the active stage and the destination from input enumeration by their
-canonical paths as well as by the usual output rules. This keeps the build's
-own writes out of its input digest when `.context` or a parent directory is an
-in-repository symlink. Explicit inventoried authoring inputs stay included
-even when directory enumeration excludes their location.
+The fingerprint boundary, source capture, and final live recheck follow
+step 3 of the [Output Transaction](./mokly-export.md#output-transaction).
 
 Construct one catalogue model from that fingerprinted input set and use it for
 the index, the details, the route list, and resource selection. When Changes
@@ -120,11 +105,6 @@ preserves the earlier output. Discovery can skip dependency and build
 directories for inputs; the build never uses a directory-based public walk.
 Git administrative directories, protected inputs, and the stage and
 destination paths stay excluded.
-
-Fingerprint again after rendering, comparison, and resource capture and before
-installing the stage. A changed fingerprint fails the build and preserves the
-earlier output. Default publication performs the same filesystem consistency
-checks without consulting Git.
 
 Imported CSS capture follows the
 [imported-styles contract](./mokly-imported-styles.md).
@@ -150,9 +130,8 @@ base for both entry impact and view comparisons. The head side renders from
 the working tree, which `publish` requires to be a clean checkout of
 `headSha`, and the base side from the base commit under
 [Sides](./mokly-comparison.md#sides); base dependencies follow the three
-tiers. One generation renders every view of both sides and compares them; a
-source change during the build fails the build instead of mixing
-generations. The index records the base ref in `base` and the review result
+tiers. One generation renders every view of both sides and compares them
+under the [Output Transaction](./mokly-export.md#output-transaction). The index records the base ref in `base` and the review result
 its `baseCommit`. `publish` requires the clean checkout of the
 [upload contract](./mokly-upload.md).
 

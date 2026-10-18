@@ -144,6 +144,7 @@ test("the configured setup publishes each prepared worker and restores its envir
     else process.env["MOKLY_PLAYWRIGHT_WORKERS"] = previous;
   });
   const closed: number[] = [];
+  const copiedBefore = process.env["MOKLY_PLAYWRIGHT_COPIED_URL"];
   const close = await setup({ workers: 2 } as FullConfig, {
     start: async (count) => {
       assert.equal(count, 2);
@@ -154,6 +155,20 @@ test("the configured setup publishes each prepared worker and restores its envir
         },
       }));
     },
+    comparisonHost: async () => ({
+      directory: "/comparison",
+      url: "http://comparison",
+      close: async () => {
+        closed.push(3);
+      },
+    }),
+    staticHost: async () => ({
+      directory: "/copied",
+      url: "http://static",
+      close: async () => {
+        closed.push(2);
+      },
+    }),
     host: async () => {
       throw new Error("Serve setup must start worker servers");
     },
@@ -162,8 +177,10 @@ test("the configured setup publishes each prepared worker and restores its envir
     process.env["MOKLY_PLAYWRIGHT_URLS"],
     '["http://worker-0","http://worker-1"]',
   );
+  assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], "http://static");
   await close();
-  assert.deepEqual(closed.sort(), [0, 1]);
+  assert.deepEqual(closed.sort(), [0, 1, 2, 3]);
+  assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], copiedBefore);
   assert.equal(process.env["MOKLY_PLAYWRIGHT_URLS"], previousUrls);
 });
 test("a failed worker drains successful siblings before setup rejects", async () => {
@@ -204,5 +221,46 @@ test("the shared example requires exactly one Git diagnostic", () => {
     validateExampleDiagnostics(
       "[mokly/git-failed] one\n[mokly/git-failed] two\n",
     ),
+  );
+});
+
+test("a copied-output setup failure drains Serve hosts and restores both URL channels", async () => {
+  const expected = new Error("copied build failed");
+  const before = [
+    process.env["MOKLY_PLAYWRIGHT_URLS"],
+    process.env["MOKLY_PLAYWRIGHT_COPIED_URL"],
+  ];
+  let closed = false;
+  await assert.rejects(
+    setup({ workers: 1 } as FullConfig, {
+      start: async () => [
+        {
+          url: "http://serve",
+          close: async () => {
+            closed = true;
+          },
+        },
+      ],
+      host: async () => {
+        throw new Error("not a manual static run");
+      },
+      comparisonHost: async () => ({
+        directory: "/comparison",
+        url: "http://comparison",
+        close: async () => {},
+      }),
+      staticHost: async () => {
+        throw expected;
+      },
+    }),
+    (error) => error === expected,
+  );
+  assert.equal(closed, true);
+  assert.deepEqual(
+    [
+      process.env["MOKLY_PLAYWRIGHT_URLS"],
+      process.env["MOKLY_PLAYWRIGHT_COPIED_URL"],
+    ],
+    before,
   );
 });

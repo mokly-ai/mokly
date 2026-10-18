@@ -30,6 +30,7 @@ function fixture(ps: () => Promise<string>) {
   });
   const boundary: MemorySystem = {
     pid: 10,
+    now: () => 0,
     ps,
     kill: (pid, signal) => {
       assert.equal(signal, "SIGKILL");
