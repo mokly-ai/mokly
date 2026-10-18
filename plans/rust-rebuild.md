@@ -1267,7 +1267,8 @@ entries, the removed-variant heading fix, and the sweep inputs:
 `.context/rust-rebuild/delegation/m7/report-19.md`.
 The review 9 fixes, the specs under their documented names, the sweep reasons
 and drops, and the merge of the rebuild tip:
-`.context/rust-rebuild/delegation/m7/report-20.md`.
+`.context/rust-rebuild/delegation/m7/report-20.md`. Merge decisions:
+`.context/rust-rebuild/delegation/m7/merge-decisions-round20.md`.
 
 - [ ] Commit.
 
