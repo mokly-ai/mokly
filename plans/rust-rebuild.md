@@ -1210,6 +1210,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         component views. Retry a full-store metadata installation.
         Decision: review 5 finding 2C, approved in changes-6.md.
         Serve report and sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-7.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-serve-changes.md`.
+  - [x] Apply Serve Changes review 5: merge-base polling, process readiness,
+        single capture diagnostics, advertised component requests, trace
+        parents, shared removed workspaces, and Git admission and drain tests.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-8.md`.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.
@@ -1654,12 +1658,10 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Serve Changes verification: unrelated sidecar `EPIPE` flake. Severity
-    Medium, effort Small. Recommended: fix the shutdown pipe race in a separate
-    change. `postcss_failures_use_exact_catalogued_codes_and_logical_paths`
-    failed with extra `Error: write EPIPE` stderr and passed its isolated rerun.
-    Suspected source: a stdout write races with pipe closure.
-    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/transport-repository.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/postcss-diagnostic-rerun.log`.
+  - [x] Resolve the Serve Changes verification sidecar `EPIPE` flake through
+        accepted commit `e10af987`. The sidecar stops on closed parent pipes.
+        The regression is `postcss_failures_use_exact_catalogued_codes_and_logical_paths`.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-8.md`.
   - [x] Reconcile the inherited M14 round 3
         `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
         The shared fixture seeds its epoch and cleanup uses one staleness rule.

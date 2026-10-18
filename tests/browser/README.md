@@ -5,6 +5,9 @@ automatic fixture fails on unexpected console and page errors. Expected
 resource failures need an exact message and URL allowance.
 
 Global setup starts the worker Serve hosts and two copied builds together.
+The shared Serve example uses the unresolved base `refs/mokly/browser-suite-no-base`.
+It waits for settled usage and unavailable Changes, with one Git diagnostic.
+Real Changes specs use their own Git fixtures.
 Every host uses a free loopback port. Setup cancels and drains all work on
 failure. Teardown closes hosts before it removes their output.
 
