@@ -43,8 +43,50 @@ test("the native comparison copy remains usable after its two-commit source repo
       comparisonPaths.removedPage,
       comparisonPaths.removedScreen,
       comparisonPaths.removedVariant,
+      comparisonPaths.quietRemoved,
     ].sort(),
   );
+  // The comparison UI specs rely on each entry's classification.
+  const changes = Object.fromEntries(
+    [...index.screens, ...index.components].map(
+      (entry: { path: string; changes: unknown }) => [
+        entry.path,
+        entry.changes,
+      ],
+    ),
+  );
+  const state = (included: boolean, kind: string) => ({
+    included,
+    kind,
+    status: "ready",
+  });
+  expect(changes).toEqual({
+    [comparisonPaths.added]: state(true, "added"),
+    [comparisonPaths.changed]: state(true, "changed"),
+    [comparisonPaths.consumer]: state(false, "unmodified"),
+    [comparisonPaths.darkOnly]: state(true, "changed"),
+    [comparisonPaths.unchanged]: state(false, "unmodified"),
+    [comparisonPaths.component]: state(true, "changed"),
+    [comparisonPaths.changedVariant]: state(true, "changed"),
+    [comparisonPaths.addedVariant]: state(true, "added"),
+    [comparisonPaths.quietParent]: state(false, "unmodified"),
+    [comparisonPaths.quietSibling]: state(false, "unmodified"),
+    [comparisonPaths.quietVariant]: state(true, "changed"),
+  });
+  const dusk = index.screens.find(
+    (entry: { path: string }) => entry.path === comparisonPaths.darkOnly,
+  );
+  expect(
+    dusk.views.map(
+      (view: { colorScheme: string; comparison: { kind: string } }) =>
+        `${view.colorScheme}:${view.comparison.kind}`,
+    ),
+  ).toEqual([
+    "light:unmodified",
+    "dark:changed",
+    "light:unmodified",
+    "dark:changed",
+  ]);
   for (const source of [
     ".git/HEAD",
     "mokly.config.json",

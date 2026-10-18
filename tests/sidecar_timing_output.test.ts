@@ -63,7 +63,7 @@ test("stderr tracking keeps backpressure and every callback form", async () => {
       form === "encoded"
         ? stream.write("x", "utf8", done)
         : form === "undefined"
-          ? stream.write("x", undefined, done)
+          ? Reflect.apply(stream.write, stream, ["x", undefined, done])
           : stream.write("x", done);
     assert.equal(accepted, false);
     assert.ok(finish);

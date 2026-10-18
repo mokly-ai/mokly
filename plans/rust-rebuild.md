@@ -1237,6 +1237,16 @@ Tags: ui
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
+  - [x] Port the cases that the shared copied comparison output supports,
+        with the fixture entries that they need.
+  - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
+        background classification and on-demand comparisons in Serve.
+  - [ ] Port the moved-entry cases, after the M9 TODO for the deferred native
+        Changes browser fixtures.
+  - [ ] Port the two D1 cases, Details before a comparison loads and the
+        `implementation` reason, after the backend and viewer D1 tasks.
+  - [ ] Port the remaining cases that need more fixture entries, embedded
+        hosts, or design references (report 19 lists them).
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1259,6 +1269,9 @@ The review v8 reader, the base snapshot identity, the `./data` trim, the
 `.context/rust-rebuild/delegation/m7/report-11.md`.
 The Chrome run against Milestone 9 output, its viewer fixes, and decision D1:
 `.context/rust-rebuild/delegation/m7/report-18.md`.
+The comparison UI specs on the shared copied comparison output, the fixture
+entries, the removed-variant heading fix, and the sweep inputs:
+`.context/rust-rebuild/delegation/m7/report-19.md`.
 
 - [ ] Commit.
 
@@ -1641,6 +1654,10 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M12 review 8 verification: investigate the unrelated
+    `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
+    port-rebind assertion failure. The isolated rerun passed. Suspected source:
+    ephemeral-port reuse or socket teardown timing. Evidence: M12 `report-12.md`.
   - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
     `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
     `sidecar render readiness: Disconnected` during a concurrent package
