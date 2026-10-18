@@ -88,6 +88,12 @@ byte limit. Oversized compiled recipes report their size and that limit as
 so a blocked render cannot leave a sidecar behind. Requests run in order. Consumer logs go to standard error.
 Closed parent output pipes and IPC channels stop the sidecar and PostCSS child
 quietly. Late writes do not add a crash stack to consumer diagnostics.
+The optional `hello.params.timings` boolean enables process-local timing JSON on
+stderr. Bundle, describe, render, and PostCSS spans contain no authored data.
+Records start on a separate line after partial Node stderr writes. The core
+redacts tokens and escapes controls in forwarded lines; ordinary timing records
+retain their bytes. Graceful completion drains stderr
+within the shared shutdown deadline; forced completion waits only for the child reaper.
 
 `bundle` compiles an unevaluated esbuild generation and reports its immutable
 compiled recipe for replay. The recipe keeps dependency-lookup provenance

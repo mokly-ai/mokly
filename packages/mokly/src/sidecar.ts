@@ -1,5 +1,7 @@
 import { Console } from "node:console";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs";
+import { performance } from "node:perf_hooks";
 
 import { SidecarError, detail } from "./sidecar/errors.js";
 import { parentInput } from "./sidecar/parent-input.js";
@@ -7,6 +9,8 @@ import { guardParentOutput } from "./sidecar/parent-output.js";
 import { requestId } from "./sidecar/request-id.js";
 import { request } from "./sidecar/requests.js";
 import { Session } from "./sidecar/session.js";
+import { timingOutput } from "./sidecar/timing-output.js";
+import { Timings } from "./sidecar/timings.js";
 import { encodeFrame, encodeResponse, frames } from "./sidecar/transport.js";
 
 const version = (
@@ -16,6 +20,12 @@ const version = (
 ).version;
 guardParentOutput();
 const write = process.stdout.write.bind(process.stdout);
+const timings = new Timings(
+  performance,
+  timingOutput(process.stderr),
+  process.pid,
+  randomUUID(),
+);
 globalThis.console = new Console(process.stderr, process.stderr);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 const send = async (id: string, outcome: object) => {
@@ -40,12 +50,17 @@ const session = new Session(
 const input = parentInput();
 try {
   for await (const value of frames(input.stream)) {
+    const received = timings.received();
+    let finish: (status: "ok" | "error") => void = () => {};
     let stop = false;
     const id = requestId(value);
     try {
       const call = request(value);
+      finish = timings.begin(call, received);
       const result = await session.call(call);
+      if (call.method === "hello") timings.enable(call.params.timings ?? false);
       await send(id!, { result });
+      finish("ok");
       stop = call.method === "shutdown";
     } catch (error) {
       const code = error instanceof SidecarError ? error.code : "render-failed";
@@ -60,6 +75,7 @@ try {
           },
         });
       else process.stderr.write(detail(error) + "\n");
+      finish("error");
       stop = code === "sidecar-protocol";
       if (stop) process.exitCode = 1;
     }

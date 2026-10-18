@@ -10,14 +10,9 @@ for (const width of [390, 1440]) {
     const requests = staticRequests(page);
     await page.setViewportSize({ width, height: 900 });
     await page.addInitScript(() => {
-      sessionStorage.setItem(
-        "mokly:recovery",
-        JSON.stringify({ changedOnly: true, mode: "overlay" }),
-      );
+      localStorage.setItem("mokly:comparison-scroll-together", "on");
     });
-    await page.goto(
-      "/view/example/screens/welcome/?filter=changed&mode=overlay&comparison=side",
-    );
+    await page.goto("/view/example/screens/welcome/?comparison=side");
     for (const reload of [false, true]) {
       if (reload) await page.reload();
       await expect(page.locator("#mb-main h2")).toHaveText("Welcome");

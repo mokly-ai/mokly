@@ -100,7 +100,7 @@ export function monitorBrowser(
     context.on("console", onConsole);
     context.on("weberror", onError);
     const settle = async () => {
-      // Advance a shared paused clock once, before settling any of its pages.
+      // Advance a shared paused clock once; do not wait on paused page frames.
       if (paused && context.pages().some((page) => !page.isClosed())) {
         await context.clock.runFor(32);
         return;

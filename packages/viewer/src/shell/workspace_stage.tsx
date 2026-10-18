@@ -1,5 +1,6 @@
 /** Current workspace preview or its explicit unavailable state. */
 
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -8,7 +9,18 @@ import { TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
-/** Render only an available current preview; comparisons stay independently usable. */
+/** What a removed entry's stage calls it: a variant names itself. */
+function removedSubject(entry: WorkspaceData["entry"]): string {
+  return entry.kind === "component" && isManifestComponentVariant(entry)
+    ? "variant"
+    : entry.kind;
+}
+
+/**
+ * Render only an available current preview; comparisons stay independently
+ * usable. A removed variant names itself, never its surviving parent, as the
+ * component explorer contract requires.
+ */
 export function WorkspaceStage({
   catalogue,
   context,
@@ -29,7 +41,7 @@ export function WorkspaceStage({
   if (data.removed)
     return (
       <div className="mbk-empty" data-mokly-stage="" data-viewport="both">
-        <h2>This {data.entry.kind} was removed</h2>
+        <h2>{`This ${removedSubject(data.entry)} was removed`}</h2>
         <p>
           {data.entry.kind === "component"
             ? "Select a comparison to see the previous version."

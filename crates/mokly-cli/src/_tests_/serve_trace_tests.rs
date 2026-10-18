@@ -3,7 +3,8 @@
 use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
-use mokly_sidecar::workers::ClockMock;
+use mokly_cli::redaction::Redactor;
+use mokly_sidecar::workers::{Clock, ClockMock};
 use serde_json::Value;
 use tracing_subscriber::layer::SubscriberExt;
 use unimock::{MockFn, Unimock, matching};
@@ -12,24 +13,45 @@ use crate::terminal::TerminalMock;
 
 use super::Timings;
 
-fn capture(run: impl FnOnce()) -> Vec<Value> {
+pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
+    collect_lines(
+        run,
+        Arc::new(Unimock::new(
+            ClockMock::now_ms.each_call(matching!()).returns(0u64),
+        )),
+        Arc::new(Redactor::default()),
+    )
+    .iter()
+    .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
+    .collect()
+}
+
+pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
+    capture_redacted(run, Redactor::default())
+}
+
+pub(super) fn capture_redacted(run: impl FnOnce(), redactor: Redactor) -> Vec<String> {
+    collect_lines(run, Arc::new(Unimock::new(())), Arc::new(redactor))
+}
+
+fn collect_lines(
+    run: impl FnOnce(),
+    clock: Arc<dyn Clock>,
+    redactor: Arc<Redactor>,
+) -> Vec<String> {
     let records = Arc::new(Mutex::new(Vec::new()));
     let output = records.clone();
     let terminal = Unimock::new(TerminalMock::stderr.each_call(matching!(_)).answers_arc(
         Arc::new(move |_, line| {
-            output
-                .lock()
-                .unwrap()
-                .push(serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap());
+            output.lock().unwrap().push(line.to_owned());
         }),
     ));
     let layer = Timings {
         terminal: Arc::new(terminal),
         session: "test".into(),
-        clock: Arc::new(Unimock::new(
-            ClockMock::now_ms.each_call(matching!()).returns(0u64),
-        )),
+        clock,
         next: AtomicU64::new(1),
+        redactor,
     };
     tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), run);
     records.lock().unwrap().clone()
@@ -79,6 +101,11 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
     assert_eq!(counts["ignoredOnly"], 2);
     assert!(counts.get("documents").is_none());
     assert_eq!(records[5]["status"], "ok");
+    for record in [&records[1], &records[5]] {
+        for field in ["views", "unchanged", "changed", "ignoredOnly"] {
+            assert!(record.get(field).is_none());
+        }
+    }
     for record in records {
         assert_eq!(record["session"], "test");
         assert_eq!(record["role"], "core");

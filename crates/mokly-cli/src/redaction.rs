@@ -50,15 +50,21 @@ impl Redactor {
         for secret in &self.secrets {
             safe = safe.replace(secret, "[redacted]");
         }
-        safe.chars()
-            .map(|character| {
-                if character.is_control() && !(lines && character == '\n') {
-                    format!("\\u{:04x}", character as u32)
-                } else {
-                    character.to_string()
-                }
-            })
-            .collect()
+        if !safe
+            .chars()
+            .any(|character| character.is_control() && !(lines && character == '\n'))
+        {
+            return safe;
+        }
+        let mut output = String::with_capacity(safe.len());
+        for character in safe.chars() {
+            if character.is_control() && !(lines && character == '\n') {
+                output.push_str(&format!("\\u{:04x}", character as u32));
+            } else {
+                output.push(character);
+            }
+        }
+        output
     }
 }
 
@@ -74,3 +80,7 @@ fn encode_component(value: &str) -> String {
         })
         .collect()
 }
+
+#[cfg(test)]
+#[path = "_tests_/redaction_tests.rs"]
+mod redaction_tests;

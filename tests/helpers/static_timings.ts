@@ -17,6 +17,7 @@ interface Timing {
   unchanged?: number;
   changed?: number;
   ignoredOnly?: number;
+  kind?: string;
 }
 
 export function timings(stderr: string): Timing[] {

@@ -12,6 +12,7 @@ use crate::client::Client;
 use crate::error::{Error, InternalError, Result};
 use crate::pool_options::Launch;
 use crate::process_clock::Wait;
+use crate::process_completion::{ProcessCompletion, complete};
 use crate::process_control::ProcessControl;
 use crate::process_io::{Reaper, read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
@@ -27,6 +28,7 @@ pub struct NodeFactory {
     clock: Arc<dyn Wait>,
     diagnostics: Arc<dyn Diagnostics>,
     memory: Arc<dyn MemoryFactory>,
+    timings: bool,
 }
 
 impl NodeFactory {
@@ -43,7 +45,14 @@ impl NodeFactory {
             clock,
             diagnostics,
             memory,
+            timings: false,
         }
+    }
+
+    /// Enable sidecar timing records through hello and forward their stderr lines.
+    pub fn with_timings(mut self, enabled: bool) -> Self {
+        self.timings = enabled;
+        self
     }
 }
 
@@ -105,20 +114,25 @@ impl WorkerFactory for NodeFactory {
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
         let (incoming_frames, incoming) = mpsc::sync_channel(2);
         let (exited_tx, exited) = mpsc::sync_channel(1);
+        let (drained, diagnostics_done) = mpsc::sync_channel(1);
         let control: Arc<dyn WorkerControl> = Arc::new(ProcessControl {
             group,
             outgoing: outgoing.clone(),
             exited: Mutex::new(exited),
+            drained: Mutex::new(diagnostics_done),
             clock: Arc::clone(&self.clock),
         });
         let diagnostics = Arc::clone(&self.diagnostics);
+        let timings = self.timings;
         let tasks: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(move || write_frames(stdin, outgoing_frames)),
             Box::new(move || read_frames(stdout, incoming_frames)),
-            Box::new(move || read_diagnostics(stderr, diagnostics)),
             Box::new(move || {
-                child.wait();
-                let _ = exited_tx.send(());
+                read_diagnostics(stderr, diagnostics, timings);
+                let _ = drained.send(());
+            }),
+            Box::new(move || {
+                complete(&mut ProcessCompletion { child }, exited_tx);
             }),
         ];
         for task in tasks {
@@ -144,7 +158,8 @@ impl WorkerFactory for NodeFactory {
             Box::new(transport),
             Box::new(ForwardEvents(Arc::clone(&self.diagnostics))),
             launch.version.clone(),
-        );
+        )
+        .with_timings(self.timings);
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
                 diagnostics: self.diagnostics.clone(),

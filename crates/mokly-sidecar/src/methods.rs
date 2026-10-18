@@ -190,6 +190,21 @@ pub struct CssModules {
     pub class_maps: BTreeMap<String, BTreeMap<String, String>>,
 }
 
+/// Optional process diagnostics selected by the core during hello.
+#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
+#[serde(deny_unknown_fields)]
+#[ts(rename = "HelloParams")]
+pub struct Hello {
+    /// Enable process-local timing records on standard error for this session.
+    #[serde(default, skip_serializing_if = "disabled")]
+    #[ts(optional, as = "Option<bool>")]
+    pub timings: bool,
+}
+
+fn disabled(value: &bool) -> bool {
+    !value
+}
+
 /// Every protocol method, encoded as method and params.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(
@@ -200,7 +215,7 @@ pub struct CssModules {
 )]
 pub enum Call {
     /// Exchange package versions.
-    Hello(Empty),
+    Hello(Hello),
     /// Compile without evaluating consumer modules.
     Bundle(Bundle),
     /// Restore an immutable compiled generation in another worker.

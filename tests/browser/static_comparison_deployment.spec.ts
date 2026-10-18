@@ -1,6 +1,5 @@
 import { expect } from "@playwright/test";
 
-import { hasMarker, markPage } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { comparisonDeployments } from "./comparison_deployment_fixture.js";
 import { comparisonPaths } from "./comparison_test.js";
@@ -21,17 +20,28 @@ test("a new deployment reloads an old tab while its non-null comparison URL stay
   expect(after!.comparisonUrl).toBe(before!.comparisonUrl);
   expect(after!.deploymentId).not.toBe(before!.deploymentId);
   const requests = staticRequests(page);
+  const stylesheetUrl = /\/mokly-viewer\/shell\.css(?:\?|$)/u;
+  const deploymentComment = "/* Next viewer deployment */";
+  const firstStylesheet = page.waitForResponse(stylesheetUrl);
   await page.goto(
     `${fixture.url}/view/${comparisonPaths.changed}/?viewport=desktop&comparison=side`,
   );
   await expect(page.locator("iframe[data-mokly-comparison-frame]")).toHaveCount(
     2,
   );
-  await markPage(page);
+  expect(await (await firstStylesheet).text()).not.toContain(deploymentComment);
+  await page.locator("html").evaluate((html) => {
+    html.setAttribute("data-test-old-tab", "true");
+  });
   await fixture.replace();
+  const secondStylesheet = page.waitForResponse(stylesheetUrl);
   await page.locator(`[data-entry-id="${comparisonPaths.unchanged}"]`).click();
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-test-old-tab",
+    "true",
+  );
+  expect(await (await secondStylesheet).text()).toContain(deploymentComment);
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
-  expect(await hasMarker(page)).toBe(false);
   await page.goto(
     `${fixture.url}/view/${comparisonPaths.changed}/?viewport=desktop&comparison=side`,
   );

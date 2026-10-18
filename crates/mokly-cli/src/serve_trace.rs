@@ -3,6 +3,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use mokly_cli::redaction::Redactor;
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::workers::Clock;
 use serde_json::{Map, Value, json};
@@ -20,14 +21,20 @@ pub(super) struct Timings {
     session: String,
     clock: Arc<dyn Clock>,
     next: AtomicU64,
+    redactor: Arc<Redactor>,
 }
 
-pub(super) fn install(terminal: Arc<dyn Terminal>, session: String) -> bool {
+pub(super) fn install(
+    terminal: Arc<dyn Terminal>,
+    session: String,
+    redactor: Arc<Redactor>,
+) -> bool {
     let layer = Timings {
         terminal,
         session,
         clock: Arc::new(SystemClock::default()),
         next: AtomicU64::new(1),
+        redactor,
     };
     tracing::subscriber::set_global_default(tracing_subscriber::registry().with(layer)).is_ok()
 }
@@ -46,8 +53,10 @@ struct SpanTiming {
 #[derive(Default)]
 struct Fields {
     values: Map<String, Value>,
+    counts: Map<String, Value>,
     error: bool,
     cache_hit: bool,
+    sidecar_timing: Option<String>,
 }
 impl Visit for Fields {
     fn record_str(&mut self, field: &Field, value: &str) {
@@ -56,20 +65,33 @@ impl Visit for Fields {
                 self.values.insert(field.name().into(), json!(value));
             }
             "status" => self.error = value == "error",
+            "sidecar_timing" => self.sidecar_timing = Some(value.to_owned()),
             _ => {}
         }
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
-        let name = match field.name() {
-            "worker" | "tier" | "views" | "unchanged" | "changed" => field.name(),
-            "input_paths" => "inputPaths",
-            "read_bytes" => "readBytes",
-            "retained_bytes" => "retainedBytes",
-            "ignored_only" => "ignoredOnly",
-            _ => return,
-        };
-        self.values.insert(name.into(), json!(value));
+        match field.name() {
+            "views" | "unchanged" | "changed" | "ignored_only" => {
+                let name = if field.name() == "ignored_only" {
+                    "ignoredOnly"
+                } else {
+                    field.name()
+                };
+                self.counts.insert(name.into(), json!(value));
+            }
+            "worker" | "tier" | "input_paths" | "read_bytes" | "retained_bytes" => {
+                let name = match field.name() {
+                    "input_paths" => "inputPaths",
+                    "read_bytes" => "readBytes",
+                    "retained_bytes" => "retainedBytes",
+                    name => name,
+                };
+                self.values.insert(name.into(), json!(value));
+            }
+            _ => {}
+        }
     }
+
     fn record_bool(&mut self, field: &Field, value: bool) {
         if field.name() == "cache_hit" {
             self.cache_hit = value;
@@ -120,6 +142,8 @@ fn stage(name: &str) -> bool {
             | "review.resource-graph"
             | "review.css-analysis"
             | "review.capture"
+            | "sidecar.spawn"
+            | "sidecar.recycle"
             | "upload.plan"
             | "upload.blobs"
             | "upload.complete"
@@ -139,6 +163,11 @@ impl Timings {
         }
         for (key, value) in &span.fields.values {
             record[key] = value.clone();
+        }
+        if event == "counts" && span.stage == "review.compare-views" {
+            for (key, value) in &span.fields.counts {
+                record[key] = value.clone();
+            }
         }
         if event == "end" {
             record["durationMs"] = json!(elapsed.saturating_sub(span.started));
@@ -194,6 +223,11 @@ where
     fn on_event(&self, event: &Event<'_>, context: Context<'_, S>) {
         let mut fields = Fields::default();
         event.record(&mut fields);
+        if let Some(line) = fields.sidecar_timing {
+            self.terminal
+                .stderr(&format!("{}\n", self.redactor.safe(&line)));
+            return;
+        }
         if let Some(operation) = fields.values.get("operation") {
             let record = json!({"schemaVersion":1,"session":self.session,"pid":std::process::id(),"role":"core","stage":"sidecar.operation","event":"counts","id":self.next.fetch_add(1, Ordering::SeqCst),"elapsedMs":self.elapsed(),"operation":operation,"worker":fields.values.get("worker"),"count":1});
             self.terminal.stderr(&format!("[mokly:timing] {record}\n"));
@@ -230,7 +264,7 @@ where
         }
         if timing.stage == "serve.background"
             || (timing.stage == "review.compare-views"
-                && timing.fields.values.contains_key("views"))
+                && timing.fields.counts.contains_key("views"))
         {
             self.emit(&timing, "counts");
         }
@@ -241,3 +275,7 @@ where
 #[cfg(test)]
 #[path = "_tests_/serve_trace_tests.rs"]
 mod serve_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/sidecar_trace_tests.rs"]
+mod sidecar_trace_tests;

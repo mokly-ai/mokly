@@ -4,7 +4,7 @@ use serde_json::json;
 
 use crate::codec::{Decoder, MAX_FRAME_BYTES, encode};
 use crate::error::{Error, ProtocolError};
-use crate::methods::{Call, Empty};
+use crate::methods::{Call, Hello};
 use crate::wire::{Frame, Request, Response};
 
 #[test]
@@ -75,7 +75,7 @@ fn exact_frame_limit_is_accepted_and_excess_is_rejected_before_buffering() {
 fn hello_encoding_and_method_deadlines_match_the_contract() {
     let request = Request {
         id: 0,
-        call: Call::Hello(Empty {}),
+        call: Call::Hello(Hello::default()),
     };
     assert_eq!(
         String::from_utf8(encode(&request).unwrap()).unwrap(),

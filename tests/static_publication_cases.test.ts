@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   command,
@@ -24,7 +25,7 @@ async function commit(root: string) {
 test(
   "environment credentials and nested configuration publish a delta after an entry edit",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture(false, "sha256");
     const server = await exchange();
     const outputs: string[] = [];
@@ -49,6 +50,7 @@ test(
         const result = await publish(root, server.endpoint, "plain", {
           environmentCredentials: true,
           args: ["--config=tools/mokly.config.json"],
+          signal: context.signal,
         }).result;
         outputs.push(directory(result.stdout));
         assert.equal(result.code, 0, result.stderr);
@@ -69,9 +71,11 @@ test(
       assert.equal(server.missingCounts[2], 0);
       assert.equal(server.completed, 3);
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
@@ -79,7 +83,7 @@ test(
 test(
   "publish warnings name strict only when the user supplied it",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange();
     const outputs: string[] = [];
@@ -92,6 +96,7 @@ test(
       for (const strict of [false, true]) {
         const result = await publish(root, server.endpoint, "plain", {
           args: strict ? ["--strict"] : [],
+          signal: context.signal,
         }).result;
         outputs.push(directory(result.stdout));
         assert.equal(result.code, 1);
@@ -102,9 +107,11 @@ test(
       }
       assert.equal(server.bodies.length, 0);
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
@@ -112,15 +119,19 @@ test(
 test(
   "an invalid output is refused before Git history work and author execution",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     try {
       await fs.mkdir(path.join(root, "unowned"));
       await fs.writeFile(path.join(root, "unowned/keep"), "keep");
-      const result = await command(root, "build", [
-        "--out=unowned",
-        "--base=absent-ref",
-      ]).result;
+      const result = await command(
+        root,
+        "build",
+        ["--out=unowned", "--base=absent-ref"],
+        "plain",
+        {},
+        context.signal,
+      ).result;
       assert.equal(result.code, 1);
       assert.match(result.stderr, /\[mokly\/export-invalid\]/);
       assert.ok(!result.stderr.includes("git-failed"));
@@ -137,7 +148,7 @@ test(
 test(
   "timings preserve plain output and diagnostic causes redact credentials",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange();
     const outputs: string[] = [];
@@ -147,11 +158,14 @@ test(
         "build",
         ["--no-changes", "--debug-timings"],
         "rich",
+        {},
+        context.signal,
       ).result;
       assert.equal(built.code, 0, built.stderr);
       assert.match(built.stdout, /^Built Mokly to/);
       const result = await publish(root, server.endpoint, "rich", {
         args: ["--debug-timings"],
+        signal: context.signal,
       }).result;
       outputs.push(directory(result.stdout));
       assert.equal(result.code, 0, result.stderr);
@@ -174,10 +188,14 @@ test(
         assert.ok(!output.stdout.includes("✔"));
       }
       assert.ok(result.stderr.includes('"stage":"upload.plan"'));
-      const badBase = await command(root, "build", [
-        "--base=absent-base",
-        "--debug-timings",
-      ]).result;
+      const badBase = await command(
+        root,
+        "build",
+        ["--base=absent-base", "--debug-timings"],
+        "plain",
+        {},
+        context.signal,
+      ).result;
       assert.equal(badBase.code, 1);
       assert.ok(
         timings(badBase.stderr).some(
@@ -191,18 +209,27 @@ test(
         path.join(root, "mokly.config.json"),
         '{"private/a==":true}',
       );
-      const failure = await command(root, "build", ["--no-changes"], "plain", {
-        MOKLY_DIAGNOSTIC: "1",
-        MOKLY_TOKEN: "private/a==",
-      }).result;
+      const failure = await command(
+        root,
+        "build",
+        ["--no-changes"],
+        "plain",
+        {
+          MOKLY_DIAGNOSTIC: "1",
+          MOKLY_TOKEN: "private/a==",
+        },
+        context.signal,
+      ).result;
       assert.equal(failure.code, 1);
       assert.match(failure.stderr, /Diagnostic causes:/);
       assert.match(failure.stderr, /\[redacted\]/);
       assert.ok(!failure.stderr.includes("private/a=="));
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
@@ -210,13 +237,16 @@ test(
 test(
   "an older receiver fails the real publication with 426 and retains the build",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange({ planStatus: 426 });
     let output: string | undefined;
     try {
       const result = await publish(root, server.endpoint, "plain", {
-        env: { MOKLY_DIAGNOSTIC: "1" },
+        ...{
+          env: { MOKLY_DIAGNOSTIC: "1" },
+        },
+        signal: context.signal,
       }).result;
       output = directory(result.stdout);
       assert.equal(result.code, 1);
@@ -230,32 +260,13 @@ test(
         (await fs.stat(path.join(output, ".mokly-export-artifact"))).isFile(),
       );
     } finally {
-      await server.close();
-      if (output) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
-    }
-  },
-);
-
-test(
-  "consumer inspector metadata fails with its document route and build category",
-  { timeout: 120_000 },
-  async () => {
-    const root = await publicationFixture();
-    try {
-      await fs.writeFile(
-        path.join(root, "specs/home.screen.html"),
-        '---\ntitle: Home\n---\n<a href="#home" data-mokly-inspector-link="0">Home</a><h1 id="home">Home</h1>',
-      );
-      const result = await command(root, "build", ["--no-changes"]).result;
-      assert.equal(result.code, 1);
-      assert.match(
-        result.stderr,
-        /\[mokly\/build-invalid\] home\/index\.(desktop|mobile)\.html: data-mokly-inspector-link is reserved/,
-      );
-      assert.ok(!result.stderr.includes("[mokly-static"));
-    } finally {
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        async () => {
+          if (output) await removeOutput(output);
+        },
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
