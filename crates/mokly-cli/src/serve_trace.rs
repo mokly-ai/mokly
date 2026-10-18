@@ -73,7 +73,13 @@ impl Visit for Fields {
                 self.counts.insert(name.into(), json!(value));
             }
             "worker" | "tier" | "input_paths" | "read_bytes" | "retained_bytes" => {
-                self.values.insert(field.name().into(), json!(value));
+                let name = match field.name() {
+                    "input_paths" => "inputPaths",
+                    "read_bytes" => "readBytes",
+                    "retained_bytes" => "retainedBytes",
+                    name => name,
+                };
+                self.values.insert(name.into(), json!(value));
             }
             _ => {}
         }

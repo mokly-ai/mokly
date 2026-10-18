@@ -144,3 +144,30 @@ fn each_successful_dependency_tier_is_a_numeric_end_field() {
         assert_eq!(pair[1]["tier"], index + 1);
     }
 }
+
+#[test]
+fn static_input_counters_use_camel_case_at_creation_and_later_recording() {
+    let records = capture(|| {
+        let span = tracing::info_span!(
+            "output.input-read",
+            input_paths = 2u64,
+            read_bytes = tracing::field::Empty,
+            retained_bytes = 3u64
+        );
+        let _scope = span.enter();
+        span.record("read_bytes", 5u64);
+        span.record("retained_bytes", 8u64);
+    });
+    assert_eq!(records.len(), 2);
+    assert_eq!(records[0]["inputPaths"], 2);
+    assert_eq!(records[0]["retainedBytes"], 3);
+    assert!(records[0].get("readBytes").is_none());
+    assert_eq!(records[1]["inputPaths"], 2);
+    assert_eq!(records[1]["readBytes"], 5);
+    assert_eq!(records[1]["retainedBytes"], 8);
+    for record in records {
+        for name in ["input_paths", "read_bytes", "retained_bytes"] {
+            assert!(record.get(name).is_none());
+        }
+    }
+}
