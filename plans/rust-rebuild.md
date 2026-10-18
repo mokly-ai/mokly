@@ -1652,6 +1652,14 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     hosted PR measurements with fresh and restored caches before Required CI.
     Keep four shards and the current timeouts until the user decides from
     measured setup, shard, and slow-case durations. Recommended A: measure.
+  - M10 shard follow-up, Low severity, Small effort: both cases of
+    `design_modern_controls.spec.ts` "every selected screen uses one icon
+    footer and one view toolbar" failed once in browser shard 2 with "Test
+    timeout of 60000ms exceeded" while the load average was 16 to 25 on 8
+    CPUs. Both passed in the complete gate and in the shard rerun on the same
+    commit. Suspected source: one test walks every selected design screen
+    inside one 60-second limit, so CPU load from other suites can use it up.
+    Separate branch. Evidence: m7 `report-20.md`.
   - M8 browser follow-up, Low severity, Small effort: investigate the existing
     `frame_adapter_navigation.spec.ts` posted-message assertion. It returned
     no navigation event once and passed unchanged after rerun. M8 viewer owns
