@@ -1543,6 +1543,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
+      writer, clarify drain and recycle scope, and distinguish the exit and
+      drain receivers in the mocked shutdown test.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-13.md`.
+
 - [x] Apply M12 review 8: bound graceful stderr drain, move the large Serve
       stream before shutdown, clarify replacement timing, redact forwarded
       records, separate partial stderr lines, and test UTF-8 and dependency errors.

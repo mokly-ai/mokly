@@ -100,14 +100,16 @@ An enabled sidecar writes its timing records to stderr. If the preceding
 Node stderr write is a partial line, the sidecar inserts a newline before
 the timing record. The core passes forwarded lines through token redaction
 and terminal-control escaping. Real records contain no secrets or controls
-and retain their exact bytes; other stderr lines remain diagnostics.
+and retain their exact bytes; other stderr lines remain diagnostics. Timing
+records use the original stderr writer captured at startup, even if consumer
+code replaces `process.stderr.write`.
 
 A sidecar emits records with `role: "sidecar"` and its own `pid` and session
 for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
 `screen`, `component`, `story`, or `page`), and `sidecar.process-css`, each
 measured inside the process from request receipt to response write. The core
 emits `sidecar.spawn` for a spawn through the `hello` exchange, and
-`sidecar.recycle` for every later spawn in the same pool slot: a planned
+`sidecar.recycle` for every later spawn in the same pool slot, for example a planned
 recycle, a crash or timeout replacement, a retry after failed hello, or a
 source-root switch. The replacement span measures the new process through
 hello; it excludes the old process's stop and the wait for another request.
