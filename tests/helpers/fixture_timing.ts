@@ -3,6 +3,9 @@ import { startDuration } from "./durations.js";
 /** Fixture setup is bounded separately from a browser assertion. */
 export const FULL_CATALOGUE_SETUP_TIMEOUT_MS = 600_000;
 
+/** Isolated catalogue setup is bounded separately from its browser tests. */
+export const ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS = 180_000;
+
 /** Emit an observation on both success and failure; no duration decides a result. */
 export async function timeFixturePhase<T>(
   fixture: string,

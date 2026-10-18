@@ -886,6 +886,8 @@ renders again.
   - [x] Split the Serve and copied-static design workspace loops into five
         groups of at most twelve screens. Check exact inventory coverage at
         module load and retain every per-screen assertion and leaf title.
+  - [x] Give the isolated link-control catalogue a 180-second setup budget
+        in its `beforeAll` hook. Keep the 60-second test timeout.
   - [ ] Cover the remaining copied-file delivery cases in the browser sweep:
         branch-point references, moved and removed previews, malformed
         comparison metadata, unchanged-base publication, lazy first reads,
@@ -1660,8 +1662,9 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
   - M8 browser review 3 finding 1, High severity, Medium effort: approve two
     hosted PR measurements with fresh and restored caches before Required CI.
-    Keep four shards and the current timeouts until the user decides from
-    measured setup, shard, and slow-case durations. Recommended A: measure.
+    Keep four shards, the job timeout, and the 60-second test timeout until
+    the user decides from measured setup, shard, and slow-case durations.
+    Recommended A: measure.
   - M8 browser follow-up, Low severity, Small effort: investigate the existing
     `frame_adapter_navigation.spec.ts` posted-message assertion. It returned
     no navigation event once and passed unchanged after rerun. M8 viewer owns
