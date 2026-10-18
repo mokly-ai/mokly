@@ -118,6 +118,19 @@ changed inputs. Other open failures keep their original IO diagnostic and do
 not request regeneration. Delivery retries interrupted reads. Explicit command
 cancellation stops the copy with the cancellation diagnostic.
 
+Each opaque asset `GET` and `HEAD` reads, hashes, and captures the complete
+asset into a private response file. Concurrent requests for the same route
+do not share or coalesce this capture. Worker parallelism bounds active
+captures. Each capture is bounded by the byte length observed at open.
+The worker permit ends after capture; the file lives until its response
+closes. There is no aggregate byte bound on these live response files.
+Temporary storage uses the OS temporary directory, which can be backed by
+`tmpfs` and consume memory outside process RSS measurements.
+
+Git asset delivery buffers one blob under the 64 MiB Git limit, then copies
+it to the destination. Each digest cache miss starts one `cat-file blob`
+command; each delivery starts one bounded `cat-file --batch` command.
+
 An edit to an imported stylesheet, a nested import, an asset, the
 configuration, or a plugin-reported dependency invalidates the stylesheet
 node and re-renders the views that link it; a new file that matches a

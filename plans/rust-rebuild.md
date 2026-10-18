@@ -1594,6 +1594,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       bytes at delivery and check them against the digest; one entry per asset
       path across roots; first audit and record the copies of each asset per
       build with the harness.
+- [ ] Decide on one shared verified opaque-asset spool per generation and
+      route with the M14 Serve budgets. Account for GET and HEAD capture work,
+      live response files after worker permits end, and OS temporary storage
+      outside process RSS (M14 review 6, finding 5; accepted interim design A).
+- [ ] Measure Git opaque-asset digest commands and buffered delivery under
+      the M14 comparison workloads. Use the cost to decide on streamed blob
+      copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
@@ -1610,6 +1617,7 @@ Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-
 Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
 Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
 Comparison review corrections and CSS asset evidence: `.context/rust-rebuild/delegation/m14/report-8.md`.
+Opaque asset review fixes and merged verification: `.context/rust-rebuild/delegation/m14/report-9.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review

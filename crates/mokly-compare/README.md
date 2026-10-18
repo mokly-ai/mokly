@@ -101,6 +101,11 @@ budgets make Changes unavailable with the path and limit. Actual-instance implem
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
 
+Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
+copies it to the destination. Digest cache misses each start one
+`cat-file blob` command; each delivery starts one bounded `cat-file --batch`
+command. Hash-only preparation does not fill the source-byte LRU.
+
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.
 `Changes` implements `dyn ChangesService` and reuses the pin when supplied. `BaseProvider` supplies the base
