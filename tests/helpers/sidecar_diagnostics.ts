@@ -8,7 +8,6 @@ import { pathToFileURL } from "node:url";
 
 import { platformPackage } from "../../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../../packages/mokly/src/runtime.mjs";
-
 import { listeningAddress } from "../../scripts/verification/serve-process.mjs";
 
 import { consumer } from "./mokly_serve.js";
