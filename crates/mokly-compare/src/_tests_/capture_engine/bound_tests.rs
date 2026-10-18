@@ -22,7 +22,7 @@ fn exact_byte_bound_is_never_exceeded() {
 }
 
 #[test]
-fn zero_and_metadata_limited_captures_fall_back_with_identical_review_bytes() {
+fn zero_and_partial_captures_fall_back_with_identical_review_bytes() {
     let run = |bound| {
         let probe = Arc::new(Probe {
             capture_base: bound > 1,
@@ -34,11 +34,14 @@ fn zero_and_metadata_limited_captures_fall_back_with_identical_review_bytes() {
         if bound == 0 {
             assert!(Arc::ptr_eq(&source, &before));
         }
-        if let Some(retained) = before.comparison_capture() {
+        if bound > 1 {
+            let retained = before.comparison_capture().unwrap();
             assert!(retained.retained_bytes <= bound);
             assert!(retained.encoded_bytes <= retained.retained_bytes);
             if bound == 32 * 1024 {
                 assert_eq!(retained.views, 0);
+            } else if bound == 96 * 1024 {
+                assert_eq!(retained.views, 2);
             }
         }
         let after = support::generation("head", 4, probe.clone(), 128);
@@ -65,7 +68,7 @@ fn zero_and_metadata_limited_captures_fall_back_with_identical_review_bytes() {
     };
     let fitting = run(DEFAULT_BASE_CAPTURE_BYTES);
     assert_eq!(fitting.2, 0);
-    for bound in [0, 1, 32 * 1024] {
+    for bound in [0, 1, 32 * 1024, 96 * 1024] {
         let fallback = run(bound);
         assert!(
             fallback.2 > 0,

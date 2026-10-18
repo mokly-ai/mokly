@@ -57,6 +57,10 @@ impl<T> CaptureDecode<T> for serde_json::Result<T> {
     fn decode(self) -> Result<T> {
         match self {
             Ok(value) => Ok(value),
+            Err(source) if source.is_io() => Err(CaptureInternalError::DecodeIo {
+                source: source.into(),
+            }
+            .into()),
             Err(source) => Err(CaptureInternalError::DecodeJson { source }.into()),
         }
     }

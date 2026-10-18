@@ -160,8 +160,13 @@ fn capture_and_restore_are_iterative_and_keep_authored_owner_attributes_untruste
 #[test]
 fn corrupt_internal_frames_return_typed_errors() {
     let mut encoded = EncodedView::encode(&artifact(vec![])).unwrap();
-    encoded.payload = Vec::new().into_boxed_slice();
-    assert!(encoded.restore().is_err());
+    encoded.payload = encoded.payload[..2].to_vec().into_boxed_slice();
+    assert!(matches!(
+        encoded.restore(),
+        Err(CaptureError::Internal(
+            CaptureInternalError::DecodeIo { .. }
+        ))
+    ));
     let bad = vec![FlatNode::Region {
         region: RegionRecord::from(&Region {
             id: "r".into(),
@@ -172,6 +177,27 @@ fn corrupt_internal_frames_return_typed_errors() {
         children: 1,
     }];
     assert!(capture_nodes::restore(bad).is_err());
+}
+
+#[test]
+fn zlib_failure_during_json_decode_reports_decompression() {
+    let mut encoded = EncodedView::encode(&artifact(vec![])).unwrap();
+    let mut compressor = ZlibEncoder::new(Vec::new(), Compression::fast());
+    compressor.write_all(br#"{"tree":[]}"#).unwrap();
+    let mut payload = compressor.finish().unwrap();
+    *payload.last_mut().unwrap() ^= 0xff;
+    encoded.payload = payload.into_boxed_slice();
+    encoded.bytes_len = 0;
+    let error = encoded.restore().unwrap_err();
+    assert!(matches!(
+        error,
+        CaptureError::Internal(CaptureInternalError::DecodeIo { .. })
+    ));
+    assert!(
+        error
+            .to_string()
+            .starts_with("[mokly-compare/capture] input decompression failed:")
+    );
 }
 
 #[test]

@@ -1219,7 +1219,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         test rebuilding a capture with a smaller bound.
   - [x] Align removed and selected preview protocols with bounded capture.
   - [x] Keep pending design-matrix CI decisions out of end-state docs.
-  - [ ] Cover partial capture, typed decode failures, and zero-view timings.
+  - [x] Cover partial capture, typed decode failures, and zero-view timings.
   - [ ] Count uncaptured base views without changing capture charges.
   - [ ] Merge the rebuild tip and run the required checks and example parity.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
