@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   command,
@@ -19,7 +20,7 @@ const exec = promisify(execFile);
 test(
   "SIGINT during a pipe-blocked render cancels build and publish before installation",
   { timeout: 120_000, skip: process.platform === "win32" },
-  async () => {
+  async (context) => {
     for (const verb of ["build", "publish"] as const) {
       const root = await publicationFixture(true);
       const server = await exchange();
@@ -44,12 +45,15 @@ test(
       );
       const running =
         verb === "publish"
-          ? publish(root, server.endpoint)
-          : command(root, "build", [
-              "--no-changes",
-              "--sidecars=1",
-              "--out=.context/site",
-            ]);
+          ? publish(root, server.endpoint, "plain", { signal: context.signal })
+          : command(
+              root,
+              "build",
+              ["--no-changes", "--sidecars=1", "--out=.context/site"],
+              "plain",
+              {},
+              context.signal,
+            );
       try {
         await Promise.race([
           readiness,
@@ -79,11 +83,19 @@ test(
           { code: "ENOENT" },
         );
       } finally {
-        watcher.close();
-        running.child.kill("SIGKILL");
-        await server.close();
-        if (output) await removeOutput(output);
-        await fs.promises.rm(root, { recursive: true, force: true });
+        await cleanupAll([
+          async () => {
+            watcher.close();
+          },
+          async () => {
+            running.child.kill("SIGKILL");
+          },
+          () => server.close(),
+          async () => {
+            if (output) await removeOutput(output);
+          },
+          () => fs.promises.rm(root, { recursive: true, force: true }),
+        ]);
       }
     }
   },
@@ -93,7 +105,7 @@ for (const mode of ["plain", "rich"])
   test(
     `${mode} SIGINT during Blob upload keeps the installed site and uses cancellation copy`,
     { timeout: 120_000, skip: process.platform === "win32" },
-    async () => {
+    async (context) => {
       const root = await publicationFixture();
       let signals = 0;
       const interrupt = () => {
@@ -103,7 +115,9 @@ for (const mode of ["plain", "rich"])
       };
       const server = await exchange({ holdBlob: interrupt });
       let output: string | undefined;
-      const running = publish(root, server.endpoint, mode);
+      const running = publish(root, server.endpoint, mode, {
+        signal: context.signal,
+      });
 
       try {
         const result = await running.result;
@@ -126,10 +140,16 @@ for (const mode of ["plain", "rich"])
           ).isFile(),
         );
       } finally {
-        running.child.kill("SIGKILL");
-        await server.close();
-        if (output) await removeOutput(output);
-        await fs.promises.rm(root, { recursive: true, force: true });
+        await cleanupAll([
+          async () => {
+            running.child.kill("SIGKILL");
+          },
+          () => server.close(),
+          async () => {
+            if (output) await removeOutput(output);
+          },
+          () => fs.promises.rm(root, { recursive: true, force: true }),
+        ]);
       }
     },
   );

@@ -44,7 +44,8 @@ const VIEW_ORDER: readonly ChangedView[] = [
   { viewport: "desktop", colorScheme: "dark" },
 ];
 const VIEWPORT_LABELS = { desktop: "Desktop", mobile: "Mobile" } as const;
-const SCHEME_LABELS = { dark: "Dark", light: "Light" } as const;
+/** Each colour scheme named for the reader. */
+export const SCHEME_LABELS = { dark: "Dark", light: "Light" } as const;
 
 /** The same views in one canonical order, deduplicated: mobile before desktop
  * and light before dark, so two catalogues never name them differently. */

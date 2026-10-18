@@ -294,3 +294,7 @@ mod one_shot_tests;
 #[cfg(test)]
 #[path = "_tests_/comparison_duration_tests.rs"]
 mod comparison_duration_tests;
+
+#[cfg(test)]
+#[path = "_tests_/publication_progress_tests.rs"]
+mod publication_progress_tests;

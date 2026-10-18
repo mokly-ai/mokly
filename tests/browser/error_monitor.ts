@@ -37,13 +37,8 @@ export function allowedBrowserFailure(
 export async function settleBrowserPage(
   page: Page,
   javaScriptEnabled = true,
-  paused = false,
 ): Promise<void> {
   if (page.isClosed()) return;
-  if (paused) {
-    await page.clock.runFor(32);
-    return;
-  }
   if (!javaScriptEnabled) {
     await page.evaluate(() => document.readyState);
     return;
@@ -66,18 +61,6 @@ export function monitorBrowser(
   defaultJavaScriptEnabled = true,
 ) {
   const failures: BrowserFailure[] = [];
-  const paused = new WeakSet<Page>();
-  const clockCleanups: (() => void)[] = [];
-  const watchClock = (page: Page) => {
-    const pauseAt = page.clock.pauseAt;
-    page.clock.pauseAt = async (...args) => {
-      paused.add(page);
-      await pauseAt.apply(page.clock, args);
-    };
-    clockCleanups.push(() => {
-      page.clock.pauseAt = pauseAt;
-    });
-  };
   const contexts = new Map<
     BrowserContext,
     { detach(): void; settle(): Promise<void> }
@@ -87,6 +70,18 @@ export function monitorBrowser(
     javaScriptEnabled = defaultJavaScriptEnabled,
   ) => {
     if (contexts.has(context)) return;
+    // Every page in a context shares this clock, including pages opened later.
+    let paused = false;
+    const pauseAt = context.clock.pauseAt;
+    const resume = context.clock.resume;
+    context.clock.pauseAt = async (...args) => {
+      await pauseAt.apply(context.clock, args);
+      paused = true;
+    };
+    context.clock.resume = async () => {
+      await resume.call(context.clock);
+      paused = false;
+    };
     const onConsole = (message: ConsoleMessage) => {
       if (message.type() === "error" && !expectedConsoleNotice(message))
         failures.push({
@@ -102,17 +97,18 @@ export function monitorBrowser(
         url: error.page()?.url() ?? "",
       });
     };
-    context.on("page", watchClock);
-    context.pages().forEach(watchClock);
     context.on("console", onConsole);
     context.on("weberror", onError);
     const settle = async () => {
+      // Advance a shared paused clock once, before settling any of its pages.
+      if (paused && context.pages().some((page) => !page.isClosed())) {
+        await context.clock.runFor(32);
+        return;
+      }
       await Promise.all(
         context
           .pages()
-          .map((page) =>
-            settleBrowserPage(page, javaScriptEnabled, paused.has(page)),
-          ),
+          .map((page) => settleBrowserPage(page, javaScriptEnabled)),
       );
     };
     const close = context.close;
@@ -123,7 +119,8 @@ export function monitorBrowser(
     contexts.set(context, {
       settle,
       detach() {
-        context.off("page", watchClock);
+        context.clock.pauseAt = pauseAt;
+        context.clock.resume = resume;
         context.off("console", onConsole);
         context.off("weberror", onError);
         context.close = close;
@@ -154,7 +151,6 @@ export function monitorBrowser(
         browser.newContext = newContext;
         browser.newPage = newPage;
         contexts.forEach((entry) => entry.detach());
-        clockCleanups.forEach((restore) => restore());
       }
     },
   };

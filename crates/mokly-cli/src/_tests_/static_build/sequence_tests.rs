@@ -39,7 +39,6 @@ fn success_drains_after_staging_and_rechecks_then_installs_once() {
             "assemble",
             "stage",
             "verify",
-            "fingerprint",
             "signals",
             "cancelled",
             "stop",

@@ -73,7 +73,7 @@ test("a public embedded viewer fetches copied data without credentials or live e
   requests.assert();
 });
 
-test("public static paths use exact-origin CORS, MIME and nosniff on GET, HEAD and errors", async ({
+test("the public test host applies exact-origin CORS and headers to copied files and missing paths", async ({
   page,
   request,
 }) => {

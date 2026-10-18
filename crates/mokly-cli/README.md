@@ -62,7 +62,9 @@ startup error flushes pending warnings before cancellation. Resource-only
 reloads retain the scope.
 It preserves carriage returns in raw mode and ignores shortcut
 release events. `--debug-timings` emits structured stage spans and background
-counts without source text, props, or error payloads.
+counts without source text, props, or error payloads. Shared Changes timings
+include the numeric dependency tier, final comparison view counts, and
+changed-path collection. A failed phase keeps error status.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
 The composition root constructs a
@@ -161,7 +163,10 @@ configuration discovery. It reports a child output path inside a private
 external directory before the build starts. That parent also confines the
 output reservation. `mokly-publish` owns the exchange and cached preparation;
 `mokly-model` owns output formats and the marker writer. The static adapter calls the same safe output transaction as `build`. It returns
-the installed bytes directly to one cached upload preparation. Checkout failures list at most 20
+the installed bytes directly to one cached upload preparation. A ready comparison
+keeps its pinned merge base, effective ref, and complete generation in that upload.
+Unavailable Changes publishes the valid current catalogue with no generation and
+null comparison metadata. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
 output stays in the private directory after an upload failure. The warning
 policy waits for a user decision. The isolated `warnings_are_fatal` function
@@ -214,7 +219,9 @@ still use their injected trait boundaries.
 - [Output](./src/output.rs), [error copy](./src/errors.rs), and
   [redaction](./src/redaction.rs).
 - [Composition root](./src/entry.rs), [native rendering services](./src/render_runtime.rs),
-  and [static output adapter](./src/publication/mod.rs).
+  and [publication orchestration](./src/publication/mod.rs).
+- [Native publication adapter](./src/publication_runtime.rs) and
+  [shared static pipeline](./src/static_build.rs).
 - [Shared Serve services](./src/serve_services.rs), [Serve shutdown](./src/serve_shutdown.rs),
   [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).

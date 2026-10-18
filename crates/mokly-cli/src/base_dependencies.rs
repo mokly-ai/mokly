@@ -11,7 +11,7 @@ use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Reporter, Storage};
 use mokly_compare::commands::TimedCommands;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
-use mokly_compare::dependency_types::Request;
+use mokly_compare::dependency_types::{Request, Tier};
 use mokly_compare::error::{Error, InternalError, Result};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
 use mokly_compare::inputs::{InputReader, SourceInputs};
@@ -45,7 +45,6 @@ pub(super) struct NativeDependencies {
 }
 
 impl BaseDependencies for NativeDependencies {
-    #[tracing::instrument(name = "review.base-dependencies", skip_all, err)]
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
@@ -101,6 +100,12 @@ impl NativeDependencies {
             files: Limits::default().files,
         };
         let sources = extraction.acquire(&request.commit)?;
+        let span = tracing::info_span!(
+            "review.base-dependencies",
+            status = "error",
+            tier = tracing::field::Empty
+        );
+        let _scope = span.enter();
         let reader: &dyn InputReader = &SourceInputs;
         let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
         let working: &dyn WorkingInputs = &SystemWorkingInputs;
@@ -135,11 +140,21 @@ impl NativeDependencies {
             configuration,
             resolution: resolution(config)?,
         })?;
+        span.record("tier", tier_number(dependencies.tier));
+        span.record("status", "ok");
         Ok(Arc::new(BaseSide {
             sources,
             dependencies,
             identity: request.commit.to_string(),
         }))
+    }
+}
+
+fn tier_number(tier: Tier) -> u64 {
+    match tier {
+        Tier::Working => 1,
+        Tier::Installed => 2,
+        Tier::Fallback => 3,
     }
 }
 

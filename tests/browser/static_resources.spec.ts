@@ -20,7 +20,7 @@ async function files(root: string, prefix = ""): Promise<string[]> {
   return groups.flat();
 }
 
-test("the copied output has a complete byte-exact resource graph without source files", async ({
+test("the exact-file host serves every copied file byte-for-byte and rejects source paths", async ({
   request,
   baseURL,
 }) => {

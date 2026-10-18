@@ -63,12 +63,19 @@ export async function fixture() {
   await git(root, "commit", "-qm", "changed catalogue");
   return { root, base };
 }
-export async function build(root: string, extra: string[] = [], mode = "rich") {
+export async function build(
+  root: string,
+  extra: string[] = [],
+  mode = "rich",
+  signal?: AbortSignal,
+) {
   const result = await command(
     root,
     "build",
     ["--out=.context/site", ...extra],
     mode,
+    {},
+    signal,
   ).result;
   assert.equal(result.code, 0, result.stderr);
   const output = path.join(root, ".context/site");

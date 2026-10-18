@@ -10,8 +10,7 @@ use mokly_model::output::upload::Publication;
 use mokly_static::assembly::{Assembler, Assembly};
 use mokly_static::changes::PublicationInput;
 use mokly_static::error;
-use mokly_static::fingerprint::{Fingerprints, InputTree};
-use mokly_static::input_selection;
+use mokly_static::fingerprint::InputTree;
 use mokly_static::transaction::{self, Transaction};
 
 use crate::build::{BuildChanges, BuildError, BuildService, BuildSummary};
@@ -100,8 +99,6 @@ pub struct Builder {
     pub render: Arc<dyn BuildService>,
     /// Output projection from the generation.
     pub assembler: Arc<dyn Assembler>,
-    /// Live source membership hash boundary.
-    pub fingerprints: Arc<dyn Fingerprints>,
     /// Exact read set from config, discovery, graph, and closure.
     pub inputs: Arc<dyn InputTree>,
     /// Signals shared by all phases.
@@ -160,10 +157,7 @@ impl Builder {
         transaction: &mut dyn Transaction,
     ) -> Result<(Artifact, BuildSummary), BuildError> {
         let excluded = vec![transaction.output().into()];
-        let before = static_result(
-            self.fingerprints
-                .capture(&request.config.repo_root, &excluded),
-        )?;
+        static_result(self.inputs.begin(request.config, &excluded))?;
         self.phases.start(Phase::Rendering);
         let rendered = self.render.prepare(request.cwd, request.options)?;
         let protected = rendered
@@ -207,17 +201,6 @@ impl Builder {
             transaction.stage(&artifact, &StaticCancellation(self.cancellation.as_ref())),
         )?;
         static_result(self.inputs.verify())?;
-        let after = static_result(
-            self.fingerprints
-                .capture(&request.config.repo_root, &excluded),
-        )?;
-        static_result(input_selection::verify(
-            request.config,
-            &rendered.generation.catalogue().model.sources,
-            &rendered.generation.public_files(),
-            &before,
-            &after,
-        ))?;
         Ok((artifact, rendered.summary))
     }
 }

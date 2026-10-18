@@ -83,6 +83,10 @@ outside this mapping keeps the fallback warning, including with equal inputs.
 Each fallback has a typed trace reason.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+Rendered and canonical trees use iterative traversal, equality, move
+fingerprinting, and release. Deep rendered trees need no enlarged thread stack.
+Its timing spans count final view states and measure changed-path collection,
+deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 All generated routes retain their digests. Usage, links, resources, and component

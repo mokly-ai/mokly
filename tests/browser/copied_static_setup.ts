@@ -3,54 +3,52 @@ import path from "node:path";
 
 import { buildStaticCatalogue } from "../helpers/build_site.js";
 import { repositoryRoot } from "../helpers/fixture.js";
-import { serveStaticFiles } from "../helpers/static_server.js";
 
-/** Each suite owns a fresh build. Only its copied output reaches the file host. */
-export async function startCopiedStaticHost(signal?: AbortSignal) {
-  const workspace = await fs.mkdtemp(
-    path.join(
-      process.env["MOKLY_VERIFICATION_RESOURCE_ROOT"] ??
-        path.join(repositoryRoot, ".context"),
-      "copied-static-",
-    ),
-  );
-  const built = path.join(workspace, "built");
-  const directory = path.join(workspace, "isolated");
-  let host: Awaited<ReturnType<typeof serveStaticFiles>> | undefined;
-  let closing: Promise<void> | undefined;
-  const close = () =>
-    (closing ??= (async () => {
-      await host?.close();
-      await fs.rm(workspace, { recursive: true, force: true });
-    })());
-  try {
-    const supplied =
-      process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ??
-      process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
-    if (supplied)
-      await fs.cp(path.resolve(supplied), built, { recursive: true });
-    else
-      await buildStaticCatalogue(
-        path.join(repositoryRoot, "examples/basic"),
-        built,
-        signal,
-      );
-    signal?.throwIfAborted();
-    await fs.cp(built, directory, { recursive: true });
-    await fs.rm(built, { recursive: true });
-    signal?.throwIfAborted();
-    host = await serveStaticFiles(directory);
-    return { directory, url: host.url, close };
-  } catch (error) {
-    try {
-      await close();
-    } catch (cleanup) {
-      throw new AggregateError(
-        [error, cleanup],
-        "Static setup and cleanup failed",
-        { cause: cleanup },
-      );
-    }
-    throw error;
+import { copiedHost } from "./copied_host.js";
+
+/** A supplied example must have the same current-only contract as a fresh build. */
+export function requireCurrentOnlyIndex(
+  index: unknown,
+  directory: string,
+): void {
+  if (
+    !index ||
+    typeof index !== "object" ||
+    !("changesStatus" in index) ||
+    index.changesStatus !== "disabled"
+  ) {
+    throw new Error(
+      `Static browser catalogue ${directory} must have changesStatus "disabled"; build it with --no-changes`,
+    );
   }
+}
+
+/** Each suite owns a fresh current-only copy, including in manual file mode. */
+export async function startCopiedStaticHost(signal?: AbortSignal) {
+  return copiedHost(
+    "copied-static-",
+    async (_source, built) => {
+      const supplied =
+        process.env["MOKLY_PLAYWRIGHT_STATIC_DIR"] ??
+        process.env["MOKLY_PLAYWRIGHT_FILE_DIR"];
+      if (supplied) {
+        const directory = path.resolve(supplied);
+        const index: unknown = JSON.parse(
+          await fs.readFile(
+            path.join(directory, "mokly-viewer/index.json"),
+            "utf8",
+          ),
+        );
+        requireCurrentOnlyIndex(index, directory);
+        await fs.cp(directory, built, { recursive: true });
+      } else {
+        await buildStaticCatalogue(
+          path.join(repositoryRoot, "examples/basic"),
+          built,
+          signal,
+        );
+      }
+    },
+    signal,
+  );
 }

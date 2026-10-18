@@ -8,10 +8,15 @@ import { timings } from "./helpers/static_timings.js";
 test(
   "base capture timings report bounded retention and encoded payload bytes",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const { root } = await fixture();
     try {
-      const result = await build(root, ["--debug-timings"]);
+      const result = await build(
+        root,
+        ["--debug-timings"],
+        "rich",
+        context.signal,
+      );
       const records = timings(result.stderr);
       const captured = records.filter(
         (record) => record.stage === "review.capture-side",

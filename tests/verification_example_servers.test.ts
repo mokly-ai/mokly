@@ -148,6 +148,13 @@ test("the configured setup publishes each prepared worker and restores its envir
         },
       }));
     },
+    comparisonHost: async () => ({
+      directory: "/comparison",
+      url: "http://comparison",
+      close: async () => {
+        closed.push(3);
+      },
+    }),
     staticHost: async () => ({
       directory: "/copied",
       url: "http://static",
@@ -165,7 +172,7 @@ test("the configured setup publishes each prepared worker and restores its envir
   );
   assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], "http://static");
   await close();
-  assert.deepEqual(closed.sort(), [0, 1, 2]);
+  assert.deepEqual(closed.sort(), [0, 1, 2, 3]);
   assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], copiedBefore);
   assert.equal(process.env["MOKLY_PLAYWRIGHT_URLS"], previousUrls);
 });
@@ -218,6 +225,11 @@ test("a copied-output setup failure drains Serve hosts and restores both URL cha
       host: async () => {
         throw new Error("not a manual static run");
       },
+      comparisonHost: async () => ({
+        directory: "/comparison",
+        url: "http://comparison",
+        close: async () => {},
+      }),
       staticHost: async () => {
         throw expected;
       },

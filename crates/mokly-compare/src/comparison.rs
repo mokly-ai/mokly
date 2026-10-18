@@ -34,7 +34,7 @@ pub struct Engine {
 }
 
 impl Comparison for Engine {
-    #[tracing::instrument(name = "review.compare-views", skip_all, err)]
+    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty))]
     fn compare(
         &self,
         request: &ComparisonRequest,
@@ -243,6 +243,21 @@ impl Engine {
             "comparison ready"
         );
         mokly_catalogue::diagnostic::normalize_warnings(&mut warnings);
+        let (mut views, mut unchanged, mut changed, mut ignored_only) = (0u64, 0u64, 0u64, 0u64);
+        for document in entries.iter().flat_map(|entry| &entry.documents) {
+            views += 1;
+            match document.state {
+                ReviewState::Unchanged => unchanged += 1,
+                ReviewState::IgnoredOnly => ignored_only += 1,
+                ReviewState::Changed | ReviewState::Added | ReviewState::Removed => changed += 1,
+            }
+        }
+        let span = tracing::Span::current();
+        span.record("views", views);
+        span.record("unchanged", unchanged);
+        span.record("changed", changed);
+        span.record("ignored_only", ignored_only);
+        span.record("status", "ok");
         Ok(ComparisonResult {
             resource_work: memo.work(),
             affected_lookups,

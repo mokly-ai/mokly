@@ -46,11 +46,19 @@ impl CatalogueBuild {
             }
         };
         self.checkpoint()?;
-        if let Some(inputs) = &self.inputs
-            && let Err(source) =
-                inputs.capture(&config.repo_root, &generation.catalogue().model.sources)
-        {
-            return Err(BuildError::Static { source });
+        if let Some(inputs) = &self.inputs {
+            let catalogue = generation.catalogue();
+            let empty = BTreeMap::new();
+            let digests = catalogue
+                .javascript
+                .generation
+                .as_ref()
+                .map_or(&empty, |generation| &generation.module_digests);
+            if let Err(source) =
+                inputs.capture(&config.repo_root, &catalogue.model.sources, digests)
+            {
+                return Err(BuildError::Static { source });
+            }
         }
         let rendered = match generation.render_all() {
             Ok(summary) => summary,
