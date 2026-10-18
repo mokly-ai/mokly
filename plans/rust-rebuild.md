@@ -888,6 +888,11 @@ renders again.
         module load and retain every per-screen assertion and leaf title.
   - [x] Give the isolated link-control catalogue a 180-second setup budget
         in its `beforeAll` hook. Keep the 60-second test timeout.
+  - [x] Prepare browser review 5 sweep input fixes: remove stale M12 work,
+        specify parameter-free static Refresh reads, and reject M12 reasons
+        on non-dropped rows.
+  - [ ] After the final viewer merge, reconcile comparison row ownership
+        and regenerate the browser sweep with the prepared input fixes.
   - [ ] Cover the remaining copied-file delivery cases in the browser sweep:
         branch-point references, moved and removed previews, malformed
         comparison metadata, unchanged-base publication, lazy first reads,
@@ -1040,6 +1045,7 @@ Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browse
 Native copied comparisons and browser review 3: `.context/rust-rebuild/delegation/m8-browser/report-5.md`.
 Browser review 4 and the comparison UI integration: `.context/rust-rebuild/delegation/m8-browser/report-6.md`.
 Browser timing and review 5 fixes: `.context/rust-rebuild/delegation/m8-browser/report-7.md`.
+Prepared review 5 sweep inputs: `.context/rust-rebuild/delegation/m8-browser/round-7-sweep-input-checks.json`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
 Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.
