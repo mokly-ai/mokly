@@ -161,7 +161,7 @@ impl Serve {
     pub(super) async fn html(&self) -> String {
         get(&self.host, "/static/mokly-generated/home/index.mobile.html").await
     }
-    /// This fixture publishes adoption and then one complete two-view usage pass.
+    /// Wait for adoption, usage, and the terminal Changes status before capturing state.
     pub(super) async fn ready(&self, previous: u64, text: &str) -> Value {
         tokio::time::timeout(Duration::from_secs(30), async {
             let mut socket = TcpStream::connect(&self.host).await.unwrap();
@@ -194,6 +194,10 @@ impl Serve {
                     serde_json::from_str(&get(&self.host, "/mokly-viewer/entries/home.json").await)
                         .unwrap();
                 if index["revision"].as_u64().unwrap() >= previous + 2
+                    && !matches!(
+                        index["changesStatus"].as_str(),
+                        Some("pending" | "preparing")
+                    )
                     && index["revision"] == detail["revision"]
                     && detail["workspace"].is_object()
                     && self.html().await.contains(text)

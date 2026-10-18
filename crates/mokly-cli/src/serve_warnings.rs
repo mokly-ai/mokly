@@ -24,6 +24,8 @@ pub(super) trait WarningScopes: Send + Sync {
 
 /// Completion and render diagnostics for one captured attempt.
 pub trait AttemptWarnings: RenderWarnings {
+    /// Run a current attempt event without changing preparation readiness.
+    fn event(&self, output: &dyn Fn());
     /// Print new sorted warnings and the result atomically with respect to producers.
     /// The output callback must not reenter the warning scope.
     /// Only preparation or adoption failure retains seen records for the next attempt.
@@ -127,6 +129,17 @@ impl RenderWarnings for Attempt {
 }
 
 impl AttemptWarnings for Attempt {
+    fn event(&self, output: &dyn Fn()) {
+        let state = self
+            .owner
+            .state
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if state.number == self.number && !self.owner.cancellation.requested() {
+            output();
+        }
+    }
+
     fn finish(&self, warnings: &[Warning], failed: bool, output: &dyn Fn(&[Warning])) {
         let mut state = self
             .owner

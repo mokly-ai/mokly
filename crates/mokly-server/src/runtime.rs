@@ -5,17 +5,14 @@ use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hyper::server::conn::http1;
-use hyper_util::rt::TokioIo;
-use hyper_util::service::TowerToHyperService;
 use tokio::net::TcpListener;
 use tokio::sync::watch;
-use tokio::task::JoinSet;
 
 use crate::accept::{
     AcceptBackoff, AcceptPeriod, Acceptor, Backoff, TcpAcceptor, connection_error,
 };
 use crate::application::HttpApplication;
+use crate::clients::{Clients, HttpClients};
 use crate::error::{InternalError, Result, ServerError};
 use crate::shutdown::Lifecycle;
 
@@ -95,7 +92,7 @@ impl BoundServer for Listener {
         lifecycle: Arc<dyn Lifecycle>,
     ) -> Result<()> {
         let router = app.clone().router(stop.clone());
-        let mut clients = JoinSet::new();
+        let mut clients: Box<dyn Clients> = Box::new(HttpClients::default());
         let mut failure = None;
         let mut period = AcceptPeriod::default();
         loop {
@@ -108,10 +105,7 @@ impl BoundServer for Listener {
                     match client {
                         Ok(stream) => {
                             if period.recovered() { app.accept_recovered(); }
-                            let service = TowerToHyperService::new(router.clone());
-                            clients.spawn(async move {
-                                if let Err(error) = http1::Builder::new().serve_connection(TokioIo::new(stream), service).await { tracing::debug!(%error, "client closed"); }
-                            });
+                            clients.admit(stream, router.clone());
                         },
                         Err(source) if connection_error(&source) => { tracing::debug!(%source, "connection could not be accepted"); },
                         Err(source) => {
@@ -120,11 +114,10 @@ impl BoundServer for Listener {
                         },
                     }
                 },
-                _ = clients.join_next(), if !clients.is_empty() => {},
+                _ = clients.completed(), if !clients.is_empty() => {},
             }
         }
-        clients.abort_all();
-        while clients.join_next().await.is_some() {}
+        clients.shutdown().await;
         if let Err(error) = lifecycle.stop_watcher().await {
             failure.get_or_insert(error);
         }

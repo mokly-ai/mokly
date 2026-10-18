@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { once } from "node:events";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
@@ -10,6 +11,7 @@ import type { EntryDetailV1 } from "../../packages/viewer/src/generated/catalogu
 import type { Viewport } from "../../packages/viewer/src/generated/catalogue/Viewport.js";
 import { spawnServe } from "../../scripts/verification/serve-process.mjs";
 
+import { EXAMPLE_BASE, validateExampleDiagnostics } from "./example_base.js";
 import type { FixtureOwner } from "./file_fixture.js";
 import { repositoryRoot } from "./fixture.js";
 import { shim } from "./mokly_serve.js";
@@ -52,9 +54,9 @@ async function fetchAll<T>(
 }
 
 /**
- * Serve the example catalogue against `--base HEAD`, so the served tree is
- * the only input, then load it. The owner drains the server's process group
- * at teardown, also when setup fails.
+ * Serve current example views with the shared unresolved base.
+ * Wait for terminal Changes before returning. The owner drains the process
+ * group at teardown, also when setup fails.
  */
 export async function serveExample(
   owner: FixtureOwner,
@@ -66,7 +68,7 @@ export async function serveExample(
       "--config",
       "examples/basic/mokly.config.json",
       "--base",
-      "HEAD",
+      EXAMPLE_BASE,
       "--no-watch",
       "--port",
       "0",
@@ -76,19 +78,25 @@ export async function serveExample(
     { cwd: repositoryRoot },
   );
   let listened = false;
+  let loaded = false;
   owner.after(async () => {
     const { code } = await server.stop();
     // A Serve that started must also stop cleanly on its interrupt.
     if (listened) assert.equal(code, 0, server.stderr());
+    if (loaded) validateExampleDiagnostics(server.stderr());
   });
   const url = await server.listening(signal);
   listened = true;
-  return loadCatalogue(url, signal);
+  const catalogue = await loadCatalogue(url, signal);
+  while (!server.stderr().includes("[mokly/git-failed]"))
+    await once(server.child.stderr, "data", { signal });
+  loaded = true;
+  return catalogue;
 }
 
 /**
  * Render every screen and component view, and wait through publication
- * events until no view's usage is pending. The wait reads no Changes state.
+ * events until usage settles and Changes is unavailable.
  */
 async function loadCatalogue(
   url: string,
@@ -101,7 +109,7 @@ async function loadCatalogue(
   };
   const events = (await read("mokly-viewer/events")).body!.getReader();
   try {
-    const index = readCatalogueIndex(
+    let index = readCatalogueIndex(
       await (await read("mokly-viewer/index.json")).json(),
     );
     const views: ServedView[] = [];
@@ -127,6 +135,14 @@ async function loadCatalogue(
       ).text();
       views.push({ ...view, document: parse(html) });
     });
+    for (;;) {
+      index = readCatalogueIndex(
+        await (await read("mokly-viewer/index.json")).json(),
+      );
+      if (!["pending", "preparing"].includes(index.changesStatus)) break;
+      await events.read();
+    }
+    assert.equal(index.changesStatus, "unavailable");
     const details = new Map<string, EntryDetailV1>();
     let unsettled = visual.map(({ entry }) => entry.path);
     // Each publication can settle more usage, so recheck after every event.

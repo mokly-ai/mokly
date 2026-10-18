@@ -29,6 +29,8 @@ publisher coalesces completed routes, skips recorded routes and routes with no
 detail views, and publishes ready or unavailable usage. Closing Serve fences
 new publications and drains that task. A page or Markdown render does not
 raise the revision only because its document completed.
+After a rebuild, ready usage reused for an equal `documentKey` is already
+recorded as complete. Its later completion publishes no revision.
 
 The event stream at `/mokly-viewer/events` writes one message per
 publication whose `id` is the new revision and whose `data` is the server's

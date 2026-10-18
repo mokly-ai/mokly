@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::axes::EntryKind;
 use mokly_model::projection;
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::{EntryDetailV1, Workspace};
 use mokly_model::public_index::{CatalogueReadModel, RemovedEntry, RemovedPreview};
 use mokly_model::snapshot::RemovedPagePreview;
 use mokly_model::versions;
@@ -126,4 +126,20 @@ pub fn previews(result: &ComparisonResult) -> Vec<RemovedPagePreview> {
             path: removed.entry.metadata().path.clone(),
         })
         .collect()
+}
+
+/// Initialize comparison workspaces after historical usage has been proved.
+/// Removed screens and component parents and variants share this policy in every host.
+pub fn workspaces(details: &mut BTreeMap<String, EntryDetailV1>) {
+    for detail in details.values_mut() {
+        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
+            detail.workspace = Some(Workspace {
+                comparison_eligible: false,
+                used_by: Vec::new(),
+                affected: Vec::new(),
+                related_components: Vec::new(),
+                input_changes: Vec::new(),
+            });
+        }
+    }
 }

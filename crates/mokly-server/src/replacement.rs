@@ -13,6 +13,7 @@ use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::detail_encoding::DetailEncoder;
 use crate::error::Result;
+use crate::evidence::Completion;
 use crate::revision_file::RevisionFile;
 use crate::snapshot::Snapshot;
 
@@ -21,14 +22,15 @@ pub(crate) fn reuse_usage(
     index: &CatalogueReadModel,
     keys: &BTreeMap<String, String>,
     previous: Option<&Snapshot>,
-) {
+) -> BTreeMap<String, Completion> {
+    let mut completed = BTreeMap::new();
     let Some(previous) = previous else {
-        return;
+        return completed;
     };
     if previous.index.identity != index.identity
         || previous.index.deployment_id != index.deployment_id
     {
-        return;
+        return completed;
     }
     for (path, detail) in details.iter_mut() {
         let Some(old) = previous.details.get(path) else {
@@ -46,6 +48,7 @@ pub(crate) fn reuse_usage(
                 && matches!(old.usage, CatalogueUsage::Ready { .. })
             {
                 view.usage = old.usage.clone();
+                completed.insert(route, Completion::Ready);
             }
         }
     }
@@ -58,6 +61,7 @@ pub(crate) fn reuse_usage(
             detail.workspace = Some(workspace);
         }
     }
+    completed
 }
 
 pub(crate) fn encode_details(

@@ -86,7 +86,12 @@ pub fn comparison_preview(path: &str) -> String {
 
 /// Artifact-root-relative prefix of a complete immutable comparison generation.
 pub fn comparison_generation(generation: &str) -> String {
-    namespace::viewer(&format!("diffs/generations/{generation}/"))
+    format!("{}{generation}/", comparison_generations())
+}
+
+/// Artifact-root-relative namespace of all immutable comparison generations.
+pub fn comparison_generations() -> String {
+    namespace::viewer("diffs/generations/")
 }
 
 /// Artifact-root-relative review document of a comparison generation.

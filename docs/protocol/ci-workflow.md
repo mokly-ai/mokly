@@ -30,7 +30,8 @@ baseline audit reads the root manifest, lockfile, and exception file from that
 comparison commit. The same-repository preview deployment resolves
 `origin/main` as the comparison base of its pull request build. The viewer,
 browser, and native jobs check out full history but never read remote-tracking
-references: the browser suite's example servers compare with `HEAD`.
+references. Shared browser example servers use the intentionally unresolved
+base `refs/mokly/browser-suite-no-base`. Real Changes specs own Git fixtures.
 
 Each downstream job starts from a fresh checkout and owns its writable build,
 report, and trace output. No job receives a live checkout or writable build

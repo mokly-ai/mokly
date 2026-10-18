@@ -1,3 +1,4 @@
+import { validateExampleDiagnostics } from "../helpers/example_base.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { exampleReady } from "./example_readiness.js";
@@ -22,7 +23,14 @@ export async function startExampleHosts(
           repositoryRoot,
           signal,
         );
-        hosts[index] = host;
+        hosts[index] = {
+          ...host,
+          async close() {
+            await host.close();
+            if (host.diagnostics)
+              validateExampleDiagnostics(host.diagnostics());
+          },
+        };
         await ready(host.url, signal);
       } catch (error) {
         abort.abort(error);

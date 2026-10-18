@@ -37,6 +37,7 @@ test(
     const running = serve(context, root);
     const url = await running.ready();
     const { index, detail } = await completed(url, running.signal, "card");
+    assert.equal(index.changesStatus, "unavailable");
     assert.ok(
       detail.workspace.usedBy.some(
         (use: { entryPath: string }) => use.entryPath === "home",
@@ -154,7 +155,7 @@ test(
     ).json();
     assert.deepEqual(after, index);
     await running.close();
-    assert.equal(running.output.stderr, "");
+    assert.match(running.output.stderr, /^\[mokly\/git-failed\] [^\n]+\n$/);
   },
 );
 

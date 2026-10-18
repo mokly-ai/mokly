@@ -5,7 +5,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use tokio::sync::{broadcast, watch};
 
+use crate::changes_background::AfterUsage;
 use crate::diagnostics::Diagnostics;
+use crate::error::{InternalError, ServerError};
 use crate::publication::{PublicationEvent, Publications};
 use crate::snapshot::Snapshot;
 use crate::work::Work;
@@ -19,6 +21,8 @@ pub trait Background: Send + Sync {
 
 /// Evidence uses the same scheduler and document adapter as foreground requests.
 pub struct UsagePass {
+    /// Optional Changes continuation after every current document settles.
+    pub changes: Option<Arc<dyn AfterUsage>>,
     /// Atomic states and completion publisher.
     pub publications: Arc<dyn Publications>,
     /// Foreground-priority worker boundary.
@@ -30,17 +34,23 @@ pub struct UsagePass {
 #[async_trait]
 impl Background for UsagePass {
     async fn run(&self, mut stop: watch::Receiver<bool>) {
+        if stopped(&stop) {
+            return;
+        }
         let mut updates = self.publications.subscribe().updates;
         loop {
-            if *stop.borrow() {
+            if stopped(&stop) {
                 return;
             }
             let origin = self.publications.current();
             if !self.fill(&origin, &mut stop, &mut updates).await {
                 continue;
             }
+            if let Some(changes) = &self.changes {
+                changes.run(origin.clone(), stop.clone()).await;
+            }
             while Arc::ptr_eq(&self.publications.current().documents, &origin.documents) {
-                if *stop.borrow() {
+                if stopped(&stop) {
                     return;
                 }
                 tokio::select! {
@@ -63,7 +73,7 @@ impl UsagePass {
         for route in &origin.routes {
             tokio::task::yield_now().await;
             let current = self.publications.current();
-            if *stop.borrow() || !Arc::ptr_eq(&current.documents, &origin.documents) {
+            if stopped(stop) || !Arc::ptr_eq(&current.documents, &origin.documents) {
                 return cancelled();
             }
             if current.completed.contains_key(&route.route) {
@@ -80,7 +90,7 @@ impl UsagePass {
                         if !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
                     },
                     result = &mut work => {
-                        if *stop.borrow() || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
+                        if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
                         if let Err(error) = result { self.diagnostics.failed(&error); }
                         break;
                     }
@@ -99,7 +109,7 @@ impl UsagePass {
             parent.in_scope(|| publications.completed_many(&publish_origin, &routes))
         })
         .await;
-        if *stop.borrow() || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents)
+        if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents)
         {
             return cancelled();
         }
@@ -108,9 +118,7 @@ impl UsagePass {
             Ok(Err(error)) => self.diagnostics.failed(&error),
             Err(source) => self
                 .diagnostics
-                .failed(&crate::error::ServerError::Internal(
-                    crate::error::InternalError::Task { source },
-                )),
+                .failed(&ServerError::Internal(InternalError::Task { source })),
         }
         true
     }
@@ -123,3 +131,8 @@ fn cancelled() -> bool {
 #[cfg(test)]
 #[path = "_tests_/background_tests.rs"]
 mod background_tests;
+
+/// A closed stop channel has the same ownership meaning as an explicit stop.
+pub(crate) fn stopped(stop: &watch::Receiver<bool>) -> bool {
+    *stop.borrow() || stop.has_changed().is_err()
+}

@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 
 import { platformPackage } from "../../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../../packages/mokly/src/runtime.mjs";
+import { listeningAddress } from "../../scripts/verification/serve-process.mjs";
 
 import { consumer } from "./mokly_serve.js";
 import { workspace } from "./static_publication.js";
@@ -100,6 +101,7 @@ await import(${JSON.stringify(module("sidecar.js"))});
   });
   child.stderr.on("data", (bytes) => {
     stderr += String(bytes);
+    updates.emit("output");
   });
   const result = new Promise<{
     code: number | null;
@@ -118,11 +120,23 @@ await import(${JSON.stringify(module("sidecar.js"))});
     result,
     root,
     async ready() {
-      while (!stdout.includes("Mokly listening at"))
+      while (!listeningAddress(stdout))
         await Promise.race([
           once(updates, "output", { signal: context.signal }),
           result.then((value) => {
             throw new Error(`Serve exited: ${value.stderr}`);
+          }),
+        ]);
+      return listeningAddress(stdout)!;
+    },
+    async gitFailure() {
+      while (!/^\[mokly\/git-failed\][^\n]*\n/mu.test(stderr))
+        await Promise.race([
+          once(updates, "output", { signal: context.signal }),
+          result.then((value) => {
+            throw new Error(
+              `Serve exited before its Git diagnostic: ${value.stderr}`,
+            );
           }),
         ]);
     },
