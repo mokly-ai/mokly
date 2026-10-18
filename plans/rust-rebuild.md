@@ -847,12 +847,13 @@ renders again.
         for the core integration gap sweep.
   - [ ] Compare captured example and large scenarios after the example port
         and comparison integration land.
-  - [ ] Add the callback-only regressions from the M5 HTML sweep: conflicting
+  - [x] Add the callback-only regressions from the M5 HTML sweep: conflicting
         inputs from impure slot replay, renderer mutation isolation, and the
         page helper call count. Cover and document the render-time failure of
         a component wrapper whose definition is not exported by an entry
         module. Cases 30, 32, 36, and 127 remain assigned here; native
         templates cannot exercise callback side effects or wrapper exports.
+        Evidence: `.context/rust-rebuild/delegation/m12-static/report-13.md`.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every
