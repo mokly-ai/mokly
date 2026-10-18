@@ -67,3 +67,11 @@ mod replacement_publication_tests;
 #[cfg(test)]
 #[path = "_tests_/comparison_support.rs"]
 mod comparison_support;
+
+#[cfg(test)]
+#[path = "_tests_/changes_support.rs"]
+mod changes_support;
+
+#[cfg(test)]
+#[path = "_tests_/changes_trace_support.rs"]
+mod changes_trace_support;

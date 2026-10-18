@@ -117,8 +117,8 @@ from the same retained catalogue state, with every published record classified.
 and caller-owned input changes. Both Serve and static output use these
 functions; neither changes the render bytes. An absent workspace stays absent
 until the caller proves usage. `projection_removed` assembles historical records,
-details with base usage, and typed preview metadata. The static caller supplies
-empty workspaces for removed visual details and owns file inventory and identity;
+details with base usage, and typed preview metadata. Both hosts use its shared
+workspace initializer for removed visual details. The static caller owns file inventory and identity;
 the engine owns classification, removal selection, and historical snapshot IDs.
 
 Compose the host adapters at the CLI boundary. Consume `dyn Sources`,

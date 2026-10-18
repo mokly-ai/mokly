@@ -16,13 +16,13 @@ use crate::serve_git::GitWorkMock;
 use crate::warning_support::{config, scopes};
 
 #[test]
-fn moved_head_with_equal_merge_base_keeps_the_classification_identity() {
+fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
     let calls = Arc::new(Mutex::new(Vec::new()));
     let observed = calls.clone();
     let outputs = Mutex::new(
         [
             "head-1", "tip", "base-1", "head-2", "tip", "base-1", "head-2", "tip", "head-2",
-            "new-tip", "base-2",
+            "new-tip", "base-2", "head-2", "tip", "base-1", "head-1", "tip", "base-1",
         ]
         .into_iter(),
     );
@@ -36,7 +36,7 @@ fn moved_head_with_equal_merge_base_keeps_the_classification_identity() {
                     stderr: Vec::new(),
                 })
             }))
-            .n_times(11),
+            .n_times(17),
     ));
     let terminal = Unimock::new(());
     let source = Source {
@@ -65,7 +65,7 @@ fn moved_head_with_equal_merge_base_keeps_the_classification_identity() {
                 GitWorkMock::runner
                     .each_call(matching!(_))
                     .returns(runner)
-                    .n_times(4),
+                    .n_times(6),
             )),
             cancellation: Arc::new(ServeCancellation::default()),
             terminal: Arc::new(Unimock::new(())),
@@ -79,7 +79,7 @@ fn moved_head_with_equal_merge_base_keeps_the_classification_identity() {
             base: None,
         },
     };
-    for expected in ["base-1", "base-1", "base-1", "base-2"] {
+    for expected in ["base-1", "base-1", "base-1", "base-2", "base-1", "base-1"] {
         assert_eq!(
             source.references(Arc::new(ChangeToken::default())).unwrap(),
             expected
@@ -96,7 +96,9 @@ fn moved_head_with_equal_merge_base_keeps_the_classification_identity() {
         vec![
             vec!["head-1", "tip"],
             vec!["head-2", "tip"],
-            vec!["head-2", "new-tip"]
+            vec!["head-2", "new-tip"],
+            vec!["head-2", "tip"],
+            vec!["head-1", "tip"]
         ]
     );
 }

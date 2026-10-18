@@ -182,3 +182,7 @@ mod changes_scheduling_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_install_tests.rs"]
 mod changes_install_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_equal_base_tests.rs"]
+mod changes_equal_base_tests;

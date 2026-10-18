@@ -83,7 +83,7 @@ impl MemoryComparisons {
         Ok(receiver)
     }
 
-    #[tracing::instrument(name = "review.capture", skip_all)]
+    #[tracing::instrument(name = "review.capture", skip_all, fields(status = "error"))]
     async fn run(
         &self,
         accepted: Arc<Accepted>,
@@ -145,6 +145,7 @@ impl MemoryComparisons {
                     };
                     let outcome = files.and_then(|files| self.commit(&accepted, &path, historical, files));
                     if let Err(error) = &outcome && !cancel.cancelled() && !matches!(error, ServerError::ChangesReplaced) { self.diagnostics.failed(error); }
+                    if outcome.is_ok() { tracing::Span::current().record("status", "ok"); }
                     sender.send_replace(Some(shared(outcome)));
                     return;
                 },

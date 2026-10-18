@@ -26,6 +26,8 @@ pub(crate) type Pending = watch::Receiver<Option<Outcome>>;
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonsMock))]
 #[async_trait]
 pub trait Comparisons: Send + Sync {
+    /// Check installation capacity before projecting ready state, without reserving it.
+    fn check_capacity(&self, accepted: &Accepted, files: &BTreeMap<String, File>) -> Result<()>;
     /// Install classification JSON and removed details without snapshot bytes.
     fn install(&self, accepted: Arc<Accepted>, files: BTreeMap<String, File>) -> Result<()>;
     /// Obtain a selected capture, coalescing identical pending requests.

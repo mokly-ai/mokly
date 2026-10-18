@@ -1,3 +1,4 @@
+import { validateExampleDiagnostics } from "../helpers/example_base.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { exampleReady } from "./example_readiness.js";
@@ -50,10 +51,4 @@ export async function startExampleHosts(
     throw new AggregateError(errors, "Example worker setup failed");
   }
   return hosts;
-}
-
-/** The invalid shared base emits one diagnostic and has no real Changes work. */
-export function validateExampleDiagnostics(output: string): void {
-  if ((output.match(/\[mokly\/git-failed\]/g) ?? []).length !== 1)
-    throw new Error(`Expected one shared example Git diagnostic:\n${output}`);
 }

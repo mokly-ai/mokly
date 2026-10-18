@@ -70,6 +70,8 @@ metadata. Serve uses those shared functions and the shared snapshot route builde
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
 all current details together. Ready state installs the review pointer, Changes
 membership, moved paths, removed records, and per-view evidence in one revision.
+Capacity is checked before ready-state projection and again at installation.
+A full store therefore retries without repeating that projection.
 New classification files enter the comparison store after ready-state projection
 and before publication. Their retention window starts after projection.
 An old head cannot publish into a replacement. Watched Serve polls HEAD and the

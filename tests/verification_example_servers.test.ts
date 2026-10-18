@@ -6,15 +6,13 @@ import type { FullConfig } from "@playwright/test";
 import config from "../playwright.config.js";
 
 import { exampleReady } from "./browser/example_readiness.js";
+import { ownExampleServerUrl } from "./browser/example_servers.js";
+import { startExampleHosts } from "./browser/example_setup.js";
+import setup from "./browser/setup.js";
 import {
   EXAMPLE_BASE,
-  ownExampleServerUrl,
-} from "./browser/example_servers.js";
-import {
-  startExampleHosts,
   validateExampleDiagnostics,
-} from "./browser/example_setup.js";
-import setup from "./browser/setup.js";
+} from "./helpers/example_base.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 test("Playwright config owns the startup hook and complete worker configuration", () => {

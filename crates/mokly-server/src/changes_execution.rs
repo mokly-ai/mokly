@@ -19,7 +19,7 @@ use crate::publication::Publications;
 use crate::snapshot::{Snapshot, encode};
 
 impl ChangesPass {
-    #[tracing::instrument(name = "changes.classify", skip_all)]
+    #[tracing::instrument(name = "changes.classify", skip_all, fields(status = "error"))]
     pub(crate) async fn execute(
         &self,
         origin: Arc<Snapshot>,
@@ -50,7 +50,8 @@ impl ChangesPass {
         let result = match result {
             Ok((accepted, files)) => {
                 match self.publish(origin.clone(), accepted.clone(), files).await {
-                    Ok(true) if !cancel.cancelled() => {
+                    Ok(true) => {
+                        tracing::Span::current().record("status", "ok");
                         cancel.commit(&Commit(&|| {
                             if let Some(phase) = &phase {
                                 phase.finish();
@@ -82,6 +83,7 @@ impl ChangesPass {
                         None,
                     ) {
                         Ok(true) => {
+                            tracing::Span::current().record("status", "ok");
                             cancel.commit(&Commit(&|| {
                                 if let Some(phase) = &phase {
                                     phase.finish();
@@ -132,7 +134,7 @@ impl ChangesPass {
         });
         let files = changes::metadata(&accepted, &origin)?;
         if files.values().map(|file| file.bytes.len()).sum::<usize>() > MAX_BYTES {
-            return Err(ServerError::ComparisonCapacity);
+            return Err(ServerError::ComparisonMetadataTooLarge);
         }
         if self.watching && source.references(cancel.clone())? != references {
             return Err(ServerError::ChangesReplaced);
@@ -154,37 +156,49 @@ impl ChangesPass {
             if accepted.cancel.cancelled() || !self.current(&origin) {
                 return Ok(false);
             }
-            let owner = self.clone();
-            let head = origin.clone();
-            let input = accepted.clone();
-            let metadata = files.clone();
-            let parent = tracing::Span::current();
-            let result = tokio::task::spawn_blocking(move || {
-                parent.in_scope(|| {
-                    owner.publications.changes(
-                        &head,
-                        ChangesStatus::Ready,
-                        Some(input.clone()),
-                        input.cancel.as_ref(),
-                        Some(&MetadataInstallation {
-                            store: owner.comparisons.as_ref(),
-                            accepted: &input,
-                            files: &metadata,
-                        }),
-                    )
-                })
-            })
-            .await;
+            let result = self
+                .install_ready(origin.clone(), accepted.clone(), files.clone())
+                .await;
             match result {
-                Ok(Err(ServerError::ComparisonCapacity)) => {
+                Err(ServerError::ComparisonCapacity) => {
                     tokio::select! {
                         _ = tokio::time::sleep(Duration::from_secs(1)) => {},
                         _ = wake.0.notified() => {},
                     }
                 }
-                Ok(result) => return result,
-                Err(source) => return Err(InternalError::Task { source }.into()),
+                result => return result,
             }
+        }
+    }
+
+    async fn install_ready(
+        &self,
+        origin: Arc<Snapshot>,
+        accepted: Arc<Accepted>,
+        files: Arc<BTreeMap<String, File>>,
+    ) -> Result<bool> {
+        self.comparisons.check_capacity(&accepted, &files)?;
+        let owner = self.clone();
+        let parent = tracing::Span::current();
+        match tokio::task::spawn_blocking(move || {
+            parent.in_scope(|| {
+                owner.publications.changes(
+                    &origin,
+                    ChangesStatus::Ready,
+                    Some(accepted.clone()),
+                    accepted.cancel.as_ref(),
+                    Some(&MetadataInstallation {
+                        store: owner.comparisons.as_ref(),
+                        accepted: &accepted,
+                        files: &files,
+                    }),
+                )
+            })
+        })
+        .await
+        {
+            Ok(result) => result,
+            Err(source) => Err(InternalError::Task { source }.into()),
         }
     }
 }

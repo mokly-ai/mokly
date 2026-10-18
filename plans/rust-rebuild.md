@@ -1214,6 +1214,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         single capture diagnostics, advertised component requests, trace
         parents, shared removed workspaces, and Git admission and drain tests.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-8.md`.
+  - [x] Apply the final Serve Changes review: shared example base, exact retry
+        timing, cancellation and size failure, capacity before projection,
+        trace outcomes, backward tip moves, and advertised URL fences.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-9.md`.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
       contracts.

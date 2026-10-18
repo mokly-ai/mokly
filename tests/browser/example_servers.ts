@@ -1,7 +1,6 @@
 import type { ConcurrencyEnvironment } from "../../scripts/verification/concurrency.mjs";
 
-// The shared example specs do not use Changes. Real Changes specs own Git fixtures.
-export const EXAMPLE_BASE = "refs/mokly/browser-suite-no-base";
+import { EXAMPLE_BASE } from "../helpers/example_base.js";
 
 /** The shim owns binary lookup. Port zero asks Serve to bind a free port. */
 export function exampleServerCommand(port = 0): readonly string[] {

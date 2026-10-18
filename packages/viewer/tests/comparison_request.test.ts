@@ -99,3 +99,28 @@ test("a null advertised comparison fails before fetching in a live host", async 
     /Comparisons are unavailable in this catalogue/,
   );
 });
+
+test("a loaded URL outside the advertised generation fails before renewal traffic", async () => {
+  let requests = 0;
+  const environment: ComparisonEnvironment = {
+    baseUrl: origin,
+    delivery: () => ({ kind: "live" }),
+    fetch: async (input) => {
+      requests++;
+      return response(String(input));
+    },
+  };
+  await assert.rejects(
+    renewComparison(
+      environment,
+      {
+        result,
+        url: `${origin}/mokly-viewer/diffs/generations/other/review.json`,
+      },
+      { id: "removed", comparisonUrl: advertised },
+      signal,
+    ),
+    /The comparison is unavailable/,
+  );
+  assert.equal(requests, 0);
+});

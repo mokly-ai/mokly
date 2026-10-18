@@ -23,6 +23,7 @@ The automated checks for repository inputs are deliberately narrow:
 - [`tests/verification_example_servers.test.ts`](../../tests/verification_example_servers.test.ts)
   requires the browser command to use the named `EXAMPLE_BASE` constant through
   the exported `exampleServerCommand` builder in `tests/browser/example_servers.ts`.
+  `tests/helpers/example_base.ts` owns the constant shared with served design checks.
   It checks the Playwright configuration, each worker's server, readiness, and
   the single Git diagnostic.
 - [`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)

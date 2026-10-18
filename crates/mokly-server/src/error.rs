@@ -48,6 +48,9 @@ pub enum ServerError {
     /// Retained comparisons fill their count or byte bound.
     #[error("[mokly-server/changes] comparison capacity is full")]
     ComparisonCapacity,
+    /// Classification metadata cannot fit even in an empty generation.
+    #[error("[mokly-server/changes] comparison metadata exceeds the 64 MiB limit")]
+    ComparisonMetadataTooLarge,
     /// The native comparison failed with its original diagnostic.
     #[error("[mokly-server/changes] {source}")]
     Comparison {

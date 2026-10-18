@@ -16,6 +16,15 @@ use crate::error::{Result, ServerError};
 
 #[async_trait]
 impl Comparisons for MemoryComparisons {
+    fn check_capacity(&self, accepted: &Accepted, files: &BTreeMap<String, File>) -> Result<()> {
+        self.collect();
+        let state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if state.closed || accepted.cancel.cancelled() {
+            return Err(ServerError::ChangesReplaced);
+        }
+        comparison_store::admit(&state, &accepted.id, files)
+    }
+
     fn install(&self, accepted: Arc<Accepted>, files: BTreeMap<String, File>) -> Result<()> {
         self.collect();
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());

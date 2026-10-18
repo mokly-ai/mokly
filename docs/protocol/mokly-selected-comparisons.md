@@ -111,7 +111,9 @@ retained generations to 64 and 128 MiB, and each generation to 64 MiB.
 Reject new captures that exceed capacity rather than removing documents still
 within their retention window. When retained generations fill the store,
 classification retries metadata installation once per second without rerendering
-or reclassifying. It remains pending until capacity is free, or replacement or
+or reclassifying. Admission is checked before ready-state projection and again
+at installation. A full store does not repeat catalogue projection on each retry.
+It remains pending until capacity is free, or replacement or
 shutdown cancels it. Metadata larger than 64 MiB fails without retry.
 Expired generations are collected
 periodically and before a new capture. A failed refresh preserves the

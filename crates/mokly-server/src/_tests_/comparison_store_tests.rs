@@ -189,6 +189,10 @@ async fn retained_generations_are_rejected_at_capacity_and_never_evicted_early()
         store.install(entry, files()).unwrap();
     }
     assert!(matches!(
+        store.check_capacity(&accepted, &files()),
+        Err(ServerError::ComparisonCapacity)
+    ));
+    assert!(matches!(
         store.install(accepted.clone(), files()),
         Err(ServerError::ComparisonCapacity)
     ));

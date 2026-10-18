@@ -9,6 +9,8 @@ use crate::output::Style;
 use crate::redaction::Redactor;
 use crate::{build_output, changes_diagnostics};
 
+const METADATA_TOO_LARGE: &str = "Comparison data exceeds the 64 MiB limit.";
+
 /// Format a server failure without library-specific error wrappers.
 pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> String {
     let (code, message) = match error {
@@ -47,6 +49,7 @@ pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> Strin
             Code::BuildInvalid,
             "Comparison capacity is full. Try again shortly.".into(),
         ),
+        ServerError::ComparisonMetadataTooLarge => (Code::BuildInvalid, METADATA_TOO_LARGE.into()),
         ServerError::Comparison { source } => (
             changes_diagnostics::failure_code(source),
             changes_diagnostics::failure_detail(source),
@@ -87,6 +90,7 @@ mod serve_errors_tests;
 /// Retain the historical commit and authored diagnostics in a Changes status reason.
 pub fn changes_reason(error: &ServerError) -> String {
     match error {
+        ServerError::ComparisonMetadataTooLarge => METADATA_TOO_LARGE.into(),
         ServerError::Comparison { source } => changes_diagnostics::failure_detail(source),
         _ => error.to_string(),
     }

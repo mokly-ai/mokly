@@ -12,10 +12,8 @@ import {
   TESTED_NODE_VERSIONS,
 } from "../packages/mokly/src/version.mjs";
 
-import {
-  EXAMPLE_BASE,
-  exampleServerCommand,
-} from "./browser/example_servers.js";
+import { exampleServerCommand } from "./browser/example_servers.js";
+import { EXAMPLE_BASE } from "./helpers/example_base.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CI_WORKFLOW = ".github/workflows/ci.yml";
