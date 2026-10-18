@@ -16,6 +16,7 @@ pub(super) struct ProcessControl {
     pub(super) group: Box<dyn ProcessGroup>,
     pub(super) outgoing: SyncSender<Vec<u8>>,
     pub(super) exited: Mutex<Receiver<()>>,
+    pub(super) drained: Mutex<Receiver<()>>,
     pub(super) clock: Arc<dyn Wait>,
 }
 
@@ -46,6 +47,14 @@ impl WorkerControl for ProcessControl {
         if !self.clock.exited(&receiver, deadline) {
             self.kill()?;
             self.clock.reaped(&receiver);
+        } else {
+            let drained = match self.drained.lock() {
+                Ok(drained) => drained,
+                Err(_) => return Err(InternalError::Synchronization.into()),
+            };
+            if !self.clock.drained(&drained, deadline) {
+                self.kill()?;
+            }
         }
         Ok(())
     }

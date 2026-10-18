@@ -6,6 +6,7 @@ import type { CssModulesParams } from "./CssModulesParams.js";
 import type { DisposeContextParams } from "./DisposeContextParams.js";
 import type { EmptyParams } from "./EmptyParams.js";
 import type { GenerationParams } from "./GenerationParams.js";
+import type { HelloParams } from "./HelloParams.js";
 import type { ProcessCssParams } from "./ProcessCssParams.js";
 import type { RenderComponentParams } from "./RenderComponentParams.js";
 import type { RenderPageParams } from "./RenderPageParams.js";
@@ -18,4 +19,4 @@ export type Request = {
 /**
  * Request identity repeated in the response.
  */
-id: number, } & ({ "method": "hello", "params": EmptyParams } | { "method": "bundle", "params": BundleParams } | { "method": "restoreGeneration", "params": RestoreGeneration } | { "method": "describe", "params": GenerationParams } | { "method": "bindings", "params": BindingsParams } | { "method": "renderScreen", "params": RenderParams } | { "method": "renderComponent", "params": RenderComponentParams } | { "method": "renderStory", "params": RenderStoryParams } | { "method": "renderPage", "params": RenderPageParams } | { "method": "processCss", "params": ProcessCssParams } | { "method": "cssModules", "params": CssModulesParams } | { "method": "dispose", "params": GenerationParams } | { "method": "disposeContext", "params": DisposeContextParams } | { "method": "shutdown", "params": EmptyParams });
+id: number, } & ({ "method": "hello", "params": HelloParams } | { "method": "bundle", "params": BundleParams } | { "method": "restoreGeneration", "params": RestoreGeneration } | { "method": "describe", "params": GenerationParams } | { "method": "bindings", "params": BindingsParams } | { "method": "renderScreen", "params": RenderParams } | { "method": "renderComponent", "params": RenderComponentParams } | { "method": "renderStory", "params": RenderStoryParams } | { "method": "renderPage", "params": RenderPageParams } | { "method": "processCss", "params": ProcessCssParams } | { "method": "cssModules", "params": CssModulesParams } | { "method": "dispose", "params": GenerationParams } | { "method": "disposeContext", "params": DisposeContextParams } | { "method": "shutdown", "params": EmptyParams });

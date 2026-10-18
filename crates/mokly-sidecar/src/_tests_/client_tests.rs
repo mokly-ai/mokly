@@ -1,12 +1,55 @@
 //! Handshake, correlation and diagnostic forwarding without real processes.
 
+use std::sync::Arc;
+
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::client::{Client, EventsMock, SidecarClient, TransportMock};
 use crate::error::{Error, ProtocolError};
-use crate::methods::{Call, Empty};
+use crate::methods::{Call, Empty, Hello};
 use crate::wire::{Event, Frame, MethodResult, Request, Response};
+
+#[test]
+fn hello_communicates_timing_opt_in_without_changing_default_wire_bytes() {
+    for enabled in [false, true] {
+        let mock = Unimock::new((
+            TransportMock::send
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, request| {
+                    let wire = serde_json::to_value(request).unwrap();
+                    assert_eq!(
+                        wire["params"],
+                        if enabled {
+                            json!({"timings":true})
+                        } else {
+                            json!({})
+                        }
+                    );
+                    Ok(())
+                })),
+            TransportMock::receive
+                .next_call(matching!())
+                .returns(Ok(Frame::Response(Response::Success {
+                    id: 0,
+                    result: json!({"version":"fixture"}),
+                }))),
+        ));
+        let mut client: Box<dyn SidecarClient> = Box::new(
+            Client::new(Box::new(mock.clone()), Box::new(mock), "fixture".into())
+                .with_timings(enabled),
+        );
+        client.handshake().unwrap();
+    }
+    for value in [json!(null), json!("true"), json!(1)] {
+        assert!(
+            serde_json::from_value::<Request>(
+                json!({"id":0,"method":"hello","params":{"timings":value}})
+            )
+            .is_err()
+        );
+    }
+}
 
 #[test]
 fn client_requires_an_exact_version_hello_before_requests() {
@@ -118,7 +161,7 @@ fn wrong_versions_and_first_events_fail_closed() {
 fn response_id_is_checked_before_result_decoding() {
     let request = Request {
         id: 7,
-        call: Call::Hello(Empty {}),
+        call: Call::Hello(Hello::default()),
     };
     let response = Response::Success {
         id: 6,

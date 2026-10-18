@@ -45,7 +45,6 @@ pub(super) struct NativeDependencies {
 }
 
 impl BaseDependencies for NativeDependencies {
-    #[tracing::instrument(name = "review.base-dependencies", skip_all, fields(status = "error", tier = tracing::field::Empty))]
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
@@ -53,33 +52,19 @@ impl BaseDependencies for NativeDependencies {
         used_directories: &[String],
         unmapped_directories: &[String],
     ) -> Result<Arc<BaseSide>> {
-        let result =
-            match self.prepare_side(request, config, used_directories, unmapped_directories) {
-                Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
-                    path: ".".into(),
-                    source,
-                }),
-                Err(Error::CacheLimit { limit }) => Err(Error::Limit {
-                    path: ".".into(),
-                    source: mokly_git::error::Error::ByteLimit {
-                        limit: limit as usize,
-                    },
-                }),
-                result => result,
-            };
-        if let Ok(side) = &result {
-            let span = tracing::Span::current();
-            span.record(
-                "tier",
-                match side.dependencies.tier {
-                    Tier::Working => 1u64,
-                    Tier::Installed => 2,
-                    Tier::Fallback => 3,
+        match self.prepare_side(request, config, used_directories, unmapped_directories) {
+            Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
+                path: ".".into(),
+                source,
+            }),
+            Err(Error::CacheLimit { limit }) => Err(Error::Limit {
+                path: ".".into(),
+                source: mokly_git::error::Error::ByteLimit {
+                    limit: limit as usize,
                 },
-            );
-            span.record("status", "ok");
+            }),
+            result => result,
         }
-        result
     }
 }
 
@@ -115,6 +100,12 @@ impl NativeDependencies {
             files: Limits::default().files,
         };
         let sources = extraction.acquire(&request.commit)?;
+        let span = tracing::info_span!(
+            "review.base-dependencies",
+            status = "error",
+            tier = tracing::field::Empty
+        );
+        let _scope = span.enter();
         let reader: &dyn InputReader = &SourceInputs;
         let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
         let working: &dyn WorkingInputs = &SystemWorkingInputs;
@@ -149,11 +140,21 @@ impl NativeDependencies {
             configuration,
             resolution: resolution(config)?,
         })?;
+        span.record("tier", tier_number(dependencies.tier));
+        span.record("status", "ok");
         Ok(Arc::new(BaseSide {
             sources,
             dependencies,
             identity: request.commit.to_string(),
         }))
+    }
+}
+
+fn tier_number(tier: Tier) -> u64 {
+    match tier {
+        Tier::Working => 1,
+        Tier::Installed => 2,
+        Tier::Fallback => 3,
     }
 }
 
