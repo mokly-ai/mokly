@@ -1524,6 +1524,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Stop sidecar and PostCSS children quietly on a closed parent output pipe.
+      Verify response, operation-count, diagnostic, and IPC closure without sleeps.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/part0-done.md`.
+
 - [ ] Obtain user approval for the current 2 GiB per repository cache namespace
       and the shared 120-second dependency preparation allowance before adding
       these values to the timings contract.

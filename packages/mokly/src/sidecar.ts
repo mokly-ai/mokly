@@ -3,6 +3,7 @@ import fs from "node:fs";
 
 import { SidecarError, detail } from "./sidecar/errors.js";
 import { parentInput } from "./sidecar/parent-input.js";
+import { guardParentOutput } from "./sidecar/parent-output.js";
 import { requestId } from "./sidecar/request-id.js";
 import { request } from "./sidecar/requests.js";
 import { Session } from "./sidecar/session.js";
@@ -13,6 +14,7 @@ const version = (
     fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"),
   ) as { version: string }
 ).version;
+guardParentOutput();
 const write = process.stdout.write.bind(process.stdout);
 globalThis.console = new Console(process.stderr, process.stderr);
 process.stdout.write = process.stderr.write.bind(process.stderr);
