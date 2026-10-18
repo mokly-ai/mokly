@@ -1,10 +1,12 @@
 //! Immediate revision handshake and ordered publication messages.
 
 use std::convert::Infallible;
+use std::time::Duration;
 
-use axum::body::{Body, Bytes};
+use axum::body::Bytes;
 use axum::http::{HeaderValue, StatusCode};
-use axum::response::Response;
+use axum::response::sse::{Event, KeepAlive, Sse};
+use axum::response::{IntoResponse, Response};
 use tokio::sync::watch;
 
 use crate::publication::Subscription;
@@ -15,7 +17,7 @@ pub(crate) fn events(mut subscription: Subscription, mut stop: watch::Receiver<b
         let mut state = subscription.current;
         loop {
             if *stop.borrow() { break; }
-            let message = format!("id: {}\ndata: {}\n\n", state.revision, state.deployment_id);
+            let message = Event::default().id(state.revision.to_string()).data(&state.deployment_id);
             yield Ok::<_, Infallible>(message);
             tokio::select! {
                 result = subscription.updates.recv() => { match result { Ok(next) => state = next, Err(_) => break } },
@@ -28,7 +30,14 @@ pub(crate) fn events(mut subscription: Subscription, mut stop: watch::Receiver<b
     response
         .headers_mut()
         .insert("x-accel-buffering", HeaderValue::from_static("no"));
-    *response.body_mut() = Body::from_stream(stream);
+    *response.body_mut() = Sse::new(stream)
+        .keep_alive(
+            KeepAlive::new()
+                .interval(Duration::from_secs(15))
+                .text("keep-alive"),
+        )
+        .into_response()
+        .into_body();
     response
 }
 #[cfg(test)]

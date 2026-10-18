@@ -9,6 +9,10 @@ import { exampleReady } from "./browser/example_readiness.js";
 import { ownExampleServerUrl } from "./browser/example_servers.js";
 import { startExampleHosts } from "./browser/example_setup.js";
 import setup from "./browser/setup.js";
+import {
+  EXAMPLE_BASE,
+  validateExampleDiagnostics,
+} from "./helpers/example_base.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 test("Playwright config owns the startup hook and complete worker configuration", () => {
@@ -52,7 +56,7 @@ test("every worker starts through the exact shim command before readiness settle
         "--config",
         "examples/basic/mokly.config.json",
         "--base",
-        "HEAD",
+        EXAMPLE_BASE,
         "--port",
         "0",
         "--no-watch",
@@ -96,7 +100,8 @@ for (const mode of ["ready", "pending", "unavailable", "ended"] as const) {
         reads++;
         return Response.json({
           revision: 1,
-          changesStatus: "disabled",
+          changesStatus:
+            reads === 1 && mode === "pending" ? "pending" : "unavailable",
           screens: [{ path: "home" }],
           components: [],
         });
@@ -202,6 +207,18 @@ test("a failed worker drains successful siblings before setup rejects", async ()
       assert.equal(closed, true);
       return true;
     },
+  );
+});
+
+test("the shared example requires exactly one Git diagnostic", () => {
+  validateExampleDiagnostics(
+    "[mokly/git-failed] Missing reserved base\nChanges unavailable\n",
+  );
+  assert.throws(() => validateExampleDiagnostics("Changes ready\n"));
+  assert.throws(() =>
+    validateExampleDiagnostics(
+      "[mokly/git-failed] one\n[mokly/git-failed] two\n",
+    ),
   );
 });
 

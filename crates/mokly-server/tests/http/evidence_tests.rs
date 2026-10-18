@@ -63,6 +63,7 @@ async fn on_demand_usage_and_the_background_pass_publish_complete_consumers_once
     );
     let (stop, receiver) = watch::channel(false);
     let pass = UsagePass {
+        changes: None,
         publications: harness.publications.clone(),
         work: Arc::new(Workers::new(2, Arc::new(TracingDiagnostics))),
         diagnostics: Arc::new(TracingDiagnostics),

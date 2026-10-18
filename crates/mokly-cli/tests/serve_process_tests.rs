@@ -92,13 +92,26 @@ async fn start(extra: &[&str]) -> Running {
     let url = line.strip_prefix("Mokly listening at ").unwrap().to_owned();
     assert!(url.starts_with("http://127.0.0.1:"));
     assert!(!url.ends_with(":0"));
-    let errors = BufReader::new(child.stderr.take().unwrap());
+    let mut errors = BufReader::new(child.stderr.take().unwrap());
+    let mut prefix = String::new();
+    tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let mut line = String::new();
+            assert!(errors.read_line(&mut line).await.unwrap() > 0);
+            prefix.push_str(&line);
+            if line.contains("[mokly/git-failed]") {
+                break;
+            }
+        }
+    })
+    .await
+    .unwrap();
     Running {
         child,
         root,
         url,
         errors,
-        prefix: String::new(),
+        prefix,
     }
 }
 
@@ -127,35 +140,28 @@ async fn repeated_sigint_and_sigterm_exit_zero_and_release_the_port() {
     for signal in ["-INT", "-TERM"] {
         let running = start(&[]).await;
         let (url, stderr) = close(running, signal).await;
-        assert!(stderr.is_empty(), "{stderr}");
+        assert_eq!(stderr.lines().count(), 1, "{stderr}");
+        assert!(stderr.contains("[mokly/git-failed]"), "{stderr}");
         assert!(std::net::TcpListener::bind(url.strip_prefix("http://").unwrap()).is_ok());
     }
 }
 
 #[tokio::test]
 async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
-    let mut running = start(&["--debug-timings"]).await;
-    tokio::time::timeout(Duration::from_secs(15), async {
-        loop {
-            let mut line = String::new();
-            assert!(running.errors.read_line(&mut line).await.unwrap() > 0);
-            let value: serde_json::Value =
-                serde_json::from_str(line.trim().strip_prefix("[mokly:timing] ").unwrap()).unwrap();
-            running.prefix.push_str(&line);
-            if value["stage"] == "serve.background" && value["event"] == "end" {
-                break;
-            }
-        }
-    })
-    .await
-    .unwrap();
+    let running = start(&["--debug-timings"]).await;
     let (_, stderr) = close(running, "-TERM").await;
+    assert_eq!(
+        stderr
+            .lines()
+            .filter(|line| line.contains("[mokly/git-failed]"))
+            .count(),
+        1,
+        "{stderr}"
+    );
     let records: Vec<_> = stderr
         .lines()
-        .map(|line| {
-            serde_json::from_str::<serde_json::Value>(line.strip_prefix("[mokly:timing] ").unwrap())
-                .unwrap()
-        })
+        .filter_map(|line| line.strip_prefix("[mokly:timing] "))
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
         .collect();
     let starts: std::collections::BTreeMap<_, _> = records
         .iter()

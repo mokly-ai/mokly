@@ -1,4 +1,5 @@
 import type { ConcurrencyEnvironment } from "../../scripts/verification/concurrency.mjs";
+import { EXAMPLE_BASE } from "../helpers/example_base.js";
 
 /** The shim owns binary lookup. Port zero asks Serve to bind a free port. */
 export function exampleServerCommand(port = 0): readonly string[] {
@@ -8,7 +9,7 @@ export function exampleServerCommand(port = 0): readonly string[] {
     "--config",
     "examples/basic/mokly.config.json",
     "--base",
-    "HEAD",
+    EXAMPLE_BASE,
     "--port",
     String(port),
     "--no-watch",

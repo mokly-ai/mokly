@@ -6,7 +6,7 @@ use mokly_server::error::{InternalError, ServerError};
 
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
-use crate::serve_errors::failure;
+use crate::serve_errors::{changes_reason, failure};
 
 #[test]
 fn server_diagnostics_have_typed_recovery_copy() {
@@ -40,4 +40,27 @@ fn server_diagnostics_have_typed_recovery_copy() {
         }
     }
     insta::assert_snapshot!("serve_diagnostics", output.join("\n"));
+}
+
+#[test]
+fn oversized_comparison_metadata_does_not_offer_retry() {
+    let style = Style {
+        mode: Mode::Plain,
+        color: false,
+        ascii: true,
+        columns: 100,
+    };
+    let text = failure(
+        &style,
+        &ServerError::ComparisonMetadataTooLarge,
+        &Redactor::default(),
+    );
+    assert_eq!(
+        text,
+        "[mokly/build-invalid] Comparison data exceeds the 64 MiB limit.\n"
+    );
+    assert_eq!(
+        changes_reason(&ServerError::ComparisonMetadataTooLarge),
+        "Comparison data exceeds the 64 MiB limit."
+    );
 }

@@ -59,6 +59,7 @@ export function ComponentWorkspace({
   const comparison = useComparison({
     effectiveColorScheme: resolvedView.colorScheme,
     eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    historical: data.removed || variant?.removed === true,
     entryId: variantPath ?? entry.path,
     ...(data.component ? { owner: data.component.path } : {}),
   });
