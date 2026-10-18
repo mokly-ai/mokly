@@ -880,6 +880,14 @@ renders again.
         preserve current-only filter omission and resized width on reload,
         centralize the exact recorder notice, and track clocks per context.
         Prove automatic console and page-error rejection with isolated probes.
+  - [x] Apply browser review 4: wait for deployment reload and replacement
+        CSS, cover Both viewport comparisons, use the saved scroll preference,
+        bound negative probes within their owner, and correct sweep ownership.
+  - [ ] Cover the remaining copied-file delivery cases in the browser sweep:
+        branch-point references, moved and removed previews, malformed
+        comparison metadata, unchanged-base publication, lazy first reads,
+        immutable bytes, and Refresh request counts. Milestone 10 owns the
+        remaining comparison UI checks, including frame color-scheme.
   - [ ] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
         user approves the new job. Include the private slot and variant file
         fixture and the design journeys checked by a manual run.
@@ -1025,6 +1033,7 @@ Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
 Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browser/report-4.md`.
 Native copied comparisons and browser review 3: `.context/rust-rebuild/delegation/m8-browser/report-5.md`.
+Browser review 4 and the comparison UI integration: `.context/rust-rebuild/delegation/m8-browser/report-6.md`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
 Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.

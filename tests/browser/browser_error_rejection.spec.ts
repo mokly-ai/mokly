@@ -1,14 +1,20 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 import { runCaptured } from "../../scripts/verification/process.mjs";
+import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
 
 test("automatic browser errors fail real tests for both console and page errors", async () => {
-  const output = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-error-proof-"));
+  const output = await fs.mkdtemp(
+    path.join(
+      process.env["MOKLY_VERIFICATION_RESOURCE_ROOT"] ??
+        path.join(repositoryRoot, ".context"),
+      "mokly-error-proof-",
+    ),
+  );
   try {
     const result = await runCaptured(
       process.execPath,
