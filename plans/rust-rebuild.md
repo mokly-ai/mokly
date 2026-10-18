@@ -1616,6 +1616,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
+    `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
+    `sidecar render readiness: Disconnected` during a concurrent package
+    rebuild. Both passed in an isolated rerun and the final repository suite.
+    Suspected source: shared built files changed during the tests. Keep builds
+    and suites separate. Evidence: M14 `report-7.md`.
   - [x] Reconcile the inherited M14 round 3
         `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
         The shared fixture seeds its epoch and cleanup uses one staleness rule.
