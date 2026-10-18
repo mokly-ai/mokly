@@ -3,6 +3,7 @@
 use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
+use mokly_cli::redaction::Redactor;
 use mokly_sidecar::workers::{Clock, ClockMock};
 use serde_json::Value;
 use tracing_subscriber::layer::SubscriberExt;
@@ -18,6 +19,7 @@ pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
         Arc::new(Unimock::new(
             ClockMock::now_ms.each_call(matching!()).returns(0u64),
         )),
+        Arc::new(Redactor::default()),
     )
     .iter()
     .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
@@ -25,10 +27,18 @@ pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
 }
 
 pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
-    collect_lines(run, Arc::new(Unimock::new(())))
+    capture_redacted(run, Redactor::default())
 }
 
-fn collect_lines(run: impl FnOnce(), clock: Arc<dyn Clock>) -> Vec<String> {
+pub(super) fn capture_redacted(run: impl FnOnce(), redactor: Redactor) -> Vec<String> {
+    collect_lines(run, Arc::new(Unimock::new(())), Arc::new(redactor))
+}
+
+fn collect_lines(
+    run: impl FnOnce(),
+    clock: Arc<dyn Clock>,
+    redactor: Arc<Redactor>,
+) -> Vec<String> {
     let records = Arc::new(Mutex::new(Vec::new()));
     let output = records.clone();
     let terminal = Unimock::new(TerminalMock::stderr.each_call(matching!(_)).answers_arc(
@@ -41,6 +51,7 @@ fn collect_lines(run: impl FnOnce(), clock: Arc<dyn Clock>) -> Vec<String> {
         session: "test".into(),
         clock,
         next: AtomicU64::new(1),
+        redactor,
     };
     tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), run);
     records.lock().unwrap().clone()

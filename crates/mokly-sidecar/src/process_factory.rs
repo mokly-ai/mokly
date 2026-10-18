@@ -114,15 +114,16 @@ impl WorkerFactory for NodeFactory {
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
         let (incoming_frames, incoming) = mpsc::sync_channel(2);
         let (exited_tx, exited) = mpsc::sync_channel(1);
+        let (drained, diagnostics_done) = mpsc::sync_channel(1);
         let control: Arc<dyn WorkerControl> = Arc::new(ProcessControl {
             group,
             outgoing: outgoing.clone(),
             exited: Mutex::new(exited),
+            drained: Mutex::new(diagnostics_done),
             clock: Arc::clone(&self.clock),
         });
         let diagnostics = Arc::clone(&self.diagnostics);
         let timings = self.timings;
-        let (drained, diagnostics_done) = mpsc::sync_channel(1);
         let tasks: Vec<Box<dyn FnOnce() + Send>> = vec![
             Box::new(move || write_frames(stdin, outgoing_frames)),
             Box::new(move || read_frames(stdout, incoming_frames)),
@@ -131,13 +132,7 @@ impl WorkerFactory for NodeFactory {
                 let _ = drained.send(());
             }),
             Box::new(move || {
-                complete(
-                    &mut ProcessCompletion {
-                        child,
-                        diagnostics: diagnostics_done,
-                    },
-                    exited_tx,
-                );
+                complete(&mut ProcessCompletion { child }, exited_tx);
             }),
         ];
         for task in tasks {

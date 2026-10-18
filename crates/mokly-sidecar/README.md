@@ -77,11 +77,16 @@ per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and
 standard error. Shutdown
 wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
-Completion waits for stderr drain, including long lines split into 64 KiB pieces.
+Graceful completion drains stderr within the shared deadline, including long
+lines split into 64 KiB pieces. Forced completion waits only for the child reaper.
 `NodeFactory::with_timings` enables timing through hello and forwards complete
 sidecar records through `Diagnostics::timing`. The default leaves timings off.
 Core spawn and replacement spans include the version handshake and retain
-error status until it succeeds.
+error status until it succeeds. Every later spawn in a pool slot is a
+replacement, including failed-hello retries and source-root switches. The
+replacement span excludes the old process's stop and idle time between requests.
+The CLI redacts secrets and controls in forwarded timing lines; records from
+the sidecar's timing writer retain their original bytes.
 
 Expected PostCSS errors carry typed configuration, plugin, or dependency data.
 The core presents their catalogued code and text. Request diagnostics use

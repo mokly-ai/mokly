@@ -3,6 +3,7 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
+use mokly_cli::redaction::Redactor;
 use mokly_sidecar::bindings::DisposeContext;
 use mokly_sidecar::error::Error;
 use mokly_sidecar::methods::Call;
@@ -12,13 +13,28 @@ use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::{ClockMock, ControlMock, FactoryMock, Spawned, WorkerMock};
 use unimock::{MockFn, Unimock, matching};
 
-use super::serve_trace_tests::{capture, capture_lines};
+use super::serve_trace_tests::{capture, capture_lines, capture_redacted};
 
 #[test]
 fn sidecar_timing_lines_keep_their_original_bytes_and_identity() {
     let raw = "[mokly:timing] { \"role\":\"sidecar\", \"session\":\"child\", \"pid\":123, \"event\":\"start\" }";
     let lines = capture_lines(|| tracing::info!(sidecar_timing = raw, "sidecar timing"));
     assert_eq!(lines, [format!("{raw}\n")]);
+}
+
+#[test]
+fn record_shaped_diagnostics_cannot_bypass_token_or_control_redaction() {
+    let raw = "[mokly:timing] {\r\"role\":\"sidecar\",\"session\":\"private/token\",\"label\":\"private%2Ftoken\u{7f}\u{85}\"}";
+    let lines = capture_redacted(
+        || tracing::info!(sidecar_timing = raw, "sidecar timing"),
+        Redactor::collect(&[], Some("private/token")),
+    );
+    assert_eq!(
+        lines,
+        [
+            "[mokly:timing] {\\u000d\"role\":\"sidecar\",\"session\":\"[redacted]\",\"label\":\"[redacted]\\u007f\\u0085\"}\n"
+        ]
+    );
 }
 
 fn spawned(mock: Unimock) -> Spawned {
