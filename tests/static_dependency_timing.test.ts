@@ -120,3 +120,68 @@ test(
     }
   },
 );
+
+test(
+  "a dependency input over its read limit ends the leased dependency span with error",
+  { timeout: 120_000 },
+  async (context) => {
+    const root = await publicationFixture();
+    const cache = await fs.mkdtemp(
+      path.join(os.tmpdir(), "mokly-timing-cache-"),
+    );
+    try {
+      await fs.symlink(
+        path.join(workspace, "node_modules"),
+        path.join(root, "node_modules"),
+        "junction",
+      );
+      await write(
+        root,
+        "specs/page.mockup.ts",
+        "import {definePage} from '@mokly/mokly'; export default definePage({title:'Page',description:'',relatedDocs:[],render:()=>'<!doctype html><html><head></head><body>Page</body></html>'});",
+      );
+      await git(root, "add", "-A");
+      await git(root, "commit", "-qm", "dependency input base");
+      const input = await fs.open(path.join(root, "yarn.lock"), "w");
+      try {
+        await input.truncate(64 * 1024 * 1024 + 1);
+      } finally {
+        await input.close();
+      }
+      const result = await command(
+        root,
+        "build",
+        ["--out=.context/site", "--base=HEAD", "--debug-timings"],
+        "plain",
+        { XDG_CACHE_HOME: cache, LOCALAPPDATA: cache, HOME: cache },
+        context.signal,
+      ).result;
+      const all = timings(result.stderr).filter(
+        (record) => record.role === "core",
+      );
+      const records = all.filter(
+        (record) => record.stage === "review.base-dependencies",
+      );
+      assert.deepEqual(
+        records.map((record) => record.event),
+        ["start", "end"],
+      );
+      assert.equal(records[1]!.status, "error");
+      assert.equal(records[1]!.id, records[0]!.id);
+      assert.equal(records[1]!.tier, undefined);
+      assert.ok(!JSON.stringify(records).includes(root));
+      const parent = all.find(
+        (record) =>
+          record.event === "start" && record.id === records[0]!.parentId,
+      );
+      assert.equal(parent!.stage, "review.base-tree");
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(result.stderr, /source bytes exceed 67108864 bytes/u);
+    } finally {
+      await cleanupAll([
+        () => fs.rm(root, { recursive: true, force: true }),
+        () => fs.rm(cache, { recursive: true, force: true }),
+      ]);
+    }
+  },
+);

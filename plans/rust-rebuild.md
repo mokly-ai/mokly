@@ -1586,6 +1586,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Apply M12 review 8: bound graceful stderr drain, move the large Serve
+      stream before shutdown, clarify replacement timing, redact forwarded
+      records, separate partial stderr lines, and test UTF-8 and dependency errors.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-12.md`.
+- [ ] Measure the old process's stop inside replacement timing after defining
+      span ownership across separate stop and spawn requests (M12 review 8,
+      finding 3B; changes-9 authorizes the documented 3A fallback for this round).
+
 - [x] Apply M12 review 7 findings 2 to 6: count-record exclusivity, dependency
       span scope and tier tests, portable cache fixtures, and receiver cleanup.
       Evidence: `.context/rust-rebuild/delegation/m12-static/report-11.md`.
@@ -1689,6 +1697,10 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M12 review 8 verification: investigate the unrelated
+    `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
+    port-rebind assertion failure. The isolated rerun passed. Suspected source:
+    ephemeral-port reuse or socket teardown timing. Evidence: M12 `report-12.md`.
   - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
     `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
     `sidecar render readiness: Disconnected` during a concurrent package

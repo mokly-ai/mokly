@@ -15,6 +15,11 @@ for (const verb of ["build", "serve"] as const)
       const running = await noisySidecar(context, verb);
       if (verb === "serve") {
         const url = await running.ready();
+        assert.deepEqual(await running.completion(), {
+          written: "yes",
+          tail: null,
+          exit: null,
+        });
         const { index } = await completed(url, context.signal, "home");
         assert.equal(index.changesStatus, "unavailable");
         await running.gitFailure();
@@ -23,6 +28,7 @@ for (const verb of ["build", "serve"] as const)
       const result = await running.result;
       assert.deepEqual(await running.completion(), {
         written: "yes",
+        tail: verb === "serve" ? "yes" : null,
         exit: "0",
       });
       assert.equal(result.code, 0, result.stderr.slice(-2000));
@@ -40,7 +46,7 @@ for (const verb of ["build", "serve"] as const)
           piece.length <= 65_536,
           `oversized diagnostic: ${piece.length}`,
         );
-        if (!isGitFailure(piece)) assert.match(piece, /^(L+|R+)$/u);
+        if (!isGitFailure(piece)) assert.match(piece, /^(L+|R+|S+|T+)$/u);
       }
       assert.equal(
         pieces
@@ -54,6 +60,16 @@ for (const verb of ["build", "serve"] as const)
           .reduce((sum, piece) => sum + piece.length, 0),
         2 * 1024 * 1024 + 1,
       );
+      for (const [marker, expected] of [
+        ["S", 65_537],
+        ["T", 17],
+      ] as const)
+        assert.equal(
+          pieces
+            .filter((piece) => piece[0] === marker)
+            .reduce((sum, piece) => sum + piece.length, 0),
+          verb === "serve" ? expected : 0,
+        );
       await running.assertStopped();
     },
   );

@@ -42,13 +42,20 @@ fs.appendFileSync('.context/pids',process.pid+'\\n');
 process.on('exit',code=>fs.writeFileSync('.context/sidecar-exit',String(code)));
 const original=Session.prototype.call;
 let written=false;
+let tailed=false;
 const write=text=>new Promise((resolve,reject)=>process.stderr.write(text,error=>error?reject(error):resolve()));
 Session.prototype.call=async function(request){
-  if(!written && request.method===${JSON.stringify(verb === "build" ? "processCss" : "shutdown")}){
+  if(!written && request.method==='processCss'){
     written=true;
     for(let index=0;index<40;index++) await write('L'.repeat(65537)+'\\n');
     await write('R'.repeat(2*1024*1024+1));
     fs.writeFileSync('.context/stderr-complete','yes');
+  }
+  if(${JSON.stringify(verb === "serve")} && !tailed && request.method==='shutdown'){
+    tailed=true;
+    await write('\\n'+'S'.repeat(65537)+'\\n');
+    await write('T'.repeat(17));
+    fs.writeFileSync('.context/stderr-tail-complete','yes');
   }
   return original.call(this,request);
 };
@@ -143,6 +150,7 @@ await import(${JSON.stringify(module("sidecar.js"))});
           });
       return {
         written: await read("stderr-complete"),
+        tail: await read("stderr-tail-complete"),
         exit: await read("sidecar-exit"),
       };
     },

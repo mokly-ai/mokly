@@ -24,7 +24,11 @@ pub(super) fn run(
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
     if options.common.debug_timings {
-        serve_trace::install(terminal.clone(), format!("build-{}", std::process::id()));
+        serve_trace::install(
+            terminal.clone(),
+            format!("build-{}", std::process::id()),
+            redactor.clone(),
+        );
     }
     let timing = tracing::info_span!("build", status = "error").entered();
     let started = Instant::now();

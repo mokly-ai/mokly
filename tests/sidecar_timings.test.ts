@@ -19,7 +19,7 @@ test(
       "theme.css": ".subject {color: red}",
       "specs/item.mockup.ts": `import React from 'react'; import {defineScreen,defineComponent,definePage} from '@mokly/mokly';
 console.error('ordinary sidecar diagnostic');
-export const screen=defineScreen({path:'screen',title:'Screen',description:'',relatedDocs:[],render:()=>React.createElement('p',{className:'subject'},'Screen')});
+export const screen=defineScreen({path:'screen',title:'Screen',description:'',relatedDocs:[],render:()=>{process.stderr.write('partial-sidecar-progress\\r');return React.createElement('p',{className:'subject'},'Screen')}});
 export const component=defineComponent({path:'component',title:'Component',description:'',relatedDocs:[],propSchema:{type:'object',additionalProperties:false,properties:{}},render:()=>React.createElement('b',null,'Component')});
 export const page=definePage({path:'page',title:'Page',description:'',relatedDocs:[],render:()=>'<!doctype html><html><head></head><body>Page</body></html>'});`,
     });
@@ -48,6 +48,7 @@ export const page=definePage({path:'page',title:'Page',description:'',relatedDoc
         continue;
       }
       const records = timings(result.stderr);
+      assert.ok(result.stderr.includes("partial-sidecar-progress\\u000d\n"));
       const core = records.filter((record) => record.role === "core");
       const sidecar = records.filter((record) => record.role === "sidecar");
       assert.ok(sidecar.length > 0);
@@ -135,5 +136,38 @@ test(
     );
     assert.ok(!JSON.stringify(records).includes("authored-only-failure"));
     assert.ok(!JSON.stringify(records).includes(root));
+  },
+);
+
+test(
+  "forwarded record-shaped consumer lines redact secrets and terminal controls",
+  { timeout: 120_000 },
+  async (context) => {
+    const spoof =
+      '[mokly:timing] {\r"schemaVersion":1,"role":"sidecar","session":"private/token\u007f\u0085","pid":123,"id":1,"stage":"sidecar.bundle","event":"start","elapsedMs":0,"encoded":"private%2Ftoken"}';
+    const root = await consumer(context, {
+      "specs/page.mockup.ts": `import {definePage} from '@mokly/mokly'; process.stderr.write(${JSON.stringify(spoof + "\n")}); export default definePage({title:'Page',description:'',relatedDocs:[],render:()=>'<!doctype html><html><head></head><body>Page</body></html>'});`,
+    });
+    const result = await command(
+      root,
+      "build",
+      [
+        "--no-changes",
+        "--debug-timings",
+        "--sidecars=1",
+        "--out=.context/site",
+      ],
+      "plain",
+      { MOKLY_TOKEN: "private/token" },
+      context.signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    assert.ok(!result.stderr.includes("private/token"));
+    assert.ok(!result.stderr.includes("private%2Ftoken"));
+    for (const control of ["\r", "\u007f", "\u0085"])
+      assert.ok(!result.stderr.includes(control));
+    assert.ok(result.stderr.includes('"session":"[redacted]\\u007f\\u0085"'));
+    assert.ok(result.stderr.includes('"encoded":"[redacted]"'));
+    assert.ok(result.stderr.includes("[mokly:timing] {\\u000d"));
   },
 );

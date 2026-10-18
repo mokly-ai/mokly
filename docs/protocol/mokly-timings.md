@@ -99,15 +99,22 @@ including failed compilations. Replay and evaluation-only reuse add no
 
 The core selects sidecar timing through the optional `hello.params.timings`
 boolean. It defaults to `false`. No environment variable carries this choice.
-An enabled sidecar writes its timing records to stderr. The core forwards
-complete records unchanged; other stderr lines remain diagnostics.
+An enabled sidecar writes its timing records to stderr. If the preceding
+Node stderr write is a partial line, the sidecar inserts a newline before
+the timing record. The core passes forwarded lines through token redaction
+and terminal-control escaping. Real records contain no secrets or controls
+and retain their exact bytes; other stderr lines remain diagnostics.
 
 A sidecar emits records with `role: "sidecar"` and its own `pid` and session
 for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
 `screen`, `component`, `story`, or `page`), and `sidecar.process-css`, each
 measured inside the process from request receipt to response write. The core
-emits `sidecar.spawn` for a spawn up to the `hello` exchange, and
-`sidecar.recycle` for a replacement. The difference between a core
+emits `sidecar.spawn` for a spawn through the `hello` exchange, and
+`sidecar.recycle` for every later spawn in the same pool slot: a planned
+recycle, a crash or timeout replacement, a retry after failed hello, or a
+source-root switch. The replacement span measures the new process through
+hello; it excludes the old process's stop and the wait for another request.
+The difference between a core
 `render.fragment` span and the matching sidecar span is transport and queue
 time.
 

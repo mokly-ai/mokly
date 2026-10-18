@@ -9,6 +9,7 @@ import { guardParentOutput } from "./sidecar/parent-output.js";
 import { requestId } from "./sidecar/request-id.js";
 import { request } from "./sidecar/requests.js";
 import { Session } from "./sidecar/session.js";
+import { timingOutput } from "./sidecar/timing-output.js";
 import { Timings } from "./sidecar/timings.js";
 import { encodeFrame, encodeResponse, frames } from "./sidecar/transport.js";
 
@@ -21,7 +22,7 @@ guardParentOutput();
 const write = process.stdout.write.bind(process.stdout);
 const timings = new Timings(
   performance,
-  process.stderr.write.bind(process.stderr),
+  timingOutput(process.stderr),
   process.pid,
   randomUUID(),
 );
