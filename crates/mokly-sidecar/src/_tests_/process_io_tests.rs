@@ -1,6 +1,7 @@
 //! Split UTF-8, line order, bounded carry, and EOF forwarding use fake input.
 
-use std::sync::Arc;
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
@@ -163,4 +164,46 @@ fn invalid_utf8_cannot_underflow_the_bounded_buffer_split() {
             .returns(()),
     ));
     forward_diagnostics(&mut reader, &diagnostics, false);
+}
+
+#[test]
+fn every_utf8_width_and_crossing_position_stays_whole_at_the_chunk_bound() {
+    for character in ["é", "€", "😀"] {
+        for crossing in 1..character.len() {
+            let prefix = "x".repeat(65_536 - crossing);
+            let original = format!("{prefix}{character}tail");
+            let chunks = Mutex::new(
+                original
+                    .as_bytes()
+                    .chunks(4096)
+                    .map(Vec::from)
+                    .collect::<VecDeque<_>>(),
+            );
+            let mut input = Unimock::new(
+                DiagnosticInputMock::read
+                    .each_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, output| {
+                        let Some(bytes) = chunks.lock().unwrap().pop_front() else {
+                            return Ok(0);
+                        };
+                        output[..bytes.len()].copy_from_slice(&bytes);
+                        Ok(bytes.len())
+                    })),
+            );
+            let pieces = Arc::new(Mutex::new(Vec::new()));
+            let captured = pieces.clone();
+            let diagnostics = Unimock::new(
+                DiagnosticsMock::emit
+                    .each_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, text| {
+                        captured.lock().unwrap().push(text.to_owned())
+                    })),
+            );
+            forward_diagnostics(&mut input, &diagnostics, false);
+            let pieces = pieces.lock().unwrap();
+            assert_eq!(*pieces, [prefix, format!("{character}tail")]);
+            assert!(pieces.iter().all(|piece| piece.len() <= 65_536));
+            assert_eq!(pieces.concat(), original);
+        }
+    }
 }

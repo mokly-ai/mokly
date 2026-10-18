@@ -91,7 +91,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
       const files: EvidenceFile[] = [[DUSK_CSS, [[MATCHED_LEAD, [".dusk"]]]]];
-      expect(await evidenceFiles(evidence)).toEqual(files);
+      await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       await expect(evidence.locator("code.mbk-code")).toHaveText([".dusk"]);
       // The shared stylesheet changed too, but no changed style reaches it.
       await expect(
@@ -107,14 +107,14 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator(".mbk-screen-head")).not.toContainText(".dusk");
       for (const preview of ["mobile", "desktop"] as const) {
         await chooseViewport(page, preview);
-        expect(await evidenceFiles(evidence)).toEqual(files);
+        await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       }
       // Details merge every compared view, so Light keeps the same facts.
       await chooseScheme(page, "light");
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
-      expect(await evidenceFiles(evidence)).toEqual(files);
+      await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       await expect(
         evidence.getByText(EXCLUDED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -131,10 +131,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
-      expect((await evidenceFiles(evidence))[0]).toEqual([
-        CHANGED_CSS,
-        [[UNRESOLVED_LEAD, [":root"]]],
-      ]);
+      await expect
+        .poll(async () => (await evidenceFiles(evidence))[0])
+        .toEqual([CHANGED_CSS, [[UNRESOLVED_LEAD, [":root"]]]]);
       await expectNoStatusWords(evidence);
     });
 
@@ -146,10 +145,12 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      expect(await evidenceFiles(evidence)).toEqual([
-        [CHANGED_CSS, [[UNRESOLVED_LEAD, [":root"]]]],
-        [THEME, [[OUTSIDE_LEAD, [".accent"]]]],
-      ]);
+      await expect
+        .poll(() => evidenceFiles(evidence))
+        .toEqual([
+          [CHANGED_CSS, [[UNRESOLVED_LEAD, [":root"]]]],
+          [THEME, [[OUTSIDE_LEAD, [".accent"]]]],
+        ]);
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
@@ -168,13 +169,14 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       );
       await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
       const evidence = await openEvidence(page);
-      expect(await evidenceFiles(evidence)).toEqual([]);
+      // The paragraphs come from the entry detail; then the list stays empty.
       await expect(evidence.locator("p")).toHaveText([
         BASE,
         EXCLUDED_LEAD,
         EXAMINED_LEAD,
         SCREEN_TERMINAL,
       ]);
+      await expect.poll(() => evidenceFiles(evidence)).toEqual([]);
       await expect(evidence.locator("ul > li")).toHaveText([THEME]);
       await expectNoStatusWords(evidence);
       if (name === "mobile")
@@ -193,9 +195,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         "Unmodified",
       );
       const evidence = await openEvidence(page);
-      expect(await evidenceFiles(evidence)).toEqual([
-        [THEME, [[MATCHED_LEAD, [".accent"]]]],
-      ]);
+      await expect
+        .poll(() => evidenceFiles(evidence))
+        .toEqual([[THEME, [[MATCHED_LEAD, [".accent"]]]]]);
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toBeVisible();
@@ -249,9 +251,9 @@ test("the comparison heading leads with the style outcome", async ({
   await expect(heading("desktop")).toHaveText("Desktop · Screen changed");
   await page.goto(`/view/${comparisonPaths.component}/`);
   const evidence = await openEvidence(page);
-  expect(await evidenceFiles(evidence)).toEqual([
-    [THEME, [[COMPONENT_LEAD, [".accent"]]]],
-  ]);
+  await expect
+    .poll(() => evidenceFiles(evidence))
+    .toEqual([[THEME, [[COMPONENT_LEAD, [".accent"]]]]]);
   await expect(
     evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
   ).toBeVisible();

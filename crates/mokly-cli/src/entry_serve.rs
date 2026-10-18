@@ -46,7 +46,9 @@ pub(super) fn run(
     terminal: Arc<dyn Terminal>,
 ) -> ExitCode {
     let entropy: Arc<dyn Entropy> = Arc::new(RandomEntropy);
-    if common.debug_timings && !serve_trace::install(terminal.clone(), entropy.secret()) {
+    if common.debug_timings
+        && !serve_trace::install(terminal.clone(), entropy.secret(), redactor.clone())
+    {
         terminal.stderr(&style.error(
             Code::ServerFailed,
             "Timing diagnostics could not start.",

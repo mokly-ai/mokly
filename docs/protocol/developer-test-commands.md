@@ -163,8 +163,8 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 `.only`. Spec discovery is defined in
 [CI verification](./ci-verification.md#gate-ownership).
 
-Global setup copies the current-only example for `static_*.spec.ts`, `stage_centring`,
-and `review_snapshot_links`. A separate two-commit fixture serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
+Global setup copies the current-only example for most `static_*.spec.ts`, `stage_centring`,
+and `review_snapshot_links`. A second two-commit fixture serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
 To supply current-only output, set `MOKLY_PLAYWRIGHT_STATIC_DIR`. For example:
 
 ```bash

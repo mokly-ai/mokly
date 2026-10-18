@@ -117,36 +117,3 @@ export async function showMode(
     page.locator("[data-diff-stage] iframe[data-mokly-comparison-frame]"),
   ).toHaveCount(frames);
 }
-
-/** Open the shown entry's Details: an inspector tab or a page disclosure. */
-export async function openDetails(page: Page): Promise<Locator> {
-  const tab = page.getByRole("tab", { name: "Details" });
-  if ((await tab.count()) > 0) {
-    if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-    await expect(tab).toHaveAttribute("aria-selected", "true");
-  } else {
-    const disclosure = page.locator("details[data-mokly-details]");
-    if (!(await disclosure.evaluate((node: HTMLDetailsElement) => node.open)))
-      await disclosure.locator("summary").click();
-    await expect(disclosure).toHaveAttribute("open", "");
-  }
-  const body = page.locator(".mbk-details-body").first();
-  await expect(body).toBeVisible();
-  return body;
-}
-
-/** Each Details metadata row as "Key=value", in order. */
-export function metaRows(page: Page): Promise<string[]> {
-  return page
-    .locator(".mbk-details-body .mbk-meta-row")
-    .evaluateAll((rows) =>
-      rows.map(
-        (row) =>
-          `${row.querySelector(".mbk-meta-k")?.textContent ?? ""}=${(
-            row.querySelector(".mbk-meta-v")?.textContent ?? ""
-          )
-            .replace(/\s+/g, " ")
-            .trim()}`,
-      ),
-    );
-}

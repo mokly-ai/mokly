@@ -133,10 +133,15 @@ test("a shorter document stays aligned past its own end", async ({ page }) => {
   await expectAligned(500);
   await wheelOver(page, paneFrame(desktop, "after"), 5_000);
   await expectAligned(after.range);
-  await expect(desktop.locator(".mb-pane--after .mb-pane-doc")).toHaveCSS(
-    "background-color",
-    "rgb(255, 255, 255)",
-  );
+  // Past its own end, the shorter version's surface keeps its canvas colour.
+  for (const side of ["before", "after"] as const) {
+    const surface = desktop.locator(`.mb-pane--${side} .mb-pane-doc`);
+    await expect(surface).toHaveCSS(
+      "background-image",
+      "linear-gradient(rgb(250, 240, 230), rgb(250, 240, 230))",
+    );
+    await expect(surface).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  }
 });
 
 test("an inner scroll region scrolls every version while the page stays", async ({

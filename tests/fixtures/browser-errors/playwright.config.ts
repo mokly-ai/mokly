@@ -7,6 +7,6 @@ export default defineConfig({
   reporter: [["json"]],
   retries: 0,
   workers: 1,
-  timeout: 60_000,
+  timeout: 20_000,
   use: { channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome" },
 });

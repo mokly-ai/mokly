@@ -3,6 +3,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use mokly_cli::redaction::Redactor;
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::workers::Clock;
 use serde_json::{Map, Value, json};
@@ -20,14 +21,20 @@ pub(super) struct Timings {
     session: String,
     clock: Arc<dyn Clock>,
     next: AtomicU64,
+    redactor: Arc<Redactor>,
 }
 
-pub(super) fn install(terminal: Arc<dyn Terminal>, session: String) -> bool {
+pub(super) fn install(
+    terminal: Arc<dyn Terminal>,
+    session: String,
+    redactor: Arc<Redactor>,
+) -> bool {
     let layer = Timings {
         terminal,
         session,
         clock: Arc::new(SystemClock::default()),
         next: AtomicU64::new(1),
+        redactor,
     };
     tracing::subscriber::set_global_default(tracing_subscriber::registry().with(layer)).is_ok()
 }
@@ -221,7 +228,8 @@ where
         let mut fields = Fields::default();
         event.record(&mut fields);
         if let Some(line) = fields.sidecar_timing {
-            self.terminal.stderr(&format!("{line}\n"));
+            self.terminal
+                .stderr(&format!("{}\n", self.redactor.safe(&line)));
             return;
         }
         if let Some(operation) = fields.values.get("operation") {
