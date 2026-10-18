@@ -1,11 +1,13 @@
 //! Opaque Git hashing and delivery leave the private source-byte cache empty.
 
+use std::io;
 use std::path::Path;
 use std::sync::Arc;
 
 use mokly_git::identity::{ObjectId, RepoPath};
 use mokly_git::tree::{Entry, Mode};
 use mokly_model::material::digest;
+use mokly_source_interface::error::SourceError;
 use mokly_source_interface::tree::SourceTree;
 use unimock::{MockFn, Unimock, matching};
 
@@ -52,4 +54,22 @@ fn opaque_hashes_memoize_without_blobs_and_streams_do_not_fill_the_byte_lru() {
         .unwrap();
     assert_eq!(output, b"opaque");
     assert_eq!(tree.read(path).unwrap(), b"opaque");
+}
+
+#[test]
+fn git_source_errors_keep_the_failed_operation() {
+    let tree: &dyn SourceTree = &GitTree::new("/repo".into(), Arc::new(Unimock::new(())), 4096);
+    let root = Path::new("/repo");
+    for error in [
+        tree.digest(root).unwrap_err(),
+        tree.digest_unretained(root).unwrap_err(),
+    ] {
+        assert!(
+            matches!(error, SourceError::Io { operation: "digest", path, source }
+            if path == root && source.kind() == io::ErrorKind::IsADirectory)
+        );
+    }
+    assert!(matches!(tree.open_stream(root).err().unwrap(),
+        SourceError::Io { operation: "open stream", path, source }
+            if path == root && source.kind() == io::ErrorKind::IsADirectory));
 }

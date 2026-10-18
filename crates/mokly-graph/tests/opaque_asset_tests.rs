@@ -115,3 +115,61 @@ fn a_replaced_asset_parent_cannot_escape_through_an_equal_byte_symlink() {
         Err(GraphError::InputsChanged { .. })
     ));
 }
+
+#[cfg(unix)]
+#[test]
+fn an_equal_byte_leaf_symlink_cannot_replace_the_captured_asset() {
+    let directory = fixture(1);
+    let outside = TempDir::new().unwrap();
+    let target = outside.path().join("image.svg");
+    fs::write(&target, vec![b'x'; 128 * 1024]).unwrap();
+    let (generation, _) = support::prepare(directory.path(), 1024 * 1024, 1);
+    let asset = directory.path().join("assets/image.svg");
+    fs::remove_file(&asset).unwrap();
+    std::os::unix::fs::symlink(target, asset).unwrap();
+    assert!(matches!(
+        generation.unwrap().resource("assets/assets/image.svg"),
+        Err(GraphError::InputsChanged { .. })
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_directory_cannot_replace_the_captured_asset() {
+    let directory = fixture(1);
+    let (generation, _) = support::prepare(directory.path(), 1024 * 1024, 1);
+    let asset = directory.path().join("assets/image.svg");
+    fs::remove_file(&asset).unwrap();
+    fs::create_dir(asset).unwrap();
+    assert!(matches!(
+        generation.unwrap().resource("assets/assets/image.svg"),
+        Err(GraphError::InputsChanged { .. })
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn a_fifo_replacement_fails_without_waiting_for_a_writer() {
+    let directory = fixture(1);
+    let (generation, _) = support::prepare(directory.path(), 1024 * 1024, 1);
+    let generation = generation.unwrap();
+    let asset = directory.path().join("assets/image.svg");
+    fs::remove_file(&asset).unwrap();
+    assert!(
+        std::process::Command::new("mkfifo")
+            .arg(asset)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let (send, receive) = std::sync::mpsc::sync_channel(1);
+    let copy = std::thread::spawn(move || {
+        send.send(generation.resource("assets/assets/image.svg"))
+            .unwrap();
+    });
+    let result = receive
+        .recv_timeout(std::time::Duration::from_secs(15))
+        .expect("opaque asset open must not wait for a FIFO writer");
+    assert!(matches!(result, Err(GraphError::InputsChanged { .. })));
+    copy.join().unwrap();
+}

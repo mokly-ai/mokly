@@ -14,7 +14,7 @@ use crate::git_tree::GitTree;
 impl GitTree {
     pub(crate) fn digest_file(&self, path: &Path, opaque: bool) -> Result<String> {
         let Some(relative) = self.relative(path)? else {
-            return Err(failure(path, io::ErrorKind::IsADirectory));
+            return Err(failure("digest", path, io::ErrorKind::IsADirectory));
         };
         if let Some(hash) = self
             .digests
@@ -30,10 +30,10 @@ impl GitTree {
         }
         let index = self.index(path)?;
         let Some(entry) = index.entries.get(&relative) else {
-            return Err(failure(path, io::ErrorKind::NotFound));
+            return Err(failure("digest", path, io::ErrorKind::NotFound));
         };
         if !entry.mode.regular() {
-            return Err(failure(path, io::ErrorKind::InvalidInput));
+            return Err(failure("digest", path, io::ErrorKind::InvalidInput));
         }
         let hash = if opaque || entry.size > 16 * 1024 * 1024 {
             match self.sources.digest(&relative) {
@@ -52,17 +52,17 @@ impl GitTree {
 
     pub(crate) fn opaque_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
         let Some(relative) = self.relative(path)? else {
-            return Err(failure(path, io::ErrorKind::IsADirectory));
+            return Err(failure("open stream", path, io::ErrorKind::IsADirectory));
         };
         if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
             return Err(self.failed("open stream", path, source));
         }
         let index = self.index(path)?;
         let Some(entry) = index.entries.get(&relative) else {
-            return Err(failure(path, io::ErrorKind::NotFound));
+            return Err(failure("open stream", path, io::ErrorKind::NotFound));
         };
         if !entry.mode.regular() {
-            return Err(failure(path, io::ErrorKind::InvalidInput));
+            return Err(failure("open stream", path, io::ErrorKind::InvalidInput));
         }
         let mut blobs = match self
             .sources
@@ -73,7 +73,7 @@ impl GitTree {
         };
         let bytes = blobs
             .pop()
-            .ok_or_else(|| failure(path, io::ErrorKind::UnexpectedEof))?;
+            .ok_or_else(|| failure("open stream", path, io::ErrorKind::UnexpectedEof))?;
         Ok(Box::new(OpenedSource {
             length: bytes.len() as u64,
             reader: Box::new(Cursor::new(bytes)),
@@ -81,9 +81,9 @@ impl GitTree {
     }
 }
 
-fn failure(path: &Path, kind: io::ErrorKind) -> SourceError {
+fn failure(operation: &'static str, path: &Path, kind: io::ErrorKind) -> SourceError {
     SourceError::Io {
-        operation: "opaque input",
+        operation,
         path: path.into(),
         source: kind.into(),
     }

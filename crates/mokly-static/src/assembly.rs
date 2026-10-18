@@ -146,12 +146,14 @@ impl Assembler for CatalogueAssembler {
         }
         for route in input.generation.resource_routes() {
             checkpoint(cancellation)?;
-            let bytes = resource_bytes::generated(input.generation, &route)?.ok_or_else(|| {
-                Error::Invalid {
-                    path: route.clone(),
-                }
-            })?;
-            inventory.insert(namespace::generated(&route), bytes.into())?;
+            let path = namespace::generated(&route);
+            let bytes =
+                resource_bytes::generated(input.generation, &route, &path)?.ok_or_else(|| {
+                    Error::Invalid {
+                        path: route.clone(),
+                    }
+                })?;
+            inventory.insert(path, bytes.into())?;
         }
         let policy: &dyn PublicPolicy = &match FilePolicy::new(
             self.tree.clone(),
