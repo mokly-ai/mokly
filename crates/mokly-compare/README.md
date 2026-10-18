@@ -83,10 +83,11 @@ outside this mapping keeps the fallback warning, including with equal inputs.
 Each fallback has a typed trace reason.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-Rendered and canonical trees use iterative traversal, equality, move
-fingerprinting, and release. Deep rendered trees need no enlarged thread stack.
 Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
+Rendered-tree walks implemented by this crate, canonical equality, move
+fingerprinting, and canonical-value release use explicit stacks. CSS selector
+matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.

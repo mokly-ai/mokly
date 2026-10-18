@@ -1556,6 +1556,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
         per-element copy of enclosing instances in `owned_style_instances::walk`.
+  - [ ] Resolve rendered-depth recursion in the `selectors` crate's `:has()`
+        matching path. Its subtree search uses one native frame per rendered
+        tree level. A depth bound or an explicit-stack matcher needs the user's
+        decision before implementation (M14 review 5, finding 1).
   - [ ] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
@@ -1582,6 +1586,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Review opaque CSS asset retention before a redesign or larger probes.
         Private source snapshots pin these bytes without a byte bound. Preserve
         generation consistency when choosing how to limit retained data.
+- [ ] Review the CSS matching tree's per-element containment-list copies.
+      Retention grows with element count times nesting depth. Decide on shared
+      containment storage with the CSS attribution work (M14 review 5, finding 2).
 - [ ] Make opaque CSS assets digest-only inputs: store the route, path, and
       digest instead of the bytes; use the digest in the cache keys; stream the
       bytes at delivery and check them against the digest; one entry per asset
@@ -1602,6 +1609,7 @@ Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/rep
 Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
 Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
 Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
+Comparison review corrections and CSS asset evidence: `.context/rust-rebuild/delegation/m14/report-8.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
