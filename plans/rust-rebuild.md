@@ -1697,10 +1697,13 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - M12 review 8 verification: investigate the unrelated
-    `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
-    port-rebind assertion failure. The isolated rerun passed. Suspected source:
-    ephemeral-port reuse or socket teardown timing. Evidence: M12 `report-12.md`.
+  - [x] Resolve both HTTP port-rebind assertions in
+        `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
+        and `incomplete_requests_close_and_a_failed_hook_does_not_skip_cleanup`.
+        Another bind can take the released port. Prove listener release through
+        the injected acceptor's weak reference after `run` returns, including a
+        failed cleanup hook. Keep clean event-stream closure and error details.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-9.md`.
   - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
     `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
     `sidecar render readiness: Disconnected` during a concurrent package
