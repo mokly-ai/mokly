@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-
 import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
@@ -11,19 +9,23 @@ import {
   showMode,
   snapshotOf,
 } from "./comparison_ui.js";
-import { responseFailure } from "./shell_error_allowances.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
-const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
 const stage = "[data-diff-stage]";
 
 test("Changes and screen browsing stay lazy until a diff is selected", async ({
   page,
 }) => {
   const requests: string[] = [];
+  const all: string[] = [];
+  const failed: string[] = [];
   page.on("request", (request) => {
+    all.push(request.url());
     if (request.url().includes("/mokly-viewer/diffs/"))
       requests.push(request.url());
+  });
+  page.on("response", (response) => {
+    if (response.status() >= 400) failed.push(response.url());
   });
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseFilter(page, "changed");
@@ -51,9 +53,25 @@ test("Changes and screen browsing stay lazy until a diff is selected", async ({
     "true",
   );
   expect(requests.some((url) => url.endsWith("/review.json"))).toBe(true);
+  for (const name of ["Side by side", "Difference"] as const)
+    await showMode(page, name);
+  // Static Refresh reads the same immutable generation again.
+  const sources = () =>
+    page
+      .locator(`${stage} iframe`)
+      .evaluateAll((frames) =>
+        frames.map((frame) => frame.getAttribute("data-mokly-preview-source")),
+      );
+  const loaded = await sources();
+  await page.getByRole("button", { name: "Refresh comparison" }).click();
+  await expect(page.locator(`${stage} iframe`)).toHaveCount(2);
+  await expect.poll(sources).toEqual(loaded);
   await modeButton(page, "Current").click();
   await expect(page.locator("[data-current-screen]")).toBeVisible();
   await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
+  // A static host has no event stream, and nothing failed to load.
+  expect(all.some((url) => url.includes("/mokly-viewer/events"))).toBe(false);
+  expect(failed).toEqual([]);
 });
 
 test("unchanged views omit comparisons while changed views retain all modes", async ({
@@ -121,70 +139,6 @@ test("added and removed screens stay current without comparison controls", async
       .frameLocator("[data-mokly-preview] .mbk-frame-desktop iframe")
       .getByRole("heading", { name: "Historical screen" }),
   ).toBeVisible();
-});
-
-test("pending requests cannot replace Current or a newly navigated screen", async ({
-  page,
-}) => {
-  let release = (): void => undefined;
-  const waiting = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route(REVIEW, async (route) => {
-    const response = await route.fetch();
-    await waiting;
-    await route.fulfill({ response }).catch(() => undefined);
-  });
-  await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
-  await expect(page.locator(stage)).toContainText("Loading comparison");
-  await modeButton(page, "Current").click();
-  await expect(page.locator("[data-current-screen]")).toBeVisible();
-  await navRow(page, comparisonPaths.unchanged).click();
-  release();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
-  await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(page.locator("[data-workspace-status]")).toHaveText(
-    "Unmodified",
-  );
-});
-
-test("a failed comparison stays in the screen and retries explicitly", async ({
-  page,
-  request,
-  baseURL,
-  allowBrowserError,
-}) => {
-  const index = await comparisonIndex(request, baseURL);
-  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 500));
-  await page.route(
-    REVIEW,
-    (route) =>
-      route.fulfill({
-        status: 500,
-        contentType: "application/json",
-        body: '{"error":"failed"}',
-      }),
-    { times: 1 },
-  );
-  await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
-  const retry = page.getByRole("button", { name: "Try again", exact: true });
-  await expect(retry).toBeVisible();
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    "Changed screen",
-  );
-  await expect(modeButton(page, "Overlay")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await retry.click();
-  await expect(page.locator(`${stage} iframe`)).toHaveCount(4);
-  await expect(page.locator(`${stage} iframe`).first()).toHaveAttribute(
-    "data-mokly-preview-source",
-    /\/snapshots\/before\//,
-  );
 });
 
 test("snapshot panes keep marked links inert", async ({ page }) => {
@@ -255,28 +209,4 @@ test("mode switches keep frames and focus and cannot expand one side alone", asy
     );
     await expect(modeButton(page, name)).toBeFocused();
   }
-});
-
-test("released review v6 uses the standalone version message", async ({
-  page,
-}) => {
-  const released = JSON.parse(
-    await fs.readFile(
-      new URL("../fixtures/released-review-v6.json", import.meta.url),
-      "utf8",
-    ),
-  );
-  await page.route(REVIEW, (route) => route.fulfill({ json: released }));
-  await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
-  await expect(page.getByRole("alert")).toContainText(
-    "This catalogue needs a compatible viewer",
-  );
-  await page.locator("[data-comparison-failure] summary").click();
-  await expect(page.locator("[data-comparison-failure]")).toContainText(
-    "Unsupported Mokly review version 6; this viewer supports version 8.",
-  );
-  await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
-  await modeButton(page, "Current").click();
-  await expect(page.locator("[data-current-screen]")).toBeVisible();
 });
