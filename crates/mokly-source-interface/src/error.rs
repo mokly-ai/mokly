@@ -11,6 +11,12 @@ pub type Result<T> = std::result::Result<T, SourceError>;
 /// Source failures retain the operation, path, and original IO error.
 #[derive(Debug, Error)]
 pub enum SourceError {
+    /// Streamed bytes differ from their captured generation identity.
+    #[error("[mokly-source-interface/changed] input changed: {}", path.display())]
+    Changed {
+        /// Original source-tree path.
+        path: PathBuf,
+    },
     /// A source operation failed.
     #[error("[mokly-source-interface/io] {operation} {}: {source}", path.display())]
     Io {

@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_model::material::digest;
 use mokly_source_interface::error::Result;
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 /// Read-once source view for graph inputs, consumed as `dyn SourceTree`.
@@ -53,14 +54,8 @@ impl SourceSnapshot {
     }
 }
 
-impl SourceTree for SourceSnapshot {
-    fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
-        self.source.prefetch(paths)
-    }
-    fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
-        self.source.read_public(path)
-    }
-    fn digest(&self, path: &Path) -> Result<String> {
+impl SourceSnapshot {
+    fn digest_value(&self, path: &Path, unretained: bool) -> Result<String> {
         let cell = {
             let mut digests = self
                 .digests
@@ -86,10 +81,29 @@ impl SourceTree for SourceSnapshot {
         });
         let value = match bytes {
             Some(bytes) => digest(&bytes),
+            None if unretained => self.source.digest_unretained(path)?,
             None => self.source.digest(path)?,
         };
         *retained = Some(value.clone());
         Ok(value)
+    }
+}
+
+impl SourceTree for SourceSnapshot {
+    fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
+        self.source.prefetch(paths)
+    }
+    fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
+        self.source.read_public(path)
+    }
+    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
+        self.source.open_stream(path)
+    }
+    fn digest(&self, path: &Path) -> Result<String> {
+        self.digest_value(path, false)
+    }
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        self.digest_value(path, true)
     }
     fn project(&self, path: &Path) -> Result<Option<Node>> {
         let mut nodes = self.nodes.lock().unwrap_or_else(|error| error.into_inner());

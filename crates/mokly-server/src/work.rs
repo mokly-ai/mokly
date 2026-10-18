@@ -49,6 +49,12 @@ pub trait Work: Send + Sync {
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
     -> Result<Option<File>>;
+    /// Verify and spool a generated opaque asset off the HTTP event loop.
+    async fn asset(
+        &self,
+        documents: Arc<dyn Documents>,
+        route: String,
+    ) -> Result<Option<OpenedFile>>;
     /// Recheck and read a reached public asset off the HTTP event loop.
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile>;
     /// Coalesce a page's work and bound admission and duration.
@@ -66,12 +72,12 @@ pub trait Work: Send + Sync {
 
 /// One bounded scheduler shared by foreground jobs and background generations.
 pub struct Workers {
-    priority: Arc<Priority>,
+    pub(crate) priority: Arc<Priority>,
     diagnostics: Arc<dyn Diagnostics>,
-    workers: Arc<Semaphore>,
+    pub(crate) workers: Arc<Semaphore>,
     queued: Arc<Semaphore>,
     pages: Mutex<BTreeMap<String, Weak<Page>>>,
-    closed: AtomicBool,
+    pub(crate) closed: AtomicBool,
     parallelism: u32,
 }
 
@@ -128,30 +134,14 @@ impl Work for Workers {
         documents: Arc<dyn Documents>,
         route: String,
     ) -> Result<Option<File>> {
-        let guard = self.priority.enter(true);
-        if self.closed.load(Ordering::SeqCst) {
-            return Ok(None);
-        }
-        let Ok(permit) = self.workers.clone().acquire_owned().await else {
-            return Ok(None);
-        };
-        if self.closed.load(Ordering::SeqCst) {
-            return Ok(None);
-        }
-        let parent = tracing::Span::current();
-        match tokio::task::spawn_blocking(move || {
-            parent.in_scope(|| {
-                let _guard = guard;
-                let _permit = permit;
-                let documents = documents;
-                documents.generated(&route)
-            })
-        })
-        .await
-        {
-            Ok(result) => result,
-            Err(source) => Err(InternalError::Task { source }.into()),
-        }
+        self.generated_delivery(documents, route).await
+    }
+    async fn asset(
+        &self,
+        documents: Arc<dyn Documents>,
+        route: String,
+    ) -> Result<Option<OpenedFile>> {
+        self.asset_delivery(documents, route).await
     }
     async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile> {
         let guard = self.priority.enter(true);

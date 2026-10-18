@@ -70,7 +70,9 @@ pub(super) fn run(
         redactor.clone(),
     ));
     let attempt = warnings.begin();
+    let (rebuild, requests) = mpsc::channel(1);
     let reporter = Arc::new(ServeLines {
+        rebuild: rebuild.clone(),
         cwd: cwd.clone(),
         cancellation: cancellation.clone(),
         terminal: terminal.clone(),
@@ -228,7 +230,6 @@ pub(super) fn run(
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }
-            let (rebuild, requests) = mpsc::channel(1);
             let controls = serve_controls::start(
                 interactive,
                 serve_controls::Controls {

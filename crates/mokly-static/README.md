@@ -59,6 +59,12 @@ Output and reservation directories
 stay outside root membership. Explicit inputs beneath excluded directory names
 remain protected.
 
+Opaque CSS assets enter the final `Artifact` through digest-checked streams.
+The existing per-file output bound is checked before allocating a payload.
+Only the final immutable output bytes remain; preparation and render caches
+hold asset metadata. A mismatch returns `InputsChanged` before inventory
+admission or installation. Publish consumes those same immutable bytes.
+
 The CLI owns configuration, complete rendering, sidecar shutdown, and publish
 orchestration. The comparison engine supplies generation output at the same assembly boundary.
 

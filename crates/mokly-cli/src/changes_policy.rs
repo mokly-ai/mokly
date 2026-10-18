@@ -55,7 +55,7 @@ fn graph(error: &GraphError) -> Option<&'static str> {
             }
             Some(reason)
         }
-        GraphError::Internal(_) => None,
+        GraphError::Internal(_) | GraphError::InputsChanged { .. } => None,
         GraphError::Html { source } => html(source),
         GraphError::Css { source } => match source {
             CssError::Runtime { source } => runtime(source.code),

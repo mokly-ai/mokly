@@ -216,6 +216,25 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         return response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone());
     }
     if let Some(route) = path.strip_prefix(&generated("")) {
+        if route.starts_with("assets/") {
+            return match app
+                .work
+                .asset(snapshot.documents.clone(), route.into())
+                .await
+            {
+                Ok(Some(file)) => response::stream(file),
+                Ok(None) => response::missing(),
+                Err(error) => {
+                    app.diagnostics.failed(&error);
+                    response::error(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "render-failed",
+                        "The asset could not be rendered. Try again.",
+                    )
+                }
+            };
+        }
+
         let result = app
             .work
             .generated(snapshot.documents.clone(), route.into())

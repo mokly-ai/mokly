@@ -68,3 +68,5 @@ mod cancellation_tests;
 #[cfg(test)]
 #[path = "_tests_/reference_tests.rs"]
 mod reference_tests;
+
+pub mod asset_delivery;

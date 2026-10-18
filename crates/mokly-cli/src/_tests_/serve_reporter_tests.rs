@@ -12,6 +12,7 @@ use mokly_cli::redaction::Redactor;
 use mokly_model::catalogue::SourceLocation;
 use mokly_server::error::ServerError;
 use mokly_watch::event::Batch;
+use tokio::sync::mpsc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_rebuild::RebuildReporter;
@@ -29,6 +30,7 @@ fn server_failures_keep_the_prepared_warning_scope_and_failure_layout() {
         }),
     ));
     let reporter = ServeLines {
+        rebuild: mpsc::channel(1).0,
         cwd: PathBuf::from("/repo"),
         cancellation: Arc::new(ServeCancellation::default()),
         terminal: Arc::new(terminal.clone()),
@@ -69,6 +71,7 @@ fn catalogue_failures_keep_plain_compatibility_and_rich_source_diagnostics() {
             Arc::new(move |_, text| *written.lock().unwrap() = text.into()),
         ));
         let reporter = ServeLines {
+            rebuild: mpsc::channel(1).0,
             cwd: PathBuf::from("/repo"),
             cancellation: Arc::new(ServeCancellation::default()),
             terminal: Arc::new(terminal),

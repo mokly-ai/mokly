@@ -12,15 +12,18 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::{Mode, Style, bounded};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::{serve_errors, serve_output, watch_output};
+use mokly_graph::error::GraphError;
 use mokly_server::diagnostics::Diagnostics;
 use mokly_server::error::ServerError;
 use mokly_watch::event::Batch;
+use tokio::sync::mpsc;
 
 use crate::serve_rebuild::RebuildReporter;
 use crate::serve_warnings::{AttemptWarnings, WarningScopes};
 use crate::terminal::Terminal;
 
 pub(super) struct ServeLines {
+    pub(super) rebuild: mpsc::Sender<()>,
     pub(super) cwd: PathBuf,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) terminal: Arc<dyn Terminal>,
@@ -42,6 +45,14 @@ impl Diagnostics for ServeLines {
     fn failed(&self, error: &ServerError) {
         if self.cancellation.requested() {
             return;
+        }
+        if matches!(
+            error,
+            ServerError::Render {
+                source: GraphError::InputsChanged { .. }
+            }
+        ) {
+            let _ = self.rebuild.try_send(());
         }
         let output = serve_errors::failure(&self.style, error, &self.redactor);
         self.terminal.stderr(&output);
@@ -215,3 +226,7 @@ mod serve_reporter_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_failure_warning_tests.rs"]
 mod serve_failure_warning_tests;
+
+#[cfg(test)]
+#[path = "_tests_/asset_rebuild_tests.rs"]
+mod asset_rebuild_tests;

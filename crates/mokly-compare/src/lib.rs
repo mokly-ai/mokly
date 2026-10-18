@@ -118,3 +118,5 @@ mod projection_tests;
 pub mod projection_detail;
 
 pub mod projection_removed;
+
+mod git_asset_io;

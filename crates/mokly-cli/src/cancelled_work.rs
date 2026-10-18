@@ -10,9 +10,11 @@ use mokly_graph::error::{GraphError, Result};
 use mokly_graph::workers::{ArtifactWorker, DocumentWorker, RenderWorkers, ValidatedView};
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::cancellation::Cancellation;
+use crate::cancelled_stream::CancellableStream;
 
 /// Source operations stop at their next boundary after interruption.
 pub struct CancellableTree {
@@ -46,6 +48,20 @@ impl SourceTree for CancellableTree {
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.check(path)?;
         self.inner.read_public(path)
+    }
+    fn open_stream(
+        &self,
+        path: &Path,
+    ) -> mokly_source_interface::error::Result<Box<dyn SourceStream>> {
+        self.check(path)?;
+        Ok(Box::new(CancellableStream {
+            inner: self.inner.open_stream(path)?,
+            cancellation: self.cancellation.clone(),
+        }))
+    }
+    fn digest_unretained(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+        self.check(path)?;
+        self.inner.digest_unretained(path)
     }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.check(path)?;

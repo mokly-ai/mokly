@@ -1589,7 +1589,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Review the CSS matching tree's per-element containment-list copies.
       Retention grows with element count times nesting depth. Decide on shared
       containment storage with the CSS attribution work (M14 review 5, finding 2).
-- [ ] Make opaque CSS assets digest-only inputs: store the route, path, and
+- [x] Make opaque CSS assets digest-only inputs: store the route, path, and
       digest instead of the bytes; use the digest in the cache keys; stream the
       bytes at delivery and check them against the digest; one entry per asset
       path across roots; first audit and record the copies of each asset per
@@ -1634,6 +1634,18 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     rebuild. Both passed in an isolated rerun and the final repository suite.
     Suspected source: shared built files changed during the tests. Keep builds
     and suites separate. Evidence: M14 `report-7.md`.
+  - M14 asset verification: the desktop and mobile `design_modern_controls`
+    screen loops hit the 60 s test timeout and passed unchanged in a focused
+    rerun. Suspected source: the full screen loop under shared machine load.
+    Investigate separately without changing test limits. Evidence: M14 `report-8.md`.
+  - M14 asset verification: `link_controls.spec.ts` hit its 60 s `beforeAll`
+    timeout and skipped five cases. All six cases passed unchanged in a focused
+    rerun. Suspected source: cold Firna fixture startup under shared machine
+    load. Evidence: M14 `report-8.md`.
+  - M14 asset verification: `static_comparison_deployment.spec.ts` reported
+    `Execution context was destroyed` in `hasMarker` and passed unchanged in a
+    focused rerun. Suspected source: the page read races automatic navigation.
+    Evidence: M14 `report-8.md`.
   - [x] Reconcile the inherited M14 round 3
         `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
         The shared fixture seeds its epoch and cleanup uses one staleness rule.

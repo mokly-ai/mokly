@@ -70,7 +70,7 @@ entries may import the same helper and still link their own bundles.
 ## Validation And The Render Cache
 
 Validation uses one pending set per render generation: the composed
-documents, the bundled stylesheet text, and the opaque asset bytes, seeded
+documents, the bundled stylesheet text, and opaque asset metadata, seeded
 with every stylesheet node before any document is validated. A document that
 renders on demand joins the same set. A bundled stylesheet's `url()`
 references are validated recursively as CSS resources; an asset by existence
@@ -82,6 +82,13 @@ once; later requests reuse both while documents and edited component props
 stay request-specific. A new generation owns fresh indexes; the validation
 rules and the diagnostic order do not change.
 
+An opaque asset keeps its generated route, logical path, confined source
+identity, and captured SHA-256 digest. Stylesheet roots share one resource
+plan per asset path. Hash-only preparation memoizes the digest and retains
+no asset payload in source snapshots, stylesheet bundles, stylesheet caches,
+or render caches. Input and document keys include the digest. Parsed CSS
+sources retain their separate snapshot policy.
+
 Serve answers `GET` and `HEAD` for `/static/mokly-generated/styles/<route>`
 and `/static/mokly-generated/assets/<route>` with the generation's bytes, the
 content types above, and confined paths. There is no disk fallback, and a
@@ -92,6 +99,16 @@ bytes. `build` writes every stylesheet and asset of its generation under
 `static/mokly-generated/`; publish uploads that output; the comparison
 contract reads the base side's bundles from the base commit's sources.
 Imported CSS, PostCSS, and asset sources never enter the static output.
+
+Delivery reads bounded chunks from the captured source identity and checks
+the complete stream against the generation digest and its opened length.
+Serve verifies into an unnamed temporary file before sending headers, then
+streams that immutable response file. A mismatch fails the request and
+requests a new generation, including with watching disabled. Static output
+captures one immutable final payload after the existing file-size check.
+A mismatch stops the build with the input-change error before installation;
+publish uses the final captured bytes. The final live fingerprint recheck
+still applies under [Output Transaction](./mokly-export.md#output-transaction).
 
 An edit to an imported stylesheet, a nested import, an asset, the
 configuration, or a plugin-reported dependency invalidates the stylesheet

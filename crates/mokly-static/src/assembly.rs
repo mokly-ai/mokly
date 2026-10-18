@@ -22,7 +22,7 @@ use crate::inspector;
 use crate::inventory::Inventory;
 use crate::modules;
 use crate::transaction::Cancellation;
-use crate::{comparison_details, comparison_output};
+use crate::{comparison_details, comparison_output, resource_bytes};
 
 /// Inputs pinned by the command; the comparison adapter supplies its complete generation.
 pub struct Assembly<'a> {
@@ -146,15 +146,11 @@ impl Assembler for CatalogueAssembler {
         }
         for route in input.generation.resource_routes() {
             checkpoint(cancellation)?;
-            let bytes = match input.generation.resource(&route) {
-                Ok(Some(bytes)) => bytes,
-                Ok(None) => return Err(Error::Invalid { path: route }),
-                Err(source) => {
-                    return Err(Error::Render {
-                        source: Box::new(source),
-                    });
+            let bytes = resource_bytes::generated(input.generation, &route)?.ok_or_else(|| {
+                Error::Invalid {
+                    path: route.clone(),
                 }
-            };
+            })?;
             inventory.insert(namespace::generated(&route), bytes.into())?;
         }
         let policy: &dyn PublicPolicy = &match FilePolicy::new(

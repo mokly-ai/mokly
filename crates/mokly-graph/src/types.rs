@@ -8,7 +8,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
-use mokly_css::types::StylesheetRoot;
+use mokly_css::types::{OpaqueAsset, StylesheetRoot};
 use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
 
@@ -43,7 +43,7 @@ pub(crate) struct ResourcePlan {
     pub(crate) document_key: NodeKey,
     pub(crate) content_type: String,
     pub(crate) root: StylesheetRoot,
-    pub(crate) asset: Option<String>,
+    pub(crate) asset: Option<OpaqueAsset>,
 }
 
 /// Build's retained evidence contains no catalogue-wide parsed tree set.

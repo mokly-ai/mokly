@@ -3,7 +3,7 @@
 `mokly-source-interface` defines read-only access to an authored source tree.
 Discovery and rendering depend on its `SourceTree` trait. Working-tree and
 Git-tree adapters use the same path, node, and error contract. The crate has
-no internal dependency and performs no IO itself.
+no internal dependency and opens no filesystem paths itself.
 
 ## Responsibilities
 
@@ -42,7 +42,14 @@ is a no-op. `read_public` bypasses private source-snapshot retention; the caller
 must first apply the same public-path policy as resource delivery.
 Working and Git adapters implement `digest` with bounded streaming reads.
 Snapshot and static admission wrappers retain the resulting hash without the
-resource bytes. Every digest-only read uses this same method.
+resource bytes. `digest_unretained` hashes an opaque input without promoting bytes into a
+private payload cache. Snapshot adapters share one digest cell with `digest`.
+`open_stream` returns a `dyn SourceStream` with a length and checked-copy
+operation. It reads bounded chunks into private destination storage and
+returns `SourceError::Changed` on a digest or length mismatch. Callers expose
+the destination only after success. Working-tree streams open the captured
+physical identity through non-following directory handles. Git streams use
+immutable blobs under the existing bounded Git IO contract.
 
 ## Quick Start
 
