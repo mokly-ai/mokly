@@ -80,8 +80,9 @@ Only a completed comparison emits these counts. `review.base-dependencies`,
 `review.compare-views`, and `review.changed-paths` start with error status and
 record `ok` only after successful work.
 
-Static input counters are observations. `retainedBytes` counts private source
-payload once per captured path. It excludes map metadata and other byte owners.
+Static input counters on `output.*` stages are observations. Their
+`retainedBytes` counts private source payload once per captured path.
+It excludes map metadata and other byte owners.
 Reads below a `css.bundle` span describe calls that reach the captured tree;
 inner cache hits and bundle copies do not appear as captured reads. The harness
 matches these spans to the RSS samples before and after their received interval.
@@ -98,8 +99,10 @@ successful work. Completed captures emit counts, including a zero-view capture
 when no input fits. `views` counts retained base documents. `encodedBytes`
 counts compressed document and CSS payloads. `retainedBytes` adds Rust metadata,
 closures, generated digests, route keys, and conservative container charges.
-The 256 MiB bound applies to that total. These charges are not measured RSS.
-A reused base reports the same capture counts without duplicating storage.
+The separate 256 MiB capture bound applies to that total, beside the render
+cache. These charges are not measured RSS. The API supports capture reuse and
+reports the same counts without duplicating storage. Production callers supply
+fresh bases; Serve can hold an accepted capture while building its replacement.
 
 ## Sidecar Spans
 

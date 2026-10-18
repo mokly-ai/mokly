@@ -1214,6 +1214,15 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       generated assets, fallback bytes, engine scale, and preview Reset.
       Merge the iterative-tree rebuild tip and verify identical example output.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-12.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-13.md`.
+- [ ] Apply engine review 9 and merge the rebuild tip.
+  - [x] Clarify capture budgets, reuse, wrapper checks, and stage counters;
+        test rebuilding a capture with a smaller bound.
+  - [ ] Align removed and selected preview protocols with bounded capture.
+  - [ ] Keep pending design-matrix CI decisions out of end-state docs.
+  - [ ] Cover partial capture, typed decode failures, and zero-view timings.
+  - [ ] Count uncaptured base views without changing capture charges.
+  - [ ] Merge the rebuild tip and run the required checks and example parity.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;

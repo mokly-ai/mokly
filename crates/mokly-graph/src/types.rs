@@ -75,6 +75,8 @@ pub struct ComparisonCapture {
 pub trait RenderGeneration: GeneratedResources {
     /// Reuse an existing comparison capture without stacking retained copies.
     /// Ordinary source generations return None.
+    /// Wrappers that add checks must return None, not delegate: rebuilding with
+    /// a smaller bound reads the capture's source and would bypass those checks.
     fn comparison_capture(&self) -> Option<ComparisonCapture>;
 
     /// Hash of every config, source, stylesheet, and bundle render input.

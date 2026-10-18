@@ -63,7 +63,9 @@ Closure evidence retains exact logical instance and referring
 edge context for comparison proof. A comparison adapter can expose its existing
 capture through `comparison_capture`. The comparison engine reuses that handle
 instead of retaining another encoded copy of the same base. A smaller capture
-budget returns to the original source recipes.
+budget returns to the original source recipes. Wrappers that add checks must
+return `None` from `comparison_capture` so rebuilding cannot bypass their checks.
+Tests exercise capture reuse; production callers supply fresh base generations.
 
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.

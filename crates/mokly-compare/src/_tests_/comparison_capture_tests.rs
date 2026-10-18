@@ -15,7 +15,7 @@ use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
-use super::capture;
+use super::{capture, capture_with_bound};
 
 fn source(
     side: &'static str,
@@ -50,17 +50,19 @@ fn source(
             .each_call(matching!())
             .returns(vec!["styles/shared.CSS".into(), "assets/image.png".into()]),
         RenderGenerationMock::render_all
-            .next_call(matching!())
-            .returns(Ok(RenderSummary {
-                documents: count,
-                ..Default::default()
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                Ok(RenderSummary {
+                    documents: count,
+                    ..Default::default()
+                })
             })),
         GeneratedResourcesMock::resource
-            .next_call(matching!("styles/shared.CSS"))
-            .returns(Ok(Some(b"p{color:red}".to_vec()))),
+            .each_call(matching!("styles/shared.CSS"))
+            .answers(&|_, _| Ok(Some(b"p{color:red}".to_vec()))),
         RenderGenerationMock::resource_digest
-            .next_call(matching!("static/mokly-generated/assets/image.png"))
-            .returns(Ok(Some("asset digest".into()))),
+            .each_call(matching!("static/mokly-generated/assets/image.png"))
+            .answers(&|_, _| Ok(Some("asset digest".into()))),
         RenderGenerationMock::comparison_document
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, route| {
@@ -151,6 +153,30 @@ fn side_switch_count_is_constant_and_replays_do_not_render() {
     let large = run(32);
     assert_eq!(small, (16, 2));
     assert_eq!(large, (small.0 * 4, small.1));
+}
+
+#[test]
+fn smaller_bound_rebuilds_from_original_source_without_stacking_captures() {
+    let events = Arc::new(Mutex::new(vec![]));
+    let original = source("base", 4, events.clone());
+    let full = capture(original.clone()).unwrap();
+    let full_info = full.comparison_capture().unwrap();
+    assert_eq!(full_info.views, 4);
+    let bound = full_info.retained_bytes / 2;
+    let smaller = capture_with_bound(full.clone(), bound).unwrap();
+    let smaller_info = smaller.comparison_capture().unwrap();
+    assert!(!Arc::ptr_eq(&full, &smaller));
+    assert!(Arc::ptr_eq(&smaller_info.source, &original));
+    assert!(smaller_info.retained_bytes <= bound);
+    assert!(smaller_info.views < full_info.views);
+    assert_eq!(events.lock().unwrap().len(), 8);
+    for index in 0..4 {
+        let route = format!("{index}/index.html");
+        assert_eq!(
+            smaller.comparison_document(&route).unwrap().bytes,
+            full.comparison_document(&route).unwrap().bytes
+        );
+    }
 }
 
 #[test]

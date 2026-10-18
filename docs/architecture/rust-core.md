@@ -164,16 +164,19 @@ Comparison works on trees, never on text offsets. The
 - Comparison data lives in Rust memory, outside the sidecar's V8 heap. A view's
   trees are discarded when its comparison ends; nothing retains a catalogue-wide
   set of parsed pages.
-  Only the base has a private capture, bounded by the named 256 MiB default
-  `DEFAULT_BASE_CAPTURE_BYTES`, the render-cache budget. The charge includes
+  Each result holds at most one private base capture, bounded by the named
+  256 MiB default `DEFAULT_BASE_CAPTURE_BYTES`. This budget is separate from
+  the 256 MiB render cache. The charge includes
   compressed documents and generated CSS, all generated resource digests,
   uncompressed Rust usage and link metadata, closures, route keys, and map
   overhead. Inputs above this bound fall back to the pinned source. No capture
   writes files. Each paired read restores only its requested base view. The
   original head generation uses the bounded render cache and renders evicted
   views again on the head root. Root switches stay constant while the base
-  capture fits; source fallback can add switches. Repeated comparisons over a
-  captured base share the existing capture instead of stacking retained copies.
+  capture fits; source fallback can add switches. The API supports reuse of a
+  captured base, which tests exercise. Production callers supply fresh bases.
+  Serve can hold an accepted capture while building its replacement, so two
+  captures and the render cache can overlap.
 - Parsed CSS is cached by content hash with a byte bound; eviction changes time
   only.
 - The render cache, the base-side extraction cache, and the base-side
