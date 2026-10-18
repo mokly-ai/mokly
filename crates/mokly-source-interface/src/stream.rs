@@ -1,6 +1,6 @@
 //! Copy one opened resource through a bounded buffer and verify its captured digest.
 
-use std::io::{Read, Write};
+use std::io::{ErrorKind, Read, Write};
 use std::path::Path;
 
 use sha2::{Digest, Sha256};
@@ -35,6 +35,7 @@ impl SourceStream for OpenedSource {
         loop {
             let count = match self.reader.read(&mut buffer) {
                 Ok(count) => count,
+                Err(source) if source.kind() == ErrorKind::Interrupted => continue,
                 Err(source) => {
                     return Err(SourceError::Io {
                         operation: "stream source",

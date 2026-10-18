@@ -82,6 +82,10 @@ chunks and fails with `GraphError::InputsChanged` if the captured digest or
 opened length differs. Consumers keep copied bytes private until verification
 succeeds. Static output retains one final immutable payload; Serve streams a
 verified temporary file. Parsed source snapshots have no byte eviction policy.
+Asset opens report `InputsChanged` for vanished paths, stopped symbolic-link
+resolution, and non-regular replacements. Other open errors keep their IO
+diagnostic. Checked reads retry interruption; explicit cancellation retains
+the cancelled runtime diagnostic.
 Entry-source keys and binary closure validation use digest reads. HTML and
 CSS closure parsing retains the bytes it needs. Resource hash reads require a
 confined regular target before opening it.

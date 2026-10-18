@@ -1,9 +1,10 @@
 //! Stream checks preserve bytes and reject edits before private buffers are published.
 
-use std::io::{self, Cursor, Write};
+use std::io::{self, Cursor, Read, Write};
 use std::path::Path;
 
 use sha2::{Digest, Sha256};
+use unimock::{MockFn, Unimock, matching};
 
 use crate::error::SourceError;
 use crate::stream::{OpenedSource, SourceStream};
@@ -77,4 +78,69 @@ fn empty_assets_have_the_empty_digest_and_empty_output() {
         .copy_verified(Path::new("empty.svg"), &hash(&[]), &mut output)
         .unwrap();
     assert!(output.is_empty());
+}
+
+#[unimock::unimock(api = ReadMock)]
+trait ReadCalls: Send {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize>;
+}
+
+struct Reader(Unimock);
+
+impl Read for Reader {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        ReadCalls::read(&mut self.0, buffer)
+    }
+}
+
+#[test]
+fn interrupted_reads_retry_without_losing_bytes_or_changing_the_digest() {
+    let reader = Unimock::new((
+        ReadMock::read
+            .next_call(matching!(_))
+            .returns(Err(io::ErrorKind::Interrupted.into())),
+        ReadMock::read
+            .next_call(matching!(_))
+            .answers(&|_, buffer| {
+                buffer[..3].copy_from_slice(b"one");
+                Ok(3)
+            }),
+        ReadMock::read
+            .next_call(matching!(_))
+            .returns(Err(io::ErrorKind::Interrupted.into())),
+        ReadMock::read
+            .next_call(matching!(_))
+            .answers(&|_, buffer| {
+                buffer[..3].copy_from_slice(b"two");
+                Ok(3)
+            }),
+        ReadMock::read.next_call(matching!(_)).returns(Ok(0)),
+    ));
+    let mut stream = OpenedSource {
+        reader: Box::new(Reader(reader)),
+        length: 6,
+    };
+    let mut output = Vec::new();
+    stream
+        .copy_verified(Path::new("image.svg"), &hash(b"onetwo"), &mut output)
+        .unwrap();
+    assert_eq!(output, b"onetwo");
+}
+
+#[test]
+fn other_read_errors_keep_the_original_io_diagnostic() {
+    let reader = Unimock::new(
+        ReadMock::read
+            .next_call(matching!(_))
+            .returns(Err(io::ErrorKind::PermissionDenied.into())),
+    );
+    let mut stream = OpenedSource {
+        reader: Box::new(Reader(reader)),
+        length: 6,
+    };
+    assert!(
+        matches!(stream.copy_verified(Path::new("image.svg"), "unused", &mut Vec::new()),
+        Err(SourceError::Io { operation: "stream source", path, source })
+        if path == Path::new("image.svg") && source.kind() == io::ErrorKind::PermissionDenied)
+    );
 }

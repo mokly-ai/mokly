@@ -56,11 +56,7 @@ impl Write for CancellableWriter<'_> {
 }
 
 fn cancelled(path: &Path) -> SourceError {
-    SourceError::Io {
-        operation: "cancelled",
-        path: path.into(),
-        source: io::ErrorKind::Interrupted.into(),
-    }
+    SourceError::Cancelled { path: path.into() }
 }
 
 #[cfg(test)]

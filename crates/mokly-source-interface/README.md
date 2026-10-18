@@ -50,6 +50,10 @@ returns `SourceError::Changed` on a digest or length mismatch. Callers expose
 the destination only after success. Working-tree streams open the captured
 physical identity through non-following directory handles. Git streams use
 immutable blobs under the existing bounded Git IO contract.
+Opening a non-regular asset returns `SourceError::Changed`. Other open failures
+retain their IO cause. `is_symlink_error` identifies stopped symbolic-link
+resolution and loops. Checked copies retry interrupted reads. Cancellation
+uses `SourceError::Cancelled`, separate from an interrupted system call.
 
 ## Quick Start
 

@@ -16,10 +16,11 @@ use crate::working_tree_read;
 
 pub(crate) fn open(path: &Path) -> Result<Box<dyn SourceStream>> {
     match confined(path) {
-        Ok((file, length)) => Ok(Box::new(OpenedSource {
+        Ok(Some((file, length))) => Ok(Box::new(OpenedSource {
             reader: Box::new(file),
             length,
         })),
+        Ok(None) => Err(SourceError::Changed { path: path.into() }),
         Err(source) => Err(SourceError::Io {
             operation: "open resource stream",
             path: path.into(),
@@ -30,7 +31,8 @@ pub(crate) fn open(path: &Path) -> Result<Box<dyn SourceStream>> {
 
 pub(crate) fn digest(path: &Path) -> Result<String> {
     match confined(path) {
-        Ok((file, _)) => working_tree_read::digest_opened(path, file),
+        Ok(Some((file, _))) => working_tree_read::digest_opened(path, file),
+        Ok(None) => Err(SourceError::Changed { path: path.into() }),
         Err(source) => Err(SourceError::Io {
             operation: "hash opaque resource",
             path: path.into(),
@@ -39,7 +41,7 @@ pub(crate) fn digest(path: &Path) -> Result<String> {
     }
 }
 
-fn confined(path: &Path) -> io::Result<(File, u64)> {
+fn confined(path: &Path) -> io::Result<Option<(File, u64)>> {
     let mut anchor = PathBuf::new();
     let mut names = Vec::new();
     for part in path.components() {
@@ -68,7 +70,7 @@ fn confined(path: &Path) -> io::Result<(File, u64)> {
     let file = directory.open_with(file, &options)?;
     let metadata = file.metadata()?;
     if !metadata.is_file() {
-        return Err(io::ErrorKind::InvalidInput.into());
+        return Ok(None);
     }
-    Ok((file.into_std(), metadata.len()))
+    Ok(Some((file.into_std(), metadata.len())))
 }

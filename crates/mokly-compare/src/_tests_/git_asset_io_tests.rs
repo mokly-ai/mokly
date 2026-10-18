@@ -73,3 +73,28 @@ fn git_source_errors_keep_the_failed_operation() {
         SourceError::Io { operation: "open stream", path, source }
             if path == root && source.kind() == io::ErrorKind::IsADirectory));
 }
+
+#[test]
+fn a_nonregular_git_entry_is_a_changed_input_before_blob_delivery() {
+    let path = RepoPath::parse("image.svg").unwrap();
+    let index = Arc::new(TreeIndex {
+        entries: [(
+            path.clone(),
+            Entry {
+                path,
+                mode: Mode::Symlink,
+                size: 6,
+                object: ObjectId::parse(&"a".repeat(40)).unwrap(),
+            },
+        )]
+        .into(),
+    });
+    let sources = Unimock::new(
+        SourcesMock::index
+            .each_call(matching!())
+            .answers_arc(Arc::new(move |_| Ok(index.clone()))),
+    );
+    let tree: &dyn SourceTree = &GitTree::new("/repo".into(), Arc::new(sources), 4096);
+    assert!(matches!(tree.open_stream(Path::new("/repo/image.svg")),
+        Err(SourceError::Changed { path }) if path == Path::new("/repo/image.svg")));
+}

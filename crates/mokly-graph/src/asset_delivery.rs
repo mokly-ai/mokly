@@ -1,7 +1,7 @@
 //! Digest-checked opaque delivery retains metadata until a consumer opens a stream.
 
-use std::io::{self, Write};
-use std::path::PathBuf;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
@@ -60,15 +60,7 @@ impl Session {
         else {
             return Ok(None);
         };
-        let stream = match self.state.tree.open_stream(&asset.source) {
-            Ok(stream) => stream,
-            Err(SourceError::Io { source, .. }) if source.kind() != io::ErrorKind::Interrupted => {
-                return Err(GraphError::InputsChanged {
-                    path: asset.source.clone(),
-                });
-            }
-            Err(error) => return source(Err(error)),
-        };
+        let stream = open(self.state.tree.as_ref(), &asset.source)?;
         Ok(Some(Box::new(PreparedAsset {
             stream,
             path: asset.source.clone(),
@@ -78,21 +70,32 @@ impl Session {
     }
 }
 
+fn open(tree: &dyn SourceTree, path: &Path) -> Result<Box<dyn SourceStream>> {
+    match tree.open_stream(path) {
+        Err(error) if error.is_vanished() || error.is_symlink_error() => {
+            Err(GraphError::InputsChanged { path: path.into() })
+        }
+        result => source(result),
+    }
+}
+
 fn source<T>(result: mokly_source_interface::error::Result<T>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
         Err(SourceError::Changed { path }) => Err(GraphError::InputsChanged { path }),
-        Err(SourceError::Io { source, .. }) if source.kind() == io::ErrorKind::Interrupted => {
-            Err(GraphError::Runtime {
-                source: RuntimeDiagnostic {
-                    code: RuntimeCode::Cancelled,
-                    message: "build cancelled".into(),
-                },
-            })
-        }
+        Err(SourceError::Cancelled { .. }) => Err(GraphError::Runtime {
+            source: RuntimeDiagnostic {
+                code: RuntimeCode::Cancelled,
+                message: "build cancelled".into(),
+            },
+        }),
         Err(source) => Err(InternalError::Provider {
             source: Box::new(source),
         }
         .into()),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/asset_delivery_tests.rs"]
+mod asset_delivery_tests;

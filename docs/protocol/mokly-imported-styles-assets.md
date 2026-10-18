@@ -112,6 +112,12 @@ A mismatch stops the build with the input-change error before installation;
 publish uses the final captured bytes. The final live fingerprint recheck
 still applies under [Output Transaction](./mokly-export.md#output-transaction).
 
+A vanished path (`NotFound` or `NotADirectory`), stopped symbolic-link
+resolution or a symbolic-link loop, and a non-regular replacement count as
+changed inputs. Other open failures keep their original IO diagnostic and do
+not request regeneration. Delivery retries interrupted reads. Explicit command
+cancellation stops the copy with the cancellation diagnostic.
+
 An edit to an imported stylesheet, a nested import, an asset, the
 configuration, or a plugin-reported dependency invalidates the stylesheet
 node and re-renders the views that link it; a new file that matches a

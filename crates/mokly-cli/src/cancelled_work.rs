@@ -1,6 +1,5 @@
 //! Cancellation checkpoints at source IO and between independently scheduled views.
 
-use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -27,11 +26,7 @@ pub struct CancellableTree {
 impl CancellableTree {
     fn check(&self, path: &Path) -> mokly_source_interface::error::Result<()> {
         if self.cancellation.requested() {
-            Err(SourceError::Io {
-                operation: "cancelled",
-                path: path.into(),
-                source: io::Error::from(io::ErrorKind::Interrupted),
-            })
+            Err(SourceError::Cancelled { path: path.into() })
         } else {
             Ok(())
         }

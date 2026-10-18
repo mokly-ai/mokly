@@ -13,7 +13,7 @@ use crate::cancellation::CancellationMock;
 use super::CancellableStream;
 
 #[test]
-fn cancellation_between_chunks_stops_copying_and_keeps_the_interrupted_error() {
+fn cancellation_between_chunks_stops_copying_with_an_explicit_error() {
     let cancellation = Unimock::new((
         CancellationMock::requested
             .next_call(matching!())
@@ -48,7 +48,7 @@ fn cancellation_between_chunks_stops_copying_and_keeps_the_interrupted_error() {
     });
     let mut output = Vec::new();
     assert!(
-        matches!(stream.copy_verified(Path::new("asset.svg"), "expected", &mut output), Err(SourceError::Io { source, .. }) if source.kind() == io::ErrorKind::Interrupted)
+        matches!(stream.copy_verified(Path::new("asset.svg"), "expected", &mut output), Err(SourceError::Cancelled { path }) if path == Path::new("asset.svg"))
     );
     assert_eq!(output, b"first");
 }

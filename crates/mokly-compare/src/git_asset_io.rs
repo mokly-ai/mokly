@@ -62,7 +62,7 @@ impl GitTree {
             return Err(failure("open stream", path, io::ErrorKind::NotFound));
         };
         if !entry.mode.regular() {
-            return Err(failure("open stream", path, io::ErrorKind::InvalidInput));
+            return Err(SourceError::Changed { path: path.into() });
         }
         let mut blobs = match self
             .sources
