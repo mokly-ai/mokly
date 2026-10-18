@@ -1552,7 +1552,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
-  - [ ] Verify the comparison engine's tree walks after M9 integration.
+  - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
         per-element copy of enclosing instances in `owned_style_instances::walk`.
@@ -1601,6 +1601,7 @@ Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
 Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/report-4.md`.
 Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
 Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
+Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -1619,6 +1620,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
+    `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
+    `sidecar render readiness: Disconnected` during a concurrent package
+    rebuild. Both passed in an isolated rerun and the final repository suite.
+    Suspected source: shared built files changed during the tests. Keep builds
+    and suites separate. Evidence: M14 `report-7.md`.
   - [x] Reconcile the inherited M14 round 3
         `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
         The shared fixture seeds its epoch and cleanup uses one staleness rule.

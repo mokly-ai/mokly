@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use mokly_html::tree::{Node, RegionKind};
+use mokly_html::tree::{self, Node, RegionKind};
 
 use crate::material::{self, Projection};
 
@@ -50,22 +50,16 @@ pub(crate) fn collect(
 }
 
 fn index<'a>(nodes: &'a [Node], output: &mut BTreeMap<&'a str, (&'a str, &'a str, &'a [Node])>) {
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                if let RegionKind::Instance {
-                    key,
-                    path,
-                    props_key,
-                    ..
-                } = &region.kind
-                {
-                    output.entry(key).or_insert((path, props_key, children));
-                }
-                index(children, output);
-            }
-            Node::Element(element) => index(&element.children, output),
-            _ => {}
+    for node in tree::walk(nodes) {
+        if let Node::Region { region, children } = node
+            && let RegionKind::Instance {
+                key,
+                path,
+                props_key,
+                ..
+            } = &region.kind
+        {
+            output.entry(key).or_insert((path, props_key, children));
         }
     }
 }
@@ -75,25 +69,34 @@ fn slots(
     instance: &str,
     projection: &Projection,
 ) -> BTreeMap<String, Vec<material::Material>> {
-    let mut output = BTreeMap::new();
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                if let RegionKind::Slot {
-                    instance_key, name, ..
-                } = &region.kind
-                    && instance_key == instance
-                {
-                    output
-                        .entry(name.clone())
-                        .or_insert_with(|| material::canonical(children, projection));
-                } else {
-                    output.extend(slots(children, instance, projection));
-                }
+    let mut frames = vec![(nodes.iter(), BTreeMap::new())];
+    while let Some((nodes, output)) = frames.last_mut() {
+        let Some(node) = nodes.next() else {
+            let Some((_, output)) = frames.pop() else {
+                break;
+            };
+            if let Some((_, parent)) = frames.last_mut() {
+                parent.extend(output);
+                continue;
             }
-            Node::Element(element) => output.extend(slots(&element.children, instance, projection)),
-            _ => {}
+            return output;
+        };
+        if let Node::Region { region, children } = node
+            && let RegionKind::Slot {
+                instance_key, name, ..
+            } = &region.kind
+            && instance_key == instance
+        {
+            output
+                .entry(name.clone())
+                .or_insert_with(|| material::canonical(children, projection));
+        } else if !node.children().is_empty() {
+            frames.push((node.children().iter(), BTreeMap::new()));
         }
     }
-    output
+    BTreeMap::new()
 }
+
+#[cfg(test)]
+#[path = "_tests_/instance_impact_tests.rs"]
+mod instance_impact_tests;

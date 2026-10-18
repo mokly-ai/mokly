@@ -61,8 +61,10 @@ impl Visit for Fields {
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
         let name = match field.name() {
-            "worker" | "tier" | "views" | "unchanged" | "changed" | "input_paths"
-            | "read_bytes" | "retained_bytes" => field.name(),
+            "worker" | "tier" | "views" | "unchanged" | "changed" => field.name(),
+            "input_paths" => "inputPaths",
+            "read_bytes" => "readBytes",
+            "retained_bytes" => "retainedBytes",
             "ignored_only" => "ignoredOnly",
             _ => return,
         };

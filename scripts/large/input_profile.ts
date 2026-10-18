@@ -49,7 +49,7 @@ export function inputProfile(
       number(record.event.pid) === null
     )
       continue;
-    const retained = number(record.event.retained_bytes);
+    const retained = number(record.event.retainedBytes);
     if (retained !== null) retainedByProcess.set(record.event.pid, retained);
     if (record.event.event === "start") starts.set(identity(record), record);
     if (record.event.event === "end") {
@@ -71,7 +71,7 @@ export function inputProfile(
         const key = identity(parent);
         const total = reads.get(key) ?? { calls: 0, bytes: 0 };
         total.calls++;
-        total.bytes += number(record.event.read_bytes) ?? 0;
+        total.bytes += number(record.event.readBytes) ?? 0;
         reads.set(key, total);
         break;
       }
@@ -98,9 +98,9 @@ export function inputProfile(
         parentId: start.event.parentId ?? null,
         status: event?.status ?? "incomplete",
         durationMs: number(event?.durationMs),
-        inputPaths: number(event?.input_paths),
+        inputPaths: number(event?.inputPaths),
         retainedSourceBytes:
-          number(event?.retained_bytes) ?? retainedAtEnd.get(key) ?? null,
+          number(event?.retainedBytes) ?? retainedAtEnd.get(key) ?? null,
         capturedReadCalls: reads.get(key)?.calls ?? null,
         capturedReadBytes: reads.get(key)?.bytes ?? null,
         ...memoryWindow(
