@@ -49,6 +49,7 @@ pub fn fixture() -> TempDir {
     write(directory.path(), ".gitignore", "node_modules/\n.context/\n");
     write(directory.path(), matrix::SCREEN_FILE, matrix::SCREEN);
     callers::seed(directory.path());
+    delivery::seed(directory.path());
     #[cfg(unix)]
     std::os::unix::fs::symlink(
         workspace.join("node_modules"),
@@ -95,12 +96,9 @@ pub fn run(root: &Path) {
         scopes::own_props(&baseline);
         matrix::temporary(&baseline);
         shared::run(root, &session, &expected);
+        delivery::run(root, &session);
         matrix::run(root, &session, &baseline);
     }
-}
-
-pub fn run_delivery(root: &Path, mode: &str) {
-    delivery::run(root, mode);
 }
 
 fn edit(

@@ -3,7 +3,6 @@
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::Mutex;
 
 use tempfile::TempDir;
 
@@ -17,7 +16,6 @@ mod changes_runtime;
 mod changes_support;
 mod design_support;
 
-static SERIAL: Mutex<()> = Mutex::new(());
 #[path = "../src/render_runtime.rs"]
 #[expect(dead_code, reason = "the fixture supplies its diagnostics")]
 mod render_runtime;
@@ -27,43 +25,10 @@ mod terminal;
 
 #[test]
 fn design_catalogue_attribution_acceptance_matrix() {
-    exercise("design_catalogue_attribution_acceptance_matrix", None);
-}
-
-#[test]
-fn design_configured_stylesheet_attribution() {
-    exercise(
-        "design_configured_stylesheet_attribution",
-        Some("configured"),
-    );
-}
-
-#[test]
-fn design_declared_stylesheet_attribution() {
-    exercise("design_declared_stylesheet_attribution", Some("declared"));
-}
-
-#[test]
-fn design_css_import_attribution() {
-    exercise("design_css_import_attribution", Some("css-imported"));
-}
-
-#[test]
-fn design_javascript_import_attribution() {
-    exercise(
-        "design_javascript_import_attribution",
-        Some("javascript-imported"),
-    );
-}
-
-fn exercise(name: &str, delivery: Option<&str>) {
-    let _serial = SERIAL.lock().unwrap_or_else(|error| error.into_inner());
+    let name = "design_catalogue_attribution_acceptance_matrix";
     if let Some(root) = env::var_os("MOKLY_TEST_DESIGN_ROOT") {
         let root = PathBuf::from(root);
-        match delivery {
-            Some(mode) => design_support::run_delivery(&root, mode),
-            None => design_support::run(&root),
-        }
+        design_support::run(&root);
         println!("Design fixture complete");
         return;
     }

@@ -184,7 +184,9 @@ HTML, React, and stylesheet edits.
 The design attribution matrix copies the example sources into temporary Git
 fixtures with fully registered base and head commits. It pins stylesheet links,
 rule and resource records, changed entries, and affected consumers. Independent
-head edits reuse the pinned base generation.
+head edits reuse the pinned base generation. Four distinct CSS delivery rules
+share one registered base and one head. Excluded, unresolved, and matched
+shared rules use separate selectors in one head, with exact per-rule evidence.
 
 ```bash
 cargo test -p mokly-cli

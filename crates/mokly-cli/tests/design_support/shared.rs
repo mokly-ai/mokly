@@ -15,43 +15,23 @@ use super::{edit, matrix, text};
 const TOP: &str = "design/library/chrome/top-bar";
 
 pub fn run(root: &Path, session: &Session, scopes: &Scopes) {
-    for (label, selector, status) in [
-        (
-            "nine excluded shared sheets",
-            ".m9-absent",
-            RuleStatus::Excluded,
-        ),
-        (
-            "nine unresolved shared sheets",
-            "body",
-            RuleStatus::Unresolved,
-        ),
-        (
-            "nine component matched shared sheets",
-            ".mbk-topbar",
-            RuleStatus::Matched,
-        ),
-    ] {
-        let paths: Vec<_> = SHEETS
-            .iter()
-            .map(|sheet| format!("examples/basic/{sheet}"))
-            .collect();
-        let edits: Vec<_> = paths
-            .iter()
-            .map(|path| {
-                (
-                    path.as_str(),
-                    format!(
-                        "{}\n{selector} {{ outline-color: rgb(1, 2, 3); }}\n",
-                        text(root, path)
-                    ),
-                )
-            })
-            .collect();
-        edit(root, session, label, &edits, &|result| {
-            check(result, scopes, selector, &status)
-        });
-    }
+    let paths: Vec<_> = SHEETS
+        .iter()
+        .map(|sheet| format!("examples/basic/{sheet}"))
+        .collect();
+    let edits: Vec<_> = paths.iter().map(|path| {
+        (path.as_str(), format!(
+            "{}\n.m9-absent {{ outline-color: rgb(1, 2, 3); }}\nbody {{ outline-color: rgb(4, 5, 6); }}\n.mbk-topbar {{ outline-color: rgb(7, 8, 9); }}\n",
+            text(root, path)
+        ))
+    }).collect();
+    edit(
+        root,
+        session,
+        "nine shared sheets with three rule statuses",
+        &edits,
+        &|result| check(result, scopes),
+    );
     let path = "examples/basic/design.css";
     edit(
         root,
@@ -97,24 +77,22 @@ pub fn run(root: &Path, session: &Session, scopes: &Scopes) {
     );
 }
 
-fn check(result: &ComparisonResult, scopes: &Scopes, selector: &str, status: &RuleStatus) {
-    let expected = match status {
-        RuleStatus::Excluded => vec![],
-        RuleStatus::Unresolved => scopes
-            .iter()
-            .filter(|(_, sheets)| !sheets.is_empty())
-            .map(|(path, _)| path.clone())
-            .collect(),
-        RuleStatus::Matched => scopes
-            .keys()
-            .filter(|path| *path == TOP || path.starts_with(&format!("{TOP}/")))
-            .cloned()
-            .collect(),
-    };
+fn check(result: &ComparisonResult, scopes: &Scopes) {
+    let expected: Vec<_> = scopes
+        .iter()
+        .filter(|(_, sheets)| !sheets.is_empty())
+        .map(|(path, _)| path.clone())
+        .collect();
     matrix::changed(result, &expected);
-    if *status != RuleStatus::Matched {
-        assert!(result.review.affected.is_empty());
-    }
+    matrix::affected(result, "top_bar_shared_rules");
+    assert!(
+        result
+            .review
+            .affected
+            .iter()
+            .all(|record| record.changed_component_id == TOP),
+        "unresolved rules add no affected components"
+    );
     for entry in &result.entries {
         let mut reasons: Vec<_> = if entry.included {
             scopes[&entry.path]
@@ -142,36 +120,48 @@ fn check(result: &ComparisonResult, scopes: &Scopes, selector: &str, status: &Ru
             let top = entry.path == TOP
                 || entry.path.starts_with(&format!("{TOP}/"))
                 || matches!(usage, CatalogueUsage::Ready { instances, .. } if instances.iter().any(|instance| instance.component_id == TOP));
-            let matched = *status == RuleStatus::Matched && top;
-            let excluded =
-                *status == RuleStatus::Excluded || (*status == RuleStatus::Matched && !top);
-            let mut rules: Vec<_> = scopes[&entry.path]
-                .iter()
-                .map(|sheet| RuleEvidence {
-                    stylesheet: scopes::route(sheet),
-                    selector: if excluded {
-                        String::new()
+            let mut rules = Vec::new();
+            for sheet in &scopes[&entry.path] {
+                let stylesheet = scopes::route(sheet);
+                for (selector, status, owner) in [
+                    (".m9-absent", RuleStatus::Excluded, EvidenceOwner::Entry),
+                    ("body", RuleStatus::Unresolved, EvidenceOwner::Entry),
+                    (
+                        ".mbk-topbar",
+                        RuleStatus::Matched,
+                        EvidenceOwner::Component { path: TOP.into() },
+                    ),
+                ] {
+                    let expected = if status == RuleStatus::Excluded
+                        || (status == RuleStatus::Matched && !top)
+                    {
+                        vec![]
                     } else {
-                        selector.into()
-                    },
-                    status: if excluded {
-                        RuleStatus::Excluded
-                    } else {
-                        status.clone()
-                    },
-                    owner: if matched {
-                        EvidenceOwner::Component { path: TOP.into() }
-                    } else {
-                        EvidenceOwner::Entry
-                    },
-                })
-                .collect();
+                        vec![RuleEvidence {
+                            stylesheet: stylesheet.clone(),
+                            selector: selector.into(),
+                            status,
+                            owner,
+                        }]
+                    };
+                    let actual: Vec<_> = view
+                        .evidence
+                        .rules
+                        .iter()
+                        .filter(|rule| rule.stylesheet == stylesheet && rule.selector == selector)
+                        .cloned()
+                        .collect();
+                    assert_eq!(
+                        actual, expected,
+                        "{} {route} {sheet} {selector}",
+                        entry.path
+                    );
+                    rules.extend(expected);
+                }
+            }
             rules.sort_by_key(review_order::rule_key);
             assert_eq!(view.evidence.rules, rules, "{} {route}", entry.path);
             assert!(view.evidence.resources.is_empty(), "{} {route}", entry.path);
         }
-    }
-    if *status == RuleStatus::Matched {
-        matrix::affected(result, "top_bar_shared_rules");
     }
 }
