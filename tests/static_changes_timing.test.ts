@@ -16,7 +16,7 @@ import { timings } from "./helpers/static_timings.js";
 test(
   "a failed base preparation ends its timing span with error while unavailable Changes settles",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const { root } = await fixture();
     try {
       await write(root, "broken.config.json", "{invalid");
@@ -24,12 +24,19 @@ test(
       await git(root, "commit", "-qm", "broken historical config");
       await git(root, "branch", "broken-base");
       await write(root, "broken.config.json", "{}");
-      const result = await command(root, "build", [
-        "--out=.context/site",
-        "--config=broken.config.json",
-        "--base=broken-base",
-        "--debug-timings",
-      ]).result;
+      const result = await command(
+        root,
+        "build",
+        [
+          "--out=.context/site",
+          "--config=broken.config.json",
+          "--base=broken-base",
+          "--debug-timings",
+        ],
+        "plain",
+        {},
+        context.signal,
+      ).result;
       assert.equal(result.code, 0, result.stderr);
       const ends = timings(result.stderr).filter(
         (record) => record.event === "end",
@@ -51,7 +58,7 @@ test(
 test(
   "Changes timings count final view states and measure sorted changed paths without source data",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     try {
       await write(
@@ -89,7 +96,12 @@ test(
           );
           await fs.rm(path.join(root, "specs/retired.screen.html"));
         }
-        const result = await build(root, ["--debug-timings"]);
+        const result = await build(
+          root,
+          ["--debug-timings"],
+          "rich",
+          context.signal,
+        );
         const records = timings(result.stderr);
         const compared = records.filter(
           (record) => record.stage === "review.compare-views",
@@ -104,6 +116,9 @@ test(
           change ? [11, 3, 6, 2] : [9, 9, 0, 0],
         );
         assert.equal(compared[2]!.status, "ok");
+        for (const record of [compared[0]!, compared[2]!])
+          for (const field of ["views", "unchanged", "changed", "ignoredOnly"])
+            assert.equal(Object.hasOwn(record, field), false);
         assert.equal(count.id, compared[0]!.id);
         const paths = records.filter(
           (record) => record.stage === "review.changed-paths",

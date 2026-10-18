@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   command,
@@ -17,7 +18,7 @@ const exec = promisify(execFile);
 test(
   "SIGINT during FIFO-blocked Git reports exact build and publish cancellation",
   { timeout: 120_000, skip: process.platform === "win32" },
-  async () => {
+  async (context) => {
     for (const verb of ["build", "publish"] as const) {
       const root = await publicationFixture();
       const server = await exchange();
@@ -44,8 +45,18 @@ test(
       };
       const running =
         verb === "build"
-          ? command(root, "build", ["--out=.context/site"], "plain", env)
-          : publish(root, server.endpoint, "plain", { env });
+          ? command(
+              root,
+              "build",
+              ["--out=.context/site"],
+              "plain",
+              env,
+              context.signal,
+            )
+          : publish(root, server.endpoint, "plain", {
+              env,
+              signal: context.signal,
+            });
       try {
         await Promise.race([
           readiness,
@@ -68,10 +79,16 @@ test(
           code: "ENOENT",
         });
       } finally {
-        watcher.close();
-        running.child.kill("SIGKILL");
-        await server.close();
-        await fs.promises.rm(root, { recursive: true, force: true });
+        await cleanupAll([
+          async () => {
+            watcher.close();
+          },
+          async () => {
+            running.child.kill("SIGKILL");
+          },
+          () => server.close(),
+          () => fs.promises.rm(root, { recursive: true, force: true }),
+        ]);
       }
     }
   },

@@ -1038,6 +1038,12 @@ Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
 
 ## Milestone 9: Changes
 
+- [ ] Settle the Git changed-path input (user decision 45): the
+      `review.changed-paths` row in `mokly-timings.md` describes Git discovery,
+      but the span measures snapshot changed-entry collection. The comparison
+      contract names Git changed paths as an input that production code does
+      not read. Keep the span and the M12 tick pending the decision.
+
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
@@ -1523,6 +1529,10 @@ and a document page: `.context/rust-rebuild/m5-example/round10/package-smoke-1.l
 its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
+
+- [x] Apply M12 review 7 findings 2 to 6: count-record exclusivity, dependency
+      span scope and tier tests, portable cache fixtures, and receiver cleanup.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-11.md`.
 
 - [x] Stop sidecar and PostCSS children quietly on a closed parent output pipe.
       Verify response, operation-count, diagnostic, and IPC closure without sleeps.

@@ -79,6 +79,11 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
     assert_eq!(counts["ignoredOnly"], 2);
     assert!(counts.get("documents").is_none());
     assert_eq!(records[5]["status"], "ok");
+    for record in [&records[1], &records[5]] {
+        for field in ["views", "unchanged", "changed", "ignoredOnly"] {
+            assert!(record.get(field).is_none());
+        }
+    }
     for record in records {
         assert_eq!(record["session"], "test");
         assert_eq!(record["role"], "core");
