@@ -61,9 +61,9 @@ its files are installed. Its Serve duration includes queue time.
 | `review.css-analysis`                            | the parse, diff, match, and reduce pass for one changed stylesheet and one document pair, cache hits included               |
 | `review.capture`                                 | one on-demand comparison generation, or the static comparison generation of `build`                                         |
 | `output.write`                                   | the static output transaction: `output.stage`, `output.install`, `output.rollback` after a failed install, `output.cleanup` |
-| `output.fingerprint`, `output.input-digests`     | selected root capture and later inventoried source digests; carry `input_paths` and `retained_bytes`                        |
-| `output.recheck`                                 | final selected membership, identity, and live digest verification; carries `input_paths` and `retained_bytes`               |
-| `output.input-read`                              | a static captured-tree read; carries `action` (`private` or `public`), `read_bytes`, and `retained_bytes`                   |
+| `output.fingerprint`, `output.input-digests`     | selected root capture and later inventoried source digests; carry `inputPaths` and `retainedBytes`                          |
+| `output.recheck`                                 | final selected membership, identity, and live digest verification; carries `inputPaths` and `retainedBytes`                 |
+| `output.input-read`                              | a static captured-tree read; carries `action` (`private` or `public`), `readBytes`, and `retainedBytes`                     |
 | `upload.plan`, `upload.blobs`, `upload.complete` | the exchange rounds of `publish`                                                                                            |
 
 Review spans use the same session, role, and parent context as their caller:
@@ -82,7 +82,7 @@ Only a completed comparison emits these counts. `review.base-dependencies`,
 `review.compare-views`, and `review.changed-paths` start with error status and
 record `ok` only after successful work.
 
-Static input counters are observations. `retained_bytes` counts private source
+Static input counters are observations. `retainedBytes` counts private source
 payload once per captured path. It excludes map metadata and other byte owners.
 Reads below a `css.bundle` span describe calls that reach the captured tree;
 inner cache hits and bundle copies do not appear as captured reads. The harness
@@ -97,6 +97,11 @@ including failed compilations. Replay and evaluation-only reuse add no
 
 ## Sidecar Spans
 
+The core selects sidecar timing through the optional `hello.params.timings`
+boolean. It defaults to `false`. No environment variable carries this choice.
+An enabled sidecar writes its timing records to stderr. The core forwards
+complete records unchanged; other stderr lines remain diagnostics.
+
 A sidecar emits records with `role: "sidecar"` and its own `pid` and session
 for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
 `screen`, `component`, `story`, or `page`), and `sidecar.process-css`, each
@@ -105,6 +110,9 @@ emits `sidecar.spawn` for a spawn up to the `hello` exchange, and
 `sidecar.recycle` for a replacement. The difference between a core
 `render.fragment` span and the matching sidecar span is transport and queue
 time.
+
+Spawn and replacement spans start with error status and record `ok` only after
+hello succeeds. A replacement span encloses its spawn/hello span.
 
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.

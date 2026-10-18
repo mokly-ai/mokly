@@ -5,7 +5,7 @@ import { parameterShapes } from "./parameter-shapes.js";
 import { requestId } from "./request-id.js";
 
 const shapes: Record<string, string[]> = {
-  hello: [],
+  hello: ["timings"],
   shutdown: [],
   bundle: [
     "evaluation",
@@ -79,10 +79,13 @@ export function request(value: unknown): Request {
       (key) =>
         key !== "renderer" &&
         key !== "evaluation" &&
+        key !== "timings" &&
         !Object.hasOwn(params, key),
     )
   )
     protocol(`invalid params for ${value.method}`);
+  if (Object.hasOwn(params, "timings") && typeof params.timings !== "boolean")
+    protocol("timings must be a boolean");
   if (value.method === "bundle" && !Object.hasOwn(params, "renderer"))
     params.renderer = null;
   if (value.method === "restoreGeneration") {

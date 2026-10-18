@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   directory,
@@ -19,7 +20,7 @@ const git = (root: string, ...args: string[]) =>
 test(
   "publication rejects every dirty checkout variant before allocating output or requesting Plan",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const cases = [
       "modified",
       "staged",
@@ -79,7 +80,9 @@ test(
             await fs.writeFile(path.join(root, expected), "changed");
           }
         }
-        const result = await publish(root, server.endpoint).result;
+        const result = await publish(root, server.endpoint, "plain", {
+          signal: context.signal,
+        }).result;
         assert.equal(result.code, 1, name);
         assert.match(result.stderr, /\[mokly\/git-uncommitted\]/u);
         assert.ok(
@@ -89,8 +92,10 @@ test(
         assert.equal(result.stdout, "");
         assert.equal(server.bodies.length, 0);
       } finally {
-        await server.close();
-        await fs.rm(root, { recursive: true, force: true });
+        await cleanupAll([
+          () => server.close(),
+          () => fs.rm(root, { recursive: true, force: true }),
+        ]);
       }
     }
   },
@@ -98,21 +103,27 @@ test(
 test(
   "Git-ignored output and ordinary ignored files do not block a full publication",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange();
     let output: string | undefined;
     try {
       await fs.mkdir(path.join(root, ".context"));
       await fs.writeFile(path.join(root, ".context/notes"), "ignored");
-      const result = await publish(root, server.endpoint).result;
+      const result = await publish(root, server.endpoint, "plain", {
+        signal: context.signal,
+      }).result;
       output = directory(result.stdout);
       assert.equal(result.code, 0, result.stderr);
       assert.equal(server.completed, 1);
     } finally {
-      await server.close();
-      if (output) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        async () => {
+          if (output) await removeOutput(output);
+        },
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
@@ -120,7 +131,7 @@ test(
 test(
   "publication reports dirty submodules even when Git settings hide them",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const submodule = await publicationFixture();
     const server = await exchange();
@@ -140,16 +151,20 @@ test(
         path.join(root, "modules/demo/signal.txt"),
         "changed submodule",
       );
-      const result = await publish(root, server.endpoint).result;
+      const result = await publish(root, server.endpoint, "plain", {
+        signal: context.signal,
+      }).result;
       assert.equal(result.code, 1);
       assert.match(result.stderr, /\[mokly\/git-uncommitted\]/u);
       assert.match(result.stderr, /modules\/demo/u);
       assert.equal(result.stdout, "");
       assert.equal(server.bodies.length, 0);
     } finally {
-      await server.close();
-      await fs.rm(root, { recursive: true, force: true });
-      await fs.rm(submodule, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        () => fs.rm(root, { recursive: true, force: true }),
+        () => fs.rm(submodule, { recursive: true, force: true }),
+      ]);
     }
   },
 );

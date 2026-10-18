@@ -1038,6 +1038,12 @@ Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
 
 ## Milestone 9: Changes
 
+- [ ] Settle the Git changed-path input (user decision 45): the
+      `review.changed-paths` row in `mokly-timings.md` describes Git discovery,
+      but the span measures snapshot changed-entry collection. The comparison
+      contract names Git changed paths as an input that production code does
+      not read. Keep the span and the M12 tick pending the decision.
+
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
@@ -1274,6 +1280,16 @@ Tags: ui
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
+  - [x] Port the cases that the shared copied comparison output supports,
+        with the fixture entries that they need.
+  - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
+        background classification and on-demand comparisons in Serve.
+  - [ ] Port the moved-entry cases, after the M9 TODO for the deferred native
+        Changes browser fixtures.
+  - [ ] Port the two D1 cases, Details before a comparison loads and the
+        `implementation` reason, after the backend and viewer D1 tasks.
+  - [ ] Port the remaining cases that need more fixture entries, embedded
+        hosts, or design references (report 19 lists them).
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1296,6 +1312,9 @@ The review v8 reader, the base snapshot identity, the `./data` trim, the
 `.context/rust-rebuild/delegation/m7/report-11.md`.
 The Chrome run against Milestone 9 output, its viewer fixes, and decision D1:
 `.context/rust-rebuild/delegation/m7/report-18.md`.
+The comparison UI specs on the shared copied comparison output, the fixture
+entries, the removed-variant heading fix, and the sweep inputs:
+`.context/rust-rebuild/delegation/m7/report-19.md`.
 
 - [ ] Commit.
 
@@ -1567,6 +1586,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Apply M12 review 7 findings 2 to 6: count-record exclusivity, dependency
+      span scope and tier tests, portable cache fixtures, and receiver cleanup.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-11.md`.
+
 - [x] Stop sidecar and PostCSS children quietly on a closed parent output pipe.
       Verify response, operation-count, diagnostic, and IPC closure without sleeps.
       Evidence: `.context/rust-rebuild/delegation/m12-static/part0-done.md`.
@@ -1574,7 +1597,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Obtain user approval for the current 2 GiB per repository cache namespace
       and the shared 120-second dependency preparation allowance before adding
       these values to the timings contract.
-- [ ] Forward sidecar timing records and add core `sidecar.spawn` and
+- [x] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 
 - [x] Restrict static fingerprints to configured roots, inventoried sources,
@@ -1595,7 +1618,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
-  - [ ] Verify the comparison engine's tree walks after M9 integration.
+  - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
         per-element copy of enclosing instances in `owned_style_instances::walk`.
@@ -1634,8 +1657,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       as an accepted difference for the release note.
 - [ ] Commit.
 
-- [ ] Verify that a sidecar emitting a large stderr stream drains safely at
+- [x] Verify that a sidecar emitting a large stderr stream drains safely at
       shutdown and leaves no process behind (M11 sweep, watched_serve case).
+
+Sidecar timing and stderr acceptance: `.context/rust-rebuild/delegation/m12-static/report-11.md`.
+Sidecar merge decisions: `.context/rust-rebuild/delegation/m12-static/merge-decisions.md`.
 
 Part 1 evidence: `.context/rust-rebuild/delegation/m14/report-1.md`.
 Part 1 gap sweep: `.context/rust-rebuild/sweeps/m14-part1.md`.
@@ -1644,6 +1670,7 @@ Part 1 round 3 evidence: `.context/rust-rebuild/delegation/m14/report-3.md`.
 Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/report-4.md`.
 Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
 Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
+Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -1662,6 +1689,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
+    `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
+    `sidecar render readiness: Disconnected` during a concurrent package
+    rebuild. Both passed in an isolated rerun and the final repository suite.
+    Suspected source: shared built files changed during the tests. Keep builds
+    and suites separate. Evidence: M14 `report-7.md`.
   - [x] Resolve the Serve Changes verification sidecar `EPIPE` flake through
         accepted commit `e10af987`. The sidecar stops on closed parent pipes.
         The regression is `postcss_failures_use_exact_catalogued_codes_and_logical_paths`.

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   directory,
@@ -14,14 +15,16 @@ import {
 test(
   "real publish retries exact bytes and preserves deployment identity",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange({ retry: true });
     const outputs: string[] = [];
     try {
       let deployment: string | undefined;
       for (const mode of ["rich", "plain"]) {
-        const result = await publish(root, server.endpoint, mode).result;
+        const result = await publish(root, server.endpoint, mode, {
+          signal: context.signal,
+        }).result;
         outputs.push(directory(result.stdout));
         assert.equal(result.code, 0, result.stderr);
         assert.equal(result.stderr, "");
@@ -58,9 +61,11 @@ test(
       assert.deepEqual(server.bodies[0], server.bodies[1]);
       assert.ok([...server.attempts.values()].every((count) => count === 2));
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
@@ -68,13 +73,15 @@ test(
 test(
   "SIGINT during Plan cancels publication and retains the complete build",
   { timeout: 120_000, skip: process.platform === "win32" },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     let interrupt: (() => void) | undefined;
     const server = await exchange({ holdPlan: () => interrupt?.() });
     let output: string | undefined;
     try {
-      const running = publish(root, server.endpoint);
+      const running = publish(root, server.endpoint, "plain", {
+        signal: context.signal,
+      });
       interrupt = () => {
         running.child.kill("SIGINT");
       };
@@ -90,9 +97,13 @@ test(
         (await fs.stat(path.join(output, ".mokly-export-artifact"))).isFile(),
       );
     } finally {
-      await server.close();
-      if (output) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        async () => {
+          if (output) await removeOutput(output);
+        },
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
@@ -100,12 +111,14 @@ test(
 test(
   "source edits during publish abort before the first receiver request",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture(true);
     const server = await exchange();
     let output: string | undefined;
     try {
-      const result = await publish(root, server.endpoint).result;
+      const result = await publish(root, server.endpoint, "plain", {
+        signal: context.signal,
+      }).result;
       output = directory(result.stdout);
       assert.equal(result.code, 1);
       assert.match(result.stderr, /\[mokly\/export-invalid\].*Inputs changed/);
@@ -116,9 +129,13 @@ test(
       );
       await assert.rejects(fs.stat(output), { code: "ENOENT" });
     } finally {
-      await server.close();
-      if (output) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        async () => {
+          if (output) await removeOutput(output);
+        },
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );

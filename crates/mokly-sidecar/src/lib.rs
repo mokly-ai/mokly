@@ -27,6 +27,7 @@ mod pool_state;
 pub mod postcss_failure;
 mod presentation;
 pub mod process_clock;
+mod process_completion;
 mod process_control;
 pub mod process_factory;
 mod process_io;

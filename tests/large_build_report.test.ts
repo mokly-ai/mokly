@@ -29,7 +29,7 @@ for (const event of ['start', 'end']) {
   process.stderr.write('[mokly:timing] '+JSON.stringify({
     schemaVersion: 1, role: 'core', pid: process.pid, id: 1,
     stage: 'output.fingerprint', event,
-    ...(event === 'end' ? {status:'ok',input_paths:7,retained_bytes:42} : {})
+    ...(event === 'end' ? {status:'ok',inputPaths:7,retainedBytes:42} : {})
   })+'\\n');
 }`,
   );

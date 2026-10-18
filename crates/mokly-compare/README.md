@@ -86,6 +86,8 @@ Each fallback has a typed trace reason.
 the caller proves base usage. Static output and Serve share this policy.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
+Rendered and canonical trees use iterative traversal, equality, move
+fingerprinting, and release. Deep rendered trees need no enlarged thread stack.
 Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized

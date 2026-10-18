@@ -3,7 +3,7 @@
 use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
-use mokly_sidecar::workers::ClockMock;
+use mokly_sidecar::workers::{Clock, ClockMock};
 use serde_json::Value;
 use tracing_subscriber::layer::SubscriberExt;
 use unimock::{MockFn, Unimock, matching};
@@ -12,23 +12,34 @@ use crate::terminal::TerminalMock;
 
 use super::Timings;
 
-fn capture(run: impl FnOnce()) -> Vec<Value> {
+pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
+    collect_lines(
+        run,
+        Arc::new(Unimock::new(
+            ClockMock::now_ms.each_call(matching!()).returns(0u64),
+        )),
+    )
+    .iter()
+    .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
+    .collect()
+}
+
+pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
+    collect_lines(run, Arc::new(Unimock::new(())))
+}
+
+fn collect_lines(run: impl FnOnce(), clock: Arc<dyn Clock>) -> Vec<String> {
     let records = Arc::new(Mutex::new(Vec::new()));
     let output = records.clone();
     let terminal = Unimock::new(TerminalMock::stderr.each_call(matching!(_)).answers_arc(
         Arc::new(move |_, line| {
-            output
-                .lock()
-                .unwrap()
-                .push(serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap());
+            output.lock().unwrap().push(line.to_owned());
         }),
     ));
     let layer = Timings {
         terminal: Arc::new(terminal),
         session: "test".into(),
-        clock: Arc::new(Unimock::new(
-            ClockMock::now_ms.each_call(matching!()).returns(0u64),
-        )),
+        clock,
         next: AtomicU64::new(1),
     };
     tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), run);
@@ -79,6 +90,11 @@ fn comparison_records_keep_counts_and_parent_context_without_authored_data() {
     assert_eq!(counts["ignoredOnly"], 2);
     assert!(counts.get("documents").is_none());
     assert_eq!(records[5]["status"], "ok");
+    for record in [&records[1], &records[5]] {
+        for field in ["views", "unchanged", "changed", "ignoredOnly"] {
+            assert!(record.get(field).is_none());
+        }
+    }
     for record in records {
         assert_eq!(record["session"], "test");
         assert_eq!(record["role"], "core");
@@ -126,5 +142,32 @@ fn each_successful_dependency_tier_is_a_numeric_end_field() {
         assert!(pair[0].get("tier").is_none());
         assert_eq!(pair[1]["status"], "ok");
         assert_eq!(pair[1]["tier"], index + 1);
+    }
+}
+
+#[test]
+fn static_input_counters_use_camel_case_at_creation_and_later_recording() {
+    let records = capture(|| {
+        let span = tracing::info_span!(
+            "output.input-read",
+            input_paths = 2u64,
+            read_bytes = tracing::field::Empty,
+            retained_bytes = 3u64
+        );
+        let _scope = span.enter();
+        span.record("read_bytes", 5u64);
+        span.record("retained_bytes", 8u64);
+    });
+    assert_eq!(records.len(), 2);
+    assert_eq!(records[0]["inputPaths"], 2);
+    assert_eq!(records[0]["retainedBytes"], 3);
+    assert!(records[0].get("readBytes").is_none());
+    assert_eq!(records[1]["inputPaths"], 2);
+    assert_eq!(records[1]["readBytes"], 5);
+    assert_eq!(records[1]["retainedBytes"], 8);
+    for record in records {
+        for name in ["input_paths", "read_bytes", "retained_bytes"] {
+            assert!(record.get(name).is_none());
+        }
     }
 }

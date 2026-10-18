@@ -116,6 +116,11 @@ impl Pool {
     }
 
     pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
+        let replacement = self.lock()?.memory.contains_key(&index);
+        let recycle = replacement.then(|| tracing::info_span!("sidecar.recycle", status = "error"));
+        let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
+        let span = tracing::info_span!("sidecar.spawn", status = "error");
+        let _scope = span.enter();
         if self.lock()?.stopped {
             return Err(Error::Cancelled);
         }
@@ -140,6 +145,10 @@ impl Pool {
         {
             spawned.control.kill()?;
             return Err(error);
+        }
+        span.record("status", "ok");
+        if let Some(recycle) = &recycle {
+            recycle.record("status", "ok");
         }
         Ok(Slot {
             source_root: source_root.into(),

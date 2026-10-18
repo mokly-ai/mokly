@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_html::composition::Composed;
-use mokly_html::tree::{Node, RegionKind};
+use mokly_html::tree::{self, Node, RegionKind};
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 
 use crate::material::{self, Projection};
@@ -139,23 +139,10 @@ fn input_signals(
 }
 
 pub(crate) fn root(nodes: &[Node]) -> Option<&[Node]> {
-    for node in nodes {
-        match node {
-            Node::Region { region, children } if matches!(region.kind, RegionKind::Root { .. }) => {
-                return Some(children);
-            }
-            Node::Element(element) => {
-                if let Some(root) = root(&element.children) {
-                    return Some(root);
-                }
-            }
-            Node::Region { children, .. } => {
-                if let Some(root) = root(children) {
-                    return Some(root);
-                }
-            }
-            _ => {}
+    tree::walk(nodes).find_map(|node| match node {
+        Node::Region { region, children } if matches!(region.kind, RegionKind::Root { .. }) => {
+            Some(children.as_slice())
         }
-    }
-    None
+        _ => None,
+    })
 }

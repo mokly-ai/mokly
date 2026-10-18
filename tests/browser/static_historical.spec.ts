@@ -51,9 +51,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
         await chooseScheme(page, scheme);
         const comparison = kind === "component";
         if (comparison) {
+          // A removed variant names itself; its parent Card survives.
+          const subject =
+            entryPath === comparisonPaths.removedVariant
+              ? "variant"
+              : "component";
           await expect(
             page.getByRole("heading", {
-              name: "This component was removed",
+              name: `This ${subject} was removed`,
               exact: true,
             }),
           ).toBeVisible();

@@ -110,7 +110,8 @@ fn visit(
     paths: &BTreeMap<String, String>,
     output: &mut BTreeMap<String, BTreeSet<String>>,
 ) {
-    for node in nodes {
+    let mut pending: Vec<_> = nodes.iter().rev().collect();
+    while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) if element.name == "style" => {
                 if let Some(owners) = &element.style_owners {
@@ -134,14 +135,18 @@ fn visit(
                 }
             }
             Node::Element(element) if element.name != "template" => {
-                visit(&element.children, paths, output)
+                pending.extend(element.children.iter().rev())
             }
             Node::Region { region, children }
                 if !matches!(region.kind, RegionKind::Ignore { .. }) =>
             {
-                visit(children, paths, output)
+                pending.extend(children.iter().rev())
             }
             _ => {}
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/owned_styles_tests.rs"]
+mod owned_styles_tests;

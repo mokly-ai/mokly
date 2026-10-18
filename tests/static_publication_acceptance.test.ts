@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import {
   command,
@@ -18,7 +19,7 @@ const exec = promisify(execFile);
 test(
   "assigned leading-dash credentials and configuration reach the receiver without diagnostic leaks",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const token = "-synthetic/credential+padding==";
     const options: { token: string; planStatus?: number } = { token };
@@ -47,6 +48,7 @@ test(
           ],
           "plain",
           { MOKLY_DIAGNOSTIC: "1", MOKLY_TOKEN: "ignored-env-token" },
+          context.signal,
         ).result;
         outputs.push(directory(result.stdout));
         assert.equal(result.code, rejected ? 1 : 0, result.stderr);
@@ -63,16 +65,18 @@ test(
       assert.equal(server.bodies.length, 2);
       assert.equal(server.completed, 1);
     } finally {
-      await server.close();
-      for (const output of outputs) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        ...outputs.map((output) => () => removeOutput(output)),
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );
 test(
   "real publication retries each retryable status at Plan Blob and Complete with concurrency one",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     try {
       for (const status of [408, 429, 500, 502, 503, 504]) {
@@ -81,6 +85,7 @@ test(
         try {
           const result = await publish(root, server.endpoint, "plain", {
             args: ["--upload-concurrency=1"],
+            signal: context.signal,
           }).result;
           output = directory(result.stdout);
           assert.equal(result.code, 0, `${status}: ${result.stderr}`);
@@ -94,8 +99,12 @@ test(
           assert.equal(server.completed, 1);
           assert.equal(server.maximumBlobConcurrency, 1);
         } finally {
-          await server.close();
-          if (output) await removeOutput(output);
+          await cleanupAll([
+            () => server.close(),
+            async () => {
+              if (output) await removeOutput(output);
+            },
+          ]);
         }
       }
     } finally {

@@ -34,16 +34,28 @@ the real shim with `--base fixture-base --strict`. It needs no repository
 history, network dependency install, or sidecar. The host receives only the
 copied output; the source repository and first output are removed.
 
-| `comparisonPaths` key | Entry and evidence                                                                                 |
-| --------------------- | -------------------------------------------------------------------------------------------------- |
-| `changed`             | `screens/changed`: changed text and CSS; a component consumer; a long page and inner scroll region |
-| `unchanged`           | `screens/stable`: unchanged and outside Changed membership                                         |
-| `component`           | `components/card`: CSS change; Usage links to the changed screen                                   |
-| `removedScreen`       | `screens/retired`: historical screen in both viewports and schemes                                 |
-| `removedPage`         | `pages/retired`: historical full HTML page                                                         |
-| `removedDocument`     | `notes/retired`: historical Markdown document                                                      |
-| `removedComponent`    | `components/retired`: removed component parent                                                     |
-| `removedVariant`      | `components/card/archived`: removed variant of a surviving component                               |
+| `comparisonPaths` key | Entry and evidence                                                                                                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `changed`             | `screens/changed`: changed text and CSS; an unresolved `:root` rule and outside `.accent` matches; a component consumer; a catalogue link; a shorter Before page and inner scroll panel; a focusable panel link; an anchor whose target reaches the top |
+| `unchanged`           | `screens/stable`: light only, unchanged, and outside Changed membership; its one changed stylesheet is excluded                                                                                                                                         |
+| `consumer`            | `screens/consumer`: changes only through `ui-card`, so it is an affected consumer outside Changes                                                                                                                                                       |
+| `added`               | `screens/added`: added by the second commit                                                                                                                                                                                                             |
+| `darkOnly`            | `screens/dusk`: a change to a dark-only stylesheet; its Light views stay unmodified                                                                                                                                                                     |
+| `component`           | `components/card`: CSS change; Usage lists both consumer screens as affected                                                                                                                                                                            |
+| `changedVariant`      | `components/card/featured`: a surviving variant whose props changed                                                                                                                                                                                     |
+| `addedVariant`        | `components/card/fresh`: a variant added by the second commit                                                                                                                                                                                           |
+| `quietParent`         | `components/tag`: an unmodified parent; every tag view is taller than its frame                                                                                                                                                                         |
+| `quietSibling`        | `components/tag/plain`: an unmodified variant                                                                                                                                                                                                           |
+| `quietVariant`        | `components/tag/bold`: a changed variant of the unmodified parent                                                                                                                                                                                       |
+| `quietRemoved`        | `components/tag/old`: a removed variant of the unmodified parent                                                                                                                                                                                        |
+| `removedScreen`       | `screens/retired`: historical screen in both viewports and schemes                                                                                                                                                                                      |
+| `removedPage`         | `pages/retired`: historical full HTML page with links, a form, and a tall body                                                                                                                                                                          |
+| `removedDocument`     | `notes/retired`: historical Markdown document                                                                                                                                                                                                           |
+| `removedComponent`    | `components/retired`: removed component parent                                                                                                                                                                                                          |
+| `removedVariant`      | `components/card/archived`: removed variant of a surviving component                                                                                                                                                                                    |
+
+The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
+switch filters and modes, and measure pane, viewport, and region offsets.
 
 Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
 removed record's `snapshotId`. Use the canonical `/view/{path}/` route and

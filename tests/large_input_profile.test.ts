@@ -86,3 +86,26 @@ test("malformed parent cycles and missing identities cannot invent a CSS owner",
   );
   assert.equal(result.spans[0]?.capturedReadCalls, null);
 });
+
+test("camelCase input counters retain path counts, read bytes, and process-local retention", () => {
+  const records = [
+    record(10, 1, "output.fingerprint", "start"),
+    record(10, 1, "output.fingerprint", "end"),
+    record(10, 2, "css.bundle", "start"),
+    record(10, 3, "output.input-read", "start", 2),
+    record(10, 3, "output.input-read", "end", 2),
+    record(10, 2, "css.bundle", "end"),
+    record(20, 2, "css.bundle", "start"),
+    record(20, 2, "css.bundle", "end"),
+  ];
+  Object.assign(records[1]!.event, { inputPaths: 7, retainedBytes: 42 });
+  Object.assign(records[4]!.event, { readBytes: 9, retainedBytes: 51 });
+  const { spans } = inputProfile(records, []);
+  assert.equal(spans[0]?.inputPaths, 7);
+  assert.equal(spans[0]?.retainedSourceBytes, 42);
+  assert.equal(spans[1]?.capturedReadCalls, 1);
+  assert.equal(spans[1]?.capturedReadBytes, 9);
+  assert.equal(spans[1]?.retainedSourceBytes, 51);
+  assert.equal(spans[2]?.retainedSourceBytes, null);
+  assert.equal(spans[2]?.capturedReadBytes, null);
+});
