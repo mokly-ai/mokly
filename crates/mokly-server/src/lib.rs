@@ -11,6 +11,7 @@ pub mod background;
 pub mod changes;
 pub mod changes_background;
 mod changes_detail;
+mod changes_execution;
 pub mod changes_install;
 pub mod changes_signal;
 mod clients;

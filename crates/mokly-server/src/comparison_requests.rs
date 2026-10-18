@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use tokio::sync::watch;
 use tokio::time::{Instant, sleep_until, timeout_at};
+use tracing::Instrument;
 
 use crate::assets::File;
 use crate::changes::{Accepted, ChangeCancellation, ChangeToken, Commit};
@@ -65,20 +66,24 @@ impl MemoryComparisons {
         );
         let store = self.clone();
         let deadline = Instant::now() + Duration::from_secs(10);
-        state.tasks.push(tokio::spawn(async move {
-            store
-                .run(accepted, path, historical, cancel, deadline, sender)
-                .await;
-            store
-                .state
-                .lock()
-                .unwrap_or_else(|error| error.into_inner())
-                .pending
-                .remove(&key);
-        }));
+        state.tasks.push(tokio::spawn(
+            async move {
+                store
+                    .run(accepted, path, historical, cancel, deadline, sender)
+                    .await;
+                store
+                    .state
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .pending
+                    .remove(&key);
+            }
+            .instrument(tracing::Span::current()),
+        ));
         Ok(receiver)
     }
 
+    #[tracing::instrument(name = "review.capture", skip_all)]
     async fn run(
         &self,
         accepted: Arc<Accepted>,
@@ -90,8 +95,18 @@ impl MemoryComparisons {
     ) {
         let permit = match timeout_at(deadline, self.serial.acquire()).await {
             Ok(Ok(permit)) => permit,
-            _ => {
-                sender.send_replace(Some(Err(Arc::new(ServerError::Deadline))));
+            Ok(Err(_)) => {
+                sender.send_replace(Some(Err(Arc::new(ServerError::ChangesReplaced))));
+                return;
+            }
+            Err(_) => {
+                let error = if cancel.cancelled() {
+                    ServerError::ChangesReplaced
+                } else {
+                    self.diagnostics.failed(&ServerError::Deadline);
+                    ServerError::Deadline
+                };
+                sender.send_replace(Some(Err(Arc::new(error))));
                 return;
             }
         };
@@ -103,8 +118,10 @@ impl MemoryComparisons {
         let input = accepted.clone();
         let entry = path.clone();
         let token = cancel.clone();
-        let mut work =
-            tokio::task::spawn_blocking(move || capture.capture(&input, &entry, historical, token));
+        let parent = tracing::Span::current();
+        let mut work = tokio::task::spawn_blocking(move || {
+            parent.in_scope(|| capture.capture(&input, &entry, historical, token))
+        });
         let mut updates = self.publications.subscribe().updates;
         let outcome = loop {
             if cancel.cancelled()
@@ -134,6 +151,12 @@ impl MemoryComparisons {
                 _ = updates.recv() => {},
             }
         };
+        if let Err(error) = &outcome
+            && !cancel.cancelled()
+            && !matches!(error, ServerError::ChangesReplaced)
+        {
+            self.diagnostics.failed(error);
+        }
         cancel.cancel();
         sender.send_replace(Some(shared(outcome)));
         let _ = work.await;

@@ -162,6 +162,10 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 `.only`. Spec discovery is defined in
 [CI verification](./ci-verification.md#gate-ownership).
 
+The shared example uses the unresolved base `refs/mokly/browser-suite-no-base`.
+It waits for settled usage and unavailable Changes with one `git-failed` line.
+Real Changes specs own Git fixtures. The guard is 600 seconds with one sidecar.
+
 For static-output checks, build the site first, then set
 `MOKLY_PLAYWRIGHT_STATIC_DIR` to its directory. For example:
 
@@ -170,9 +174,8 @@ npx mokly build --config examples/basic/mokly.config.json --out ../../.context/e
 MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
 ```
 
-The host serves exact files and directory indexes. It uses a free loopback port.
-Browser specs support POSIX systems only. Specs must not assume an empty Changes set:
-remote Testboxes hold branch edits as working-tree changes against their base.
+The host serves exact files and directory indexes on a free loopback port.
+Browser specs support POSIX only. Do not assume empty Changes in remote Testboxes.
 `MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
 that open portable documents directly through `file://` URLs.
 

@@ -43,8 +43,8 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
             Err(_) => unavailable(),
         });
     }
-    let Some((generation, file)) = rest
-        .strip_prefix("generations/")
+    let Some((generation, file)) = path
+        .strip_prefix(&routes::comparison_generations())
         .and_then(|rest| rest.split_once('/'))
     else {
         return Some(response::missing());
@@ -55,10 +55,7 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
     Some(match store.file(generation, file).await {
         Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
         Ok(None) => response::missing(),
-        Err(error) => {
-            app.diagnostics.failed(&error);
-            unavailable()
-        }
+        Err(_) => unavailable(),
     })
 }
 

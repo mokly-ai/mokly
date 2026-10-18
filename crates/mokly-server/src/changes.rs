@@ -113,7 +113,7 @@ pub trait ChangeSource: Send + Sync {
     fn refreshed(&self) -> Option<Arc<dyn ChangeSource>> {
         None
     }
-    /// Resolve HEAD and the configured base without rendering either side.
+    /// Poll HEAD and base tips and return their merge base without rendering either side.
     fn references(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String>;
     /// Pin the base once and classify through the command's shared render runtime.
     fn classify(

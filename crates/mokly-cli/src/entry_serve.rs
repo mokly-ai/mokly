@@ -21,7 +21,7 @@ use tokio::sync::{mpsc, watch};
 
 use crate::serve_candidates::{CandidateWork, ManualCandidates};
 use crate::serve_delivery::{self, StateInputs};
-use crate::serve_git::ServeGit;
+use crate::serve_git::{ServeGit, SystemRunners};
 use crate::serve_lifecycle::ServeLifecycle;
 use crate::serve_progress::{Progress, ServeProgress};
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
@@ -116,7 +116,7 @@ pub(super) fn run(
             })
         };
         let phase = Arc::new(serve_shutdown::Phase::default());
-        let git = Arc::new(ServeGit::default());
+        let git = Arc::new(ServeGit::new(Arc::new(SystemRunners)));
         let lifecycle = Arc::new(ServeLifecycle {
             git: git.clone(),
             watch: Mutex::new(None),

@@ -1,24 +1,20 @@
 //! Changes begins after current usage and restarts only for new heads or Git refs.
 
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use async_trait::async_trait;
-use mokly_model::material::digest;
-use mokly_model::public_metadata::ChangesStatus;
 use tokio::sync::watch;
 use tokio::time;
+use tracing::Instrument;
 
 use crate::background::stopped;
-use crate::changes::{
-    self, Accepted, ChangeCancellation, ChangeProgress, ChangeSource, ChangeToken, Commit,
-};
-use crate::changes_install::MetadataInstallation;
+use crate::changes::{ChangeCancellation, ChangeSource, ChangeToken};
 use crate::comparison_store::Comparisons;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::publication::Publications;
-use crate::snapshot::{Snapshot, encode};
+use crate::snapshot::Snapshot;
 
 /// Continuation of the foreground-priority current usage pass.
 #[async_trait]
@@ -70,9 +66,14 @@ impl AfterUsage for ChangesPass {
             let head = origin.clone();
             let task_source = source.clone();
             let task_cancel = cancel.clone();
-            let mut work = tokio::task::spawn_blocking(move || {
-                owner.execute(head, task_source, task_cancel, references)
-            });
+            let mut work = tokio::spawn(
+                async move {
+                    owner
+                        .execute(head, task_source, task_cancel, references)
+                        .await;
+                }
+                .instrument(tracing::Span::current()),
+            );
             let mut refresh = false;
             let mut settled = false;
             loop {
@@ -136,97 +137,8 @@ impl AfterUsage for ChangesPass {
 }
 
 impl ChangesPass {
-    fn current(&self, origin: &Snapshot) -> bool {
+    pub(crate) fn current(&self, origin: &Snapshot) -> bool {
         Arc::ptr_eq(&self.publications.current().documents, &origin.documents)
-    }
-
-    fn execute(
-        &self,
-        origin: Arc<Snapshot>,
-        source: Arc<dyn ChangeSource>,
-        cancel: Arc<dyn ChangeCancellation>,
-        references: Result<String>,
-    ) {
-        let started = Instant::now();
-        let phase = source.started(cancel.clone());
-        let progress: Arc<dyn ChangeProgress> = Arc::new(Progress {
-            publications: self.publications.clone(),
-            origin: origin.clone(),
-            cancel: cancel.clone(),
-        });
-        let result = (|| {
-            if !progress.status(ChangesStatus::Pending)? {
-                return Err(ServerError::ChangesReplaced);
-            }
-            let references = references?;
-            let result = source.classify(cancel.clone(), progress)?;
-            if cancel.cancelled() || !self.current(&origin) {
-                return Err(ServerError::ChangesReplaced);
-            }
-            let identity = encode(&(
-                &result.review,
-                &result.snapshot,
-                result.after.generation_key(),
-            ))?;
-            let accepted = Arc::new(Accepted {
-                source: Some(source.clone()),
-                cancel: cancel.clone(),
-                id: digest(&identity.bytes),
-                result,
-            });
-            let files = changes::metadata(&accepted, &origin)?;
-            if self.watching && source.references(cancel.clone())? != references {
-                return Err(ServerError::ChangesReplaced);
-            }
-            if cancel.cancelled() || !self.current(&origin) {
-                return Err(ServerError::ChangesReplaced);
-            }
-            if self.publications.changes(
-                &origin,
-                ChangesStatus::Ready,
-                Some(accepted.clone()),
-                cancel.as_ref(),
-                Some(&MetadataInstallation {
-                    store: self.comparisons.as_ref(),
-                    accepted: &accepted,
-                    files: &files,
-                }),
-            )? && !cancel.cancelled()
-            {
-                cancel.commit(&Commit(&|| {
-                    if let Some(phase) = &phase {
-                        phase.finish();
-                    }
-                    source.finished(Ok(&accepted.result), started.elapsed());
-                    true
-                }));
-            }
-            Ok(())
-        })();
-        if let Err(error) = result
-            && !cancel.cancelled()
-            && !matches!(error, ServerError::ChangesReplaced)
-        {
-            match self.publications.changes(
-                &origin,
-                ChangesStatus::Unavailable,
-                None,
-                cancel.as_ref(),
-                None,
-            ) {
-                Ok(true) => {
-                    cancel.commit(&Commit(&|| {
-                        if let Some(phase) = &phase {
-                            phase.finish();
-                        }
-                        source.finished(Err(&error), started.elapsed());
-                        true
-                    }));
-                }
-                Err(error) => self.diagnostics.failed(&error),
-                _ => {}
-            }
-        }
     }
 
     async fn reference(
@@ -240,7 +152,9 @@ impl ChangesPass {
         }
         let cancel: Arc<dyn ChangeCancellation> = Arc::new(ChangeToken::default());
         let task_cancel = cancel.clone();
-        let mut work = tokio::task::spawn_blocking(move || source.references(task_cancel));
+        let parent = tracing::Span::current();
+        let mut work =
+            tokio::task::spawn_blocking(move || parent.in_scope(|| source.references(task_cancel)));
         let mut updates = self.publications.subscribe().updates;
         loop {
             if stopped(stop) || !self.current(origin) {
@@ -254,21 +168,6 @@ impl ChangesPass {
                 _ = updates.recv() => {},
             }
         }
-    }
-}
-
-struct Progress {
-    publications: Arc<dyn Publications>,
-    origin: Arc<Snapshot>,
-    cancel: Arc<dyn ChangeCancellation>,
-}
-impl ChangeProgress for Progress {
-    fn status(&self, status: ChangesStatus) -> Result<bool> {
-        if self.cancel.cancelled() {
-            return Ok(false);
-        }
-        self.publications
-            .changes(&self.origin, status, None, self.cancel.as_ref(), None)
     }
 }
 

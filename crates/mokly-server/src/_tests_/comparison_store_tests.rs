@@ -13,6 +13,7 @@ use crate::comparison_capture::{Capturer, CapturerMock};
 use crate::comparison_requests::receive;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
 use crate::comparison_support::{accepted, files, snapshot};
+use crate::diagnostics::DiagnosticsMock;
 use crate::entropy::{Entropy, EntropyMock};
 use crate::error::ServerError;
 use crate::publication::{PublicationWriter, SharedPublication};
@@ -100,15 +101,24 @@ async fn identical_pending_requests_coalesce_refresh_is_new_and_head_renews_rete
 
 #[tokio::test(start_paused = true)]
 async fn deadline_starts_at_admission_and_pending_count_is_bounded() {
-    let (store, accepted, _, _) = setup(Arc::new(Unimock::new(())), false);
+    let (mut store, accepted, _, _) = setup(Arc::new(Unimock::new(())), false);
+    Arc::get_mut(&mut store).unwrap().diagnostics = Arc::new(Unimock::new(
+        DiagnosticsMock::failed
+            .each_call(matching!(_))
+            .answers(&|_, error| assert!(matches!(error, ServerError::Deadline)))
+            .n_times(32),
+    ));
     let permit = store.serial.acquire().await.unwrap();
     let mut first = store
         .begin(accepted.clone(), "sample".into(), false, false)
         .unwrap();
+    let mut queued = Vec::new();
     for number in 1..32 {
-        store
-            .begin(accepted.clone(), format!("entry-{number}"), false, false)
-            .unwrap();
+        queued.push(
+            store
+                .begin(accepted.clone(), format!("entry-{number}"), false, false)
+                .unwrap(),
+        );
     }
     assert!(matches!(
         *store
@@ -125,6 +135,12 @@ async fn deadline_starts_at_admission_and_pending_count_is_bounded() {
         *receive(first).await.unwrap_err(),
         ServerError::Deadline
     ));
+    for pending in queued {
+        assert!(matches!(
+            *receive(pending).await.unwrap_err(),
+            ServerError::Deadline
+        ));
+    }
     drop(permit);
     store.stop().await;
 }
@@ -207,5 +223,19 @@ async fn a_status_replacement_discards_selection_cache_even_with_equal_content_i
     let new = store.selected(next, "sample".into(), false).await.unwrap();
     assert_ne!(old, new);
     assert!(store.file(&old, "review.json").await.unwrap().is_some());
+    store.stop().await;
+}
+
+#[tokio::test]
+async fn closing_capture_admission_is_not_reported_as_a_deadline_failure() {
+    let (store, accepted, _, _) = setup(Arc::new(Unimock::new(())), false);
+    let pending = store
+        .begin(accepted, "sample".into(), false, false)
+        .unwrap();
+    store.serial.close();
+    assert!(matches!(
+        *receive(pending).await.unwrap_err(),
+        ServerError::ChangesReplaced
+    ));
     store.stop().await;
 }

@@ -36,6 +36,7 @@ tracing-subscriber = "0.3.23"
 chrono = { version = "0.4.45", features = ["clock"] }
 
 [dev-dependencies]
+mokly-git = { workspace = true, features = ["mock"] }
 mokly-platform = { workspace = true, features = ["mock"] }
 mokly-compare = { workspace = true, features = ["mock"] }
 mokly-watch = { workspace = true, features = ["mock"] }

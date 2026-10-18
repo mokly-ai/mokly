@@ -23,6 +23,10 @@ use crate::serve_changes_base::{AttemptBase, CacheNotice, CombinedCancel, Prepar
 impl Source {
     pub(super) fn references_native(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {
         let runner = self.services.git.runner(cancel);
+        let mut cached = self
+            .references
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
         let mut refs = Vec::new();
         for reference in [
             "HEAD",
@@ -45,7 +49,7 @@ impl Source {
                 stderr_limit: 1024 * 1024,
             };
             match runner.run(&request) {
-                Ok(output) => refs.extend(output.stdout),
+                Ok(output) => refs.push(String::from_utf8_lossy(&output.stdout).trim().to_owned()),
                 Err(source) => {
                     return Err(ServerError::Comparison {
                         source: Box::new(mokly_compare::error::Error::Git { source }),
@@ -53,7 +57,33 @@ impl Source {
                 }
             }
         }
-        Ok(String::from_utf8_lossy(&refs).into_owned())
+        if let Some((previous, base)) = &*cached
+            && previous == &refs
+        {
+            return Ok(base.clone());
+        }
+        let request = Request {
+            directory: self.config.repo_root.clone(),
+            args: ["--no-optional-locks", "merge-base"]
+                .into_iter()
+                .chain(refs.iter().map(String::as_str))
+                .map(Into::into)
+                .collect(),
+            stdin: Vec::new(),
+            output_limit: 1024,
+            stderr_limit: 1024 * 1024,
+        };
+        let output = match runner.run(&request) {
+            Ok(output) => output,
+            Err(source) => {
+                return Err(ServerError::Comparison {
+                    source: Box::new(mokly_compare::error::Error::Git { source }),
+                });
+            }
+        };
+        let base = String::from_utf8_lossy(&output.stdout).trim().to_owned();
+        *cached = Some((refs, base.clone()));
+        Ok(base)
     }
 
     pub(super) fn classify_native(
@@ -124,3 +154,7 @@ impl Source {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/serve_references_tests.rs"]
+mod serve_references_tests;

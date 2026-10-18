@@ -63,7 +63,8 @@ admission gate lets queued and active foreground requests finish their sidecar
 calls before more base requests start. This groups each foreground burst even
 with one worker. Attempt cancellation wakes queued base calls without polling.
 
-A base-ref change retains the current warning attempt and current render graph.
+A merge-base change retains the current warning attempt and current render graph.
+A changed HEAD or base tip with the same merge base keeps the Changes evidence.
 Content replacement starts a new attempt and invalidates pending captures.
 The command supplies tracked Git runners to both classification and retained
 historical sources. The ordered Git shutdown hook closes admission, cancels

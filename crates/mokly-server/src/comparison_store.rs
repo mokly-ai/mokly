@@ -95,9 +95,18 @@ impl MemoryComparisons {
 }
 
 pub(crate) fn collect(state: &mut State, now: u64, current: Option<&Arc<Accepted>>) {
-    state
-        .bundles
-        .retain(|_, bundle| now.saturating_sub(bundle.touched) < RETENTION);
+    state.bundles.retain(|id, bundle| {
+        if now.saturating_sub(bundle.touched) < RETENTION {
+            return true;
+        }
+        if current.is_some_and(|accepted| accepted.id == *id) {
+            bundle
+                .files
+                .retain(|path, _| !path.starts_with("snapshots/"));
+            return true;
+        }
+        false
+    });
     let epoch = current.map(|accepted| Arc::as_ptr(accepted) as usize);
     state.selections.retain(|(owner, _), selection| {
         Some(*owner) == epoch
@@ -152,3 +161,7 @@ mod comparison_owner_tests;
 #[cfg(test)]
 #[path = "_tests_/comparison_historical_tests.rs"]
 mod comparison_historical_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_idle_tests.rs"]
+mod comparison_idle_tests;

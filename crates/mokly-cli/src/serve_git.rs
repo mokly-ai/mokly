@@ -22,23 +22,44 @@ struct State {
     active: usize,
 }
 
-#[derive(Default)]
 pub(super) struct ServeGit {
     state: Arc<(Mutex<State>, Condvar)>,
+    runners: Arc<dyn GitRunners>,
+}
+
+#[cfg_attr(test, unimock::unimock(api = GitRunnersMock))]
+pub(super) trait GitRunners: Send + Sync {
+    fn create(&self, cancellation: Arc<dyn Cancellation>) -> Arc<dyn Runner>;
+}
+
+pub(super) struct SystemRunners;
+impl GitRunners for SystemRunners {
+    fn create(&self, cancellation: Arc<dyn Cancellation>) -> Arc<dyn Runner> {
+        Arc::new(SystemRunner {
+            groups: Arc::new(SystemProcessGroups),
+            clock: Arc::new(SystemClock::default()),
+            cancellation,
+        })
+    }
+}
+
+impl ServeGit {
+    pub(super) fn new(runners: Arc<dyn GitRunners>) -> Self {
+        Self {
+            state: Arc::default(),
+            runners,
+        }
+    }
 }
 
 impl GitWork for ServeGit {
     fn runner(&self, cancellation: Arc<dyn ChangeCancellation>) -> Arc<dyn Runner> {
         Arc::new(Tracked {
             state: self.state.clone(),
-            inner: Arc::new(SystemRunner {
-                groups: Arc::new(SystemProcessGroups),
-                clock: Arc::new(SystemClock::default()),
-                cancellation: Arc::new(Cancel {
-                    state: self.state.clone(),
-                    generation: cancellation,
-                }),
-            }),
+            inner: self.runners.create(Arc::new(Cancel {
+                state: self.state.clone(),
+                generation: cancellation,
+            })),
         })
     }
     fn cancel(&self) {
@@ -124,3 +145,7 @@ impl Runner for Tracked {
         self.inner.run_cancellable(request, cancellation)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/serve_git_tests.rs"]
+mod serve_git_tests;

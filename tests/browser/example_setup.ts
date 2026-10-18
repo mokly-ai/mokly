@@ -22,7 +22,14 @@ export async function startExampleHosts(
           repositoryRoot,
           signal,
         );
-        hosts[index] = host;
+        hosts[index] = {
+          ...host,
+          async close() {
+            await host.close();
+            if (host.diagnostics)
+              validateExampleDiagnostics(host.diagnostics());
+          },
+        };
         await ready(host.url, signal);
       } catch (error) {
         abort.abort(error);
@@ -43,4 +50,10 @@ export async function startExampleHosts(
     throw new AggregateError(errors, "Example worker setup failed");
   }
   return hosts;
+}
+
+/** The invalid shared base emits one diagnostic and has no real Changes work. */
+export function validateExampleDiagnostics(output: string): void {
+  if ((output.match(/\[mokly\/git-failed\]/g) ?? []).length !== 1)
+    throw new Error(`Expected one shared example Git diagnostic:\n${output}`);
 }

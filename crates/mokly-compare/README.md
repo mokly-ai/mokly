@@ -82,6 +82,9 @@ directories also map when no package root explicitly lists them. A directory
 outside this mapping keeps the fallback warning, including with equal inputs.
 Each fallback has a typed trace reason.
 
+`projection_removed::workspaces` initializes historical visual workspaces after
+the caller proves base usage. Static output and Serve share this policy.
+
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity

@@ -73,7 +73,8 @@ membership, moved paths, removed records, and per-view evidence in one revision.
 New classification files enter the comparison store after ready-state projection
 and before publication. Their retention window starts after projection.
 An old head cannot publish into a replacement. Watched Serve polls HEAD and the
-base ref once per second. A ref change reuses the accepted current graph.
+base ref once per second. A changed merge base reuses the accepted current
+graph; a tip change with the same merge base keeps the published state.
 HTTP worker leases keep foreground priority for the whole request. The CLI
 shares those leases with base-side sidecar admission. Cancellation listeners
 wake blocked admission without changing the process pool's size or deadlines.
@@ -88,9 +89,12 @@ before a capture can install a mixed generation.
 
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after
-60 seconds without a read. GET and HEAD renew retention. The store allows 64
+60 seconds without a read, except the classification JSON that the current
+index names. Its snapshot files still expire and can be recaptured from the
+retained base handles. GET and HEAD renew retention. The store allows 64
 generations, 128 MiB total, and 64 MiB per generation. It rejects capacity
-without evicting retained files. Missing generations return 404. Replacement
+without evicting retained files. A full store delays classification publication
+and retries installation without repeating comparison work. Missing generations return 404. Replacement
 fences pending selected captures; shutdown cancels and drains all captures.
 
 `GraphDocuments` implements `dyn Documents`. It coalesces requests for the same

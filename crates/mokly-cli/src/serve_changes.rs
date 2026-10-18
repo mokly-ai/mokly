@@ -66,10 +66,12 @@ impl ChangeSources for ServeChanges {
             warnings,
             pending: Arc::new(Mutex::new(Vec::new())),
             operation: Arc::new(CaptureCancellation::default()),
+            references: Mutex::new(None),
         })
     }
 }
 pub(super) struct Source {
+    pub(super) references: Mutex<Option<(Vec<String>, String)>>,
     pub(super) operation: Arc<dyn CaptureScopes>,
     pub(super) pending: Arc<Mutex<Vec<Warning>>>,
     pub(super) services: ServeChanges,
@@ -110,6 +112,7 @@ impl ChangeSource for Source {
             warnings,
             pending: Arc::new(Mutex::new(Vec::new())),
             operation: Arc::new(CaptureCancellation::default()),
+            references: Mutex::new(None),
         }))
     }
     fn references(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {

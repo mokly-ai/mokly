@@ -97,10 +97,7 @@ impl Comparisons for MemoryComparisons {
                     .and_then(|bundle| bundle.files.get(path))
                     .cloned())
             }
-            Err(error) => {
-                self.diagnostics.failed(&error);
-                Err(ServerError::ChangesUnavailable)
-            }
+            Err(_) => Err(ServerError::ChangesUnavailable),
         }
     }
 

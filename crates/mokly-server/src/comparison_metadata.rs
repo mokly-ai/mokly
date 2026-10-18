@@ -3,8 +3,6 @@
 use std::collections::BTreeMap;
 
 use mokly_compare::{projection_index, projection_removed, projection_workspace};
-use mokly_model::axes::EntryKind;
-use mokly_model::public_detail::Workspace;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::{readers, routes};
 
@@ -28,17 +26,7 @@ pub(crate) fn files(accepted: &Accepted, current: &Snapshot) -> Result<BTreeMap<
         &historical,
         &accepted.id,
     ))?;
-    for detail in details.values_mut() {
-        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
-            detail.workspace = Some(Workspace {
-                comparison_eligible: false,
-                used_by: Vec::new(),
-                affected: Vec::new(),
-                related_components: Vec::new(),
-                input_changes: Vec::new(),
-            });
-        }
-    }
+    projection_removed::workspaces(&mut details);
     compared(projection_workspace::apply(&mut details, result))?;
     let mut files = BTreeMap::from([("review.json".into(), encode(&result.review)?)]);
     for (path, detail) in details {

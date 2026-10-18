@@ -1157,17 +1157,21 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
           one-worker and three-worker admission bounds and cancellation.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/interleaving-measurement.md`.
     - [ ] Repeat the combined measurement after shared-engine batching merges.
-    - [ ] Resolve the full browser fixture readiness timeout with the accepted
-          engine integration. Idle SSE transport is fixed; the existing
-          600-second setup guard still expires with one sidecar.
-          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/browser-setup-probe-after.log`.
+          Each run creates a fresh base runtime, bundle cache, and CSS context.
+          Cached source and dependency reuse still publishes preparing. The
+          one-line edit smoke took 5m19s to Changes ready with three sidecars.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-8/cache-retention-measurement.md`.
+    - [x] Use an intentionally unresolved base for the shared browser example,
+          with terminal quiescence and one Git diagnostic. Real Changes specs
+          keep independent fixtures. Keep the 600-second guard and one sidecar.
+          Decision: review 5 finding 1B, approved in changes-6.md.
   - [x] Install classification metadata after ready projection, so projection
         cannot consume a new generation's retention window before publication.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/metadata-install-before.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/metadata-server-tests.log`.
-  - [ ] Decide the lifetime of advertised classification metadata for idle
-        removed previews. Severity Medium, effort Medium. Recommended: retain
-        advertised metadata and expire captured snapshot bytes after 60 seconds.
-        Proposal: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/retention-proposal.md`.
+  - [x] Keep advertised classification JSON within the existing byte and count
+        bounds. Expire idle snapshots and recapture removed previews and
+        component views. Retry a full-store metadata installation.
+        Decision: review 5 finding 2C, approved in changes-6.md.
         Serve report and sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-7.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-serve-changes.md`.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
       formats; run the gap sweep against the Changes and attribution
@@ -1177,11 +1181,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
   - [ ] Replay the eleven full references after the sidecar and source
         migration are ready. Every captured catalogue has JavaScript entries.
-- [x] Port the deferred native Changes browser fixtures in the M8 browser
+- [ ] Port the deferred native Changes browser fixtures in the M8 browser
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
       assertions. Keep the duplicate component-explorer cases in one suite.
-      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/browser-shards.json`.
+  - [x] Add one native HTML fixture with five cases in four Serve Changes specs.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log`.
+  - [ ] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
+        `next-assignments.md` item 7b.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered

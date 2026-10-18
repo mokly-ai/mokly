@@ -70,7 +70,8 @@ never blocks a rebuild or comparison invalidation.
 
 Watched Serve polls the resolved `HEAD` and base commits once per second
 outside the HTTP event loop; Git resolves symbolic refs, worktrees, and
-packed refs. A moved merge base clears the Changes evidence, reclassifies
+packed refs. When either tip moves, Serve resolves their merge base again.
+An equal merge base keeps the published Changes state. A moved merge base clears the Changes evidence, reclassifies
 from the render cache without re-rendering the head side, renders the base
 views whose commit changed, and publishes the result as a revision; the
 terminal reports `comparing again`. Replacement and shutdown cancel active

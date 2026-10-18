@@ -9,7 +9,7 @@ use std::process::Stdio;
 use std::time::Duration;
 
 use tempfile::TempDir;
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 use tokio::process::Command;
 
 async fn marker(path: &Path) -> String {
@@ -57,7 +57,8 @@ async fn shutdown_kills_ignoring_git_and_its_pipe_holding_child_before_exit() {
         .args(["serve", "--port", "0", "--no-watch"])
         .current_dir(root.path())
         .env("PATH", root.path().join("bin"))
-        .env("MOKLY_OUTPUT", "plain")
+        .env("MOKLY_OUTPUT", "rich")
+        .env("NO_COLOR", "1")
         .env("MOKLY_GIT_TEST_PID", &pid_file)
         .env("MOKLY_GIT_TEST_CHILD", &child_file)
         .env(
@@ -70,16 +71,23 @@ async fn shutdown_kills_ignoring_git_and_its_pipe_holding_child_before_exit() {
         .kill_on_drop(true)
         .spawn()
         .unwrap();
-    let stdout = child.stdout.take().unwrap();
-    let line = tokio::time::timeout(
-        Duration::from_secs(15),
-        BufReader::new(stdout).lines().next_line(),
-    )
+    let mut stdout = BufReader::new(child.stdout.take().unwrap());
+    let mut prefix = String::new();
+    let url = tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let mut line = String::new();
+            assert!(stdout.read_line(&mut line).await.unwrap() > 0);
+            prefix.push_str(&line);
+            if let Some(url) = line
+                .split_whitespace()
+                .find(|part| part.starts_with("http://127.0.0.1:"))
+            {
+                break url.to_owned();
+            }
+        }
+    })
     .await
-    .unwrap()
-    .unwrap()
     .unwrap();
-    let url = line.strip_prefix("Mokly listening at ").unwrap();
     let git_pid = marker(&pid_file).await;
     let descendant = marker(&child_file).await;
     assert!(live(&git_pid));
@@ -104,5 +112,8 @@ async fn shutdown_kills_ignoring_git_and_its_pipe_holding_child_before_exit() {
     assert!(!live(&git_pid));
     assert!(!live(&descendant));
     assert!(std::net::TcpListener::bind(url.strip_prefix("http://").unwrap()).is_ok());
-    assert!(!String::from_utf8_lossy(&output.stderr).contains("Changes ready"));
+    let mut remaining = prefix;
+    stdout.read_to_string(&mut remaining).await.unwrap();
+    assert!(remaining.contains("Catalogue ready"), "{remaining}");
+    assert!(!remaining.contains("Changes ready"), "{remaining}");
 }

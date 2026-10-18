@@ -58,6 +58,7 @@ fn refresh_uses_current_and_cancelled_attempts_print_no_warnings_or_result() {
     let old = scopes.begin();
     let current = scopes.begin();
     let service = Source {
+        references: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
         pending: Arc::new(Mutex::new(Vec::new())),
         config: config(),
