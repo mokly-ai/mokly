@@ -34,35 +34,35 @@ phase returned successfully, not that optional Git evidence was available.
 
 ## Core Spans
 
-| Stage                                            | Measures                                                                                                                    |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `config.load`                                    | configuration discovery, loading, and validation                                                                            |
-| `catalogue.discover`                             | the root walk, front matter and folder parsing, and path derivation                                                         |
-| `catalogue.describe`                             | the wait for the sidecar's `bundle` and `describe` results and their validation                                             |
-| `catalogue.validate`                             | registry, relationship, link, marker, and stylesheet validation                                                             |
-| `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                              |
-| `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`      |
-| `render.fragment`                                | the wait for one sidecar render, or an HTML component render in Rust                                                        |
-| `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module                              |
-| `index.build`, `detail.build`                    | the catalogue index and one entry detail                                                                                    |
-| `serve.ready`                                    | command start to the listening URL                                                                                          |
-| `serve.background`                               | the background pass over every view, with a `counts` record of `documents`, `fragments`, and `cacheHits`                    |
-| `watch.action`                                   | one watch action from debounce end to publication; carries `action`                                                         |
-| `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                         |
-| `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                     |
-| `review.changed-paths`                           | changed-path discovery, deduplication, and sorting                                                                          |
-| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation   |
-| `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                           |
-| `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                         |
-| `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `retainedBytes`, and `encodedBytes`           |
-| `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                  |
-| `review.css-analysis`                            | the parse, diff, match, and reduce pass for one changed stylesheet and one document pair, cache hits included               |
-| `review.capture`                                 | one on-demand comparison generation, or the static comparison generation of `build`                                         |
-| `output.write`                                   | the static output transaction: `output.stage`, `output.install`, `output.rollback` after a failed install, `output.cleanup` |
-| `output.fingerprint`, `output.input-digests`     | selected root capture and later inventoried source digests; carry `inputPaths` and `retainedBytes`                          |
-| `output.recheck`                                 | final selected membership, identity, and live digest verification; carries `inputPaths` and `retainedBytes`                 |
-| `output.input-read`                              | a static captured-tree read; carries `action` (`private` or `public`), `readBytes`, and `retainedBytes`                     |
-| `upload.plan`, `upload.blobs`, `upload.complete` | the exchange rounds of `publish`                                                                                            |
+| Stage                                            | Measures                                                                                                                             |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `config.load`                                    | configuration discovery, loading, and validation                                                                                     |
+| `catalogue.discover`                             | the root walk, front matter and folder parsing, and path derivation                                                                  |
+| `catalogue.describe`                             | the wait for the sidecar's `bundle` and `describe` results and their validation                                                      |
+| `catalogue.validate`                             | registry, relationship, link, marker, and stylesheet validation                                                                      |
+| `graph.prepare`                                  | stylesheet inputs, render plans, and generation keys before document rendering                                                       |
+| `render.document`                                | one composed document: substitution, slots, composition, link rewriting, and assembly; carries `viewport` and `scheme`               |
+| `render.fragment`                                | the wait for one sidecar render, or an HTML component render in Rust                                                                 |
+| `css.bundle`                                     | one stylesheet bundle on `lightningcss`; `css.postcss` nests inside it for the consumer module                                       |
+| `index.build`, `detail.build`                    | the catalogue index and one entry detail                                                                                             |
+| `serve.ready`                                    | command start to the listening URL                                                                                                   |
+| `serve.background`                               | the background pass over every view, with a `counts` record of `documents`, `fragments`, and `cacheHits`                             |
+| `watch.action`                                   | one watch action from debounce end to publication; carries `action`                                                                  |
+| `changes.classify`                               | one Changes classification, in Serve and in `build`                                                                                  |
+| `review.base-commit`                             | merge-base resolution and commit validation; a pinned commit reuses the result without another Git span                              |
+| `review.changed-paths`                           | changed-path discovery, deduplication, and sorting                                                                                   |
+| `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation            |
+| `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                                    |
+| `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                                  |
+| `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `uncapturedViews`, `retainedBytes`, and `encodedBytes` |
+| `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                           |
+| `review.css-analysis`                            | the parse, diff, match, and reduce pass for one changed stylesheet and one document pair, cache hits included                        |
+| `review.capture`                                 | one on-demand comparison generation, or the static comparison generation of `build`                                                  |
+| `output.write`                                   | the static output transaction: `output.stage`, `output.install`, `output.rollback` after a failed install, `output.cleanup`          |
+| `output.fingerprint`, `output.input-digests`     | selected root capture and later inventoried source digests; carry `inputPaths` and `retainedBytes`                                   |
+| `output.recheck`                                 | final selected membership, identity, and live digest verification; carries `inputPaths` and `retainedBytes`                          |
+| `output.input-read`                              | a static captured-tree read; carries `action` (`private` or `public`), `readBytes`, and `retainedBytes`                              |
+| `upload.plan`, `upload.blobs`, `upload.complete` | the exchange rounds of `publish`                                                                                                     |
 
 Review spans use the same session, role, and parent context as their caller:
 under `changes.classify` in Serve and under `output.write` in `build`. A
@@ -96,7 +96,9 @@ including failed compilations. Replay and evaluation-only reuse add no
 
 `review.capture-side` starts with status `error` and records `ok` only after
 successful work. Completed captures emit counts, including a zero-view capture
-when no input fits. `views` counts retained base documents. `encodedBytes`
+when no input fits. `views` counts retained base documents. `uncapturedViews`
+counts base documents that use pinned-source fallback. These counts sum to the
+number of base documents, including on reuse. `encodedBytes`
 counts compressed document and CSS payloads. `retainedBytes` adds Rust metadata,
 closures, generated digests, route keys, and conservative container charges.
 The separate 256 MiB capture bound applies to that total, beside the render

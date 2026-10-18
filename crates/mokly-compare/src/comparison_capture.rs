@@ -39,7 +39,7 @@ pub(crate) fn capture(source: Arc<dyn RenderGeneration>) -> Result<Arc<dyn Rende
     capture_with_bound(source, DEFAULT_BASE_CAPTURE_BYTES)
 }
 
-#[tracing::instrument(name = "review.capture-side", skip_all, fields(status = "error", views = tracing::field::Empty, retained_bytes = tracing::field::Empty, encoded_bytes = tracing::field::Empty))]
+#[tracing::instrument(name = "review.capture-side", skip_all, fields(status = "error", views = tracing::field::Empty, uncaptured_views = tracing::field::Empty, retained_bytes = tracing::field::Empty, encoded_bytes = tracing::field::Empty))]
 pub(crate) fn capture_with_bound(
     source: Arc<dyn RenderGeneration>,
     bound: usize,
@@ -48,6 +48,7 @@ pub(crate) fn capture_with_bound(
         if previous.retained_bytes <= bound {
             complete(
                 previous.views,
+                previous.source.plans().len(),
                 previous.retained_bytes,
                 previous.encoded_bytes,
             );
@@ -60,7 +61,7 @@ pub(crate) fn capture_with_bound(
     let summary = source.render_all()?;
     let mut budget = Budget::new(bound);
     if !budget.retain(mem::size_of::<CapturedGeneration>() + capture_weight::summary(&summary)) {
-        complete(0, 0, 0);
+        complete(0, summary.documents, 0, 0);
         return Ok(source);
     }
     let styles = capture_styles::capture(source.as_ref(), &mut budget)?;
@@ -80,7 +81,12 @@ pub(crate) fn capture_with_bound(
             views.insert(route.clone(), CapturedView { document, closure });
         }
     }
-    complete(views.len(), budget.retained, encoded_bytes);
+    complete(
+        views.len(),
+        summary.documents,
+        budget.retained,
+        encoded_bytes,
+    );
     Ok(Arc::new(CapturedGeneration {
         source,
         views,
@@ -91,9 +97,10 @@ pub(crate) fn capture_with_bound(
     }))
 }
 
-fn complete(views: usize, retained: usize, encoded: usize) {
+fn complete(views: usize, total: usize, retained: usize, encoded: usize) {
     let span = tracing::Span::current();
     span.record("views", views as u64);
+    span.record("uncaptured_views", total.saturating_sub(views) as u64);
     span.record("retained_bytes", retained as u64);
     span.record("encoded_bytes", encoded as u64);
     span.record("status", "ok");

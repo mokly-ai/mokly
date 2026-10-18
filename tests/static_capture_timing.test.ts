@@ -27,11 +27,14 @@ test(
       );
       const counts = captured[1]!;
       assert.equal(counts.views, 6);
+      assert.equal(counts.uncapturedViews, 0);
       assert.ok(counts.encodedBytes! > 0);
       assert.ok(counts.retainedBytes! >= counts.encodedBytes!);
       assert.ok(counts.retainedBytes! <= 256 * 1024 * 1024);
       assert.equal(captured[2]!.status, "ok");
       assert.equal(captured[0]!.views, undefined);
+      assert.equal(captured[0]!.uncapturedViews, undefined);
+      assert.equal(captured[2]!.uncapturedViews, undefined);
       assert.equal(captured[0]!.retainedBytes, undefined);
       assert.equal(captured[0]!.encodedBytes, undefined);
       const parent = records.find(

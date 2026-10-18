@@ -1220,7 +1220,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Align removed and selected preview protocols with bounded capture.
   - [x] Keep pending design-matrix CI decisions out of end-state docs.
   - [x] Cover partial capture, typed decode failures, and zero-view timings.
-  - [ ] Count uncaptured base views without changing capture charges.
+  - [x] Count uncaptured base views without changing capture charges.
   - [ ] Merge the rebuild tip and run the required checks and example parity.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
@@ -1595,6 +1595,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
+  - [ ] Measure `review.capture-side` retained and uncaptured views on the large
+        fixture (M9 engine review 9 finding 1). Keep the capture bound and
+        per-entry charges until the capacity measurements support a decision.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the

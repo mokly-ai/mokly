@@ -64,11 +64,11 @@ impl Visit for Fields {
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
         match field.name() {
-            "views" | "unchanged" | "changed" | "ignored_only" => {
-                let name = if field.name() == "ignored_only" {
-                    "ignoredOnly"
-                } else {
-                    field.name()
+            "views" | "unchanged" | "changed" | "ignored_only" | "uncaptured_views" => {
+                let name = match field.name() {
+                    "ignored_only" => "ignoredOnly",
+                    "uncaptured_views" => "uncapturedViews",
+                    name => name,
                 };
                 self.counts.insert(name.into(), json!(value));
             }
