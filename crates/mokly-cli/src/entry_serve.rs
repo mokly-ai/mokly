@@ -72,7 +72,7 @@ pub(super) fn run(
     let attempt = warnings.begin();
     let (rebuild, requests) = mpsc::channel(1);
     let reporter = Arc::new(ServeLines {
-        rebuild: rebuild.clone(),
+        rebuild: (!options.no_watch).then(|| rebuild.clone()),
         cwd: cwd.clone(),
         cancellation: cancellation.clone(),
         terminal: terminal.clone(),

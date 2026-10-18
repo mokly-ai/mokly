@@ -23,7 +23,7 @@ use crate::serve_warnings::{AttemptWarnings, WarningScopes};
 use crate::terminal::Terminal;
 
 pub(super) struct ServeLines {
-    pub(super) rebuild: mpsc::Sender<()>,
+    pub(super) rebuild: Option<mpsc::Sender<()>>,
     pub(super) cwd: PathBuf,
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) terminal: Arc<dyn Terminal>,
@@ -46,15 +46,25 @@ impl Diagnostics for ServeLines {
         if self.cancellation.requested() {
             return;
         }
+        let mut output = serve_errors::failure(&self.style, error, &self.redactor);
         if matches!(
             error,
             ServerError::Render {
                 source: GraphError::InputsChanged { .. }
             }
         ) {
-            let _ = self.rebuild.try_send(());
+            if let Some(rebuild) = &self.rebuild {
+                let _ = rebuild.try_send(());
+            } else {
+                let guidance = "Restart Serve or use watching.";
+                let line = if self.style.mode == Mode::Plain {
+                    guidance.into()
+                } else {
+                    bounded(&format!("  {guidance}"), self.style.columns)
+                };
+                output.push_str(&format!("{line}\n"));
+            }
         }
-        let output = serve_errors::failure(&self.style, error, &self.redactor);
         self.terminal.stderr(&output);
     }
 }

@@ -1,4 +1,4 @@
-//! A stale asset request regenerates Serve even when filesystem watching is disabled.
+//! Watched assets regenerate; snapshot assets require a restart without adopting edits.
 
 #![cfg(unix)]
 
@@ -9,95 +9,187 @@ use std::time::Duration;
 
 use serde_json::Value;
 use tempfile::TempDir;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
-use tokio::process::Command;
+use tokio::process::{Child, Command};
+use tokio::sync::mpsc::{self, UnboundedReceiver};
+use tokio::task::JoinHandle;
+
+const RESOURCE: &str = "/static/mokly-generated/assets/css/image.svg";
 
 #[tokio::test]
-async fn digest_mismatch_requests_a_new_generation_without_a_watch_event() {
+async fn snapshot_asset_mismatch_preserves_the_generation_and_names_the_recovery() {
+    let root = fixture();
+    let mut serve = Serve::start(root.path(), false).await;
+    let first = serve.index().await;
+    assert_eq!(get(&serve.host, RESOURCE).await, (200, "before".into()));
+    fs::write(root.path().join("css/image.svg"), "edited").unwrap();
+    fs::write(
+        root.path().join("specs/home.screen.html"),
+        "---\ntitle: Edited\n---\n<p>Edited</p>",
+    )
+    .unwrap();
+    assert_eq!(get(&serve.host, RESOURCE).await.0, 500);
+    until(&mut serve.stderr, "Restart Serve or use watching.").await;
+    let current = serve.index().await;
+    assert_eq!(current["live"]["generation"], first["live"]["generation"]);
+    assert_eq!(current["screens"][0]["title"], "Home");
+    assert_eq!(get(&serve.host, RESOURCE).await.0, 500);
+    let (stdout, stderr) = serve.close().await;
+    assert!(stderr.iter().any(|line| line.contains("css/image.svg")));
+    assert!(!stdout.iter().any(|line| line.contains(" rebuilt")));
+}
+
+#[tokio::test]
+async fn watched_asset_edits_publish_a_new_generation_before_the_completion_line() {
+    let root = fixture();
+    let mut serve = Serve::start(root.path(), true).await;
+    let first = serve.index().await;
+    assert_eq!(get(&serve.host, RESOURCE).await, (200, "before".into()));
+    fs::write(root.path().join("css/image.svg"), "edited").unwrap();
+    let response = get(&serve.host, RESOURCE).await;
+    assert!(matches!(response.0, 200 | 500), "{response:?}");
+    if response.0 == 200 {
+        assert_eq!(response.1, "edited");
+    }
+    until(&mut serve.stdout, " rebuilt").await;
+    let next = serve.index().await;
+    assert_ne!(next["live"]["generation"], first["live"]["generation"]);
+    assert!(next["revision"].as_u64().unwrap() > first["revision"].as_u64().unwrap());
+    assert_eq!(get(&serve.host, RESOURCE).await, (200, "edited".into()));
+    let (_, stderr) = serve.close().await;
+    if response.0 == 500 {
+        assert!(stderr.iter().any(|line| line.contains("css/image.svg")));
+    }
+    assert!(
+        !stderr
+            .iter()
+            .any(|line| line.contains("Restart Serve or use watching."))
+    );
+}
+
+fn fixture() -> TempDir {
     let root = TempDir::new().unwrap();
     fs::create_dir(root.path().join("specs")).unwrap();
     fs::create_dir(root.path().join("css")).unwrap();
-    fs::write(
-        root.path().join("mokly.config.json"),
-        r#"{"stylesheets":[{"match":"**","stylesheets":["css/main.css"]}]}"#,
-    )
-    .unwrap();
-    fs::write(
-        root.path().join("specs/home.screen.html"),
-        "---\ntitle: Home\n---\n<p>Home</p>",
-    )
-    .unwrap();
-    fs::write(
-        root.path().join("css/main.css"),
-        ".image{background:url('./image.svg')}",
-    )
-    .unwrap();
-    let asset = root.path().join("css/image.svg");
-    fs::write(&asset, "before").unwrap();
-    let viewer = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../packages/viewer/dist")
-        .canonicalize()
-        .unwrap();
-    let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
-        .args(["serve", "--no-watch", "--port", "0"])
-        .current_dir(root.path())
-        .env("PATH", "")
-        .env("MOKLY_OUTPUT", "plain")
-        .env("MOKLY_VIEWER_DIST", viewer)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true)
-        .spawn()
-        .unwrap();
-    let mut lines = BufReader::new(child.stdout.take().unwrap()).lines();
-    let url = tokio::time::timeout(Duration::from_secs(15), async {
+    for (path, text) in [
+        (
+            "mokly.config.json",
+            r#"{"stylesheets":[{"match":"**","stylesheets":["css/main.css"]}]}"#,
+        ),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<p>Home</p>",
+        ),
+        ("css/main.css", ".image{background:url('./image.svg')}"),
+        ("css/image.svg", "before"),
+    ] {
+        fs::write(root.path().join(path), text).unwrap();
+    }
+    root
+}
+
+struct Serve {
+    child: Child,
+    host: String,
+    stdout: UnboundedReceiver<String>,
+    stderr: UnboundedReceiver<String>,
+    stdout_log: JoinHandle<Vec<String>>,
+    stderr_log: JoinHandle<Vec<String>>,
+}
+
+impl Serve {
+    async fn start(root: &Path, watching: bool) -> Self {
+        let viewer = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packages/viewer/dist")
+            .canonicalize()
+            .unwrap();
+        let mut child = Command::new(env!("CARGO_BIN_EXE_mokly"))
+            .args([
+                "serve",
+                if watching { "--watch" } else { "--no-watch" },
+                "--port",
+                "0",
+            ])
+            .current_dir(root)
+            .env("PATH", "")
+            .env("MOKLY_OUTPUT", "rich")
+            .env("NO_COLOR", "1")
+            .env("MOKLY_VIEWER_DIST", viewer)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()
+            .unwrap();
+        let (mut stdout, stdout_log) = lines(Box::new(child.stdout.take().unwrap()));
+        let (stderr, stderr_log) = lines(Box::new(child.stderr.take().unwrap()));
+        let address = until(&mut stdout, "http://127.0.0.1:").await;
+        let host = address
+            .split_whitespace()
+            .find_map(|word| word.strip_prefix("http://"))
+            .unwrap()
+            .to_owned();
+        until(&mut stdout, "Catalogue ready").await;
+        Self {
+            child,
+            host,
+            stdout,
+            stderr,
+            stdout_log,
+            stderr_log,
+        }
+    }
+    async fn index(&self) -> Value {
+        let (status, text) = get(&self.host, "/mokly-viewer/index.json").await;
+        assert_eq!(status, 200);
+        serde_json::from_str(&text).unwrap()
+    }
+    async fn close(mut self) -> (Vec<String>, Vec<String>) {
+        let status = Command::new("kill")
+            .args(["-INT", &self.child.id().unwrap().to_string()])
+            .status()
+            .await
+            .unwrap();
+        assert!(status.success());
+        let status = tokio::time::timeout(Duration::from_secs(15), self.child.wait())
+            .await
+            .unwrap()
+            .unwrap();
+        let stdout = self.stdout_log.await.unwrap();
+        let stderr = self.stderr_log.await.unwrap();
+        assert_eq!(status.code(), Some(0), "{stderr:?}");
+        (stdout, stderr)
+    }
+}
+
+fn lines(
+    stream: Box<dyn AsyncRead + Unpin + Send>,
+) -> (UnboundedReceiver<String>, JoinHandle<Vec<String>>) {
+    let (send, receive) = mpsc::unbounded_channel();
+    let task = tokio::spawn(async move {
+        let mut reader = BufReader::new(stream).lines();
+        let mut output = Vec::new();
+        while let Some(line) = reader.next_line().await.unwrap() {
+            let _ = send.send(line.clone());
+            output.push(line);
+        }
+        output
+    });
+    (receive, task)
+}
+
+async fn until(lines: &mut UnboundedReceiver<String>, text: &str) -> String {
+    tokio::time::timeout(Duration::from_secs(15), async {
         loop {
-            let line = lines
-                .next_line()
-                .await
-                .unwrap()
-                .expect("Serve startup output");
-            if let Some(url) = line.strip_prefix("Mokly listening at ") {
-                break url.to_owned();
+            let line = lines.recv().await.expect("Serve output ended");
+            if line.contains(text) {
+                return line;
             }
         }
     })
     .await
-    .unwrap();
-    let host = url.strip_prefix("http://").unwrap();
-    let first: Value =
-        serde_json::from_str(&get(host, "/mokly-viewer/index.json").await.1).unwrap();
-    let resource = "/static/mokly-generated/assets/css/image.svg";
-    assert_eq!(get(host, resource).await, (200, "before".into()));
-    fs::write(asset, "edited").unwrap();
-    assert_eq!(get(host, resource).await.0, 500);
-    let next = tokio::time::timeout(Duration::from_secs(15), async {
-        loop {
-            let index: Value =
-                serde_json::from_str(&get(host, "/mokly-viewer/index.json").await.1).unwrap();
-            if index["live"]["generation"] != first["live"]["generation"] {
-                break index;
-            }
-            tokio::task::yield_now().await;
-        }
-    })
-    .await
-    .unwrap();
-    assert!(next["revision"].as_u64().unwrap() > first["revision"].as_u64().unwrap());
-    assert_eq!(get(host, resource).await, (200, "edited".into()));
-    let status = Command::new("kill")
-        .args(["-INT", &child.id().unwrap().to_string()])
-        .status()
-        .await
-        .unwrap();
-    assert!(status.success());
-    let status = tokio::time::timeout(Duration::from_secs(15), child.wait())
-        .await
-        .unwrap()
-        .unwrap();
-    assert_eq!(status.code(), Some(0));
+    .unwrap()
 }
 
 async fn get(host: &str, path: &str) -> (u16, String) {
@@ -111,6 +203,8 @@ async fn get(host: &str, path: &str) -> (u16, String) {
     let mut response = String::new();
     socket.read_to_string(&mut response).await.unwrap();
     let (headers, body) = response.split_once("\r\n\r\n").unwrap();
-    let status = headers.split_whitespace().nth(1).unwrap().parse().unwrap();
-    (status, body.into())
+    (
+        headers.split_whitespace().nth(1).unwrap().parse().unwrap(),
+        body.into(),
+    )
 }

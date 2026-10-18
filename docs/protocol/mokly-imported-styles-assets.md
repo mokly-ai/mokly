@@ -103,8 +103,10 @@ Imported CSS, PostCSS, and asset sources never enter the static output.
 Delivery reads bounded chunks from the captured source identity and checks
 the complete stream against the generation digest and its opened length.
 Serve verifies into an unnamed temporary file before sending headers, then
-streams that immutable response file. A mismatch fails the request and
-requests a new generation, including with watching disabled. Static output
+streams that immutable response file. A mismatch fails the request. Watched
+Serve requests a new generation through its coalesced rebuild queue.
+With `--no-watch`, the generation stays fixed. The terminal diagnostic names
+the asset and tells the user to restart Serve or use watching. Static output
 captures one immutable final payload after the existing file-size check.
 A mismatch stops the build with the input-change error before installation;
 publish uses the final captured bytes. The final live fingerprint recheck

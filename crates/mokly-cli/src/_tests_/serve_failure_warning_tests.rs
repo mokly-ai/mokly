@@ -32,7 +32,7 @@ fn reporter(mode: Mode, writes: bool) -> (ServeLines, Arc<Mutex<String>>, Arc<Se
     let cancellation = Arc::new(ServeCancellation::default());
     (
         ServeLines {
-            rebuild: mpsc::channel(1).0,
+            rebuild: Some(mpsc::channel(1).0),
             cwd: "/repo".into(),
             cancellation: cancellation.clone(),
             terminal: Arc::new(terminal),

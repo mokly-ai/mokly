@@ -20,7 +20,7 @@ fn stale_assets_coalesce_one_regeneration_and_shutdown_does_not_request_work() {
     let (rebuild, mut requests) = mpsc::channel(1);
     let cancellation = Arc::new(ServeCancellation::default());
     let reporter = ServeLines {
-        rebuild,
+        rebuild: Some(rebuild),
         cwd: "/repo".into(),
         cancellation: cancellation.clone(),
         terminal: Arc::new(Unimock::new(
@@ -51,4 +51,33 @@ fn stale_assets_coalesce_one_regeneration_and_shutdown_does_not_request_work() {
     cancellation.interrupt();
     reporter.failed(&changed);
     assert!(requests.try_recv().is_err());
+}
+
+#[test]
+fn snapshot_asset_failures_name_the_input_and_require_an_explicit_restart() {
+    for mode in [Mode::Plain, Mode::Rich] {
+        let reporter = ServeLines {
+            rebuild: None,
+            cwd: "/repo".into(),
+            cancellation: Arc::new(ServeCancellation::default()),
+            terminal: Arc::new(Unimock::new(
+                TerminalMock::stderr
+                    .next_call(matching!((text) if text.contains("/repo/asset.svg")
+                        && text.contains("Restart Serve or use watching.")))
+                    .returns(()),
+            )),
+            style: Style {
+                mode,
+                color: false,
+                ascii: false,
+                columns: 120,
+            },
+            redactor: Arc::new(Redactor::default()),
+        };
+        reporter.failed(&ServerError::Render {
+            source: GraphError::InputsChanged {
+                path: "/repo/asset.svg".into(),
+            },
+        });
+    }
 }

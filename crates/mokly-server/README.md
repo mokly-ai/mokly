@@ -64,8 +64,10 @@ Generated opaque assets use `dyn AssetStreams`. It captures the generation's
 source stream into an unnamed temporary file and verifies its digest before
 headers or payload reach the browser. GET streams that checked file; HEAD
 sends its checked length without a body. The response owns the file until it
-closes. A mismatch fails delivery and asks the CLI's coalesced rebuild queue
-for a new generation, including with `--no-watch`.
+closes. A mismatch fails delivery. Watched Serve asks the CLI's coalesced
+rebuild queue for a new generation. With `--no-watch`, the generation stays
+fixed and the CLI names the asset and tells the user to restart Serve or use
+watching.
 The built viewer's browser manifest lists the only client modules served.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
