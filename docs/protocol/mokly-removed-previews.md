@@ -94,8 +94,8 @@ It names the entry's path and the base commit of the generation; readers
 accept only version 3.
 
 Serve answers the generation's before-side routes for a removed entry from
-the render cache, where the background classification composed its base
-views; a view evicted from the cache is recomputed from the same base inputs.
+the bounded base capture or pinned-source fallback from the background
+classification. Uncaptured views render again from the same base inputs.
 The generation's routes answer with `no-store`, `nosniff`, and GET/HEAD
 parity. `build` writes every
 removed entry's detail, documents, and preview metadata into the generation,

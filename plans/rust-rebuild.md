@@ -1217,7 +1217,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Apply engine review 9 and merge the rebuild tip.
   - [x] Clarify capture budgets, reuse, wrapper checks, and stage counters;
         test rebuilding a capture with a smaller bound.
-  - [ ] Align removed and selected preview protocols with bounded capture.
+  - [x] Align removed and selected preview protocols with bounded capture.
   - [ ] Keep pending design-matrix CI decisions out of end-state docs.
   - [ ] Cover partial capture, typed decode failures, and zero-view timings.
   - [ ] Count uncaptured base views without changing capture charges.

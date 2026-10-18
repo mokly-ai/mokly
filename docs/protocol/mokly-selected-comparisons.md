@@ -53,14 +53,15 @@ next explicit selection uses the new revision. Network and comparison
 failures use the comparison failure state with explicit retry.
 
 The server projects the completed background classification onto the
-selected entry; it renders nothing again and reclassifies nothing. Both sides
+selected entry without reclassification. Both sides
 are the views the render graph composed for that classification under the
 [comparison contract](./mokly-comparison.md): the head from the working tree
 and the base from the base commit's Git tree under
 [Sides](./mokly-comparison.md#sides), compared under
 [materiality](./mokly-comparison.md#materiality) and
-[style ownership](./mokly-comparison.md#style-ownership), held in the render
-cache and recomputed from the same inputs only after eviction. The base
+[style ownership](./mokly-comparison.md#style-ownership). Base views use the
+bounded capture or pinned-source fallback. Head views use the bounded render
+cache and render again from the same inputs after eviction. The base
 commit is the one the accepted Changes snapshot pinned. Missing or pending
 Changes evidence produces the retryable comparison failure state; the server
 never falls back to an exhaustive foreground build.
@@ -83,8 +84,9 @@ document under the [public closure policy](./mokly-public-closure.md); the
 before side of a paired moved entry is the paired base entry's views, named
 by `previousPath`. The head side reads resources from the working tree and
 the base side from Git blobs, under the
-[resources](./mokly-comparison.md#resources) rule. Documents keep the bytes
-the render cache holds; panes present them without script permission under
+[resources](./mokly-comparison.md#resources) rule. Base documents keep the bytes
+from the bounded base capture or pinned-source fallback; head documents keep
+the bytes from the bounded render cache. Panes present them without script permission under
 the [comparison pane contract](./mokly-comparison-panes.md).
 
 Identical pending selections coalesce. Different selections serialize, with
