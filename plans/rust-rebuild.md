@@ -1642,18 +1642,15 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     rebuild. Both passed in an isolated rerun and the final repository suite.
     Suspected source: shared built files changed during the tests. Keep builds
     and suites separate. Evidence: M14 `report-7.md`.
-  - M14 asset verification: the desktop and mobile `design_modern_controls`
-    screen loops hit the 60 s test timeout and passed unchanged in a focused
-    rerun. Suspected source: the full screen loop under shared machine load.
-    Investigate separately without changing test limits. Evidence: M14 `report-8.md`.
-  - M14 asset verification: `link_controls.spec.ts` hit its 60 s `beforeAll`
-    timeout and skipped five cases. All six cases passed unchanged in a focused
-    rerun. Suspected source: cold Firna fixture startup under shared machine
-    load. Evidence: M14 `report-8.md`.
-  - M14 asset verification: `static_comparison_deployment.spec.ts` reported
-    `Execution context was destroyed` in `hasMarker` and passed unchanged in a
-    focused rerun. Suspected source: the page read races automatic navigation.
-    Evidence: M14 `report-8.md`.
+  - [x] Resolve the M14 `design_modern_controls` screen-loop timeout.
+        Commit `f81b7744` splits the screens into separate tests and keeps
+        the existing per-test limit. Verification: M14 `report-9.md`.
+  - [x] Resolve the M14 `link_controls.spec.ts` fixture-startup timeout.
+        Commit `9653a6d0` gives its `beforeAll` hook the approved 180-second
+        preparation budget. Verification: M14 `report-9.md`.
+  - [x] Resolve the M14 `static_comparison_deployment.spec.ts` navigation race.
+        Commit `9299c3c0` waits for replacement and the new stylesheet bytes.
+        Verification: M14 `report-9.md`.
   - [x] Reconcile the inherited M14 round 3
         `resident_set_recycles_only_after_one_gib_is_exceeded` flake with M9.
         The shared fixture seeds its epoch and cleanup uses one staleness rule.
