@@ -21,9 +21,54 @@ function visibleRows(page: Page): Promise<string[]> {
   );
 }
 
-/** A folder's monospace child count. */
-function folderCount(page: Page, folder: string) {
-  return navFolder(page, folder).locator(":scope > summary .mbk-nav-count");
+/** A folder's count, its visible child rows, and its visible current entries. */
+function folderFacts(page: Page, folder: string) {
+  return navFolder(page, folder).evaluate((group) => {
+    const rows = [...group.children].filter(
+      // A variant parent counts once; its variant list is not a row.
+      (child) =>
+        child.tagName !== "SUMMARY" &&
+        !child.classList.contains("mbk-nav-variants") &&
+        !child.hasAttribute("hidden") &&
+        getComputedStyle(child).display !== "none",
+    );
+    return {
+      count: Number(
+        group.querySelector(":scope > summary .mbk-nav-count")?.textContent ??
+          "0",
+      ),
+      rows: rows.length,
+      current: [
+        ...group.querySelectorAll<HTMLElement>(
+          "a[data-nav-row]:not([data-nav-removed])",
+        ),
+      ]
+        .filter((row) => row.checkVisibility())
+        .map((row) => row.dataset["entryId"] ?? "")
+        .sort(),
+    };
+  });
+}
+
+/**
+ * Rows and counts use one visibility rule: a folder counts the child rows it
+ * shows. When given, its visible current entries match the index.
+ */
+async function expectFolder(
+  page: Page,
+  folder: string,
+  current?: readonly string[],
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const facts = await folderFacts(page, folder);
+      return (
+        facts.rows > 0 &&
+        facts.count === facts.rows &&
+        (!current || facts.current.join() === [...current].sort().join())
+      );
+    }, folder)
+    .toBe(true);
 }
 
 test("Changes lists, counts and marks exactly the entries the index includes", async ({
@@ -44,8 +89,12 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
       await expect(row, entry.path).toHaveAttribute("data-changed", "true");
     else await expect(row, entry.path).not.toHaveAttribute("data-changed");
   }
-  await expect(folderCount(page, "screens")).toHaveText("5");
-  await expect(folderCount(page, "components")).toHaveText("2");
+  const screens = (included: boolean) =>
+    index.screens
+      .filter((entry) => !included || entry.changes?.included)
+      .map((entry) => entry.path);
+  await expectFolder(page, "screens", screens(false));
+  await expectFolder(page, "components");
 
   await chooseFilter(page, "changed");
   // A parent that only holds a changed variant stays as an unmarked container.
@@ -59,8 +108,8 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
     "data-changed-variants",
     "true",
   );
-  await expect(folderCount(page, "screens")).toHaveText("3");
-  await expect(folderCount(page, "components")).toHaveText("2");
+  await expectFolder(page, "screens", screens(true));
+  await expectFolder(page, "components");
   await expect(
     page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
   ).toHaveText(String(included.length));
@@ -162,6 +211,14 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
     name: "Resize navigation panel",
   });
   await expect(handle).toBeVisible();
+  // The handle reports the rendered navigation width before any drag.
+  await expect
+    .poll(
+      async () =>
+        Math.round((await nav.boundingBox())?.width ?? 0) ===
+        Number(await handle.getAttribute("aria-valuenow")),
+    )
+    .toBe(true);
   const start = Number(await handle.getAttribute("aria-valuenow"));
   const grip = await handle.boundingBox();
   if (!grip) throw new Error("navigation resize bounds unavailable");
@@ -179,8 +236,9 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
   await expect(handle).toHaveAttribute("aria-valuenow", String(start + 64));
   await handle.focus();
   await page.keyboard.press("ArrowLeft");
-  const stepped = Number(await handle.getAttribute("aria-valuenow"));
-  expect(stepped).toBeLessThan(start + 64);
+  // One arrow key moves the divider by its 16 px step.
+  const stepped = start + 64 - 16;
+  await expect(handle).toHaveAttribute("aria-valuenow", String(stepped));
   for (const mode of ["Difference", "Current"] as const) {
     await page
       .getByRole("group", { name: "Comparison mode" })
