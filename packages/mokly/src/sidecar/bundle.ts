@@ -165,7 +165,11 @@ export async function bundle(
     const metadataInputs: Record<string, string | null> = {};
     for (const module of graph) {
       const absolute = physical.get(module.path)!;
-      const text = inputs.files.get(absolute) ?? (await fs.readFile(absolute));
+      const text = inputs.files.get(absolute);
+      if (text === undefined)
+        throw new Error(
+          `Bundled source bytes were not recorded: ${module.path}`,
+        );
       module.digest = createHash("sha256").update(text).digest("hex");
       hash.update(JSON.stringify([module.path, module.imports]));
       if (!module.path.endsWith(".css")) {

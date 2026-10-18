@@ -8,12 +8,14 @@ const execute = promisify(execFile);
 export const DEFAULT_MEMORY_STOP_KIB = 1_750_000;
 export interface MemorySystem {
   pid: number;
+  now(): number;
   ps(): Promise<string>;
   kill(pid: number, signal: NodeJS.Signals): void;
   every(sample: () => void, intervalMs: number): () => void;
 }
 const system: MemorySystem = {
   pid: process.pid,
+  now: () => performance.now(),
   ps: async () =>
     (
       await execute("ps", ["-eo", "pid=,ppid=,pgid=,rss="], {
@@ -33,6 +35,11 @@ export interface ProcessRow {
   parent: number;
   group: number;
   rssKiB: number;
+}
+export interface MemoryObservation {
+  receivedMs: number;
+  cliKiB: number;
+  harnessKiB: number;
 }
 export function processRows(text: string): ProcessRow[] {
   return text
@@ -79,12 +86,19 @@ export function monitor(
     samples = 0,
     stopped = false;
   let active: Promise<void> | undefined;
+  const observations: MemoryObservation[] = [];
   let cancel = () => {};
   const stop = async () => {
     stopped = true;
     cancel();
     await active;
-    return { peakKiB, totalPeakKiB, samples, sampleIntervalMs: 50 };
+    return {
+      peakKiB,
+      totalPeakKiB,
+      samples,
+      sampleIntervalMs: 50,
+      observations,
+    };
   };
   // No process was started. Never manufacture a sentinel PID for sampling or signals.
   if (!validPid(root, boundary.pid)) return stop;
@@ -109,8 +123,11 @@ export function monitor(
       return;
     }
     if (stopped) return;
-    peakKiB = Math.max(peakKiB, treeRss(rows, root));
-    totalPeakKiB = Math.max(totalPeakKiB, treeRss(rows, boundary.pid));
+    const cliKiB = treeRss(rows, root);
+    const harnessKiB = treeRss(rows, boundary.pid);
+    peakKiB = Math.max(peakKiB, cliKiB);
+    totalPeakKiB = Math.max(totalPeakKiB, harnessKiB);
+    observations.push({ receivedMs: boundary.now(), cliKiB, harnessKiB });
     samples++;
     if (stopKiB > 0 && totalPeakKiB > stopKiB)
       abort(

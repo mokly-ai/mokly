@@ -36,7 +36,33 @@ struct RootMatch {
     globs: GlobSet,
 }
 
+impl RootMatch {
+    fn matches(&self, path: &str) -> bool {
+        [&self.lexical, &self.physical].iter().any(|directory| {
+            let relative = if directory.is_empty() {
+                Some(path)
+            } else {
+                path.strip_prefix(directory.as_str())
+                    .and_then(|rest| rest.strip_prefix('/'))
+            };
+            relative.is_some_and(|relative| self.globs.is_match(relative))
+        })
+    }
+}
+
 impl SourcePolicy {
+    /// Whether a child directory's name is eligible for discovery.
+    pub fn searches_directory(name: &str) -> bool {
+        !globs::denied_directory(name)
+    }
+
+    /// Match one configured root without widening it through another root's patterns.
+    pub fn root_matches(&self, index: usize, requested: &str) -> bool {
+        self.roots
+            .get(index)
+            .is_some_and(|root| root.matches(requested))
+    }
+
     /// Compile each root once and index the complete private source set.
     pub fn new(config: &ResolvedConfig, sources: &[String]) -> Result<Self> {
         let mut roots = Vec::new();
@@ -67,15 +93,7 @@ impl SourcePolicy {
         let paths: Vec<_> = std::iter::once(requested).chain(resolved).collect();
         for (index, root) in self.roots.iter().enumerate() {
             for path in &paths {
-                if [&root.lexical, &root.physical].iter().any(|directory| {
-                    let relative = if directory.is_empty() {
-                        Some(*path)
-                    } else {
-                        path.strip_prefix(directory.as_str())
-                            .and_then(|rest| rest.strip_prefix('/'))
-                    };
-                    relative.is_some_and(|relative| root.globs.is_match(relative))
-                }) {
+                if root.matches(path) {
                     return Some(ProtectedBy::RootMatch { root: index });
                 }
             }

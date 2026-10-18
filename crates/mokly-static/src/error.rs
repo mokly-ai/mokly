@@ -182,6 +182,12 @@ pub enum Error {
 /// Adapter causes retained for diagnostics.
 #[derive(Debug, Error)]
 pub enum InternalError {
+    /// An inventoried bundle module has no digest of its consumed source bytes.
+    #[error("sidecar module digest is missing for {}", .path.display())]
+    MissingModuleDigest {
+        /// Inventoried repository module.
+        path: PathBuf,
+    },
     /// Index validation failed before publication, with the reader's diagnostic.
     #[error("Invalid static output at {path}: {source}")]
     Index {

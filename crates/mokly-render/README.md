@@ -48,6 +48,8 @@ It validates complete props and control bounds before rendering and leaves saved
 documents intact. Returned instance props pass the Rust schema validator.
 Serve supplies one source snapshot to catalogue parsing and graph preparation.
 Bundle reuse compares the actual module digests that the sidecar reports.
+The private JavaScript generation exposes those digests so static builds can
+verify their captured inputs against the bundled bytes.
 HTML edits reuse bundle definitions. CSS text changes reuse JavaScript when
 class maps remain equal. A changed map uses a separate evaluated lifetime.
 Graph leases retain old maps, bindings, and PostCSS contexts until the final

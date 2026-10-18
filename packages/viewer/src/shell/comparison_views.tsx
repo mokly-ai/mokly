@@ -49,7 +49,14 @@ export function ComparisonViews({
   views: readonly SelectedComparisonView[] | undefined;
 }) {
   const [owner] = useState(createScrollOwner);
-  if (!views) return <p>This screen has no comparison available.</p>;
+  if (!views)
+    return (
+      <p>
+        {entryWording(props.entryKind).label(
+          "This screen has no comparison available.",
+        )}
+      </p>
+    );
   return (
     <>
       {views.map((selected) => (
@@ -123,6 +130,7 @@ function ComparisonSection({
           documents={{ after, before }}
           sync={sync}
           view={view}
+          wording={wording}
         />
       )}
     </section>

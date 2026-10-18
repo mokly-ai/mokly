@@ -48,3 +48,7 @@ features = ["mock"]
 [dev-dependencies.mokly-source-interface]
 workspace = true
 features = ["mock"]
+
+[dev-dependencies.mokly-catalogue]
+workspace = true
+features = ["mock"]

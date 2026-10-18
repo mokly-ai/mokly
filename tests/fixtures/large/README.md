@@ -46,7 +46,7 @@ The opt-in benchmark fails if usable startup is at or above 5000 ms.
 Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
 set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
 `GOMAXPROCS`, and `GOMEMLIMIT`. These values can change time and memory use.
-Build and listening waits stop after 300 seconds. Browser operations allow
+Default build and listening waits stop after 300 seconds. Browser operations allow
 60 seconds. Shutdown escalates to SIGKILL after 10 seconds.
 
 `generate` accepts variant, toolchain, and size flags. `benchmark` reads those
@@ -56,3 +56,12 @@ Both commands warn if Git does not confirm that `--root` is ignored.
 Each fixture's `.context/` holds its setup record, logs, timing records, and
 `measurements.json`. See the [scale contract](../../../docs/protocol/mokly-timings.md#scale-fixture)
 and [reference capture procedure](../../../docs/protocol/rust-rebuild-procedures.md#reference-capture).
+
+Build reports include input-capture and recheck spans, retained private source
+payload, per-root CSS preparation, and bracketing RSS samples. These are
+observations, not acceptance budgets. Captured read totals exclude inner cache
+hits and bundle copies. An unfinished span stays marked `incomplete`.
+Programmatic build probes can pass `{ buildChanges: false }` to `benchmark`
+to isolate current-source preparation from comparison work.
+They can set `buildDeadlineMs` for an observation that needs a longer build wait.
+The report records the chosen deadline. It changes no acceptance or memory budget.

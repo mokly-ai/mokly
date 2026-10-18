@@ -3,6 +3,7 @@ import type { ProcessCssParams } from "../generated/sidecar/ProcessCssParams.js"
 
 import { detail } from "./errors.js";
 import { parentInput } from "./parent-input.js";
+import { guardParentOutput } from "./parent-output.js";
 import { PostcssError, pluginFailure } from "./postcss-errors.js";
 import { loadPostcss } from "./postcss-loader.js";
 import { configureResolution, loadedFiles } from "./postcss-resolution.js";
@@ -12,6 +13,7 @@ type WorkerData = Pick<
   "sourceRoot" | "moduleResolution" | "repositoryRoots" | "postcss"
 >;
 
+guardParentOutput();
 const parent = parentInput();
 parent.stream.on("error", () => process.exit(1));
 process.on("disconnect", () => process.exit());

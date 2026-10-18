@@ -13,8 +13,8 @@ use crate::error::Result;
 use crate::material::{self, Projection};
 use crate::move_context::RenderedMoves;
 use crate::move_types::{MoveEvidence, MoveLines, MoveSignature};
-use crate::view_material;
 use crate::{instance_inputs, matching_tree, move_fingerprint, owned_styles};
+use crate::{material_traits, view_material};
 
 impl MoveEvidence for RenderedMoves<'_> {
     fn signature(
@@ -53,13 +53,13 @@ impl MoveEvidence for RenderedMoves<'_> {
             views.push((
                 key.viewport,
                 key.color_scheme,
-                material::canonical(&document.tree, &projection),
+                material_traits::fingerprint(&material::canonical(&document.tree, &projection))?,
             ));
             projection.ignored.clear();
             unignored.push((
                 key.viewport,
                 key.color_scheme,
-                material::canonical(&document.tree, &projection),
+                material_traits::fingerprint(&material::canonical(&document.tree, &projection))?,
             ));
         }
         let steps = match &entry.content {
