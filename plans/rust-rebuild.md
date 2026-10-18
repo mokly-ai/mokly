@@ -1206,14 +1206,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       unresolved shared rules, and the attribution acceptance matrix.
       The matrix runs on demand until its CI job is decided.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
-- [ ] Apply engine review 8 fixes: gate the design matrix for on-demand runs;
+  - [ ] Decide the CI home of the on-demand design matrix (review 8 finding
+        1B, user decision 50). Add no CI job or timeout change before that decision.
+- [x] Apply engine review 8 fixes: gate the design matrix for on-demand runs;
       bound base capture to 256 MiB and retain cached head reads;
       preserve deep props and private trusted records; cover capture timings,
       generated assets, fallback bytes, engine scale, and preview Reset.
       Merge the iterative-tree rebuild tip and verify identical example output.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-12.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-13.md`.
-  - [ ] Decide the CI home of the on-demand design matrix (review 8 finding
-        1B, user decision 50). Add no CI job or timeout change before that decision.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -1657,6 +1657,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M9 engine round 13 verification: the unchanged desktop
+    `design_modern_controls` sweep and `link_controls` setup each hit their
+    60-second limit. All seven affected cases passed unchanged in a focused
+    run and the full shard rerun. Suspected source: shared-machine load.
+    Track this with the M8 browser timing measurements below.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-13.md`.
   - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
     `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
     `sidecar render readiness: Disconnected` during a concurrent package
