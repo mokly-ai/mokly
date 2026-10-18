@@ -10,7 +10,7 @@ for (const width of [390, 1440]) {
     const requests = staticRequests(page);
     await page.setViewportSize({ width, height: 900 });
     await page.addInitScript(() => {
-      localStorage.setItem("mokly:comparison-scroll-together", "on");
+      localStorage.setItem("mokly:comparison-scroll-together", "off");
     });
     await page.goto("/view/example/screens/welcome/?comparison=side");
     for (const reload of [false, true]) {
