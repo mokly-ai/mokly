@@ -46,4 +46,5 @@ mod replacement_tests;
 
 pub mod asset_streams;
 
+mod generated_routes;
 mod work_delivery;

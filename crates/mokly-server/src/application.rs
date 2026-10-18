@@ -20,7 +20,7 @@ use crate::publication::Publications;
 use crate::render_request::{Rejection, RenderRequest};
 use crate::snapshot::Snapshot;
 use crate::work::Work;
-use crate::{live, render_request, response, security};
+use crate::{generated_routes, live, render_request, response, security};
 
 /// Application services are independent of socket and signal ownership.
 pub struct Application {
@@ -216,42 +216,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         return response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone());
     }
     if let Some(route) = path.strip_prefix(&generated("")) {
-        if route.starts_with("assets/") {
-            return match app
-                .work
-                .asset(snapshot.documents.clone(), route.into())
-                .await
-            {
-                Ok(Some(file)) => response::stream(file),
-                Ok(None) => response::missing(),
-                Err(error) => {
-                    app.diagnostics.failed(&error);
-                    response::error(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        "render-failed",
-                        "The asset could not be rendered. Try again.",
-                    )
-                }
-            };
-        }
-
-        let result = app
-            .work
-            .generated(snapshot.documents.clone(), route.into())
-            .await;
-        app.publisher.completed(snapshot.clone(), route.into());
-        return match result {
-            Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
-            Ok(None) => response::missing(),
-            Err(error) => {
-                app.diagnostics.failed(&error);
-                response::error(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "render-failed",
-                    "The document could not be rendered. Try again.",
-                )
-            }
-        };
+        return generated_routes::route(app, &snapshot, route).await;
     }
     if let Some(path) = path.strip_prefix("static/")
         && let Some(file) = app
