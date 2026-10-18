@@ -5,6 +5,7 @@ import test from "node:test";
 import { verifyInventory } from "./helpers/receiver/ownership.js";
 import { upload } from "./helpers/receiver/upload.js";
 import { build, fixture } from "./helpers/static_changes.js";
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import { files } from "./helpers/static_faults.js";
 import {
@@ -16,10 +17,10 @@ import {
 test(
   "publication includes the pinned comparison and an older receiver rejects it without fallback",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const { root, base } = await fixture();
     try {
-      const local = await build(root);
+      const local = await build(root, [], "rich", context.signal);
       const previous = await files(local.output);
       for (const status of [undefined, 426]) {
         const server = await exchange(
@@ -36,6 +37,8 @@ test(
               "--token=private/a==",
             ],
             status ? "plain" : "rich",
+            {},
+            context.signal,
           ).result;
           output = directory(result.stdout);
           assert.equal(result.code, status ? 1 : 0, result.stderr);
@@ -69,8 +72,12 @@ test(
             assert.equal(server.attempts.size, 0);
           } else assert.equal(server.completed, 1);
         } finally {
-          await server.close();
-          if (output) await removeOutput(output);
+          await cleanupAll([
+            () => server.close(),
+            async () => {
+              if (output) await removeOutput(output);
+            },
+          ]);
         }
       }
     } finally {

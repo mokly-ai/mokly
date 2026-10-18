@@ -57,7 +57,7 @@ sidecar run in order; the pool spreads independent requests across sidecars. A r
 
 | Method              | Params                                                                                                            | Result                                                                              |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `hello`             | none                                                                                                              | `{ version }`                                                                       |
+| `hello`             | optional `timings` boolean, default `false`                                                                       | `{ version }`                                                                       |
 | `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots | `{ generation, modules, warnings, compiled }`                                       |
 | `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                       | nothing                                                                             |
 | `describe`          | generation                                                                                                        | `{ screens, pages, useCases, folders, components, stories, diagnostics, warnings }` |

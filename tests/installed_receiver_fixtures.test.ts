@@ -14,6 +14,7 @@ import {
   digest,
 } from "./helpers/receiver/ownership.js";
 import { complete, plan, upload } from "./helpers/receiver/upload.js";
+import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
 import { files } from "./helpers/static_faults.js";
 import {
@@ -124,12 +125,14 @@ test(
 test(
   "independent receiver checks a real publication and rejects missing extra duplicate and changed bytes",
   { timeout: 120_000 },
-  async () => {
+  async (context) => {
     const root = await publicationFixture();
     const server = await exchange();
     let output: string | undefined;
     try {
-      const result = await publish(root, server.endpoint).result;
+      const result = await publish(root, server.endpoint, "plain", {
+        signal: context.signal,
+      }).result;
       output = directory(result.stdout);
       assert.equal(result.code, 0, result.stderr);
       const artifact = [...(await files(output))].map(
@@ -211,9 +214,13 @@ test(
         /invalid/u,
       );
     } finally {
-      await server.close();
-      if (output) await removeOutput(output);
-      await fs.rm(root, { recursive: true, force: true });
+      await cleanupAll([
+        () => server.close(),
+        async () => {
+          if (output) await removeOutput(output);
+        },
+        () => fs.rm(root, { recursive: true, force: true }),
+      ]);
     }
   },
 );

@@ -3,6 +3,18 @@
 use std::collections::BTreeMap;
 
 use mokly_catalogue::config_types::{Config, ModuleResolution, ResolvedConfig};
+use mokly_compare::dependency_types::Tier;
+
+#[test]
+fn dependency_timing_tiers_match_the_three_documented_numbers() {
+    for (tier, number) in [
+        (Tier::Working, 1),
+        (Tier::Installed, 2),
+        (Tier::Fallback, 3),
+    ] {
+        assert_eq!(super::tier_number(tier), number);
+    }
+}
 
 #[test]
 fn package_roots_are_normalized_before_selecting_dependency_tiers() {
