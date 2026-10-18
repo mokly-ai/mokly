@@ -7,6 +7,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { modeButton } from "./comparison_ui.js";
+import { passRenderingUpdates } from "./page_settling.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 /** One version of a comparison. */
@@ -183,14 +184,6 @@ export async function expectRegionsAt(
       return [offsets.before[axis], offsets.after[axis]];
     })
     .toEqual(expected);
-}
-
-/** Let a few rendering updates of the page pass. */
-export async function passRenderingUpdates(page: Page): Promise<void> {
-  for (let frames = 0; frames < 3; frames += 1)
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(resolve)),
-    );
 }
 
 /**

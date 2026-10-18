@@ -2,14 +2,9 @@ import fs from "node:fs/promises";
 
 import { expect, type Request } from "@playwright/test";
 
-import { passRenderingUpdates } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import {
-  comparisonIndex,
-  endedRequests,
-  modeButton,
-  navRow,
-} from "./comparison_ui.js";
+import { comparisonIndex, modeButton, navRow } from "./comparison_ui.js";
+import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 import { responseFailure } from "./shell_error_allowances.js";
 
 const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
