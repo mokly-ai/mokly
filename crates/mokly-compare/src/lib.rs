@@ -31,6 +31,8 @@ mod windows_durability;
 
 mod matching_tree;
 mod material;
+mod material_nodes;
+mod material_traits;
 
 mod move_candidates;
 pub mod move_types;

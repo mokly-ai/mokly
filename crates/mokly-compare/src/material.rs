@@ -2,16 +2,15 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use mokly_html::tree::{Element, Node, RegionKind};
+use mokly_html::tree::{self, Element, Node, RegionKind};
 use mokly_model::canonical::compare_utf16;
 use mokly_model::usage::ComponentInputOwner;
-use serde::Serialize;
 
 use crate::instance_inputs::{SlotInputs, SlotSignal};
-use crate::material_urls;
+use crate::{material_nodes, material_urls};
 
 /// Typed canonical material, never used as captured document bytes.
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Eq)]
 pub(crate) enum Material {
     Element(String, String, Vec<(String, String)>, Vec<Material>),
     Text(String),
@@ -37,19 +36,7 @@ pub(crate) struct Projection {
 
 /// Canonicalize one composed tree without retaining it or changing output bytes.
 pub(crate) fn canonical(nodes: &[Node], projection: &Projection) -> Vec<Material> {
-    let mut state = State {
-        projection,
-        instances: BTreeSet::new(),
-        slots: BTreeMap::new(),
-    };
-    let mut output = state.nodes(nodes, false, false);
-    output.extend(
-        state
-            .slots
-            .into_iter()
-            .map(|(key, nodes)| Material::Slot(key, nodes)),
-    );
-    output
+    material_nodes::canonical(nodes, projection)
 }
 
 pub(crate) fn ignores(nodes: &[Node]) -> BTreeSet<String> {
@@ -86,137 +73,24 @@ pub(crate) fn instances(
 }
 
 fn visit(nodes: &[Node], callback: &mut dyn FnMut(&RegionKind)) {
-    for node in nodes {
-        match node {
-            Node::Region { region, children } => {
-                callback(&region.kind);
-                visit(children, callback);
-            }
-            Node::Element(element) => visit(&element.children, callback),
-            _ => {}
+    for node in tree::walk(nodes) {
+        if let Node::Region { region, .. } = node {
+            callback(&region.kind);
         }
     }
 }
 
-struct State<'a> {
-    projection: &'a Projection,
-    instances: BTreeSet<String>,
-    slots: BTreeMap<String, Vec<Material>>,
-}
-
-impl State<'_> {
-    fn nodes(&mut self, nodes: &[Node], raw: bool, head: bool) -> Vec<Material> {
-        let mut output = Vec::new();
-        for node in nodes {
-            match node {
-                Node::Region { region, children } => match &region.kind {
-                    RegionKind::Ignore { id, material_key }
-                        if self.projection.ignored.contains(id) =>
-                    {
-                        output.push(Material::Ignore(id.clone(), material_key.clone()));
-                    }
-                    RegionKind::Slot { owner, name, .. }
-                        if self.projection.instance_owner.is_some() && !self.owns(owner) =>
-                    {
-                        output.push(Material::SlotBoundary(name.clone()));
-                    }
-                    RegionKind::Instance {
-                        key,
-                        path,
-                        local_id,
-                        props_key,
-                    } => {
-                        if self.instances.insert(key.clone()) {
-                            output.push(Material::Instance(
-                                key.clone(),
-                                mapped(path, &self.projection.paths),
-                                local_id.clone(),
-                                props_key.clone(),
-                                self.projection.inputs.get(key).cloned().unwrap_or_default(),
-                            ));
-                        }
-                        if self.projection.instances.contains(key) {
-                            self.slots(children, raw, head);
-                        } else {
-                            output.extend(self.nodes(children, raw, head));
-                        }
-                    }
-                    _ => output.extend(self.nodes(children, raw, head)),
-                },
-                Node::Element(element) => {
-                    let name = element.name.to_ascii_lowercase();
-                    if head && name == "style" {
-                        continue;
-                    }
-                    let attributes = attributes(element, self.projection);
-                    let children = self.nodes(
-                        &element.children,
-                        raw || matches!(name.as_str(), "pre" | "textarea" | "script" | "style"),
-                        head || name == "head",
-                    );
-                    output.push(Material::Element(
-                        element.namespace.clone(),
-                        name,
-                        attributes,
-                        children,
-                    ));
-                }
-                Node::Text(text) => {
-                    let text = if raw { text.clone() } else { whitespace(text) };
-                    if let Some(Material::Text(previous)) = output.last_mut() {
-                        previous.push_str(&text);
-                    } else if !text.is_empty() {
-                        output.push(Material::Text(text));
-                    }
-                }
-                Node::Comment(text) if !text.trim_start().starts_with("mokly-") => {
-                    output.push(Material::Comment(text.clone()))
-                }
-                Node::Doctype(text) => output.push(Material::Doctype(text.to_ascii_lowercase())),
-                _ => {}
-            }
-        }
-        output
-    }
-
-    fn owns(&self, owner: &ComponentInputOwner) -> bool {
-        match (owner, self.projection.instance_owner.as_deref()) {
-            (ComponentInputOwner::Entry, None) => true,
-            (ComponentInputOwner::Instance { instance_key }, Some(key)) => instance_key == key,
-            _ => false,
-        }
-    }
-
-    fn slots(&mut self, nodes: &[Node], raw: bool, head: bool) {
-        for node in nodes {
-            match node {
-                Node::Region { region, children } => {
-                    if let RegionKind::Slot { key, owner, .. } = &region.kind
-                        && self.owns(owner)
-                    {
-                        if !self.slots.contains_key(key) {
-                            let material = self.nodes(children, raw, head);
-                            self.slots.insert(key.clone(), material);
-                        }
-                    } else {
-                        self.slots(children, raw, head);
-                    }
-                }
-                Node::Element(element) => self.slots(
-                    &element.children,
-                    raw || matches!(
-                        element.name.as_str(),
-                        "pre" | "textarea" | "script" | "style"
-                    ),
-                    head || element.name == "head",
-                ),
-                _ => {}
-            }
-        }
+/// Test whether a supplied slot belongs to this projection input owner.
+pub(crate) fn owns(projection: &Projection, owner: &ComponentInputOwner) -> bool {
+    match (owner, projection.instance_owner.as_deref()) {
+        (ComponentInputOwner::Entry, None) => true,
+        (ComponentInputOwner::Instance { instance_key }, Some(key)) => instance_key == key,
+        _ => false,
     }
 }
 
-fn attributes(element: &Element, projection: &Projection) -> Vec<(String, String)> {
+/// Normalize and sort attributes without changing rendered output.
+pub(crate) fn attributes(element: &Element, projection: &Projection) -> Vec<(String, String)> {
     let mut attributes: Vec<_> = element
         .attributes
         .iter()
@@ -262,7 +136,8 @@ fn attributes(element: &Element, projection: &Projection) -> Vec<(String, String
     attributes
 }
 
-fn whitespace(text: &str) -> String {
+/// Collapse each ASCII whitespace run outside a raw-text scope.
+pub(crate) fn whitespace(text: &str) -> String {
     let mut output = String::new();
     let mut space = false;
     for character in text.chars() {
@@ -285,3 +160,7 @@ pub(crate) fn mapped(path: &str, paths: &BTreeMap<String, String>) -> String {
         .cloned()
         .unwrap_or_else(|| path.into())
 }
+
+#[cfg(test)]
+#[path = "_tests_/material_tests.rs"]
+mod material_tests;

@@ -19,3 +19,7 @@ Render labels split the last `#` as `{module} export {name}`.
 
 Forced termination waits for the owned process reaper before lifecycle release.
 This wait adds no graceful period for consumer code.
+
+A closed parent output pipe or IPC channel ends the sidecar or PostCSS child
+with exit code 0. Late response, operation-count, and diagnostic writes emit
+no crash stack or extra diagnostic. Other output errors remain failures.

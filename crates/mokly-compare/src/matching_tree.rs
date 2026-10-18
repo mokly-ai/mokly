@@ -50,11 +50,26 @@ impl Context<'_> {
         regions: &[Containment],
         owner: &EvidenceOwner,
     ) {
-        for node in nodes {
+        let mut regions = regions.to_vec();
+        let mut owner = owner.clone();
+        let mut pending: Vec<_> = nodes
+            .iter()
+            .rev()
+            .map(|node| Step::Node(node, parent))
+            .collect();
+        while let Some(step) = pending.pop() {
+            let (node, parent) = match step {
+                Step::Node(node, parent) => (node, parent),
+                Step::Restore(length, previous) => {
+                    regions.truncate(length);
+                    owner = previous;
+                    continue;
+                }
+            };
             match node {
                 Node::Region { region, children } => {
-                    let mut regions = regions.to_vec();
-                    let owner = match &region.kind {
+                    let length = regions.len();
+                    let next_owner = match &region.kind {
                         RegionKind::Ignore { .. } => continue,
                         RegionKind::Root { path } | RegionKind::Instance { path, .. } => {
                             let path = mapped(path, self.paths);
@@ -75,7 +90,9 @@ impl Context<'_> {
                             }),
                         RegionKind::Slot { .. } => EvidenceOwner::Entry,
                     };
-                    self.walk(children, parent, &regions, &owner);
+                    pending.push(Step::Restore(length, owner));
+                    owner = next_owner;
+                    pending.extend(children.iter().rev().map(|node| Step::Node(node, parent)));
                 }
                 Node::Element(element) => {
                     let index = self.tree.elements.len();
@@ -97,7 +114,13 @@ impl Context<'_> {
                         self.tree.elements[parent].children.push(index);
                     }
                     if element.name != "template" {
-                        self.walk(&element.children, Some(index), regions, owner);
+                        pending.extend(
+                            element
+                                .children
+                                .iter()
+                                .rev()
+                                .map(|node| Step::Node(node, Some(index))),
+                        );
                     }
                 }
                 Node::Text(text) if !text.is_empty() => {
@@ -110,3 +133,12 @@ impl Context<'_> {
         }
     }
 }
+
+enum Step<'a> {
+    Node(&'a Node, Option<usize>),
+    Restore(usize, EvidenceOwner),
+}
+
+#[cfg(test)]
+#[path = "_tests_/matching_tree_tests.rs"]
+mod matching_tree_tests;
