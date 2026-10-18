@@ -176,6 +176,12 @@ pub fn temporary(result: &ComparisonResult) {
     assert_eq!(generation.render(route).unwrap().bytes, saved.bytes);
     let reset = generation.render_props(route, &visual.props).unwrap();
     assert_eq!(reset.artifact.bytes, saved.bytes);
+    let restored = generation.render(route).unwrap();
+    assert_eq!(restored.bytes, saved.bytes);
+    assert_eq!(
+        restored.document.as_ref().unwrap().usage,
+        saved.document.as_ref().unwrap().usage
+    );
     assert!(result.snapshot.changed_entries.is_empty());
     assert!(result.review.affected.is_empty());
 }

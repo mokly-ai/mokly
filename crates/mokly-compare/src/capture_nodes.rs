@@ -5,6 +5,7 @@ use mokly_html::tree::{Attribute, Element, Node, Region};
 use mokly_model::catalogue::SourceLocation;
 use serde::{Deserialize, Serialize};
 
+use crate::capture_annotations::{AttributeRecord, ReferenceRecord, RegionRecord};
 use crate::capture_error::{CaptureInternalError, Result};
 
 #[derive(Deserialize, Serialize)]
@@ -12,15 +13,15 @@ pub(crate) enum FlatNode {
     Element {
         style_owners: Option<Vec<String>>,
         origin: Option<String>,
-        navigation: Option<Reference>,
+        navigation: Option<ReferenceRecord>,
         source: Option<SourceLocation>,
         name: String,
         namespace: String,
-        attributes: Vec<Attribute>,
+        attributes: Vec<AttributeRecord>,
         children: usize,
     },
     Region {
-        region: Region,
+        region: RegionRecord,
         children: usize,
     },
     Text(String),
@@ -38,18 +39,22 @@ pub(crate) fn flatten(nodes: &[Node]) -> Vec<FlatNode> {
                 FlatNode::Element {
                     style_owners: element.style_owners.clone(),
                     origin: element.origin.clone(),
-                    navigation: element.navigation.clone(),
+                    navigation: element.navigation.as_ref().map(ReferenceRecord::from),
                     source: element.source.clone(),
                     name: element.name.clone(),
                     namespace: element.namespace.clone(),
-                    attributes: element.attributes.clone(),
+                    attributes: element
+                        .attributes
+                        .iter()
+                        .map(AttributeRecord::from)
+                        .collect(),
                     children: element.children.len(),
                 }
             }
             Node::Region { region, children } => {
                 pending.extend(children.iter().rev());
                 FlatNode::Region {
-                    region: region.clone(),
+                    region: RegionRecord::from(region),
                     children: children.len(),
                 }
             }
@@ -87,14 +92,17 @@ pub(crate) fn restore(nodes: Vec<FlatNode>) -> Result<Vec<Node>> {
             } => Node::Element(Element {
                 style_owners,
                 origin,
-                navigation,
+                navigation: navigation.map(Reference::from),
                 source,
                 name,
                 namespace,
-                attributes,
+                attributes: attributes.into_iter().map(Attribute::from).collect(),
                 children,
             }),
-            FlatNode::Region { region, .. } => Node::Region { region, children },
+            FlatNode::Region { region, .. } => Node::Region {
+                region: Region::from(region),
+                children,
+            },
             FlatNode::Text(text) => Node::Text(text),
             FlatNode::Comment(text) => Node::Comment(text),
             FlatNode::Doctype(text) => Node::Doctype(text),

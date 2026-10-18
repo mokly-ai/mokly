@@ -59,9 +59,13 @@ impl Visit for Fields {
         }
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
-        if field.name() == "worker" {
-            self.values.insert("worker".into(), json!(value));
-        }
+        let name = match field.name() {
+            "worker" | "views" => field.name(),
+            "retained_bytes" => "retainedBytes",
+            "encoded_bytes" => "encodedBytes",
+            _ => return,
+        };
+        self.values.insert(name.into(), json!(value));
     }
     fn record_bool(&mut self, field: &Field, value: bool) {
         if field.name() == "cache_hit" {
@@ -105,6 +109,7 @@ fn stage(name: &str) -> bool {
             | "review.base-tree"
             | "review.base-dependencies"
             | "review.compare-views"
+            | "review.capture-side"
             | "review.resource-graph"
             | "review.css-analysis"
             | "review.capture"
@@ -220,9 +225,15 @@ where
                 break;
             }
         }
-        if timing.stage == "serve.background" {
+        if timing.stage == "serve.background"
+            || (timing.stage == "review.capture-side" && timing.fields.values.contains_key("views"))
+        {
             self.emit(&timing, "counts");
         }
         self.emit(&timing, "end");
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/capture_trace_tests.rs"]
+mod capture_trace_tests;

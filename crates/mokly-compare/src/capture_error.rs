@@ -17,12 +17,14 @@ pub(crate) enum CaptureError {
 pub(crate) enum CaptureInternalError {
     #[error("input encoding failed: {source}")]
     Json { source: serde_json::Error },
+    #[error("input decoding failed: {source}")]
+    DecodeJson { source: serde_json::Error },
+    #[error("input decompression failed: {source}")]
+    DecodeIo { source: io::Error },
     #[error("input compression failed: {source}")]
     Io { source: io::Error },
     #[error("encoded tree has an invalid child count")]
     Tree,
-    #[error("captured document is missing for {route}")]
-    Missing { route: String },
 }
 
 pub(crate) trait CaptureResult<T> {
@@ -43,6 +45,28 @@ impl<T> CaptureResult<T> for io::Result<T> {
         match self {
             Ok(value) => Ok(value),
             Err(source) => Err(CaptureInternalError::Io { source }.into()),
+        }
+    }
+}
+
+pub(crate) trait CaptureDecode<T> {
+    fn decode(self) -> Result<T>;
+}
+
+impl<T> CaptureDecode<T> for serde_json::Result<T> {
+    fn decode(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(source) => Err(CaptureInternalError::DecodeJson { source }.into()),
+        }
+    }
+}
+
+impl<T> CaptureDecode<T> for io::Result<T> {
+    fn decode(self) -> Result<T> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(source) => Err(CaptureInternalError::DecodeIo { source }.into()),
         }
     }
 }

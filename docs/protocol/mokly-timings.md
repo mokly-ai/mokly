@@ -54,6 +54,7 @@ phase returned successfully, not that optional Git evidence was available.
 | `review.base-tree`                               | base source preparation and complete rendering, including bounded tree/blob reads, extraction, and dependency preparation   |
 | `review.base-dependencies`                       | the dependency tier decision and, in the second tier, the bounded install; the end carries `tier`                           |
 | `review.compare-views`                           | the comparison loop; its `counts` record carries `views`, `unchanged`, `changed`, and `ignoredOnly`                         |
+| `review.capture-side`                            | base validation and bounded capture or reuse; completed counts carry `views`, `retainedBytes`, and `encodedBytes`           |
 | `review.resource-graph`                          | reference discovery and transitive traversal for one view or document side                                                  |
 | `review.css-analysis`                            | the parse, diff, match, and reduce pass for one changed stylesheet and one document pair, cache hits included               |
 | `review.capture`                                 | one on-demand comparison generation, or the static comparison generation of `build`                                         |
@@ -73,6 +74,14 @@ selectors, CSS, or document text.
 `postcss-stop`. The worker emits each event at the actual operation boundary,
 including failed compilations. Replay and evaluation-only reuse add no
 `esbuild` count. These records contain no authored data.
+
+`review.capture-side` starts with status `error` and records `ok` only after
+successful work. Completed captures emit counts, including a zero-view capture
+when no input fits. `views` counts retained base documents. `encodedBytes`
+counts compressed document and CSS payloads. `retainedBytes` adds Rust metadata,
+closures, generated digests, route keys, and conservative container charges.
+The 256 MiB bound applies to that total. These charges are not measured RSS.
+A reused base reports the same capture counts without duplicating storage.
 
 ## Sidecar Spans
 

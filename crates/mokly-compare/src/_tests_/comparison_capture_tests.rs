@@ -40,6 +40,9 @@ fn source(
         })
         .collect::<BTreeMap<_, _>>();
     Arc::new(Unimock::new((
+        RenderGenerationMock::comparison_capture
+            .each_call(matching!())
+            .returns(None),
         RenderGenerationMock::plans
             .each_call(matching!())
             .returns(plans),
@@ -55,6 +58,9 @@ fn source(
         GeneratedResourcesMock::resource
             .next_call(matching!("styles/shared.CSS"))
             .returns(Ok(Some(b"p{color:red}".to_vec()))),
+        RenderGenerationMock::resource_digest
+            .next_call(matching!("static/mokly-generated/assets/image.png"))
+            .returns(Ok(Some("asset digest".into()))),
         RenderGenerationMock::comparison_document
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, route| {
@@ -113,6 +119,11 @@ fn side_switch_count_is_constant_and_replays_do_not_render() {
         assert_eq!(before.render_all().unwrap().documents, count);
         for side in [&before, &after] {
             assert_eq!(
+                side.resource_digest("static/mokly-generated/assets/image.png")
+                    .unwrap(),
+                Some("asset digest".into())
+            );
+            assert_eq!(
                 side.resource("styles/shared.CSS").unwrap(),
                 Some(b"p{color:red}".to_vec())
             );
@@ -144,7 +155,10 @@ fn side_switch_count_is_constant_and_replays_do_not_render() {
 
 #[test]
 fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
-    let source: Arc<dyn RenderGeneration> = Arc::new(Unimock::new(
+    let source: Arc<dyn RenderGeneration> = Arc::new(Unimock::new((
+        RenderGenerationMock::comparison_capture
+            .each_call(matching!())
+            .returns(None),
         RenderGenerationMock::render_all
             .next_call(matching!())
             .returns(Err(GraphError::Runtime {
@@ -153,7 +167,7 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
                     message: "cancelled".into(),
                 },
             })),
-    ));
+    )));
     assert!(
         matches!(capture(source), Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled)
     );

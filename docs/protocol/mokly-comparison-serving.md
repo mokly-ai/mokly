@@ -48,10 +48,11 @@ The development shell requests a comparison on demand at
 removed page's or document's preview under the
 [removed previews contract](./mokly-removed-previews.md). The response
 redirects to an immutable generation named `selected-<uuid>`, whose files are
-captured in memory from the render cache and the base-side render; snapshot
-URLs resolve relative to that response URL. A selected generation projects the
-completed background classification onto the selected entry; it renders
-nothing again and reclassifies nothing. Before the shell changes an open
+captured in memory from the bounded base capture or pinned-source fallback and
+the original head generation's render cache. Evicted head views render again
+from the same inputs. Snapshot URLs resolve relative to that response URL.
+A selected generation projects the completed background classification onto
+the selected entry without reclassification. Before the shell changes an open
 comparison's view or diff mode, it renews the generation with a HEAD request.
 A missing or replaced generation is reacquired for the same selection before
 new panes load, and a retained result reuses its loaded JSON. Retention,

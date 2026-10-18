@@ -83,16 +83,25 @@ outside this mapping keeps the fallback warning, including with equal inputs.
 Each fallback has a typed trace reason.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-It validates and captures each side in one source-root pass. Private compressed
-inputs preserve exact render bytes, generated CSS, and trusted annotations in process memory.
-Move pairing, view comparison, and snapshot reads restore one view at a time.
-The captures live with the comparison result and write no files. They retain no
-parsed page set and do not enlarge the render cache or sidecar pool.
+It validates and captures the base in one source-root pass. Private compressed
+inputs preserve exact document bytes, generated CSS, and trusted annotations.
+All generated routes retain their digests. Usage, links, resources, and component
+metadata stay Rust values, so valid deep props need no recursive JSON decode.
+`DEFAULT_BASE_CAPTURE_BYTES` sets a 256 MiB retention budget. It charges encoded
+payloads, Rust metadata, closures, route keys, and conservative map overhead.
+Inputs that do not fit read from the pinned source. Head reads use the original
+bounded render cache and render again on the head root after eviction. Source
+switches stay constant while the base capture fits; fallback can add switches.
+Move pairing, view comparison, and snapshot reads restore one base view at a time.
+The capture lives with the result, writes no files, and retains no parsed page
+set. Reusing a captured base reuses its allocation. The render cache and sidecar
+pool keep their own bounds.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
 It releases parsed documents after collecting canonical and containment proof.
-The retained result holds graph handles, view states, reasons, ownership
+The retained result holds a bounded base capture over its pinned source, the
+original cached head generation, view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs
 are reused per route; public resource bytes and stylesheet diffs have explicit
 cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and

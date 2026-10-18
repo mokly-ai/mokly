@@ -187,10 +187,13 @@ rule and resource records, changed entries, and affected consumers. Independent
 head edits reuse the pinned base generation. Four distinct CSS delivery rules
 share one registered base and one head. Excluded, unresolved, and matched
 shared rules use separate selectors in one head, with exact per-rule evidence.
+The matrix runs only on demand with the `design-matrix` feature. The default
+workspace tests and verification gate exclude this target. Its CI job awaits
+a user decision.
 
 ```bash
 cargo test -p mokly-cli
-cargo test -p mokly-cli --test design_attribution_tests
+cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 

@@ -42,7 +42,19 @@ impl Comparison for Engine {
         after: Arc<dyn RenderGeneration>,
     ) -> Result<ComparisonResult> {
         let before = comparison_capture::capture(before).compare()?;
-        let after = comparison_capture::capture(after).compare()?;
+        self.compare_captured(request, before, after)
+    }
+}
+
+impl Engine {
+    /// Classify after the caller has validated and captured the base.
+    pub(crate) fn compare_captured(
+        &self,
+        request: &ComparisonRequest,
+        before: Arc<dyn RenderGeneration>,
+        after: Arc<dyn RenderGeneration>,
+    ) -> Result<ComparisonResult> {
+        after.render_all().compare()?;
         let before_model = &before.catalogue().model;
         let after_model = &after.catalogue().model;
         let memo: Arc<dyn ResourceMemo> = Arc::new(Memo::new(

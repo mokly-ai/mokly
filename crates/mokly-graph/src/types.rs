@@ -57,9 +57,26 @@ pub struct RenderSummary {
     pub closure: BTreeSet<String>,
 }
 
+/// Private comparison inputs retained over one original generation.
+#[derive(Clone)]
+pub struct ComparisonCapture {
+    /// Uncaptured recipes and source leases, used when a smaller budget is requested.
+    pub source: Arc<dyn RenderGeneration>,
+    /// Number of documents retained in the capture.
+    pub views: usize,
+    /// Charged payload and Rust metadata bytes.
+    pub retained_bytes: usize,
+    /// Compressed document and stylesheet payload bytes.
+    pub encoded_bytes: usize,
+}
+
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Reuse an existing comparison capture without stacking retained copies.
+    /// Ordinary source generations return None.
+    fn comparison_capture(&self) -> Option<ComparisonCapture>;
+
     /// Hash of every config, source, stylesheet, and bundle render input.
     fn generation_key(&self) -> &str;
     /// All document keys, available without any document render.

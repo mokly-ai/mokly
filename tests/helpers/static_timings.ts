@@ -12,6 +12,9 @@ interface Timing {
   elapsedMs: number;
   durationMs?: number;
   status?: string;
+  views?: number;
+  retainedBytes?: number;
+  encodedBytes?: number;
 }
 
 export function timings(stderr: string): Timing[] {

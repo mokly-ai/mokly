@@ -4,12 +4,11 @@ use std::mem;
 
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::usage::ComponentInputOwner;
-use serde::{Deserialize, Serialize};
 
 use crate::links::Reference;
 
 /// One parsed attribute, in authored order.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Attribute {
     /// Qualified attribute name, including a namespace prefix when present.
     pub name: String,
@@ -72,7 +71,7 @@ impl Element {
 }
 
 /// An annotation around a sequence of siblings with one physical parent.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug)]
 pub struct Region {
     /// Document-order inspection id, allocated after composition.
     pub id: String,
@@ -81,7 +80,7 @@ pub struct Region {
 }
 
 /// Ownership and material-ignore information attached by composition.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug)]
 pub enum RegionKind {
     /// A component on its own page; serialized without markers.
     Root {
