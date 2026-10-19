@@ -1402,6 +1402,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         exclusions on views that link `shared-1.css`. Classify every differing
         field in both completed results before accepting the artifacts.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
