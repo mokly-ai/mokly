@@ -1374,6 +1374,13 @@ Tags: ui
           against ready included membership, and use UTF-16 source reason order.
           The orchestrator confirms that changed deployment identities are required.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
+    - [x] D1 viewer: read `reasons` strictly with their shape, order, and
+          membership fence; show them in Details before a comparison loads, once
+          beside a loaded comparison; state the sentence of each reason kind,
+          including `implementation`, in `mokly-component-workspace-design.md`.
+    - [ ] Depict the reason sentences in the component explorer design, whose
+          Details still read "Rendered output changed" and depict no
+          `implementation` reason, after the round's design decision.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1383,7 +1390,7 @@ Tags: ui
         background classification and on-demand comparisons in Serve.
   - [ ] Port the moved-entry cases with the shared moved fixtures in the
         branch-point copy and `serve_comparison_test.ts`.
-  - [ ] Port the two D1 cases, Details before a comparison loads and the
+  - [x] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [x] Port the cases that need an embedded viewer host through both frame
         adapters; `sweep-overrides-comparisons.json` and
@@ -1431,6 +1438,12 @@ and scroll fixture groups, the review 12 fixes, the sweep inputs, and the rows
 that remain: `.context/rust-rebuild/delegation/m7/report-25.md`. Merge
 decisions for the rebuild tip `a3cc0828`:
 `.context/rust-rebuild/delegation/m7/merge-decisions-round25.md`.
+The D1 viewer reasons, the two D1 rows and the `implementation` case, the
+light-only document, imported CSS, HEAD-baseline, and branch-point rows on
+small comparison copies, the round 25 follow-ups with the component light-only
+note fix, the sweep inputs, and the merge decisions for the rebuild tip
+`ef7458f2` and the delivery fixtures `f4829d8d`:
+`.context/rust-rebuild/delegation/m10-d1/report-1.md`.
 
 - [ ] Commit.
 
