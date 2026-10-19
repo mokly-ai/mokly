@@ -1719,7 +1719,18 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
-  - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
+  - [x] Measure React Serve on a suitable machine with a configurable memory stop.
+        At `a3cc0828`, the default 1,620-route/5,850-document React fixture used
+        two sidecars, default deadlines, workspace dependencies, and a 6 GiB
+        whole-harness RSS stop. Cold/warm usable startup: 184.370/183.713 s;
+        both failed the unchanged 5 s budget. Browser checks passed. CLI RSS
+        peaks: 1,368,268/1,591,676 KiB; whole harness: 2,744,332/3,435,732 KiB.
+        Same eight-CPU, 16.25 GiB machine and development build as the M9 repeat.
+        Evidence: `.context/m14-measurements/large-react/.context/measurements.json`.
+  - [ ] Resolve the React large-fixture startup budget failure. `graph.prepare`
+        took 167.990/167.741 s in the cold/warm development-build observations.
+        Profile preparation and repeat with the intended acceptance build profile.
+        Keep the approved usable startup budget below 5000 ms.
   - [ ] Connect Changes and watch to their delivered browser events.
   - [ ] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
