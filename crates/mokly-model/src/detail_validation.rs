@@ -1,11 +1,13 @@
 //! Structural detail rules and canonical decoding of recorded input props.
 
 use crate::axes::EntryKind;
+use crate::canonical::compare_utf16;
 use crate::paths::is_entry_path;
 use crate::public_detail::EntryDetailV1;
 use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
+use crate::review_order::reason_key;
 use crate::usage::CatalogueUsage;
 use crate::wire_decode;
 
@@ -38,6 +40,18 @@ pub(crate) fn validate(detail: &EntryDetailV1) -> Result<(), ReadError> {
     }
     if !is_entry_path(&detail.entry.path) {
         return Err(invalid(ContractViolation::DetailPath));
+    }
+    if detail.reasons.as_ref().is_some_and(|reasons| {
+        reasons.windows(2).any(|pair| {
+            let (left_kind, left_target) = reason_key(&pair[0]);
+            let (right_kind, right_target) = reason_key(&pair[1]);
+            !left_kind
+                .cmp(right_kind)
+                .then_with(|| compare_utf16(left_target, right_target))
+                .is_lt()
+        })
+    }) {
+        return Err(invalid(ContractViolation::DetailReasons));
     }
     let visual = matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component);
     if !visual && (!detail.views.is_empty() || detail.workspace.is_some()) {

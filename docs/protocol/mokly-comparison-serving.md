@@ -26,9 +26,17 @@ disabled. A selected-only generation of the
 [on-demand contract](./mokly-on-demand.md) leaves it `null`, and a superseded
 completion cannot set it. Serve keeps the advertised classification's JSON
 while the current index names it. Its snapshot files expire after 60 idle
-seconds and can be captured again from the retained base handles. Reading a
-generation renews its idle retention. After replacement, its JSON follows the
-same idle rule. All retained bytes count against the selected-comparison bounds.
+seconds. This trim releases duplicated delivery bytes; the accepted base
+capture restores retained documents without another base render. Uncaptured
+views use the pinned-source fallback. Reading a generation renews its idle
+retention. After replacement, cached JSON and snapshots follow the same idle
+rule. The store holds only a weak reference to the classification: cached
+files do not retain an old base capture. A missing snapshot can be restored
+only while the classification still has an owner, such as an in-flight request.
+Delivery files count against the 128 MiB comparison store. Each classification
+can also retain a separate base capture of up to 256 MiB, beside the graph's
+256 MiB render cache. An old capture held by in-flight work can overlap a new
+classification's capture. These bounds are separate, not a process memory limit.
 A route whose generation is gone returns 404
 and never redirects or starts work. The shell derives every snapshot and
 preview URL from that response URL and the entry's path; no descriptor and no

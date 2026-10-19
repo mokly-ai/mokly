@@ -20,6 +20,7 @@ pub(crate) fn apply(next: &mut Snapshot) -> Result<()> {
                 view.resource_evidence = None;
             }
             detail.resource_evidence = None;
+            detail.reasons = None;
             detail.workspace = None;
             (path.clone(), detail)
         })
@@ -43,3 +44,7 @@ pub(crate) fn apply(next: &mut Snapshot) -> Result<()> {
         .collect();
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "_tests_/changes_detail_tests.rs"]
+mod changes_detail_tests;

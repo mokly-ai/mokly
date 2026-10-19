@@ -6,7 +6,7 @@ use std::sync::Arc;
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV1};
-use mokly_model::public_metadata::ComparisonSelection;
+use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::usage_schemas::UsageSchemas;
@@ -33,6 +33,7 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         let path = format!("screen-{number}");
         let mut screen = template.clone();
         screen.entry.path = path.clone();
+        screen.entry.changes = CatalogueChanges::Unavailable;
         screen.visual.views.truncate(1);
         screen.visual.views[0].comparison = ComparisonSelection::Unavailable;
         let view = &screen.visual.views[0];
@@ -54,6 +55,7 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
                 resource_evidence: None,
             }],
             resource_evidence: None,
+            reasons: None,
             workspace: None,
         };
         routes.push(RenderRoute {

@@ -16,6 +16,20 @@ test("native CSS evidence shares the published base and selected generations rej
       await page.request.get(`${fixture.url}/mokly-viewer/entries/sample.json`)
     ).json();
     expect(detail.revision).toBe(index.revision);
+    expect(detail.reasons).toEqual(
+      review.entries.find((entry: { path: string }) => entry.path === "sample")
+        .reasons,
+    );
+    const unchanged = await (
+      await page.request.get(`${fixture.url}/mokly-viewer/entries/stable.json`)
+    ).json();
+    expect(unchanged).not.toHaveProperty("reasons");
+    const removed = await (
+      await page.request.get(
+        `${fixture.url}/${index.comparisonUrl!.replace("review.json", "entries/removed.json")}`,
+      )
+    ).json();
+    expect(removed.reasons).toEqual([{ kind: "removed" }]);
     expect(detail.views[0].resourceEvidence.rules).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

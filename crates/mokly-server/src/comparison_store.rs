@@ -42,7 +42,7 @@ pub trait Comparisons: Send + Sync {
 
 pub(crate) struct Bundle {
     pub(crate) files: BTreeMap<String, File>,
-    pub(crate) accepted: Option<Arc<Accepted>>,
+    pub(crate) accepted: Option<Weak<Accepted>>,
     pub(crate) touched: u64,
 }
 pub(crate) struct Selection {
@@ -167,3 +167,7 @@ mod comparison_historical_tests;
 #[cfg(test)]
 #[path = "_tests_/comparison_idle_tests.rs"]
 mod comparison_idle_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_release_tests.rs"]
+mod comparison_release_tests;

@@ -8,6 +8,8 @@ use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::material::digest;
 use mokly_model::projection;
+use mokly_model::readers;
+use mokly_model::review::EntryChangeReason;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_output;
@@ -46,6 +48,12 @@ fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
             .ends_with("/review.json")
     );
     let files = inventory.into_files();
+    let historical = files
+        .iter()
+        .find(|file| file.path.ends_with("/entries/old.json"))
+        .unwrap();
+    let detail = readers::detail(std::str::from_utf8(&historical.bytes).unwrap()).unwrap();
+    assert_eq!(detail.reasons, Some(vec![EntryChangeReason::Removed]));
     assert!(
         !files
             .iter()

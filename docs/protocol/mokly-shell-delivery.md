@@ -4,10 +4,10 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Purpose And Boundary
 
-The browser renders the Browse shell from a stub, an index, and entry
-details. The index holds navigation and entry metadata. Details hold usage,
-comparison evidence and workspace lists. Serve and `build` deliver these
-resources. Navigation fetches the next detail. No process renders shell HTML.
+The browser renders Browse from a stub, an index, and entry details. The index
+holds navigation and metadata. Details hold usage, comparison evidence and
+workspaces. Serve and `build` deliver them. Navigation fetches the next detail.
+No process renders shell HTML.
 
 ## Routes
 
@@ -86,6 +86,7 @@ interface EntryDetailV1 {
   revision?: number; // current entries: equal to the index
   generation?: string; // removed entries: the comparison generation
   entry: { path: string; kind: CatalogueRecord["kind"]; snapshotId?: string };
+  reasons?: readonly EntryChangeReason[]; // reasons in the review v8 shape
   views: readonly DetailView[]; // empty for pages, documents, and use cases
   resourceEvidence?: ViewEvidence; // pages only; present when ready
   workspace?: Workspace; // screens and components, when all list inputs are proven
@@ -137,6 +138,10 @@ and neither of the other two, so a generation's files never change.
 present only while Changes is `ready` under
 [CSS attribution membership](./mokly-css-attribution-membership.md);
 `CatalogueUsage` and `ComponentWireProps` are the catalogue contract's shapes.
+`reasons` carries classification reasons in the review v8 `EntryChangeReason` shape and sorted unique order, under the same reason policy.
+Pages and documents have no review record. Their details carry the classification's direct reasons under this policy.
+Ready included current and removed entries carry `reasons`. A pure move carries `[]`. Other entries omit the field.
+Reasons are independent of `workspace` and remain available before usage is proven.
 `usedBy` lists the current uses of a component, `affected` the consumers a
 changed component affects, `relatedComponents` the changed components that
 affect a screen, and `inputChanges` the instances whose props differ from the
@@ -185,12 +190,11 @@ removed entry's detail only when `identity` equals the index, `generation`
 equals the generation that the index's `comparisonUrl` names, and
 `snapshotId` equals the index's removed record for that path.
 
-Every fetch is an ordinary GET without custom headers, uses
-`credentials: "omit"`, stays same-origin, and rejects a redirect outside the
-origin; a URL source is HTTP(S) without userinfo or fragment. Serve sends `Cache-Control: no-store` on every
-JSON route. The index and the details of one build are immutable: a static
-host may cache them under the static delivery contract's revalidation rules,
-and the shell keeps them for the page's lifetime.
+Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
+URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
+and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
+Static hosts may cache the immutable index and details under the static revalidation rules.
+The shell keeps the index and details for the page's lifetime.
 
 ## Updates In Serve
 
@@ -222,23 +226,19 @@ unavailable with retry, and waits for the next message.
 
 ## Identity
 
-`build` computes `deploymentId` as the hash of every installed file of the
-output under the [static export browser contract](./mokly-export-browser.md),
-with the `deploymentId` field of the index and the details set to 64 zeros
-while hashing; generation files carry no deployment id, so one comparison
-gives the same bytes in every build. Serve chooses one `deploymentId` for the
-life of the server process, for example the hash of the catalogue identity and
-a start value, so a different id always means another build or server process.
+`build` computes `deploymentId` as the hash of every installed output file under the
+[static export browser contract](./mokly-export-browser.md), with index and
+detail `deploymentId` fields set to 64 zeros. Generation files carry no deployment id,
+so one comparison gives the same bytes in every build. Serve keeps one id per process,
+for example a hash of catalogue identity and start value. A new id means another build or process.
 `revision` orders the states of one Serve process from `1`; a build writes `0`.
 
 ## Embedded Viewer
 
-`MoklyViewer` takes an `index` source, an object or a URL, and a `detail`
-source, a function from an entry path and an optional snapshot id to an
-object, a URL, or a promise of either; a React host renders it in the browser
-with its own React. The `@mokly/viewer/browser` entry mounts the standalone
-shell into the stub's mount element. The
-[embeddable viewer contract](./mokly-viewer.md) owns the props.
+`MoklyViewer` takes `index` as an object or URL and `detail` as a function from an
+entry path and optional snapshot id to an object, URL, or promise of either. Hosts use their own
+React. `@mokly/viewer/browser` mounts the standalone shell in the stub's mount element.
+The [embeddable viewer contract](./mokly-viewer.md) owns the props.
 
 ## Fail-Closed Rules
 
