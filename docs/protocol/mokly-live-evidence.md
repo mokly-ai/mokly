@@ -30,6 +30,8 @@ publisher coalesces completed routes, skips recorded routes and routes with no
 detail views, and publishes ready or unavailable usage. Closing Serve fences
 new publications and drains that task. A page or Markdown render does not
 raise the revision only because its document completed.
+A completion that changes no detail publishes nothing, but its route still
+counts as completed. Its current revision and live render validity stay intact.
 After a rebuild, ready usage reused for an equal `documentKey` is already
 recorded as complete. Its later completion publishes no revision.
 

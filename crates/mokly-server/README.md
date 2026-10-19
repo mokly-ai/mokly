@@ -53,8 +53,10 @@ between documents and waits while foreground requests need the worker pool.
 Document responses queue completion notices without waiting for publication.
 One application-owned task coalesces notices and skips recorded routes and
 routes with no detail views. A completed background
-pass publishes its evidence in one batch. A replacement starts a new pass;
-`--no-watch` computes it once. Old backends cannot publish into a replacement.
+pass publishes its changed evidence in one batch. Equal completions only record
+the route as completed. They keep the revision and live render validity and send
+no event. A replacement starts a new pass. With `--no-watch`, Serve computes it
+once. Old backends cannot publish into a replacement.
 Workspace lists stay absent until all consumer usage is proven. One unavailable
 view keeps every Used by list absent until the next generation. Failed views
 publish unavailable usage without inventing empty consumers.

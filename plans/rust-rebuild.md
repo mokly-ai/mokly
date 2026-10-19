@@ -944,11 +944,12 @@ renders again.
         design library component's Unmodified status after temporary edits
         and Reset, which needs an unchanged component with editable props in
         the fixture's base commit.
-  - [ ] When Serve stops publishing a render completion that changes no
-        detail (review 8 finding 1, for the Serve owner), restore one index
-        read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
-        and the exact revision in the first half of its adoption spec. Until
-        then, the orchestrator accepts one index read per rejected revision.
+  - [x] Publish no new revision for a render completion that changes no detail,
+        while recording its route as completed. Restore one index read
+        (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
+        exact revision in the first half of its adoption spec. Review 8 finding
+        1, for the Serve owner. Implementation: `3961636d`.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-12/browser-observations.json`.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
@@ -1265,6 +1266,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
             The default-count probe stops at the common memory allowance before
             ready; its edit time and overlap peak need a probe-budget decision.
             Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/measurements.md`.
+            Measurement clarification: the held-phase peak precedes the new
+            capture, so it only bounds the overlap window. Its maximum cannot
+            be recovered from the saved phase maxima. The initial phase peaked
+            at 1,603,197,952 bytes.
+      - [ ] Run the deferred default-count probe with a 4 GB allowance in a
+            quiet machine window, with no other delegate running, alongside
+            the M14 React Serve measurement. Decision C, approved by the
+            orchestrator on 2026-10-19: the shared-machine 2 GB rule stays.
+            Record the maximum from the new capture's start to the old
+            snapshot's release.
     - [x] Use an intentionally unresolved base for the shared browser example,
           with terminal quiescence and one Git diagnostic. Real Changes specs
           keep independent fixtures. Keep the 600-second guard and one sidecar.

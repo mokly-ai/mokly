@@ -18,7 +18,8 @@ use mokly_model::review::{
     EntryChangeReason, ReviewEntry, ReviewEntryAddress, ReviewKind, ReviewResultV8, ReviewState,
     ReviewView,
 };
-use mokly_model::snapshot::CatalogueChangeSnapshotV4;
+use mokly_model::snapshot::{CatalogueChangeSnapshotV4, RemovedEntrySnapshot};
+use mokly_model::snapshot_records::{EntryRecord, RecordMetadata};
 use mokly_model::wire_props;
 use unimock::Unimock;
 
@@ -191,4 +192,29 @@ pub(crate) fn historical_inputs() -> (PreparedCatalogue, BTreeMap<String, Docume
         },
     )]);
     (catalogue, plans)
+}
+
+/// A removed page whose before document can be captured on demand.
+pub(crate) fn historical() -> Arc<Accepted> {
+    let mut value = accepted(Arc::new(Unimock::new(())), Arc::new(Unimock::new(())));
+    let result = &mut Arc::get_mut(&mut value).unwrap().result;
+    result.snapshot.removed_entries.push(RemovedEntrySnapshot {
+        entry: EntryRecord::Page {
+            metadata: RecordMetadata {
+                path: "sample".into(),
+                title: "Sample".into(),
+                description: String::new(),
+                rationale: None,
+                moved_from: None,
+                related_docs: Vec::new(),
+                source_path: "sample.page.html".into(),
+                tags: None,
+            },
+        },
+        folder_titles: Vec::new(),
+        parent_title: None,
+        snapshot_id: "c".repeat(64),
+    });
+    result.entries[0].documents[0].before_route = Some("sample/index.html".into());
+    value
 }
