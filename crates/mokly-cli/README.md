@@ -212,9 +212,18 @@ cargo run -p mokly-cli --bin mokly -- build --help
 Changes integration tests isolate cache directories for each child process.
 They check exact entry names through the native build composition, including
 HTML, React, and stylesheet edits.
+The design attribution matrix copies the example sources into temporary Git
+fixtures with fully registered base and head commits. It pins stylesheet links,
+rule and resource records, changed entries, and affected consumers. Independent
+head edits reuse the pinned base generation. Four distinct CSS delivery rules
+share one registered base and one head. Excluded, unresolved, and matched
+shared rules use separate selectors in one head, with exact per-rule evidence.
+The matrix runs only on demand with the `design-matrix` feature. The default
+workspace tests and verification gate exclude this target.
 
 ```bash
 cargo test -p mokly-cli
+cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
@@ -250,6 +259,7 @@ the held native process. Windows retains the immediate-abort check and uses
 - [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).
 - [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
+- [Design attribution matrix](./tests/design_attribution_tests.rs).
 
 ### Related Docs
 

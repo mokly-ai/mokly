@@ -6,15 +6,16 @@ Continuation of [design component adoption](./mokly-design-components.md).
 
 Acceptance once the base commit has the registered components:
 
-| Edit                                                           | Direct Changes                                                                                                    | Secondary evidence                        |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Top bar implementation                                         | Top bar                                                                                                           | Consuming design screens                  |
-| Nested Tag chip implementation                                 | Tag chip                                                                                                          | Picker/Top bar and their screen consumers |
-| A screen changes query, title, target, status or a field value | That screen                                                                                                       | Actual usage updates                      |
-| A screen changes supplied slot content or instance order       | That screen                                                                                                       | Actual usage updates                      |
-| A variant entry's props change                                 | That variant entry                                                                                                | No automatic consumer change              |
-| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#rendered-resources-and-styles) | Rendered-resource evidence                |
-| Temporary local prop edit or Reset                             | None                                                                                                              | Preview only                              |
+| Edit                                                     | Direct Changes                                                                                                    | Secondary evidence                                   |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Top bar implementation                                   | Top bar                                                                                                           | Consuming design screens                             |
+| Nested Tag chip implementation                           | Tag chip                                                                                                          | Picker/Top bar and their screen consumers            |
+| A screen changes query, title, target or status          | That screen                                                                                                       | Actual usage updates                                 |
+| A screen changes a field value in slot content           | That screen                                                                                                       | Material changes; usage identities can stay the same |
+| A screen changes supplied slot content or instance order | That screen                                                                                                       | Actual usage updates                                 |
+| A variant entry's props change                           | That variant entry                                                                                                | No automatic consumer change                         |
+| Global tokens or screen layout change                    | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#rendered-resources-and-styles) | Rendered-resource evidence                           |
+| Temporary local prop edit or Reset                       | None                                                                                                              | Preview only                                         |
 
 | CSS delivery                | Direct Changes                                                                        | Secondary evidence              |
 | --------------------------- | ------------------------------------------------------------------------------------- | ------------------------------- |

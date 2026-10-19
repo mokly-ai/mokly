@@ -6,9 +6,10 @@
  * retries after one index refresh, even while the event stream is down.
  */
 
-import { expect, type Page, type Request } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { frameTexts, openProps, renders } from "./live_props.js";
 import {
   cardFile,
   closeServe,
@@ -21,33 +22,6 @@ import {
   tourFile,
 } from "./live_shell_fixture.js";
 import { networkFailure, responseFailure } from "./shell_error_allowances.js";
-
-/** Open the card's Props panel once its live descriptor is installed. */
-async function openProps(page: Page, url: string) {
-  await page.goto(`${url}/view/card/`);
-  await page.getByRole("tab", { name: "Props" }).click();
-  const props = page.getByRole("tabpanel", { name: "Props" });
-  await expect(props.getByRole("textbox", { name: "label" })).toBeEditable();
-  return props;
-}
-
-/** Collect render requests; each visible view sends its own. */
-function renders(page: Page): Request[] {
-  const seen: Request[] = [];
-  page.on("request", (request) => {
-    if (isRender(request)) seen.push(request);
-  });
-  return seen;
-}
-
-/** The text that every stage frame shows, read through the parent page. */
-function frameTexts(page: Page): Promise<string[]> {
-  return page.evaluate(() =>
-    [...document.querySelectorAll<HTMLIFrameElement>("#mb-main iframe")].map(
-      (frame) => frame.contentDocument?.body?.innerText ?? "",
-    ),
-  );
-}
 
 test("text edits wait for the 150 ms debounce; a boolean edit renders at once", async ({
   page,

@@ -125,8 +125,9 @@ changed-component set from the selected entry alone.
 
 ## Read And Analysis Reuse
 
-Both sides' composed documents come from the render cache. A comparison-scoped
-route map reuses resource digests, byte proofs, and changed-byte state. Public
+Head documents use the bounded render cache; evicted views render again on the
+head root. Base documents use the 256 MiB capture or pinned-source fallback.
+A comparison-scoped route map reuses resource digests, byte proofs, and changed-byte state. Public
 asset reads and planning digests do not enter the private source snapshot.
 Planning batches the generation's known read set before digest reads. Opaque
 resources use streamed digests when they exceed the blob read budget. Resource bytes

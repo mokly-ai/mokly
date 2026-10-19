@@ -61,6 +61,7 @@ serde_json = "1.0.154"
 thiserror = "2.0.21"
 
 [features]
+design-matrix = []
 mock = ["dep:unimock", "mokly-publish/mock"]
 
 [target."cfg(unix)".dependencies]
@@ -88,3 +89,8 @@ workspace = true
 [dev-dependencies.mokly-static]
 workspace = true
 features = ["mock"]
+
+[[test]]
+name = "design_attribution_tests"
+path = "tests/design_attribution_tests.rs"
+required-features = ["design-matrix"]

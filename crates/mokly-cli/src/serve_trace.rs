@@ -71,19 +71,21 @@ impl Visit for Fields {
     }
     fn record_u64(&mut self, field: &Field, value: u64) {
         match field.name() {
-            "views" | "unchanged" | "changed" | "ignored_only" => {
-                let name = if field.name() == "ignored_only" {
-                    "ignoredOnly"
-                } else {
-                    field.name()
+            "views" | "unchanged" | "changed" | "ignored_only" | "uncaptured_views" => {
+                let name = match field.name() {
+                    "ignored_only" => "ignoredOnly",
+                    "uncaptured_views" => "uncapturedViews",
+                    name => name,
                 };
                 self.counts.insert(name.into(), json!(value));
             }
-            "worker" | "tier" | "input_paths" | "read_bytes" | "retained_bytes" => {
+            "worker" | "tier" | "input_paths" | "read_bytes" | "retained_bytes"
+            | "encoded_bytes" => {
                 let name = match field.name() {
                     "input_paths" => "inputPaths",
                     "read_bytes" => "readBytes",
                     "retained_bytes" => "retainedBytes",
+                    "encoded_bytes" => "encodedBytes",
                     name => name,
                 };
                 self.values.insert(name.into(), json!(value));
@@ -139,6 +141,7 @@ fn stage(name: &str) -> bool {
             | "review.base-dependencies"
             | "review.changed-paths"
             | "review.compare-views"
+            | "review.capture-side"
             | "review.resource-graph"
             | "review.css-analysis"
             | "review.capture"
@@ -164,7 +167,8 @@ impl Timings {
         for (key, value) in &span.fields.values {
             record[key] = value.clone();
         }
-        if event == "counts" && span.stage == "review.compare-views" {
+        if event == "counts" && matches!(span.stage, "review.compare-views" | "review.capture-side")
+        {
             for (key, value) in &span.fields.counts {
                 record[key] = value.clone();
             }
@@ -263,7 +267,7 @@ where
             }
         }
         if timing.stage == "serve.background"
-            || (timing.stage == "review.compare-views"
+            || (matches!(timing.stage, "review.compare-views" | "review.capture-side")
                 && timing.fields.counts.contains_key("views"))
         {
             self.emit(&timing, "counts");
@@ -271,6 +275,10 @@ where
         self.emit(&timing, "end");
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/capture_trace_tests.rs"]
+mod capture_trace_tests;
 
 #[cfg(test)]
 #[path = "_tests_/serve_trace_tests.rs"]

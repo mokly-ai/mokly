@@ -6,9 +6,10 @@
  * keeps the last valid preview, and a newer edit replaces a held render.
  */
 
-import { expect, type Page, type Route } from "@playwright/test";
+import { expect, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { frameTexts, openProps, showProps } from "./live_props.js";
 import {
   closeServe,
   forwardServe,
@@ -17,32 +18,6 @@ import {
   serveLiveCatalogue,
 } from "./live_shell_fixture.js";
 import { responseFailure } from "./shell_error_allowances.js";
-
-/** The text that every stage frame shows, read through the parent page. */
-function frameTexts(page: Page): Promise<string[]> {
-  return page.evaluate(() =>
-    [...document.querySelectorAll<HTMLIFrameElement>("#mb-main iframe")].map(
-      (frame) => frame.contentDocument?.body?.innerText ?? "",
-    ),
-  );
-}
-
-/** Show the Props panel; a click on the selected tab would close it. */
-async function showProps(page: Page) {
-  const tab = page.getByRole("tab", { name: "Props" });
-  await expect(tab).toBeVisible();
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  return page.getByRole("tabpanel", { name: "Props" });
-}
-
-/** Open the card's Props panel; `editable` waits for the live descriptor. */
-async function openProps(page: Page, url: string, editable = true) {
-  await page.goto(`${url}/view/card/`);
-  const props = await showProps(page);
-  if (editable)
-    await expect(props.getByRole("textbox", { name: "label" })).toBeEditable();
-  return props;
-}
 
 for (const hostname of ["127.0.0.1", "localhost"])
   test(`${hostname}: an edit through a forwarded port renders, and Reset restores the saved props`, async ({
@@ -135,7 +110,7 @@ test("fields stay read-only until the live descriptor installs", async ({
       await released;
       await route.continue();
     });
-    const props = await openProps(page, server.url, false);
+    const props = await openProps(page, server.url, { editable: false });
     const label = props.getByRole("textbox", { name: "label" });
     await expect(props.getByText("Preparing to edit props…")).toBeVisible();
     await expect(label).toHaveValue("Hello");
@@ -164,7 +139,7 @@ test("a failed live descriptor offers Try again, which installs it", async ({
     await page.route("**/mokly-viewer/live.json", (route) =>
       failing ? route.fulfill({ status: 503, body: "" }) : route.continue(),
     );
-    const props = await openProps(page, server.url, false);
+    const props = await openProps(page, server.url, { editable: false });
     const label = props.getByRole("textbox", { name: "label" });
     await expect(props.getByText("Editing could not start.")).toBeVisible();
     await expect(label).not.toBeEditable();

@@ -51,8 +51,9 @@ screens, so a component rendered with the same props on many screens renders
 once.
 
 Rendered documents live in the render cache: process memory, bounded by bytes,
-evicted least recently used. Serve, Changes, and `build` read the cache; an
-evicted document renders again from its sources on the next request. The
+evicted least recently used. Serve and `build` read it. Changes captures the
+base within 256 MiB and reads the head from this cache. Base capture misses use
+the pinned source; evicted head documents render again on the head root. The
 base-side extraction cache and the dependency install cache live in the
 operating system's cache directory under a key derived from the repository
 path, each with its own byte bound; the terminal names that directory, and

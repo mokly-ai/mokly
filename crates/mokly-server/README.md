@@ -88,6 +88,8 @@ routes capture the removed entry from the same pinned base. Captures preserve
 original document bytes. `FrozenResources` retains document and resource hashes.
 It rejects changed public bytes or an inconsistent document after cache eviction
 before a capture can install a mixed generation.
+Its `comparison_capture` method returns `None` so capture creation and smaller
+budgets cannot bypass these checks through the wrapped generation.
 
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after

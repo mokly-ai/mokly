@@ -122,8 +122,9 @@ Grouped component records keep the views that belong to each component side.
 
 Both sides are the composed documents of the
 [comparison contract's sides](./mokly-comparison.md#sides), rendered by the
-current Mokly version and read from the render cache with their real bytes;
-ownership regions are node annotations of those trees. The base is the merge base of `HEAD` and the configured base; staged,
+current Mokly version with their real bytes. Head views use the bounded render
+cache; base views use the bounded capture or pinned-source fallback. Ownership
+regions are node annotations of those trees. The base is the merge base of `HEAD` and the configured base; staged,
 unstaged, and untracked edits participate on the head side. No command checks
 the base commit out. Cross-kind path reuse and moves follow the
 [comparison engine](./mokly-changes-serving.md#comparison-engine) and the
