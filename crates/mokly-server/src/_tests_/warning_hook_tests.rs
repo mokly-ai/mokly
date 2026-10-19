@@ -81,6 +81,7 @@ fn build_warning_hook_delivers_cached_demand_and_background_records_without_chan
             Arc::new(generation),
             Arc::new(Unimock::new(())),
             Arc::new(sink),
+            Arc::new(Unimock::new(())),
         );
         if background {
             documents.background(ROUTE).unwrap();
@@ -116,6 +117,7 @@ fn build_warning_hook_flushes_retained_records_before_each_render_failure_return
             Arc::new(mock.clone()),
             Arc::new(Unimock::new(())),
             Arc::new(mock),
+            Arc::new(Unimock::new(())),
         );
         if background {
             assert!(documents.background(ROUTE).is_err());
@@ -157,6 +159,7 @@ fn build_warning_transient_hook_keeps_warnings_out_of_preview_files_and_errors()
             Arc::new(mock.clone()),
             Arc::new(Unimock::new(())),
             Arc::new(mock),
+            Arc::new(Unimock::new(())),
         );
         let result = documents.preview(ROUTE, &Default::default());
         if fails {
@@ -197,6 +200,7 @@ fn build_warning_preview_resource_failure_keeps_the_rendered_records() {
         Arc::new(mock.clone()),
         Arc::new(mock.clone()),
         Arc::new(mock),
+        Arc::new(Unimock::new(())),
     );
     assert!(documents.preview(ROUTE, &Default::default()).is_err());
 }

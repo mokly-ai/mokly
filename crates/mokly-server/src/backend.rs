@@ -10,6 +10,7 @@ use mokly_model::data::Props;
 use mokly_model::namespace::{GENERATED_DIRECTORY, generated};
 use mokly_model::usage::CatalogueUsage;
 
+use crate::asset_streams::AssetStreams;
 use crate::assets::{File, content_type};
 use crate::error::{Result, ServerError};
 use crate::preview::MAX_BYTES;
@@ -31,6 +32,10 @@ pub struct PreviewDocument {
 pub trait Documents: Send + Sync {
     /// Read a declared generated document or resource.
     fn generated(&self, route: &str) -> Result<Option<File>>;
+    /// Verify and spool a generated opaque asset before streaming its response.
+    fn asset(&self, _route: &str) -> Result<Option<OpenedFile>> {
+        Ok(None)
+    }
     /// Render one background document without copying its response bytes.
     fn background(&self, route: &str) -> Result<()>;
     /// Completed usage, retained separately from evictable document trees.
@@ -47,6 +52,7 @@ pub struct GraphDocuments {
     pub generation: Arc<dyn RenderGeneration>,
     /// Confined working-tree reads, separate from captured source bytes.
     pub public: Arc<dyn PublicReader>,
+    streams: Arc<dyn AssetStreams>,
     warnings: Arc<dyn RenderWarnings>,
     locks: BTreeMap<String, Mutex<Option<CatalogueUsage>>>,
 }
@@ -57,6 +63,7 @@ impl GraphDocuments {
         generation: Arc<dyn RenderGeneration>,
         public: Arc<dyn PublicReader>,
         warnings: Arc<dyn RenderWarnings>,
+        streams: Arc<dyn AssetStreams>,
     ) -> Self {
         let locks = generation
             .plans()
@@ -66,6 +73,7 @@ impl GraphDocuments {
         Self {
             generation,
             public,
+            streams,
             warnings,
             locks,
         }
@@ -113,14 +121,34 @@ impl GraphDocuments {
                 content_type: rendered.artifact.content_type.clone(),
             },
         );
+        let mut remaining = MAX_BYTES
+            .checked_sub(files.values().map(|file| file.bytes.len()).sum())
+            .ok_or(ServerError::PreviewCapacity)?;
         for resource in rendered
             .closure
             .edges
             .keys()
             .filter_map(|path| path.strip_prefix(&format!("static/{GENERATED_DIRECTORY}/")))
         {
-            match self.generation.resource(resource) {
+            let bytes = if resource.starts_with("assets/") {
+                match self.generation.open_asset(resource) {
+                    Ok(Some(mut asset)) => {
+                        if asset.length() > remaining as u64 {
+                            return Err(ServerError::PreviewCapacity);
+                        }
+                        asset.read_bytes().map(Some)
+                    }
+                    Ok(None) => self.generation.resource(resource),
+                    Err(source) => return Err(ServerError::Render { source }),
+                }
+            } else {
+                self.generation.resource(resource)
+            };
+            match bytes {
                 Ok(Some(bytes)) => {
+                    remaining = remaining
+                        .checked_sub(bytes.len())
+                        .ok_or(ServerError::PreviewCapacity)?;
                     files.insert(
                         generated(resource),
                         File {
@@ -133,9 +161,6 @@ impl GraphDocuments {
                 Err(source) => return Err(ServerError::Render { source }),
             }
         }
-        let mut remaining = MAX_BYTES
-            .checked_sub(files.values().map(|file| file.bytes.len()).sum())
-            .ok_or(ServerError::PreviewCapacity)?;
         for path in rendered.closure.files {
             let Some(file) = self.public.read(&path, remaining)? else {
                 return Err(ServerError::PreviewResource);
@@ -161,6 +186,17 @@ impl GraphDocuments {
 }
 
 impl Documents for GraphDocuments {
+    fn asset(&self, route: &str) -> Result<Option<OpenedFile>> {
+        let mut asset = match self.generation.open_asset(route) {
+            Ok(Some(asset)) => asset,
+            Ok(None) => return Ok(None),
+            Err(source) => return Err(ServerError::Render { source }),
+        };
+        self.streams
+            .capture(asset.as_mut(), &content_type(route))
+            .map(Some)
+    }
+
     fn generated(&self, route: &str) -> Result<Option<File>> {
         if self.locks.contains_key(route) {
             return Ok(self.render(route)?.map(|artifact| File {

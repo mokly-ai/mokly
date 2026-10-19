@@ -115,6 +115,20 @@ fences pending selected captures; shutdown cancels and drains all captures.
 document. Public authored reads require both reached closure membership and a
 fresh policy check. `ConfinedReader` opens each directory and the final regular
 file without following symlinks. Routes never fall back to repository files.
+Generated opaque assets use `dyn AssetStreams`. It captures the generation's
+source stream into an unnamed temporary file and verifies its digest before
+headers or payload reach the browser. GET streams that checked file; HEAD
+sends its checked length without a body. The response owns the file until it
+closes. A mismatch fails delivery. Watched Serve asks the CLI's coalesced
+rebuild queue for a new generation. With `--no-watch`, the generation stays
+fixed and the CLI names the asset and tells the user to restart Serve or use
+watching.
+Each GET and HEAD reads, hashes, and captures the whole opaque asset. Requests
+for the same route do not share a capture. Worker parallelism bounds active
+captures, and the opened length bounds each file. The worker permit ends
+after capture; the response keeps its file until it closes. Live response
+files have no aggregate byte bound. The OS temporary directory can use
+`tmpfs`, whose storage consumes memory outside process RSS measurements.
 The built viewer's browser manifest lists the only client modules served.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning

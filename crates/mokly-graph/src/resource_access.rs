@@ -9,7 +9,15 @@ use crate::session::Session;
 
 impl Session {
     pub(crate) fn digest_resource(&self, route: &str) -> Result<Option<String>> {
-        if route.starts_with("static/mokly-generated/") {
+        if let Some(generated) = route.strip_prefix("static/mokly-generated/") {
+            if let Some(asset) = self
+                .state
+                .resources
+                .get(generated)
+                .and_then(|plan| plan.asset.as_ref())
+            {
+                return Ok(Some(asset.digest.clone()));
+            }
             return Ok(self.read_resource(route)?.as_deref().map(digest));
         }
         let path = route

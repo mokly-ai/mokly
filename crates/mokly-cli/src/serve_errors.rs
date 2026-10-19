@@ -1,5 +1,7 @@
 //! Typed Serve failures use user diagnostics and matching recovery guidance.
 
+use std::path::Path;
+
 use mokly_model::error::ModelError;
 use mokly_model::readers::ReadError;
 use mokly_server::error::{InternalError, ServerError};
@@ -10,6 +12,16 @@ use crate::redaction::Redactor;
 use crate::{build_output, changes_diagnostics};
 
 const METADATA_TOO_LARGE: &str = "Comparison data exceeds the 64 MiB limit.";
+
+/// A fixed Serve snapshot needs an explicit restart after its asset source changes.
+pub fn snapshot_asset_changed(style: &Style, path: &Path, redactor: &Redactor) -> String {
+    style.error_with_recovery(
+        Code::BuildInvalid,
+        &format!("Source changed during delivery: {}.", path.display()),
+        "Restart Serve or use watching.",
+        redactor,
+    )
+}
 
 /// Format a server failure without library-specific error wrappers.
 pub fn failure(style: &Style, error: &ServerError, redactor: &Redactor) -> String {

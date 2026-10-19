@@ -7,7 +7,7 @@ The [comparison contract](./mokly-comparison.md) uses the following tree model.
 Comparison walks over rendered and canonical trees use explicit stacks.
 Canonical equality, move fingerprints, and destruction do not consume native
 stack space in proportion to rendered depth. This rule covers rendered trees.
-Authored-input parsing, props, schemas, and CSS keep their separate contracts.
+Authored-input parsing, props, schemas, and CSS follow their own contracts.
 
 Both sides of a view are the trees the core composed; a sidecar fragment is
 parsed by a spec-compliant HTML parser, with its markers as comment nodes,

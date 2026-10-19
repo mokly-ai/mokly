@@ -8,6 +8,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_model::output::validation::digest;
 use mokly_source_interface::error;
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
@@ -71,6 +72,18 @@ impl SourceTree for CapturedTree {
             .entry(path.into())
             .or_insert_with(|| Observation::Value(digest(&bytes)));
         Ok(bytes)
+    }
+    fn open_stream(&self, path: &Path) -> error::Result<Box<dyn SourceStream>> {
+        self.snapshot.open_stream(path)
+    }
+    fn digest_unretained(&self, path: &Path) -> error::Result<String> {
+        let hash = self.snapshot.digest_unretained(path);
+        self.reads
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .entry(path.into())
+            .or_insert_with(|| Observation::from(&hash));
+        hash
     }
     fn digest(&self, path: &Path) -> error::Result<String> {
         let hash = self.snapshot.digest(path);

@@ -8,6 +8,8 @@ publish = false
 
 
 [dependencies]
+cap-fs-ext = "4.0.3"
+cap-std = "4.0.3"
 dunce = "1.0.5"
 globset = "0.4.20"
 html5gum = "0.8.4"

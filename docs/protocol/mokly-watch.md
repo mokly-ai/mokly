@@ -52,7 +52,7 @@ stylesheet bundle survives:
   never rebundles.
 - An edit to a configured or imported stylesheet, or to a PostCSS dependency,
   recomputes the stylesheet bundle. Documents depend on its emitted CSS and
-  generated asset bytes. Equal output keeps their document keys.
+  generated asset digests. Equal output keeps their document keys.
 - An edit to a referenced resource recomputes the documents that reference
   it and clears their resource evidence.
 - A configuration change reloads the configuration under the

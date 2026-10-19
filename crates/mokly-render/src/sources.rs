@@ -7,6 +7,7 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::ancestor_roots::dependency_directory;
 use mokly_source_interface::error::Result;
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::dependency_usage::DependencyUsage;
@@ -35,6 +36,12 @@ pub(crate) struct LeasedTree {
 impl SourceTree for LeasedTree {
     fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
         self.tree.prefetch(paths)
+    }
+    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
+        self.tree.open_stream(path)
+    }
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        self.tree.digest_unretained(path)
     }
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.tree.read_public(path)
@@ -176,6 +183,20 @@ impl SourceTree for SideTree {
             self.dependencies.prefetch(&dependencies)?;
         }
         Ok(())
+    }
+    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
+        let (tree, physical) = self.selected(path)?;
+        let source = tree
+            .project(&physical)?
+            .map_or(physical, |node| node.identity);
+        tree.open_stream(&source)
+    }
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        let (tree, physical) = self.selected(path)?;
+        let source = tree
+            .project(&physical)?
+            .map_or(physical, |node| node.identity);
+        tree.digest_unretained(&source)
     }
     fn digest(&self, path: &Path) -> Result<String> {
         let (tree, physical) = self.selected(path)?;
