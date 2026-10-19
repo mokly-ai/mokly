@@ -1333,6 +1333,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         capture creation and preserve advertised historical generation URLs.
         Compile the on-demand matrix without executing it.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
+- [x] Keep a view that exists on one side out of implementation impact when
+      its entry has both sides; adding Dark to a light-only catalogue made
+      every build and Serve classification invalid.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -1378,15 +1381,17 @@ Tags: ui
       comparison scroll regions, retained focus, and stylesheet Details.
   - [ ] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
-  - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
+  - [x] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
-  - [ ] Port the moved-entry cases with the shared moved fixtures in the
+  - [x] Port the moved-entry cases with the shared moved fixtures in the
         branch-point copy and `serve_comparison_test.ts`.
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [ ] Port the cases that need an embedded viewer host through both frame
         adapters; `.context/rust-rebuild/delegation/m7/sweep-overrides-comparisons.json`
         names each row.
+    - [ ] Register the eleven moved-entry viewer cases on that host once it
+          accepts the branch copy; the moved cases modules take any `test`.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
