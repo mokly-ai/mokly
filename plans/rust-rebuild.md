@@ -1898,6 +1898,11 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - F2 item 2: choose the canonical consumer for Before variant evidence when
+    another kind reuses its donor parent's path. Severity Medium, effort
+    Medium. Recommended: B, use the resolved variant when its original parent
+    has no destination, retaining original evidence paths. The spec does not
+    define this fallback. Evidence: `.context/f2/item-2-decision.md`.
   - [ ] Decide whether extglob-shaped stylesheet matches need a warning
         (M9 review 10 finding 5B, user item 54). Keep the migration release note;
         add no diagnostic before approval.
