@@ -2125,6 +2125,7 @@ name = "mokly-compare"
 version = "0.14.0"
 dependencies = [
  "directories",
+ "flate2",
  "mokly-catalogue",
  "mokly-css",
  "mokly-git",
