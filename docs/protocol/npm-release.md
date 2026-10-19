@@ -87,6 +87,8 @@ uses its 6-vCPU tier. The one native-build exception is `darwin-x64` on
 GitHub-hosted `macos-26-intel`, with `actions/checkout`; the other build rows
 use Blacksmith checkout. A build refuses a different host OS or architecture.
 Native jobs install npm dependencies with lifecycle scripts disabled.
+Each native release job has a 60-minute hang guard. It must allow at least
+three times the job's typical duration, including setup and builds.
 
 The publish job downloads the five archives, verifies that each archive's
 version equals the CLI version and that its inventory holds exactly the binary
@@ -173,7 +175,7 @@ exercise pending states and command-to-preview timings under the
 
 ## Continuous Integration
 
-The hosted job graph, trusted runtime profiles, checkout ownership, 30-minute
+The hosted job graph, trusted runtime profiles, checkout ownership, job
 timeouts, and stable branch-rule status follow the
 [CI workflow graph contract](./ci-workflow.md). Suite ownership and report
 completeness follow the [CI verification contract](./ci-verification.md).

@@ -93,7 +93,7 @@ jobs:
     if: always() && needs.select-release.result == 'success' && needs.select-release.outputs.publish_ref != '' && needs.select-release.outputs.artifact_run_id == ''
     needs: [select-release]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
