@@ -13,6 +13,24 @@ export function frameTexts(page: Page): Promise<string[]> {
   );
 }
 
+/** The URL and text of one viewport's stage frame, read through the page. */
+export function frameDocument(page: Page, viewport: "desktop" | "mobile") {
+  return page
+    .locator(`#mb-main iframe[data-workspace-frame="${viewport}"]`)
+    .evaluate((frame: HTMLIFrameElement) => ({
+      url: frame.contentDocument?.URL ?? "",
+      text: frame.contentDocument?.body?.innerText ?? "",
+    }));
+}
+
+/** The text of one viewport's stage frame. */
+export async function frameText(
+  page: Page,
+  viewport: "desktop" | "mobile",
+): Promise<string> {
+  return (await frameDocument(page, viewport)).text;
+}
+
 /** Show the Props panel; a click on the selected tab would close it. */
 export async function showProps(page: Page) {
   const tab = page.getByRole("tab", { name: "Props" });
