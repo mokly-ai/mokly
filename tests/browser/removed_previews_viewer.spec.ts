@@ -87,10 +87,15 @@ for (const adapter of ["same-origin", "cross"] as const) {
       ),
     ).toEqual([]);
     expect(await probe(page, "frameMessages")).toEqual([]);
-    expect(await probe(page, "viewerNavigations")).toContainEqual({
-      screenPath: comparisonPaths.removedScreen,
-      snapshotId: snapshotOf(index, comparisonPaths.removedScreen),
-    });
+    // The committed selection announces itself exactly once, also after the
+    // next rendering updates.
+    await passRenderingUpdates(page);
+    expect(await probe(page, "viewerNavigations")).toEqual([
+      {
+        screenPath: comparisonPaths.removedScreen,
+        snapshotId: snapshotOf(index, comparisonPaths.removedScreen),
+      },
+    ]);
   });
 
   test(`a previous version stays inert through the ${adapter} adapter`, async ({
