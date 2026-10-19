@@ -1425,7 +1425,7 @@ Tags: ui
 - [ ] Run the viewer suite against Milestone 9 output.
   - [x] Run the comparison UI in Chrome against `mokly build --base` output
         and a removed-entry fixture, and fix the viewer defects that it finds.
-  - [ ] Settle how Details shows the review reasons, including
+  - [x] Settle how Details shows the review reasons, including
         `implementation`, before a comparison loads (report 18, decision D1).
     - [x] D1 spec correction, backend: carry `reasons` in the review v8 shape at the
           detail root for ready included current and removed entries, independent
@@ -1442,9 +1442,20 @@ Tags: ui
           including `implementation`, in `mokly-component-workspace-design.md`.
           Whether a reader also rejects a detail whose reasons disagree with
           its index record waits for the round's decision.
-    - [ ] Depict the reason sentences in the component explorer design, whose
-          Details still read "Rendered output changed" and depict no
-          `implementation` reason, after the round's design decision.
+    - [x] Keep Details graceful: the viewer rejects no detail whose reasons
+          disagree with its index record, so details written before reasons
+          keep loading, and drops a reason that contradicts its record
+          instead. Test every reason sentence and a removed snapshot.
+          Decisions 6 A, 1 B, and 2 A of the D1 round, approved by the
+          orchestrator on 2026-10-19.
+    - [x] Depict one sentence per reason with the protocol copy in the
+          component explorer and removed-screen designs. The `style-changed`
+          fixture of Action's parent carries the `implementation` reason,
+          because every other changed comparison fixture routes a variant.
+          Decision 4 A, approved by the orchestrator on 2026-10-19.
+    - Pages, documents, and use cases show no reason sentences until a
+      design exists. Decision 7 A, approved by the orchestrator on
+      2026-10-19.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1456,6 +1467,9 @@ Tags: ui
         branch-point copy and `serve_comparison_test.ts`.
   - [x] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
+  - The M10 D1 delegate owns the branch-point comparison UI and the
+    light-only document rows. Decision 8 A, approved by the orchestrator on
+    2026-10-19.
   - [x] Port the cases that need an embedded viewer host through both frame
         adapters; `sweep-overrides-comparisons.json` and
         `sweep-overrides-comparisons-3.json` in
@@ -1508,6 +1522,10 @@ small comparison copies, the round 25 follow-ups with the component light-only
 note fix, the sweep inputs, and the merge decisions for the rebuild tip
 `ef7458f2` and the delivery fixtures `f4829d8d`:
 `.context/rust-rebuild/delegation/m10-d1/report-1.md`.
+The D1 round 2 decisions (1 B, 2 A, 3 B, 4 A, 5 A), the reason sentences in
+the designs, the comparison suites list in the browser test guide, and the
+merge of the rebuild tip `3d2d1535`:
+`.context/rust-rebuild/delegation/m10-d1/report-2.md`.
 
 - [ ] Commit.
 
