@@ -14,9 +14,11 @@ use crate::pool_options::Launch;
 use crate::process_clock::Wait;
 use crate::process_completion::{ProcessCompletion, complete};
 use crate::process_control::ProcessControl;
-use crate::process_io::{Reaper, read_diagnostics, read_frames, write_frames};
+use crate::process_io::{read_diagnostics, read_frames, write_frames};
 use crate::process_memory::MemoryFactory;
 use crate::process_parent::{ParentSpawn, ParentSpawner};
+use crate::process_reaper::Reaper;
+use crate::process_startup::StartupTiming;
 use crate::process_transport::{Deadlines, PipeTransport};
 use crate::process_worker::{ForwardEvents, ProcessWorker};
 use crate::workers::{Diagnostics, Spawned, WorkerControl, WorkerFactory};
@@ -90,8 +92,9 @@ impl WorkerFactory for NodeFactory {
         if let Err(source) = self.groups.configure(&mut command) {
             return Err(InternalError::Platform { source }.into());
         }
+        let startup = Arc::new(StartupTiming::default());
         let mut child = match self.parent.spawn(command) {
-            Ok(child) => Reaper(child),
+            Ok(child) => Reaper(child, Some(Arc::clone(&startup))),
             Err(_) => {
                 return Err(Error::Unavailable {
                     part: launch.node.display().to_string(),
@@ -108,7 +111,9 @@ impl WorkerFactory for NodeFactory {
             child.0.stdout.take(),
             child.0.stderr.take(),
         ) else {
-            let _ = group.kill();
+            let span = startup.stop();
+            let _scope = span.enter();
+            startup.observe(group.kill().is_ok());
             return Err(InternalError::Synchronization.into());
         };
         let (outgoing, outgoing_frames) = mpsc::sync_channel(2);
@@ -121,6 +126,7 @@ impl WorkerFactory for NodeFactory {
             exited: Mutex::new(exited),
             drained: Mutex::new(diagnostics_done),
             clock: Arc::clone(&self.clock),
+            startup: Arc::downgrade(&startup),
         });
         let diagnostics = Arc::clone(&self.diagnostics);
         let timings = self.timings;
@@ -132,6 +138,7 @@ impl WorkerFactory for NodeFactory {
                 let _ = drained.send(());
             }),
             Box::new(move || {
+                child.started();
                 complete(&mut ProcessCompletion { child }, exited_tx);
             }),
         ];
@@ -140,6 +147,8 @@ impl WorkerFactory for NodeFactory {
                 .name("mokly-sidecar-pipe".to_owned())
                 .spawn(task)
             {
+                let span = startup.stop();
+                let _scope = span.enter();
                 control.kill()?;
                 return Err(InternalError::Io { source }.into());
             }
@@ -160,6 +169,7 @@ impl WorkerFactory for NodeFactory {
             launch.version.clone(),
         )
         .with_timings(self.timings);
+        startup.hand_off();
         Ok(Spawned {
             worker: Box::new(ProcessWorker {
                 diagnostics: self.diagnostics.clone(),

@@ -240,10 +240,12 @@ from validated index and detail records. `comparison_views.tsx` renders
 React-owned frame chrome around the snapshots from validated comparison
 metadata.
 
-`workspace_evidence_data.ts` merges an entry's own reasons, the selected
+`workspace_evidence_data.ts` merges an entry's own reasons, which
+`publicWorkspace` reads from the routed entry detail's `reasons`, the selected
 screen's or saved view's projected and live view evidence, and a loaded
 comparison by path and rule key, so Current and a loaded comparison show the
-same facts once. `workspace_stylesheet_evidence.ts` turns that evidence into
+same facts once. `workspace_evidence_merge.ts` clears held reasons that a newer
+publication no longer carries. `workspace_stylesheet_evidence.ts` turns that evidence into
 one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `workspace_stylesheet_list.tsx` renders each file once with its

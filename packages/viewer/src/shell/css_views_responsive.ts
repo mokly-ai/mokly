@@ -6,6 +6,9 @@ export const CSS_VIEWS_RESPONSIVE = `.mbk-frame-scheme-note {
 
 body[data-mokly-color-scheme="dark"]
   .mbk-frame-wrap[data-color-scheme-fallback]
+  .mbk-frame-scheme-note,
+body[data-mokly-color-scheme="dark"]
+  .mbk-component-canvas[data-color-scheme-fallback]
   .mbk-frame-scheme-note {
   display: inline;
 }

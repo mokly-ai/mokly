@@ -1414,6 +1414,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         exclusions on views that link `shared-1.css`. Classify every differing
         field in both completed results before accepting the artifacts.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -1448,6 +1449,15 @@ Tags: ui
           against ready included membership, and use UTF-16 source reason order.
           The orchestrator confirms that changed deployment identities are required.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
+    - [x] D1 viewer: read `reasons` strictly with their shape and order; show
+          them in Details for a listed record before a comparison loads, once
+          beside a loaded comparison; state the sentence of each reason kind,
+          including `implementation`, in `mokly-component-workspace-design.md`.
+          Whether a reader also rejects a detail whose reasons disagree with
+          its index record waits for the round's decision.
+    - [ ] Depict the reason sentences in the component explorer design, whose
+          Details still read "Rendered output changed" and depict no
+          `implementation` reason, after the round's design decision.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1457,7 +1467,7 @@ Tags: ui
         background classification and on-demand comparisons in Serve.
   - [ ] Port the moved-entry cases with the shared moved fixtures in the
         branch-point copy and `serve_comparison_test.ts`.
-  - [ ] Port the two D1 cases, Details before a comparison loads and the
+  - [x] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [x] Port the cases that need an embedded viewer host through both frame
         adapters; `sweep-overrides-comparisons.json` and
@@ -1505,6 +1515,12 @@ and scroll fixture groups, the review 12 fixes, the sweep inputs, and the rows
 that remain: `.context/rust-rebuild/delegation/m7/report-25.md`. Merge
 decisions for the rebuild tip `a3cc0828`:
 `.context/rust-rebuild/delegation/m7/merge-decisions-round25.md`.
+The D1 viewer reasons, the two D1 rows and the `implementation` case, the
+light-only document, imported CSS, HEAD-baseline, and branch-point rows on
+small comparison copies, the round 25 follow-ups with the component light-only
+note fix, the sweep inputs, and the merge decisions for the rebuild tip
+`ef7458f2` and the delivery fixtures `f4829d8d`:
+`.context/rust-rebuild/delegation/m10-d1/report-1.md`.
 
 - [ ] Commit.
 
@@ -1786,9 +1802,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       stream before shutdown, clarify replacement timing, redact forwarded
       records, separate partial stderr lines, and test UTF-8 and dependency errors.
       Evidence: `.context/rust-rebuild/delegation/m12-static/report-12.md`.
-- [ ] Measure the old process's stop inside replacement timing after defining
+- [x] Measure the old process's stop inside replacement timing after defining
       span ownership across separate stop and spawn requests (M12 review 8,
       finding 3B; changes-9 authorizes the documented 3A fallback for this round).
+      Approved option A on 2026-10-19 keeps each stop and spawn under its own caller.
+      Evidence: M14 sidecar stop timing final report, `.context/m14-stop/report.md`.
+
+- [x] Include partial factory startup cleanup in stop timing without changing
+      lifecycle calls or errors. Apply stop-timing review finding 1, option B.
+      Evidence: `.context/m14-stop/review.md` and `.context/m14-stop/report.md`.
 
 - [x] Apply M12 review 7 findings 2 to 6: count-record exclusivity, dependency
       span scope and tier tests, portable cache fixtures, and receiver cleanup.
@@ -1814,6 +1836,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       or supply immutable generation inputs. Paths and rereads after a plugin
       runs cannot establish the consumed bytes. Plugin file dependencies outside
       roots and bundle modules retain an accepted late baseline until this work.
+  - [x] Compare read observers with immutable PostCSS inputs, including native
+        plugins, child processes, descriptors, cost, and supported platforms.
+  - [ ] Decide M14-PC1: staged observed-read digests with explicit opaque gaps,
+        enforced immutable inputs, or continued deferral. No runtime change is
+        selected; the full consumed-byte requirement remains open.
+        Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
+        Evidence: `.context/rust-rebuild/m14-postcss-digests/` and
+        `.context/rust-rebuild/delegation/m9-compare/report-16.md`.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1835,6 +1865,24 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         optimized release build; HTML stays below 5,000 ms.
     - [ ] Enforce variant-specific startup acceptance on a verified release
           binary and repeat the large React startup measurement.
+          Merge preservation: `.context/m14-round3/merge-decisions.md`.
+    - [x] Measure optimized startup and profile core, sidecar, and serial work.
+          The release baseline at `9257b131` used the same fixture, two sidecars,
+          default deadlines, and 6 GiB RSS stop. Cold/warm usable startup:
+          24.838/25.858 s. Core preparation used one CPU; sidecars were idle.
+          Evidence: `.context/m14-round2/baseline/`.
+    - [x] Share routing inventories and remove repeated stylesheet-root walks.
+          Preserve routing-key snapshots, stylesheet order, and result checks.
+          Operation counts cover both input sizes. The final release source
+          tree `9ad26d863edb4eb7cfe3f0e8178c696c3d005c04` took 10.551/10.538 s
+          cold/warm. Core preparation fell to 0.260/0.177 s; stylesheet-root
+          discovery took 2 ms. Compilation still took 7.491/7.019 s.
+          Both browser checks passed; both startup budget checks failed.
+          Evidence: `.context/m14-round2/final/`.
+    - [x] Settle the remaining startup approach with decision 57 C on
+          2026-10-19. Keep complete readiness and approve React startup below
+          15,000 ms on the release build. Defer compilation redesign to the
+          non-blocking follow-up.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
@@ -1964,6 +2012,7 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
 Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
+Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -1989,6 +2038,13 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
         test command in the CLI README and preparation mechanics in fixture
         comments. Retain the default-suite requirement in the protocol.
         Evidence: `.context/integration-4/`.
+  - [x] Fix integration batch 4 review finding 1: select comparison flags
+        through one helper. Builds with Changes disabled omit the pinned
+        base. Default builds and Serve retain the fixture's pinned base.
+        Evidence: `.context/integration-4/review-fix/`.
+  - [x] Split core timing stage selection after integration batch 5 combines
+        stop timing and startup stages. Retain every stage and the file cap.
+        Evidence: `.context/integration-5/length-before.log` and `targeted.log`.
   - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
     another entry kind reuses the donor path needs a requirement decision.
     Separate branch.

@@ -26,6 +26,10 @@ export const scenarios: readonly Scenario[] = [
   "changes",
   "watch",
 ];
+function comparisonArguments(baseline: string, enabled: boolean): string[] {
+  return enabled ? ["--base", baseline] : ["--no-changes"];
+}
+
 export async function benchmark(
   fixture: PreparedFixture,
   selected: readonly Scenario[],
@@ -49,8 +53,6 @@ export async function benchmark(
     fixture.configPath,
     "--sidecars",
     String(sidecars),
-    "--base",
-    fixture.baseline,
   ];
   const results: object[] = [];
   const report = {
@@ -88,7 +90,10 @@ export async function benchmark(
             "build",
             ...common,
             "--strict",
-            ...(options.buildChanges === false ? ["--no-changes"] : []),
+            ...comparisonArguments(
+              fixture.baseline,
+              options.buildChanges !== false,
+            ),
           ],
           fixture.root,
           memoryStopKiB,
@@ -129,7 +134,14 @@ export async function benchmark(
           : ["cold", "warm"]) {
           const beginning = performance.now();
           const running = start(
-            [cli, "serve", ...common, "--port", "0"],
+            [
+              cli,
+              "serve",
+              ...common,
+              ...comparisonArguments(fixture.baseline, true),
+              "--port",
+              "0",
+            ],
             fixture.root,
             memoryStopKiB,
             options.sidecarTimeoutMs,

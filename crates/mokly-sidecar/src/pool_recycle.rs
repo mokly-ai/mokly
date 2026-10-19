@@ -3,6 +3,7 @@
 use crate::error::Result;
 use crate::pool::Pool;
 use crate::pool_state::Slot;
+use crate::pool_timing::Reason;
 
 impl Pool {
     pub(super) fn recycle(&self, index: usize, slot: &mut Option<Slot>) -> Result<()> {
@@ -36,6 +37,13 @@ impl Pool {
         if current.renders < 500 && pressure.is_none() {
             return Ok(());
         }
+        let stopped = {
+            let mut state = self.lock()?;
+            state.replacement_reasons.insert(index, Reason::Recycle);
+            state.stopped
+        };
+        let span = (!stopped).then(|| Reason::Recycle.stop());
+        let _scope = span.as_ref().map(tracing::Span::enter);
         let drained = current.control.shutdown().and_then(|()| {
             current
                 .control
@@ -46,6 +54,8 @@ impl Pool {
             if let Err(error) = current.control.kill() {
                 tracing::warn!(%error, "sidecar recycle kill failed");
             }
+        } else if let Some(span) = &span {
+            span.record("status", "ok");
         }
         *slot = None;
         Ok(())
