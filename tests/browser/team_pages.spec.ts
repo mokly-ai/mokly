@@ -16,6 +16,14 @@ for (const width of [390, 1280]) {
     await expect(page.getByLabel("Viewport", { exact: true })).toHaveCount(0);
     for (const scheme of ["light", "dark"] as const) {
       await chooseScheme(page, scheme);
+      await expect(page.locator("body")).toHaveAttribute(
+        "data-mokly-color-scheme",
+        scheme,
+      );
+      await expect(element).toHaveAttribute(
+        "src",
+        /\/example\/team\/invitation\/index\.html$/u,
+      );
       await expectFrameSource(
         element,
         /\/example\/team\/invitation\/index\.html$/u,
