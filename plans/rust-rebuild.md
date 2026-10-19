@@ -1298,6 +1298,11 @@ Tags: ui
         and a removed-entry fixture, and fix the viewer defects that it finds.
   - [ ] Settle how Details shows the review reasons, including
         `implementation`, before a comparison loads (report 18, decision D1).
+    - [x] D1 spec correction, backend: carry the review v8 `reasons` at the
+          detail root for ready included current and removed entries, independent
+          of workspace readiness. Share the projection across static output and
+          Serve, clear stale reasons, and generate the additive v1 field.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-10.md`.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.

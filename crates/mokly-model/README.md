@@ -57,6 +57,8 @@ Ready component and view eligibility follows the same kind rules as the viewer,
 including removed component parents.
 Detail validation checks the current or historical fence, field placement
 by kind, and canonical tagged props in usage and input-change records.
+The optional detail-root `reasons` uses the review v8 reason shape and order.
+Ready included entries carry it even when their usage workspace is unavailable.
 `ReadError::Contract` carries a typed `ContractViolation`. Version failures
 print the supplied integer or explain its absence.
 

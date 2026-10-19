@@ -53,6 +53,7 @@ test(
           `${path.posix.dirname(built.index.comparisonUrl!)}/entries/${entry.path}.json`,
         );
         assert.equal(detail.workspace?.comparisonEligible, true);
+        assert.deepEqual(detail.reasons, [{ kind: "removed" }]);
         assert.ok(detail.views.every((view) => view.usage.status === "ready"));
       }
     } finally {

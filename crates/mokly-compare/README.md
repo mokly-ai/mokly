@@ -115,6 +115,8 @@ Historical runtime failures follow the typed policy in base preparation.
 one complete comparison. `projection_index::apply` projects the retained
 classification onto current or historical public records. The index must be
 from the same retained catalogue state, with every published record classified.
+`projection_detail::apply_evidence` supplies included entry reasons and resource
+evidence independently of workspace readiness for current and removed details.
 `projection_workspace::apply` joins ready usage with indexed affected links
 and caller-owned input changes. Both Serve and static output use these
 functions; neither changes the render bytes. An absent workspace stays absent

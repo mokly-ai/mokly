@@ -143,6 +143,9 @@ pub enum ContractViolation {
     /// Root resource evidence belongs only to pages.
     #[error("root resource evidence belongs only to pages")]
     DetailEvidence,
+    /// Detail review reasons must use the review's sorted unique order.
+    #[error("detail review reasons must use the review's sorted unique order")]
+    DetailReasons,
     /// Instance or slot key does not match its material preimage.
     #[error("invalid usage digest or local id")]
     UsageKey,

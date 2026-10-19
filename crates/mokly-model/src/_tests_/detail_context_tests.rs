@@ -42,6 +42,7 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
             })
             .collect(),
         workspace: None,
+        reasons: None,
         resource_evidence: None,
     };
     validate(&detail, &index).unwrap();

@@ -6,6 +6,7 @@ use ts_rs::TS;
 use crate::axes::{ColorScheme, EntryKind, Viewport};
 use crate::evidence::ViewEvidence;
 use crate::public_metadata::CatalogueIdentity;
+use crate::review::EntryChangeReason;
 use crate::usage::CatalogueUsage;
 use crate::wire_props::ComponentWireProps;
 
@@ -144,6 +145,10 @@ pub struct EntryDetailV1 {
     pub generation: Option<String>,
     /// Entry identity and optional historical snapshot.
     pub entry: DetailEntry,
+    /// Exact review reasons, present only for included entries while Changes is ready.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub reasons: Option<Vec<EntryChangeReason>>,
     /// Empty for pages, documents, and use cases.
     pub views: Vec<DetailView>,
     /// Page evidence, present when ready.

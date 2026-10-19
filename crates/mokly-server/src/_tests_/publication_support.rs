@@ -54,6 +54,7 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
                 resource_evidence: None,
             }],
             resource_evidence: None,
+            reasons: None,
             workspace: None,
         };
         routes.push(RenderRoute {

@@ -11,7 +11,7 @@ use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock};
 use mokly_html::{composition::Composed, parse};
 use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{CatalogueModel, EntryContent, ModelEntry};
-use mokly_model::review::{ReviewResultV8, ReviewState};
+use mokly_model::review::{EntryChangeReason, ReviewResultV8, ReviewState};
 use mokly_model::snapshot::{CatalogueChangeSnapshotV4, RemovedEntrySnapshot};
 use mokly_model::snapshot_records::{EntryRecord, RecordMetadata};
 use mokly_model::usage::CatalogueUsage;
@@ -118,7 +118,7 @@ pub(super) fn result_with(
             previous_path: None,
             state: ReviewState::Removed,
             included: true,
-            reasons: vec![],
+            reasons: vec![EntryChangeReason::Removed],
             documents: vec![],
         }],
         before,

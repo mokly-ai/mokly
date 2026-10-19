@@ -137,6 +137,10 @@ fn known_fields(input: &Value, encoded: &Value) -> bool {
 mod public_reader_tests;
 
 #[cfg(test)]
+#[path = "_tests_/detail_reasons_tests.rs"]
+mod detail_reasons_tests;
+
+#[cfg(test)]
 #[path = "_tests_/public_contract_tests.rs"]
 mod public_contract_tests;
 

@@ -23,6 +23,7 @@ holds no data. A completed on-demand render reaches the shell as a
 publication whose refreshed detail carries that view's usage as `ready`. A
 temporary prop preview of the component controls contract uses the usage
 records of its own render response and never enters a detail.
+An included entry's detail carries its review v8 `reasons` while Changes is ready, independently of workspace readiness.
 
 Document responses do not wait for evidence publication. One application-owned
 publisher coalesces completed routes, skips recorded routes and routes with no
