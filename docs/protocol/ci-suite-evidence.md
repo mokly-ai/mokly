@@ -156,8 +156,9 @@ or reuse another job's writable output.
 Every browser spec uses the automatic error fixture in `browser_test.ts`.
 It observes console errors and page errors in the default context, extra
 contexts, and popups, including pages closed by a test. The shared
-`expectedConsoleNotice` rule permits viewer sandbox notices and the recorder's
-exact `about:blank` script-denial message with an empty source location.
+`expectedConsoleNotice` rule permits viewer sandbox notices and the exact
+`about:blank` denial from Playwright's recorder or clock injection, with an
+empty or `about:blank` source location.
 A test that causes another error declares its kind and exact message pattern
 through `allowBrowserError` or `expectedBrowserErrors`. Console resource
 failures also require the exact resource URL. Sandbox denials, synthetic

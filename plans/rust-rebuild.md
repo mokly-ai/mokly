@@ -784,6 +784,11 @@ At completion React components, React screens, JavaScript pages, and
 Storybook stories render through the sidecar, and the example catalogue
 renders again.
 
+- [x] Apply browser review 7: exact affected destinations, isolated base
+      commits, semantic waits, and required console notices.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m8-browser/report-11.md`.
+      Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m8-browser/merge-decisions-3.md`.
+
 - [x] Replace the configured-renderer refusal in both Serve and `build` with
       the sidecar bundle's complete source inventory (Milestone 6 review, finding 13).
 - [x] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
@@ -893,11 +898,16 @@ renders again.
         on non-dropped rows.
   - [x] After the final viewer merge, reconcile comparison row ownership
         and regenerate the browser sweep with the prepared input fixes.
-  - [ ] Cover the remaining copied-file delivery cases in the browser sweep:
+  - [x] Cover the remaining copied-file delivery cases in the browser sweep:
         branch-point references, moved and removed previews, malformed
         comparison metadata, lazy first reads, immutable bytes, and Refresh
         request counts. Milestone 10 owns the
         remaining comparison UI checks, including frame color-scheme.
+  - [x] Apply browser review 6: comparison view-switch request counts,
+        copied affected references, misplaced Before-file rejection, moved
+        fixture shapes, semantic edit readiness, and exact blank-frame notices.
+        Evidence: `.context/rust-rebuild/delegation/m8-browser/report-10.md`.
+        Merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions-2.md`.
   - [ ] Add continuous `MOKLY_PLAYWRIGHT_FILE_DIR` runs in CI only after the
         user approves the new job. Include the private slot and variant file
         fixture and the design journeys checked by a manual run.
@@ -927,7 +937,7 @@ renders again.
         source.
   - [x] Port the review-base sentence while a detail loads, on the copied
         comparison output.
-  - [ ] Port the two cases that wait for the shared Serve Changes fixture:
+  - [ ] Port the two remaining cases on `tests/browser/serve_comparison_test.ts`:
         focus on an unchanged Usage link while a Changes completion is
         adopted, which needs a changed component with a consumer; and the
         design library component's Unmodified status after temporary edits
@@ -1045,6 +1055,7 @@ Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8
 
 Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
 Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
+Copied comparison delivery and the shared Serve fixture: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
 Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
 Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
@@ -1083,6 +1094,8 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
+- [ ] Index `Lookup` and build the projection's references on it, so one
+      branch-point lookup serves every shell.
 - [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
 - [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
@@ -1110,6 +1123,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Implement branch-point entry lookup and its shared verification cases:
       kind/case identity, accepted-pair precedence, removed destinations,
       counterparts, variant parents, stored titles, and generation isolation.
+- [x] Project affected Usage links to their evidence entries through moves
+      and removals, with kind isolation and distinct parent/variant destinations.
+      Keep canonical impact grouping unchanged.
+      Evidence: `.context/rust-rebuild/delegation/m8-browser/report-10.md`.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
@@ -1283,6 +1300,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       assertions. Keep the duplicate component-explorer cases in one suite.
   - [x] Add one native HTML fixture with five cases in four Serve Changes specs.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log`.
+  - [x] Supply a shared private Serve comparison fixture with a pinned base,
+        moved and removed entries, CSS evidence, watched edits, and base-ref
+        moves. Cover readiness, membership, retained bytes, and renewal.
+        Evidence: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
   - [ ] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
         `next-assignments.md` item 7b.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
@@ -1360,8 +1381,8 @@ Tags: ui
         with the fixture entries that they need.
   - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
-  - [ ] Port the moved-entry cases, after the M9 TODO for the deferred native
-        Changes browser fixtures.
+  - [ ] Port the moved-entry cases with the shared moved fixtures in the
+        branch-point copy and `serve_comparison_test.ts`.
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [x] Port the cases that need an embedded viewer host through both frame

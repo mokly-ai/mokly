@@ -84,6 +84,10 @@ Each fallback has a typed trace reason.
 
 `projection_removed::workspaces` initializes historical visual workspaces after
 the caller proves base usage. Static output and Serve share this policy.
+Affected Usage links resolve each evidence entry from its own side. They keep
+current variants through accepted moves and retain selected historical variants.
+Canonical impact groups stay at the consumer level. A different entry kind
+at an old path supplies no destination.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Its timing spans count final view states and measure changed-path collection,

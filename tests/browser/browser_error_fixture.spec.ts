@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { settleBrowserPage } from "./error_monitor.js";
 
 test("the automatic error fixture observes every context and page with exact test allowances", async ({
   page,
@@ -54,3 +55,40 @@ test("the automatic error fixture settles every page of a paused context", async
     await expect(target.getByText("Controlled clock")).toBeVisible();
   }
 });
+
+for (const installed of [false, true]) {
+  test(`a sandboxed iframe preserves exact notice handling ${installed ? "with" : "without"} an installed clock`, async ({
+    page,
+    browserErrors,
+  }, testInfo) => {
+    const notices: { text: string; location: string }[] = [];
+    page.on("console", (message) => {
+      if (message.text().startsWith("Blocked script execution"))
+        notices.push({
+          text: message.text(),
+          location: message.location().url,
+        });
+    });
+    if (installed) await page.clock.install();
+    await page.setContent('<iframe sandbox="allow-same-origin"></iframe>');
+    await expect(page.frameLocator("iframe").locator("body")).toBeAttached();
+    await settleBrowserPage(page);
+    await page.locator("iframe").evaluate((frame) => {
+      frame.setAttribute("srcdoc", "<p>Sandbox ready</p>");
+    });
+    await expect(
+      page.frameLocator("iframe").getByText("Sandbox ready"),
+    ).toBeVisible();
+    await settleBrowserPage(page);
+    const observation = { installed, notices };
+    await testInfo.attach("sandbox-notices", {
+      body: JSON.stringify(observation),
+      contentType: "application/json",
+    });
+    expect(notices).toContainEqual({
+      text: "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
+      location: "about:blank",
+    });
+    expect(browserErrors).toEqual([]);
+  });
+}
