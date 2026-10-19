@@ -1457,6 +1457,10 @@ Tags: ui
   - [ ] Register the eleven moved-entry viewer cases on the embedded viewer
         host through both frame adapters once that host accepts the branch
         copy; the moved cases modules take any `test`.
+  - [ ] When `rebuild/m10-d1-and-copies` merges, make its copied-output
+        `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
+        call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve
+        instances use, so each check lives once.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
