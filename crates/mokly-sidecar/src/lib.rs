@@ -34,6 +34,8 @@ pub mod process_factory;
 mod process_io;
 pub mod process_memory;
 mod process_parent;
+mod process_reaper;
+mod process_startup;
 mod process_transport;
 mod process_worker;
 pub mod render_records;
@@ -48,3 +50,7 @@ mod memory_schedule;
 mod memory_table;
 mod memory_tree;
 mod pool_recycle;
+
+#[cfg(test)]
+#[path = "_tests_/trace_capture.rs"]
+mod trace_capture;

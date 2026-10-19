@@ -92,6 +92,7 @@ spawn for hello cleanup. Stop and replacement records carry a closed cause:
 `recycle`, `replacement`, `retry`, or `root-switch`. A later replacement uses
 its later caller. The slot retains only the cause between requests.
 A stop succeeds only when every attempted lifecycle operation succeeds.
+Failed startup also measures child cleanup before the factory returns a worker.
 Final shutdown and cancellation emit no replacement stop span.
 The CLI redacts secrets and controls in forwarded timing lines; records from
 the sidecar's timing writer retain their original bytes.

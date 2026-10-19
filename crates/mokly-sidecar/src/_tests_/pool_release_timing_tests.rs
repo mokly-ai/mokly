@@ -10,10 +10,10 @@ use crate::pool::Pool;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
 use crate::pool_timing::Reason;
+use crate::trace_capture::Trace;
 use crate::workers::{ControlMock, WorkerMock};
 
-use super::super::clean_idle;
-use super::capture::Trace;
+use super::clean_idle;
 
 #[test]
 fn cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure() {

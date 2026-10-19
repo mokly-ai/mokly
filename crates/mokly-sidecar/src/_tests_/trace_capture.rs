@@ -8,20 +8,21 @@ use tracing::span::{Attributes, Id, Record};
 use tracing::{Event, Metadata, Subscriber};
 
 #[derive(Clone, Default)]
-pub(super) struct Trace(Arc<Mutex<State>>);
+pub(crate) struct Trace(Arc<Mutex<State>>);
 
 #[derive(Default)]
 struct State {
     spans: Vec<Span>,
     active: Vec<Id>,
     closed: Vec<Span>,
+    references: Vec<usize>,
 }
 
 #[derive(Clone)]
-pub(super) struct Span {
-    pub(super) metadata: &'static Metadata<'static>,
-    pub(super) parent: Option<Id>,
-    pub(super) fields: BTreeMap<String, String>,
+pub(crate) struct Span {
+    metadata: &'static Metadata<'static>,
+    pub(crate) parent: Option<Id>,
+    pub(crate) fields: BTreeMap<String, String>,
 }
 
 impl Visit for Span {
@@ -32,7 +33,7 @@ impl Visit for Span {
 }
 
 impl Trace {
-    pub(super) fn stopped(&self) -> Vec<Span> {
+    pub(crate) fn stopped(&self) -> Vec<Span> {
         self.0
             .lock()
             .unwrap()
@@ -62,6 +63,7 @@ impl Subscriber for Trace {
         };
         attributes.record(&mut span);
         state.spans.push(span);
+        state.references.push(1);
         Id::from_u64(state.spans.len() as u64)
     }
     fn record(&self, id: &Id, values: &Record<'_>) {
@@ -75,8 +77,17 @@ impl Subscriber for Trace {
     fn exit(&self, _: &Id) {
         self.0.lock().unwrap().active.pop();
     }
+    fn clone_span(&self, id: &Id) -> Id {
+        self.0.lock().unwrap().references[id.into_u64() as usize - 1] += 1;
+        id.clone()
+    }
     fn try_close(&self, id: Id) -> bool {
         let mut state = self.0.lock().unwrap();
+        let count = &mut state.references[id.into_u64() as usize - 1];
+        *count -= 1;
+        if *count != 0 {
+            return false;
+        }
         let span = state.spans[id.into_u64() as usize - 1].clone();
         state.closed.push(span);
         true
