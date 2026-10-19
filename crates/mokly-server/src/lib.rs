@@ -88,3 +88,7 @@ mod quiet_completion_tests;
 #[cfg(test)]
 #[path = "_tests_/quiet_http_completion_tests.rs"]
 mod quiet_http_completion_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_body_snapshot_tests.rs"]
+mod render_body_snapshot_tests;

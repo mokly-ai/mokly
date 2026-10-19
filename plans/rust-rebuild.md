@@ -1984,6 +1984,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         Reject omission of valid variant evidence. Never link to a replacement
         document or restore the suppressed parent. The lookup protocol defines
         the fallback. Evidence: `.context/f3/item-1-red.log` and `item-1-green.log`.
+  - [x] F3 item 2: release the authorization snapshot before reading a render
+        request body. Take the validation snapshot after the body arrives.
+        Keep the revision fence. Held-body tests prove snapshot and base-capture
+        release through weak references without sleeps.
+        Evidence: `.context/f3/item-2-red-corrected.log` and `item-2-green.log`.
   - [ ] Decide whether extglob-shaped stylesheet matches need a warning
         (M9 review 10 finding 5B, user item 54). Keep the migration release note;
         add no diagnostic before approval.

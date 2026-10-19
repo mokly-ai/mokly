@@ -151,7 +151,10 @@ Every response uses `no-store` and `nosniff`. No route adds a CORS header.
 
 Temporary renders validate the installed revision, view, controls, and complete
 props. They use the graph's shared prop render path outside the HTTP event
-loop. The CLI supplies the shared JavaScript runtime, so React entries use
+loop. Body reads keep only the authorization token. Validation and render
+admission take the current snapshot after the body arrives. A stalled body
+cannot retain a replaced snapshot or its comparison capture.
+The CLI supplies the shared JavaScript runtime, so React entries use
 the same pool, cache, renderer, PostCSS, and fragment keys as their saved
 views. The HTTP token and revision checks apply before that render path.
 `MemoryPreviews` holds at most 16 bundles and 32 MiB for five minutes.
