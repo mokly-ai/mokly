@@ -80,7 +80,7 @@ for (const adapter of ["same-origin", "cross"] as const) {
     await navRow(page, comparisonPaths.removedScreen).click();
     await expect(historicalScreen(page)).toHaveText("Historical screen");
     await expect(page.locator("#viewer .mbk-diff-toolbar")).toHaveCount(0);
-    // Every review read is the pinned file, never a live endpoint.
+    // No review read carries a query: each reads the pinned generation's file.
     expect(
       requests.filter(
         (url) => url.includes("review.json") && new URL(url).search !== "",
