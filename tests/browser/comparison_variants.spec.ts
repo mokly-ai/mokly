@@ -103,6 +103,9 @@ test("a removed variant keeps a Removed row under its surviving parent", async (
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
+  // The parent's own page and row render before the hidden check.
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Card");
+  await expect(navRow(page, comparisonPaths.component)).toBeVisible();
   const removed = navRow(page, comparisonPaths.removedVariant);
   await expect(removed).toBeHidden();
 

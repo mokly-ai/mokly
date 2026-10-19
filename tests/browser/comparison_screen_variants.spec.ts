@@ -98,6 +98,11 @@ test("a removed screen variant keeps a Removed row under its surviving parent", 
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.screenParent}/`);
+  // The parent's own page and row render before the hidden check.
+  await expect(page.locator("#mb-main h2").first()).toHaveText(
+    "Workspace screen",
+  );
+  await expect(navRow(page, comparisonPaths.screenParent)).toBeVisible();
   const removed = navRow(page, comparisonPaths.screenRemovedVariant);
   await expect(removed).toBeHidden();
 

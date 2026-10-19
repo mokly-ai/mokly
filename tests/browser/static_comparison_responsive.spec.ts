@@ -4,11 +4,12 @@
  * window. In each viewport, scheme, and mode, every pane frame uses the
  * selected scheme, each version shows its own document, and the page does
  * not scroll sideways. Refresh comparison reads the pinned generation again
- * and presents the same versions.
+ * and presents the same versions as new documents.
  */
 
 import { expect, type Page, type Route } from "@playwright/test";
 
+import { markPaneDocuments } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { comparisonIndex, modeButton } from "./comparison_ui.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
@@ -88,6 +89,8 @@ test("Refresh comparison reads the pinned review again and presents the same ver
   for (const frame of await frames.all())
     await expect(frame.contentFrame().locator("h1")).toBeVisible();
   const loaded = await sources(page);
+  const stage = page.locator("[data-diff-stage]");
+  await markPaneDocuments(stage);
 
   const held: Route[] = [];
   await page.route(`**/${index.comparisonUrl}`, (route) => {
@@ -95,12 +98,24 @@ test("Refresh comparison reads the pinned review again and presents the same ver
   });
   await page.getByRole("button", { name: "Refresh comparison" }).click();
   await expect.poll(() => held.length).toBe(1);
-  const stage = page.locator("[data-diff-stage]");
   await expect(stage).toHaveAttribute("aria-busy", "true");
   await held[0]!.continue();
   await expect(stage).not.toHaveAttribute("aria-busy", "true");
   await expect(frames).toHaveCount(4);
   await expect.poll(() => sources(page)).toEqual(loaded);
+  // Refresh presents every document anew: no frame keeps a marked one.
+  await expect
+    .poll(() =>
+      frames.evaluateAll((items) =>
+        items.map((item) => {
+          const document = (item as HTMLIFrameElement).contentDocument;
+          return [document?.URL, document?.documentElement.dataset["probe"]];
+        }),
+      ),
+    )
+    .toEqual(Array.from({ length: 4 }, () => ["about:srcdoc", undefined]));
+  for (const frame of await frames.all())
+    await expect(frame.contentFrame().locator("h1")).toBeVisible();
   await modeButton(page, "Current").click();
   await expect(frames).toHaveCount(0);
 });
