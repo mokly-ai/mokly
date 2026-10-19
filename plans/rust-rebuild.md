@@ -2209,8 +2209,17 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
   - M10 Serve and moved rows decision 10, Severity Low, effort Small: each
     sweep override lists the old checks that its port does not prove, and a
     dropped duplicate moves its extra checks into the kept port. Covers
-    review 3 findings 1 and 2; previous examples 0858e172, 4d6a21a4, and
-    abf52983. Recommended A: add the rule to the sweep procedure.
+    review 3 findings 1 and 2 and review 4 finding 2; previous examples
+    0858e172, 4d6a21a4, and abf52983. Recommended A: add the rule to the sweep
+    procedure.
+  - M10 Serve and moved rows review 4, open finding 12 for the user: the
+    restored removed-variant journey also changes the parent entry, because
+    its private base gives `screens/plain` props. Severity Low, effort Small.
+    Recommended: B, drop the props and check that the parent row has no
+    changed mark.
+  - M10 Serve and moved rows review 4, open finding 13 for the user: the Serve
+    fixture's poll comment misstates the publication time. Severity Low,
+    effort Small. Recommended: A, drop the duration from the comment.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
