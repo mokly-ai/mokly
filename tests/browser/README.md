@@ -134,16 +134,30 @@ comparison generations. It waits for ready Changes at the pinned base.
 The `comparisonPaths` entries and both additive source hooks are available.
 The existing `serve_changes_fixture.ts` remains the smaller engine fixture.
 
-| API                                        | Purpose                                                                         |
-| ------------------------------------------ | ------------------------------------------------------------------------------- |
-| `changes.paths`                            | Named paths from `comparisonPaths`, `branchPointPaths`, and `movedFixturePaths` |
-| `changes.url`, `changes.root`              | Loopback origin and private source directory                                    |
-| `changes.baseCommit`, `changes.headCommit` | Independent base and head commit IDs                                            |
-| `await changes.index()`                    | Read and validate the current catalogue index                                   |
-| `await changes.ready(afterRevision?)`      | Wait for a newer ready Changes publication                                      |
-| `await changes.edit(relativeFile, text)`   | Change one source file and wait for its accepted publication                    |
-| `await changes.moveBase("head" \| "base")` | Switch the private base ref and wait for that pinned comparison                 |
-| `await changes.close()`                    | Drain Serve before removing the repository; safe to repeat                      |
+| API                                                              | Purpose                                                                         |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `changes.paths`                                                  | Named paths from `comparisonPaths`, `branchPointPaths`, and `movedFixturePaths` |
+| `changes.url`, `changes.root`                                    | Loopback origin and private source directory                                    |
+| `changes.baseCommit`, `changes.headCommit`                       | Independent base and head commit IDs                                            |
+| `await changes.index()`                                          | Read and validate the current catalogue index                                   |
+| `await changes.ready(afterRevision?, expectedBase?, predicate?)` | Wait for a newer ready publication and the optional semantic predicate          |
+| `await changes.edit(relativeFile, text, predicate?)`             | Atomically replace one source and wait for its accepted semantic state          |
+| `await changes.moveBase("head" \| "base" \| commit)`             | Switch the private ref to a fixture alias or commit and wait for its merge base |
+| `await changes.close()`                                          | Drain Serve before removing the repository; safe to repeat                      |
+
+`expectedBase` is the expected pinned merge-base commit in `review.json`.
+A `predicate` receives the accepted index and can return a boolean or a
+promise. `ready` and `edit` wait for both a higher revision and that state.
+Use a changed title, membership, or document key for the semantic condition.
+`edit` rejects unchanged text. It writes a temporary file outside the
+watched source root, then replaces the target with one rename.
+`moveBase` resolves an arbitrary commit as well as the original fixture
+aliases. Moving to the already selected ref returns its ready publication.
+
+To stage a Changes completion for a Usage-focus check, first use
+`await changes.moveBase("head")`, then `await changes.moveBase("base")`.
+The ref changes preserve the current source and documents. A caller can
+keep its browser page and focused link mounted during both publications.
 
 The `changed` screen has a matched `.accent` rule from `theme.css`, an
 unresolved root rule, and native component usage. Read `comparisonUrl` from

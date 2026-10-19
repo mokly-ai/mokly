@@ -21,9 +21,15 @@ test("shared Serve comparison fixture renews selected generations after a watche
   expect(await (await request.get(before)).text()).toContain("Before screen");
   expect((await request.head(initial.url())).ok()).toBe(true);
   const index = await changes.index();
+  const previousKey = index.screens.find(
+    (entry) => entry.path === changes.paths.changed,
+  )!.views[0]!.documentKey;
   const next = await changes.edit(
     `specs/${changes.paths.changed}.screen.html`,
     '---\ntitle: Changed screen\n---\n<h1>Watched edit</h1><p class="accent">Changed CSS</p>',
+    (current) =>
+      current.screens.find((entry) => entry.path === changes.paths.changed)!
+        .views[0]!.documentKey !== previousKey,
   );
   expect(next.revision).toBeGreaterThan(index.revision);
   expect(next.live).not.toEqual(index.live);

@@ -23,6 +23,33 @@ import { git, write } from "../helpers/static_changes.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
 
+/** A caller's semantic state, beyond the publication counter and Changes status. */
+export type ReadyPredicate = (
+  index: CatalogueReadModel,
+) => boolean | Promise<boolean>;
+
+/** Replace one source atomically without placing a partial file in a watched root. */
+async function replaceSource(root: string, name: string, contents: string) {
+  const file = path.join(root, name);
+  const previous = await fs
+    .readFile(file, "utf8")
+    .catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+      return undefined;
+    });
+  if (previous === contents)
+    throw new Error(`Unchanged fixture source: ${name}`);
+  await fs.mkdir(path.join(root, ".context"), { recursive: true });
+  const temporary = await fs.mkdtemp(path.join(root, ".context", "edit-"));
+  try {
+    await write(temporary, "source", contents);
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    await fs.rename(path.join(temporary, "source"), file);
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
+  }
+}
+
 /** Real, private Changes state for viewer specs; no checkout history or mock data. */
 export async function serveComparisonCatalogue() {
   const root = await fs.mkdtemp(
@@ -71,7 +98,11 @@ export async function serveComparisonCatalogue() {
       if (!response.ok) throw new Error(`Catalogue index: ${response.status}`);
       return readCatalogueIndex(await response.json());
     };
-    const ready = async (after = 0, expectedBase?: string) => {
+    const ready = async (
+      after = 0,
+      expectedBase?: string,
+      predicate?: ReadyPredicate,
+    ): Promise<CatalogueReadModel> => {
       let accepted: Awaited<ReturnType<typeof index>> | undefined;
       try {
         await expect
@@ -90,6 +121,7 @@ export async function serveComparisonCatalogue() {
                 if ((await review.json()).baseCommit !== expectedBase)
                   return false;
               }
+              if (predicate && !(await predicate(current))) return false;
               accepted = current;
               return true;
             },
@@ -120,17 +152,32 @@ export async function serveComparisonCatalogue() {
       headCommit,
       paths: { ...comparisonPaths, ...branchPointPaths, ...movedFixturePaths },
       /** One watched source write, followed by its accepted Changes publication. */
-      async edit(name: string, contents: string) {
+      async edit(name: string, contents: string, predicate?: ReadyPredicate) {
         const previous = await index();
-        await write(root, name, contents);
-        return ready(previous.revision);
+        await replaceSource(root, name, contents);
+        return ready(previous.revision, undefined, predicate);
       },
       /** Move only the private base ref; the working catalogue and HEAD stay fixed. */
-      async moveBase(side: "base" | "head") {
+      async moveBase(reference: string) {
         const previous = await index();
-        const commit = side === "base" ? baseCommit : headCommit;
+        const selected =
+          reference === "base"
+            ? baseCommit
+            : reference === "head"
+              ? headCommit
+              : reference;
+        const commit = await git(
+          root,
+          "rev-parse",
+          "--verify",
+          "--end-of-options",
+          `${selected}^{commit}`,
+        );
+        const expectedBase = await git(root, "merge-base", commit, "HEAD");
+        if ((await git(root, "rev-parse", "fixture-base")) === commit)
+          return ready(0, expectedBase);
         await git(root, "update-ref", "refs/heads/fixture-base", commit);
-        return ready(previous.revision, commit);
+        return ready(previous.revision, expectedBase);
       },
     };
   } catch (error) {
