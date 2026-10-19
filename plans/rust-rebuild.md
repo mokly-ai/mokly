@@ -959,6 +959,7 @@ renders again.
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
         exact revision in the first half of its adoption spec. Review 8 finding
         1, for the Serve owner. Implementation: `3961636d`.
+        The red run on the old code failed five of the six new Rust tests.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-12/browser-observations.json`.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
@@ -1999,6 +2000,8 @@ Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
+Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
+F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -2031,9 +2034,17 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
   - [x] Split core timing stage selection after integration batch 5 combines
         stop timing and startup stages. Retain every stage and the file cap.
         Evidence: `.context/integration-5/length-before.log` and `targeted.log`.
-  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
-    another entry kind reuses the donor path needs a requirement decision.
-    Separate branch.
+  - [x] F3 item 1: the orchestrator approved F2 decision B on 2026-10-19.
+        Use the resolved variant as the canonical affected consumer when its
+        original parent has no destination. Keep the original evidence paths.
+        Reject omission of valid variant evidence. Never link to a replacement
+        document or restore the suppressed parent. The lookup protocol defines
+        the fallback. Evidence: `.context/f3/item-1-red.log` and `item-1-green.log`.
+  - [x] F3 item 2: release the authorization snapshot before reading a render
+        request body. Take the validation snapshot after the body arrives.
+        Keep the revision fence. Held-body tests prove snapshot and base-capture
+        release through weak references without sleeps.
+        Evidence: `.context/f3/item-2-red-corrected.log` and `item-2-green.log`.
   - [ ] Decide whether extglob-shaped stylesheet matches need a warning
         (M9 review 10 finding 5B, user item 54). Keep the migration release note;
         add no diagnostic before approval.
