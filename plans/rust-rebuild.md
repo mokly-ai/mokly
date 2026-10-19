@@ -1785,7 +1785,9 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         command diagnostics before shutdown, check graceful exit and the final
         tail through direct sidecars, and retain mocked shared-deadline checks.
         Split recovery faults into independent cases and make readiness and
-        process cleanup follow test cancellation. Keep every assertion and
+        process-group cleanup follow test cancellation. The Unix abort check
+        waits for the complete native gate marker before cancellation.
+        Keep every assertion and
         snapshot payload. Evidence: M12 `report-13.md`,
         `round13-load-counts.json`, and `round13-load-after.json`.
   - [x] Resolve the inherited M14 input fingerprint replay flake

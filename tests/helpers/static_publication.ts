@@ -59,6 +59,7 @@ export function publish(
     env?: NodeJS.ProcessEnv;
     environmentCredentials?: boolean;
     signal?: AbortSignal;
+    detached?: boolean;
   } = {},
 ) {
   return command(
@@ -81,6 +82,7 @@ export function publish(
       ...options.env,
     },
     options.signal,
+    options.detached,
   );
 }
 
@@ -91,6 +93,7 @@ export function command(
   mode = "plain",
   extra: NodeJS.ProcessEnv = {},
   signal?: AbortSignal,
+  detached = false,
 ) {
   signal?.throwIfAborted();
   const child = spawn(
@@ -98,6 +101,7 @@ export function command(
     [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
     {
       cwd: root,
+      detached,
       env: {
         ...process.env,
         MOKLY_OUTPUT: mode,

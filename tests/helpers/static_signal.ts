@@ -1,3 +1,4 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -13,7 +14,19 @@ export async function signalFault(
 ) {
   const readiness = faultReadiness(root, fault.split(",")[0]!, signal);
   const running = faultCommand(root, verb, fault, mode);
-  const stop = () => running.child.kill("SIGKILL");
+  const stop = () => {
+    const pid = running.child.pid;
+    if (pid === undefined) return;
+    if (process.platform === "win32") {
+      execFile("taskkill", ["/PID", String(pid), "/T", "/F"], () => {});
+      return;
+    }
+    try {
+      process.kill(-pid, "SIGKILL");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+    }
+  };
   signal.addEventListener("abort", stop, { once: true });
   try {
     await Promise.race([

@@ -24,20 +24,32 @@ test("fault readiness observes complete markers and releases its watcher on abor
 });
 
 test(
-  "an aborted signal fixture closes its readiness wait and reaps its process",
+  "an aborted signal fixture reaps the shim and native process held at a complete marker",
   { timeout: 120_000 },
   async (context) => {
     const root = await recoveryFixture(context.signal);
     context.after(() => cleanup(root, "build"));
     const signal = new AbortController();
+    const held = faultReadiness(root, "config", context.signal);
+    context.after(() => held.close());
     const running = signalFault(
       root,
       "build",
       "plain",
-      "config",
+      "unreached,config",
       signal.signal,
     );
     const stopped = assert.rejects(running, /fixture cancelled/u);
+    if (process.platform !== "win32") {
+      await held.ready;
+      assert.equal(
+        await fs.readFile(path.join(root, ".context/ready"), "utf8"),
+        "config",
+      );
+      context.diagnostic(
+        "The native process reached the complete config marker.",
+      );
+    }
     signal.abort(new Error("fixture cancelled"));
     await stopped;
   },

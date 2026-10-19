@@ -54,8 +54,16 @@ export function faultCommand(
     ...extra,
   };
   return verb === "publish"
-    ? publish(root, "http://127.0.0.1:1/plan", mode, { env })
-    : command(root, "build", ["--no-changes", `--out=${output}`], mode, env);
+    ? publish(root, "http://127.0.0.1:1/plan", mode, { env, detached: true })
+    : command(
+        root,
+        "build",
+        ["--no-changes", `--out=${output}`],
+        mode,
+        env,
+        undefined,
+        true,
+      );
 }
 export function outputDirectory(
   root: string,
