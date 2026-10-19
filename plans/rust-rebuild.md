@@ -1507,9 +1507,10 @@ decisions for the rebuild tip `a3cc0828`:
       using new bindings or class maps under an old fragment key (M8 review 1,
       finding 8).
 - [x] Behaviour tests that count rebuilds and renders per change.
-- [ ] Port the M8 browser sweep's watch and folder-update cases after watcher
+- [x] Port the M8 browser sweep's watch and folder-update cases after watcher
       integration. Use publication events and document keys in place of page
       reloads. Keep shutdown, moves, titles, search, and disclosure coverage.
+      Evidence: m12-static report-14 and sweep-overrides-watch.json (orchestrator records).
 - [x] Preserve saved component frame document keys when controls supply view
       records. Only temporary preview URLs bypass the saved document key.
 - [x] Bound retained stylesheet results and keep generation source snapshots
