@@ -915,11 +915,14 @@ renders again.
         the Usage loading state while evidence is unavailable; instance deep
         links; and a published scheme swap while a redirect replaces a frame
         source.
-  - [ ] After the Serve merge, with D1, port the cases that need Serve
-        Changes: focus on an unchanged Usage link while a Changes completion
-        is adopted; the review-base sentence while a detail loads, which
-        needs a served catalogue with a Git base; and the design library
-        component's Unmodified status after temporary edits and Reset.
+  - [x] Port the review-base sentence while a detail loads, on the copied
+        comparison output.
+  - [ ] Port the two cases that wait for the shared Serve Changes fixture:
+        focus on an unchanged Usage link while a Changes completion is
+        adopted, which needs a changed component with a consumer; and the
+        design library component's Unmodified status after temporary edits
+        and Reset, which needs an unchanged component with editable props in
+        the fixture's base commit.
   - [ ] When Serve stops publishing a render completion that changes no
         detail (review 8 finding 1, for the Serve owner), restore one index
         read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
@@ -1048,6 +1051,9 @@ Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
 The remaining client-shell cases of the sweep and their generator inputs:
 `.context/rust-rebuild/delegation/m7/report-22.md` and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell-2.json`.
+Review 11 fixes, the negative zero fix of live edit renders, and the merge of
+the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
+decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
 - [ ] Commit.
 
