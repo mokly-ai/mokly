@@ -8,11 +8,15 @@ import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
 import { copiedHost } from "./copied_host.js";
 
-/** Build native Changes once per suite, then discard all source and Git files. */
+/**
+ * Build native Changes once per suite, then discard all source and Git files.
+ * `base` names the commit Changes compares with; `HEAD` leaves nothing changed.
+ */
 export async function startComparisonStaticHost(
   signal?: AbortSignal,
   additions?: ComparisonAdditions,
   fixtureName = "browser-comparison",
+  base = "fixture-base",
 ) {
   return copiedHost(
     "copied-comparison-",
@@ -25,7 +29,7 @@ export async function startComparisonStaticHost(
             `${repositoryRoot}/packages/mokly/bin/mokly.mjs`,
             "build",
             "--base",
-            "fixture-base",
+            base,
             "--out",
             output,
             "--sidecars",

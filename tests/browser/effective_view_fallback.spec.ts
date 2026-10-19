@@ -16,9 +16,11 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
   await expect(page.locator("#mb-main h2").first()).toHaveText("Lamp");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  await expect(
-    page.locator("[data-mokly-appearance-select], [data-workspace-scheme]"),
-  ).not.toHaveCount(0);
+  // The Dark selection stays, and each frame label names the Light fallback.
+  await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
+    "dark",
+  );
+  await expect(page.locator(".mbk-frame-scheme-note").first()).toBeVisible();
   await expect(page.locator('[data-view-changed="scheme"]')).toBeHidden();
   const frames = page.locator("iframe[data-workspace-frame]");
   await expect(frames).not.toHaveCount(0);

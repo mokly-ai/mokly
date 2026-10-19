@@ -37,6 +37,8 @@ test("the walk reaches every record kind the readers read", () => {
   const home = richDetails().find(
     (detail) => detail.entry.path === "product/browse/home",
   )!;
+  for (const reason of extended(home).reasons as unknown as Raw[])
+    assert.equal(reason.later, 1);
   const usage = (extended(home).views[0] as unknown as Raw).usage as Raw;
   const instance = (usage.instances as Raw[])[0]!;
   assert.equal(instance.later, 1);
