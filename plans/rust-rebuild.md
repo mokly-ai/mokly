@@ -368,6 +368,11 @@ more than re-deriving the behaviour from the requirements.
   time and memory budgets of Milestone 14. Milestone 3 records the answer
   before adding any of them.
 
+**CI timeout approval (user, 2026-10-19, decision 5 = D):** browser shards and
+native jobs use 60-minute hang guards. Other jobs keep 30 minutes. The user
+chose longer job limits instead of changing the four-shard browser partition.
+The guards must allow at least three times each job's typical duration.
+
 **Review decisions the user gave on 2026-10-12:** every live native engine
 reference is repointed now; head styles, owned and unowned, leave the canonical
 form; the behaviour-table script is written on this branch; the server

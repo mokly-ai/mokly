@@ -221,6 +221,11 @@ total runner minutes. Record hosted-run billing data when GitHub exposes it;
 otherwise record the applicable repository plan and the calculated
 runner-minute consumption. Keep the measurement record under `.context/`.
 
+Browser shards and native jobs have 60-minute hang guards. Other CI jobs keep
+30-minute hang guards. Compare each complete job's typical duration with its
+guard and retain at least three times that duration. Record a shortfall for
+review without changing assertion deadlines, coverage, or the four shards.
+
 Queue time and the downstream verification jobs are reported separately from
 execution. Compare shard balance and the measured server-readiness phases
 before changing partitioning, and confirm the resulting shard layout with
