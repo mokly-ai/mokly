@@ -1822,6 +1822,15 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     no navigation event once and passed unchanged after rerun. M8 viewer owns
     the suspected message/animation-frame ordering. Recommended A: wait for
     the message event. Evidence is in the browser delegate's `report-4.md`.
+  - M8 sidecar follow-up, Low severity, Small effort: the Rust test
+    `serve_trace::sidecar_trace_tests::spawn_and_replacement_cover_hello_and_keep_error_until_success`
+    in `mokly-cli` failed once in `cargo test --workspace` with "Original
+    Unimock instance destroyed on a different thread than the one it was
+    created on", then passed 20 isolated runs and 15 runs of the whole
+    `mokly-cli` binary test set. Suspected source: the sidecar pool drops a
+    replaced worker's mock on another thread, depending on timing.
+    Recommended A: clone the mocks before they move to the pool, as the
+    message says. Separate branch. Evidence: m7 `report-23.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
