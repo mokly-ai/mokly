@@ -21,7 +21,9 @@ entry's previous version is delivered with its detail under the generation
 that the index's `comparisonUrl` names, under
 [removed previews](./mokly-removed-previews.md). Current browsing never
 requests comparison documents; a static build uses its packaged
-`comparisonUrl` without parameters.
+`comparisonUrl` without parameters. Removed component parents and variants
+also request the advertised generation URL in every host, including Serve.
+Their HEAD renewal and retry use that same URL.
 
 The response redirects to
 `/mokly-viewer/diffs/generations/selected-<uuid>/review.json`, an immutable
@@ -37,7 +39,8 @@ server's retention and lets the shell reuse its loaded JSON before it
 displays the requested panes. If the generation is missing or the response
 resolves to a different generation, the shell fetches the stable endpoint
 again, without `refresh=1`, and renders only after the replacement result is
-ready. It never reuses old document URLs after a failed renewal and never
+ready. A removed component parent or variant reacquires its advertised URL
+instead of the selected endpoint. It never reuses old document URLs after a failed renewal and never
 depends on matching browser and server clocks.
 
 Repeated view or mode switches share pending work and apply the latest axes
@@ -53,14 +56,15 @@ next explicit selection uses the new revision. Network and comparison
 failures use the comparison failure state with explicit retry.
 
 The server projects the completed background classification onto the
-selected entry; it renders nothing again and reclassifies nothing. Both sides
+selected entry without reclassification. Both sides
 are the views the render graph composed for that classification under the
 [comparison contract](./mokly-comparison.md): the head from the working tree
 and the base from the base commit's Git tree under
 [Sides](./mokly-comparison.md#sides), compared under
 [materiality](./mokly-comparison.md#materiality) and
-[style ownership](./mokly-comparison.md#style-ownership), held in the render
-cache and recomputed from the same inputs only after eviction. The base
+[style ownership](./mokly-comparison.md#style-ownership). Base views use the
+bounded capture or pinned-source fallback. Head views use the bounded render
+cache and render again from the same inputs after eviction. The base
 commit is the one the accepted Changes snapshot pinned. Missing or pending
 Changes evidence produces the retryable comparison failure state; the server
 never falls back to an exhaustive foreground build.
@@ -83,8 +87,9 @@ document under the [public closure policy](./mokly-public-closure.md); the
 before side of a paired moved entry is the paired base entry's views, named
 by `previousPath`. The head side reads resources from the working tree and
 the base side from Git blobs, under the
-[resources](./mokly-comparison.md#resources) rule. Documents keep the bytes
-the render cache holds; panes present them without script permission under
+[resources](./mokly-comparison.md#resources) rule. Base documents keep the bytes
+from the bounded base capture or pinned-source fallback; head documents keep
+the bytes from the bounded render cache. Panes present them without script permission under
 the [comparison pane contract](./mokly-comparison-panes.md).
 
 Identical pending selections coalesce. Different selections serialize, with
@@ -97,10 +102,22 @@ regenerates the selection and coalesces with a pending capture for the same
 accepted inputs.
 
 Keep each generation for 60 seconds of inactivity so that in-flight frames
-and replaced documents stay coherent. Requests extend that retention. Bound
+and replaced documents stay coherent. Requests extend that retention.
+Keep the classification generation's JSON while the current index names it,
+including removed details and preview metadata. Its snapshot files still expire
+after 60 idle seconds; a later removed preview or component parent or variant
+view captures them again from the retained base handles. After replacement,
+the JSON follows the idle rule too. Count all retained JSON and snapshots
+against the same bounds. Bound
 retained generations to 64 and 128 MiB, and each generation to 64 MiB.
 Reject new captures that exceed capacity rather than removing documents still
-within their retention window. Expired generations are collected
+within their retention window. When retained generations fill the store,
+classification retries metadata installation once per second without rerendering
+or reclassifying. Admission is checked before ready-state projection and again
+at installation. A full store does not repeat catalogue projection on each retry.
+It remains pending until capacity is free, or replacement or
+shutdown cancels it. Metadata larger than 64 MiB fails without retry.
+Expired generations are collected
 periodically and before a new capture. A failed refresh preserves the
 earlier documents and does not poison later requests. An idle open
 comparison does not keep its generation alive; its next view or mode switch

@@ -50,8 +50,34 @@ listener and file locks release last. Startup uses the same lifecycle with a wat
 handoff. A stop before that handoff suppresses the ready layout.
 The browser bundle comes from the matching installed `@mokly/viewer` package.
 
+After `Catalogue ready`, Serve completes current usage and classifies Changes
+against one pinned merge base. Base extraction and dependency installation
+publish `preparing`; rendering and comparison publish `pending`. Only the
+accepted generation reports `Changes ready` and its Changes, moved, and
+ignored-only counts. A failed comparison publishes `unavailable` with its
+diagnostic while All remains available. Base dependency warnings use the
+captured attempt and precede the result. Base composition warnings stay private.
+
+Serve keeps the configured sidecar pool bound for both source roots. A shared
+admission gate lets queued and active foreground requests finish their sidecar
+calls before more base requests start. This groups each foreground burst even
+with one worker. Attempt cancellation wakes queued base calls without polling.
+
+A merge-base change retains the current warning attempt and current render graph.
+A changed HEAD or base tip with the same merge base keeps the Changes evidence.
+Content replacement starts a new attempt and invalidates pending captures.
+The command supplies tracked Git runners to both classification and retained
+historical sources. The ordered Git shutdown hook closes admission, cancels
+process groups, and waits for every command and pipe to drain. Git processes
+that ignore SIGTERM receive SIGKILL after the one-second grace period.
+
 One injected terminal writer handles startup, shortcuts, rebuilds, and render
 diagnostics. It reports listener backoff and recovery in both output modes.
+Comparisons use one progress row with 80 ms animation on a TTY. Every durable
+line erases that row first. A pipe keeps the starting and completion lines
+without animation. A cancelled phase clears its row. The first cache path
+prints once in both modes. Base-ref refresh prints the Git watch action and
+keeps the current warning attempt.
 Serve captures one warning sink per preparation attempt. It sorts and
 deduplicates preparation and composition warnings before the completion line.
 Later on-demand, background, and temporary renders report only new warnings.
@@ -186,9 +212,18 @@ cargo run -p mokly-cli --bin mokly -- build --help
 Changes integration tests isolate cache directories for each child process.
 They check exact entry names through the native build composition, including
 HTML, React, and stylesheet edits.
+The design attribution matrix copies the example sources into temporary Git
+fixtures with fully registered base and head commits. It pins stylesheet links,
+rule and resource records, changed entries, and affected consumers. Independent
+head edits reuse the pinned base generation. Four distinct CSS delivery rules
+share one registered base and one head. Excluded, unresolved, and matched
+shared rules use separate selectors in one head, with exact per-rule evidence.
+The matrix runs only on demand with the `design-matrix` feature. The default
+workspace tests and verification gate exclude this target.
 
 ```bash
 cargo test -p mokly-cli
+cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
@@ -215,7 +250,9 @@ still use their injected trait boundaries.
 - [Shared Serve services](./src/serve_services.rs), [Serve shutdown](./src/serve_shutdown.rs),
   [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).
+- [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
+- [Design attribution matrix](./tests/design_attribution_tests.rs).
 
 ### Related Docs
 

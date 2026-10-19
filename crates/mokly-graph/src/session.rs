@@ -21,7 +21,8 @@ use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::resource_inputs::ResourceObserver;
 use crate::types::{
-    DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan, TemporaryDocument,
+    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan,
+    TemporaryDocument,
 };
 use crate::workers::RenderWorkers;
 use crate::{route_inventory, styles, temporary, validation};
@@ -119,6 +120,10 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn comparison_capture(&self) -> Option<ComparisonCapture> {
+        None
+    }
+
     fn generation_key(&self) -> &str {
         &self.state.generation_key
     }

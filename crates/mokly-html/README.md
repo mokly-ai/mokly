@@ -47,7 +47,9 @@ omits private normalization attributes from cloned tags and private markers.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 Sidecar style elements carry typed owner annotations through HTML reparsing.
-Authored attributes cannot create these trusted records.
+Authored attributes cannot create these trusted records. The public annotation
+types have no serde decoding implementation; private comparison codecs own
+their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
 Ignore scopes resolve during composition. Ignore and link comments do not
 reach the output. Fragment markers require authenticated input and placement records. The

@@ -1,5 +1,7 @@
 import { expect } from "@playwright/test";
 
+import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
+
 import { test } from "./browser_test.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { startLinkControlFixture } from "./link_controls_fixture.js";
@@ -7,6 +9,7 @@ import { startLinkControlFixture } from "./link_controls_fixture.js";
 let controls: Awaited<ReturnType<typeof startLinkControlFixture>>;
 
 test.beforeAll(async () => {
+  test.setTimeout(ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS);
   controls = await startLinkControlFixture();
 });
 test.afterAll(async () => {

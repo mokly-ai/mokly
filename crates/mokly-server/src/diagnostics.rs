@@ -1,10 +1,11 @@
 //! Render diagnostics stay separate from public failure response bodies.
 
-use crate::error::ServerError;
 use std::io;
 
+use crate::error::ServerError;
+
 /// CLI-owned typed error reporting boundary.
-#[cfg_attr(test, unimock::unimock(api = DiagnosticsMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DiagnosticsMock))]
 pub trait Diagnostics: Send + Sync {
     /// Report a render failure once through the command's reporter.
     fn failed(&self, error: &ServerError);

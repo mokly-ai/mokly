@@ -2,11 +2,11 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import screens from "../fixtures/design-library/screens.json" with { type: "json" };
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { designModernControlGroups } from "./design_modern_controls_groups.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
 
@@ -39,43 +39,48 @@ export function registerDesignModernControls(
             : { width: 1440, height: 1000 },
       });
 
-      test("every selected screen uses one icon footer and one view toolbar", async ({
-        page,
-      }) => {
-        for (const screen of screens) {
-          await page.goto(fileUrl(`${screen.path}/index.${viewport}.html`));
-          await expect(page.locator(".mbk-details-bar")).toHaveCount(0);
-          await expect(
-            page.getByRole("group", {
-              name: /^(Viewport|Preview color scheme)$/,
-            }),
-          ).toHaveCount(0);
-          if (withoutInspector.has(screen.path)) continue;
-          await expect(page.locator(".ce-inspector"), screen.path).toHaveCount(
-            1,
-          );
-          await expect(
-            page.getByRole("toolbar", { name: "Preview options" }),
-            screen.path,
-          ).toHaveCount(1);
-          await expect(
-            page.locator(".mbk-topbar .ce-view-controls"),
-          ).toHaveCount(0);
-          for (const selection of ["mobile", "desktop", "both"]) {
-            await page
-              .getByLabel("Preview viewport", { exact: true })
-              .selectOption(selection);
-            await expect(
-              page.locator(".ce-preview-view:visible"),
-              screen.path,
-            ).toHaveCount(selection === "both" ? 2 : 1);
-          }
-          expect(
-            await page.evaluate(() => document.documentElement.scrollWidth),
-            screen.path,
-          ).toBeLessThanOrEqual(viewport === "mobile" ? 390 : 1440);
-        }
-      });
+      for (const group of designModernControlGroups) {
+        test.describe(group.name, () => {
+          test("every selected screen uses one icon footer and one view toolbar", async ({
+            page,
+          }) => {
+            for (const screen of group.screens) {
+              await page.goto(fileUrl(`${screen.path}/index.${viewport}.html`));
+              await expect(page.locator(".mbk-details-bar")).toHaveCount(0);
+              await expect(
+                page.getByRole("group", {
+                  name: /^(Viewport|Preview color scheme)$/,
+                }),
+              ).toHaveCount(0);
+              if (withoutInspector.has(screen.path)) continue;
+              await expect(
+                page.locator(".ce-inspector"),
+                screen.path,
+              ).toHaveCount(1);
+              await expect(
+                page.getByRole("toolbar", { name: "Preview options" }),
+                screen.path,
+              ).toHaveCount(1);
+              await expect(
+                page.locator(".mbk-topbar .ce-view-controls"),
+              ).toHaveCount(0);
+              for (const selection of ["mobile", "desktop", "both"]) {
+                await page
+                  .getByLabel("Preview viewport", { exact: true })
+                  .selectOption(selection);
+                await expect(
+                  page.locator(".ce-preview-view:visible"),
+                  screen.path,
+                ).toHaveCount(selection === "both" ? 2 : 1);
+              }
+              expect(
+                await page.evaluate(() => document.documentElement.scrollWidth),
+                screen.path,
+              ).toBeLessThanOrEqual(viewport === "mobile" ? 390 : 1440);
+            }
+          });
+        });
+      }
 
       test("Browse viewport selection and footer opening stay inside the fixed shell", async ({
         page,

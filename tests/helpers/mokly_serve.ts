@@ -87,24 +87,26 @@ export function serve(context: TestContext, root: string, group = false) {
   };
 }
 
-/** Wait for the background batch through publication events, not a clock assertion. */
+/** Wait for usage and a terminal Changes state through publication events. */
 export async function completed(
   url: string,
   signal: AbortSignal,
   path: string,
+  request: typeof fetch = fetch,
 ) {
-  const events = await fetch(`${url}/mokly-viewer/events`, { signal });
+  const events = await request(`${url}/mokly-viewer/events`, { signal });
   const stream = events.body!.getReader();
   try {
     for (;;) {
       const index = await (
-        await fetch(`${url}/mokly-viewer/index.json`, { signal })
+        await request(`${url}/mokly-viewer/index.json`, { signal })
       ).json();
       const detail = await (
-        await fetch(`${url}/mokly-viewer/entries/${path}.json`, { signal })
+        await request(`${url}/mokly-viewer/entries/${path}.json`, { signal })
       ).json();
       if (
         detail.revision === index.revision &&
+        ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
         Array.isArray(detail.workspace?.usedBy)
       )
         return { index, detail };

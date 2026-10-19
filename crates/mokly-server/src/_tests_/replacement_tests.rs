@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use mokly_model::namespace::viewer;
+use mokly_model::routes;
+use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::detail_encoding::{DetailEncoder, DetailEncoderMock, ValidatedDetails};
@@ -95,7 +97,8 @@ fn usage_requires_equal_document_keys_and_the_same_catalogue_deployment() {
                 *key = "changed".into();
             }
         }
-        reuse_usage(&mut details, &origin.index, &keys, Some(&origin));
+        let completed = reuse_usage(&mut details, &origin.index, &keys, Some(&origin));
+        assert_eq!(completed.len(), if changed { 0 } else { keys.len() });
         for (path, detail) in &details {
             assert_eq!(
                 detail.views[0].usage,
@@ -119,10 +122,48 @@ fn usage_requires_equal_document_keys_and_the_same_catalogue_deployment() {
         } else {
             index.identity.id = "another-catalogue".into();
         }
-        reuse_usage(&mut details, &index, &origin.document_keys, Some(&origin));
+        assert!(reuse_usage(&mut details, &index, &origin.document_keys, Some(&origin)).is_empty());
         assert_eq!(
             details["screen-0"].views[0].usage,
             pending.details["screen-0"].views[0].usage
         );
+    }
+}
+
+#[test]
+fn pending_or_failed_usage_is_not_recorded_as_a_reused_completion() {
+    for usage in [CatalogueUsage::Pending, CatalogueUsage::Unavailable] {
+        let pending = publication_support::snapshot(2, Arc::new(Unimock::new(())));
+        let mut previous = (*pending).clone();
+        for (path, detail) in &mut previous.details {
+            let view = &mut Arc::make_mut(detail).views[0];
+            view.usage = if path == "screen-0" {
+                publication_support::ready()
+            } else {
+                usage.clone()
+            };
+            previous.document_keys.insert(
+                routes::view(path, view.viewport, view.color_scheme),
+                "same".into(),
+            );
+        }
+        let mut details = pending
+            .details
+            .iter()
+            .map(|(path, detail)| (path.clone(), (**detail).clone()))
+            .collect();
+        let completed = reuse_usage(
+            &mut details,
+            &previous.index,
+            &previous.document_keys,
+            Some(&previous),
+        );
+        assert_eq!(completed.len(), 1);
+        assert!(completed.contains_key("screen-0/index.mobile.html"));
+        assert_eq!(
+            details["screen-0"].views[0].usage,
+            publication_support::ready()
+        );
+        assert_eq!(details["screen-1"].views[0].usage, CatalogueUsage::Pending);
     }
 }

@@ -26,9 +26,13 @@ async fn duplicate_stop_requests_stop_the_watcher_before_cancelling_startup() {
         PoolMock::cancel_requests
             .next_call(matching!())
             .returns(Ok(())),
+        crate::serve_git::GitWorkMock::cancel
+            .next_call(matching!())
+            .returns(()),
         PoolMock::shutdown.next_call(matching!()).returns(Ok(())),
     ));
     let lifecycle = Arc::new(ServeLifecycle {
+        git: Arc::new(mock.clone()),
         watch: Mutex::new(Some(Arc::new(mock.clone()))),
         cancellation: cancellation.clone(),
         pool: Arc::new(mock),

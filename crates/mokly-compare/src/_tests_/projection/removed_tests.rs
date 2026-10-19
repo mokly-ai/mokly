@@ -125,7 +125,7 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
     )));
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let index = projection_index::base_index(&result, &state).unwrap();
-    let details = projection_removed::details(&result, &index, &"f".repeat(64)).unwrap();
+    let mut details = projection_removed::details(&result, &index, &"f".repeat(64)).unwrap();
     assert_eq!(details.len(), 1);
     let detail = &details["removed"];
     assert!(detail.deployment_id.is_none());
@@ -142,4 +142,11 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
         CatalogueUsage::Ready { .. }
     ));
     assert!(detail.views[0].resource_evidence.is_none());
+    projection_removed::workspaces(&mut details);
+    let workspace = details["removed"].workspace.as_ref().unwrap();
+    assert!(!workspace.comparison_eligible);
+    assert!(workspace.used_by.is_empty());
+    assert!(workspace.affected.is_empty());
+    assert!(workspace.related_components.is_empty());
+    assert!(workspace.input_changes.is_empty());
 }

@@ -36,6 +36,7 @@ tracing-subscriber = "0.3.23"
 chrono = { version = "0.4.45", features = ["clock"] }
 
 [dev-dependencies]
+mokly-git = { workspace = true, features = ["mock"] }
 mokly-platform = { workspace = true, features = ["mock"] }
 mokly-compare = { workspace = true, features = ["mock"] }
 mokly-watch = { workspace = true, features = ["mock"] }
@@ -60,6 +61,7 @@ serde_json = "1.0.154"
 thiserror = "2.0.21"
 
 [features]
+design-matrix = []
 mock = ["dep:unimock", "mokly-publish/mock"]
 
 [target."cfg(unix)".dependencies]
@@ -87,3 +89,8 @@ workspace = true
 [dev-dependencies.mokly-static]
 workspace = true
 features = ["mock"]
+
+[[test]]
+name = "design_attribution_tests"
+path = "tests/design_attribution_tests.rs"
+required-features = ["design-matrix"]
