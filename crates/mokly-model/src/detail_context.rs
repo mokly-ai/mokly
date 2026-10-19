@@ -3,7 +3,7 @@
 use crate::axes::EntryKind;
 use crate::public_detail::EntryDetailV1;
 use crate::public_index::CatalogueReadModel;
-use crate::public_metadata::ComparisonSelection;
+use crate::public_metadata::{CatalogueChanges, ComparisonSelection};
 use crate::read_contract::ContractViolation;
 use crate::readers::{self, ReadError};
 use crate::usage_context;
@@ -38,38 +38,43 @@ pub fn validate_with(
         return Err(invalid(ContractViolation::DetailFence));
     }
     let path = &detail.entry.path;
-    let visual = match detail.entry.kind {
+    let entry = match detail.entry.kind {
         EntryKind::Screen => index
             .screens
             .iter()
             .find(|entry| &entry.entry.path == path)
-            .map(|entry| &entry.visual),
+            .map(|entry| (&entry.entry, Some(&entry.visual))),
         EntryKind::Component => index
             .components
             .iter()
             .find(|entry| &entry.entry.path == path)
-            .map(|entry| &entry.visual),
-        EntryKind::Page if index.pages.iter().any(|entry| &entry.entry.path == path) => None,
-        EntryKind::Document
-            if index
-                .documents
-                .iter()
-                .any(|entry| &entry.entry.path == path) =>
-        {
-            None
-        }
-        EntryKind::UseCase
-            if index
-                .use_cases
-                .iter()
-                .any(|entry| &entry.entry.path == path) =>
-        {
-            None
-        }
-        _ => return Err(invalid(ContractViolation::DetailKind)),
+            .map(|entry| (&entry.entry, Some(&entry.visual))),
+        EntryKind::Page => index
+            .pages
+            .iter()
+            .find(|entry| &entry.entry.path == path)
+            .map(|entry| (&entry.entry, None)),
+        EntryKind::Document => index
+            .documents
+            .iter()
+            .find(|entry| &entry.entry.path == path)
+            .map(|entry| (&entry.entry, None)),
+        EntryKind::UseCase => index
+            .use_cases
+            .iter()
+            .find(|entry| &entry.entry.path == path)
+            .map(|entry| (&entry.entry, None)),
     };
-    if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) && visual.is_none() {
+    let Some((entry, visual)) = entry else {
         return Err(invalid(ContractViolation::DetailKind));
+    };
+    if detail.reasons.is_some()
+        != matches!(
+            entry.changes,
+            CatalogueChanges::Ready { included: true, .. }
+        )
+    {
+        return Err(invalid(ContractViolation::DetailReasonsPresence));
     }
     if let Some(visual) = visual {
         if visual.views.len() != detail.views.len() {
@@ -100,3 +105,7 @@ pub(crate) fn invalid(message: ContractViolation) -> ReadError {
 #[cfg(test)]
 #[path = "_tests_/detail_context_tests.rs"]
 mod detail_context_tests;
+
+#[cfg(test)]
+#[path = "_tests_/detail_reason_presence_tests.rs"]
+mod detail_reason_presence_tests;

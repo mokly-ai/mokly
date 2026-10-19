@@ -34,7 +34,7 @@ generation?: string,
  */
 entry: DetailEntry,
 /**
- * Exact review reasons, present only for included entries while Changes is ready.
+ * Direct reasons in the review v8 shape, present for ready included entries of every kind.
  */
 reasons?: Array<EntryChangeReason>,
 /**

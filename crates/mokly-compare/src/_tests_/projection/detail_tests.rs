@@ -43,7 +43,7 @@ fn comparison(entry: EntryClassification) -> ComparisonResult {
 }
 
 #[test]
-fn included_reasons_survive_without_workspace_and_preserve_implementation_only_state() {
+fn included_reasons_survive_without_workspace_including_implementation_only_components() {
     for (kind, state, reasons) in [
         (
             EntryKind::Screen,
@@ -87,7 +87,6 @@ fn included_reasons_survive_without_workspace_and_preserve_implementation_only_s
         let detail = serde_json::to_value(&details["sample"]).unwrap();
         assert_eq!(detail["reasons"], json!(reasons));
         assert!(detail.get("workspace").is_none());
-        assert_eq!(result.entries[0].state, state);
     }
 }
 

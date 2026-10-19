@@ -146,6 +146,9 @@ pub enum ContractViolation {
     /// Detail review reasons must use the review's sorted unique order.
     #[error("detail review reasons must use the review's sorted unique order")]
     DetailReasons,
+    /// Detail reasons are present exactly for ready included index records.
+    #[error("detail reasons must match ready included Changes membership")]
+    DetailReasonsPresence,
     /// Instance or slot key does not match its material preimage.
     #[error("invalid usage digest or local id")]
     UsageKey,

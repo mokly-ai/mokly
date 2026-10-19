@@ -17,13 +17,13 @@ view's `documentKey` in the index.
 Evidence travels only in the index and in the entry details. The index
 carries `changesStatus`, each entry's `changes`, each view's `comparison`,
 and `removedEntries`; a detail carries one entry's per-view usage, resource
-evidence, and workspace lists. There is no evidence route per view or per
+evidence, direct reasons, and workspace lists. There is no evidence route per view or per
 navigation state, and a shell page is never fetched as evidence: the stub
 holds no data. A completed on-demand render reaches the shell as a
 publication whose refreshed detail carries that view's usage as `ready`. A
 temporary prop preview of the component controls contract uses the usage
 records of its own render response and never enters a detail.
-An included entry's detail carries its review v8 `reasons` while Changes is ready, independently of workspace readiness.
+An included entry's detail carries direct `reasons` in the review v8 shape while Changes is ready, independently of workspace readiness.
 
 Document responses do not wait for evidence publication. One application-owned
 publisher coalesces completed routes, skips recorded routes and routes with no

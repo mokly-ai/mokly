@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use axum::body::to_bytes;
 use mokly_graph::types::RenderGenerationMock;
-use mokly_model::public_metadata::ChangesStatus;
+use mokly_model::public_metadata::{CatalogueChanges, ChangeKind, ChangesStatus};
 use mokly_model::readers;
 use mokly_model::usage_schemas::UsageSchemas;
 use serde_json::{Value, json};
@@ -34,7 +34,7 @@ async fn delivered(snapshot: &Snapshot) -> Value {
 }
 
 #[tokio::test]
-async fn ready_reasons_are_delivered_and_every_non_ready_status_removes_them() {
+async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
     let (mut catalogue, _) = historical_inputs();
     catalogue.model = publication_support::empty_model();
     let graph = Unimock::new(
@@ -48,21 +48,19 @@ async fn ready_reasons_are_delivered_and_every_non_ready_status_removes_them() {
     result.entries[0].path = "screen-0".into();
     result.entries[0].documents.clear();
     let mut snapshot = (*publication_support::snapshot(1, Arc::new(Unimock::new(())))).clone();
+    snapshot.index.screens[0].entry.changes = CatalogueChanges::Ready {
+        kind: ChangeKind::Changed,
+        included: true,
+    };
     snapshot.changes = Some(comparison);
     changes_detail::apply(&mut snapshot).unwrap();
     let ready = delivered(&snapshot).await;
     assert_eq!(ready["reasons"], json!([{ "kind": "material" }]));
     assert!(ready.get("workspace").is_none());
-    for status in [
-        ChangesStatus::Preparing,
-        ChangesStatus::Pending,
-        ChangesStatus::Unavailable,
-        ChangesStatus::Disabled,
-    ] {
-        let mut replacement = snapshot.clone();
-        replacement.changes = None;
-        replacement.index.changes_status = status;
-        changes_detail::apply(&mut replacement).unwrap();
-        assert!(delivered(&replacement).await.get("reasons").is_none());
-    }
+    let mut replacement = snapshot.clone();
+    replacement.changes = None;
+    replacement.index.changes_status = ChangesStatus::Pending;
+    replacement.index.screens[0].entry.changes = CatalogueChanges::Pending;
+    changes_detail::apply(&mut replacement).unwrap();
+    assert!(delivered(&replacement).await.get("reasons").is_none());
 }

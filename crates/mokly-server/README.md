@@ -70,7 +70,7 @@ metadata. Serve uses those shared functions and the shared snapshot route builde
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
 all current details together. Ready state installs the review pointer, Changes
 membership, moved paths, removed records, and per-view evidence in one revision.
-Included details carry review reasons at their root even without a workspace.
+Included details carry classification reasons in the review v8 shape even without a workspace.
 Non-ready publications remove those reasons with the other comparison evidence.
 Capacity is checked before ready-state projection and again at installation.
 A full store therefore retries without repeating that projection.

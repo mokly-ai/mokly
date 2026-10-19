@@ -95,7 +95,7 @@ the machine.
 | definitions       | the bundle generation, through the sidecar's `describe` call: every exported definition and the story inventory                                                                                                                                                                                     |
 | catalogue model   | every entry record and the definitions                                                                                                                                                                                                                                                              |
 | catalogue index   | the catalogue model without per-view usage and resource evidence, the document keys of every view, page, and document, and, in Serve, the render generation                                                                                                                                         |
-| entry detail      | the entry's views' usage and resource evidence from the composed trees, and its workspace lists from the catalogue model                                                                                                                                                                            |
+| entry detail      | the entry's views' usage and resource evidence from the composed trees, direct classification reasons, and workspace lists from the catalogue model                                                                                                                                                 |
 
 A watched change hashes the changed file, finds the nodes whose keys moved, and
 recomputes only those. An HTML-only edit never rebundles JavaScript; a
@@ -184,20 +184,20 @@ shape or interpretation changes. No reader accepts an earlier number; readers
 reject before interpreting any field. Package 1.0.0 is the first number held
 stable.
 
-| Boundary                               | Version | Content                                                   |
-| -------------------------------------- | ------- | --------------------------------------------------------- |
-| Public catalogue read model            | 7       | the catalogue index at `mokly-viewer/index.json`          |
-| Entry detail                           | 1       | one entry's usage, resource evidence, and workspace lists |
-| Review result                          | 8       | tree materiality and owner-attributed rules               |
-| Catalogue change snapshot              | 4       | pairs review v8 with the base commit                      |
-| Live descriptor                        | 3       | the Serve JSON route with the render capability           |
-| Inspector wire envelope                | 2       | the frame adapter messages                                |
-| Removed page/document preview metadata | 3       | the preview of a removed page or document                 |
-| Export ownership                       | 3       | the ownership marker `build` writes                       |
-| Upload metadata, plan exchange         | 2, 1    | the publish exchange Mokly Cloud implements               |
-| Export transaction marker              | 2       | the output transaction marker `build` writes              |
-| Navigation disclosure storage          | v4      | the shell's navigation disclosure state                   |
-| Timing and verification records        | 1       | the timing and verification evidence records              |
+| Boundary                               | Version | Content                                                                   |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------- |
+| Public catalogue read model            | 7       | the catalogue index at `mokly-viewer/index.json`                          |
+| Entry detail                           | 1       | one entry's usage, resource evidence, direct reasons, and workspace lists |
+| Review result                          | 8       | tree materiality and owner-attributed rules                               |
+| Catalogue change snapshot              | 4       | pairs review v8 with the base commit                                      |
+| Live descriptor                        | 3       | the Serve JSON route with the render capability                           |
+| Inspector wire envelope                | 2       | the frame adapter messages                                                |
+| Removed page/document preview metadata | 3       | the preview of a removed page or document                                 |
+| Export ownership                       | 3       | the ownership marker `build` writes                                       |
+| Upload metadata, plan exchange         | 2, 1    | the publish exchange Mokly Cloud implements                               |
+| Export transaction marker              | 2       | the output transaction marker `build` writes                              |
+| Navigation disclosure storage          | v4      | the shell's navigation disclosure state                                   |
+| Timing and verification records        | 1       | the timing and verification evidence records                              |
 
 The render graph keeps generations in memory; there is no private IPC format.
 

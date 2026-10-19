@@ -63,7 +63,8 @@ Ready included entries carry it even when their usage workspace is unavailable.
 print the supplied integer or explain its absence.
 
 `detail_context::read` validates a current detail against its installed index.
-It checks the identity, deployment, revision, kind, and exact view set.
+It checks identity, deployment, revision, kind, exact views, and reason presence
+against ready included membership in the matching index record.
 `usage_context::validate` checks recorded props against component schemas,
 recomputes the shared props, instance, and slot keys, and checks references,
 cycles, input order, locations, and physical ranges. Historical callers supply

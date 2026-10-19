@@ -86,7 +86,7 @@ interface EntryDetailV1 {
   revision?: number; // current entries: equal to the index
   generation?: string; // removed entries: the comparison generation
   entry: { path: string; kind: CatalogueRecord["kind"]; snapshotId?: string };
-  reasons?: readonly EntryChangeReason[]; // review v8 reasons; ready and included only
+  reasons?: readonly EntryChangeReason[]; // reasons in the review v8 shape
   views: readonly DetailView[]; // empty for pages, documents, and use cases
   resourceEvidence?: ViewEvidence; // pages only; present when ready
   workspace?: Workspace; // screens and components, when all list inputs are proven
@@ -138,9 +138,9 @@ and neither of the other two, so a generation's files never change.
 present only while Changes is `ready` under
 [CSS attribution membership](./mokly-css-attribution-membership.md);
 `CatalogueUsage` and `ComponentWireProps` are the catalogue contract's shapes.
-`reasons` uses the review v8 `EntryChangeReason` shape and sorted unique order.
-It is present exactly when Changes is `ready` and the entry is included, for
-current and removed entries. A pure move carries `[]`. Other entries omit it.
+`reasons` carries classification reasons in the review v8 `EntryChangeReason` shape and sorted unique order, under the same reason policy.
+Pages and documents have no review record. Their details carry the classification's direct reasons under this policy.
+Ready included current and removed entries carry `reasons`. A pure move carries `[]`. Other entries omit the field.
 Reasons are independent of `workspace` and remain available before usage is proven.
 `usedBy` lists the current uses of a component, `affected` the consumers a
 changed component affects, `relatedComponents` the changed components that
@@ -190,11 +190,11 @@ removed entry's detail only when `identity` equals the index, `generation`
 equals the generation that the index's `comparisonUrl` names, and
 `snapshotId` equals the index's removed record for that path.
 
-Fetches use GET without custom headers and `credentials: "omit"`.
-Sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
+Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
+URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
 and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
-Built indexes and details are immutable. Hosts apply the static revalidation
-rules. The shell keeps them for the page's lifetime.
+Static hosts may cache the immutable index and details under the static revalidation rules.
+The shell keeps the index and details for the page's lifetime.
 
 ## Updates In Serve
 
@@ -226,19 +226,19 @@ unavailable with retry, and waits for the next message.
 
 ## Identity
 
-`build` hashes every installed output file under the
+`build` computes `deploymentId` as the hash of every installed output file under the
 [static export browser contract](./mokly-export-browser.md), with index and
-detail `deploymentId` fields set to 64 zeros. Generation files have no deployment
-id and keep the same bytes across builds. Serve keeps one id per process, such
-as a hash of catalogue identity and start value. A new id means another build or process.
+detail `deploymentId` fields set to 64 zeros. Generation files carry no deployment id,
+so one comparison gives the same bytes in every build. Serve keeps one id per process,
+for example a hash of catalogue identity and start value. A new id means another build or process.
 `revision` orders the states of one Serve process from `1`; a build writes `0`.
 
 ## Embedded Viewer
 
-`MoklyViewer` accepts an index object or URL and a detail function from entry
-path and optional snapshot id to an object, URL, or promise of either. Hosts
-use their own React. `@mokly/viewer/browser` mounts the standalone shell in
-the stub. The [viewer contract](./mokly-viewer.md) owns the props.
+`MoklyViewer` takes `index` as an object or URL and `detail` as a function from an
+entry path and optional snapshot id to an object, URL, or promise of either. Hosts use their own
+React. `@mokly/viewer/browser` mounts the standalone shell in the stub's mount element.
+The [embeddable viewer contract](./mokly-viewer.md) owns the props.
 
 ## Fail-Closed Rules
 

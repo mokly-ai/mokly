@@ -54,6 +54,7 @@ fn strict_reader_rejects_malformed_or_noncanonical_reasons() {
         json!([{ "kind": "material", "extra": true }]),
         json!([{ "kind": "material" }, { "kind": "dependency", "path": "static/a.css" }]),
         json!([{ "kind": "material" }, { "kind": "material" }]),
+        json!([{ "kind": "dependency", "path": "static/\u{e000}.css" }, { "kind": "dependency", "path": "static/\u{10000}.css" }]),
     ] {
         let mut value = detail();
         value["reasons"] = reasons;
