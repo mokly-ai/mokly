@@ -1727,6 +1727,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         decision before implementation (M14 review 5, finding 1).
   - [ ] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
+    - [x] Repair single-host isolated setup and record three unmodified installs.
+          Evidence: `.context/m14-installs/measurements.json` and `report.md` there.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.

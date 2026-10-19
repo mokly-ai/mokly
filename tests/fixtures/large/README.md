@@ -27,8 +27,12 @@ Generated output stays ignored.
 
 `--toolchain workspace` is the default. It links the workspace dependencies
 and records their lockfile. It measures no install time. `--toolchain install`
-packs the CLI, viewer, and host native package, pins consumer dependencies,
-and runs an isolated install. Its setup time is separate from the benchmark.
+packs the CLI, viewer, and every native package, pins consumer dependencies,
+and runs an isolated install. Only the host native package needs a built binary.
+Other native archives carry their available metadata and remain optional.
+Their platform selectors prevent installation on the host. Local overrides
+keep all five targets in the consumer lockfile without registry publication.
+Its setup time is separate from the benchmark.
 
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
 select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
