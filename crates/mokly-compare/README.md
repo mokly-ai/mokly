@@ -90,11 +90,28 @@ Rendered and canonical trees use iterative traversal, equality, move
 fingerprinting, and release. Deep rendered trees need no enlarged thread stack.
 Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
+It validates and captures the base in one source-root pass. Private compressed
+inputs preserve exact document bytes, generated CSS, and trusted annotations.
+Every generated route that fits retains its digest. Usage, links, resources,
+and component metadata stay Rust values, so valid deep props need no recursive
+JSON decode.
+`DEFAULT_BASE_CAPTURE_BYTES` sets a 256 MiB retention budget. It charges encoded
+payloads, Rust metadata, closures, route keys, and conservative map overhead.
+Inputs that do not fit read from the pinned source. Head reads use the original
+bounded render cache and render again on the head root after eviction. Source
+switches stay constant while the base capture fits; fallback can add switches.
+Move pairing, view comparison, and snapshot reads restore one base view at a time.
+Each result holds at most one base capture. It writes no files and retains no
+parsed page set. The API supports capture reuse, which tests exercise;
+production callers supply fresh bases. Serve can hold an accepted capture while
+building its replacement, so two captures can overlap. The separate 256 MiB
+render cache and the sidecar pool keep their own bounds.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
 It releases parsed documents after collecting canonical and containment proof.
-The retained result holds graph handles, view states, reasons, ownership
+The retained result holds a bounded base capture over its pinned source, the
+original cached head generation, view states, reasons, ownership
 records, and immutable historical metadata. Resource facts and byte proofs
 are reused per route; public resource bytes and stylesheet diffs have explicit
 cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and

@@ -14,6 +14,9 @@ interface Timing {
   status?: string;
   tier?: number;
   views?: number;
+  uncapturedViews?: number;
+  retainedBytes?: number;
+  encodedBytes?: number;
   unchanged?: number;
   changed?: number;
   ignoredOnly?: number;

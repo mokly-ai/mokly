@@ -90,9 +90,9 @@ pub struct ComparisonResult {
     pub pairing: Pairing,
     /// Shared terminal and index counts.
     pub counts: ComparisonCounts,
-    /// Same pinned base generation used by historical reads and removed previews.
+    /// Bounded captured base over the pinned source; misses read that same source.
     pub before: Arc<dyn RenderGeneration>,
-    /// Same working generation used by the build.
+    /// Original working generation; head reads use its bounded render cache.
     pub after: Arc<dyn RenderGeneration>,
 }
 

@@ -12,6 +12,12 @@ use unimock::{MockFn, Unimock, matching};
 use crate::comparison_graph::FrozenResources;
 
 #[test]
+fn capture_reuse_cannot_bypass_frozen_resource_checks() {
+    let graph: &dyn RenderGeneration = &FrozenResources::new(Arc::new(Unimock::new(())));
+    assert!(graph.comparison_capture().is_none());
+}
+
+#[test]
 fn saved_digests_reject_later_resource_mutation_without_a_second_hash_read() {
     let graph: &dyn RenderGeneration = &FrozenResources::new(Arc::new(Unimock::new((
         RenderGenerationMock::resource_digest
