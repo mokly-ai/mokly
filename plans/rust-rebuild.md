@@ -1781,14 +1781,13 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     navigation. Keep the assertions and console policy. Recommended A: confirm
     the notice origin before a separate fixture fix. Evidence: M12
     `report-13.md` and `round13-gate-attempt1-failures.json`.
-  - M12 verification follow-up, Low severity, Small effort: investigate the
-    build cases in `sidecar_stderr_shutdown.test.ts` (exit marker `null`,
-    expected `"0"`) and `static_recovery_signals.test.ts` (120000ms timeout).
-    Both passed unchanged in isolation. Suspected sources are loaded shutdown
-    timing and watcher or signal readiness; the timed-out recovery callback
-    left its test process open. Recommended A: inspect those boundaries in a
-    separate fix without changing deadlines or assertions. Evidence: M12
-    `report-13.md` and `round13-node-failures-rerun.log`.
+  - [x] Resolve the loaded stderr and recovery signal test failures. Acknowledge
+        command diagnostics before shutdown, check graceful exit and the final
+        tail through direct sidecars, and retain mocked shared-deadline checks.
+        Split recovery faults into independent cases and make readiness and
+        process cleanup follow test cancellation. Keep every assertion and
+        snapshot payload. Evidence: M12 `report-13.md`,
+        `round13-load-counts.json`, and `round13-load-after.json`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

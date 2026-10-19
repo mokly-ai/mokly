@@ -228,6 +228,9 @@ itself without debug assertions and cannot be referenced in that mode. It does
 not inspect a packed release binary. The signal-session probe creates and drops
 both build and publish signal handlers. Normal source and output operations
 still use their injected trait boundaries.
+Each recovery signal case owns one fault, fixture, and hang guard. It waits for
+the complete readiness marker before sending SIGINT. Test cancellation closes
+the watcher, kills and reaps the fixture process, and removes its output.
 
 ### Key Code
 

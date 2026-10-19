@@ -120,6 +120,10 @@ cargo xtask generate-types
 ```
 
 Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
+The shutdown unit tests control exit and drain independently through `WaitMock`.
+Command stderr tests acknowledge all forwarded bytes before shutdown and check
+bounded pieces and process reaping. Direct sidecar tests check graceful exit
+code 0 and the final partial stderr tail without the core's grace timer.
 They verify frame limits, hello, correlation, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines. Real integration tests spawn
 the built sidecar and render a component, screen, story, and page.

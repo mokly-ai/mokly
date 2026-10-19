@@ -13,20 +13,29 @@ import {
 } from "./static_publication.js";
 
 const exec = promisify(execFile);
-export async function recoveryFixture() {
+export async function recoveryFixture(signal?: AbortSignal) {
   const root = await publicationFixture();
-  const result = await command(root, "build", [
-    "--no-changes",
-    "--out=.context/previous",
-  ]).result;
-  assert.equal(result.code, 0, result.stderr);
-  await fs.writeFile(
-    path.join(root, "specs/home.screen.html"),
-    "---\ntitle: Home\n---\n<h1>New site</h1>",
-  );
-  await exec("git", ["add", "."], { cwd: root });
-  await exec("git", ["commit", "-qm", "new site"], { cwd: root });
-  return root;
+  try {
+    const result = await command(
+      root,
+      "build",
+      ["--no-changes", "--out=.context/previous"],
+      "plain",
+      {},
+      signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    await fs.writeFile(
+      path.join(root, "specs/home.screen.html"),
+      "---\ntitle: Home\n---\n<h1>New site</h1>",
+    );
+    await exec("git", ["add", "."], { cwd: root, signal });
+    await exec("git", ["commit", "-qm", "new site"], { cwd: root, signal });
+    return root;
+  } catch (error) {
+    await fs.rm(root, { recursive: true, force: true });
+    throw error;
+  }
 }
 export function faultCommand(
   root: string,
