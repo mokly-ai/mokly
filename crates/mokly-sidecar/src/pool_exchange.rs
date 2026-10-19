@@ -4,6 +4,7 @@ use crate::error::{Error, FailureKind, ProtocolError, Result};
 use crate::methods::Call;
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_releases::Release;
+use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 
 impl SidecarPool for Pool {
@@ -68,7 +69,16 @@ impl SidecarPool for Pool {
                 || matches!(&outcome, Err(Error::Remote { code, .. }) if code.reusable())
                 || matches!(&outcome, Err(Error::Postcss { .. }));
             if !reusable {
-                let killed = current.control.kill();
+                let stopped = {
+                    let mut state = self.lock()?;
+                    state.replacement_reasons.insert(index, Reason::Replacement);
+                    state.stopped
+                };
+                let killed = if stopped {
+                    current.control.kill()
+                } else {
+                    Reason::Replacement.kill(current.control.as_ref())
+                };
                 if let Err(error) = killed {
                     outcome = Err(error);
                     break;

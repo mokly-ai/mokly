@@ -2,6 +2,10 @@ import fs from "node:fs/promises";
 
 import { expect, type Request } from "@playwright/test";
 
+import {
+  expectPaneDocumentsKept,
+  markPaneDocuments,
+} from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { comparisonIndex, modeButton, navRow } from "./comparison_ui.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
@@ -162,10 +166,13 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
   // after it, and changes nothing.
   held[1]!.open();
   await expectDaylight();
+  await markPaneDocuments(page.locator(stage));
   held[0]!.open();
   await expect.poll(() => ended.has(held[0]!.request)).toBe(true);
   await passRenderingUpdates(page);
   await expectDaylight();
+  // The same pane documents stay, not equal replacements.
+  await expectPaneDocumentsKept(page.locator(stage));
 });
 
 test("released review v6 uses the standalone version message", async ({

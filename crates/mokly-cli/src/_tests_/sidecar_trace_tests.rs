@@ -144,10 +144,27 @@ fn spawn_and_replacement_cover_hello_and_keep_error_until_success() {
             .filter(|record| record["stage"] == "sidecar.recycle")
             .collect();
         assert_eq!(recycle.len(), 2);
+        assert!(recycle.iter().all(|record| record["reason"] == "retry"));
         assert_eq!(recycle[1]["status"], if success { "ok" } else { "error" });
         assert_eq!(spawns[0]["parentId"], records[0]["id"]);
         assert_eq!(recycle[0]["parentId"], records[0]["id"]);
         assert_eq!(spawns[2]["parentId"], recycle[0]["id"]);
+        let stops: Vec<_> = records
+            .iter()
+            .filter(|record| record["stage"] == "sidecar.stop")
+            .collect();
+        assert_eq!(stops.len(), if success { 2 } else { 4 });
+        for (index, pair) in stops.chunks_exact(2).enumerate() {
+            assert_eq!(pair[0]["event"], "start");
+            assert_eq!(pair[1]["event"], "end");
+            assert_eq!(pair[0]["id"], pair[1]["id"]);
+            assert_eq!(pair[1]["status"], "ok");
+            assert_eq!(pair[1]["durationMs"], 0);
+            for record in pair {
+                assert_eq!(record["reason"], "retry");
+                assert_eq!(record["parentId"], spawns[index * 2]["id"]);
+            }
+        }
         assert!(
             records
                 .iter()

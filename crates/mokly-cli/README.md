@@ -278,6 +278,8 @@ retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
   [Serve preparation](./src/serve.rs) and [Serve terminal output](./src/serve_output.rs).
 - [Serve warning scopes](./src/serve_warnings.rs) and [candidate actions](./src/serve_rebuild_action.rs).
 - [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
+- [Structured timings](./src/serve_trace.rs) and the
+  [core stage selection](./src/serve_trace_stages.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 - [Design attribution matrix](./tests/design_attribution_tests.rs).
 - [Design behaviour checks](./tests/design_behaviour_tests.rs) pin four design

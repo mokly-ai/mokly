@@ -157,6 +157,28 @@ can populate factual rows from validated comparison/usage records and paired
 inputs, but does not generate visual-analysis prose. Temporary control edits
 stay separate from saved comparison evidence.
 
+Details read the routed entry's direct reasons from its
+[entry detail](./mokly-shell-delivery.md#entry-detail), so they show them as
+soon as the detail arrives: in Current before any comparison loads, in a loaded
+comparison, and under either filter. Each reason is one sentence after the
+branch-point sentence, shown once whatever supplies it. A `dependency` reason
+reads only through the changed-files list of the
+[CSS evidence contract](./mokly-css-evidence-presentation.md), and a pure move
+has no reason sentence.
+
+| Reason           | Sentence                                                 |
+| ---------------- | -------------------------------------------------------- |
+| `added`          | “Added to this branch.”                                  |
+| `removed`        | “Removed on this branch.”                                |
+| `material`       | “Rendered content changed.”                              |
+| `implementation` | “Rendered content changed where this component is used.” |
+| `inputs`         | “Supplied props or slots changed.”                       |
+| `structure`      | “Component instances changed.”                           |
+| `metadata`       | “Page details or saved examples changed.”                |
+
+The `implementation` sentence describes actual-instance impact. The
+component's own view states and comparison captions stay unchanged.
+
 ## Verification
 
 Capture regressions before making the changes. Exercise native viewport,

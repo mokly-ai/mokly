@@ -24,6 +24,7 @@ mod pool_requests;
 mod pool_shutdown;
 mod pool_sources;
 mod pool_state;
+mod pool_timing;
 pub mod postcss_failure;
 mod presentation;
 pub mod process_clock;
@@ -33,6 +34,8 @@ pub mod process_factory;
 mod process_io;
 pub mod process_memory;
 mod process_parent;
+mod process_reaper;
+mod process_startup;
 mod process_transport;
 mod process_worker;
 pub mod render_records;
@@ -47,3 +50,7 @@ mod memory_schedule;
 mod memory_table;
 mod memory_tree;
 mod pool_recycle;
+
+#[cfg(test)]
+#[path = "_tests_/trace_capture.rs"]
+mod trace_capture;

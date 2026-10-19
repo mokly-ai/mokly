@@ -128,6 +128,10 @@ export function richDetails(): EntryDetailV1[] {
       resources: [{ path: "assets/icon.svg", owner: { kind: "entry" } }],
     };
   }
+  home.reasons = [
+    { kind: "dependency", path: "styles/action.css" },
+    { kind: "material" },
+  ];
   home.workspace!.relatedComponents = [
     { path: "components/action", title: "Action" },
   ];

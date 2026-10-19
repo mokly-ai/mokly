@@ -10,6 +10,7 @@ export function mergeWorkspaceEvidence(
   for (const key of [
     "status",
     "change",
+    "reasons",
     "comparison",
     "resourceEvidence",
     "usageComplete",
