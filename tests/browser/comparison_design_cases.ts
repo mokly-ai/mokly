@@ -6,6 +6,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
+import { expectReasonSentences } from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
 
@@ -218,6 +219,11 @@ export function registerComparisonDesign(
               exact: true,
             }),
           ).toBeVisible();
+          await expectReasonSentences(
+            page.locator(".mbk-comparison-details"),
+            ["removed"],
+            `${viewport} ${route}`,
+          );
           await expect(
             page.getByRole("group", { name: "Comparison mode" }),
           ).toHaveCount(0);

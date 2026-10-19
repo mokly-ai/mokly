@@ -7,6 +7,7 @@ import {
 
 import type { DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
+import { ReasonSentences } from "./reason_sentences.js";
 import { PreviousVersionLabel } from "./removed_preview.js";
 import { ReviewNav } from "./review.js";
 import { ScreenHead, Shell, ViewSwitch } from "./shell.js";
@@ -52,7 +53,7 @@ export function RemovedScreen({
   const inspector = (
     <DetailsPanel
       subject={subject}
-      comparisonEvidence={<p>The previous version comes from that point.</p>}
+      comparisonEvidence={<ReasonSentences reasons={["removed"]} />}
       open
     />
   );

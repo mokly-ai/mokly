@@ -2,6 +2,10 @@ import { expect } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
 import { componentDesignFixture } from "./component_design_fixture.js";
+import {
+  expectReasonSentences,
+  type SentenceReason,
+} from "./design_reason_sentences.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
 
@@ -30,17 +34,28 @@ export function registerComponentEvidence(
       test("comparison facts appear only in Details when evidence exists", async ({
         page,
       }) => {
-        for (const route of [
-          "design/components/pages/comparison",
-          "design/components/pages/stacked/overlay",
-          "design/components/pages/stacked/difference",
-          "design/components/pages/stacked/overlay-tall",
-          "design/components/pages/affected",
-          "design/components/controls/states/comparison",
-          "design/components/states/removed",
-          "design/components/states/removed-consumer",
-          "design/components/inspection/inspection-direct-change",
-        ]) {
+        // Each route's direct reasons; a stylesheet reads only as its files.
+        for (const [route, reasons] of [
+          ["design/components/pages/comparison", ["material"]],
+          ["design/components/pages/stacked/overlay", ["material"]],
+          ["design/components/pages/stacked/difference", ["material"]],
+          ["design/components/pages/stacked/overlay-tall", ["material"]],
+          ["design/components/pages/affected", ["material"]],
+          ["design/components/controls/states/comparison", ["material"]],
+          ["design/components/states/additions/added", ["added"]],
+          ["design/components/states/removed", ["removed"]],
+          ["design/components/states/removed-consumer", ["removed"]],
+          ["design/components/inspection/inspection-direct-change", ["inputs"]],
+          [
+            "design/components/states/shared-impact/style-changed",
+            ["implementation"],
+          ],
+          ["design/components/states/shared-impact/style-outside", []],
+          ["design/components/states/shared-impact/shared-impact", []],
+        ] as const satisfies readonly (readonly [
+          string,
+          readonly SentenceReason[],
+        ])[]) {
           await page.goto(componentDesignUrl(route, viewport));
           await expect(
             page.locator(".ce-preview-pane .ce-comparison-evidence"),
@@ -59,6 +74,11 @@ export function registerComponentEvidence(
           await expect(
             page.locator(".ce-comparison-evidence"),
           ).not.toContainText("corners and spacing");
+          await expectReasonSentences(
+            page.locator(".ce-comparison-evidence"),
+            reasons,
+            `${viewport} ${route}`,
+          );
           if (route === "design/components/states/removed-consumer")
             await expect(
               page.getByRole("region", { name: "Details", exact: true }),

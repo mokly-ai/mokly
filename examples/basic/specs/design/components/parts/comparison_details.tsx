@@ -3,6 +3,7 @@ import { MockLink } from "@mokly/mokly";
 import { useDesignInstance } from "../../library/composition.js";
 import { changeStatusBadge } from "../../library/controls/change-status.js";
 import { MetaRow } from "../../parts/metadata_row.js";
+import { ReasonSentences } from "../../parts/reason_sentences.js";
 import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
@@ -20,7 +21,10 @@ export function ChangeStatusBadge({ status }: { status: ChangeStatus }) {
   );
 }
 
-/** Factual evidence belongs to the inspector, with no generated visual narrative. */
+/**
+ * Factual evidence belongs to the inspector, with no generated visual
+ * narrative: each direct reason reads as one sentence after the branch point.
+ */
 export function ComparisonDetails({
   comparison,
   subject,
@@ -38,23 +42,13 @@ export function ComparisonDetails({
   const prop = detail?.propChange;
   const styleCopy =
     subject === "component" ? COMPONENT_STYLE_COPY : SCREEN_STYLE_COPY;
-  const reasons = {
-    output: "Rendered output changed",
-    inputs: "Supplied props changed",
-    added: "Added since the comparison baseline",
-    removed: "Removed since the comparison baseline",
-    "variant-removed": "Saved variant removed",
-    styles: styleCopy.stylesChanged,
-  } as const;
   return (
     <section className="ce-comparison-evidence" aria-label="Comparison details">
       <h3>Comparison details</h3>
       <p className="ce-muted">Compared with the branch point on origin/main.</p>
-      {detail ? (
+      {detail ? <ReasonSentences reasons={detail.reasons} /> : null}
+      {detail && (detail.variant || detail.savedPropsUnchanged) ? (
         <dl className="ce-props">
-          <MetaRow name="change" label="Change" presentation="props">
-            {reasons[detail.reason]}
-          </MetaRow>
           {detail.variant ? (
             <MetaRow
               name="saved-variant"

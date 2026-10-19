@@ -145,7 +145,7 @@ Its `design/components/states/shared-impact/style-changed` and `design/component
 siblings depict a changed Action and a screen styled outside it; each changed
 file lists its outcomes under that file.
 
-Use structured evidence: entry/variant state, a generic output-change reason,
+Use structured evidence: entry/variant state, one sentence per direct reason,
 the component-level changed-file list and style outcomes, selected-variant
 stylesheet exclusions, paired prop values, and links to changed components
 actually used by the screen. The [CSS evidence contract](./mokly-css-evidence-presentation.md#details-copy)
@@ -182,7 +182,10 @@ because details written before reasons existed must keep loading.
 | `metadata`       | “Page details or saved examples changed.”                |
 
 The `implementation` sentence describes actual-instance impact. The
-component's own view states and comparison captions stay unchanged.
+component's own view states and comparison captions stay unchanged. The
+`design/components/states/shared-impact/style-changed` artboard depicts it: a
+markup change shows only where screens use Action, so Details read the
+sentence while the Default caption still names only the changed styles.
 
 ## Verification
 

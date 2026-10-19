@@ -1,3 +1,4 @@
+import type { ChangeReasonKind } from "../../parts/reason_sentences.js";
 import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
@@ -12,8 +13,11 @@ export type ChangeStatus = "unmodified" | "added" | "changed" | "removed";
 
 interface ChangedComparisonFixture {
   status: Exclude<ChangeStatus, "unmodified">;
-  reason:
-    "output" | "inputs" | "added" | "removed" | "variant-removed" | "styles";
+  /**
+   * The routed entry's direct reasons in their sorted order. Details read
+   * each one as its sentence, and a `dependency` only through the files list.
+   */
+  reasons: readonly ChangeReasonKind[];
   variant?: string;
   savedPropsUnchanged?: boolean;
   propChange?: {
@@ -48,7 +52,7 @@ export const footerLabelChange = {
 
 export const actionComparison = {
   status: "changed",
-  reason: "output",
+  reasons: ["material"],
   variant: "Default",
   savedPropsUnchanged: true,
 } as const satisfies ComparisonFixture;
@@ -56,7 +60,7 @@ export const actionComparison = {
 /** The Checklist's own output changed while its saved props stayed the same. */
 const checklistComparison = {
   status: "changed",
-  reason: "output",
+  reasons: ["material"],
   variant: "Default",
   savedPropsUnchanged: true,
 } as const satisfies ComparisonFixture;
@@ -64,10 +68,14 @@ const checklistComparison = {
 /** The one stylesheet all three stylesheet stories change. */
 const ACTION_STYLES = "styles/actions.css";
 
-/** Its changed `.action` rule styles only Action's own output. */
+/**
+ * Its changed `.action` rule styles only Action's own output. A markup change
+ * shows only where Welcome and Details use Action, so the parent also has the
+ * `implementation` reason, which leaves the Default caption naming the styles.
+ */
 const actionStyleComparison = {
   status: "changed",
-  reason: "styles",
+  reasons: ["dependency", "implementation"],
   variant: "Default",
   savedPropsUnchanged: true,
   stylesheets: [
@@ -89,8 +97,8 @@ const componentComparisons: Partial<
   difference: actionComparison,
   "overlay-tall": checklistComparison,
   affected: actionComparison,
-  added: { status: "added", reason: "added", variant: "Default" },
-  removed: { status: "changed", reason: "variant-removed", variant: "Compact" },
+  added: { status: "added", reasons: ["added"], variant: "Default" },
+  removed: { status: "changed", reasons: ["removed"], variant: "Compact" },
   "shared-impact": {
     status: "unmodified",
     excludedStylesheets: [ACTION_STYLES],
@@ -103,16 +111,16 @@ const screenComparisons: Partial<
 > = {
   "direct-change": {
     status: "changed",
-    reason: "inputs",
+    reasons: ["inputs"],
     propChange: footerLabelChange,
     changedComponents: [
       { title: "Action", to: "design/components/pages/affected" },
     ],
   },
-  "removed-consumer": { status: "removed", reason: "removed" },
+  "removed-consumer": { status: "removed", reasons: ["removed"] },
   "style-outside": {
     status: "changed",
-    reason: "styles",
+    reasons: ["dependency"],
     stylesheets: [
       {
         path: ACTION_STYLES,
