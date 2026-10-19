@@ -224,9 +224,25 @@ shared rules use separate selectors in one head, with exact per-rule evidence.
 The matrix runs only on demand with the `design-matrix` feature. The default
 workspace tests and verification gate exclude this target.
 
+The design behaviour target checks parents' own-props views, stacked frames,
+captions tied to recorded changes, and the Checklist's Changes in the default
+workspace suite. It renders an isolated copy of the example catalogue.
+Set `MOKLY_TEST_DESIGN_MUTATION` to inject one defect into that copy. Each
+value must fail its corresponding behaviour check:
+
+| Value            | Injected defect                                      |
+| ---------------- | ---------------------------------------------------- |
+| `own-props`      | Replace a parent's own destination prop.             |
+| `stack`          | Remove the Current layer's class marker.             |
+| `caption`        | Replace a comparison caption with incorrect text.    |
+| `checklist`      | Replace the Checklist's Changes with Action's story. |
+| `stack-swap`     | Swap Before and Current content in stacked previews. |
+| `caption-record` | Change a recorded reason without changing a caption. |
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
+cargo test -p mokly-cli --test design_behaviour_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
@@ -264,6 +280,8 @@ retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
 - [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 - [Design attribution matrix](./tests/design_attribution_tests.rs).
+- [Design behaviour checks](./tests/design_behaviour_tests.rs) pin four design
+  contracts and check fixture failure handling.
 
 ### Related Docs
 
