@@ -1,4 +1,3 @@
-import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -13,28 +12,24 @@ export async function signalFault(
   signal: AbortSignal,
 ) {
   const readiness = faultReadiness(root, fault.split(",")[0]!, signal);
-  const running = faultCommand(root, verb, fault, mode);
-  const stop = () => {
-    const pid = running.child.pid;
-    if (pid === undefined) return;
-    if (process.platform === "win32") {
-      execFile("taskkill", ["/PID", String(pid), "/T", "/F"], () => {});
-      return;
-    }
-    try {
-      process.kill(-pid, "SIGKILL");
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-    }
-  };
+  // Registration is async; retain an early abort until its group can be drained.
+  const ready = readiness.ready.catch((error: unknown) => ({ error }));
+  const running = await faultCommand(root, verb, fault, mode).catch(
+    (error: unknown) => {
+      readiness.close();
+      throw error;
+    },
+  );
+  const stop = () => running.signal("SIGKILL");
   signal.addEventListener("abort", stop, { once: true });
   try {
-    await Promise.race([
-      readiness.ready,
+    const failure = await Promise.race([
+      ready,
       running.result.then((result) => {
         throw new Error(`No fault readiness: ${result.stderr}`);
       }),
     ]);
+    if (failure) throw failure.error;
     signal.throwIfAborted();
     running.child.kill("SIGINT");
     return await running.result;

@@ -8,7 +8,8 @@ import {
   command,
   directory,
   publicationFixture,
-  publish,
+  publishArguments,
+  registeredCommand,
   removeOutput,
 } from "./static_publication.js";
 
@@ -37,7 +38,7 @@ export async function recoveryFixture(signal?: AbortSignal) {
     throw error;
   }
 }
-export function faultCommand(
+export async function faultCommand(
   root: string,
   verb: "build" | "publish",
   faults: string,
@@ -53,17 +54,11 @@ export function faultCommand(
     MOKLY_TEST_STATIC_READY: path.join(root, ".context/ready"),
     ...extra,
   };
-  return verb === "publish"
-    ? publish(root, "http://127.0.0.1:1/plan", mode, { env, detached: true })
-    : command(
-        root,
-        "build",
-        ["--no-changes", `--out=${output}`],
-        mode,
-        env,
-        undefined,
-        true,
-      );
+  const args =
+    verb === "publish"
+      ? publishArguments("http://127.0.0.1:1/plan")
+      : ["--no-changes", `--out=${output}`];
+  return registeredCommand(root, verb, args, mode, env);
 }
 export function outputDirectory(
   root: string,
