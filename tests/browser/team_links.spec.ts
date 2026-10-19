@@ -2,6 +2,11 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { documentFavicon } from "./document_error_allowance.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 test.beforeEach(({ allowBrowserError, baseURL }) =>
   documentFavicon(allowBrowserError, baseURL!),
@@ -9,12 +14,16 @@ test.beforeEach(({ allowBrowserError, baseURL }) =>
 
 for (const viewport of ["mobile", "desktop"] as const)
   for (const scheme of ["light", "dark"] as const)
-    test(`${viewport}/${scheme}: direct native team links retain screen axes and reach the canonical page`, async ({
+    test(`${viewport}/${scheme}: native team links retain screen axes and reach pages and documents`, async ({
       page,
     }) => {
       const suffix = `index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
       const document = (entry: string) =>
         `/static/mokly-generated/example/team/${entry}/${suffix}`;
+      const roles = new RegExp(
+        `/example/team/member-roles/index${scheme === "dark" ? "\\.dark" : ""}\\.html$`,
+        "u",
+      );
       await page.goto(document("members"));
       await page
         .getByRole("link", { name: "Invite teammate", exact: true })
@@ -65,4 +74,23 @@ for (const viewport of ["mobile", "desktop"] as const)
       await expect(
         page.getByRole("heading", { name: "Team", exact: true }),
       ).toBeVisible();
+      await page.goto(document("invite"));
+      await page
+        .getByRole("link", { name: "Read about roles", exact: true })
+        .click();
+      await expect(page).toHaveURL(roles);
+      await page.goto("/view/example/team/invite/");
+      await chooseViewport(page, viewport);
+      await chooseScheme(page, scheme);
+      const invite = page.locator(`.mbk-frame-${viewport} iframe`);
+      await expectFrameSource(
+        invite,
+        new RegExp(document("invite").replaceAll(".", "\\.") + "$", "u"),
+      );
+      await invite
+        .contentFrame()
+        .getByRole("link", { name: "Read about roles", exact: true })
+        .click();
+      await expect(page).toHaveURL(/\/view\/example\/team\/member-roles\/$/u);
+      await expectFrameSource(page.locator(".mbk-stage-embed iframe"), roles);
     });
