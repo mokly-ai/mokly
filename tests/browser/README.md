@@ -78,6 +78,17 @@ copied output; the source repository and first output are removed.
 | `removedComponent`     | `components/retired`: removed component parent                                                                                                                                                                                                                                                                                                         |
 | `removedVariant`       | `components/card/archived`: removed variant of a surviving component                                                                                                                                                                                                                                                                                   |
 
+The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
+switch filters and modes, and measure pane, viewport, and region offsets.
+
+Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
+removed record's `snapshotId`. Use the canonical `/view/{path}/` route and
+`snapshot` query when selecting a historical record. The fixture provides
+native comparison data for comparison modes, removed previews, Changed
+membership, navigation disclosure, focus, scrolling, and stylesheet Details.
+Each spec owns its browser state and assertions; the fixture does not mock
+read models or alter responses.
+
 ## Embedded comparison viewer
 
 `comparison_viewer_host.ts` mounts the public `MoklyViewer` over the native
@@ -89,17 +100,6 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `view`, `viewport`, `base=none` (an index without `base`), and
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
-
-The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
-switch filters and modes, and measure pane, viewport, and region offsets.
-
-Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
-removed record's `snapshotId`. Use the canonical `/view/{path}/` route and
-`snapshot` query when selecting a historical record. The fixture provides
-native comparison data for comparison modes, removed previews, Changed
-membership, navigation disclosure, focus, scrolling, and stylesheet Details.
-Each spec owns its browser state and assertions; the fixture does not mock
-read models or alter responses.
 
 ## Watched catalogue cases
 
