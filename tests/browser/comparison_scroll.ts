@@ -126,6 +126,22 @@ export async function expectStackAt(
     .toBe(y);
 }
 
+/** Read a value after each of several rendering updates of the page. */
+export async function sampleFrames<T>(
+  page: Page,
+  read: () => Promise<T>,
+  frames = 8,
+): Promise<T[]> {
+  const samples: T[] = [];
+  for (let index = 0; index < frames; index += 1) {
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(resolve)),
+    );
+    samples.push(await read());
+  }
+  return samples;
+}
+
 /** Expect the two layers of a stack to occupy one rectangle. */
 export async function expectCoincidentLayers(section: Locator): Promise<void> {
   const before = await paneFrame(section, "before").boundingBox();

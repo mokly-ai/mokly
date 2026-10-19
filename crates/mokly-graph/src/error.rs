@@ -1,5 +1,6 @@
 //! Render graph errors preserve failures from each subsystem.
 
+use std::path::PathBuf;
 use std::result;
 
 use mokly_catalogue::diagnostic::Warning;
@@ -15,6 +16,12 @@ pub type Result<T> = result::Result<T, GraphError>;
 /// A failed candidate cannot be published or written.
 #[derive(Debug, Error)]
 pub enum GraphError {
+    /// Opaque source bytes no longer match the generation that selected them.
+    #[error("[mokly-graph/input-changed] input changed: {}", path.display())]
+    InputsChanged {
+        /// Captured source identity.
+        path: PathBuf,
+    },
     /// Expected consumer runtime failure with its terminal category intact.
     #[error("[mokly-graph/runtime] {source}")]
     Runtime {

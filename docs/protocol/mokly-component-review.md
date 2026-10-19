@@ -88,8 +88,9 @@ component path, and its `instanceKey`, the scoped instance identity of the
 through accepted move pairs, equals `changedComponentId`. Each instance must
 exist in the named side's composed tree with that component path and an
 ownership edge to the next element. Direct screen use has one element. A
-component consumer either owns the context entry or is an earlier instance on
-that chain. Use input ownership, not physical slot placement, to determine the
+component consumer either owns the context entry or owns the first instance
+on that chain. The chain omits the consumer's own instance and outer ancestors.
+Use input ownership, not physical slot placement, to determine the
 edges: a screen-supplied child in a container slot is a direct screen
 dependency. Repeated placements of one logical instance do not duplicate
 evidence or screen counts. The

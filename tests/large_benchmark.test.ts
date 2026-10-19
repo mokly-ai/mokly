@@ -5,24 +5,19 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { deferred, scenarios } from "../scripts/large/benchmark.js";
+import { scenarios } from "../scripts/large/benchmark.js";
 import { processRows, treeRss } from "../scripts/large/memory.js";
 import { commitFixture } from "../scripts/large/setup.js";
 import { prepareToolchain } from "../scripts/large/toolchain.js";
+import { NATIVE_TARGETS } from "../scripts/release/targets.mjs";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const run = promisify(execFile);
 
-test("four scenarios distinguish pending integrations from measured work", () => {
+test("the harness offers all four measured scenarios", () => {
   assert.deepEqual(scenarios, ["build", "serve", "changes", "watch"]);
-  assert.equal(deferred("build"), undefined);
-  assert.equal(deferred("serve"), undefined);
-  assert.equal(deferred("changes")?.owner, "M9");
-  assert.equal(deferred("watch")?.owner, "M11");
-  assert.equal(deferred("changes")?.status, "deferred");
-  assert.equal(deferred("watch")?.status, "deferred");
 });
 
 test("RSS samples include descendants and exclude unrelated processes", () => {
@@ -56,7 +51,7 @@ test("setup commits stylesheets before the unrelated CSS edit", async (t) => {
   );
 });
 
-test("isolated toolchain packs core, viewer and native runtime before locked install", async (t) => {
+test("isolated toolchain packs core, viewer and every native target before locked install", async (t) => {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/large-toolchain-"),
   );
@@ -86,6 +81,13 @@ test("isolated toolchain packs core, viewer and native runtime before locked ins
         "file:tooling/viewer.tgz",
       );
       assert.match(pkg.dependencies["@firna/ui"], /^\d+\.\d+\.\d+/);
+      for (const { name, directory } of NATIVE_TARGETS) {
+        assert.equal(
+          pkg.dependencies[name] ?? pkg.optionalDependencies[name],
+          `file:tooling/${path.basename(directory)}.tgz`,
+        );
+        assert.equal(pkg.overrides[name], `$${name}`);
+      }
       if (args[0] === "install")
         await fs.writeFile(
           path.join(root, "package-lock.json"),
@@ -100,7 +102,7 @@ test("isolated toolchain packs core, viewer and native runtime before locked ins
     [
       ["npm", "pack"],
       ["npm", "pack"],
-      ["npm", "pack"],
+      ...NATIVE_TARGETS.map(() => ["npm", "pack"]),
       ["npm", "install"],
       ["npm", "ci"],
     ],

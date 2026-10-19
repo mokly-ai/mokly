@@ -11,7 +11,9 @@ test(
   { timeout: 120_000 },
   async (context) => {
     const { root } = await fixture();
-    const running = serve(context, root, false, ["--debug-timings"]);
+    const running = await serve(context, root, process.env, [
+      "--debug-timings",
+    ]);
     try {
       const url = await running.ready();
       const { index } = await completed(url, context.signal, "home");

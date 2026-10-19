@@ -14,6 +14,7 @@ import {
 export interface ComparisonIndexEntry {
   path: string;
   title: string;
+  variantOf?: string;
   changes?: { included: boolean; kind: string; status: string };
 }
 
@@ -67,6 +68,26 @@ export function navRow(page: Page, entryPath: string): Locator {
   return page.locator(
     `nav.mbk-nav a[data-nav-row][data-route="${entryPath}/index.html"]`,
   );
+}
+
+/** The trailing changed dot the stylesheet draws, or `none` when unmarked. */
+export function changedDot(page: Page, entryPath: string) {
+  return navRow(page, entryPath).evaluate((row) => {
+    const style = getComputedStyle(row, "::after");
+    return {
+      color: style.backgroundColor,
+      content: style.content,
+      radius: style.borderTopLeftRadius,
+      width: style.width,
+    };
+  });
+}
+
+/** How the row's accessible change wording resolves for assistive tech. */
+export function changedText(page: Page, entryPath: string) {
+  return navRow(page, entryPath)
+    .locator(".mbk-nav-changed-text")
+    .evaluate((mark) => getComputedStyle(mark).display);
 }
 
 /** One authored folder group of the catalogue navigation. */

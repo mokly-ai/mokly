@@ -111,6 +111,23 @@ impl Style {
         self.error_text(code, message, redactor, false)
     }
 
+    /// Keep a case-specific recovery in the plain line or the single rich hint.
+    pub(crate) fn error_with_recovery(
+        &self,
+        code: Code,
+        message: &str,
+        recovery: &str,
+        redactor: &Redactor,
+    ) -> String {
+        let (code, headline, _) = code.presentation();
+        let message = redactor.safe(message);
+        let recovery = redactor.safe(recovery);
+        if self.mode == Mode::Plain {
+            return format!("[mokly/{code}] {message} {recovery}\n");
+        }
+        self.rich(code, headline, &recovery, Some(&message))
+    }
+
     /// Present the structural continuation lines of a catalogue identity diagnostic.
     pub(crate) fn error_lines(&self, code: Code, message: &str, redactor: &Redactor) -> String {
         self.error_text(code, message, redactor, true)

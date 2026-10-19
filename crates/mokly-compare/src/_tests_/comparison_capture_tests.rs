@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 
+use mokly_graph::asset_delivery::AssetReadMock;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResourcesMock};
 use mokly_graph::error::GraphError;
@@ -13,7 +14,7 @@ use mokly_html::parse;
 use mokly_model::axes::ColorScheme;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::usage::CatalogueUsage;
-use unimock::{MockFn, Unimock, matching};
+use unimock::{Clause, MockFn, Unimock, matching};
 
 use super::{capture, capture_with_bound};
 
@@ -22,6 +23,10 @@ fn source(
     count: usize,
     events: Arc<Mutex<Vec<String>>>,
 ) -> Arc<dyn RenderGeneration> {
+    Arc::new(Unimock::new(source_calls(side, count, events)))
+}
+
+fn source_calls(side: &'static str, count: usize, events: Arc<Mutex<Vec<String>>>) -> impl Clause {
     let plans = (0..count)
         .map(|index| {
             let route = format!("{index}/index.html");
@@ -39,7 +44,10 @@ fn source(
             )
         })
         .collect::<BTreeMap<_, _>>();
-    Arc::new(Unimock::new((
+    (
+        RenderGenerationMock::check_cancelled
+            .each_call(matching!())
+            .answers(&|_| Ok(())),
         RenderGenerationMock::comparison_capture
             .each_call(matching!())
             .returns(None),
@@ -89,7 +97,35 @@ fn source(
                     ..Default::default()
                 })
             }),
-    )))
+    )
+}
+
+#[test]
+fn captured_assets_forward_streams_and_membership_without_reading_payloads() {
+    let source: Arc<dyn RenderGeneration> = Arc::new(Unimock::new((
+        source_calls("base", 1, Arc::new(Mutex::new(vec![]))),
+        GeneratedResourcesMock::open_asset
+            .each_call(matching!("assets/image.png"))
+            .answers(&|_, _| {
+                Ok(Some(Box::new(Unimock::new(
+                    AssetReadMock::length.next_call(matching!()).returns(17_u64),
+                ))))
+            }),
+        GeneratedResourcesMock::contains_resource
+            .each_call(matching!("assets/image.png"))
+            .answers(&|_, _| Ok(true)),
+    )));
+    let captured = capture_with_bound(source, usize::MAX).unwrap();
+    assert!(captured.comparison_capture().is_some());
+    assert!(captured.contains_resource("assets/image.png").unwrap());
+    assert_eq!(
+        captured
+            .open_asset("assets/image.png")
+            .unwrap()
+            .unwrap()
+            .length(),
+        17
+    );
 }
 
 #[test]

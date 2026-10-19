@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
 use mokly_compare::base_selection::GitBaseLookup;
 use mokly_compare::comparison::Engine;
@@ -12,6 +13,7 @@ use mokly_git::command::Request;
 use mokly_git::disk::SystemDisk;
 use mokly_git::repository::GitRepositories;
 use mokly_git::tree::Limits;
+use mokly_render::runtime::Runtime;
 use mokly_server::changes::{ChangeCancellation, ChangeProgress};
 use mokly_server::error::{Result, ServerError};
 
@@ -100,8 +102,7 @@ impl Source {
             command: self.services.cancellation.clone(),
             generation: cancel.clone(),
         });
-        let mut runtime = (*self.services.runtime).clone();
-        runtime.pool = self.services.sidecars.pool(Some(cancellation.clone()));
+        let runtime = self.classification_runtime(cancellation.clone());
         let changes: &dyn ChangesService = &Changes {
             lookup: Arc::new(GitBaseLookup {
                 repositories: Arc::new(GitRepositories {
@@ -117,7 +118,7 @@ impl Source {
             provider: Arc::new(AttemptBase {
                 warnings: self.pending.clone(),
                 inner: Arc::new(NativeBase {
-                    runtime: Arc::new(runtime),
+                    runtime,
                     cancellation: cancellation.clone(),
                     dependencies: Arc::new(PreparingDependencies {
                         progress: progress.clone(),
@@ -153,8 +154,22 @@ impl Source {
             }),
         }
     }
+
+    fn classification_runtime(&self, cancellation: Arc<CombinedCancel>) -> Arc<Runtime> {
+        let mut runtime = (*self.services.runtime).clone();
+        runtime.workers = Arc::new(CancellableWorkers {
+            inner: runtime.workers.clone(),
+            cancellation: cancellation.clone(),
+        });
+        runtime.pool = self.services.sidecars.pool(Some(cancellation));
+        Arc::new(runtime)
+    }
 }
 
 #[cfg(test)]
 #[path = "_tests_/serve_references_tests.rs"]
 mod serve_references_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_capture_generation_tests.rs"]
+mod serve_capture_generation_tests;

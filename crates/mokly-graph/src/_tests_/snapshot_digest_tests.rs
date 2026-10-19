@@ -45,7 +45,7 @@ fn binary_resource_validation_keeps_no_snapshot_bytes() {
             .next_call(matching!(_))
             .returns(Ok(digest(&vec![42; 4096]))),
     );
-    let snapshot = Arc::new(SourceSnapshot::new(Arc::new(source)));
+    let snapshot = Arc::new(SourceSnapshot::new(Arc::new(source.clone())));
     let policy = Unimock::new(
         PublicPolicyMock::check
             .next_call(matching!("assets/image.png"))
@@ -99,4 +99,21 @@ fn a_blocked_digest_does_not_block_another_paths_memo_hit() {
     slow.join().unwrap();
     fast.join().unwrap();
     assert_eq!(result.unwrap().unwrap(), "cached-hash");
+}
+
+#[test]
+fn opaque_digests_share_the_generation_cell_without_retaining_payloads() {
+    let expected = digest(b"opaque");
+    let source = Unimock::new(
+        SourceTreeMock::digest_unretained
+            .next_call(matching!((path) if *path == Path::new("/repo/asset.svg")))
+            .returns(Ok(expected.clone())),
+    );
+    let snapshot = SourceSnapshot::new(Arc::new(source));
+    let path = Path::new("/repo/asset.svg");
+    assert_eq!(snapshot.digest_unretained(path).unwrap(), expected);
+    assert_eq!(snapshot.digest_unretained(path).unwrap(), expected);
+    assert_eq!(snapshot.digest(path).unwrap(), expected);
+    assert_eq!(snapshot.retained_bytes(), 0);
+    assert!(snapshot.reads.lock().unwrap().is_empty());
 }

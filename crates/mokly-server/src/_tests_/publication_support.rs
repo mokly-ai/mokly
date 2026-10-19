@@ -13,7 +13,7 @@ use mokly_model::usage_schemas::UsageSchemas;
 
 use crate::backend::Documents;
 use crate::detail_encoding::{DetailEncoder, ValidatedDetails};
-use crate::evidence::RenderRoute;
+use crate::evidence::{self, RenderRoute};
 use crate::generation::Generation;
 use crate::revision::RevisionLease;
 use crate::snapshot::Snapshot;
@@ -118,4 +118,20 @@ pub(crate) fn empty_model() -> CatalogueModel {
         sources: Vec::new(),
         color_schemes: Vec::new(),
     }
+}
+
+/// Published ready evidence whose routes have not yet been recorded as completed.
+pub(crate) fn unrecorded_ready(count: usize, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
+    let initial = snapshot(count, documents);
+    let updates = initial
+        .routes
+        .iter()
+        .map(|view| (view.route.clone(), ready()))
+        .collect::<Vec<_>>();
+    let published = evidence::complete(&initial, &updates, &ValidatedDetails)
+        .unwrap()
+        .unwrap();
+    let mut unrecorded = (*published).clone();
+    unrecorded.completed.clear();
+    Arc::new(unrecorded)
 }

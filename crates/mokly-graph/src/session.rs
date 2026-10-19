@@ -24,7 +24,7 @@ use crate::types::{
     ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan,
     TemporaryDocument,
 };
-use crate::workers::RenderWorkers;
+use crate::workers::{RenderWorkers, check_cancelled};
 use crate::{route_inventory, styles, temporary, validation};
 
 #[derive(Clone)]
@@ -120,6 +120,10 @@ impl Session {
 }
 
 impl RenderGeneration for Session {
+    fn check_cancelled(&self) -> Result<()> {
+        check_cancelled(self.state.workers.as_ref())
+    }
+
     fn comparison_capture(&self) -> Option<ComparisonCapture> {
         None
     }

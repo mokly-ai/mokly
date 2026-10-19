@@ -90,12 +90,12 @@ Canonical impact groups stay at the consumer level. A different entry kind
 at an old path supplies no destination.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-Rendered and canonical trees use iterative traversal, equality, move
-fingerprinting, and release. Deep rendered trees need no enlarged thread stack.
 Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
+Before each view is read and encoded, capture checks the generation's
+cancellation state and returns its error without processing a later view.
 Every generated route that fits retains its digest. Usage, links, resources,
 and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
@@ -110,6 +110,11 @@ parsed page set. The API supports capture reuse, which tests exercise;
 production callers supply fresh bases. Serve can hold an accepted capture while
 building its replacement, so two captures can overlap. The separate 256 MiB
 render cache and the sidecar pool keep their own bounds.
+The static build's captured source forwards opaque asset streams and membership
+checks to its pinned source.
+Rendered-tree walks implemented by this crate, canonical equality, move
+fingerprinting, and canonical-value release use explicit stacks. CSS selector
+matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
@@ -123,6 +128,13 @@ working files are streamed without retaining their bytes. Remaining source
 budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
+Metadata comparison keeps schema, controls, and declared slots on the parent.
+Variants compare their own metadata, props, and supplied slots independently.
+
+Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
+copies it to the destination. Digest cache misses each start one
+`cat-file blob` command; each delivery starts one bounded `cat-file --batch`
+command. Hash-only preparation does not fill the source-byte LRU.
 
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.

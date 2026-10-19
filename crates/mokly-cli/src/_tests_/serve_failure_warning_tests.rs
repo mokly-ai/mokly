@@ -7,6 +7,7 @@ use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_static::error::Error;
+use tokio::sync::mpsc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_reporter::ServeLines;
@@ -31,6 +32,7 @@ fn reporter(mode: Mode, writes: bool) -> (ServeLines, Arc<Mutex<String>>, Arc<Se
     let cancellation = Arc::new(ServeCancellation::default());
     (
         ServeLines {
+            rebuild: Some(mpsc::channel(1).0),
             cwd: "/repo".into(),
             cancellation: cancellation.clone(),
             terminal: Arc::new(terminal),

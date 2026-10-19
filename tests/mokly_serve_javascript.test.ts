@@ -34,7 +34,7 @@ test(
         "export default {plugins:[{postcssPlugin:'colors',Declaration(decl){if(decl.value==='MOKLY_COLOR') decl.value='blue'}}]};",
       "style.css": "button { color: MOKLY_COLOR }",
     });
-    const running = serve(context, root);
+    const running = await serve(context, root);
     const url = await running.ready();
     const { index, detail } = await completed(url, running.signal, "card");
     assert.equal(index.changesStatus, "unavailable");
@@ -178,7 +178,7 @@ test(
     assert.equal(built.status, 1);
     assert.match(built.stderr, /protected target .*helper\.js/);
     assert.doesNotMatch(built.stderr, /JavaScript renderer is unavailable/);
-    const running = serve(context, root);
+    const running = await serve(context, root);
     const url = await running.ready();
     assert.equal(
       (await fetch(`${url}/static/helper.js`, { signal: running.signal }))

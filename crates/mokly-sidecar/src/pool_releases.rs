@@ -153,3 +153,7 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
     }
     Ok(pending)
 }
+
+#[cfg(test)]
+#[path = "_tests_/pool_release_ownership_tests.rs"]
+mod pool_release_ownership_tests;

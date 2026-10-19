@@ -45,11 +45,11 @@ pub trait Publications: Send + Sync {
     fn current(&self) -> Arc<Snapshot>;
     /// Install an update receiver and capture its handshake in one step.
     fn subscribe(&self) -> Subscription;
-    /// Publish completed usage only if its immutable backend is still current.
+    /// Record completed usage only if its immutable backend is still current.
     fn completed(&self, origin: &Snapshot, route: &str) -> Result<()> {
         self.completed_many(origin, &[route.into()])
     }
-    /// Publish one completed background stage without rebuilding the index per view.
+    /// Record a completion batch and publish only changed public details.
     fn completed_many(&self, _origin: &Snapshot, _routes: &[String]) -> Result<()> {
         Ok(())
     }
@@ -191,9 +191,14 @@ impl Publications for SharedPublication {
             if !Arc::ptr_eq(&state.snapshot, &current) {
                 continue;
             }
-            state.snapshot.lease.expire();
+            let publish = next.index.revision != current.index.revision;
+            if publish {
+                state.snapshot.lease.expire();
+            }
             state.snapshot = next;
-            let _ = state.updates.send(event(&state.snapshot));
+            if publish {
+                let _ = state.updates.send(event(&state.snapshot));
+            }
             return Ok(());
         }
     }

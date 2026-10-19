@@ -193,7 +193,7 @@ equals the generation that the index's `comparisonUrl` names, and
 Every fetch uses ordinary GET without custom headers and `credentials: "omit"`.
 URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
 and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
-Static hosts may cache the immutable index and details under the static revalidation rules.
+Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).
 The shell keeps the index and details for the page's lifetime.
 
 ## Updates In Serve

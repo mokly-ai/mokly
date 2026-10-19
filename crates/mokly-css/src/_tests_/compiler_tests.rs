@@ -1,8 +1,10 @@
 //! Compiler boundaries use unimock; no unit test reads the filesystem.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::sync::Arc;
 
+use mokly_model::material::digest;
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
@@ -21,34 +23,49 @@ fn root() -> StylesheetRoot {
     }
 }
 
-fn compiler(files: &[(&str, &str)]) -> Compiler {
+fn compiler(files: &[(&str, &str)], assets: bool) -> Compiler {
     let files: BTreeMap<_, _> = files
         .iter()
         .map(|(path, text)| (format!("/repo/{path}"), text.as_bytes().to_vec()))
         .collect();
     let projection = files.clone();
-    let mock = Arc::new(Unimock::new((
-        SourceTreeMock::project
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(
-                    (projection.contains_key(&path.to_string_lossy().to_string())
-                        || projection.keys().any(|candidate| {
-                            candidate.starts_with(&format!("{}/", path.display()))
-                        }))
-                    .then(|| Node {
-                        identity: path.into(),
-                        lexical_kind: FileKind::File,
-                        kind: FileKind::File,
-                    }),
-                )
-            })),
-        SourceTreeMock::read
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, path| {
-                Ok(files[&path.to_string_lossy().to_string()].clone())
-            })),
-    )));
+    let hashes = files
+        .iter()
+        .map(|(path, bytes)| (path.clone(), digest(bytes)))
+        .collect::<BTreeMap<_, _>>();
+    let project = SourceTreeMock::project
+        .each_call(matching!(_))
+        .answers_arc(Arc::new(move |_, path| {
+            Ok(
+                (projection.contains_key(&path.to_string_lossy().to_string())
+                    || projection
+                        .keys()
+                        .any(|candidate| candidate.starts_with(&format!("{}/", path.display()))))
+                .then(|| Node {
+                    identity: path.into(),
+                    lexical_kind: FileKind::File,
+                    kind: FileKind::File,
+                }),
+            )
+        }));
+    let read = SourceTreeMock::read
+        .each_call(matching!((path) if path.to_string_lossy().ends_with(".css")))
+        .answers_arc(Arc::new(move |_, path| {
+            Ok(files[&path.to_string_lossy().to_string()].clone())
+        }));
+    let mock = Arc::new(if assets {
+        Unimock::new((
+            project,
+            read,
+            SourceTreeMock::digest_unretained
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |_, path| {
+                    Ok(hashes[&path.to_string_lossy().to_string()].clone())
+                })),
+        ))
+    } else {
+        Unimock::new((project, read))
+    });
     Compiler {
         tree: mock.clone(),
         repo_root: "/repo".into(),
@@ -63,25 +80,33 @@ fn compiler(files: &[(&str, &str)]) -> Compiler {
 
 #[test]
 fn imports_assets_and_modules_share_one_per_root_bundle() {
-    let compiler = compiler(&[
-        (
-            "css/base.css",
-            "@import './card.module.css'; .card { background:url('../images/a.svg?q#id') }",
-        ),
-        ("css/card.module.css", ".label { color:red }"),
-        ("images/a.svg", "<svg/>"),
-    ]);
+    let compiler = compiler(
+        &[
+            (
+                "css/base.css",
+                "@import './card.module.css'; .card { background:url('../images/a.svg?q#id') }",
+            ),
+            ("css/card.module.css", ".label { color:red }"),
+            ("images/a.svg", "<svg/>"),
+        ],
+        true,
+    );
     let bundle = compiler.bundle(&root()).unwrap();
     assert_eq!(bundle.route, "styles/css/base.css");
     assert!(bundle.css.ends_with('\n'));
     assert!(bundle.css.contains("../../assets/images/a.svg?q#id"));
-    assert_eq!(bundle.assets["assets/images/a.svg"], b"<svg/>");
+    let asset = &bundle.assets["assets/images/a.svg"];
+    assert_eq!(asset.path, "images/a.svg");
+    assert_eq!(asset.source, Path::new("/repo/images/a.svg"));
+    assert_eq!(asset.digest, digest(b"<svg/>"));
+    assert!(asset.aliases.is_empty());
     assert!(
         bundle
             .css
             .contains(&bundle.css_modules["css/card.module.css"]["label"])
     );
-    assert_eq!(bundle.inputs.len(), 3);
+    assert_eq!(bundle.inputs.len(), 2);
+    assert!(!bundle.inputs.contains_key("images/a.svg"));
     insta::assert_snapshot!(bundle.css);
 }
 
@@ -94,12 +119,15 @@ fn invalid_css_assets_and_late_imports_fail_with_authored_paths() {
         ".x { background:image-set('../images/a.svg' 1x) }",
         ".x {color:red} @import './late.css';",
     ] {
-        let compiler = compiler(&[
-            ("css/base.css", source),
-            ("images/a.txt", "x"),
-            ("images/a.svg", "<svg/>"),
-            ("css/late.css", ".y{}"),
-        ]);
+        let compiler = compiler(
+            &[
+                ("css/base.css", source),
+                ("images/a.txt", "x"),
+                ("images/a.svg", "<svg/>"),
+                ("css/late.css", ".y{}"),
+            ],
+            false,
+        );
         let error = compiler.bundle(&root()).unwrap_err().to_string();
         assert!(error.contains("css/base.css"), "{error}");
         assert!(!error.contains("/repo/"));
@@ -119,7 +147,7 @@ fn renderer_owned_imports_are_removed_before_postcss_is_called() {
                 }))
             }),
         SourceTreeMock::read
-            .next_call(matching!((path) if *path == std::path::Path::new("/repo/css/base.css")))
+            .next_call(matching!((path) if *path == Path::new("/repo/css/base.css")))
             .returns(Ok(b"@import './renderer.css'; .x {color:red}".to_vec())),
         ImportResolverMock::resolve
             .next_call(matching!("css/base.css", "./renderer.css"))

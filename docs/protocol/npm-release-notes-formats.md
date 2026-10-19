@@ -65,6 +65,8 @@ configuration, authoring modules, generated output, or caches.
   stylesheet token. Replace the `componentStylesheets` JavaScript export
   with this token in the JSON stylesheet list. `WatchConfig` and `ReviewConfig`
   are removed configuration types.
+  Replace extglob stylesheet matches such as `@(a|b)` with brace alternatives
+  such as `{a,b}`.
 - Do not commit generated output. `build` defaults to `mokly-static/`, which
   must be ignored by Git. Remove committed `mokly-generated/` output and
   `.mokly-cache`. Serve and comparisons render in memory. Base extraction and
@@ -104,6 +106,11 @@ contributes one component, with its stories as variants and their args as props.
 `argTypes` supplies control hints and does not define validation. `definePage`
 returns one complete synchronous document.
 
+Renderer modules return a React node or `{ node, resources }`. Their input
+has `props` and an entry address with `kind`, `path`, and `title`. The core
+assembles the document and stylesheet links. Put theme attributes and `lang`
+on the renderer's wrapper element.
+
 Prop schemas use the strict JSON Schema 2020-12 profile. Object schemas must
 be closed with `additionalProperties: false`. Defaults, references, and
 unsupported keywords fail. The schema can be inferred where the entry contract
@@ -123,6 +130,36 @@ checks. Changed CSS contributes rule evidence through selector matching.
 Source dependency declarations do not determine Changes. Instance and slot
 markers remain in delivered documents for inspection. Ignore and logical-link
 markers are consumed during composition.
+
+Component parents render their own views from their props. Static Changes
+captures both sides of pages and Markdown documents and their resources.
+Configured CSS uses `styles/{repository-relative stylesheet path}` under
+`static/mokly-generated/`; referenced authored files use their repository
+paths under `static/`. Base snapshots include the same generated delivery
+roots as current output.
+Rewrite authored relative URLs so they resolve from the document route to
+`static/{repository path}`.
+
+Schema, control, and declared-slot metadata changes list the component parent.
+Variants keep independent metadata, props, and supplied-slot changes. A shared
+schema edit alone does not add one Changes row per variant.
+
+Caller-owned component props remain material when the rendered HTML is equal.
+Review records keep every applicable reason, including both `inputs` and
+`material`. The view's `ignoredIds` lists every paired region used for
+equality, including equal regions in unchanged views.
+
+CSS evidence names delivered resource routes. Unowned head-style edits use
+per-rule records at the containing public document route. A removed view keeps
+matched and conservative rule records from its available before-side tree.
+Missing entries use their `added` or `removed` reason; `material` describes a
+paired view's canonical-form change.
+
+A use case has no views, so its review aggregate stays `unchanged` while
+its screen reasons independently include it in Changes.
+
+Affected-consumer chains start inside that consumer. They omit its own
+instance and outer ancestors; each context keeps its side and variant address.
 
 ### Viewer And Wire Formats
 

@@ -3,14 +3,20 @@ import path from "node:path";
 import v8 from "node:v8";
 
 import { chromium } from "@playwright/test";
+import type { Browser } from "@playwright/test";
 
 import { browse } from "./browse.js";
+import { browserMeasurement } from "./browser_measurement.js";
+import { changes } from "./changes.js";
+import { comparisonProfile } from "./comparison_profile.js";
 import { inputProfile } from "./input_profile.js";
 import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import { start, stop, waitFor } from "./process.js";
 import { finishRun } from "./run_output.js";
 import type { PreparedFixture } from "./setup.js";
 import { startupBudget } from "./startup_budget.js";
+import { watch } from "./watch.js";
+import type { WatchMeasurement } from "./watch.js";
 
 export type Scenario = "build" | "serve" | "changes" | "watch";
 export const scenarios: readonly Scenario[] = [
@@ -19,23 +25,6 @@ export const scenarios: readonly Scenario[] = [
   "changes",
   "watch",
 ];
-export function deferred(scenario: Scenario) {
-  if (scenario === "changes")
-    return {
-      scenario,
-      status: "deferred",
-      owner: "M9",
-      reason: "Wait for Changes integration and delivered Browse evidence",
-    };
-  if (scenario === "watch")
-    return {
-      scenario,
-      status: "deferred",
-      owner: "M11",
-      reason: "Wait for watcher integration and frame reload evidence",
-    };
-  return undefined;
-}
 export async function benchmark(
   fixture: PreparedFixture,
   selected: readonly Scenario[],
@@ -45,6 +34,7 @@ export async function benchmark(
     sidecarTimeoutMs?: number;
     buildChanges?: boolean;
     buildDeadlineMs?: number;
+    browser?: Browser;
   } = {},
 ) {
   const memoryStopKiB = options.memoryStopKiB ?? DEFAULT_MEMORY_STOP_KIB;
@@ -58,6 +48,8 @@ export async function benchmark(
     fixture.configPath,
     "--sidecars",
     String(sidecars),
+    "--base",
+    fixture.baseline,
   ];
   const results: object[] = [];
   const report = {
@@ -79,15 +71,11 @@ export async function benchmark(
     results,
   };
   let active: Scenario | undefined;
+  const completedEdits: WatchMeasurement[] = [];
   try {
     for (const scenario of selected) {
       active = scenario;
       process.stderr.write(`Benchmark ${scenario}: starting\n`);
-      const pending = deferred(scenario);
-      if (pending) {
-        results.push(pending);
-        continue;
-      }
       if (scenario === "build") {
         const beginning = performance.now();
         const running = start(
@@ -125,12 +113,16 @@ export async function benchmark(
         }
         continue;
       }
-      const browser = await chromium.launch({
-        args: ["--renderer-process-limit=2", "--disable-gpu"],
-        channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome",
-      });
+      const browser =
+        options.browser ??
+        (await chromium.launch({
+          args: ["--renderer-process-limit=2", "--disable-gpu"],
+          channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome",
+        }));
       try {
-        for (const state of ["cold", "warm"]) {
+        for (const state of scenario === "watch"
+          ? ["live"]
+          : ["cold", "warm"]) {
           const beginning = performance.now();
           const running = start(
             [cli, "serve", ...common, "--port", "0"],
@@ -144,14 +136,25 @@ export async function benchmark(
               /Mokly listening at (http:\/\/127\.0\.0\.1:\d+)/,
             );
             const readinessMs = performance.now() - beginning;
-            const measured = await Promise.race([
-              browse(browser, match[1]!, fixture, beginning),
-              running.done.then(() => {
-                throw new Error("Serve stopped before browser verification");
-              }),
-            ]);
+            const context = await browser.newContext({
+              viewport: { width: 1440, height: 1000 },
+            });
+            context.setDefaultTimeout(60_000);
+            context.setDefaultNavigationTimeout(60_000);
+            const measured = await browserMeasurement(
+              context,
+              running.done,
+              scenario === "changes"
+                ? changes(context, match[1]!, fixture, beginning)
+                : scenario === "watch"
+                  ? watch(context, match[1]!, fixture, completedEdits)
+                  : browse(context, match[1]!, fixture, beginning),
+            );
             const elapsedMs = performance.now() - beginning;
-            const reason = startupBudget(measured.usableMs);
+            const reason =
+              "usableMs" in measured
+                ? startupBudget(measured.usableMs)
+                : undefined;
             results.push({
               scenario,
               state,
@@ -160,15 +163,23 @@ export async function benchmark(
               readinessMs,
               ...measured,
               elapsedMs,
+              comparison: comparisonProfile(running.timings),
+              basePreparation: {
+                baseCommit: fixture.baseline,
+                mode: "M9 Git sources and leased caches; retained across fresh processes",
+                cacheDirectory:
+                  running.output().match(/Mokly cache: ([^\r\n]+)/)?.[1] ??
+                  null,
+              },
               ...(await running.finishMemory()),
             });
             if (reason) throw new Error(reason);
           } finally {
-            await finishRun(fixture.root, `serve-${state}`, running);
+            await finishRun(fixture.root, `${scenario}-${state}`, running);
           }
         }
       } finally {
-        await browser.close();
+        if (!options.browser) await browser.close();
       }
     }
   } catch (error) {
@@ -181,6 +192,7 @@ export async function benchmark(
         scenario: active,
         status: "failed",
         reason: error instanceof Error ? error.message : String(error),
+        ...(active === "watch" ? { completedEdits } : {}),
       });
     await fs.writeFile(
       path.join(fixture.root, ".context/measurements.json"),

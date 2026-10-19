@@ -76,10 +76,12 @@ const branchPairs = [
 ];
 const removedPaths = [
   paths.removedScreen,
+  paths.removedLightOnly,
   paths.removedPage,
   paths.removedDocument,
   paths.removedComponent,
   paths.removedVariant,
+  paths.screenRemovedVariant,
   paths.quietRemoved,
   "branch/parent/action/secondary",
   "branch/case/Action/secondary",

@@ -5,8 +5,17 @@ use mokly_css::types::Bundle;
 
 pub(crate) fn bundle(value: &Bundle) -> usize {
     let mut bytes = size_of::<Bundle>() + value.route.capacity() + value.css.capacity();
-    for (path, source) in value.inputs.iter().chain(&value.assets) {
+    for (path, source) in &value.inputs {
         bytes += size_of::<(String, Vec<u8>)>() + path.capacity() + source.capacity();
+    }
+    for (route, asset) in &value.assets {
+        bytes += size_of_val(asset)
+            + route.capacity()
+            + asset.path.capacity()
+            + asset.source.capacity()
+            + asset.digest.capacity()
+            + asset.aliases.capacity() * size_of::<String>()
+            + asset.aliases.iter().map(String::capacity).sum::<usize>();
     }
     for (path, value) in value.imported_by.iter().chain(&value.dependency_digests) {
         bytes += size_of::<(String, String)>() + path.capacity() + value.capacity();

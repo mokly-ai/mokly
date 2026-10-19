@@ -240,7 +240,15 @@ pub(super) fn generation(
     if side == "head" {
         Arc::new(Unimock::new((common, render, read)))
     } else if capture {
-        Arc::new(Unimock::new((common, routes, generated, capture_info)))
+        Arc::new(Unimock::new((
+            common,
+            routes,
+            generated,
+            capture_info,
+            RenderGenerationMock::check_cancelled
+                .each_call(matching!())
+                .answers(&|_| Ok(())),
+        )))
     } else {
         Arc::new(Unimock::new((common, read, capture_info)))
     }

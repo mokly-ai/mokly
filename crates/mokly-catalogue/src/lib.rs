@@ -46,3 +46,5 @@ mod variants;
 pub mod working_tree;
 mod working_tree_read;
 mod yaml;
+
+mod working_tree_stream;

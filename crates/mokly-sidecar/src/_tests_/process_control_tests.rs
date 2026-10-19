@@ -46,7 +46,13 @@ fn an_open_stderr_pipe_cannot_extend_the_shared_deadline() {
     let mock = Unimock::new((
         WaitMock::exited
             .next_call(matching!(_, 2_100))
-            .returns(true),
+            .answers(&|_, receiver, _| {
+                assert!(matches!(
+                    receiver.try_recv(),
+                    Err(mpsc::TryRecvError::Disconnected)
+                ));
+                true
+            }),
         WaitMock::drained
             .next_call(matching!(_, 2_100))
             .answers(&|_, receiver, _| {
@@ -64,7 +70,10 @@ fn an_open_stderr_pipe_cannot_extend_the_shared_deadline() {
             .returns(Ok(())),
     ));
     let (outgoing, _frames) = mpsc::sync_channel(2);
-    let (_exited_sender, exited) = mpsc::sync_channel(1);
+    let exited = {
+        let (_exited_sender, exited) = mpsc::sync_channel(1);
+        exited
+    };
     let (_never_drained, drained) = mpsc::sync_channel(1);
     let control: Box<dyn WorkerControl> = Box::new(ProcessControl {
         group: Box::new(mock.clone()),

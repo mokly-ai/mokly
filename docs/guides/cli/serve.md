@@ -54,7 +54,9 @@ never the HTTP child, performs opted-in writes.
 
 A watched server also notices Git ref changes, reloads the page when your
 sources change and keeps your place. `--no-watch` starts the same way but does
-not follow later edits.
+not follow later edits. If an imported stylesheet asset changes, its request
+fails and the terminal names the asset. Restart Serve or use watching to
+load the edited asset.
 
 When the complete generated output finishes, Serve prints that generation's
 build warnings once on standard error. Previews you open afterwards are not

@@ -22,23 +22,26 @@ import {
 } from "./comparison_scroll.js";
 import { modeButton } from "./comparison_ui.js";
 
+/** Expect Side by side's two documents and viewports at one offset. */
+export async function expectMirrored(
+  section: Locator,
+  y: number,
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const offsets = await layerOffsets(section);
+      return [offsets.before.y, offsets.after.y];
+    })
+    .toEqual([y, y]);
+  const viewports = sharedViewports(section);
+  await expect(viewports).toHaveCount(2);
+  for (const viewport of await viewports.all())
+    await expect.poll(async () => (await viewportOffset(viewport)).y).toBe(y);
+}
+
 /** Register the input cases on the host that `test` supplies as its base URL. */
 export function registerComparisonAlignmentInput(test = baseTest): void {
   const changed = comparisonPaths.changed;
-
-  /** Expect Side by side's two documents and viewports at one offset. */
-  async function expectMirrored(section: Locator, y: number): Promise<void> {
-    await expect
-      .poll(async () => {
-        const offsets = await layerOffsets(section);
-        return [offsets.before.y, offsets.after.y];
-      })
-      .toEqual([y, y]);
-    const viewports = sharedViewports(section);
-    await expect(viewports).toHaveCount(2);
-    for (const viewport of await viewports.all())
-      await expect.poll(async () => (await viewportOffset(viewport)).y).toBe(y);
-  }
 
   test("Side by side mirrors its two viewports in both directions", async ({
     page,
@@ -77,6 +80,14 @@ export function registerComparisonAlignmentInput(test = baseTest): void {
       .poll(async () => (await viewportOffset(sharedViewports(desktop))).y)
       .toBe(end);
     await page.keyboard.press("Home");
+    await expectStackAt(desktop, 0);
+
+    // An editable field keeps its keys, so the shared viewport stays.
+    const field = paneFrame(desktop, "after").contentFrame().locator("#field");
+    await field.click();
+    await page.keyboard.press("Space");
+    await page.keyboard.press("End");
+    await expect(field).toHaveValue(" ");
     await expectStackAt(desktop, 0);
   });
 

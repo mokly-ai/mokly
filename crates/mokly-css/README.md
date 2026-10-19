@@ -13,8 +13,8 @@ owns cache keys and resource routes. The sidecar supplies consumer PostCSS.
 - Prune renderer-owned imports before consumer processing.
 - Scope local CSS Module names with repository-path hashes.
 - Bundle on `lightningcss` without minification or target lowering.
-- Rewrite local URLs and retain exact asset bytes.
-- Return protected input bytes and importing-source attribution.
+- Rewrite local URLs and retain opaque asset identities and digests.
+- Return parsed source bytes, opaque input metadata, and importing-source attribution.
 - Collect unoptimized rules and diff occurrences without losing declaration order.
 - Match selectors on composed-document arenas with a conservative keep list.
 - Join equal rule copies and filter nested own-page matches before attribution.
@@ -69,7 +69,11 @@ are excluded from this collector. Evidence uses the containing public document
 route. Linked selectors emit one
 record per innermost changed component owner, plus outside entry evidence.
 
-Plugin dependency inputs use digests, separate from CSS and asset bytes.
+Opaque assets use `Bundle.assets` records with logical paths, confined source
+identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
+CSS only. The graph checks asset streams against these digests at delivery.
+
+Plugin dependency inputs use digests, separate from parsed CSS bytes.
 They keep source protection and graph invalidation without retaining file bodies.
 
 CSS syntax scanners and the external `lightningcss` parser use recursive

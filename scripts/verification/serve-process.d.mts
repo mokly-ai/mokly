@@ -30,13 +30,19 @@ export function startServe(
   options: { cwd: string; env?: Readonly<Record<string, string | undefined>> },
 ): Promise<ServeGroup>;
 export function listeningAddress(output: string): string | undefined;
-export function serveProcess(
+/** Register a suspended Node command without changing its output mode. */
+export function commandProcess(
   args: readonly string[],
   cwd: string,
   env?: NodeJS.ProcessEnv,
 ): Promise<{
-  child: import("node:child_process").ChildProcess;
+  child: ChildProcessByStdio<null, Readable, Readable>;
   signal(value: NodeJS.Signals): void;
   start(): Promise<void>;
   drain(): Promise<void>;
 }>;
+export function serveProcess(
+  args: readonly string[],
+  cwd: string,
+  env?: NodeJS.ProcessEnv,
+): ReturnType<typeof commandProcess>;

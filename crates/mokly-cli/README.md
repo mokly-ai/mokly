@@ -66,6 +66,8 @@ with one worker. Attempt cancellation wakes queued base calls without polling.
 A merge-base change retains the current warning attempt and current render graph.
 A changed HEAD or base tip with the same merge base keeps the Changes evidence.
 Content replacement starts a new attempt and invalidates pending captures.
+Each classification gives its base workers the run's cancellation token.
+Replacing the run stops capture before another cached view is read or encoded.
 The command supplies tracked Git runners to both classification and retained
 historical sources. The ordered Git shutdown hook closes admission, cancels
 process groups, and waits for every command and pipe to drain. Git processes
@@ -221,9 +223,25 @@ shared rules use separate selectors in one head, with exact per-rule evidence.
 The matrix runs only on demand with the `design-matrix` feature. The default
 workspace tests and verification gate exclude this target.
 
+The design behaviour target checks parents' own-props views, stacked frames,
+captions tied to recorded changes, and the Checklist's Changes in the default
+workspace suite. It renders an isolated copy of the example catalogue.
+Set `MOKLY_TEST_DESIGN_MUTATION` to inject one defect into that copy. Each
+value must fail its corresponding behaviour check:
+
+| Value            | Injected defect                                      |
+| ---------------- | ---------------------------------------------------- |
+| `own-props`      | Replace a parent's own destination prop.             |
+| `stack`          | Remove the Current layer's class marker.             |
+| `caption`        | Replace a comparison caption with incorrect text.    |
+| `checklist`      | Replace the Checklist's Changes with Action's story. |
+| `stack-swap`     | Swap Before and Current content in stacked previews. |
+| `caption-record` | Change a recorded reason without changing a caption. |
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
+cargo test -p mokly-cli --test design_behaviour_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
@@ -237,6 +255,14 @@ itself without debug assertions and cannot be referenced in that mode. It does
 not inspect a packed release binary. The signal-session probe creates and drops
 both build and publish signal handlers. Normal source and output operations
 still use their injected trait boundaries.
+Each recovery signal case owns one fault, fixture, and hang guard. It waits for
+the complete readiness marker before sending SIGINT. Test cancellation closes
+the watcher, kills the fixture's process group, waits for the inherited output
+pipes to close, and removes its output. On Unix the abort regression waits for
+the complete native gate marker before cancellation, so the shim has started
+the held native process. The regression combines local cancellation with the
+test signal and closes the marker watcher before fixture removal. Windows
+retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
 
 ### Key Code
 
@@ -253,6 +279,8 @@ still use their injected trait boundaries.
 - [Serve Changes](./src/serve_changes.rs) and [sidecar admission](./src/serve_pool.rs).
 - [Build service](./src/build.rs) and [build presentation](./src/build_output.rs).
 - [Design attribution matrix](./tests/design_attribution_tests.rs).
+- [Design behaviour checks](./tests/design_behaviour_tests.rs) pin four design
+  contracts and check fixture failure handling.
 
 ### Related Docs
 

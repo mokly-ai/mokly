@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
 import { EventEmitter, once } from "node:events";
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -7,15 +6,33 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { serveProcess } from "../../scripts/verification/serve-process.mjs";
+
 const workspace = fileURLToPath(new URL("../../", import.meta.url));
 export const shim = path.join(workspace, "packages/mokly/bin/mokly.mjs");
+const processCleanups = new Map<string, (() => Promise<void>)[]>();
 
 export async function consumer(
   context: TestContext,
   files: Record<string, string>,
 ) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-js-serve-"));
-  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const cleanups: (() => Promise<void>)[] = [];
+  processCleanups.set(root, cleanups);
+  context.after(async () => {
+    const failures: unknown[] = [];
+    for (const close of cleanups.toReversed()) {
+      try {
+        await close();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    processCleanups.delete(root);
+    if (failures.length)
+      throw new AggregateError(failures, "Serve consumer cleanup failed");
+    await fs.rm(root, { recursive: true, force: true });
+  });
   await fs.symlink(
     path.join(workspace, "node_modules"),
     path.join(root, "node_modules"),
@@ -31,23 +48,19 @@ export async function consumer(
   return root;
 }
 
-export function serve(
+export async function serve(
   context: TestContext,
   root: string,
-  group = false,
+  environment: NodeJS.ProcessEnv = process.env,
   extra: string[] = [],
 ) {
-  const child = spawn(
-    process.execPath,
+  const managed = await serveProcess(
     [shim, "serve", "--no-watch", "--port", "0", "--sidecars", "1", ...extra],
-    {
-      cwd: root,
-      detached: group,
-      env: { ...process.env, MOKLY_OUTPUT: "plain" },
-      stdio: ["ignore", "pipe", "pipe"],
-    },
+    root,
+    environment,
   );
-  const exited = once(child, "exit");
+  const { child } = managed;
+  const exited = once(child, "close").finally(managed.drain);
   const updates = new EventEmitter();
   const output = { stdout: "", stderr: "" };
   for (const stream of ["stdout", "stderr"] as const)
@@ -55,11 +68,21 @@ export function serve(
       output[stream] += chunk.toString();
       updates.emit(stream);
     });
-  context.after(async () => {
+  const stop = async () => {
     if (child.exitCode === null && child.signalCode === null)
-      child.kill("SIGINT");
+      managed.signal("SIGINT");
     await exited;
-  });
+  };
+  const cleanups = processCleanups.get(root);
+  if (cleanups) cleanups.push(stop);
+  else context.after(stop);
+  try {
+    await managed.start();
+  } catch (error) {
+    managed.signal("SIGKILL");
+    await exited;
+    throw error;
+  }
   const signal = AbortSignal.timeout(30_000);
   async function wait(stream: "stdout" | "stderr", pattern: RegExp) {
     for (;;) {
@@ -84,8 +107,7 @@ export function serve(
         await wait("stdout", /Mokly listening at (http:\/\/127\.0\.0\.1:\d+)/)
       )[1]!,
     close: async () => {
-      if (child.exitCode === null && child.signalCode === null)
-        child.kill("SIGINT");
+      await stop();
       const [code] = await exited;
       assert.equal(code, 0, output.stderr);
     },

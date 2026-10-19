@@ -13,6 +13,7 @@ use mokly_cli::build::{BuildError, BuildService, BuildSummary, PreparedBuild};
 use mokly_cli::grammar::Build;
 use mokly_platform::rename::Rename;
 use mokly_source_interface::error::SourceError;
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 use mokly_static::error::{Error, InternalError, Result};
 use mokly_static::filesystem::Files;
@@ -139,6 +140,15 @@ impl SourceTree for InjectedTree {
     }
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.inner.read_public(path)
+    }
+    fn open_stream(
+        &self,
+        path: &Path,
+    ) -> mokly_source_interface::error::Result<Box<dyn SourceStream>> {
+        self.inner.open_stream(path)
+    }
+    fn digest_unretained(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+        self.inner.digest_unretained(path)
     }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.inner.digest(path)

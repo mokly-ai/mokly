@@ -78,7 +78,7 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
 }) => {
   const index = await comparisonIndex(request, baseURL);
   const included = changesPaths(index);
-  expect(included).toHaveLength(13);
+  expect(included).toHaveLength(26);
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await expect(
     page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
@@ -89,9 +89,17 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
       await expect(row, entry.path).toHaveAttribute("data-changed", "true");
     else await expect(row, entry.path).not.toHaveAttribute("data-changed");
   }
+  // All shows each screen row with its variant list closed. Changes shows
+  // the included screens and the unmodified parent of a changed variant.
   const screens = (included: boolean) =>
     index.screens
-      .filter((entry) => !included || entry.changes?.included)
+      .filter((entry) => entry.path.startsWith("screens/"))
+      .filter((entry) =>
+        included
+          ? entry.changes?.included ||
+            entry.path === comparisonPaths.screenParent
+          : !entry.variantOf,
+      )
       .map((entry) => entry.path);
   await expectFolder(page, "screens", screens(false));
   await expectFolder(page, "components");
@@ -100,7 +108,16 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
   // A parent that only holds a changed variant stays as an unmarked container.
   await expect
     .poll(() => visibleRows(page))
-    .toEqual([...included, comparisonPaths.quietParent].sort());
+    .toEqual(
+      [
+        ...included,
+        comparisonPaths.quietParent,
+        comparisonPaths.screenParent,
+        comparisonPaths.folderIndex,
+        comparisonPaths.taskList,
+        comparisonPaths.lightOnlyParent,
+      ].sort(),
+    );
   await expect(navRow(page, comparisonPaths.quietParent)).not.toHaveAttribute(
     "data-changed",
   );
@@ -127,6 +144,7 @@ test("an affected consumer stays out of Changes while its changed component list
   await expect(affected.getByRole("link")).toHaveText([
     "Changed screen",
     "Consumer screen",
+    "Former screen · Removed",
   ]);
   await chooseFilter(page, "changed");
   await expect(navRow(page, comparisonPaths.consumer)).toBeHidden();

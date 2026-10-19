@@ -2061,6 +2061,8 @@ dependencies = [
 name = "mokly-catalogue"
 version = "0.14.0"
 dependencies = [
+ "cap-fs-ext",
+ "cap-std",
  "dunce",
  "globset",
  "html5gum",
@@ -2362,6 +2364,7 @@ dependencies = [
  "sha2",
  "thiserror",
  "unimock",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

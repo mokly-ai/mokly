@@ -142,9 +142,17 @@ impl Graph {
                     asset: None,
                 },
             );
-            for (route, bytes) in bundle.assets {
+            let asset_inputs: Vec<_> = bundle
+                .assets
+                .values()
+                .flat_map(|asset| asset.input_paths().cloned())
+                .collect();
+            for (route, asset) in bundle.assets {
                 names.insert(&route, true)?;
-                let asset_key = key(NodeKind::Stylesheet, &[route.as_bytes(), &bytes]);
+                let asset_key = key(
+                    NodeKind::Stylesheet,
+                    &[route.as_bytes(), asset.digest.as_bytes()],
+                );
                 if resources
                     .get(&route)
                     .is_some_and(|previous| previous.key != asset_key)
@@ -156,35 +164,23 @@ impl Graph {
                         ),
                     ));
                 }
-                let content_type = paths::content_type(&route)
-                    .unwrap_or("application/octet-stream")
-                    .into();
-                self.cache.insert(
-                    asset_key.clone(),
-                    Arc::new(Artifact {
-                        bytes,
-                        document: None,
-                        fragment: None,
-                        content_type,
-                    }),
-                );
-                resources.insert(
-                    route.clone(),
-                    ResourcePlan {
+                resources
+                    .entry(route.clone())
+                    .or_insert_with(|| ResourcePlan {
                         document_key: asset_key.clone(),
                         key: asset_key,
                         content_type: paths::content_type(&route)
                             .unwrap_or("application/octet-stream")
                             .into(),
                         root: root.clone(),
-                        asset: Some(route),
-                    },
-                );
+                        asset: Some(asset),
+                    });
             }
             catalogue.model.sources.extend(
                 bundle
                     .inputs
                     .into_keys()
+                    .chain(asset_inputs)
                     .chain(bundle.dependency_digests.into_keys())
                     .filter(|path| {
                         (!path.split('/').any(|part| part == "node_modules")

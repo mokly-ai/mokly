@@ -30,7 +30,7 @@ fn whole_foreground_bursts_share_roots_with_one_or_three_workers() {
     for size in [1, 3] {
         let mut counts = Vec::new();
         for views in [4, 16] {
-            let (inner, baseline) = pool();
+            let (_baseline_owner, inner, baseline) = pool();
             inner.request(css("/base", 0)).unwrap();
             for sequence in 1..=views {
                 for root in ["/head", "/base"] {
@@ -41,7 +41,7 @@ fn whole_foreground_bursts_share_roots_with_one_or_three_workers() {
             assert_eq!(baseline.lock().unwrap().calls.len(), views * 2 + 1);
             inner.abort().unwrap();
 
-            let (inner, observed) = pool();
+            let (_owner, inner, observed) = pool();
             let scheduler = ServePool::new(inner, size);
             let head = scheduler.pool(None);
             let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
@@ -95,7 +95,8 @@ fn whole_foreground_bursts_share_roots_with_one_or_three_workers() {
 
 #[test]
 fn cancellation_wakes_queued_base_work_without_waiting_for_the_foreground() {
-    let scheduler = ServePool::new(Arc::new(Unimock::new(())), 1);
+    let inner = Unimock::new(());
+    let scheduler = ServePool::new(Arc::new(inner.clone()), 1);
     let _foreground = scheduler.enter();
     let token: Arc<dyn ChangeCancellation> = Arc::new(ChangeToken::default());
     let base = scheduler.pool(Some(token.clone()));
@@ -116,14 +117,12 @@ fn cancellation_wakes_queued_base_work_without_waiting_for_the_foreground() {
 
 #[test]
 fn shutdown_closes_both_sides_and_wakes_pending_admission() {
-    let scheduler = ServePool::new(
-        Arc::new(Unimock::new(
-            PoolMock::cancel_requests
-                .next_call(matching!())
-                .returns(Ok(())),
-        )),
-        1,
+    let inner = Unimock::new(
+        PoolMock::cancel_requests
+            .next_call(matching!())
+            .returns(Ok(())),
     );
+    let scheduler = ServePool::new(Arc::new(inner.clone()), 1);
     let _foreground = scheduler.enter();
     let head = scheduler.pool(None);
     let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
@@ -139,7 +138,7 @@ fn shutdown_closes_both_sides_and_wakes_pending_admission() {
 
 #[tokio::test]
 async fn http_priority_covers_gaps_between_a_documents_sidecar_calls() {
-    let (inner, observed) = pool();
+    let (_owner, inner, observed) = pool();
     let scheduler = Arc::new(ServePool::new(inner, 1));
     let head = scheduler.pool(None);
     let base = scheduler.pool(Some(Arc::new(ChangeToken::default())));
