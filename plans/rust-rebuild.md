@@ -941,9 +941,10 @@ renders again.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
-- [ ] M8 browser follow-up: add Serve browser specs for the example's HTML
+- [x] M8 browser follow-up: add Serve browser specs for the example's HTML
       screens, slot components, document page, and YAML user flow under
       `examples/basic/specs/example/team`, including native HTML screen links.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-14.md`.
 
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
