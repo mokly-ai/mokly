@@ -4,6 +4,7 @@ const exact = (text: string) =>
   new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "u");
 
 const reasons = {
+  404: "Not Found",
   409: "Conflict",
   422: "Unprocessable Entity",
   500: "Internal Server Error",
