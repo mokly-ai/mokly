@@ -55,6 +55,9 @@ set of parsed documents. Eviction changes work only.
 Cross-view anchor checks retain successful destination renders in this same
 bounded cache. Repeated links reuse those documents. Each requested fragment
 is still checked in every destination view, including cache hits.
+Concurrent checks of one destination wait for its active render, then check
+the bounded cache again. Completed requests release their synchronization keys.
+Different targets and different generations keep independent requests.
 
 Comparison batches use the same render pool and sidecar count as validation.
 They return transient documents and closures in requested route order.

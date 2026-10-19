@@ -1,13 +1,64 @@
 //! Cross-view logical anchors are checked against composed destination documents.
 
 use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex};
 
 use mokly_html::links::Reference;
 use mokly_model::catalogue::EntryContent;
 
 use crate::error::{Result, invalid};
+use crate::key::NodeKey;
 use crate::session::Session;
+use crate::types::DocumentPlan;
 use crate::{references, workers};
+
+/// Share a live target request before checking the bounded render cache again.
+fn flight(session: &Session, key: &NodeKey) -> Arc<Mutex<()>> {
+    session
+        .state
+        .anchor_flights
+        .lock()
+        .unwrap_or_else(|error| error.into_inner())
+        .entry(key.clone())
+        .or_insert_with(|| Arc::new(Mutex::new(())))
+        .clone()
+}
+
+/// Remove completed request metadata after the final waiter leaves.
+fn release(session: &Session, key: &NodeKey, flight: &Arc<Mutex<()>>) {
+    let mut flights = session
+        .state
+        .anchor_flights
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    if Arc::strong_count(flight) == 2 {
+        flights.remove(key);
+    }
+}
+
+fn validate_target(
+    session: &Session,
+    plan: &DocumentPlan,
+    reference: &Reference,
+    fragment: &str,
+) -> Result<()> {
+    let artifact = session.raw(&plan.route)?;
+    if !artifact
+        .document
+        .as_ref()
+        .is_some_and(|document| references::anchors(&document.tree).contains(fragment))
+    {
+        return Err(invalid(
+            &reference.source_route,
+            format!(
+                "{}: logical fragment {fragment:?} is missing from {}",
+                reference.source_route, plan.route
+            ),
+        ));
+    }
+    session.state.cache.insert(plan.key.clone(), artifact);
+    Ok(())
+}
 
 pub(crate) fn links(session: &Session, links: &[Reference]) -> Result<()> {
     for reference in links {
@@ -35,21 +86,13 @@ pub(crate) fn links(session: &Session, links: &[Reference]) -> Result<()> {
                 .path
                 == path
         }) {
-            let artifact = session.raw(&plan.route)?;
-            if !artifact
-                .document
-                .as_ref()
-                .is_some_and(|document| references::anchors(&document.tree).contains(fragment))
-            {
-                return Err(invalid(
-                    &reference.source_route,
-                    format!(
-                        "{}: logical fragment {fragment:?} is missing from {}",
-                        reference.source_route, plan.route
-                    ),
-                ));
-            }
-            session.state.cache.insert(plan.key.clone(), artifact);
+            let shared = flight(session, &plan.key);
+            let result = {
+                let _guard = shared.lock().unwrap_or_else(|error| error.into_inner());
+                validate_target(session, plan, reference, fragment)
+            };
+            release(session, &plan.key, &shared);
+            result?;
         }
     }
     Ok(())
@@ -108,3 +151,7 @@ pub(crate) fn completed(
 #[cfg(test)]
 #[path = "_tests_/validation_cache_tests.rs"]
 mod validation_cache_tests;
+
+#[cfg(test)]
+#[path = "_tests_/validation_flight_tests.rs"]
+mod validation_flight_tests;

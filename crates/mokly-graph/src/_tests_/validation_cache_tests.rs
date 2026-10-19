@@ -28,14 +28,14 @@ use crate::styles::Matchers;
 use crate::types::DocumentPlan;
 use crate::validation;
 
-struct Probe {
-    session: Session,
+pub(super) struct Probe {
+    pub(super) session: Session,
     compositions: Arc<AtomicUsize>,
     reads: Arc<AtomicUsize>,
     artifacts: Arc<Mutex<BTreeMap<NodeKey, Arc<Artifact>>>>,
 }
 
-fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
+pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
     let compositions = Arc::new(AtomicUsize::new(0));
     let renders = compositions.clone();
     let reads = Arc::new(AtomicUsize::new(0));
@@ -242,6 +242,15 @@ fn a_cached_destination_does_not_make_a_missing_fragment_valid() {
         "caller/index.desktop.html: logical fragment \"absent\" is missing from target/index.desktop.dark.html"
     );
     assert_eq!(probe.compositions.load(Ordering::SeqCst), 4);
+    assert!(
+        probe
+            .session
+            .state
+            .anchor_flights
+            .lock()
+            .unwrap()
+            .is_empty()
+    );
 }
 
 #[test]
@@ -261,5 +270,14 @@ fn an_anchor_missing_from_one_destination_view_still_fails() {
     assert_eq!(
         message,
         "caller/index.desktop.html: logical fragment \"summary\" is missing from target/index.mobile.dark.html"
+    );
+    assert!(
+        probe
+            .session
+            .state
+            .anchor_flights
+            .lock()
+            .unwrap()
+            .is_empty()
     );
 }
