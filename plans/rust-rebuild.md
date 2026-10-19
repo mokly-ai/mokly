@@ -885,6 +885,16 @@ renders again.
   - [x] Apply browser review 4: wait for deployment reload and replacement
         CSS, cover Both viewport comparisons, use the saved scroll preference,
         bound negative probes within their owner, and correct sweep ownership.
+  - [x] Split the Serve and copied-static design workspace loops into five
+        groups of at most twelve screens. Check exact inventory coverage at
+        module load and retain every per-screen assertion and leaf title.
+  - [x] Give the isolated link-control catalogue a 180-second setup budget
+        in its `beforeAll` hook. Keep the 60-second test timeout.
+  - [x] Prepare browser review 5 sweep input fixes: remove stale M12 work,
+        specify parameter-free static Refresh reads, and reject M12 reasons
+        on non-dropped rows.
+  - [ ] After the final viewer merge, reconcile comparison row ownership
+        and regenerate the browser sweep with the prepared input fixes.
   - [ ] Cover the remaining copied-file delivery cases in the browser sweep:
         branch-point references, moved and removed previews, malformed
         comparison metadata, unchanged-base publication, lazy first reads,
@@ -1036,6 +1046,8 @@ Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-
 Static and error-fixture follow-ups: `.context/rust-rebuild/delegation/m8-browser/report-4.md`.
 Native copied comparisons and browser review 3: `.context/rust-rebuild/delegation/m8-browser/report-5.md`.
 Browser review 4 and the comparison UI integration: `.context/rust-rebuild/delegation/m8-browser/report-6.md`.
+Browser timing and review 5 fixes: `.context/rust-rebuild/delegation/m8-browser/report-7.md`.
+Prepared review 5 sweep inputs: `.context/rust-rebuild/delegation/m8-browser/round-7-sweep-input-checks.json`.
 Design journey coverage: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-3.md`.
 Copied-static journeys: `.context/rust-rebuild/delegation/m8-browser/design-journey-map-round-4.md`.
 Client shell specs and the sweep's viewer cases: `.context/rust-rebuild/delegation/m7/report-15.md`.
@@ -1256,7 +1268,9 @@ Tags: ui
         Changes browser fixtures.
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
-  - [ ] Port the remaining cases (report 20 lists them).
+  - [ ] Port the cases that need an embedded viewer host through both frame
+        adapters; `.context/rust-rebuild/delegation/m7/sweep-overrides-comparisons.json`
+        names each row.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1286,6 +1300,11 @@ The review 9 fixes, the specs under their documented names, the sweep reasons
 and drops, and the merge of the rebuild tip:
 `.context/rust-rebuild/delegation/m7/report-20.md`. Merge decisions:
 `.context/rust-rebuild/delegation/m7/merge-decisions-round20.md`.
+The review 10 fixes (the held-request waits, the Before-only canvas, and the
+embedded host sub-TODO), the sweep halves and part rows, and the merge of the
+rebuild tip `fa06c3fd`: `.context/rust-rebuild/delegation/m7/report-21.md`.
+Merge decisions:
+`.context/rust-rebuild/delegation/m7/merge-decisions-round21.md`.
 
 - [ ] Commit.
 
@@ -1691,21 +1710,35 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round9/merge-recycle-regression.log`.
   - M8 browser review 3 finding 1, High severity, Medium effort: approve two
     hosted PR measurements with fresh and restored caches before Required CI.
-    Keep four shards and the current timeouts until the user decides from
-    measured setup, shard, and slow-case durations. Recommended A: measure.
-  - M10 shard follow-up, Low severity, Small effort: both cases of
-    `design_modern_controls.spec.ts` "every selected screen uses one icon
-    footer and one view toolbar" failed once in browser shard 2 with "Test
-    timeout of 60000ms exceeded" while the load average was 16 to 25 on 8
-    CPUs. Both passed in the complete gate and in the shard rerun on the same
-    commit. Suspected source: one test walks every selected design screen
-    inside one 60-second limit, so CPU load from other suites can use it up.
-    Separate branch. Evidence: m7 `report-20.md`.
+    Keep four shards, the job timeout, and the 60-second test timeout until
+    the user decides from measured setup, shard, and slow-case durations.
+    Recommended A: measure.
+  - [x] M10 shard follow-up: both cases of `design_modern_controls.spec.ts`
+        "every selected screen uses one icon footer and one view toolbar"
+        timed out once under load in shard 2. Fixed by `f81b7744`, which
+        splits the screen loop into five groups of at most 12 screens
+        (medians 3.6 to 7.2 seconds per group). Evidence: m7 `report-20.md`
+        and m8-browser `report-7.md`.
   - M8 browser follow-up, Low severity, Small effort: investigate the existing
     `frame_adapter_navigation.spec.ts` posted-message assertion. It returned
     no navigation event once and passed unchanged after rerun. M8 viewer owns
     the suspected message/animation-frame ordering. Recommended A: wait for
     the message event. Evidence is in the browser delegate's `report-4.md`.
+  - M8 browser follow-up, Low severity, Small effort: investigate the
+    `static_cors.spec.ts` public embedded viewer case. It reported the blocked
+    script notice from `about:blank` once and passed unchanged in isolation.
+    Suspected source: clock or trace injection during sandboxed frame
+    navigation. Keep the assertions and console policy. Recommended A: confirm
+    the notice origin before a separate fixture fix. Evidence: M12
+    `report-13.md` and `round13-gate-attempt1-failures.json`.
+  - M12 verification follow-up, Low severity, Small effort: investigate the
+    build cases in `sidecar_stderr_shutdown.test.ts` (exit marker `null`,
+    expected `"0"`) and `static_recovery_signals.test.ts` (120000ms timeout).
+    Both passed unchanged in isolation. Suspected sources are loaded shutdown
+    timing and watcher or signal readiness; the timed-out recovery callback
+    left its test process open. Recommended A: inspect those boundaries in a
+    separate fix without changing deadlines or assertions. Evidence: M12
+    `report-13.md` and `round13-node-failures-rerun.log`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

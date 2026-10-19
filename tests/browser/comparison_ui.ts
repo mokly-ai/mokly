@@ -8,6 +8,7 @@ import {
   type APIRequestContext,
   type Locator,
   type Page,
+  type Request,
 } from "@playwright/test";
 
 /** The index fields the comparison UI specs compare with the shell. */
@@ -60,6 +61,21 @@ export function snapshotOf(index: ComparisonIndex, entryPath: string): string {
   );
   if (!record) throw new Error(`${entryPath} is not a removed entry`);
   return record.snapshotId;
+}
+
+/**
+ * Every request that the browser finished or failed after this call. A held
+ * request ends either way, also when a navigation cancelled it, so a spec
+ * waits for its end instead of the clock.
+ */
+export function endedRequests(page: Page): ReadonlySet<Request> {
+  const ended = new Set<Request>();
+  const end = (request: Request): void => {
+    ended.add(request);
+  };
+  page.on("requestfinished", end);
+  page.on("requestfailed", end);
+  return ended;
 }
 
 /** The catalogue row of one entry. */
