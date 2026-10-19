@@ -1346,8 +1346,9 @@ Tags: ui
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [ ] Port the cases that need an embedded viewer host through both frame
-        adapters; `.context/rust-rebuild/delegation/m7/sweep-overrides-comparisons.json`
-        names each row.
+        adapters; `sweep-overrides-comparisons.json` and
+        `sweep-overrides-comparisons-2.json` in
+        `.context/rust-rebuild/delegation/m7/` name each row.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1382,6 +1383,9 @@ embedded host sub-TODO), the sweep halves and part rows, and the merge of the
 rebuild tip `fa06c3fd`: `.context/rust-rebuild/delegation/m7/report-21.md`.
 Merge decisions:
 `.context/rust-rebuild/delegation/m7/merge-decisions-round21.md`.
+The round 24 rows on the shared copied comparison output, the new fixture
+entries, the sweep inputs, and the rows that remain:
+`.context/rust-rebuild/delegation/m7/report-24.md`.
 
 - [ ] Commit.
 
