@@ -1357,8 +1357,8 @@ Tags: ui
         with the fixture entries that they need.
   - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
-  - [ ] Port the moved-entry cases, after the M9 TODO for the deferred native
-        Changes browser fixtures.
+  - [ ] Port the moved-entry cases with the shared moved fixtures in the
+        branch-point copy and `serve_comparison_test.ts`.
   - [ ] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [ ] Port the cases that need an embedded viewer host through both frame
