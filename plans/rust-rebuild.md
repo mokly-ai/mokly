@@ -959,6 +959,7 @@ renders again.
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
         exact revision in the first half of its adoption spec. Review 8 finding
         1, for the Serve owner. Implementation: `3961636d`.
+        The red run on the old code failed five of the six new Rust tests.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-12/browser-observations.json`.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test

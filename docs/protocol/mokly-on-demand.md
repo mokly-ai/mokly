@@ -65,8 +65,8 @@ may enter the bounded fragment cache.
 After readiness, Serve renders every view in the background in catalogue
 order, which fills the render cache and the usage of every detail, then
 classifies Changes, which renders the base side under the
-[comparison contract](./mokly-comparison.md#sides). Every completed stage
-publishes one revision under the
+[comparison contract](./mokly-comparison.md#sides). A completion that changes
+the index or a detail publishes one revision under the
 [shell delivery contract](./mokly-shell-delivery.md#updates-in-serve): the
 index and the details are replaced in one step, the shell updates its
 navigation, counts, and details in place, and the frames keep their
