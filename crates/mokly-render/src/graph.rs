@@ -23,7 +23,7 @@ use crate::declarations;
 use crate::error::{self, RenderError, Result};
 use crate::fragments::Fragments;
 use crate::runtime::Runtime;
-use crate::sources::LeasedTree;
+use crate::source_lease::LeasedTree;
 use crate::stylesheets;
 
 pub(crate) struct JavaScriptGraph {

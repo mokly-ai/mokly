@@ -62,6 +62,7 @@ fn pool(worker: Unimock, clock: Unimock) -> Pool {
 
 fn result() -> MethodResult {
     MethodResult::Css(Css {
+        read_evidence: Default::default(),
         unmapped_dependency_directories: None,
         text: "success".into(),
         dependencies: Vec::new(),

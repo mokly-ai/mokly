@@ -22,6 +22,11 @@ owned bytes. `read_shared` returns immutable `Arc<[u8]>` storage, with a default
 adapter over `read`. A caching implementation shares that storage on hits.
 `digest` returns a SHA-256 hash through the same boundary. Snapshot adapters
 can retain only that hash for dependency, resource, and watch stamps.
+`observe_input` forwards an external consumer baseline without rereading its file.
+Static admission retains these witnesses. Other adapters can use the default
+no-op. `observe_pinned_input` compares historical witnesses with an immutable
+source digest without reading the matching working-tree path. [Read evidence](./src/read_evidence.rs) distinguishes observed whole-file
+versions from late hashes and keeps coverage incomplete.
 The byte-reading methods read bytes from an inventoried regular file and reject a replacement symlink.
 Callers project an explicit alias and read its target identity. Paths are private source-tree paths; public catalogue JSON uses
 repository-relative metadata instead.

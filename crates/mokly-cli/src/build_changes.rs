@@ -36,6 +36,11 @@ impl CatalogueBuild {
                     BuildChanges::Ready(Arc::new(result))
                 }
                 Err(source) => {
+                    if let Some(inputs) = &self.inputs
+                        && let Err(source) = inputs.verify()
+                    {
+                        return Err(BuildError::Static { source });
+                    }
                     warnings.extend(changes_diagnostics::warnings(&source));
                     if let Some(unavailable) = changes_diagnostics::unavailable(
                         &source,

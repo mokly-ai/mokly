@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::compiled::CompiledGeneration;
+use crate::postcss_evidence::Evidence;
 use crate::render_records::{CollectedStyle, MarkerDraft};
 use crate::usage::{InstanceDraft, SlotDraft};
 
@@ -136,6 +137,9 @@ pub struct Dependency {
 #[serde(deny_unknown_fields)]
 #[ts(rename = "CssResult")]
 pub struct Css {
+    /// Context read witnesses, independent of plugin dependency declarations.
+    #[serde(default, rename = "readEvidence")]
+    pub read_evidence: Evidence,
     /// Used repository dependency directories whose importer lookup is not mapped.
     #[serde(
         default,

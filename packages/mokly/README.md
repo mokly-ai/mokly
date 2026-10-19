@@ -11,6 +11,10 @@ tsconfig paths stay with the base files.
 Tracked base files beneath `node_modules` supply their base bytes and keep
 their dependency role in attribution.
 
+PostCSS children retain raw whole-file read witnesses beside dependency reports.
+Coverage remains incomplete for opaque readers. See the
+[PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
+
 ## Install And Run
 
 ```bash

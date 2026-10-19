@@ -65,7 +65,7 @@ sidecar run in order; the pool spreads independent requests across sidecars. A r
 | `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope         | render result                                                                       |
 | `renderStory`       | generation, story id, props, viewport, colour scheme                                                              | render result                                                                       |
 | `renderPage`        | generation, handle                                                                                                | `{ html, resources, warnings }`                                                     |
-| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies }`                                                            |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                    | `{ text, dependencies, readEvidence }`                                              |
 | `bindings`          | generation, handle-to-path-and-title table                                                                        | nothing                                                                             |
 | `disposeContext`    | PostCSS context                                                                                                   | nothing                                                                             |
 | `cssModules`        | generation, class maps by stylesheet path                                                                         | nothing                                                                             |
@@ -199,24 +199,8 @@ excluded with the `props-not-data` warning of the
 
 ## Consumer PostCSS
 
-`processCss` runs consumer PostCSS in an owned child process with `sourceRoot` as its working directory.
-The core uses a process-wide context sequence and selects `repositoryRoots` and `moduleResolution`.
-`sourcePath` is a logical repository or dependency path. The child resolves
-it against `sourceRoot` or the selected dependency root before setting PostCSS
-`from`. Request labels keep the logical path. Children are keyed by context and module. Each context has fresh local and
-package module state and fixed source and resolution inputs. `disposeContext`
-kills and reaps only that context's process; bundle creation and disposal do not reset it.
-CSS-only catalogues need no bundle. The pool tracks contexts per process and
-releases disposed contexts before that process takes more work. The result
-contains transformed text, resolved packages, and plugin dependencies for watching.
-The fragment key includes the class-map table digest. A changed map uses a
-new evaluation digest. The core retains the old generation until its final
-graph or request releases it. CSS text alone invalidates stylesheet nodes.
-The pool assigns each loaded lifetime an epoch. Every process reloads a stale
-epoch, then replays maps, describe, and bindings before a render.
-Mokly's own CSS work stays in Rust. Expected PostCSS errors carry a typed
-`postcss` failure in the error envelope. Rust selects its exact code and text
-from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
+The [PostCSS context and evidence contract](./mokly-sidecar-postcss.md) defines
+consumer processing, context lifetime, read witnesses, and incomplete coverage.
 
 ## Cancellation And Timeouts
 

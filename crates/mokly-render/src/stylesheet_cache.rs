@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use mokly_css::error::Result;
+use mokly_css::error::{CssError, InternalError, Result};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
 use mokly_source_interface::tree::SourceTree;
 
@@ -76,7 +76,7 @@ impl StylesheetBundler for CachedStylesheets {
             .records
             .get(&key)
         {
-            return Ok(record.bundle.clone());
+            return self.deliver(&record.bundle);
         }
         let previous = self
             .shared
@@ -92,7 +92,7 @@ impl StylesheetBundler for CachedStylesheets {
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())
                 .insert(key, previous.clone());
-            return Ok(previous.bundle.clone());
+            return self.deliver(&previous.bundle);
         }
         let bundle = self.inner.bundle(root)?;
         let mut stamp = InputStamp::default();
@@ -105,6 +105,16 @@ impl StylesheetBundler for CachedStylesheets {
             }
         }
         stamp.directories(self.tree.as_ref(), &self.root, &bundle.directories);
+        let mut consistent = true;
+        for (path, versions) in &bundle.read_evidence.inputs {
+            let mut versions = versions.iter();
+            if let Some(first) = versions.next() {
+                consistent &= versions.all(|other| other.digest() == first.digest());
+                stamp
+                    .files
+                    .insert(self.root.join(path), Some(first.digest().into()));
+            }
+        }
         let bytes =
             size_of::<Record>() + stylesheet_weight::bundle(&bundle) + stamp.retained_bytes();
         let record = Arc::new(Record {
@@ -112,18 +122,39 @@ impl StylesheetBundler for CachedStylesheets {
             bundle,
             bytes,
         });
-        self.shared
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(key.clone(), record.clone());
+        if consistent {
+            self.shared
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(key.clone(), record.clone());
+        }
         self.local
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(key, record.clone());
-        Ok(record.bundle.clone())
+        self.deliver(&record.bundle)
+    }
+}
+
+impl CachedStylesheets {
+    fn deliver(&self, bundle: &Bundle) -> Result<Bundle> {
+        for (path, versions) in &bundle.read_evidence.inputs {
+            for version in versions {
+                if let Err(source) = self.tree.observe_input(&self.root.join(path), version) {
+                    return Err(CssError::Internal(InternalError::Provider {
+                        source: Box::new(source),
+                    }));
+                }
+            }
+        }
+        Ok(bundle.clone())
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/stylesheet_cache_tests.rs"]
 mod stylesheet_cache_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_evidence_tests.rs"]
+mod stylesheet_evidence_tests;

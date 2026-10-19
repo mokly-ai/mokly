@@ -153,4 +153,6 @@ under `packages/mokly/src/generated/sidecar/`. Authenticated marker drafts retai
 Collected style records carry CSS and component owner paths. Authored schemas remain raw JSON
 until the core validates them. A definition's source path identifies its
 helper module separately from the exporting module in its handle. PostCSS
-dependencies keep their plugin names and optional directory globs.
+dependencies keep their plugin names and optional directory globs. Separate
+[read evidence](./src/postcss_evidence.rs) carries raw whole-file witnesses,
+known module paths, and an explicit incomplete coverage mark.

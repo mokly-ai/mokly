@@ -73,6 +73,8 @@ Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
 
+`Bundle.read_evidence` retains distinct observed and late input versions.
+Combining stylesheets preserves both kinds without overwriting earlier witnesses.
 Plugin dependency inputs use digests, separate from parsed CSS bytes.
 They keep source protection and graph invalidation without retaining file bodies.
 

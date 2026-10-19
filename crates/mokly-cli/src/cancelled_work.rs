@@ -9,6 +9,7 @@ use mokly_graph::error::{GraphError, Result};
 use mokly_graph::workers::{ArtifactWorker, DocumentWorker, RenderWorkers, ValidatedView};
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
+use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
@@ -34,6 +35,23 @@ impl CancellableTree {
 }
 
 impl SourceTree for CancellableTree {
+    fn observe_input(
+        &self,
+        path: &Path,
+        baseline: &ReadBaseline,
+    ) -> mokly_source_interface::error::Result<()> {
+        self.check(path)?;
+        self.inner.observe_input(path, baseline)
+    }
+    fn observe_pinned_input(
+        &self,
+        path: &Path,
+        baseline: &ReadBaseline,
+        digest: &str,
+    ) -> mokly_source_interface::error::Result<()> {
+        self.check(path)?;
+        self.inner.observe_pinned_input(path, baseline, digest)
+    }
     fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
         for path in paths {
             self.check(path)?;

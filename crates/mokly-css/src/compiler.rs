@@ -51,6 +51,7 @@ impl StylesheetBundler for Compiler {
             sources: BTreeMap::new(),
             resolutions: BTreeMap::new(),
             result: Bundle {
+                read_evidence: Default::default(),
                 route,
                 css: String::new(),
                 assets: BTreeMap::new(),
@@ -143,6 +144,7 @@ impl Preparation<'_> {
             .processor
             .process(path, &pruned, &self.root.excluded)?;
         self.result.plugin_inputs.extend(processed.plugin_inputs);
+        self.result.read_evidence.extend(processed.read_evidence);
         self.result.directories.extend(processed.directories);
         self.result.dependency_digests.extend(processed.inputs);
         let mut edits = Vec::new();
