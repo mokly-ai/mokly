@@ -242,15 +242,7 @@ fn a_cached_destination_does_not_make_a_missing_fragment_valid() {
         "caller/index.desktop.html: logical fragment \"absent\" is missing from target/index.desktop.dark.html"
     );
     assert_eq!(probe.compositions.load(Ordering::SeqCst), 4);
-    assert!(
-        probe
-            .session
-            .state
-            .anchor_flights
-            .lock()
-            .unwrap()
-            .is_empty()
-    );
+    assert!(probe.session.state.anchor_flights.is_empty());
 }
 
 #[test]
@@ -271,13 +263,5 @@ fn an_anchor_missing_from_one_destination_view_still_fails() {
         message,
         "caller/index.desktop.html: logical fragment \"summary\" is missing from target/index.mobile.dark.html"
     );
-    assert!(
-        probe
-            .session
-            .state
-            .anchor_flights
-            .lock()
-            .unwrap()
-            .is_empty()
-    );
+    assert!(probe.session.state.anchor_flights.is_empty());
 }

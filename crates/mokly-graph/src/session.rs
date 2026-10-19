@@ -17,9 +17,9 @@ use crate::closure::{Closure, Walker};
 use crate::delivery_inputs::DeliveryInputs;
 use crate::error::{GraphError, Result};
 use crate::graph::Graph;
-use crate::key::NodeKey;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
+use crate::requests::{MemoryRequests, Requests};
 use crate::resource_inputs::ResourceObserver;
 use crate::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
@@ -34,7 +34,7 @@ pub(crate) struct Session {
 }
 
 pub(crate) struct State {
-    pub(crate) anchor_flights: Mutex<BTreeMap<NodeKey, Arc<Mutex<()>>>>,
+    pub(crate) anchor_flights: Arc<dyn Requests>,
     pub(crate) observed: Arc<Mutex<BTreeSet<String>>>,
     pub(crate) observer: Arc<Mutex<Option<Weak<dyn ResourceObserver>>>>,
     pub(crate) directories: Vec<DirectoryDependency>,
@@ -73,7 +73,7 @@ impl Session {
         }
         Self {
             state: Arc::new(State {
-                anchor_flights: Mutex::new(BTreeMap::new()),
+                anchor_flights: Arc::new(MemoryRequests::default()),
                 observed: Arc::new(Mutex::new(
                     input
                         .plans

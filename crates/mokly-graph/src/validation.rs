@@ -1,40 +1,14 @@
 //! Cross-view logical anchors are checked against composed destination documents.
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
 
 use mokly_html::links::Reference;
 use mokly_model::catalogue::EntryContent;
 
 use crate::error::{Result, invalid};
-use crate::key::NodeKey;
 use crate::session::Session;
 use crate::types::DocumentPlan;
 use crate::{references, workers};
-
-/// Share a live target request before checking the bounded render cache again.
-fn flight(session: &Session, key: &NodeKey) -> Arc<Mutex<()>> {
-    session
-        .state
-        .anchor_flights
-        .lock()
-        .unwrap_or_else(|error| error.into_inner())
-        .entry(key.clone())
-        .or_insert_with(|| Arc::new(Mutex::new(())))
-        .clone()
-}
-
-/// Remove completed request metadata after the final waiter leaves.
-fn release(session: &Session, key: &NodeKey, flight: &Arc<Mutex<()>>) {
-    let mut flights = session
-        .state
-        .anchor_flights
-        .lock()
-        .unwrap_or_else(|error| error.into_inner());
-    if Arc::strong_count(flight) == 2 {
-        flights.remove(key);
-    }
-}
 
 fn validate_target(
     session: &Session,
@@ -86,13 +60,9 @@ pub(crate) fn links(session: &Session, links: &[Reference]) -> Result<()> {
                 .path
                 == path
         }) {
-            let shared = flight(session, &plan.key);
-            let result = {
-                let _guard = shared.lock().unwrap_or_else(|error| error.into_inner());
-                validate_target(session, plan, reference, fragment)
-            };
-            release(session, &plan.key, &shared);
-            result?;
+            let shared = session.state.anchor_flights.acquire(&plan.key);
+            let _guard = shared.lock().unwrap_or_else(|error| error.into_inner());
+            validate_target(session, plan, reference, fragment)?;
         }
     }
     Ok(())

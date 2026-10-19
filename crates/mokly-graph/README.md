@@ -58,6 +58,9 @@ is still checked in every destination view, including cache hits.
 Concurrent checks of one destination wait for its active render, then check
 the bounded cache again. Completed requests release their synchronization keys.
 Different targets and different generations keep independent requests.
+Anchor checks and JavaScript fragments use the same scoped request mechanism.
+Each generation and each fragment adapter owns an independent registry.
+The final active lease removes its entry even when an old mutex handle still lives.
 
 Comparison batches use the same render pool and sidecar count as validation.
 They return transient documents and closures in requested route order.

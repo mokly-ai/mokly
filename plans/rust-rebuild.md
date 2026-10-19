@@ -1851,6 +1851,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
     - [x] Coalesce concurrent anchor-target renders and preserve cache bounds.
           Evidence: `.context/m14-capture/coalesced-release-html/analysis.json`
           and `.context/m14-capture/coalesced-release-react/analysis.json`.
+  - [x] Retire completed anchor and fragment requests through scoped leases.
+        Close capture-throughput review finding 1 with option B.
+        Evidence: `.context/m14-capture/review-clarification.md` and
+        `.context/m14-capture/review-f1-tests.log`.
   - [ ] Decide whether to combine validation and capture through bounded ordered
         collection. Severity Medium, effort Large. Recommended: B, share the
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.

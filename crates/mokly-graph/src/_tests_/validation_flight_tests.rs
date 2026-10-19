@@ -27,30 +27,29 @@ fn prepared() -> Probe {
 fn a_target_serializes_live_requests_and_releases_its_lock_after_the_last_request() {
     let probe = prepared();
     let key = NodeKey("target".into());
-    let second = {
-        let first = validation::flight(&probe.session, &key);
-        let second = validation::flight(&probe.session, &key);
+    let retired = {
+        let second = {
+            let first = probe.session.state.anchor_flights.acquire(&key);
+            let second = probe.session.state.anchor_flights.acquire(&key);
+            {
+                let _guard = first.lock().unwrap();
+                assert!(matches!(second.try_lock(), Err(TryLockError::WouldBlock)));
+                let other_key = NodeKey("other".into());
+                let other = probe.session.state.anchor_flights.acquire(&other_key);
+                assert!(other.try_lock().is_ok());
+            }
+            second
+        };
         {
-            let _guard = first.lock().unwrap();
-            assert!(matches!(second.try_lock(), Err(TryLockError::WouldBlock)));
-            let other_key = NodeKey("other".into());
-            let other = validation::flight(&probe.session, &other_key);
-            assert!(other.try_lock().is_ok());
-            validation::release(&probe.session, &other_key, &other);
+            let same = probe.session.state.anchor_flights.acquire(&key);
+            assert!(Arc::ptr_eq(&same.handle(), &second.handle()));
         }
-        validation::release(&probe.session, &key, &first);
-        second
+        assert!(second.try_lock().is_ok());
+        second.handle()
     };
-    {
-        let same = validation::flight(&probe.session, &key);
-        assert!(Arc::ptr_eq(&same, &second));
-        validation::release(&probe.session, &key, &same);
-    }
-    assert!(second.try_lock().is_ok());
-    validation::release(&probe.session, &key, &second);
-    let fresh = validation::flight(&probe.session, &key);
-    assert!(!Arc::ptr_eq(&fresh, &second));
-    validation::release(&probe.session, &key, &fresh);
+    assert!(probe.session.state.anchor_flights.is_empty());
+    let fresh = probe.session.state.anchor_flights.acquire(&key);
+    assert!(!Arc::ptr_eq(&fresh.handle(), &retired));
 }
 
 #[test]
@@ -58,12 +57,23 @@ fn different_generations_do_not_wait_on_each_others_target_requests() {
     let first = prepared();
     let second = prepared();
     let key = NodeKey("same key".into());
-    let left = validation::flight(&first.session, &key);
-    let right = validation::flight(&second.session, &key);
+    let left = first.session.state.anchor_flights.acquire(&key);
+    let right = second.session.state.anchor_flights.acquire(&key);
     {
         let _guard = left.lock().unwrap();
         assert!(right.try_lock().is_ok());
     }
-    validation::release(&first.session, &key, &left);
-    validation::release(&second.session, &key, &right);
+}
+
+#[test]
+fn completed_requests_release_metadata_before_both_handles_are_dropped() {
+    let probe = prepared();
+    let key = NodeKey("overlapping cleanup".into());
+    let handles = {
+        let first = probe.session.state.anchor_flights.acquire(&key);
+        let second = probe.session.state.anchor_flights.acquire(&key);
+        [first.handle(), second.handle()]
+    };
+    assert_eq!(probe.session.state.anchor_flights.len(), 0);
+    assert!(Arc::ptr_eq(&handles[0], &handles[1]));
 }
