@@ -21,6 +21,10 @@ export const groupPaths = {
   currentDocument: "guides/terms",
   plainScreen: "screens/plain",
   plainComponent: "components/plain",
+  lightOnlyParent: "components/lamp",
+  lightOnlyVariant: "components/lamp/on",
+  atRuleChange: "screens/fade",
+  mobileOnlyChange: "screens/compact",
   ...scrollPaths,
 } as const;
 
@@ -30,6 +34,8 @@ export const groupStylesheets = [
     match: "{screens,components}/plain/index.html",
     stylesheets: ["plain.css"],
   },
+  { match: "screens/fade/index.html", stylesheets: ["fade.css"] },
+  { match: "screens/compact/index.html", stylesheets: ["compact.css"] },
   ...scrollStylesheets,
 ];
 
@@ -84,6 +90,31 @@ export async function writeGroups(root: string, side: Side): Promise<void> {
     root,
     "specs/components/plain.component.html",
     '---\ntitle: Plain\nelement: ui-plain\npropSchema: {type: object, additionalProperties: false, properties: {}}\n---\n<p class="plain">Plain component</p>',
+  );
+  // Light only: a component with Light views only and a changed variant.
+  await write(
+    root,
+    "specs/components/lamp.component.html",
+    `---\ntitle: Lamp\nelement: ui-lamp\ncolorSchemes: [light]\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Lamp}\nvariants: [{slug: on, title: On, props: {label: Lamp on ${side}}}]\n---\n<p class="lamp">{{label}}</p>`,
+  );
+  // CSS evidence: a changed selector-less at-rule, and a changed rule that
+  // matches only the mobile view.
+  const after = side === "After";
+  await write(
+    root,
+    "fade.css",
+    `@keyframes fixture-fade { from { opacity: 1; } to { opacity: ${after ? 0.6 : 0.8}; } }\n`,
+  );
+  await write(
+    root,
+    "specs/screens/fade.screen.html",
+    "---\ntitle: Fade screen\n---\n<h1>Fade screen</h1>",
+  );
+  await write(root, "compact.css", `.auth { padding: ${after ? 2 : 1}px; }\n`);
+  await write(
+    root,
+    "specs/screens/compact.screen.html",
+    '---\ntitle: Compact screen\n---\n<main><h1>Compact screen</h1><button class="auth" mokly-viewport="mobile">Sign in</button></main>',
   );
   await writeScrollGroups(root, side);
 }
