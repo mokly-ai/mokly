@@ -232,18 +232,18 @@ CI's small correctness fixtures have
 
 ## Budgets
 
-| Budget                                               | Rule                                                                                                |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `usableMs`                                           | under 5000 ms, cold and warm, on both fixture variants                                              |
-| sidecar deadlines and recycling                      | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                  |
-| dependency install time limit                        | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning |
-| render cache, extraction cache, install cache bounds | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                |
-| `build` time and peak memory                         | recorded per variant from scenario 1                                                                |
-| `changesReadyMs` and the CSS share                   | recorded per variant from scenarios 2 and 3                                                         |
-| watch edit-to-reload                                 | recorded per edit kind from scenario 4                                                              |
+| Budget                             | Rule                                                                                                        |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `usableMs`                         | under 5000 ms, cold and warm, on both fixture variants                                                      |
+| sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                          |
+| dependency install time limit      | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning         |
+| comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs |
+| render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                        |
+| `build` time and peak memory       | recorded per variant from scenario 1                                                                        |
+| `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                 |
+| watch edit-to-reload               | recorded per edit kind from scenario 4                                                                      |
 
-This table holds the budgets with the values the user approved. A row whose
-value is a recording rule rather than a number is measured and reported, not
-enforced; a number enters the row when the user approves it. The benchmark
-enforces every numeric row and fails when one is exceeded. A startup observation
+Recording rules measure and report values. The runtime enforces the approved
+cache and dependency-preparation limits. The benchmark enforces numeric
+acceptance thresholds, including startup under 5000 ms. A startup observation
 at or above 5000 ms produces a failed result with its measured values and reason.
