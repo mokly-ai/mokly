@@ -180,6 +180,19 @@ A pure move is included even when its kind is `unmodified`.
 | `moves/icon`                       | —                                | unmodified   | no       | Shared nested input target                       |
 | `moves/ring`                       | —                                | unmodified   | no       | Slot container for the glyph                     |
 
+## Small comparison copies
+
+`additions_copy_test.ts` supplies `additionsCopyTest(name, additions?, base?)`.
+The returned `test` builds its own comparison copy once per worker: the default
+catalogue with the source hook, compared with `base` (`fixture-base` unless
+given). Its `baseURL` serves that copy, and the worker fixture
+`additionsCopy` holds its read-only `directory`. Setup uses the isolated
+180,000 ms budget. The default and branch copies keep their membership.
+
+| Hook                       | Entries and evidence                                                                                                             |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `addImplementationSources` | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected |
+
 ## Shared Serve comparison fixture
 
 Import `test` from `serve_comparison_test.ts` for viewer Changes journeys.
