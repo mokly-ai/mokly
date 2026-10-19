@@ -1800,7 +1800,12 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       in the timings contract once approved.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
-  - [ ] Connect Changes and watch to their delivered browser events.
+  - [x] Connect Changes and watch to their delivered browser events.
+        Evidence: `.context/m14-harness/browser-focused.log` and
+        `.context/m14-harness/watch-smoke/.context/measurements.json`.
+  - [x] Drain browser measurements and restore sources before reporting failure
+        when Serve stops, including runs with a caller-owned browser.
+        Evidence: `.context/m14-harness/cleanup-green.log` and `review.md` there.
   - [ ] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
         per-entry charges until the capacity measurements support a decision.
@@ -1814,6 +1819,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         decision before implementation (M14 review 5, finding 1).
   - [ ] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
+    - [x] Repair single-host isolated setup and record three unmodified installs.
+          Evidence: `.context/m14-installs/measurements.json` and `report.md` there.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
@@ -1828,8 +1835,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
-- [ ] Replace the old baseline-output cold reset with M9 leased-cache preparation
+- [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
+      Evidence: `.context/m14-harness/changes-tests-3.log` and
+      `.context/m14-harness/changes-smoke/`.
 - [ ] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.

@@ -260,6 +260,13 @@ The browser leaves the page before the fixture closes its process and directory.
 `watch_updates`, `watch_moves`, `watch_folders`, and `watch_shutdown` cover the
 watched publication and disclosure cases.
 
+`large_changes` and `large_watch` run the opt-in large-fixture harness with
+small HTML and React inputs. They verify native base preparation, delivered
+Changes, event identity, visible reloads, and restoration of edited sources.
+They use the suite browser and assert outcomes without timing budgets.
+`large_watch_failure` holds restoration pending after the owned server exits.
+It requires the harness to close its context and finish restoration before return.
+
 ## Native team example
 
 The `team_screens`, `team_components`, `team_links`, `team_pages`, and `team_flow`

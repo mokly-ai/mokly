@@ -27,12 +27,35 @@ Generated output stays ignored.
 
 `--toolchain workspace` is the default. It links the workspace dependencies
 and records their lockfile. It measures no install time. `--toolchain install`
-packs the CLI, viewer, and host native package, pins consumer dependencies,
-and runs an isolated install. Its setup time is separate from the benchmark.
+packs the CLI, viewer, and every native package, pins consumer dependencies,
+and runs an isolated install. Only the host native package needs a built binary.
+Other native archives carry their available metadata and remain optional.
+Their platform selectors prevent installation on the host. Local overrides
+keep all five targets in the consumer lockfile without registry publication.
+Its setup time is separate from the benchmark.
 
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
 select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
 Cold and warm runs each use a new Serve process and browser context.
+Both keep the native comparison caches. Cold means application-cold, not an
+empty disk cache. Serve prepares the pinned fixture base through M9: HTML
+reads Git sources; React acquires source and dependency leases. The harness
+records the announced cache directory and never resets a baseline output.
+Serve reports delivered Changes readiness and review availability separately.
+Changes verifies the browser's own event stream, delivered index, Changes
+control, and advertised review. The unrelated CSS edit must list no Changes.
+Its report includes each classification duration and the union of CSS analysis
+intervals on that classification's core clock. These are observations.
+Watch uses one Serve process. It edits one screen, one component, and one
+stylesheet in turn. Each edit records the browser publication, changed frame,
+ready index, Changes control, and available review. The browser clock starts
+immediately before the driver requests the file write. This includes driver
+dispatch. Publication and index timestamps come from the shell's own stream
+and fetch responses. Frame and control times include browser assertion work.
+Every edit restores its original bytes. The next edit waits for the restored
+frame and Changes state. A failed run keeps completed edits in its report.
+When Serve stops during a measurement, the harness closes that measurement's
+browser context and waits for source restoration before it reports failure.
 For ordinary development, reuse a generated configuration with
 `npx mokly serve --config .context/large-html/mokly.config.json`.
 
