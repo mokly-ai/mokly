@@ -27,7 +27,7 @@ try {
       input.variant,
       input.toolchain,
       root,
-      acceptanceBuild,
+      acceptanceBuild ? { acceptanceBuild } : {},
     );
     process.stdout.write(JSON.stringify(fixture, null, 2) + "\n");
   } else {

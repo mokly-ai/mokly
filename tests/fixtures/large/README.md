@@ -32,7 +32,13 @@ and runs an isolated install. Only the host native package needs a built binary.
 Other native archives carry their available metadata and remain optional.
 Their platform selectors prevent installation on the host. Local overrides
 keep all five targets in the consumer lockfile without registry publication.
-Its setup time is separate from the benchmark.
+Full isolated setup must finish below 60000 ms and stay below 1.5 GiB sampled
+RSS for the setup harness and its descendants. Both limits are exclusive.
+Setup includes generation, package archives, npm, and Git. Product builds
+finish before the setup clock and RSS sampler start. Workspace reuse has no
+isolated-setup budget. Setup writes its result and samples to `.context/setup.json`,
+also when installation or a budget fails. A budget failure exits unsuccessfully
+after preserving the complete fixture record. Setup time is separate from Serve.
 
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
 select all four. Serve checks navigation search, real previews, both axes, live props, and a page.

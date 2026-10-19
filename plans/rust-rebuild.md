@@ -354,6 +354,12 @@ more than re-deriving the behaviour from the requirements.
     This aligns the round 15 specification with the producer and the viewer's
     direct-use flag. Decision: M9 review 10 finding 3A, approved in changes-12.
 
+**Decision 55 B (user, 2026-10-19):** Approve full isolated fixture setup below
+60,000 ms and setup-family RSS below 1.5 GiB, including the setup harness.
+Enforce these budgets after the isolated-install repair rather than retaining
+observation-only results. Full setup includes generation, packing, dependency
+installation, and Git setup. The product build is a separate prerequisite.
+
 **Decision 57 C (user, 2026-10-19):** Keep the current complete-catalogue
 startup design. Approve usable startup below 15,000 ms for the large React
 fixture, cold and warm, on the optimized release binary. HTML retains its
@@ -1829,9 +1835,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         optimized release build; HTML stays below 5,000 ms.
     - [ ] Enforce variant-specific startup acceptance on a verified release
           binary and repeat the large React startup measurement.
-  - [ ] Bring large React usable startup under 5,000 ms
-        (compilation cache redesign, decision 57 option A); measured 10.5 s
-        on the release build on 2026-10-19.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
@@ -1877,13 +1880,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Evidence: `.context/m14-measurements/install-cold-evidence/summary.json`.
     - [x] Repair single-host isolated setup and record three unmodified installs.
           Evidence: `.context/m14-installs/measurements.json` and `report.md` there.
-  - [ ] Decide proposed isolated-setup budgets after that repair: under 60,000 ms
-        cold and warm, and under 1.5 GiB process-family RSS including the setup
-        harness. Proposal dated 2026-10-19, not approved or enforced. Alternative:
-        retain observation-only results. Recommend the budgets after three
-        unmodified repetitions; these samples leave time and memory headroom.
-        Keep the approved usable startup budget below 5000 ms and leave the
-        separate base dependency preparation allowance unchanged.
+  - [x] Approve isolated-setup budgets after the repair, decision 55 B on
+        2026-10-19: under 60,000 ms and under 1.5 GiB setup-family RSS,
+        including the setup harness.
+    - [ ] Enforce both isolated-setup budgets with synthetic boundary tests
+          and repeat one complete isolated install.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
@@ -2278,6 +2279,10 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Bring large React usable startup under 5,000 ms
+      (compilation cache redesign, decision 57 option A); measured 10.5 s
+      on the release build on 2026-10-19.
 
 - [ ] Replace the Intel macOS release runner before GitHub retires its Intel
       images, preserving native build and execution coverage.

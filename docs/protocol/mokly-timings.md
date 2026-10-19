@@ -215,6 +215,8 @@ CI's small correctness fixtures have
 | Budget                                               | Rule                                                                                                |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `usableMs`                                           | under 5000 ms for HTML and under 15000 ms for React, cold and warm, on the acceptance build         |
+| full isolated fixture setup                          | under 60000 ms                                                                                      |
+| isolated setup-family peak RSS                       | under 1.5 GiB, including the setup harness and its descendants                                      |
 | sidecar deadlines and recycling                      | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                  |
 | dependency install time limit                        | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning |
 | render cache, extraction cache, install cache bounds | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                |
@@ -227,6 +229,11 @@ verifies that binary before timing and identifies its profile and digest in
 the results. Build preparation is outside the startup measurement.
 The React budget retains complete-catalogue readiness. Compilation redesign
 is deferred rather than changing readiness to partial navigation.
+
+Isolated setup includes catalogue generation, package archives, dependency
+installation, and Git setup. The product build is a prerequisite outside this
+measurement. Setup records keep elapsed time, sampled peak RSS, and failures.
+An observation at or above either setup budget fails isolated setup.
 
 This table holds the budgets with the values the user approved. A row whose
 value is a recording rule rather than a number is measured and reported, not

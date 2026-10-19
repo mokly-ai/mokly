@@ -10,6 +10,8 @@ import type {
 } from "../../tests/fixtures/large/generate.js";
 
 import type { AcceptanceBuild } from "./acceptance_build.js";
+import { measureSetup } from "./setup_measurement.js";
+import type { SetupSystem } from "./setup_memory.js";
 import { prepareToolchain } from "./toolchain.js";
 import type { ToolchainMode } from "./toolchain.js";
 
@@ -43,24 +45,49 @@ export async function prepareFixture(
   variant: Variant,
   mode: ToolchainMode,
   root: string,
-  acceptanceBuild?: AcceptanceBuild,
+  options: {
+    acceptanceBuild?: AcceptanceBuild;
+    setupSystem?: SetupSystem;
+    toolchain?: typeof prepareToolchain;
+  } = {},
 ) {
-  const beginning = performance.now();
-  const fixture = await generateLargeFixture(root, size, variant);
-  const toolchain = await prepareToolchain(repository, root, mode);
-  const baseline = await commitFixture(root, fixture.size.stylesheets);
+  let generated = false;
+  const { outcome, measurement } = await measureSetup(
+    mode,
+    async () => {
+      const fixture = await generateLargeFixture(root, size, variant);
+      generated = true;
+      const toolchain = await (options.toolchain ?? prepareToolchain)(
+        repository,
+        root,
+        mode,
+      );
+      const baseline = await commitFixture(root, fixture.size.stylesheets);
+      return { ...fixture, toolchain, baseline };
+    },
+    options.setupSystem,
+  );
+  if (generated) {
+    await fs.mkdir(path.join(root, ".context"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, ".context/setup.json"),
+      JSON.stringify(measurement, null, 2) + "\n",
+    );
+  }
+  if (!outcome.ok) throw outcome.error;
   const record = {
-    ...fixture,
-    toolchain,
-    baseline,
-    ...(acceptanceBuild ? { acceptanceBuild } : {}),
-    setupMs: performance.now() - beginning,
+    ...outcome.value,
+    ...(options.acceptanceBuild
+      ? { acceptanceBuild: options.acceptanceBuild }
+      : {}),
+    setupMs: measurement.setupMs,
+    ...(mode === "install" ? { setup: measurement } : {}),
   };
-  await fs.mkdir(path.join(root, ".context"));
   await fs.writeFile(
     path.join(root, ".context/fixture.json"),
     JSON.stringify(record, null, 2) + "\n",
   );
+  if (measurement.reason) throw new Error(measurement.reason);
   return record;
 }
 export async function preparedFixture(root: string): Promise<PreparedFixture> {
