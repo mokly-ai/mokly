@@ -1875,6 +1875,40 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     replaced worker's mock on another thread, depending on timing.
     Recommended A: clone the mocks before they move to the pool, as the
     message says. Separate branch. Evidence: m7 `report-23.md`.
+  - M10 Serve and moved rows decision 6, Severity High, effort Small: Serve
+    answers 503 to a selected comparison of a component variant whose
+    dependency evidence names a rule that its parent owns, for example
+    `components/card/featured`. Recommended A: the selected projection keeps
+    the parent record with only the selected variant. Until the user
+    decides, the Serve variant specs use the Badge family.
+  - M10 Serve and moved rows review 1, open findings for the user:
+    1. Expiry emulation cannot fail its snapshot checks. Severity Medium,
+       effort Small. Recommended: C, one shared helper fakes a complete
+       collection of the expired generation and its previews.
+    2. Renewal fence checks pass before the late response. Severity Medium,
+       effort Small. Recommended: B, the held renewal release waits until
+       the browser ends each held request.
+    3. Regression test proves one shape of the fix. Severity Low, effort
+       Small. Recommended: A, CLI tests for a lost Dark view, a variant that
+       gains Dark, and a removed component with a surviving consumer.
+    4. The copy drops the moved variant comparison. Severity Low, effort
+       Small. Recommended: A, register the moved variant comparison on the
+       branch copy too.
+    5. Plan omits the Featured comparison failure. Severity Low, effort
+       Small. Recommended: A, an open plan TODO for the 503 and decision 6.
+  - Outside the scope of the M10 Serve and moved rows review:
+    - `crates/mokly-server`: Serve answers 503 to the selected comparison of
+      `components/card/featured`. Decision 6 above. Separate branch.
+    - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
+      Verification paragraph asks for an advanced server clock, and Serve
+      has no test hook for it. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:115`: one shared set of
+      base commits must feed Rust and browser tests, but Rust reads
+      `tests/fixtures/branch_point_cases.json` and the browser writes its
+      own sources. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
+      must run through Serve, `build`, and the embedded viewer, but they run
+      only on the branch copy. Separate branch.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
