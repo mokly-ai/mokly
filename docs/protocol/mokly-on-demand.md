@@ -99,15 +99,16 @@ before cleanup completes.
 
 ## Comparison Snapshots
 
-No comparison renders until the reader selects a diff or opens a removed
-entry. For a current screen or component, the shell requests
+No comparison generation is assembled until the reader selects a diff or opens a
+removed entry. For a current screen or component, the shell requests
 `/mokly-viewer/diffs/review.json?path=<path>`, with `refresh=1` for an explicit
 retry, under the [selected comparison contract](./mokly-selected-comparisons.md).
 Removed component parents and variants use the advertised generation URL.
 Historical screens, pages, and documents use that generation under the
-[removed previews contract](./mokly-removed-previews.md). The selected endpoint takes
-both sides of the current entry's views from the render cache, recomputes only
-evicted views from the same inputs, treats missing or pending evidence as the
+[removed previews contract](./mokly-removed-previews.md). The selected endpoint
+takes the current entry's base views from the bounded capture or pinned-source
+fallback and its head views from the bounded render cache. It renders evicted
+head views again from the same inputs, treats missing or pending evidence as the
 retryable failure, writes the review result v8 and the two snapshot trees into one
 immutable in-memory generation, and redirects to
 `/mokly-viewer/diffs/generations/<generation>/review.json`. Snapshot files

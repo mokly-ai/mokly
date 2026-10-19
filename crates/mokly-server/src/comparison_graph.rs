@@ -10,7 +10,9 @@ use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::error::{GraphError, InternalError, Result};
 
 use mokly_graph::resource_inputs::ResourceObserver;
-use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderSummary, TemporaryDocument};
+use mokly_graph::types::{
+    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, TemporaryDocument,
+};
 use mokly_model::data::Props;
 use mokly_model::material::digest;
 use mokly_model::namespace::generated;
@@ -57,6 +59,11 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    /// Return None so the engine captures through these digest checks.
+    fn comparison_capture(&self) -> Option<ComparisonCapture> {
+        None
+    }
+
     fn generation_key(&self) -> &str {
         self.inner.generation_key()
     }

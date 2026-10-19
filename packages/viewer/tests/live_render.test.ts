@@ -99,6 +99,26 @@ test("a render request posts the installed revision with the render token", asyn
   assert.deepEqual(JSON.parse(String(sent.init.body)), request);
 });
 
+test("a negative zero edit keeps its sign in the posted body", async () => {
+  const serve = fakeServe({});
+  const edited: ComponentRenderRequest = {
+    ...request,
+    overrides: {
+      radius: { kind: "set", value: -0 },
+      sizes: { kind: "set", value: [0, -0, { inner: -0 }] },
+      label: { kind: "set", value: "Go" },
+    },
+  };
+  await serve.live.render(descriptor, edited, signal);
+  const body = String(serve.received[0]!.init.body);
+  assert.match(body, /"radius":\{"kind":"set","value":-0\}/);
+  assert.match(body, /"value":\[0,-0,\{"inner":-0\}\]/);
+  const sent = JSON.parse(body) as ComponentRenderRequest;
+  assert.deepEqual(sent, edited);
+  const radius = sent.overrides["radius"];
+  assert.ok(radius?.kind === "set" && Object.is(radius.value, -0));
+});
+
 test("an older revision is refused with the stale-revision code and Serve's message", async () => {
   const serve = fakeServe({ installed: 5 });
   await assert.rejects(

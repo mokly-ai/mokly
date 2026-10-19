@@ -14,6 +14,7 @@ import {
   failureMessage,
   readRenderResponse,
   renderFailure,
+  renderRequestBody,
 } from "./live_render.js";
 
 const DEPLOYMENT = /^[a-f0-9]{64}$/;
@@ -71,7 +72,7 @@ export function standaloneLiveSource(win: StandaloneWindow): ShellLiveSource {
           "content-type": "application/json",
           "x-mokly-render-token": descriptor.render.token,
         },
-        body: JSON.stringify(request),
+        body: renderRequestBody(request),
       });
       if (!response.ok)
         throw renderFailure(response.status, await failureMessage(response));

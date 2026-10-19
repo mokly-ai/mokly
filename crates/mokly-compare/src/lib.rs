@@ -38,6 +38,11 @@ mod move_candidates;
 pub mod move_types;
 pub mod moves;
 
+mod capture_codec;
+mod capture_error;
+mod capture_nodes;
+mod capture_styles;
+mod comparison_capture;
 mod comparison_error;
 
 mod comparison_resources;
@@ -119,3 +124,11 @@ mod projection_tests;
 pub mod projection_detail;
 
 pub mod projection_removed;
+
+mod capture_annotations;
+mod capture_usage;
+mod capture_weight;
+
+#[cfg(test)]
+#[path = "_tests_/capture_engine/mod.rs"]
+mod capture_engine_tests;
