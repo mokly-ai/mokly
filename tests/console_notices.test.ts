@@ -30,9 +30,10 @@ test("every other console error stays an error", () => {
   for (const [text, location] of [
     [blocked("http://127.0.0.1:4517/view/shop/cart/"), ""],
     [blocked("http://127.0.0.1:4517/statics/cart.html"), ""],
-    [blocked("about:blank"), "about:blank"],
     [blocked("about:blank") + " extra", ""],
     [blocked("about:blank") + "\n", ""],
+    [blocked("about:blank") + " extra", "about:blank"],
+    [blocked("about:blank") + "\n", "about:blank"],
     [blocked("about:blank"), "https://host.test/unrelated"],
     [`Blocked script execution in 'about:srcdoc'`, "about:srcdoc"],
     ["Uncaught TypeError: x is not a function", "about:srcdoc"],
@@ -44,6 +45,10 @@ test("every other console error stays an error", () => {
     assert.equal(viewerSandboxNotice(text, location), false, text);
 });
 
-test("the trace recorder notice requires exact blank-document text and an empty location", () => {
+test("the injected-script notice requires exact blank-document text and a blank location", () => {
   assert.equal(viewerSandboxNotice(blocked("about:blank"), ""), true);
+  assert.equal(
+    viewerSandboxNotice(blocked("about:blank"), "about:blank"),
+    true,
+  );
 });
