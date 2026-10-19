@@ -1323,6 +1323,17 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       prove large-scale Changes with the Rust implementation.
   - [x] Prove bounded full-comparison work at 128 and 512 component parents
         with variants, and shared before/after CSS parse reuse.
+  - [ ] Complete reviews, resource inventories, and closures for the two
+        distinct large states: the unrelated-rule edit and the watch edits.
+        Use one sidecar, a detached run, an external 60-minute guard, and the
+        same 1.85 GB process-family PSS bound. The earlier external ten-minute
+        guards stopped base rendering before capture started; they are not
+        product limits. Three earlier states have identical source trees.
+        Before each run, record its exact expected Changes and rule evidence.
+        The unrelated-rule edit must list no Changes and retain `no-selector-hit`
+        exclusions on views that link `shared-1.css`. Classify every differing
+        field in both completed results before accepting the artifacts.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
