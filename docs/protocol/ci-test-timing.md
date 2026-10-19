@@ -96,7 +96,7 @@ A polling deadline does not establish a speed contract.
 A test-runner timeout is a hang guard for the whole test.
 Keep it at least three times the test's typical duration.
 CI job timeouts follow the same rule for the whole job, including setup and
-builds. Browser shards and native jobs allow 60 minutes. Other CI jobs allow
+builds. Browser shards, static-delivery jobs, and native jobs allow 60 minutes. Other CI jobs allow
 30 minutes. Record typical durations separately from these hang guards.
 An expected-state allowance inside a test can be longer than the runner timeout.
 The runner timeout then bounds the whole test.

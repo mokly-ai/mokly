@@ -625,6 +625,10 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
   - [x] Add the Rust advisory audit to Repository, the daily dependency audit,
         and release verification, including reused CI evidence.
   - [x] Add the generated-TypeScript byte-identity gate.
+- [ ] Resolve RUSTSEC-2026-0235 before the new advisory gate can pass.
+      `lightningcss` 1.0.0-alpha.72 uses `parcel_sourcemap` 2.1.1, which
+      requires vulnerable `rkyv` 0.7.46. No compatible published update exists.
+      Keep the strict audit until the user approves a dependency repair or exception.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
@@ -993,6 +997,10 @@ renders again.
   - [x] Portable design links, shared samples, and inspector disclosures
         directly from real `mokly build` output through `file://` URLs are
         checked by a manual run.
+  - [x] Add a required CI job that builds the example and runs the portable
+        design specs through static HTTP and `file://`. Decision 2 = A on
+        2026-10-19 approves this gate. The complete local and remote gates
+        run the same delivery checks without changing the four browser shards.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.

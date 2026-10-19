@@ -59,6 +59,10 @@ sidecar, and the viewer.
 A selected suite is partial verification. The unqualified command is the
 complete gate. A local run stops at the first failed suite. A remote run
 reports every failed suite. Rerun one failed suite with `--suite <name>`.
+The complete local gate also runs `npm run test:delivery:prepared` after the
+browser suite. It builds the example and checks portable design specs through
+static HTTP and file URLs. Remote verification runs this command after browser
+shard 1. Hosted CI has a separate required static-delivery job.
 The local gate gets native build coverage from Viewer and Rust checks from
 Repository. It does not repeat them in Native. Hosted native jobs repeat that
 coverage on their own operating systems and are required by `Required CI`.

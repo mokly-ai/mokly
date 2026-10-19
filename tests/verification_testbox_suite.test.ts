@@ -56,9 +56,18 @@ test("six commands derive exact cargo arguments, report names and streamed outpu
           ],
           captureOutput: false,
         },
+        ...(shard === "1/4"
+          ? [
+              {
+                file: "npm",
+                args: ["run", "test:delivery:prepared"],
+                captureOutput: false,
+              },
+            ]
+          : []),
       ],
     );
-    const cargo = harness.commands.at(-1)!;
+    const cargo = harness.commands.find((command) => command.file === "cargo")!;
     assert.equal(cargo.cwd, "/repo");
     assert.equal(
       cargo.env.MOKLY_VERIFICATION_REPORT,

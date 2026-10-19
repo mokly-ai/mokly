@@ -45,10 +45,11 @@ For ordinary pull requests and pushes to `main`, the workflow fans out to:
 
 - one viewer job on Node 22.14.0;
 - four browser shards on Node 22.14.0; and
+- one static-delivery job on Node 22.14.0; and
 - native jobs on macOS and Windows at Node 22.14.0.
 
 For a same-repository Release Please pull request, the viewer job and every
-browser shard also run on Node 24. A release pull request selects this profile
+browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
 only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
@@ -127,7 +128,7 @@ A second, narrow exception permits only the release matrix's `darwin-x64`
 build on GitHub-hosted `macos-26-intel`, with `actions/checkout`. Blacksmith's
 macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
 it has no npm publishing permission. Every other native release row follows
-the Blacksmith size rule. Browser shards and native jobs have a 60-minute
+the Blacksmith size rule. Browser shards, static-delivery jobs, and native jobs have a 60-minute
 execution timeout. The other CI jobs keep a 30-minute timeout. These limits
 are hang guards, not speed requirements. Each limit must allow at least three
 times the job's typical duration, including setup and builds. The longer
@@ -144,6 +145,12 @@ unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile emitted by the repository job: five
 viewer and browser reports for ordinary events and ten for a Release Please
 pull request.
+
+Static delivery is also required. It builds the example with Changes disabled
+and checks portable design journeys through static HTTP and `file://`.
+Both modes require every assigned test to pass once. Empty discovery, skips,
+duplicate results, missing results, and reporter errors fail the job.
+Its reports stay separate from the five- or ten-report suite aggregate.
 
 Required CI is a report aggregator. It checks out the validator and installs
 Node. It needs no npm dependencies or Rust build.

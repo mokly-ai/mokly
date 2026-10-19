@@ -101,6 +101,10 @@ suite and passes it to `cargo xtask check`. The command name stays
 Both scripts use `validateFingerprint` from `source-tree.mjs`.
 Its error contains no usage text. Each script adds its own usage line.
 
+The first browser shard also checks the example through static HTTP and file
+URLs after its ordinary specs pass. A failure makes that command unsuccessful.
+These selected delivery checks do not replace any of the five suite reports.
+
 ## Readiness And Sync Probe
 
 Run `blacksmith testbox run` from the

@@ -202,6 +202,7 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Dependency Update Pull Request](./dependency-audit-update-pr.md)
 - [Deterministic Test Repository Inputs](./ci-test-repository-inputs.md)
 - [Developer Test Commands](./developer-test-commands.md)
+- [Developer browser commands](./developer-browser-commands.md) — browser selection and static delivery.
 - [Packed Consumer Smoke](./packed-consumer-smoke.md)
 - [GitHub Publishing Protections](./npm-github-protections.md)
 - [Historical npm Upgrade Notes](./npm-release-history.md)

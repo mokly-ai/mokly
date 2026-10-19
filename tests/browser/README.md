@@ -20,6 +20,12 @@ disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
 `changesStatus` is not `disabled`.
 
+`npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
+It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
+The configuration selects the portable design specs. The delivery reporter
+rejects skips, missing or duplicate results, and empty discovery. Reports live
+under `.context/static-delivery`, outside the complete suite report directory.
+
 ## Deployment replacement
 
 `static_deployment.spec.ts` hosts two immutable copies. The static host's root

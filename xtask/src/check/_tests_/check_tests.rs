@@ -17,8 +17,10 @@ use super::runner::{CheckRunner, DefaultCheckRunner};
 #[test]
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
     let command_runner = Arc::new(Unimock::new((
+        (
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check:rust" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        ),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "cargo xtask check-generated-types" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run format:check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run lint" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
@@ -33,6 +35,7 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run typecheck" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:viewer:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:browser:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run test:delivery:prepared" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
     )));
     let auditor = Arc::new(Unimock::new(
         RustFileLengthAuditorRunMock

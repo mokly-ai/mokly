@@ -22,6 +22,8 @@
   "include": [
     "scripts/large/**/*.ts",
     "playwright.config.ts",
+    "playwright.delivery.config.ts",
+    "scripts/verification/static-delivery-reporter.ts",
     "packages/mokly/src/**/*.ts",
     "packages/mokly/src/**/*.d.mts",
     "tests/**/*.ts",

@@ -35,7 +35,8 @@
     "fixture:large": "node --import tsx scripts/large/cli.ts generate",
     "benchmark:large": "node --import tsx scripts/large/cli.ts benchmark",
     "test:browser": "npm run -s build && node scripts/verification/browser-developer.mjs",
-    "test:browser:prepared": "node scripts/verification/run-browser.mjs"
+    "test:browser:prepared": "node scripts/verification/run-browser.mjs",
+    "test:delivery:prepared": "node scripts/verification/static-delivery.mjs"
   },
   "devDependencies": {
     "@emotion/cache": "^11.14.0",

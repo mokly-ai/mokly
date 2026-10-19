@@ -123,7 +123,12 @@ for Browse pages and opens portable design documents from that directory with
 directory is also the input of the suite's isolated current-only copy. Its
 index must have `changesStatus: "disabled"`; otherwise setup rejects it with
 an instruction to build with `--no-changes`. The comparison fixture always
-owns a fresh build. Direct `file://` delivery supports manual selected runs.
+owns a fresh build. CI and the complete local gate check both static HTTP and
+direct `file://` delivery against a fresh example build. The first remote
+browser shard runs those checks after its ordinary specs. The four-shard
+inventory stays unchanged. Selected delivery reports cannot replace complete
+browser evidence. Each mode requires a nonempty inventory and exactly one
+passing result per assigned test.
 Fixtures that test private inputs still own their own hosts.
 
 Browser specs support POSIX systems only. Specs must not depend on an empty Changes set:
@@ -221,7 +226,7 @@ total runner minutes. Record hosted-run billing data when GitHub exposes it;
 otherwise record the applicable repository plan and the calculated
 runner-minute consumption. Keep the measurement record under `.context/`.
 
-Browser shards and native jobs have 60-minute hang guards. Other CI jobs keep
+Browser shards, static-delivery jobs, and native jobs have 60-minute hang guards. Other CI jobs keep
 30-minute hang guards. Compare each complete job's typical duration with its
 guard and retain at least three times that duration. Record a shortfall for
 review without changing assertion deadlines, coverage, or the four shards.
