@@ -1754,9 +1754,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         decision before implementation (M14 review 5, finding 1).
   - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
-        At `0cda750a`, isolated React fixture setup took 28.076/20.160 s with
+        At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
         cold/warm npm caches, including package packing. `npm ci` took
-        7.328/5.446 s. Setup process-family RSS peaked at 784,814,080/916,635,648
+        7.328/5.446 s. Full fixture setup, including catalogue generation and
+        Git setup, took 28.948/21.024 s.
+        Setup process-family RSS peaked at 784,814,080/916,635,648
         bytes. Both installed CLI and React rendering smoke checks passed.
         Unmodified setup failed twice: `EUSAGE`, four non-host native packages
         missing from the lockfile. Measurements used fixture-only metadata
