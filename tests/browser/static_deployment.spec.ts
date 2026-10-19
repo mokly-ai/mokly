@@ -63,7 +63,7 @@ test.beforeAll(async () => {
   identities = indexes.map((index) => index.deploymentId);
   expect(indexes.map((index) => index.comparisonUrl)).toEqual([null, null]);
   await fs.rm(source, { recursive: true });
-  host = await serveStaticFiles(site);
+  host = await serveStaticFiles(() => site);
 });
 
 test("a copied catalogue reloads on another deployment without comparison changes", async ({
@@ -74,9 +74,7 @@ test("a copied catalogue reloads on another deployment without comparison change
   await page.goto(`${host.url}/view/home/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await markPage(page);
-  const previous = path.join(root, "previous");
-  await fs.rename(site, previous);
-  await fs.rename(next, site);
+  site = next;
   await page.locator('a[data-route="details/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("New details");
   expect(await hasMarker(page)).toBe(false);
