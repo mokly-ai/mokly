@@ -10,10 +10,11 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
   writes the evidence report. The inventory is the tooling tests under `tests/`
   and the viewer tests under `packages/viewer/tests/`.
 - `cargo test -p <crate>` runs one crate's Rust tests, and
-  `cargo test --workspace` runs them all. The repository suite runs the complete
+  `cargo test --workspace` runs the default targets. The repository suite runs the default
   set; a selected crate is partial verification. Sidecar integration tests
   require `npm run build --workspace @mokly/viewer` then
   `npm run build --workspace @mokly/mokly` before a raw Cargo run.
+- Run the on-demand design matrix with `cargo test -p mokly-cli --features design-matrix --test design_attribution_tests`; the default workspace suite and gate exclude it.
 - `npm run test:browser -- [<spec> ...] [-g "<name>"]` builds first, then
   forwards its arguments to Playwright. Without filters, it runs every browser
   spec against `mokly serve` of the example catalogue.
@@ -164,9 +165,8 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 Shared Serve uses `refs/mokly/browser-suite-no-base` and waits for settled usage and unavailable Changes.
 It requires one `git-failed` line. Real Changes specs own separate Git fixtures.
 
-Global setup copies the current-only example for most `static_*.spec.ts`,
-`stage_centring`, and `review_snapshot_links`. A second two-commit fixture
-serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
+Global setup copies the current-only example for most `static_*.spec.ts`, `stage_centring`,
+and `review_snapshot_links`. A second two-commit fixture serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
 To supply current-only output, set `MOKLY_PLAYWRIGHT_STATIC_DIR`. For example:
 
 ```bash

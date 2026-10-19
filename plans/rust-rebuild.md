@@ -915,7 +915,7 @@ renders again.
       route/detail races, frame handoff, live prop edits, and preserved focus.
   - [x] Port the route, history, detail fence, mount, publication, and live
         edit cases.
-  - [ ] Port the cases that stay under the viewer client-shell TODO in the
+  - [x] Port the cases that stay under the viewer client-shell TODO in the
         sweep: mount-time frame ownership and the Browse exact-resource
         handoff; live edit validation, the viewport switch, an expired
         preview, and a context change during a pending render; the React
@@ -923,10 +923,16 @@ renders again.
         inspector tabs; the design library's unset, Reset, and nested styles;
         an older response for the same route; use-case and page frames and
         the Usage loading state while evidence is unavailable; instance deep
-        links; focus on an unchanged Usage link while a Changes completion
-        is adopted; a published scheme swap while a redirect replaces a frame
-        source; and the review-base sentence while a detail loads, which needs
-        a served catalogue with a Git base.
+        links; and a published scheme swap while a redirect replaces a frame
+        source.
+  - [x] Port the review-base sentence while a detail loads, on the copied
+        comparison output.
+  - [ ] Port the two cases that wait for the shared Serve Changes fixture:
+        focus on an unchanged Usage link while a Changes completion is
+        adopted, which needs a changed component with a consumer; and the
+        design library component's Unmodified status after temporary edits
+        and Reset, which needs an unchanged component with editable props in
+        the fixture's base commit.
   - [ ] When Serve stops publishing a render completion that changes no
         detail (review 8 finding 1, for the Serve owner), restore one index
         read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
@@ -1055,6 +1061,12 @@ rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
 `.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
 Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
+The remaining client-shell cases of the sweep and their generator inputs:
+`.context/rust-rebuild/delegation/m7/report-22.md` and
+`.context/rust-rebuild/delegation/m7/sweep-overrides-shell-2.json`.
+Review 11 fixes, the negative zero fix of live edit renders, and the merge of
+the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
+decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
 - [ ] Commit.
 
@@ -1156,10 +1168,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Connect the Comparing spinner to the static phase reporter.
   - [x] Include the comparison duration when the Changes phase settles.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round8/d-duration-tests.log`.
-- [ ] Complete the final shared-runtime review: bounded memory sampling,
+- [x] Complete the final shared-runtime review: bounded memory sampling,
       canonical Node identity, ancestor dependency tiers, selected NODE_PATH
       priority, and direct base, extraction, timeout, and recycle tests.
-      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-6.md`.
+      Evidence: accepted reviews `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/review-6a.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/review-7.md`.
 - [x] Implement per-importer Node resolution on the base side (review 5b,
       finding 1 option A). Resolve each bare import from its matching directory
       in the dependency tier and retain tier-two missing-directory fallback.
@@ -1190,11 +1202,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       comparison and shared projections together, isolate both reader test
       modules, and supply the duration fixture's base ref.
       Decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/merge-decisions.md`.
-- [ ] Reduce source-root replacements in the shared Changes engine for build,
+- [x] Reduce source-root replacements in the shared Changes engine for build,
       publish, and Serve. Owner: M9 engine delegate (`m9-compare`). Render each
       side's planned views in one pass before pairing, or batch requests by root.
       Acceptance: one worker spawns a small constant per side switch plus
       recycles, independent of the number of paired views. Keep the pool bound.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/final-root-groups.json` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round11/comparison-equality.json`.
 - [ ] Decide whether sidecars and PostCSS children remove all `npm_*` variables
       and head `.bin` entries from `PATH` (review 7 finding 5B). Keep other
       inherited values until the user decides.
@@ -1268,6 +1281,28 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       stylesheet links, the exact per-entry rendered-resource and rule
       records, the exact changed-entry union, no affected consumers for
       unresolved shared rules, and the attribution acceptance matrix.
+      The matrix runs on demand until its CI job is decided.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
+  - [ ] Decide the CI home of the on-demand design matrix (review 8 finding
+        1B, user decision 50). Add no CI job or timeout change before that decision.
+- [x] Apply engine review 8 fixes: gate the design matrix for on-demand runs;
+      bound base capture to 256 MiB and retain cached head reads;
+      preserve deep props and private trusted records; cover capture timings,
+      generated assets, fallback bytes, engine scale, and preview Reset.
+      Merge the iterative-tree rebuild tip and verify identical example output.
+      Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-12.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-13.md`.
+- [x] Apply engine review 9 and merge the rebuild tip.
+  - [x] Clarify capture budgets, reuse, wrapper checks, and stage counters;
+        test rebuilding a capture with a smaller bound.
+  - [x] Align removed and selected preview protocols with bounded capture.
+  - [x] Keep pending design-matrix CI decisions out of end-state docs.
+  - [x] Cover partial capture, typed decode failures, and zero-view timings.
+  - [x] Count uncaptured base views without changing capture charges.
+  - [x] Merge the rebuild tip and run the required checks and example parity.
+  - [x] Integrate Serve Changes after the restart. Keep digest checks around
+        capture creation and preserve advertised historical generation URLs.
+        Compile the on-demand matrix without executing it.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -1658,6 +1693,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
   - [ ] Connect Changes and watch to their delivered browser events.
+  - [ ] Measure `review.capture-side` retained and uncaptured views on the large
+        fixture (M9 engine review 9 finding 1). Keep the capture bound and
+        per-entry charges until the capacity measurements support a decision.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -1747,6 +1785,22 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M12 review 8 verification: investigate the unrelated
+    `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
+    port-rebind assertion failure. The isolated rerun passed. Suspected source:
+    ephemeral-port reuse or socket teardown timing. Evidence: M12 `report-12.md`.
+  - M9 engine round 13 verification: the unchanged desktop
+    `design_modern_controls` sweep and `link_controls` setup each hit their
+    60-second limit. All seven affected cases passed unchanged in a focused
+    run and the full shard rerun. Suspected source: shared-machine load.
+    Track this with the M8 browser timing measurements below.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-13.md`.
+  - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
+    `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
+    `sidecar render readiness: Disconnected` during a concurrent package
+    rebuild. Both passed in an isolated rerun and the final repository suite.
+    Suspected source: shared built files changed during the tests. Keep builds
+    and suites separate. Evidence: M14 `report-7.md`.
   - [x] Resolve both HTTP port-rebind assertions in
         `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
         and `incomplete_requests_close_and_a_failed_hook_does_not_skip_cleanup`.
@@ -1754,12 +1808,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         the injected acceptor's weak reference after `run` returns, including a
         failed cleanup hook. Keep clean event-stream closure and error details.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-9.md`.
-  - M14 walk verification: `interrupt_drains_and_stops_a_hung_sidecar` and
-    `one_process_group_signal_through_the_shim_drains_the_sidecar` reported
-    `sidecar render readiness: Disconnected` during a concurrent package
-    rebuild. Both passed in an isolated rerun and the final repository suite.
-    Suspected source: shared built files changed during the tests. Keep builds
-    and suites separate. Evidence: M14 `report-7.md`.
+  - M9 engine round 14 verification: the incoming
+    `spawn_and_replacement_cover_hello_and_keep_error_until_success` test
+    failed once because an original Unimock was destroyed on a different
+    thread. The isolated case and the complete CLI/compare rerun passed
+    unchanged. Suspected source: cross-thread mock ownership during pool cleanup.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round14/cli-compare.log` and `cli-compare-retry.log` there.
   - [x] Integrate browser fix `f81b7744` for the M14 `design_modern_controls`
         screen-loop timeout. It splits screens into five groups of at most
         12 screens and keeps the per-test limit. The rebuild tip `690eb698`
@@ -1797,6 +1851,15 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     no navigation event once and passed unchanged after rerun. M8 viewer owns
     the suspected message/animation-frame ordering. Recommended A: wait for
     the message event. Evidence is in the browser delegate's `report-4.md`.
+  - M8 sidecar follow-up, Low severity, Small effort: the Rust test
+    `serve_trace::sidecar_trace_tests::spawn_and_replacement_cover_hello_and_keep_error_until_success`
+    in `mokly-cli` failed once in `cargo test --workspace` with "Original
+    Unimock instance destroyed on a different thread than the one it was
+    created on", then passed 20 isolated runs and 15 runs of the whole
+    `mokly-cli` binary test set. Suspected source: the sidecar pool drops a
+    replaced worker's mock on another thread, depending on timing.
+    Recommended A: clone the mocks before they move to the pool, as the
+    message says. Separate branch. Evidence: m7 `report-23.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

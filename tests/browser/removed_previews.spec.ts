@@ -1,15 +1,14 @@
 import { expect, type Page, type Request } from "@playwright/test";
 
-import { passRenderingUpdates } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   chooseFilter,
   comparisonIndex,
-  endedRequests,
   navRow,
   snapshotOf,
   type ComparisonIndex,
 } from "./comparison_ui.js";
+import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 import { responseFailure } from "./shell_error_allowances.js";
 import { chooseViewport } from "./workspace_actions.js";
 

@@ -181,10 +181,11 @@ fn a_socket_cannot_replace_the_captured_asset() {
     let directory = fixture(1);
     let (generation, _) = support::prepare(directory.path(), 1024 * 1024, 1);
     let asset = directory.path().join("assets/image.svg");
+    let identity = fs::canonicalize(&asset).unwrap();
     fs::remove_file(&asset).unwrap();
     let _socket = UnixListener::bind(&asset).unwrap();
     assert!(matches!(
         generation.unwrap().resource("assets/assets/image.svg"),
-        Err(GraphError::InputsChanged { path }) if path == asset
+        Err(GraphError::InputsChanged { path }) if path == identity
     ));
 }
