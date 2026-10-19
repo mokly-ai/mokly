@@ -1904,6 +1904,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         `.context/m14-capture/review-f1-tests.log`.
   - [x] Preserve capture timings through the shared stage-selection split.
         Integration evidence: `.context/m14-capture/merge2-resolution.md`.
+  - [x] Skip already loaded sidecar replay inputs and share binding revisions.
+        Keep replay order, deadlines, updates, and recycling unchanged.
+        Evidence: `.context/m14-capture/replay-green.log` and
+        `.context/m14-capture/replay-release-react/analysis.json`.
   - [ ] Decide whether to combine validation and capture through bounded ordered
         collection. Severity Medium, effort Large. Recommended: B, share the
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.
