@@ -17,7 +17,7 @@ for (const verb of ["build", "serve"] as const)
         const url = await running.ready();
         assert.deepEqual(await running.completion(), {
           written: "yes",
-          tail: null,
+          tail: "yes",
           exit: null,
         });
         const { index } = await completed(url, context.signal, "home");
@@ -26,11 +26,14 @@ for (const verb of ["build", "serve"] as const)
         running.child.kill("SIGINT");
       }
       const result = await running.result;
-      assert.deepEqual(await running.completion(), {
-        written: "yes",
-        tail: verb === "serve" ? "yes" : null,
-        exit: "0",
-      });
+      const { written, tail } = await running.completion();
+      assert.deepEqual(
+        { written, tail },
+        {
+          written: "yes",
+          tail: verb === "serve" ? "yes" : null,
+        },
+      );
       assert.equal(result.code, 0, result.stderr.slice(-2000));
       assert.equal(result.signal, null);
       const pieces = result.stderr.split("\n").filter(Boolean);

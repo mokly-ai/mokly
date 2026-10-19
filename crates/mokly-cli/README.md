@@ -253,6 +253,14 @@ itself without debug assertions and cannot be referenced in that mode. It does
 not inspect a packed release binary. The signal-session probe creates and drops
 both build and publish signal handlers. Normal source and output operations
 still use their injected trait boundaries.
+Each recovery signal case owns one fault, fixture, and hang guard. It waits for
+the complete readiness marker before sending SIGINT. Test cancellation closes
+the watcher, kills the fixture's process group, waits for the inherited output
+pipes to close, and removes its output. On Unix the abort regression waits for
+the complete native gate marker before cancellation, so the shim has started
+the held native process. The regression combines local cancellation with the
+test signal and closes the marker watcher before fixture removal. Windows
+retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
 
 ### Key Code
 

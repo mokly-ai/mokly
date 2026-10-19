@@ -38,7 +38,9 @@ for (const verb of ["build", "publish"] as const)
           let output: string | undefined;
           try {
             const previous = await files(path.join(root, ".context/previous"));
-            const result = await faultCommand(root, verb, fault, mode).result;
+            const result = await (
+              await faultCommand(root, verb, fault, mode)
+            ).result;
             output = outputDirectory(root, verb, result.stdout);
             const recovery = reservation(output);
             assert.equal(result.code, 1, result.stderr);

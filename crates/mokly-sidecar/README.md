@@ -77,8 +77,10 @@ per-worker `dyn ResidentMemory` monitor, and `dyn Diagnostics` for events and
 standard error. Shutdown
 wakes queued callers and sends shutdown to each process. All processes share
 one two-second grace deadline. Survivors are killed and reaped.
-Graceful completion drains stderr within the shared deadline, including long
-lines split into 64 KiB pieces. Forced completion waits only for the child reaper.
+After child exit, completion drains stderr within the shared deadline, also
+when cancellation killed the worker first. Long lines split into 64 KiB pieces.
+A child still running at the deadline is killed; completion then waits only
+for its reaper. A late drain causes a tree kill without another drain wait.
 `NodeFactory::with_timings` enables timing through hello and forwards complete
 sidecar records through `Diagnostics::timing`. The default leaves timings off.
 Core spawn and replacement spans include the version handshake and retain
@@ -119,8 +121,15 @@ cargo xtask generate-types
 
 Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, correlation, deadlines, retry, recycling,
-FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines. Real integration tests spawn
-the built sidecar and render a component, screen, story, and page.
+FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
+The shutdown unit tests control exit and drain independently through `WaitMock`.
+Command stderr tests acknowledge all forwarded bytes before shutdown and check
+bounded pieces and process reaping. Direct sidecar tests check graceful exit
+code 0 and the final partial stderr tail without the core's grace timer.
+A real `NodeFactory` test holds the final stderr piece until the drain wait
+starts, then checks EOF delivery and completion with an injected `Wait`.
+Other real integration tests spawn the built sidecar and render a component,
+screen, story, and page.
 The `mock` feature exposes the public trait mocks to other crates.
 
 ### Key Code

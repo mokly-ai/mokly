@@ -11,12 +11,12 @@ use crate::source_snapshot::SourceSnapshot;
 
 #[test]
 fn shared_hits_reuse_the_same_allocation() {
-    let source = Arc::new(Unimock::new(
+    let source = Unimock::new(
         SourceTreeMock::read
             .next_call(matching!(_))
             .returns(Ok(vec![7; 4096])),
-    ));
-    let snapshot: &dyn SourceTree = &SourceSnapshot::new(source);
+    );
+    let snapshot: &dyn SourceTree = &SourceSnapshot::new(Arc::new(source.clone()));
     let first = snapshot.read_shared(Path::new("/repo/a")).unwrap();
     let second = snapshot.read_shared(Path::new("/repo/a")).unwrap();
     assert!(Arc::ptr_eq(&first, &second));
@@ -26,15 +26,15 @@ fn shared_hits_reuse_the_same_allocation() {
 #[test]
 fn independent_source_reads_enter_before_either_read_returns() {
     let both = Arc::new(Barrier::new(2));
-    let source = Arc::new(Unimock::new(
+    let source = Unimock::new(
         SourceTreeMock::read
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
                 both.wait();
                 Ok(path.to_string_lossy().as_bytes().to_vec())
             })),
-    ));
-    let snapshot = SourceSnapshot::new(source);
+    );
+    let snapshot = SourceSnapshot::new(Arc::new(source.clone()));
     thread::scope(|scope| {
         let first = scope.spawn(|| snapshot.read_shared(Path::new("/repo/a")).unwrap());
         let second = scope.spawn(|| snapshot.read_shared(Path::new("/repo/b")).unwrap());

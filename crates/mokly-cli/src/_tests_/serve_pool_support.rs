@@ -13,7 +13,7 @@ pub(super) struct Observed {
     pub(super) calls: Vec<String>,
 }
 
-pub(super) fn pool() -> (Arc<dyn SidecarPool>, Arc<Mutex<Observed>>) {
+pub(super) fn pool() -> (Unimock, Arc<dyn SidecarPool>, Arc<Mutex<Observed>>) {
     let events = Arc::new(Mutex::new(Observed::default()));
     let observed = events.clone();
     let pool = Unimock::new((
@@ -32,7 +32,8 @@ pub(super) fn pool() -> (Arc<dyn SidecarPool>, Arc<Mutex<Observed>>) {
             })),
         PoolMock::abort.next_call(matching!()).returns(Ok(())),
     ));
-    (Arc::new(pool), events)
+    let shared: Arc<dyn SidecarPool> = Arc::new(pool.clone());
+    (pool, shared, events)
 }
 
 pub(super) fn css(root: &str, sequence: usize) -> Call {

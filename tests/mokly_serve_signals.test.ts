@@ -18,7 +18,7 @@ if (process.platform !== "win32")
         const root = await consumer(context, {
           "specs/hang.mockup.ts": source,
         });
-        const running = serve(context, root, true);
+        const running = await serve(context, root);
         if (stage === "render") await running.ready();
         const pid = Number(
           (await running.wait("stderr", /sidecar-ready:(\d+)/))[1],

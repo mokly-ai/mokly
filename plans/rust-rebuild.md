@@ -847,12 +847,14 @@ renders again.
         for the core integration gap sweep.
   - [ ] Compare captured example and large scenarios after the example port
         and comparison integration land.
-  - [ ] Add the callback-only regressions from the M5 HTML sweep: conflicting
+  - [x] Add the callback-only regressions from the M5 HTML sweep: conflicting
         inputs from impure slot replay, renderer mutation isolation, and the
         page helper call count. Cover and document the render-time failure of
         a component wrapper whose definition is not exported by an entry
         module. Cases 30, 32, 36, and 127 remain assigned here; native
         templates cannot exercise callback side effects or wrapper exports.
+        Evidence: `.context/rust-rebuild/delegation/m12-static/report-13.md`.
+        Merge decisions: `.context/rust-rebuild/delegation/m12-static/merge-decisions.md`.
   - [x] Port the React example, the React components, and the design
         catalogue to the authoring API.
   - [x] Render both catalogues through the integrated sidecar and check every
@@ -1062,6 +1064,8 @@ rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
 `.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
 Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
+Callback review fixes and mock ownership checks:
+`.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
 The remaining client-shell cases of the sweep and their generator inputs:
 `.context/rust-rebuild/delegation/m7/report-22.md` and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell-2.json`.
@@ -1672,6 +1676,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
+      writer, clarify drain and recycle scope, and distinguish the exit and
+      drain receivers in the mocked shutdown test.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-13.md`.
+
 - [x] Apply M12 review 8: bound graceful stderr drain, move the large Serve
       stream before shutdown, clarify replacement timing, redact forwarded
       records, separate partial stderr lines, and test UTF-8 and dependency errors.
@@ -1789,6 +1798,8 @@ Final asset merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisio
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/merge-decisions-1.md`.
 
+Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
+
 ## Milestone 15: Verification, close-out, and review
 
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
@@ -1810,11 +1821,25 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
     current page. Check Default-only selection through the active class.
     Reject changing the current-page marks to follow row selection. This
     keeps the self-link decision in `be30a10a` and changes no protocol.
+    Merge preservation: `.context/f1-round2/merge-decisions.md`.
   - F1 verification: `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`
     failed with `Original Unimock instance destroyed on a different thread`
     and passed on the isolated rerun. Suspected source: tracing subscriber
     cleanup drops the original mock across threads. Separate branch.
     Evidence: `.context/f1/gate.log` and `.context/f1/serve-trace-rerun.log`.
+  - [x] Resolve the M9 engine round 15 preparation-warning test flake in
+        `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`.
+        Match the watched source's failure line, so a delayed Git comparison
+        diagnostic cannot become the preparation failure. Keep every warning,
+        ordering, repair, and cleanup assertion. A controlled log sequence
+        proves the old failure; the fixed case passes 20 isolated runs.
+        Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
+  - [x] Resolve the M9 engine round 15 copied-deployment test flake in
+        `static_deployment.spec.ts`. Publish immutable copies through one root
+        selection per request. A controlled request between the old renames
+        proves the 404; a held-request test keeps each response on its selected
+        copy. The browser case passes 20 runs in distinct workers with every
+        assertion retained. Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
@@ -1838,12 +1863,15 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
         the injected acceptor's weak reference after `run` returns, including a
         failed cleanup hook. Keep clean event-stream closure and error details.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-9.md`.
-  - M9 engine round 14 verification: the incoming
-    `spawn_and_replacement_cover_hello_and_keep_error_until_success` test
-    failed once because an original Unimock was destroyed on a different
-    thread. The isolated case and the complete CLI/compare rerun passed
-    unchanged. Suspected source: cross-thread mock ownership during pool cleanup.
-    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round14/cli-compare.log` and `cli-compare-retry.log` there.
+  - [x] M9 engine round 14 verification: the incoming
+        `spawn_and_replacement_cover_hello_and_keep_error_until_success` test
+        failed once because an original Unimock was destroyed on a different
+        thread. The isolated case and the complete CLI/compare rerun passed
+        unchanged. Suspected source: cross-thread mock ownership during pool cleanup.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round14/cli-compare.log` and `cli-compare-retry.log` there.
+        Fixed by `7b4dd657`: retain original mocks and await tracing subscriber
+        release. The recorded panic comes from the timing capture terminal mock.
+        Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
   - [x] Integrate browser fix `f81b7744` for the M14 `design_modern_controls`
         screen-loop timeout. It splits screens into five groups of at most
         12 screens and keeps the per-test limit. The rebuild tip `690eb698`
@@ -1881,15 +1909,34 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
     no navigation event once and passed unchanged after rerun. M8 viewer owns
     the suspected message/animation-frame ordering. Recommended A: wait for
     the message event. Evidence is in the browser delegate's `report-4.md`.
-  - M8 sidecar follow-up, Low severity, Small effort: the Rust test
-    `serve_trace::sidecar_trace_tests::spawn_and_replacement_cover_hello_and_keep_error_until_success`
-    in `mokly-cli` failed once in `cargo test --workspace` with "Original
-    Unimock instance destroyed on a different thread than the one it was
-    created on", then passed 20 isolated runs and 15 runs of the whole
-    `mokly-cli` binary test set. Suspected source: the sidecar pool drops a
-    replaced worker's mock on another thread, depending on timing.
-    Recommended A: clone the mocks before they move to the pool, as the
-    message says. Separate branch. Evidence: m7 `report-23.md`.
+  - M8 browser follow-up, Low severity, Small effort: investigate the
+    `static_cors.spec.ts` public embedded viewer case. It reported the blocked
+    script notice from `about:blank` once and passed unchanged in isolation.
+    Suspected source: clock or trace injection during sandboxed frame
+    navigation. Keep the assertions and console policy. Recommended A: confirm
+    the notice origin before a separate fixture fix. Evidence: M12
+    `report-13.md` and `round13-gate-attempt1-failures.json`.
+  - [x] Resolve the loaded stderr and recovery signal test failures. Acknowledge
+        command diagnostics before shutdown, check graceful exit and the final
+        tail through direct sidecars, and retain mocked shared-deadline checks.
+        Split recovery faults into independent cases and make readiness and
+        process-group cleanup follow test cancellation. The Unix abort check
+        waits for the complete native gate marker before cancellation.
+        Keep every assertion and
+        snapshot payload. Evidence: M12 `report-13.md`,
+        `round13-load-counts.json`, and `round13-load-after.json`.
+  - [x] M8 sidecar follow-up, Low severity, Small effort: the Rust test
+        `serve_trace::sidecar_trace_tests::spawn_and_replacement_cover_hello_and_keep_error_until_success`
+        in `mokly-cli` failed once in `cargo test --workspace` with "Original
+        Unimock instance destroyed on a different thread than the one it was
+        created on", then passed 20 isolated runs and 15 runs of the whole
+        `mokly-cli` binary test set. Suspected source: the sidecar pool drops a
+        replaced worker's mock on another thread, depending on timing.
+        Recommended A: clone the mocks before they move to the pool, as the
+        message says. Separate branch. Evidence: m7 `report-23.md`.
+        Fixed by `7b4dd657`. Controlled cross-thread drops reproduce the error;
+        original mocks stay on their owner thread through subscriber and pool
+        completion. Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

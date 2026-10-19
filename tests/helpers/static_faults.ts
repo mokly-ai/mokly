@@ -8,27 +8,37 @@ import {
   command,
   directory,
   publicationFixture,
-  publish,
+  publishArguments,
+  registeredCommand,
   removeOutput,
 } from "./static_publication.js";
 
 const exec = promisify(execFile);
-export async function recoveryFixture() {
+export async function recoveryFixture(signal?: AbortSignal) {
   const root = await publicationFixture();
-  const result = await command(root, "build", [
-    "--no-changes",
-    "--out=.context/previous",
-  ]).result;
-  assert.equal(result.code, 0, result.stderr);
-  await fs.writeFile(
-    path.join(root, "specs/home.screen.html"),
-    "---\ntitle: Home\n---\n<h1>New site</h1>",
-  );
-  await exec("git", ["add", "."], { cwd: root });
-  await exec("git", ["commit", "-qm", "new site"], { cwd: root });
-  return root;
+  try {
+    const result = await command(
+      root,
+      "build",
+      ["--no-changes", "--out=.context/previous"],
+      "plain",
+      {},
+      signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    await fs.writeFile(
+      path.join(root, "specs/home.screen.html"),
+      "---\ntitle: Home\n---\n<h1>New site</h1>",
+    );
+    await exec("git", ["add", "."], { cwd: root, signal });
+    await exec("git", ["commit", "-qm", "new site"], { cwd: root, signal });
+    return root;
+  } catch (error) {
+    await fs.rm(root, { recursive: true, force: true });
+    throw error;
+  }
 }
-export function faultCommand(
+export async function faultCommand(
   root: string,
   verb: "build" | "publish",
   faults: string,
@@ -44,9 +54,11 @@ export function faultCommand(
     MOKLY_TEST_STATIC_READY: path.join(root, ".context/ready"),
     ...extra,
   };
-  return verb === "publish"
-    ? publish(root, "http://127.0.0.1:1/plan", mode, { env })
-    : command(root, "build", ["--no-changes", `--out=${output}`], mode, env);
+  const args =
+    verb === "publish"
+      ? publishArguments("http://127.0.0.1:1/plan")
+      : ["--no-changes", `--out=${output}`];
+  return registeredCommand(root, verb, args, mode, env);
 }
 export function outputDirectory(
   root: string,
