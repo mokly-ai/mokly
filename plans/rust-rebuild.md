@@ -2146,6 +2146,16 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
     4. The copy drops the moved variant comparison. Severity Low, effort
        Small. Recommended: A, register the moved variant comparison on the
        branch copy too.
+  - M10 Serve and moved rows review 3, open finding 7 for the user (review 3
+    finding 1): the kept ports lack two steps of the dropped copies, the
+    parent activation while a search shows only the removed sibling, and the
+    removed page's Location row. Severity Low, effort Small. Recommended: B,
+    add both steps to the kept ports when the branches merge.
+  - M10 Serve and moved rows decision 10, Severity Low, effort Small: each
+    sweep override lists the old checks that its port does not prove, and a
+    dropped duplicate moves its extra checks into the kept port. Covers
+    review 3 findings 1 and 2; previous examples 0858e172, 4d6a21a4, and
+    abf52983. Recommended A: add the rule to the sweep procedure.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
