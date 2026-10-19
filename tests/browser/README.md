@@ -89,8 +89,7 @@ The branch copy and Serve use this composition. The default copy uses no hook.
 
 Viewer journeys on this copy register shared case modules:
 `static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
-Serve also runs, `static_branch_point_journeys.spec.ts` uses
-`branch_point_journeys.ts`, and `static_development_mount.spec.ts` serves the
+Serve also runs, and `static_development_mount.spec.ts` serves the
 `development_shell.ts` bundle with React's development build.
 
 The table pins every branch entry at the original fixture base. Both path
