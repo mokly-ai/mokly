@@ -915,10 +915,11 @@ renders again.
         the Usage loading state while evidence is unavailable; instance deep
         links; and a published scheme swap while a redirect replaces a frame
         source.
-  - [ ] After the Serve merge, with D1, port the two cases that need Serve
+  - [ ] After the Serve merge, with D1, port the cases that need Serve
         Changes: focus on an unchanged Usage link while a Changes completion
-        is adopted, and the review-base sentence while a detail loads, which
-        needs a served catalogue with a Git base.
+        is adopted; the review-base sentence while a detail loads, which
+        needs a served catalogue with a Git base; and the design library
+        component's Unmodified status after temporary edits and Reset.
   - [ ] When Serve stops publishing a render completion that changes no
         detail (review 8 finding 1, for the Serve owner), restore one index
         read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
