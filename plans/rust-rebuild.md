@@ -1897,6 +1897,13 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Fix integration batch 3 review finding 1: keep original ownership
+        metadata separate from resolved Usage destinations. A transferred
+        variant follows its own pair when its donor survives or is removed.
+        Evidence: `.context/integration-3/review-fixes/`.
+  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
+    another entry kind reuses the donor path needs a requirement decision.
+    Separate branch.
   - [ ] Decide whether extglob-shaped stylesheet matches need a warning
         (M9 review 10 finding 5B, user item 54). Keep the migration release note;
         add no diagnostic before approval.
