@@ -171,8 +171,9 @@ Run the component specs of the browser suite against `mokly serve` with
 The browser suite opens every artboard in the served Browse frames, checks
 links, selection semantics, counts, missing states, responsive overflow, mask
 geometry, and the stacked frames' layers, blending, single scroller and drawn
-offset; the Rust behaviour tests pin the stacked frames' structure, tie every
-comparison caption to its recorded change, and pin the Checklist's Changes.
+offset; the Rust behaviour tests pin parents' own-props views, the stacked
+frames' structure, every comparison caption tied to its recorded change, and
+the Checklist's Changes.
 These four focused checks run in the default Rust workspace suite. Run them
 alone with `cargo test -p mokly-cli --test design_behaviour_tests`. They prepare
 the authored catalogue once for overlapping tests and render documents on

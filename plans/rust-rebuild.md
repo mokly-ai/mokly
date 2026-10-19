@@ -1920,6 +1920,18 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
     renames. Keep the requested-file and browser-error assertions.
     Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/browser-3.log`
     and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/static-deployment-rerun.log`.
+  - F1 follow-up finding 1: settled by the orchestrator on 2026-10-19,
+    decision 1A. Keep `aria-current` on both links because both open the
+    current page. Check Default-only selection through the active class.
+    Reject changing the current-page marks to follow row selection. This
+    keeps the self-link decision in `be30a10a` and changes no protocol.
+    Merge preservation: `.context/f1-round2/merge-decisions.md`.
+  - [x] Resolve the F1 tracing failure in
+        `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`.
+        The earlier failure reported an original Unimock destroyed on another
+        thread. Commit `7b4dd657` retains original mocks until the tracing
+        subscriber releases its clones. The requested merge includes this fix.
+        Evidence: `.context/f1-round2/serve-trace.log`.
   - [x] Resolve the M9 engine round 15 preparation-warning test flake in
         `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`.
         Match the watched source's failure line, so a delayed Git comparison
