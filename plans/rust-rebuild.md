@@ -1240,11 +1240,20 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
           Keep the 60-second snapshot trim for duplicated delivery bytes, count
           the separate capture budget, and assert the real Serve capture trace.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
-    - [ ] Repeat the combined measurement after shared-engine batching merges.
+    - [x] Repeat the combined measurement after shared-engine batching merges.
           Each run creates a fresh base runtime, bundle cache, and CSS context.
           Cached source and dependency reuse still publishes preparing. The
           one-line edit smoke took 5m19s to Changes ready with three sidecars.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-8/cache-retention-measurement.md`.
+          Quiet-machine repeat on 2026-10-19 at `a3cc0828`: eight default
+          sidecars, base `4cc9e004`, default deadlines, 4 GB stop, 50 ms PSS
+          samples with per-process RSS fallback. The authorized incomplete
+          render returned 100 Continue before the edit and 400 after release.
+          Edit to ready: 127.955 s. Initial peak: 2.615 GB. Held reclassification
+          and new-capture-to-release peaks: 2.054 GB. Initial/replacement
+          sidecar starts: 14/12; source-root groups: 3/2. Machine: eight CPUs,
+          16.25 GiB RAM, Node 24.21.0, Rust 1.95.0 development build.
+          Evidence: `.context/m14-measurements/m9-default/summary.json`.
       - [x] Measure one worker with an old capture held by an in-flight request.
             The default-count probe stops at the common memory allowance before
             ready; its edit time and overlap peak need a probe-budget decision.
