@@ -4,7 +4,8 @@
  * each route's document for its extensionless address. The shell opens the
  * removed record from that address, writes the canonical address, and keeps
  * the record through a move to current content, Back, Forward, and a
- * reload. A current path with that snapshot shows no historical content.
+ * reload. A current path with that snapshot is unavailable through the
+ * error state and shows no historical content.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -86,8 +87,12 @@ test("screen preserves its snapshot through provider-normalized URLs", async ({
   await expectHistorical(page);
   expect(errors).toEqual([]);
 
-  // A current path with the removed record's snapshot shows nothing of it.
+  // A current path with the removed record's snapshot is unavailable through
+  // the error state, and shows nothing of either entry.
   await page.goto(`${currentUrl}?snapshot=${snapshot}`);
+  await expect(page.locator("#mb-main .mbk-empty h2")).toHaveText(
+    "Item not found",
+  );
   await expect(page.locator("[data-mokly-preview] iframe")).toHaveCount(0);
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
   await expect(page.locator("#mb-main")).not.toContainText("Added screen");
