@@ -1,4 +1,5 @@
-//! Share one live generation while tests overlap; release it before removing its source.
+//! Share one prepared authored catalogue while behaviour tests overlap.
+//! Render documents on demand and release the generation before removing its source.
 
 use std::env;
 use std::num::NonZeroUsize;

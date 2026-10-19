@@ -1950,6 +1950,7 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
 
 Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
+Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -1971,6 +1972,10 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
         Evidence: `.context/integration-3/review-fixes/`.
+  - [x] Fix integration batch 3 review finding 2: keep the focused design
+        test command in the CLI README and preparation mechanics in fixture
+        comments. Retain the default-suite requirement in the protocol.
+        Evidence: `.context/integration-4/`.
   - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
     another entry kind reuses the donor path needs a requirement decision.
     Separate branch.
