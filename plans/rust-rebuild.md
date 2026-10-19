@@ -1727,6 +1727,8 @@ Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m
 Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
 Comparison review corrections and CSS asset evidence: `.context/rust-rebuild/delegation/m14/report-8.md`.
 Opaque asset review fixes and merged verification: `.context/rust-rebuild/delegation/m14/report-9.md`.
+Final asset fixes and engine integration: `.context/rust-rebuild/delegation/m14/report-10.md`.
+Final asset merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions-2.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review

@@ -37,7 +37,14 @@ async fn snapshot_asset_mismatch_preserves_the_generation_and_names_the_recovery
     assert_eq!(get(&serve.host, RESOURCE).await.0, 500);
     let (stdout, stderr) = serve.close().await;
     assert!(stderr.iter().any(|line| line.contains("css/image.svg")));
-    assert!(!stdout.iter().any(|line| line.contains(" rebuilt")));
+    assert_eq!(
+        stdout
+            .iter()
+            .filter(|line| line.contains("Catalogue ready"))
+            .count(),
+        1,
+        "{stdout:?}"
+    );
 }
 
 #[tokio::test]
