@@ -69,7 +69,7 @@ read models or alter responses.
 
 `watch_fixture.ts` extends the automatic console-error fixture. Each test owns
 a small native catalogue through `serveCatalogue(..., { watch: true })` and
-uses the isolated setup budget. Changes wait for a higher published revision
+uses the isolated setup budget. Each edit waits for a higher published revision
 and the expected catalogue state through `settleLive`. Document keys and DOM
 marks distinguish changed previews from retained ones without a shell reload.
 The browser leaves the page before the fixture closes its process and directory.
