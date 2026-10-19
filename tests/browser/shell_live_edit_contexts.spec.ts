@@ -196,14 +196,17 @@ test("a scheme change while the first render is pending shows only the new schem
       text: expect.stringContaining("Context edit 1"),
     };
     await expect.poll(() => frameDocument(page, "desktop")).toEqual(dark);
-    // Release the light render, wait until the browser ends it (the shell
-    // cancels it when the scheme changes), then let the shell handle it.
+    // Release the light render, wait until the browser ends it, then let the
+    // shell handle it.
     await Promise.all(
       held.map((route) => route.continue().catch(() => undefined)),
     );
     await expect
       .poll(() => held.every((route) => ended.has(route.request())))
       .toBe(true);
+    // The shell cancelled the light render when the scheme changed.
+    for (const route of held)
+      expect(route.request().failure()?.errorText).toBe("net::ERR_ABORTED");
     await passRenderingUpdates(page);
     expect(await frameDocument(page, "desktop")).toEqual(dark);
   } finally {

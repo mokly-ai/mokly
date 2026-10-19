@@ -1,11 +1,12 @@
 /**
- * Publication order in Serve, under the shell delivery contract: a refresh
- * that a newer publication overtakes cannot replace the newer state, whether
- * the held response is the index or the routed entry's detail, and the shell
- * adopts both publications without a page load.
+ * Publication order in Serve, under the shell delivery contract: the shell
+ * cancels a refresh that a newer publication overtakes, and its older
+ * response cannot replace the newer state, whether the held response is the
+ * index or the routed entry's detail. The shell adopts both publications
+ * without a page load.
  */
 
-import { expect, type Route } from "@playwright/test";
+import { expect, type APIResponse, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import {
@@ -41,14 +42,17 @@ for (const held of ["index", "detail"] as const)
       page.on("load", () => {
         loads += 1;
       });
-      const holding: Route[] = [];
+      const holding: { route: Route; response: APIResponse }[] = [];
+      let first = true;
       await page.route(
         held === "index"
           ? "**/mokly-viewer/index.json"
           : "**/mokly-viewer/entries/home.json",
-        (route) => {
-          if (holding.length) return route.continue();
-          holding.push(route);
+        async (route) => {
+          if (!first) return route.continue();
+          first = false;
+          // Read Serve's answer now, so the late response carries this state.
+          holding.push({ route, response: await route.fetch() });
         },
       );
       const ended = endedRequests(page);
@@ -62,17 +66,22 @@ for (const held of ["index", "detail"] as const)
       await expect.poll(() => holding.length).toBe(1);
       // A newer publication overtakes it.
       await replaceFile(server.root, HOME, homeFile("Home three"));
-      await settleLive(server.url, second, (index) =>
+      const third = await settleLive(server.url, second, (index) =>
         index.screens.some((entry) => entry.title === "Home three"),
       );
       await expect(heading).toHaveText("Home three");
       // The row also holds the hidden Changed text of the navigation.
       await expect(row).toContainText("Home three");
 
-      // Release the older response, wait until the browser ends it, then let
-      // the shell handle it: the newer state stays.
-      await holding[0]!.continue().catch(() => undefined);
-      await expect.poll(() => ended.has(holding[0]!.request())).toBe(true);
+      // Deliver the older response, wait until the browser ends that
+      // request, then let the shell handle it: the newer state stays.
+      const { route, response } = holding[0]!;
+      const older = (await response.json()) as { revision: number };
+      expect(older.revision).toBeLessThan(third);
+      await route.fulfill({ response }).catch(() => undefined);
+      await expect.poll(() => ended.has(route.request())).toBe(true);
+      // The shell cancelled the refresh when the newer publication arrived.
+      expect(route.request().failure()?.errorText).toBe("net::ERR_ABORTED");
       await passRenderingUpdates(page);
       await expect(heading).toHaveText("Home three");
       await expect(row).toContainText("Home three");
