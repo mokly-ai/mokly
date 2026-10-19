@@ -24,6 +24,7 @@ mod pool_requests;
 mod pool_shutdown;
 mod pool_sources;
 mod pool_state;
+mod pool_timing;
 pub mod postcss_failure;
 mod presentation;
 pub mod process_clock;

@@ -87,6 +87,12 @@ Core spawn and replacement spans include the version handshake and retain
 error status until it succeeds. Every later spawn in a pool slot is a
 replacement, including failed-hello retries and source-root switches. The
 replacement span excludes the old process's stop and idle time between requests.
+`sidecar.stop` measures retirement under its active caller, or under the failed
+spawn for hello cleanup. Stop and replacement records carry a closed cause:
+`recycle`, `replacement`, `retry`, or `root-switch`. A later replacement uses
+its later caller. The slot retains only the cause between requests.
+A stop succeeds only when every attempted lifecycle operation succeeds.
+Final shutdown and cancellation emit no replacement stop span.
 The CLI redacts secrets and controls in forwarded timing lines; records from
 the sidecar's timing writer retain their original bytes.
 

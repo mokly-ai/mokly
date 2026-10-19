@@ -64,6 +64,9 @@ impl Visit for Fields {
             "viewport" | "scheme" | "action" | "operation" => {
                 self.values.insert(field.name().into(), json!(value));
             }
+            "reason" if matches!(value, "recycle" | "replacement" | "retry" | "root-switch") => {
+                self.values.insert(field.name().into(), json!(value));
+            }
             "status" => self.error = value == "error",
             "sidecar_timing" => self.sidecar_timing = Some(value.to_owned()),
             _ => {}
@@ -147,6 +150,7 @@ fn stage(name: &str) -> bool {
             | "review.capture"
             | "sidecar.spawn"
             | "sidecar.recycle"
+            | "sidecar.stop"
             | "upload.plan"
             | "upload.blobs"
             | "upload.complete"
@@ -287,3 +291,7 @@ mod serve_trace_tests;
 #[cfg(test)]
 #[path = "_tests_/sidecar_trace_tests.rs"]
 mod sidecar_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/sidecar_stop/mod.rs"]
+mod sidecar_stop_tests;
