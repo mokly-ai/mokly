@@ -4,8 +4,8 @@ import { expect, type Page } from "@playwright/test";
 
 import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
 
-import { test as baseTest } from "./browser_test.js";
-import { ACTION, row, showDetails } from "./moved_rows.js";
+import type { test as baseTest } from "./browser_test.js";
+import { ACTION, row, showDetails, type MovedHost } from "./moved_rows.js";
 
 /** The saved-variant bar of the moved Action: its parent, then its variants. */
 const BAR = ["Action", "Primary", "Ghost", "Iconic", "Secondary · Removed"];
@@ -21,8 +21,14 @@ async function expectBar(page: Page, status: string): Promise<void> {
   await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
 }
 
-/** Register the moved component cases on the host that `test` supplies. */
-export function registerMovedComponentCases(test = baseTest): void {
+/**
+ * Register the moved component cases on `host`, which `test` serves. The
+ * first-paint case follows the page address, so it needs a routing host.
+ */
+export function registerMovedComponentCases(
+  test: typeof baseTest,
+  host: MovedHost,
+): void {
   test("a moved component's variants read their own changes, never the move", async ({
     page,
   }) => {
@@ -32,7 +38,7 @@ export function registerMovedComponentCases(test = baseTest): void {
       [moves.metadataMovedVariant, "Ghost · Changed"],
       [moves.nestedMovedVariant, "Iconic · Changed"],
     ] as const) {
-      await page.goto(`/view/${entry}/`);
+      await host.open(page, entry);
       await expectBar(page, status);
     }
   });
@@ -41,7 +47,7 @@ export function registerMovedComponentCases(test = baseTest): void {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(`/view/${moves.removedActionVariant}/`);
+    await host.open(page, moves.removedActionVariant);
     await expectBar(page, "Secondary · Removed");
     await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
     await page.getByRole("tab", { name: "Props", exact: true }).click();
@@ -54,7 +60,7 @@ export function registerMovedComponentCases(test = baseTest): void {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(`/view/${moves.nestedMovedVariant}/`);
+    await host.open(page, moves.nestedMovedVariant);
     await showDetails(page);
     const evidence = page.locator("[data-workspace-evidence]");
     // The fixture renders both schemes, so each view names its own input.
@@ -70,36 +76,37 @@ export function registerMovedComponentCases(test = baseTest): void {
     );
   });
 
-  test("a moved parent lists its removed variant from the first paint after navigation", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
-    let release = () => {};
-    let fetching = () => {};
-    const held = new Promise<void>((resolve) => (release = resolve));
-    const fetched = new Promise<void>((resolve) => (fetching = resolve));
-    await page.route(
-      `**/mokly-viewer/entries/${ACTION}.json`,
-      async (route) => {
-        fetching();
-        await held;
-        await route.continue();
-      },
-    );
-    await page.goto(`/view/${moves.moveIcon}/`);
-    await page
-      .locator(
-        '[data-nav-disclosure="folder:components:branch/moves/current"] > summary',
-      )
-      .click();
-    await row(page, ACTION).click();
-    await expect(page).toHaveURL(new RegExp(`/view/${ACTION}/$`, "u"));
-    await fetched;
-    await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
-    release();
-    await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-      "Action · Unmodified",
-    );
-    await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
-  });
+  if (host.routes)
+    test("a moved parent lists its removed variant from the first paint after navigation", async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1280, height: 900 });
+      let release = () => {};
+      let fetching = () => {};
+      const held = new Promise<void>((resolve) => (release = resolve));
+      const fetched = new Promise<void>((resolve) => (fetching = resolve));
+      await page.route(
+        `**/mokly-viewer/entries/${ACTION}.json`,
+        async (route) => {
+          fetching();
+          await held;
+          await route.continue();
+        },
+      );
+      await host.open(page, moves.moveIcon);
+      await page
+        .locator(
+          '[data-nav-disclosure="folder:components:branch/moves/current"] > summary',
+        )
+        .click();
+      await row(page, ACTION).click();
+      await expect(page).toHaveURL(new RegExp(`/view/${ACTION}/$`, "u"));
+      await fetched;
+      await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+      release();
+      await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
+        "Action · Unmodified",
+      );
+      await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+    });
 }

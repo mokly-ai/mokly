@@ -4,13 +4,13 @@ import { expect, type Page } from "@playwright/test";
 
 import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
 
-import { test as baseTest } from "./browser_test.js";
+import type { test as baseTest } from "./browser_test.js";
 import { modeButton } from "./comparison_ui.js";
 import {
   INVOICE,
   PREVIOUS,
   showDetails,
-  type MovedHostKind,
+  type MovedHost,
 } from "./moved_rows.js";
 import { loadComparison } from "./serve_comparison_ui.js";
 
@@ -40,28 +40,29 @@ async function expectBothSides(
 }
 
 /**
- * Choose Side by side. Serve captures the comparison on demand; the branch
- * copy reads its published generation.
+ * Choose Side by side. Serve captures the comparison on demand; a copy reads
+ * its published generation.
  */
-async function sideBySide(page: Page, kind: MovedHostKind): Promise<void> {
-  if (kind === "serve") return loadComparison(page, "Side by side");
+async function sideBySide(page: Page, host: MovedHost): Promise<void> {
+  if (host.comparisons === "on demand")
+    return loadComparison(page, "Side by side");
   await modeButton(page, "Side by side").click();
 }
 
 /**
- * Register the moved screen comparison on the host that `test` supplies.
+ * Register the moved screen comparison on `host`, which `test` serves.
  * `variant` adds the moved component variant's comparison.
  */
 export function registerMovedComparisonCases(
-  test = baseTest,
-  kind: MovedHostKind,
+  test: typeof baseTest,
+  host: MovedHost,
   variant: boolean,
 ): void {
   test("a moved screen compares with the version at its previous path in every mode", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(`/view/${INVOICE}/`);
+    await host.open(page, INVOICE);
     await expect(page.locator(".mbk-entry-status")).toHaveText("Changed");
     await expect(modeButton(page, "Current")).toHaveAttribute(
       "aria-pressed",
@@ -77,7 +78,7 @@ export function registerMovedComparisonCases(
       [`${PREVIOUS}/invoice`, INVOICE],
       [/Due in 14 days/u, /Due on 14 March/u],
     ] as const;
-    await sideBySide(page, kind);
+    await sideBySide(page, host);
     await expectBothSides(page, ...sides);
     for (const mode of ["Overlay", "Difference"] as const) {
       await modeButton(page, mode).click();
@@ -102,8 +103,8 @@ export function registerMovedComparisonCases(
       page,
     }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
-      await page.goto(`/view/${moves.nestedMovedVariant}/`);
-      await sideBySide(page, kind);
+      await host.open(page, moves.nestedMovedVariant);
+      await sideBySide(page, host);
       await expectBothSides(
         page,
         [`${PREVIOUS}/action/iconic`, moves.nestedMovedVariant],

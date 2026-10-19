@@ -1454,9 +1454,9 @@ Tags: ui
         adapters; `sweep-overrides-comparisons.json` and
         `sweep-overrides-comparisons-3.json` in
         `.context/rust-rebuild/delegation/m7/` name each row.
-  - [ ] Register the eleven moved-entry viewer cases on the embedded viewer
-        host through both frame adapters once that host accepts the branch
-        copy; the moved cases modules take any `test`.
+  - [x] Register the moved-entry viewer cases on the embedded viewer host
+        through both frame adapters, over the branch copy. The case that
+        follows the page address runs only on Serve and the branch copy.
   - [ ] When `rebuild/m10-d1-and-copies` merges, make its copied-output
         `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
         call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve

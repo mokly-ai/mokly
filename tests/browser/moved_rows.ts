@@ -4,8 +4,49 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
-/** Where the moved cases run: the private Serve fixture or the branch copy. */
-export type MovedHostKind = "serve" | "static";
+/** How one host runs the moved cases. */
+export interface MovedHost {
+  /** Open one entry. */
+  open(page: Page, entry: string): Promise<unknown>;
+  /** Serve captures comparisons on demand; a copy publishes them. */
+  comparisons: "on demand" | "published";
+  /** The page address follows the selected entry as `/view/{path}/`. */
+  routes: boolean;
+  /** The window widths of the Moved-row case. */
+  widths: readonly number[];
+}
+
+const openRoute = (page: Page, entry: string) => page.goto(`/view/${entry}/`);
+
+/** The private Serve fixture. */
+export const serveMovedHost: MovedHost = {
+  open: openRoute,
+  comparisons: "on demand",
+  routes: true,
+  widths: [390, 1280],
+};
+
+/** The branch copy. */
+export const copyMovedHost: MovedHost = {
+  open: openRoute,
+  comparisons: "published",
+  routes: true,
+  widths: [390, 1280],
+};
+
+/**
+ * An embedded viewer over the branch copy through one frame adapter. Its
+ * host page opens an entry by query and keeps one fixed width.
+ */
+export function embeddedMovedHost(adapter: "cross" | "same-origin"): MovedHost {
+  return {
+    open: (page, entry) =>
+      page.goto(`/viewer.html?adapter=${adapter}&entry=${entry}`),
+    comparisons: "published",
+    routes: false,
+    widths: [1280],
+  };
+}
 
 export const INVOICE = movedFixturePaths.movedInvoice;
 export const ACTION = movedFixturePaths.movedAction;

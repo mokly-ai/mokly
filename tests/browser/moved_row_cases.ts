@@ -5,7 +5,7 @@ import { expect } from "@playwright/test";
 import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
 
-import { test as baseTest } from "./browser_test.js";
+import type { test as baseTest } from "./browser_test.js";
 import { chooseFilter } from "./comparison_ui.js";
 import {
   ACTION,
@@ -17,11 +17,15 @@ import {
   row,
   showCatalogue,
   showDetails,
+  type MovedHost,
 } from "./moved_rows.js";
 
-/** Register the row and Details cases on the host that `test` supplies. */
-export function registerMovedRowCases(test = baseTest): void {
-  for (const width of [390, 1280])
+/** Register the row and Details cases on `host`, which `test` serves. */
+export function registerMovedRowCases(
+  test: typeof baseTest,
+  host: MovedHost,
+): void {
+  for (const width of host.widths)
     test(`${width}px: Changes keeps one Moved row per paired entry, with no changed mark`, async ({
       page,
       request,
@@ -32,7 +36,7 @@ export function registerMovedRowCases(test = baseTest): void {
       expect(moved.map(([path]) => path)).toEqual(
         expect.arrayContaining([INVOICE, ACTION, moves.pureMovedScreen]),
       );
-      await page.goto(`/view/${comparisonPaths.unchanged}/`);
+      await host.open(page, comparisonPaths.unchanged);
       await showCatalogue(page);
       await expect(row(page, INVOICE)).not.toContainText("Moved");
       for (const removed of [
@@ -100,7 +104,7 @@ export function registerMovedRowCases(test = baseTest): void {
         ],
       ],
     ] as const) {
-      await page.goto(`/view/${entry}/`);
+      await host.open(page, entry);
       await expectMarks(page, rows);
     }
     await expect(row(page, ACTION)).not.toHaveAttribute("data-changed", /./u);
@@ -118,7 +122,7 @@ export function registerMovedRowCases(test = baseTest): void {
       [moves.movedPage, `${PREVIOUS}/guide`, "summary"],
       [moves.metadataMovedVariant, `${PREVIOUS}/action/ghost`, "tab"],
     ] as const) {
-      await page.goto(`/view/${entry}/`);
+      await host.open(page, entry);
       if (open === "tab") await showDetails(page);
       else await page.locator("[data-mokly-details] summary").click();
       const moved = page.locator(".mbk-meta-row", {
@@ -135,7 +139,7 @@ export function registerMovedRowCases(test = baseTest): void {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(`/view/${moves.pureMovedScreen}/`);
+    await host.open(page, moves.pureMovedScreen);
     await expect(page.locator(".mbk-entry-status")).toHaveText("Unmodified");
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),
@@ -154,7 +158,7 @@ export function registerMovedRowCases(test = baseTest): void {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(`/view/${moves.removedInvoiceVariant}/`);
+    await host.open(page, moves.removedInvoiceVariant);
     await expect(page.locator(".mbk-previous")).toHaveText(
       "Showing previous version",
     );

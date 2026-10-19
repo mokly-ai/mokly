@@ -100,6 +100,8 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `view`, `viewport`, `base=none` (an index without `base`), and
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
+`comparisonViewerHost(source)` mounts another copy instead, such as the
+branch copy's `branchCopy.directory`.
 
 The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
@@ -134,10 +136,13 @@ a pure-moved screen, a moved component with distinct variant states and
 nested slot inputs, a moved screen with a removed variant, and a moved page.
 The branch copy and Serve use this composition. The default copy uses no hook.
 
-Viewer journeys on this copy register shared case modules:
+Viewer journeys on this copy register shared case modules.
 `static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
-Serve also runs, and `static_development_mount.spec.ts` serves the
-`development_shell.ts` bundle with React's development build.
+Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
+viewer over this copy through both frame adapters. Each host passes a
+`MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`static_development_mount.spec.ts` serves the `development_shell.ts` bundle
+with React's development build.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
