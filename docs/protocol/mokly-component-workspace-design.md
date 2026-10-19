@@ -164,7 +164,12 @@ comparison, and under either filter. Each reason is one sentence after the
 branch-point sentence, shown once whatever supplies it. A `dependency` reason
 reads only through the changed-files list of the
 [CSS evidence contract](./mokly-css-evidence-presentation.md), and a pure move
-has no reason sentence.
+has no reason sentence. Only a record that Changes lists shows reasons. A
+reason that contradicts its record is dropped: `removed` on a current record,
+`added` on a record with a base side, `screen` outside a use case, and
+`implementation` outside a component parent. The detail itself still loads. A
+viewer does not reject such a detail, as the model crate's reader does,
+because details written before reasons existed must keep loading.
 
 | Reason           | Sentence                                                 |
 | ---------------- | -------------------------------------------------------- |
