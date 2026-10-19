@@ -37,7 +37,8 @@ export function detailKey(request: DetailRequest): string {
  * generation and snapshot id equal the index's record. Another deployment
  * wins over every other difference, and a revision mismatch is reported
  * before the content is compared, so the content is matched against the
- * index of the detail's own revision.
+ * index of the detail's own revision. The content includes `reasons`, which
+ * a detail carries exactly while its record is ready and included.
  */
 export function fenceDetail(
   index: CatalogueReadModel,
@@ -96,6 +97,8 @@ function matches(
 ): boolean {
   if (detail.entry.path !== entry.path || detail.entry.kind !== entry.kind)
     return false;
+  const included = entry.changes.status === "ready" && entry.changes.included;
+  if ((detail.reasons !== undefined) !== included) return false;
   if (entry.kind !== "screen" && entry.kind !== "component")
     return detail.views.length === 0;
   const axes = (views: readonly { viewport: string; colorScheme: string }[]) =>

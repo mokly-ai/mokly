@@ -140,7 +140,7 @@ present only while Changes is `ready` under
 `CatalogueUsage` and `ComponentWireProps` are the catalogue contract's shapes.
 `reasons` carries classification reasons in the review v8 `EntryChangeReason` shape and sorted unique order, under the same reason policy.
 Pages and documents have no review record. Their details carry the classification's direct reasons under this policy.
-Ready included current and removed entries carry `reasons`. A pure move carries `[]`. Other entries omit the field.
+Ready included current and removed entries carry `reasons`. A pure move carries `[]`. Other entries omit the field, and a reader rejects a detail whose `reasons` disagree with its index record.
 Reasons are independent of `workspace` and remain available before usage is proven.
 `usedBy` lists the current uses of a component, `affected` the consumers a
 changed component affects, `relatedComponents` the changed components that

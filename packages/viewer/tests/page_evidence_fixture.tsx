@@ -13,6 +13,7 @@ import type {
   EntryDetailV1,
   ViewEvidence,
 } from "../src/catalogue/types.js";
+import type { EntryChangeReason } from "../src/review/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { ShellMain } from "../src/shell/views.js";
@@ -60,6 +61,12 @@ export const CHANGED: ViewEvidence = {
   resources: [],
 };
 
+/** The direct reasons of a page whose own rules in {@link CHANGED} changed. */
+export const CHANGED_REASONS: EntryChangeReason[] = [
+  { kind: "dependency", path: "mockups/actions.css" },
+  { kind: "dependency", path: "mockups/handbook.css" },
+];
+
 /** The exact comparison details the shell renders for {@link CHANGED}. */
 export const CHANGED_SECTION =
   '<section class="mbk-comparison-evidence" data-page-evidence="">' +
@@ -91,15 +98,20 @@ export function publishedIndex(
   });
 }
 
-/** Every fixture detail, with the page's detail carrying `evidence` or none. */
+/**
+ * Every fixture detail, with the page's detail carrying `evidence` or none,
+ * and the `reasons` of a page that Changes includes.
+ */
 export function publishedDetails(
   evidence?: ViewEvidence,
+  reasons?: EntryChangeReason[],
 ): (readonly [DetailRequest, EntryDetailV1])[] {
   const fixtures = rawDetailFixtures();
   const guide = fixtures.current["guide"];
   assert.ok(guide);
   delete guide.resourceEvidence;
   if (evidence) guide.resourceEvidence = evidence;
+  if (reasons) guide.reasons = reasons;
   return detailPairs(undefined, fixtures);
 }
 

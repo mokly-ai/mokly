@@ -29,8 +29,9 @@ export interface WorkspaceComparisonEvidence {
 }
 
 /**
- * Keep catalogue facts, including the selected views' live evidence in
- * Current, while adding only the loaded selection's details.
+ * Keep catalogue facts, including the routed detail's reasons and the
+ * selected views' live evidence in Current, while adding only the loaded
+ * selection's details. Each reason appears once, whatever its sources.
  */
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
@@ -58,6 +59,7 @@ export function workspaceComparisonEvidence(
     resourceViews: [...resources, ...viewEvidence],
     reasons: mergeReasons([
       ...(data.change?.reasons ?? []),
+      ...(data.reasons ?? []),
       ...(routed?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
       ...viewEvidence.flatMap((view) => view.reasons ?? []),

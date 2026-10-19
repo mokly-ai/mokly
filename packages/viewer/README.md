@@ -594,6 +594,9 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/review/result_validation.ts`](./src/review/result_validation.ts) and
   [`src/review/result_order.ts`](./src/review/result_order.ts) — the strict
   review result v8 reader and the canonical record order it requires
+- [`src/catalogue/detail_reasons.ts`](./src/catalogue/detail_reasons.ts) and
+  [`src/catalogue/reason_order.ts`](./src/catalogue/reason_order.ts) — the
+  entry detail's `reasons` and the reason order it shares with review v8
 - [`tests`](./tests) — package-level conformance tests
 
 ### Related Docs

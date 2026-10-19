@@ -183,6 +183,11 @@
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
       },
+      "reasons": [
+        {
+          "kind": "added"
+        }
+      ],
       "revision": 0,
       "schemaVersion": 1,
       "views": []
@@ -197,6 +202,7 @@
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
       },
+      "reasons": [],
       "revision": 0,
       "schemaVersion": 1,
       "views": [
@@ -256,6 +262,11 @@
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
       },
+      "reasons": [
+        {
+          "kind": "material"
+        }
+      ],
       "revision": 0,
       "schemaVersion": 1,
       "views": [
@@ -373,6 +384,11 @@
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
       },
+      "reasons": [
+        {
+          "kind": "removed"
+        }
+      ],
       "schemaVersion": 1,
       "views": [
         {
@@ -423,6 +439,11 @@
         "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
         "title": "Mokly"
       },
+      "reasons": [
+        {
+          "kind": "removed"
+        }
+      ],
       "resourceEvidence": {
         "resources": [],
         "rules": []

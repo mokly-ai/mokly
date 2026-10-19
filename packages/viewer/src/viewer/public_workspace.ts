@@ -62,6 +62,7 @@ function variantStatus(
 /**
  * The routed entry's workspace from the index and the routed entry's detail.
  * `base` is the index's branch name; it stays empty when the index names none.
+ * The detail's direct reasons reach Details before any comparison loads.
  */
 export function publicWorkspace(
   catalogue: Catalogue,
@@ -80,12 +81,13 @@ export function publicWorkspace(
   )
     throw new Error("The selected item is unavailable.");
   const removed = model.removedEntries.some((item) => item.entry === original);
-  const detail = model.details.get(
+  const held = model.details.get(
     detailKey({
       path: original.path,
       ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
     }),
-  )?.workspace;
+  );
+  const detail = held?.workspace;
   const publicComponent: ShellCatalogueComponent | undefined =
     original.kind === "component"
       ? original.variantOf !== undefined
@@ -174,6 +176,7 @@ export function publicWorkspace(
     ...(detail ? {} : { usageComplete: false }),
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
+    ...(held?.reasons ? { reasons: held.reasons } : {}),
     ...(resourceEvidence.length ? { resourceEvidence } : {}),
   };
 }
