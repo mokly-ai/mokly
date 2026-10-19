@@ -1467,7 +1467,7 @@ Tags: ui
   - [x] Register the moved-entry viewer cases on the embedded viewer host
         through both frame adapters, over the branch copy. The case that
         follows the page address runs only on Serve and the branch copy.
-  - [ ] When `rebuild/m10-d1-and-copies` merges, make its copied-output
+  - [x] When `rebuild/m10-d1-and-copies` merges, make its copied-output
         `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
         call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve
         instances use, so each check lives once.
