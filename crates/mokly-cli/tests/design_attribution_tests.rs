@@ -17,7 +17,6 @@ mod changes_support;
 mod design_support;
 
 #[path = "../src/render_runtime.rs"]
-#[expect(dead_code, reason = "the fixture supplies its diagnostics")]
 mod render_runtime;
 #[path = "../src/terminal.rs"]
 #[expect(dead_code, reason = "native fixtures use no terminal streams")]
