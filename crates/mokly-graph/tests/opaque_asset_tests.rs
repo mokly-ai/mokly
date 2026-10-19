@@ -1,6 +1,8 @@
 //! Opaque CSS resources retain one plan and reject stale or replaced delivery inputs.
 
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::net::UnixListener;
 use std::path::Path;
 
 use mokly_graph::error::GraphError;
@@ -133,7 +135,6 @@ fn an_equal_byte_leaf_symlink_cannot_replace_the_captured_asset() {
     ));
 }
 
-#[cfg(unix)]
 #[test]
 fn a_directory_cannot_replace_the_captured_asset() {
     let directory = fixture(1);
@@ -172,4 +173,18 @@ fn a_fifo_replacement_fails_without_waiting_for_a_writer() {
         .expect("opaque asset open must not wait for a FIFO writer");
     assert!(matches!(result, Err(GraphError::InputsChanged { .. })));
     copy.join().unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn a_socket_cannot_replace_the_captured_asset() {
+    let directory = fixture(1);
+    let (generation, _) = support::prepare(directory.path(), 1024 * 1024, 1);
+    let asset = directory.path().join("assets/image.svg");
+    fs::remove_file(&asset).unwrap();
+    let _socket = UnixListener::bind(&asset).unwrap();
+    assert!(matches!(
+        generation.unwrap().resource("assets/assets/image.svg"),
+        Err(GraphError::InputsChanged { path }) if path == asset
+    ));
 }
