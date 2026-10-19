@@ -64,3 +64,22 @@ native comparison data for comparison modes, removed previews, Changed
 membership, navigation disclosure, focus, scrolling, and stylesheet Details.
 Each spec owns its browser state and assertions; the fixture does not mock
 read models or alter responses.
+
+## Watched catalogue cases
+
+`watch_fixture.ts` extends the automatic console-error fixture. Each test owns
+a small native catalogue through `serveCatalogue(..., { watch: true })` and
+uses the isolated setup budget. Changes wait for a higher published revision
+and the expected catalogue state through `settleLive`. Document keys and DOM
+marks distinguish changed previews from retained ones without a shell reload.
+The browser leaves the page before the fixture closes its process and directory.
+`watch_updates`, `watch_moves`, `watch_folders`, and `watch_shutdown` cover the
+watched publication and disclosure cases.
+
+## Native team example
+
+The `team_screens`, `team_components`, `team_links`, `team_pages`, and `team_flow`
+specs read the shared Serve example. They do not edit its files. They cover the
+HTML team screens, slot components, saved variants, canonical invitation page,
+Markdown role guide, YAML flow, and native links in Browse and direct documents.
+Each file has at most four cases so Playwright can balance whole files.
