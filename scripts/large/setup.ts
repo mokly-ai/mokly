@@ -9,6 +9,7 @@ import type {
   Variant,
 } from "../../tests/fixtures/large/generate.js";
 
+import type { AcceptanceBuild } from "./acceptance_build.js";
 import { prepareToolchain } from "./toolchain.js";
 import type { ToolchainMode } from "./toolchain.js";
 
@@ -42,6 +43,7 @@ export async function prepareFixture(
   variant: Variant,
   mode: ToolchainMode,
   root: string,
+  acceptanceBuild?: AcceptanceBuild,
 ) {
   const beginning = performance.now();
   const fixture = await generateLargeFixture(root, size, variant);
@@ -51,6 +53,7 @@ export async function prepareFixture(
     ...fixture,
     toolchain,
     baseline,
+    ...(acceptanceBuild ? { acceptanceBuild } : {}),
     setupMs: performance.now() - beginning,
   };
   await fs.mkdir(path.join(root, ".context"));

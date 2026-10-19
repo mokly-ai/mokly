@@ -354,6 +354,12 @@ more than re-deriving the behaviour from the requirements.
     This aligns the round 15 specification with the producer and the viewer's
     direct-use flag. Decision: M9 review 10 finding 3A, approved in changes-12.
 
+**Decision 57 C (user, 2026-10-19):** Keep the current complete-catalogue
+startup design. Approve usable startup below 15,000 ms for the large React
+fixture, cold and warm, on the optimized release binary. HTML retains its
+5,000 ms budget. Defer compilation cache redesign, option A, and partial
+readiness rather than blocking this acceptance round on further startup work.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1819,7 +1825,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [ ] Resolve the React large-fixture startup budget failure. `graph.prepare`
         took 167.990/167.741 s in the cold/warm development-build observations.
         Profile preparation and repeat with the intended acceptance build profile.
-        Keep the approved usable startup budget below 5000 ms.
+        Apply decision 57 C: React usable startup stays below 15,000 ms on the
+        optimized release build; HTML stays below 5,000 ms.
+    - [ ] Enforce variant-specific startup acceptance on a verified release
+          binary and repeat the large React startup measurement.
+  - [ ] Bring large React usable startup under 5,000 ms
+        (compilation cache redesign, decision 57 option A); measured 10.5 s
+        on the release build on 2026-10-19.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
@@ -1847,7 +1859,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
   - [x] Measure isolated dependency installs and propose additional budgets;
-        retain the approved usable startup budget of under 5000 ms.
+        retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
         cold/warm npm caches, including package packing. `npm ci` took
         7.328/5.446 s. Full fixture setup, including catalogue generation and

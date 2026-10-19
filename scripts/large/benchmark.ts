@@ -5,6 +5,7 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
+import { acceptanceForFixture } from "./acceptance_build.js";
 import { browse } from "./browse.js";
 import { browserMeasurement } from "./browser_measurement.js";
 import { changes } from "./changes.js";
@@ -73,6 +74,9 @@ export async function benchmark(
   let active: Scenario | undefined;
   const completedEdits: WatchMeasurement[] = [];
   try {
+    const acceptanceBuild = selected.includes("serve")
+      ? await acceptanceForFixture(fixture)
+      : undefined;
     for (const scenario of selected) {
       active = scenario;
       process.stderr.write(`Benchmark ${scenario}: starting\n`);
@@ -153,13 +157,14 @@ export async function benchmark(
             const elapsedMs = performance.now() - beginning;
             const reason =
               "usableMs" in measured
-                ? startupBudget(measured.usableMs)
+                ? startupBudget(measured.usableMs, fixture.variant)
                 : undefined;
             results.push({
               scenario,
               state,
               status: reason ? "failed" : "measured",
               ...(reason ? { reason } : {}),
+              ...(acceptanceBuild ? { acceptanceBuild } : {}),
               readinessMs,
               ...measured,
               elapsedMs,

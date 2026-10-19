@@ -214,7 +214,7 @@ CI's small correctness fixtures have
 
 | Budget                                               | Rule                                                                                                |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `usableMs`                                           | under 5000 ms, cold and warm, on both fixture variants                                              |
+| `usableMs`                                           | under 5000 ms for HTML and under 15000 ms for React, cold and warm, on the acceptance build         |
 | sidecar deadlines and recycling                      | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                  |
 | dependency install time limit                        | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning |
 | render cache, extraction cache, install cache bounds | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                |
@@ -222,8 +222,15 @@ CI's small correctness fixtures have
 | `changesReadyMs` and the CSS share                   | recorded per variant from scenarios 2 and 3                                                         |
 | watch edit-to-reload                                 | recorded per edit kind from scenario 4                                                              |
 
+Startup acceptance uses an optimized release native binary. The harness
+verifies that binary before timing and identifies its profile and digest in
+the results. Build preparation is outside the startup measurement.
+The React budget retains complete-catalogue readiness. Compilation redesign
+is deferred rather than changing readiness to partial navigation.
+
 This table holds the budgets with the values the user approved. A row whose
 value is a recording rule rather than a number is measured and reported, not
 enforced; a number enters the row when the user approves it. The benchmark
 enforces every numeric row and fails when one is exceeded. A startup observation
-at or above 5000 ms produces a failed result with its measured values and reason.
+at or above its variant's budget produces a failed result with its measured
+values and reason.

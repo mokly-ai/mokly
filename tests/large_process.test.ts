@@ -115,10 +115,21 @@ test("benchmark options reject unused generation flags and record opt-in limits"
     );
 });
 
-test("startup budget classifies synthetic observations at its exclusive boundary", () => {
-  assert.equal(startupBudget(4999), undefined);
-  assert.match(startupBudget(5000)!, /under 5000 ms/);
-  assert.match(startupBudget(5001)!, /observed 5001/);
+test("startup budgets classify synthetic observations for each variant", () => {
+  for (const [variant, limit] of [
+    ["html", 5000],
+    ["react", 15000],
+  ] as const) {
+    assert.equal(startupBudget(limit - 1, variant), undefined);
+    assert.match(
+      startupBudget(limit, variant)!,
+      new RegExp(`under ${limit} ms`),
+    );
+    assert.match(startupBudget(limit + 1, variant)!, /observed/);
+    for (const invalid of [-1, NaN, Infinity])
+      assert.match(startupBudget(invalid, variant)!, /Usable startup/);
+  }
+  assert.equal(startupBudget(5000, "react"), undefined);
 });
 
 test("failed cached preview HTTP cannot become a successful measurement", async () => {

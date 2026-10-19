@@ -64,7 +64,13 @@ It samples aggregate RSS. `--memory-stop-kib` defaults to 1750000; use 0 to
 disable it. React Serve needs a larger stop on a machine with more memory.
 Do not raise the stop on a shared machine without sufficient capacity.
 A safety stop records failure and keeps completed measurements and diagnostics.
-The opt-in benchmark fails if usable startup is at or above 5000 ms.
+Startup acceptance uses an optimized release native binary. Before a Serve
+benchmark, workspace mode builds that binary and installs it in the host
+native package. Isolated generation builds it before packing, outside setup
+timing. An installed fixture verifies its recorded binary digest before Serve.
+Each startup result records the release profile, target, source, and digest.
+The opt-in benchmark fails at or above 5000 ms for HTML or 15000 ms for React,
+for both cold and warm startup.
 
 Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
 set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
