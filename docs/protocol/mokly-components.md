@@ -147,9 +147,11 @@ slot names must be disjoint, and neither may use `moklyInstance`, `key`, or
 A private definition can remain unregistered while its `Component` wrapper
 is unused. Invoking the wrapper of a definition that no entry module exports
 fails at render time with `render-failed`, presented by the CLI as `build-invalid`.
-The message is `unexported component {title} from {definedIn}`, prefixed by
-the invoking entry's module, export, viewport, and colour scheme. The defining
-module can be an imported helper. Mokly never registers an unreachable
+The exact message is
+`{module} export {name} ({viewport}, {colorScheme}): unexported component {title} from {definedIn}`.
+The prefix identifies the invoking entry. The defining module can be an
+imported helper. If its module is outside the owned repository sources,
+`{definedIn}` is `unknown module`. Mokly never registers an unreachable
 component page.
 
 ## Instances And Ownership
