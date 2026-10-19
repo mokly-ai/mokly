@@ -5,7 +5,7 @@ Continuation of [CI Verification](./ci-verification.md).
 ## Repository Boundary
 
 The repository suite
-starts with the live lockfile-only workspace audit, then Prettier, ESLint,
+starts with the live npm lockfile audit and Rust advisory audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
 with warnings denied, viewer and sidecar package builds, Rust tests and the Rust file-length audit. The
 [test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
@@ -20,6 +20,9 @@ strict mode; the scheduled `main` audit and release publish step also stay
 strict. The [baseline contract](./dependency-audit-baseline.md) defines the
 mode selection and comparison rules. Reviewed path and expiry
 rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
+
+The Rust audit follows [Dependency Security](./dependency-security.md).
+It fails on vulnerabilities and audit errors in both npm audit modes.
 
 The repository and native suites build `@mokly/viewer` then `@mokly/mokly`
 before `cargo test --workspace`. The real sidecar smoke tests require these

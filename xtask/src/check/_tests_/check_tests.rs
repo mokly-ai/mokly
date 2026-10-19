@@ -18,6 +18,7 @@ use super::runner::{CheckRunner, DefaultCheckRunner};
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
+        CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run dependencies:check:rust" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run format:check" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "npm run lint" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
         CommandRunnerRunMock.next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace")))).returns(Ok(())),
@@ -67,6 +68,9 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check:rust"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run format:check"))

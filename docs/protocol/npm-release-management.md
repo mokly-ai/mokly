@@ -64,8 +64,8 @@ The release workflow then:
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and
    installs npm 11.21.0, the `packageManager` version, without a package cache.
-   Rust 1.95.0 (the `rust-toolchain.toml` pin) is installed when complete
-   verification is selected. Chromium is installed for the packed viewer smoke
+   Rust 1.95.0, the `rust-toolchain.toml` pin, is installed for the live Rust
+   advisory audit in both verification modes. Chromium is installed for the packed viewer smoke
    in both modes. A tag that predates
    `rust-toolchain.toml` verifies on the runner's default toolchain.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean

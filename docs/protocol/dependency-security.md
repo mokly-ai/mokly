@@ -49,6 +49,20 @@ audit has no exceptions. It calls strict `npm audit` directly in the release
 smoke and never loads the workspace exception file. Consumers must maintain and audit their own
 lockfiles, including dependencies they bring to their renderer or application.
 
+## Rust Advisory Audit
+
+The Rust dependency audit is independent of npm baseline comparisons and
+exceptions. `npm run dependencies:check:rust` audits every crate in the committed
+`Cargo.lock` against the current RustSec advisory database. It installs pinned
+`cargo-audit` 0.22.2 with its locked dependencies before running the audit.
+Reported vulnerabilities and audit errors fail verification. Informational
+warnings remain visible. There are no approved Rust advisory exceptions.
+The repository suite, daily dependency audit, and release verification run it.
+A release with reusable CI evidence still runs a fresh Rust audit. The daily
+npm update automation keeps its npm report and does not update Rust crates.
+Rust fixes require a reviewed dependency change. A cached tool or build never
+replaces the live advisory check.
+
 ## Reviewed Workspace Exceptions
 
 `scripts/verification/dependency-audit-exceptions.json` is a JSON array. Each

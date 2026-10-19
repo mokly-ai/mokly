@@ -332,6 +332,11 @@ audit stay strict. See the
 [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md),
 and [dependency security](./docs/protocol/dependency-security.md) contracts.
 
+`npm run dependencies:check:rust` installs the pinned Rust advisory tool and
+audits `Cargo.lock` against RustSec. The repository suite, daily audit, and
+release verification run it alongside the npm audit. Rust vulnerabilities and
+audit errors fail in both npm audit modes.
+
 Pull request titles use Conventional Commits and at most 72 Unicode code
 points; see the
 [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).

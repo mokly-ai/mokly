@@ -373,6 +373,14 @@ native jobs use 60-minute hang guards. Other jobs keep 30 minutes. The user
 chose longer job limits instead of changing the four-shard browser partition.
 The guards must allow at least three times each job's typical duration.
 
+**Gate approvals (user, 2026-10-19, decision 2 = A):** enable the Rust advisory
+audit, generated-TypeScript byte identity, packed-native `MOKLY_TEST_` scan,
+and CI example checks through static HTTP and `file://`. Approve 2 GiB per
+comparison cache namespace and 120 seconds for base dependency preparation.
+The user chose all six items instead of leaving the checks and bounds pending.
+The gates protect dependency security, generated contracts, release binaries,
+and portable output. The budget values document the existing bounds.
+
 **Review decisions the user gave on 2026-10-12:** every live native engine
 reference is repointed now; head styles, owned and unowned, leave the canonical
 form; the behaviour-table script is written on this branch; the server
@@ -610,11 +618,13 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       hosted macOS and Windows runners.
 - [x] Add `cargo xtask check-generated-types` as a standalone byte-identity
       check. Keep it outside every gate and CI job.
-- [ ] Record the gate approvals from the Status section before adding the gates.
-      The generated-TypeScript byte-identity and Rust advisory audit gates
-      wait for the user.
+- [x] Record the gate approvals from the Status section before adding the gates.
+      Decision 2 = A on 2026-10-19 approves all six items recorded above.
 - [ ] After user approval, add `cargo xtask check-generated-types` and the
       Rust advisory audit to the Repository suite and CI.
+  - [x] Add the Rust advisory audit to Repository, the daily dependency audit,
+        and release verification, including reused CI evidence.
+  - [ ] Add the generated-TypeScript byte-identity gate.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.

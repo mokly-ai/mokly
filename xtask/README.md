@@ -49,12 +49,12 @@ sidecar, and the viewer.
 
 ### Suites
 
-| Suite      | Content                                                                                                                                                                                                                                                                                        |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository | The live dependency audit, then Prettier, ESLint, the file-length audits, the protocol-cap, unused-internal-export, unused-member, and public-package-export ratchets, the public API report check, Rust formatting, workspace Clippy with warnings denied, and the Rust tests of every crate. |
-| Viewer     | The viewer typecheck, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                                                                                                |
-| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded.                                                      |
-| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                                                                          |
+| Suite      | Content                                                                                                                                                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Repository | The live npm and Rust dependency audits, then Prettier, ESLint, the file-length audits, the protocol-cap, unused-internal-export, unused-member, and public-package-export ratchets, the public API report check, Rust formatting, workspace Clippy with warnings denied, and the Rust tests of every crate. |
+| Viewer     | The viewer typecheck, then every discovered Node test file under `tests/` and `packages/viewer/tests/`. The suite has no shard.                                                                                                                                                                              |
+| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded.                                                                    |
+| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of every crate. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                                                                                        |
 
 A selected suite is partial verification. The unqualified command is the
 complete gate. A local run stops at the first failed suite. A remote run
@@ -141,6 +141,12 @@ repository command on its Testbox. The
 defines the comparison. Reviewed exceptions have exact dev-only paths,
 inclusive UTC end dates, and a maximum 31-day window under the
 [dependency security contract](../docs/protocol/dependency-security.md#reviewed-workspace-exceptions).
+
+`npm run dependencies:check:rust` follows the npm audit in both modes. It
+installs locked `cargo-audit` 0.22.2 and audits `Cargo.lock` against the live
+RustSec database. Vulnerabilities and audit errors stop the suite. The daily
+audit and release publish job run the same command, including when release
+verification reuses CI evidence. npm exceptions do not cover Rust findings.
 
 ### Executors
 

@@ -49,3 +49,9 @@ jobs:
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: node scripts/verification/dependency-audit-pr.mjs --outcome "$AUDIT_OUTCOME" --log .context/dependency-audit.log --report .context/dependency-audit.json
+      - name: Set up Rust
+        if: success() || failure()
+        run: rustup toolchain install
+      - name: Audit Rust dependencies
+        if: success() || failure()
+        run: npm run dependencies:check:rust

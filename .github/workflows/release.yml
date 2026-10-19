@@ -221,14 +221,15 @@ jobs:
         run: npm ci
       - name: Audit workspace dependencies
         run: npm run dependencies:check
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Audit Rust dependencies
+        run: npm run dependencies:check:rust
       - name: Select verification evidence
         id: evidence
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/release/evidence.mjs
-      - name: Set up Rust
-        if: steps.evidence.outputs.mode != 'evidence'
-        run: rustup toolchain install
       - name: Install Chromium for verification and smoke
         run: npx playwright install --with-deps chromium
       # A manual retry dispatches from main, whose head can be newer than the

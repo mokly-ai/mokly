@@ -22,6 +22,8 @@ audit and the strict release audit own new advisories on `main`.
 `main` and supports manual dispatch. Its write permissions, JSON report, token,
 branch, and create, refresh, and close behavior follow the
 [dependency update pull request contract](./dependency-audit-update-pr.md).
+It also runs the Rust advisory audit, even when the npm audit or its update
+automation fails. That audit reports Rust findings without changing a branch.
 
 The repository job's full-history checkout uses `fetch-depth: 0`. It must fetch
 release tags for the public-package-export ratchet, plus `origin/main` and

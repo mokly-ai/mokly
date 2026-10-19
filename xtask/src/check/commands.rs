@@ -45,6 +45,7 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
     };
     vec![
         audit,
+        npm(&["run", "dependencies:check:rust"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
         CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
