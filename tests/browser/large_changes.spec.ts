@@ -4,7 +4,6 @@ import path from "node:path";
 
 import { benchmark } from "../../scripts/large/benchmark.js";
 import { prepareFixture } from "../../scripts/large/setup.js";
-
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
