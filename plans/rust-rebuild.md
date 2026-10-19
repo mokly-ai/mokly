@@ -1838,14 +1838,22 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep the 256 MiB bound and every per-entry charge.
         Evidence: `.context/m14-measurements/capture-html/summary.json` and
         `.context/m14-measurements/capture-react/summary.json`.
-  - [ ] Profile optimized capture throughput and remove repeated work without
+  - [x] Profile optimized capture throughput and remove repeated work without
         changing the capture bound, entry charges, or preparation contracts.
     - [x] Reuse anchor-check destination renders through the bounded cache.
           Evidence: `.context/m14-capture/anchor-release-html/analysis.json`
           and `.context/m14-capture/anchor-release-react/analysis.json`.
-    - [ ] Measure sidecar waits and capture encoding, then use bounded capture
+    - [x] Measure sidecar waits and capture encoding, then use bounded capture
           batches on the existing render workers without changing retention order.
           Integration evidence: `.context/m14-capture/merge-resolution.md`.
+          Evidence: `.context/m14-capture/observations.json` and
+          `.context/m14-capture/parallel-release-react/analysis.json`.
+    - [x] Coalesce concurrent anchor-target renders and preserve cache bounds.
+          Evidence: `.context/m14-capture/coalesced-release-html/analysis.json`
+          and `.context/m14-capture/coalesced-release-react/analysis.json`.
+  - [ ] Decide whether to combine validation and capture through bounded ordered
+        collection. Severity Medium, effort Large. Recommended: B, share the
+        validated inputs. Decision: `.context/m14-capture/design-decision.md`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
