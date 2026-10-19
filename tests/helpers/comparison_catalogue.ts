@@ -26,6 +26,9 @@ export const comparisonPaths = {
 
 type Side = "Before" | "After";
 
+/** Optional sources added before each commit, without changing the default copy. */
+export type ComparisonAdditions = (root: string, side: Side) => Promise<void>;
+
 const screen = (title: string, body: string) =>
   `---\ntitle: ${title}\n---\n${body}`;
 const component = (
@@ -107,7 +110,10 @@ async function writeSide(root: string, side: Side): Promise<void> {
 }
 
 /** Write exactly two commits in an isolated repository; never read checkout history. */
-export async function createComparisonCatalogue(root: string): Promise<void> {
+export async function createComparisonCatalogue(
+  root: string,
+  additions?: ComparisonAdditions,
+): Promise<void> {
   await write(root, ".gitignore", ".context/\nmokly-static/\n");
   await write(
     root,
@@ -185,6 +191,7 @@ propSchema: {type: object, additionalProperties: false, properties: {}}
 ---
 <p>Historical component</p>`,
   );
+  await additions?.(root, "Before");
   for (const args of [
     ["init", "-q"],
     ["config", "user.name", "Mokly Browser Fixture"],
@@ -207,6 +214,7 @@ propSchema: {type: object, additionalProperties: false, properties: {}}
     "components/retired.component.html",
   ])
     await fs.rm(path.join(root, "specs", file));
+  await additions?.(root, "After");
   await git(root, "add", "-A");
   await git(root, "commit", "-qm", "Changed catalogue");
 }

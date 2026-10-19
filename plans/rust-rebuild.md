@@ -893,7 +893,7 @@ renders again.
         on non-dropped rows.
   - [x] After the final viewer merge, reconcile comparison row ownership
         and regenerate the browser sweep with the prepared input fixes.
-  - [ ] Cover the remaining copied-file delivery cases in the browser sweep:
+  - [x] Cover the remaining copied-file delivery cases in the browser sweep:
         branch-point references, moved and removed previews, malformed
         comparison metadata, lazy first reads, immutable bytes, and Refresh
         request counts. Milestone 10 owns the
@@ -1038,6 +1038,7 @@ Final core fixes and invocation-path smoke: `.context/rust-rebuild/delegation/m8
 
 Browser case ownership: `.context/rust-rebuild/sweeps/m8-browser.md`.
 Browser restoration checks: `.context/rust-rebuild/delegation/m8-browser/report-1.md`.
+Copied comparison delivery and the shared Serve fixture: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
 Browser merge decisions: `.context/rust-rebuild/delegation/m8-browser/merge-decisions.md`.
 Browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-2.md`.
 Final browser review fixes: `.context/rust-rebuild/delegation/m8-browser/report-3.md`.
@@ -1260,6 +1261,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       assertions. Keep the duplicate component-explorer cases in one suite.
   - [x] Add one native HTML fixture with five cases in four Serve Changes specs.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-native-browser.log`.
+  - [x] Supply a shared private Serve comparison fixture with a pinned base,
+        moved and removed entries, CSS evidence, watched edits, and base-ref
+        moves. Cover readiness, membership, retained bytes, and renewal.
+        Evidence: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
   - [ ] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
         `next-assignments.md` item 7b.
 - [ ] Add the stylesheet attribution tests over the design catalogue that

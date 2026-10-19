@@ -1,16 +1,22 @@
 import { runCaptured } from "../../scripts/verification/process.mjs";
-import { createComparisonCatalogue } from "../helpers/comparison_catalogue.js";
+import {
+  createComparisonCatalogue,
+  type ComparisonAdditions,
+} from "../helpers/comparison_catalogue.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
 import { copiedHost } from "./copied_host.js";
 
 /** Build native Changes once per suite, then discard all source and Git files. */
-export async function startComparisonStaticHost(signal?: AbortSignal) {
+export async function startComparisonStaticHost(
+  signal?: AbortSignal,
+  additions?: ComparisonAdditions,
+) {
   return copiedHost(
     "copied-comparison-",
     async (source, output) => {
-      await createComparisonCatalogue(source);
+      await createComparisonCatalogue(source, additions);
       await timeFixturePhase(
         "browser-comparison",
         "static-build",

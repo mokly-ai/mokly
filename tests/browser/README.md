@@ -64,3 +64,49 @@ native comparison data for comparison modes, removed previews, Changed
 membership, navigation disclosure, focus, scrolling, and stylesheet Details.
 Each spec owns its browser state and assertions; the fixture does not mock
 read models or alter responses.
+
+## Branch-point delivery copy
+
+`branch_point_test.ts` supplies `test`, the worker fixture `branchCopy`, and
+`branchPointPaths`. Its `baseURL` serves a separate comparison copy. Use
+`branchCopy.directory` for byte assertions. The source repository is removed
+before requests start. The copy is read-only.
+
+`createComparisonCatalogue(root, additions?)` calls the optional source hook
+before each of its two commits. The default catalogue has no extra entries.
+`addBranchPointSources` adds five namespaced cases under `branch/`: moved
+screen and component consumers, a moved parent with a removed sibling, a
+transferred variant, case-only renames, and a document that reuses a removed
+component's path. The moved consumers also retain distinct base and head SVG
+bytes. The case-only entries use no changed styles. Both hosts below use the
+same authored sources.
+
+## Shared Serve comparison fixture
+
+Import `test` from `serve_comparison_test.ts` for viewer Changes journeys.
+Each test gets a private `changes` fixture and its URL as `baseURL`. It owns
+a two-commit Git repository, a `fixture-base` branch, a watcher, and real
+comparison generations. It waits for ready Changes at the pinned base.
+The `comparisonPaths` entries and all five branch-point cases are available.
+The existing `serve_changes_fixture.ts` remains the smaller engine fixture.
+
+| API                                        | Purpose                                                         |
+| ------------------------------------------ | --------------------------------------------------------------- |
+| `changes.paths`                            | Named paths from `comparisonPaths` and `branchPointPaths`       |
+| `changes.url`, `changes.root`              | Loopback origin and private source directory                    |
+| `changes.baseCommit`, `changes.headCommit` | Independent base and head commit IDs                            |
+| `await changes.index()`                    | Read and validate the current catalogue index                   |
+| `await changes.ready(afterRevision?)`      | Wait for a newer ready Changes publication                      |
+| `await changes.edit(relativeFile, text)`   | Change one source file and wait for its accepted publication    |
+| `await changes.moveBase("head" \| "base")` | Switch the private base ref and wait for that pinned comparison |
+| `await changes.close()`                    | Drain Serve before removing the repository; safe to repeat      |
+
+The `changed` screen has a matched `.accent` rule from `theme.css`, an
+unresolved root rule, and native component usage. Read `comparisonUrl` from
+the index for removed records. Use `/mokly-viewer/diffs/review.json?path={path}`
+for live selected comparisons, and add `&refresh=1` for an explicit refresh.
+The test fixture closes automatically. It permits watched edits and base-ref
+moves without sharing writable state with another test.
+
+Branch-point copy setup and Serve comparison setup use the isolated
+180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.
