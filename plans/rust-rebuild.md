@@ -1811,6 +1811,11 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
     with the active class. The requested Default-only `aria-current` assertion
     conflicts with the self-link decision in `be30a10a`; wait for the user.
     Evidence: `.context/f1/selection-decision.md`.
+  - F1 verification: `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`
+    failed with `Original Unimock instance destroyed on a different thread`
+    and passed on the isolated rerun. Suspected source: tracing subscriber
+    cleanup drops the original mock across threads. Separate branch.
+    Evidence: `.context/f1/gate.log` and `.context/f1/serve-trace-rerun.log`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
