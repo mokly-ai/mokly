@@ -1740,6 +1740,23 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         took 167.990/167.741 s in the cold/warm development-build observations.
         Profile preparation and repeat with the intended acceptance build profile.
         Keep the approved usable startup budget below 5000 ms.
+    - [x] Measure optimized startup and profile core, sidecar, and serial work.
+          The release baseline at `9257b131` used the same fixture, two sidecars,
+          default deadlines, and 6 GiB RSS stop. Cold/warm usable startup:
+          24.838/25.858 s. Core preparation used one CPU; sidecars were idle.
+          Evidence: `.context/m14-round2/baseline/`.
+    - [x] Share routing inventories and remove repeated stylesheet-root walks.
+          Preserve routing-key snapshots, stylesheet order, and result checks.
+          Operation counts cover both input sizes. The final release source
+          tree `9ad26d863edb4eb7cfe3f0e8178c696c3d005c04` took 10.551/10.538 s
+          cold/warm. Core preparation fell to 0.260/0.177 s; stylesheet-root
+          discovery took 2 ms. Compilation still took 7.491/7.019 s.
+          Both browser checks passed; both startup budget checks failed.
+          Evidence: `.context/m14-round2/final/`.
+    - [ ] Choose the remaining startup approach before changing readiness or
+          compilation boundaries. Keep the 5 s budget. Compare reusable
+          compilation units with staged navigation and selected-preview readiness.
+          A persistent cache alone cannot meet the first cold cache miss.
   - [ ] Connect Changes and watch to their delivered browser events.
   - [x] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
