@@ -12,6 +12,8 @@ import { bundleResult, restore, reuse } from "./compiled.js";
 import { describe } from "./describe.js";
 import { SidecarError, detail, handleLocation, protocol } from "./errors.js";
 import { finishMarkup } from "./markup.js";
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
 import { PostcssWorkers } from "./postcss.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
@@ -27,6 +29,7 @@ export class Session {
     diagnostic: (message: string) => void,
     private readonly compile: typeof build = build,
     private readonly operation: (operation: Operation) => void = () => {},
+    private readonly measurements: Measurements = unmeasured,
   ) {
     this.workers = new PostcssWorkers(diagnostic, operation);
   }
@@ -64,10 +67,14 @@ export class Session {
         const previous = await reuse(this.generations.values(), request.params);
         const { generation, result } = previous
           ? { generation: previous, result: bundleResult(previous) }
-          : await bundle(request.params, (options) => {
-              this.operation("esbuild");
-              return this.compile(options);
-            });
+          : await bundle(
+              request.params,
+              (options) => {
+                this.operation("esbuild");
+                return this.compile(options);
+              },
+              this.measurements,
+            );
         this.generations.set(generation.id, generation);
         return result;
       }

@@ -76,3 +76,67 @@ test("sidecar spans use a fake clock and fixed categories without request data",
   timing.begin({ method: "renderPage" }, timing.received())("error");
   assert.equal(lines.length, 14);
 });
+
+test("bundle phases keep their parent and record results without source data", async () => {
+  let clock = 0;
+  const lines: string[] = [];
+  const timing = new Timings(
+    { now: () => clock },
+    (line) => lines.push(line),
+    321,
+    "session",
+  );
+  assert.equal(
+    await timing.run("sidecar.bundle.compile", async () => "disabled"),
+    "disabled",
+  );
+  assert.equal(
+    timing.runSync("sidecar.bundle.graph", () => "disabled"),
+    "disabled",
+  );
+  assert.equal(lines.length, 0);
+  timing.enable(true);
+  const finish = timing.begin({ method: "bundle" }, timing.received());
+  clock = 5;
+  assert.equal(
+    await timing.run("sidecar.bundle.compile", async () => {
+      clock = 15;
+      return "private source";
+    }),
+    "private source",
+  );
+  const failure = new Error("private failure");
+  assert.throws(
+    () =>
+      timing.runSync("sidecar.bundle.graph", () => {
+        throw failure;
+      }),
+    (error) => error === failure,
+  );
+  await assert.rejects(
+    timing.run("sidecar.bundle.resolution", async () => {
+      throw failure;
+    }),
+    (error) => error === failure,
+  );
+  assert.equal(
+    timing.runSync("sidecar.bundle.inputs", () => 7),
+    7,
+  );
+  finish("error");
+  const records = lines.map((line) => JSON.parse(line.slice(15)));
+  assert.equal(records.length, 10);
+  for (const record of records.slice(1, -1))
+    assert.equal(record.parentId, records[0].id);
+  assert.equal(records[2].durationMs, 10);
+  assert.deepEqual(
+    records
+      .filter((record) => record.event === "end")
+      .map((record) => record.status),
+    ["ok", "error", "error", "ok", "error"],
+  );
+  assert.ok(lines.every((line) => !line.includes("private")));
+  timing.enable(false);
+  timing.runSync("sidecar.bundle.graph", () => null);
+  assert.equal(lines.length, 10);
+});
