@@ -43,38 +43,41 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
             receivers.push(Mutex::new(receive));
         }
         let receivers = Arc::new(receivers);
-        let workers = Mutex::new(
-            (0..size)
-                .map(|_| {
-                    let entered = entered.clone();
-                    let receivers = Arc::clone(&receivers);
-                    let worker = Unimock::new((
-                        WorkerMock::handshake
-                            .next_call(matching!(_))
-                            .returns(Ok(())),
-                        WorkerMock::request
-                            .each_call(matching!(_, _))
-                            .answers_arc(Arc::new(move |_, request, _| {
-                                let Call::ProcessCss(params) = &request.call else {
-                                    panic!()
-                                };
-                                let index = params.text.parse::<usize>().unwrap();
-                                entered.send(index).unwrap();
-                                receivers[index].lock().unwrap().recv().unwrap();
-                                Ok(MethodResult::Css(Css {
-                                    unmapped_dependency_directories: None,
-                                    text: params.text.clone(),
-                                    dependencies: Vec::new(),
-                                }))
-                            })),
-                        WorkerMock::resident_bytes
-                            .each_call(matching!())
-                            .answers(&|_| Ok(0)),
-                    ));
-                    Spawned {
-                        worker: Box::new(worker.clone()),
-                        control: Arc::new(worker),
-                    }
+        let workers = (0..size)
+            .map(|_| {
+                let entered = entered.clone();
+                let receivers = Arc::clone(&receivers);
+                Unimock::new((
+                    WorkerMock::handshake
+                        .next_call(matching!(_))
+                        .returns(Ok(())),
+                    WorkerMock::request
+                        .each_call(matching!(_, _))
+                        .answers_arc(Arc::new(move |_, request, _| {
+                            let Call::ProcessCss(params) = &request.call else {
+                                panic!()
+                            };
+                            let index = params.text.parse::<usize>().unwrap();
+                            entered.send(index).unwrap();
+                            receivers[index].lock().unwrap().recv().unwrap();
+                            Ok(MethodResult::Css(Css {
+                                unmapped_dependency_directories: None,
+                                text: params.text.clone(),
+                                dependencies: Vec::new(),
+                            }))
+                        })),
+                    WorkerMock::resident_bytes
+                        .each_call(matching!())
+                        .answers(&|_| Ok(0)),
+                ))
+            })
+            .collect::<Vec<_>>();
+        let processes = Mutex::new(
+            workers
+                .iter()
+                .map(|worker| Spawned {
+                    worker: Box::new(worker.clone()),
+                    control: Arc::new(worker.clone()),
                 })
                 .collect::<Vec<_>>(),
         );
@@ -82,13 +85,14 @@ fn leases_are_fifo_and_concurrent_requests_never_exceed_the_size_bound() {
             FactoryMock::spawn
                 .each_call(matching!(_))
                 .answers_arc(Arc::new(move |_, _| {
-                    Ok(workers.lock().unwrap().pop().unwrap())
+                    Ok(processes.lock().unwrap().pop().unwrap())
                 }))
                 .n_times(size),
         );
+        let clock = Unimock::new(());
         let pool = Arc::new(Pool::new(
-            Arc::new(factory),
-            Arc::new(Unimock::new(())),
+            Arc::new(factory.clone()),
+            Arc::new(clock.clone()),
             Launch {
                 node: "node".into(),
                 entry: "sidecar.js".into(),

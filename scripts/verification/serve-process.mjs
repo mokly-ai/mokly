@@ -9,13 +9,10 @@ import { captureProcessGroups } from "./process-groups.mjs";
 import { assertOwnerOpen } from "./process-owner-records.mjs";
 import { createVerificationProcessOwner } from "./process-owner.mjs";
 
-/** A suspended, registered Serve process scope shared with the outer wrapper. */
-export async function serveProcess(args, cwd, environment = process.env) {
+/** A suspended Node command registered before its worker is released. */
+export async function commandProcess(args, cwd, environment = process.env) {
   const owner = await createVerificationProcessOwner({ cwd, env: environment });
-  const env = owner.environment({
-    ...childEnvironment(environment),
-    MOKLY_OUTPUT: "plain",
-  });
+  const env = owner.environment(childEnvironment(environment));
   const child = spawn(
     process.execPath,
     [path.join(import.meta.dirname, "serve-process-worker.mjs")],
@@ -85,12 +82,17 @@ export async function serveProcess(args, cwd, environment = process.env) {
     } catch (cleanup) {
       throw new AggregateError(
         [error, cleanup],
-        "Serve registration and cleanup failed",
+        "Command registration and cleanup failed",
         { cause: cleanup },
       );
     }
     throw error;
   }
+}
+
+/** A suspended, registered Serve process scope shared with the outer wrapper. */
+export function serveProcess(args, cwd, environment = process.env) {
+  return commandProcess(args, cwd, { ...environment, MOKLY_OUTPUT: "plain" });
 }
 
 /** A complete listening line prevents returning a partial port. */

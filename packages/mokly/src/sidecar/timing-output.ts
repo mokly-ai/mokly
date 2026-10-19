@@ -18,5 +18,9 @@ export function timingOutput(stream: Pick<Writable, "write">) {
       ? write(chunk, encoding, callback)
       : write(chunk, encoding ?? callback);
   };
-  return (line: string) => stream.write(`${atLineStart ? "" : "\n"}${line}`);
+  return (line: string) => {
+    const text = `${atLineStart ? "" : "\n"}${line}`;
+    atLineStart = text.endsWith("\n");
+    return write(text);
+  };
 }

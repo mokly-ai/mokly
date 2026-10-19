@@ -2,6 +2,7 @@
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
+use std::thread;
 
 use mokly_cli::redaction::Redactor;
 use mokly_sidecar::bindings::DisposeContext;
@@ -37,11 +38,23 @@ fn record_shaped_diagnostics_cannot_bypass_token_or_control_redaction() {
     );
 }
 
-fn spawned(mock: Unimock) -> Spawned {
+fn spawned(mock: &Unimock) -> Spawned {
     Spawned {
         worker: Box::new(mock.clone()),
-        control: Arc::new(mock),
+        control: Arc::new(mock.clone()),
     }
+}
+
+#[test]
+fn spawned_mock_keeps_verification_on_its_owner_thread() {
+    let mock = Unimock::new(ControlMock::shutdown.next_call(matching!()).returns(Ok(())));
+    let process = spawned(&mock);
+    thread::spawn(move || {
+        let process = process;
+        process.control.shutdown().unwrap();
+    })
+    .join()
+    .unwrap();
 }
 
 #[test]
@@ -80,7 +93,7 @@ fn spawn_and_replacement_cover_hello_and_keep_error_until_success() {
                 ControlMock::kill.next_call(matching!()).returns(Ok(())),
             ))
         };
-        let processes = Mutex::new(VecDeque::from([spawned(first), spawned(second)]));
+        let processes = Mutex::new(VecDeque::from([spawned(&first), spawned(&second)]));
         let factory = Unimock::new(
             FactoryMock::spawn
                 .each_call(matching!(_))
@@ -89,16 +102,17 @@ fn spawn_and_replacement_cover_hello_and_keep_error_until_success() {
                 }))
                 .n_times(2),
         );
+        let clock = if success {
+            Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0u64))
+        } else {
+            Unimock::new(())
+        };
         let records = capture(|| {
             let outer = tracing::info_span!("output.write", status = "ok");
             let _scope = outer.enter();
             let pool = Pool::new(
-                Arc::new(factory),
-                Arc::new(if success {
-                    Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0u64))
-                } else {
-                    Unimock::new(())
-                }),
+                Arc::new(factory.clone()),
+                Arc::new(clock.clone()),
                 Launch {
                     node: "private-node".into(),
                     entry: "private-entry".into(),

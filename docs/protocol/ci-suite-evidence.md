@@ -42,7 +42,9 @@ another owner creates a child identity in the same registry; cancellation acts
 only on that owner subtree, so concurrent sibling commands cannot terminate or
 remove each other's work. Independently grouped process scopes atomically
 register before releasing their command worker and unregister only after
-normal drainage. Abrupt cancellation signals the direct process tree and every
+normal drainage. This rule includes every process group a test helper creates,
+including fault commands and detached Serve helpers.
+Abrupt cancellation signals the direct process tree and every
 registered descendant group, rescans for registrations racing with shutdown,
 escalates from TERM to KILL within the existing bound, and waits for all groups
 to stop before removing the subtree's resources. Invalid ownership records or a

@@ -56,7 +56,7 @@ fn shutdown_cancels_queued_and_inflight_work_with_one_shared_deadline() {
         ));
         let pool = Pool::new(
             Arc::new(factory.clone()),
-            Arc::new(factory),
+            Arc::new(factory.clone()),
             Launch {
                 node: "node".into(),
                 entry: "sidecar.js".into(),
