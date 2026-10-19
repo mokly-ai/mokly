@@ -105,10 +105,17 @@ Keep each generation for 60 seconds of inactivity so that in-flight frames
 and replaced documents stay coherent. Requests extend that retention.
 Keep the classification generation's JSON while the current index names it,
 including removed details and preview metadata. Its snapshot files still expire
-after 60 idle seconds; a later removed preview or component parent or variant
-view captures them again from the retained base handles. After replacement,
-the JSON follows the idle rule too. Count all retained JSON and snapshots
-against the same bounds. Bound
+after 60 idle seconds. A later removed preview or component parent or variant
+view restores them from the accepted base capture or pinned-source fallback.
+The current index's publication, an in-flight request, or a capture must still
+own the classification. The store holds only a weak reference to it. After
+its last owner exits, a missing snapshot returns 404 and starts no work, even
+while the generation's cached JSON remains available. After replacement,
+cached JSON and snapshots follow the idle rule too.
+Each classification can retain a separate base capture of up to 256 MiB,
+beside the graph's 256 MiB render cache. An old capture held by in-flight work
+can overlap a new capture. These are separate bounds, not a process memory limit.
+Count all retained delivery JSON and snapshots against the same store bounds. Bound
 retained generations to 64 and 128 MiB, and each generation to 64 MiB.
 Reject new captures that exceed capacity rather than removing documents still
 within their retention window. When retained generations fill the store,
