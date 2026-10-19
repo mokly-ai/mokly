@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { commandProcess } from "../../scripts/verification/serve-process.mjs";
+
 const exec = promisify(execFile);
 export const workspace = path.resolve(import.meta.dirname, "../..");
 
@@ -64,15 +66,7 @@ export function publish(
   return command(
     root,
     "publish",
-    [
-      "--no-changes",
-      "--repository=example.com/team/site",
-      "--sidecars=1",
-      ...(options.environmentCredentials
-        ? []
-        : [`--endpoint=${endpoint}`, "--token=private/a=="]),
-      ...(options.args ?? []),
-    ],
+    publishArguments(endpoint, options.environmentCredentials, options.args),
     mode,
     {
       ...(options.environmentCredentials
@@ -82,6 +76,65 @@ export function publish(
     },
     options.signal,
   );
+}
+
+export function publishArguments(
+  endpoint: string,
+  environmentCredentials = false,
+  args: string[] = [],
+) {
+  return [
+    "--no-changes",
+    "--repository=example.com/team/site",
+    "--sidecars=1",
+    ...(environmentCredentials
+      ? []
+      : [`--endpoint=${endpoint}`, "--token=private/a=="]),
+    ...args,
+  ];
+}
+
+function commandEnvironment(mode: string, extra: NodeJS.ProcessEnv) {
+  return {
+    ...process.env,
+    MOKLY_OUTPUT: mode,
+    MOKLY_PACKAGE_ROOT: path.join(workspace, "packages/mokly"),
+    MOKLY_VIEWER_DIST: path.join(workspace, "packages/viewer/dist"),
+    ...extra,
+  };
+}
+
+/** Register the process group before starting the shim and drain before return. */
+export async function registeredCommand(
+  root: string,
+  verb: "build" | "publish",
+  args: string[],
+  mode: string,
+  extra: NodeJS.ProcessEnv,
+) {
+  const managed = await commandProcess(
+    [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
+    root,
+    commandEnvironment(mode, extra),
+  );
+  let drained = false;
+  const running = captureCommand(managed.child, undefined, async () => {
+    await managed.drain();
+    drained = true;
+  });
+  try {
+    await managed.start();
+    return {
+      ...running,
+      signal: (value: NodeJS.Signals) => {
+        if (!drained) managed.signal(value);
+      },
+    };
+  } catch (error) {
+    managed.signal("SIGKILL");
+    await running.result;
+    throw error;
+  }
 }
 
 export function command(
@@ -98,16 +151,18 @@ export function command(
     [path.join(workspace, "packages/mokly/bin/mokly.mjs"), verb, ...args],
     {
       cwd: root,
-      env: {
-        ...process.env,
-        MOKLY_OUTPUT: mode,
-        MOKLY_PACKAGE_ROOT: path.join(workspace, "packages/mokly"),
-        MOKLY_VIEWER_DIST: path.join(workspace, "packages/viewer/dist"),
-        ...extra,
-      },
+      env: commandEnvironment(mode, extra),
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
+  return captureCommand(child, signal);
+}
+
+function captureCommand(
+  child: Awaited<ReturnType<typeof commandProcess>>["child"],
+  signal?: AbortSignal,
+  drain?: () => Promise<void>,
+) {
   let stdout = "";
   let stderr = "";
   child.stdout.on("data", (chunk) => {
@@ -123,7 +178,7 @@ export function command(
   }>((resolve, reject) => {
     child.once("error", reject);
     child.once("close", (code) => resolve({ code, stdout, stderr }));
-  });
+  }).finally(drain);
   const stop = () => {
     if (process.platform === "win32" && child.pid !== undefined)
       execFile("taskkill", ["/PID", String(child.pid), "/T", "/F"], () => {});
