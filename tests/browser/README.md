@@ -261,7 +261,13 @@ rewrites the index body into a pending, preparing, or unavailable Changes
 state, the shape Serve writes before classification completes. Each step
 still arrives as a real watched publication, and Serve keeps no test seam.
 Specs that run the same comparison checks on the copied output and on Serve
-register them from a `*_cases.ts` module. Checks that each host reaches
+register them from a `*_cases.ts` module. The copied output registers the
+alignment, input, and Scroll together memory cases in
+`comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
+`comparison_regions_toggle.spec.ts`. Serve registers them in
+`serve_comparison_alignment.spec.ts`,
+`serve_comparison_alignment_input.spec.ts`, and
+`serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
 through its own setup are helpers instead. `light_only_band.ts` checks the
 Light only band. `imported_css_panes.ts` checks the panes of the screen that
 `tests/helpers/imported_css_sources.ts` adds. `serve_light_only_band.spec.ts`

@@ -163,8 +163,7 @@ each request to its immutable generation and configured sides.
 ## Acceptance
 
 Regressions prove the page items below in live Serve through the selected
-comparison path (`tests/browser/comparison_alignment.spec.ts` and
-`comparison_alignment_input.spec.ts`). Against a static build and an embedded
+comparison path, and in a static build. Against a static build and an embedded
 viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
 stacked wheel alignment, frame attributes, inert links and anchors, and static
 Side by side mirroring; the pane failure path runs embedded. The region, key,
