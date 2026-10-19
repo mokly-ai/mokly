@@ -1,16 +1,15 @@
 //! Replace nesting tokens without changing literal strings or attribute values.
 
-use std::result;
+use cssparser_next::Token;
 
-use cssparser_next::{ParseError, Parser, Token};
+use crate::selector_tokens::{NESTED_BLOCK_LIMIT, tokenize};
 
 pub(crate) fn combine(selector: &str, parent: Option<&str>) -> Option<String> {
     let Some(parent) = parent else {
         return Some(selector.into());
     };
-    let mut parser = Parser::new(selector);
     let mut edits = Vec::new();
-    positions(&mut parser, &mut edits)?;
+    positions(selector, &mut edits)?;
     let parent = format!(":is({parent})");
     if edits.is_empty() {
         return Some(format!("{parent} {selector}"));
@@ -23,30 +22,24 @@ pub(crate) fn combine(selector: &str, parent: Option<&str>) -> Option<String> {
     Some(result)
 }
 
-fn positions(parser: &mut Parser<'_>, output: &mut Vec<(usize, usize)>) -> Option<()> {
-    while !parser.is_exhausted() {
-        let start = parser.position().byte_index();
-        let token = parser
-            .next_including_whitespace_and_comments()
-            .ok()?
-            .clone();
-        match token {
-            Token::Delim('&') => output.push((start, parser.position().byte_index())),
+fn positions(source: &str, output: &mut Vec<(usize, usize)>) -> Option<()> {
+    let tokens = tokenize(source);
+    let mut pending = vec![(tokens.root(), 0)];
+    while let Some((mut range, depth)) = pending.pop() {
+        let Some(index) = tokens.next(&mut range) else {
+            continue;
+        };
+        let node = &tokens.nodes[index];
+        pending.push((range, depth));
+        match node.token {
+            Token::Delim('&') => output.push((node.start, node.end)),
             Token::Function(_) | Token::ParenthesisBlock => {
-                let parsed: result::Result<_, ParseError<()>> =
-                    parser.parse_nested_block(|nested| {
-                        positions(nested, output).ok_or_else(|| ParseError::custom(()))
-                    });
-                parsed.ok()?;
+                if depth == NESTED_BLOCK_LIMIT {
+                    return None;
+                }
+                pending.push((tokens.children(index), depth + 1));
             }
-            Token::SquareBracketBlock => {
-                let parsed: result::Result<_, ParseError<()>> =
-                    parser.parse_nested_block(|nested| {
-                        while nested.next_including_whitespace_and_comments().is_ok() {}
-                        Ok(())
-                    });
-                parsed.ok()?;
-            }
+            Token::SquareBracketBlock if depth == NESTED_BLOCK_LIMIT => return None,
             _ => {}
         }
     }

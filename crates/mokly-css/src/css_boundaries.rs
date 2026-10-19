@@ -1,8 +1,6 @@
 //! Ignore CSS's top-level HTML boundary tokens without touching nested or quoted text.
 
-use std::result;
-
-use cssparser::{ParseError, Parser, ParserInput, Token};
+use cssparser::{Parser, ParserInput, Token};
 
 pub(crate) fn strip(source: &str) -> String {
     let mut input = ParserInput::new(source);
@@ -15,16 +13,6 @@ pub(crate) fn strip(source: &str) -> String {
         };
         match token {
             Token::CDO | Token::CDC => edits.push((start, parser.position().byte_index())),
-            Token::Function(_)
-            | Token::CurlyBracketBlock
-            | Token::SquareBracketBlock
-            | Token::ParenthesisBlock => {
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        consume(nested);
-                        Ok(())
-                    });
-            }
             _ => {}
         }
     }
@@ -35,21 +23,4 @@ pub(crate) fn strip(source: &str) -> String {
         }
     }
     output
-}
-
-fn consume(parser: &mut Parser<'_, '_>) {
-    while let Ok(token) = parser.next_including_whitespace_and_comments().cloned() {
-        if matches!(
-            token,
-            Token::Function(_)
-                | Token::CurlyBracketBlock
-                | Token::SquareBracketBlock
-                | Token::ParenthesisBlock
-        ) {
-            let _: result::Result<_, ParseError<'_, ()>> = parser.parse_nested_block(|nested| {
-                consume(nested);
-                Ok(())
-            });
-        }
-    }
 }

@@ -1,14 +1,14 @@
 //! Rename-only CSS Modules edits preserve every unrelated authored byte.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::result;
 
-use cssparser::{Delimiter, ParseError, Parser, ParserInput, Token};
+use cssparser::{Parser, ParserInput, Token};
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
 use crate::rename_output::Scoped;
 use crate::syntax;
+use crate::token_tree::Tokens;
 
 pub(crate) struct Renamer<'a> {
     pub(crate) source: &'a str,
@@ -29,9 +29,7 @@ pub(crate) fn scope<'a>(path: &'a str, source: &'a str) -> Result<Scoped<'a>> {
         exports: BTreeMap::new(),
         defined: BTreeSet::new(),
     };
-    let mut input = ParserInput::new(source);
-    let mut parser = Parser::new(&mut input);
-    renamer.rules(&mut parser)?;
+    renamer.rules(&Tokens::new(source))?;
     renamer.edits.sort_by_key(|edit| edit.0);
     Ok(Scoped {
         source,
@@ -60,126 +58,7 @@ impl Renamer<'_> {
         self.edits.push((start, end, replacement));
     }
 
-    fn rules(&mut self, parser: &mut Parser<'_, '_>) -> Result<()> {
-        while !parser.is_exhausted() {
-            let earlier = self.defined.clone();
-            let state = parser.state();
-            let first = parser.next().cloned();
-            parser.reset(&state);
-            let at = match first {
-                Ok(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-                _ => None,
-            };
-            if at.as_deref() == Some("value") {
-                return Err(self.error(
-                    parser.position().byte_index(),
-                    "CSS Modules @value is unsupported",
-                    "use a CSS custom property or JavaScript constant",
-                ));
-            }
-            let mut own = None;
-            let mut result = Ok(());
-            let _: result::Result<_, ParseError<'_, ()>> = parser.parse_until_before(
-                Delimiter::CurlyBracketBlock | Delimiter::Semicolon,
-                |prelude| {
-                    result = if at
-                        .as_deref()
-                        .is_some_and(|name| name.ends_with("keyframes"))
-                    {
-                        self.keyframes(prelude)
-                    } else if at.as_deref() == Some("scope") {
-                        self.selector(prelude, true).map(|_| ())
-                    } else if at.is_none() {
-                        match self.selector(prelude, true) {
-                            Ok(classes) => {
-                                own = classes;
-                                Ok(())
-                            }
-                            Err(source) => Err(source),
-                        }
-                    } else {
-                        while prelude.next().is_ok() {}
-                        Ok(())
-                    };
-                    Ok(())
-                },
-            );
-            result?;
-            if matches!(parser.next(), Ok(Token::CurlyBracketBlock)) {
-                let mut result = Ok(());
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        result = if at.as_deref().is_some_and(grouping) {
-                            self.rules(nested)
-                        } else {
-                            self.body(nested, own.as_deref(), &earlier)
-                        };
-                        Ok(())
-                    });
-                result?;
-            }
-        }
-        Ok(())
-    }
-
-    fn body(
-        &mut self,
-        parser: &mut Parser<'_, '_>,
-        own: Option<&str>,
-        earlier: &BTreeSet<String>,
-    ) -> Result<()> {
-        while !parser.is_exhausted() {
-            let state = parser.state();
-            let start = parser.position().byte_index();
-            let mut prelude = String::new();
-            let _: result::Result<_, ParseError<'_, ()>> = parser.parse_until_before(
-                Delimiter::CurlyBracketBlock | Delimiter::Semicolon,
-                |value| {
-                    let begin = value.position();
-                    while value.next().is_ok() {}
-                    prelude = value.slice_from(begin).into();
-                    Ok(())
-                },
-            );
-            let end = parser.position().byte_index();
-            let delimiter = parser.next().cloned();
-            if matches!(delimiter, Ok(Token::CurlyBracketBlock))
-                && !prelude.trim_start().starts_with("--")
-            {
-                parser.reset(&state);
-                let mut own = None;
-                let earlier_nested = self.defined.clone();
-                let mut result = Ok(());
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_until_before(Delimiter::CurlyBracketBlock, |nested| {
-                        result = self.selector(nested, true).map(|value| own = value);
-                        Ok(())
-                    });
-                result?;
-                if matches!(parser.next(), Ok(Token::CurlyBracketBlock)) {
-                    let mut result = Ok(());
-                    let _: result::Result<_, ParseError<'_, ()>> =
-                        parser.parse_nested_block(|nested| {
-                            result = self.body(nested, own.as_deref(), &earlier_nested);
-                            Ok(())
-                        });
-                    result?;
-                }
-            } else {
-                self.declaration(
-                    &prelude,
-                    start,
-                    end,
-                    matches!(delimiter, Ok(Token::Semicolon)),
-                    own,
-                    earlier,
-                )?;
-            }
-        }
-        Ok(())
-    }
-
-    fn declaration(
+    pub(crate) fn declaration(
         &mut self,
         source: &str,
         offset: usize,

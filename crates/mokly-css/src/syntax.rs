@@ -1,10 +1,11 @@
 //! Token-based CSS references preserve comments, escapes, strings, and nesting.
 
-use std::result;
+use std::ops::Range;
 
-use cssparser::{ParseError, Parser, ParserInput, Token};
+use cssparser::{Parser, ParserInput, Token};
 
 use crate::error;
+use crate::token_tree::Tokens;
 
 /// A CSS URL reference with a replaceable byte range.
 #[derive(Clone, Debug)]
@@ -27,108 +28,108 @@ pub struct Reference {
 
 /// Extract nested URL functions and prelude imports without matching source strings.
 pub fn references(source: &str) -> Vec<Reference> {
-    let mut input = ParserInput::new(source);
-    let mut parser = Parser::new(&mut input);
-    let mut output = Vec::new();
-    scan(&mut parser, false, &mut output);
+    let tokens = Tokens::new(source);
+    let mut pending = vec![Scan::new(tokens.root(), false)];
+    let mut output: Vec<Reference> = Vec::new();
+    while let Some(mut frame) = pending.pop() {
+        if tokens.next_significant(&mut frame.range.clone()).is_none() {
+            if let Some(index) = frame.current_import {
+                output[index].rule = Some((frame.import_start, tokens.offset(frame.range.start)));
+            }
+            continue;
+        }
+        let Some(index) = tokens.next(&mut frame.range) else {
+            continue;
+        };
+        let node = &tokens.nodes[index];
+        let mut nested = None;
+        let value = match &node.token {
+            Token::AtKeyword(name) if name.eq_ignore_ascii_case("import") => {
+                frame.import = true;
+                frame.import_start = node.start;
+                None
+            }
+            Token::QuotedString(value) if frame.import || frame.image_set => Some((
+                value.to_string(),
+                node.end,
+                frame.image_set && !frame.import,
+            )),
+            Token::UnquotedUrl(value) => Some((value.to_string(), node.end, false)),
+            Token::Function(name) if name.eq_ignore_ascii_case("url") => {
+                let value = url_string(tokens.body(index));
+                if value.is_none() {
+                    frame.import = false;
+                }
+                value.map(|value| (value, node.after, false))
+            }
+            Token::Semicolon => {
+                if let Some(index) = frame.current_import.take() {
+                    output[index].rule = Some((frame.import_start, node.end));
+                }
+                frame.import = false;
+                None
+            }
+            Token::Function(name) => {
+                let image_set = name.eq_ignore_ascii_case("image-set")
+                    || name.eq_ignore_ascii_case("-webkit-image-set");
+                nested = Some(Scan::new(tokens.children(index), image_set));
+                None
+            }
+            Token::CurlyBracketBlock | Token::SquareBracketBlock | Token::ParenthesisBlock => {
+                frame.rule |= matches!(node.token, Token::CurlyBracketBlock);
+                nested = Some(Scan::new(tokens.children(index), false));
+                None
+            }
+            _ => None,
+        };
+        if let Some((value, end, image_set_string)) = value {
+            frame.current_import = frame.import.then_some(output.len());
+            output.push(Reference {
+                value,
+                start: node.start,
+                end,
+                import: frame.import,
+                image_set_string,
+                rule: None,
+                late: frame.rule,
+            });
+            frame.import = false;
+        }
+        pending.push(frame);
+        if let Some(nested) = nested {
+            pending.push(nested);
+        }
+    }
     output
 }
 
-fn scan(parser: &mut Parser<'_, '_>, image_set: bool, output: &mut Vec<Reference>) {
-    let mut import = false;
-    let mut import_start = 0;
-    let mut rule = false;
-    let mut current_import = None;
-    while !parser.is_exhausted() {
-        let start = parser.position().byte_index();
-        let Ok(token) = parser.next_including_whitespace_and_comments().cloned() else {
-            break;
-        };
-        let mut end = parser.position().byte_index();
-        match token {
-            Token::AtKeyword(name) if name.eq_ignore_ascii_case("import") => {
-                import = true;
-                import_start = start;
-            }
-            Token::QuotedString(value) if import || image_set => {
-                current_import = import.then_some(output.len());
-                output.push(Reference {
-                    value: value.to_string(),
-                    start,
-                    end,
-                    import,
-                    image_set_string: image_set && !import,
-                    rule: None,
-                    late: rule,
-                });
-                import = false;
-            }
-            Token::UnquotedUrl(value) => {
-                current_import = import.then_some(output.len());
-                output.push(Reference {
-                    value: value.to_string(),
-                    start,
-                    end,
-                    import,
-                    image_set_string: false,
-                    rule: None,
-                    late: rule,
-                });
-                import = false;
-            }
-            Token::Function(name) if name.eq_ignore_ascii_case("url") => {
-                let parsed: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| Ok(nested.expect_string()?.to_string()));
-                end = parser.position().byte_index();
-                if let Ok(value) = parsed {
-                    current_import = import.then_some(output.len());
-                    output.push(Reference {
-                        value,
-                        start,
-                        end,
-                        import,
-                        image_set_string: false,
-                        rule: None,
-                        late: rule,
-                    });
-                }
-                import = false;
-            }
-            Token::Semicolon => {
-                if let Some(index) = current_import.take() {
-                    output[index].rule = Some((import_start, end));
-                }
-                import = false;
-            }
-            Token::Function(name) => {
-                let is_image_set = name.eq_ignore_ascii_case("image-set")
-                    || name.eq_ignore_ascii_case("-webkit-image-set");
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        scan(nested, is_image_set, output);
-                        Ok(())
-                    });
-            }
-            Token::CurlyBracketBlock => {
-                rule = true;
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        scan(nested, false, output);
-                        Ok(())
-                    });
-            }
-            Token::SquareBracketBlock | Token::ParenthesisBlock => {
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        scan(nested, false, output);
-                        Ok(())
-                    });
-            }
-            _ => {}
+fn url_string(source: &str) -> Option<String> {
+    let mut input = ParserInput::new(source);
+    let mut parser = Parser::new(&mut input);
+    let value = parser.expect_string().ok()?.to_string();
+    parser.expect_exhausted().ok()?;
+    Some(value)
+}
+
+struct Scan {
+    range: Range<usize>,
+    image_set: bool,
+    import: bool,
+    import_start: usize,
+    current_import: Option<usize>,
+    rule: bool,
+}
+
+impl Scan {
+    fn new(range: Range<usize>, image_set: bool) -> Self {
+        Self {
+            range,
+            image_set,
+            import: false,
+            import_start: 0,
+            current_import: None,
+            rule: false,
         }
-    }
-    if let Some(index) = current_import {
-        output[index].rule = Some((import_start, parser.position().byte_index()));
     }
 }
 

@@ -12,7 +12,7 @@ use yaml_rust2::scanner::{Marker, TScalarStyle};
 use crate::diagnostic::{Code, Issue};
 
 /// A decoded authoring value and its JSON-pointer source locations.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(crate) struct Document {
     pub(crate) value: Value,
     pub(crate) positions: BTreeMap<String, SourceLocation>,
@@ -76,78 +76,114 @@ impl Reader<'_> {
         }
         Ok(())
     }
-    fn node(&mut self, event: Event, marker: Marker) -> Result<Document, Issue> {
-        let mut positions = BTreeMap::from([(String::new(), self.location(marker))]);
-        let (value, anchor) = match event {
-            Event::Scalar(text, style, anchor, tag) => {
-                self.tag(&tag, marker)?;
-                let quoted = style != TScalarStyle::Plain
-                    || tag.as_ref().is_some_and(|tag| tag.suffix == "str");
-                let value = if quoted {
-                    Value::String(text)
-                } else {
-                    scalar(&text)
-                        .ok_or_else(|| self.error(marker, "YAML value is not finite JSON data"))?
-                };
-                (value, anchor)
-            }
-            Event::Alias(anchor) => {
-                let Some(mut node) = self.anchors.get(&anchor).cloned() else {
-                    return Err(self.error(marker, "unknown or recursive YAML alias"));
-                };
-                node.positions.insert(String::new(), self.location(marker));
-                return Ok(node);
-            }
-            Event::SequenceStart(anchor, tag) => {
-                self.tag(&tag, marker)?;
-                let mut values = Vec::new();
-                loop {
-                    let (event, marker) = self.next()?;
-                    if event == Event::SequenceEnd {
-                        break;
-                    }
-                    let node = self.node(event, marker)?;
-                    append(
-                        &mut positions,
-                        &format!("/{}", values.len()),
-                        node.positions,
-                    );
-                    values.push(node.value);
-                }
-                (Value::Array(values), anchor)
-            }
-            Event::MappingStart(anchor, tag) => {
-                self.tag(&tag, marker)?;
-                let mut values = Map::new();
-                loop {
-                    let (event, key_marker) = self.next()?;
-                    if event == Event::MappingEnd {
-                        break;
-                    }
-                    let key = self.node(event, key_marker)?;
-                    let Some(key) = key.value.as_str() else {
-                        return Err(self.error(key_marker, "YAML object keys must be strings"));
+    fn node(&mut self, mut event: Event, mut marker: Marker) -> Result<Document, Issue> {
+        let mut frames: Vec<Frame> = Vec::new();
+        loop {
+            let positions = BTreeMap::from([(String::new(), self.location(marker))]);
+            let sequence = matches!(&event, Event::SequenceStart(..));
+            let (mut node, anchor) = match event {
+                Event::Scalar(text, style, anchor, tag) => {
+                    self.tag(&tag, marker)?;
+                    let quoted = style != TScalarStyle::Plain
+                        || tag.as_ref().is_some_and(|tag| tag.suffix == "str");
+                    let value = if quoted {
+                        Value::String(text)
+                    } else {
+                        scalar(&text).ok_or_else(|| {
+                            self.error(marker, "YAML value is not finite JSON data")
+                        })?
                     };
-                    if values.contains_key(key) {
-                        return Err(self.error(key_marker, format!("duplicate key {key}")));
-                    }
-                    let (event, marker) = self.next()?;
-                    let node = self.node(event, marker)?;
-                    let pointer = format!("/{}", key.replace('~', "~0").replace('/', "~1"));
-                    append(&mut positions, &pointer, node.positions);
-                    positions.insert(pointer, self.location(key_marker));
-                    values.insert(key.into(), node.value);
+                    (Document { value, positions }, anchor)
                 }
-                (Value::Object(values), anchor)
+                Event::Alias(anchor) => {
+                    let Some(mut node) = self.anchors.get(&anchor).cloned() else {
+                        return Err(self.error(marker, "unknown or recursive YAML alias"));
+                    };
+                    node.positions.insert(String::new(), self.location(marker));
+                    (node, 0)
+                }
+                Event::SequenceStart(anchor, tag) | Event::MappingStart(anchor, tag) => {
+                    self.tag(&tag, marker)?;
+                    let value = if sequence {
+                        Value::Array(Vec::new())
+                    } else {
+                        Value::Object(Map::new())
+                    };
+                    frames.push(Frame {
+                        document: Document { value, positions },
+                        anchor,
+                        key: None,
+                    });
+                    (event, marker) = self.next()?;
+                    continue;
+                }
+                Event::SequenceEnd | Event::MappingEnd => {
+                    let Some(frame) = frames.pop() else {
+                        return Err(self.error(marker, "expected a YAML value"));
+                    };
+                    (frame.document, frame.anchor)
+                }
+                _ => return Err(self.error(marker, "expected a YAML value")),
+            };
+            if anchor != 0 {
+                self.anchors.insert(anchor, node.clone());
             }
-            _ => return Err(self.error(marker, "expected a YAML value")),
-        };
-        let document = Document { value, positions };
-        if anchor != 0 {
-            self.anchors.insert(anchor, document.clone());
+            let Some(frame) = frames.last_mut() else {
+                return Ok(node);
+            };
+            match &mut frame.document.value {
+                Value::Array(values) => {
+                    append(
+                        &mut frame.document.positions,
+                        &format!("/{}", values.len()),
+                        std::mem::take(&mut node.positions),
+                    );
+                    values.push(std::mem::take(&mut node.value));
+                }
+                Value::Object(values) => {
+                    if let Some((key, location)) = frame.key.take() {
+                        let pointer = format!("/{}", key.replace('~', "~0").replace('/', "~1"));
+                        append(
+                            &mut frame.document.positions,
+                            &pointer,
+                            std::mem::take(&mut node.positions),
+                        );
+                        frame.document.positions.insert(pointer, location);
+                        values.insert(key, std::mem::take(&mut node.value));
+                    } else {
+                        let location = node
+                            .positions
+                            .get("")
+                            .cloned()
+                            .unwrap_or_else(|| self.location(marker));
+                        let Some(key) = node.value.as_str() else {
+                            return Err(Issue::new(
+                                Code::HtmlFrontMatter,
+                                "YAML object keys must be strings",
+                            )
+                            .at(location));
+                        };
+                        if values.contains_key(key) {
+                            return Err(Issue::new(
+                                Code::HtmlFrontMatter,
+                                format!("duplicate key {key}"),
+                            )
+                            .at(location));
+                        }
+                        frame.key = Some((key.into(), location));
+                    }
+                }
+                _ => return Err(self.error(marker, "expected a YAML container")),
+            }
+            (event, marker) = self.next()?;
         }
-        Ok(document)
     }
+}
+
+struct Frame {
+    document: Document,
+    anchor: usize,
+    key: Option<(String, SourceLocation)>,
 }
 
 fn append(

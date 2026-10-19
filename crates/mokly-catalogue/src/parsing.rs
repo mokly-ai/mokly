@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 
 use mokly_model::catalogue::SourceLocation;
+use serde::Deserialize;
 
 use crate::diagnostic::{Code, Issue};
 use crate::discovery::SourceKind;
@@ -24,9 +25,9 @@ pub(crate) fn parse(text: String, path: &str, kind: SourceKind) -> Result<Parsed
         let document = yaml::parse(block.header.unwrap_or(""), path, 2)?;
         (document, block.body.to_owned(), block.body_offset)
     };
-    let mut value = document.value.clone();
-    let issues = entry_fields::validate(&mut value, &document, path, kind)?;
-    let input: EntryInput = match serde_json::from_value(value) {
+    let mut value = document.clone();
+    let issues = entry_fields::validate(&mut value.value, &document, path, kind)?;
+    let input: EntryInput = match EntryInput::deserialize(&value.value) {
         Ok(input) => input,
         Err(error) => {
             return Err(Issue::new(Code::HtmlFrontMatter, error.to_string()).at(at(path, &text, 0)));

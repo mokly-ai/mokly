@@ -6,6 +6,7 @@ use crate::diagnostic::{Code, Issue};
 use crate::discovery::SourceKind;
 use crate::parsing::issue;
 use crate::yaml::Document;
+use crate::yaml_value::discard;
 
 pub(crate) fn validate(
     value: &mut Value,
@@ -97,7 +98,9 @@ pub(crate) fn validate(
                 Code::HtmlFrontMatter,
                 format!("{key} must be an array of strings"),
             ));
-            object.insert(key.into(), json!([]));
+            if let Some(previous) = object.insert(key.into(), json!([])) {
+                discard(previous);
+            }
         }
     }
     for key in ["props", "propSchema"] {
@@ -109,7 +112,9 @@ pub(crate) fn validate(
                 Code::HtmlFrontMatter,
                 format!("{key} must be an object"),
             ));
-            object.remove(key);
+            if let Some(previous) = object.remove(key) {
+                discard(previous);
+            }
         }
     }
     for key in ["variants", "steps"] {
@@ -121,7 +126,9 @@ pub(crate) fn validate(
                 Code::HtmlFrontMatter,
                 format!("{key} must be an array"),
             ));
-            object.insert(key.into(), json!([]));
+            if let Some(previous) = object.insert(key.into(), json!([])) {
+                discard(previous);
+            }
         }
     }
     if kind == SourceKind::Component {
@@ -153,7 +160,9 @@ pub(crate) fn validate(
             Code::HtmlFrontMatter,
             "colorSchemes must contain only light or dark",
         ));
-        object.remove("colorSchemes");
+        if let Some(previous) = object.remove("colorSchemes") {
+            discard(previous);
+        }
     }
     if let Some(steps) = object.get_mut("steps").and_then(Value::as_array_mut) {
         let mut valid = Vec::new();
@@ -201,7 +210,7 @@ pub(crate) fn validate(
                 valid.push(step.clone());
             }
         }
-        *steps = valid;
+        discard(Value::Array(std::mem::replace(steps, valid)));
     }
     Ok(issues)
 }
