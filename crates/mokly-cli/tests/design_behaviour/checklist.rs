@@ -1,0 +1,125 @@
+//! Checklist's depicted Changes are independent of the Action story.
+
+use mokly_html::tree::Node;
+use mokly_model::usage::CatalogueUsage;
+use mokly_model::wire_props::ComponentWireValue;
+
+use super::{catalogue, dom};
+
+/// Keep the one-entry Changes story and its sole output edit explicit.
+pub(crate) fn check() {
+    let fixture = catalogue::shared();
+    let views = fixture.views("design/components/pages/stacked/overlay-tall");
+    assert_eq!(views.len(), 2);
+    let mut artboards = Vec::new();
+    for artifact in views {
+        let document = artifact.document.as_ref().unwrap();
+        let CatalogueUsage::Ready { instances, .. } = &document.usage else {
+            panic!("ready usage")
+        };
+        let navigation: Vec<_> = instances
+            .iter()
+            .filter(|instance| {
+                instance.component_id == "design/library/chrome/catalogue-navigation"
+            })
+            .collect();
+        let desktop = !dom::class(&document.tree, "mbk-shell--desktop").is_empty();
+        artboards.push(desktop);
+        assert_eq!(navigation.len(), usize::from(desktop));
+        if desktop {
+            assert!(
+                matches!(&navigation[0].props["changedCount"], ComponentWireValue::Number(_, value) if value == "1")
+            );
+            assert!(matches!(
+                &navigation[0].props["changedOnly"],
+                ComponentWireValue::Boolean(_, true)
+            ));
+            let nav = dom::class(&document.tree, "mbk-nav-scroll");
+            assert_eq!(nav.len(), 1);
+            let labels: Vec<_> = dom::class(&nav[0].children, "mbk-nav-row")
+                .into_iter()
+                .filter(|element| element.name == "a")
+                .map(|element| {
+                    element
+                        .children
+                        .iter()
+                        .filter_map(|node| match node {
+                            Node::Text(text) => Some(text.as_str()),
+                            _ => None,
+                        })
+                        .collect::<String>()
+                })
+                .collect();
+            assert_eq!(labels, ["Checklist", "Default"]);
+            let counts = dom::class(&document.tree, "mbk-nav-filter-count");
+            assert_eq!(counts.len(), 1);
+            assert_eq!(dom::text(&counts[0].children), "1");
+        } else {
+            assert_eq!(dom::class(&document.tree, "mbk-shell--mobile").len(), 1);
+            let shortcuts = dom::class(&document.tree, "ce-mobile-location");
+            assert_eq!(shortcuts.len(), 1);
+            let count = dom::class(&shortcuts[0].children, "ce-change-count");
+            assert_eq!(count.len(), 1);
+            assert_eq!(dom::text(&count[0].children), "1");
+        }
+        let inspector = dom::class(&document.tree, "ce-inspector");
+        assert_eq!(inspector.len(), 1);
+        let panels = dom::elements(&inspector[0].children);
+        let open: Vec<_> = panels
+            .iter()
+            .filter(|element| element.name == "details" && element.get("open").is_some())
+            .map(|element| element.get("data-panel").unwrap())
+            .collect();
+        assert_eq!(open, ["info"]);
+        let usage = panels
+            .iter()
+            .find(|element| element.get("data-panel") == Some("usage"))
+            .unwrap();
+        let usage_text = dom::text(&usage.children);
+        assert!(
+            usage_text.contains("No screens or components use Checklist yet."),
+            "{usage_text}"
+        );
+        assert!(!usage_text.contains("Affected screens"), "{usage_text}");
+        for preview in dom::class(&document.tree, "ce-preview-view") {
+            let before = dom::class(&preview.children, "mbk-stack-layer--before");
+            let after = dom::class(&preview.children, "mbk-stack-layer--after");
+            assert_eq!((before.len(), after.len()), (1, 1));
+            let labels = |nodes: &[Node]| {
+                dom::class(nodes, "ce-checklist-label")
+                    .into_iter()
+                    .map(|element| dom::text(&element.children))
+                    .collect::<Vec<_>>()
+            };
+            let before_labels = labels(&before[0].children);
+            let after_labels = labels(&after[0].children);
+            assert_eq!((before_labels.len(), after_labels.len()), (10, 10));
+            let changed: Vec<_> = before_labels
+                .iter()
+                .zip(&after_labels)
+                .enumerate()
+                .filter(|(_, (left, right))| left != right)
+                .map(|(index, _)| index)
+                .collect();
+            assert_eq!(changed, [4]);
+            assert_eq!(before_labels[4], "Pick your interests");
+            assert_eq!(after_labels[4], "Choose your topics");
+            for layer in [before[0], after[0]] {
+                let rows: Vec<_> = dom::elements(&layer.children)
+                    .into_iter()
+                    .filter(|element| element.name == "li")
+                    .collect();
+                assert_eq!(
+                    rows.iter()
+                        .enumerate()
+                        .filter(|(_, row)| row.get("data-complete").is_some())
+                        .map(|(index, _)| index)
+                        .collect::<Vec<_>>(),
+                    [0, 1, 2]
+                );
+            }
+        }
+    }
+    artboards.sort();
+    assert_eq!(artboards, [false, true]);
+}

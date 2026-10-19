@@ -157,7 +157,7 @@ stylesheet stays scoped to its twenty owning entries. Watched Serve reloads
 configured and declared CSS. Shared fixtures and screen parts live beside their
 owning screen modules.
 
-The Rust behaviour tests over the design catalogue classify all nine shared
+The on-demand Rust attribution matrix over the design catalogue classifies all nine shared
 sheets once per scenario. Rendered stylesheet links pin 50, 20, 0, or all
 `design/` screens and 69 component saved-variant entries. A parent component
 renders its own views from its own props. The tests keep exact per-entry
@@ -173,6 +173,10 @@ links, selection semantics, counts, missing states, responsive overflow, mask
 geometry, and the stacked frames' layers, blending, single scroller and drawn
 offset; the Rust behaviour tests pin the stacked frames' structure, tie every
 comparison caption to its recorded change, and pin the Checklist's Changes.
+These four focused checks run in the default Rust workspace suite. Run them
+alone with `cargo test -p mokly-cli --test design_behaviour_tests`. They prepare
+the authored catalogue once for overlapping tests and render documents on
+demand. The full attribution matrix uses the separate `design-matrix` feature.
 Visually inspect all rendered mobile and desktop pages in the served frames and
 in the `mokly build` output, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the
