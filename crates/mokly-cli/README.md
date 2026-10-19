@@ -242,8 +242,9 @@ the complete readiness marker before sending SIGINT. Test cancellation closes
 the watcher, kills the fixture's process group, waits for the inherited output
 pipes to close, and removes its output. On Unix the abort regression waits for
 the complete native gate marker before cancellation, so the shim has started
-the held native process. Windows retains the immediate-abort check and uses
-`taskkill /T /F` for cleanup.
+the held native process. The regression combines local cancellation with the
+test signal and closes the marker watcher before fixture removal. Windows
+retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
 
 ### Key Code
 

@@ -28,16 +28,16 @@ test(
   { timeout: 120_000 },
   async (context) => {
     const root = await recoveryFixture(context.signal);
-    context.after(() => cleanup(root, "build"));
     const signal = new AbortController();
     const held = faultReadiness(root, "config", context.signal);
     context.after(() => held.close());
+    context.after(() => cleanup(root, "build"));
     const running = signalFault(
       root,
       "build",
       "plain",
       "unreached,config",
-      signal.signal,
+      AbortSignal.any([signal.signal, context.signal]),
     );
     const stopped = assert.rejects(running, /fixture cancelled/u);
     if (process.platform !== "win32") {
@@ -51,6 +51,7 @@ test(
       );
     }
     signal.abort(new Error("fixture cancelled"));
+    held.close();
     await stopped;
   },
 );
