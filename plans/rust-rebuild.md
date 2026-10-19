@@ -1223,6 +1223,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
           one-worker and three-worker admission bounds and cancellation.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/interleaving-measurement.md`.
     - Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/merge-decisions.md`.
+    - [x] Release replaced base captures independently of cached delivery files.
+          Keep the 60-second snapshot trim for duplicated delivery bytes, count
+          the separate capture budget, and assert the real Serve capture trace.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
     - [ ] Repeat the combined measurement after shared-engine batching merges.
           Each run creates a fresh base runtime, bundle cache, and CSS context.
           Cached source and dependency reuse still publishes preparing. The
