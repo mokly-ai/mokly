@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { deferred, scenarios } from "../scripts/large/benchmark.js";
+import { scenarios } from "../scripts/large/benchmark.js";
 import { processRows, treeRss } from "../scripts/large/memory.js";
 import { commitFixture } from "../scripts/large/setup.js";
 import { prepareToolchain } from "../scripts/large/toolchain.js";
@@ -15,13 +15,8 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const run = promisify(execFile);
 
-test("Changes uses the delivered benchmark instead of a deferred result", () => {
+test("the harness offers all four measured scenarios", () => {
   assert.deepEqual(scenarios, ["build", "serve", "changes", "watch"]);
-  assert.equal(deferred("build"), undefined);
-  assert.equal(deferred("serve"), undefined);
-  assert.equal(deferred("changes"), undefined);
-  assert.equal(deferred("watch")?.owner, "M11");
-  assert.equal(deferred("watch")?.status, "deferred");
 });
 
 test("RSS samples include descendants and exclude unrelated processes", () => {

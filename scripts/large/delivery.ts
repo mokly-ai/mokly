@@ -71,23 +71,23 @@ export async function delivered(
     ready?: boolean;
   } = {},
 ) {
-  await page.waitForFunction(
+  const handle = await page.waitForFunction(
     ({ afterRevision = 0, previousGeneration, ready = true }) => {
       const state = window.moklyBenchmark;
-      const value = state?.index?.value;
+      if (!state?.index) return false;
+      if (state.errors.length) throw new Error(state.errors.join("\n"));
+      const value = state.index.value;
       if (!value || typeof value !== "object" || !("revision" in value))
         return false;
       if (typeof value.revision !== "number" || value.revision <= afterRevision)
         return false;
       if (!("deploymentId" in value)) return false;
-      if (
-        !state.events.some(
-          (event) =>
-            event.revision === value.revision &&
-            event.deploymentId === value.deploymentId,
-        )
-      )
-        return false;
+      const publication = state.events.find(
+        (event) =>
+          event.revision === value.revision &&
+          event.deploymentId === value.deploymentId,
+      );
+      if (!publication) return false;
       if (previousGeneration !== undefined) {
         if (
           !("live" in value) ||
@@ -98,29 +98,31 @@ export async function delivered(
         )
           return false;
       }
-      return (
-        !ready ||
-        ("changesStatus" in value &&
+      if (
+        ready &&
+        !(
+          "changesStatus" in value &&
           (value.changesStatus === "ready" ||
-            value.changesStatus === "unavailable"))
-      );
+            value.changesStatus === "unavailable")
+        )
+      )
+        return false;
+      return { value, publication, indexReceivedMs: state.index.receivedMs };
     },
     options,
     { timeout: 60_000 },
   );
-  const observed = await page.evaluate(() => window.moklyBenchmark);
-  if (observed.errors.length) throw new Error(observed.errors.join("\n"));
-  const index = readCatalogueIndex(observed.index?.value);
+  const observed = await handle.jsonValue();
+  await handle.dispose();
+  if (!observed) throw new Error("Missing delivered publication");
+  const index = readCatalogueIndex(observed.value);
   if (options.ready !== false && index.changesStatus !== "ready")
     throw new Error(`Delivered Changes is ${index.changesStatus}`);
-  const publication = observed.events.find(
-    (event) =>
-      event.revision === index.revision &&
-      event.deploymentId === index.deploymentId,
-  );
-  if (!publication || !observed.index)
-    throw new Error("Missing delivered publication");
-  return { index, publication, indexReceivedMs: observed.index.receivedMs };
+  return {
+    index,
+    publication: observed.publication,
+    indexReceivedMs: observed.indexReceivedMs,
+  };
 }
 
 export function changedEntries(index: CatalogueReadModel) {

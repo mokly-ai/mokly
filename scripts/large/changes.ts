@@ -22,7 +22,9 @@ export async function availableReview(
   if (!current.index.comparisonUrl)
     throw new Error("Ready Changes has no review URL");
   const raw: unknown = await page.evaluate(async (url) => {
-    const response = await fetch(new URL(url, location.origin));
+    const response = await fetch(new URL(url, location.origin), {
+      signal: AbortSignal.timeout(60_000),
+    });
     if (!response.ok)
       throw new Error(`Review returned HTTP ${response.status}`);
     return response.json();

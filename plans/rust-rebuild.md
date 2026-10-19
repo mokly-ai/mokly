@@ -1711,7 +1711,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       in the timings contract once approved.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
   - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
-  - [ ] Connect Changes and watch to their delivered browser events.
+  - [x] Connect Changes and watch to their delivered browser events.
+        Evidence: `.context/m14-harness/browser-focused.log` and
+        `.context/m14-harness/watch-smoke/.context/measurements.json`.
   - [ ] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
         per-entry charges until the capacity measurements support a decision.

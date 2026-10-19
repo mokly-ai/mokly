@@ -42,6 +42,14 @@ Changes verifies the browser's own event stream, delivered index, Changes
 control, and advertised review. The unrelated CSS edit must list no Changes.
 Its report includes each classification duration and the union of CSS analysis
 intervals on that classification's core clock. These are observations.
+Watch uses one Serve process. It edits one screen, one component, and one
+stylesheet in turn. Each edit records the browser publication, changed frame,
+ready index, Changes control, and available review. The browser clock starts
+immediately before the driver requests the file write. This includes driver
+dispatch. Publication and index timestamps come from the shell's own stream
+and fetch responses. Frame and control times include browser assertion work.
+Every edit restores its original bytes. The next edit waits for the restored
+frame and Changes state. A failed run keeps completed edits in its report.
 For ordinary development, reuse a generated configuration with
 `npx mokly serve --config .context/large-html/mokly.config.json`.
 
