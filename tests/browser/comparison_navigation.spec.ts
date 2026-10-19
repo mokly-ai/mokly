@@ -78,7 +78,7 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
 }) => {
   const index = await comparisonIndex(request, baseURL);
   const included = changesPaths(index);
-  expect(included).toHaveLength(17);
+  expect(included).toHaveLength(18);
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await expect(
     page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
@@ -93,6 +93,7 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
   // the included screens and the unmodified parent of a changed variant.
   const screens = (included: boolean) =>
     index.screens
+      .filter((entry) => entry.path.startsWith("screens/"))
       .filter((entry) =>
         included
           ? entry.changes?.included ||
@@ -112,6 +113,7 @@ test("Changes lists, counts and marks exactly the entries the index includes", a
         ...included,
         comparisonPaths.quietParent,
         comparisonPaths.screenParent,
+        comparisonPaths.folderIndex,
       ].sort(),
     );
   await expect(navRow(page, comparisonPaths.quietParent)).not.toHaveAttribute(

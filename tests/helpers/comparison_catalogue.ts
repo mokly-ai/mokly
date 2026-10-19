@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import {
+  groupPaths,
+  groupStylesheets,
+  writeGroups,
+} from "./comparison_entry_groups.js";
 import { git, write } from "./static_changes.js";
 
 /** Stable authored entries for copied comparison and viewer UI journeys. */
@@ -28,6 +33,7 @@ export const comparisonPaths = {
   screenVariant: "screens/workspace/error",
   screenSibling: "screens/workspace/empty",
   screenRemovedVariant: "screens/workspace/gone",
+  ...groupPaths,
 } as const;
 
 type Side = "Before" | "After";
@@ -128,6 +134,7 @@ async function writeSide(root: string, side: Side): Promise<void> {
   await write(root, "specs/screens/workspace.screen.html", workspace(side));
   await write(root, "specs/components/card.component.html", card(side));
   await write(root, "specs/components/tag.component.html", tag(side));
+  await writeGroups(root, side);
 }
 
 /** Write exactly two commits in an isolated repository; never read checkout history. */
@@ -149,6 +156,7 @@ export async function createComparisonCatalogue(root: string): Promise<void> {
           stylesheets: ["theme.css"],
           darkStylesheets: ["dusk.css"],
         },
+        ...groupStylesheets,
         { match: "**/*.html", stylesheets: ["theme.css"] },
       ],
     }),
