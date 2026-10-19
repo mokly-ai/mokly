@@ -2043,6 +2043,13 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs`:
+    `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`
+    observed zero stop spans instead of one during CI-gates verification.
+    Its exact rerun and the full workspace rerun passed. Suspected source:
+    concurrent tracing-subscriber capture; not proven. Separate branch.
+    Evidence: `.context/ci-gates/repository-remainder.log` and
+    `.context/ci-gates/sidecar-rerun.log`.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
