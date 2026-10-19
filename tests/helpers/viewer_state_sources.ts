@@ -24,13 +24,15 @@ export const viewerStatePaths = {
   removedConsumer: "viewer/legacy",
   lightOnlyChanged: "viewer/pale",
   lightOnlyRemoved: "viewer/faded",
+  fragmentPage: "viewer/handbook",
 } as const;
 
 /**
  * Add the viewer-state shapes under `viewer/`: an unmodified screen with
  * unmodified, changed, and removed variants; an unmodified component whose
- * Night variant changes only in Dark; a removed screen that used Card; and a
- * changed and a removed light-only screen. Specs opt in per file.
+ * Night variant changes only in Dark; a removed screen that used Card; a
+ * changed and a removed light-only screen; and an unchanged page with an
+ * anchor and a catalogue link. Specs opt in per file.
  */
 export const addViewerStateSources: ComparisonAdditions = async (
   root,
@@ -120,6 +122,14 @@ export const addViewerStateSources: ComparisonAdditions = async (
         ],
       },
       '<span class="chip">{{label}}</span>',
+    ),
+  );
+  await write(
+    root,
+    "specs/viewer/handbook.page.html",
+    source(
+      { title: "Handbook" },
+      '<!doctype html><html><head><title>Handbook</title></head><body><h1>Handbook</h1><p><a href="mock:screens/stable">Stable screen</a></p><div style="height:1600px">Introduction</div><h2 id="overview">Overview</h2><div style="height:1600px">Details</div></body></html>',
     ),
   );
   await write(
