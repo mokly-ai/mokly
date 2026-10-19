@@ -13,25 +13,20 @@ use mokly_cli::grammar::{Common, Serve};
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::{serve_errors, serve_output};
-use mokly_server::application::Application;
-use mokly_server::assets::{PackageAssets, ViewerAssets};
-use mokly_server::background::{Background, UsagePass};
-use mokly_server::clock::MonotonicClock;
 use mokly_server::entropy::{Entropy, RandomEntropy};
 use mokly_server::error::{InternalError, ServerError};
-use mokly_server::preview::MemoryPreviews;
-use mokly_server::publication::SharedPublication;
 use mokly_server::runtime::{ServerRuntime, TokioServer};
-use mokly_server::snapshot::Projector;
-use mokly_server::work::{Workers, parallelism};
+use mokly_server::work::parallelism;
 use tokio::sync::{mpsc, watch};
 
 use crate::serve_candidates::{CandidateWork, ManualCandidates};
+use crate::serve_delivery::{self, StateInputs};
+use crate::serve_git::{ServeGit, SystemRunners};
 use crate::serve_lifecycle::ServeLifecycle;
+use crate::serve_progress::{Progress, ServeProgress};
 use crate::serve_rebuild::{ManualRebuilds, ServeActions};
 use crate::serve_reporter::ServeLines;
 use crate::serve_services::ServeServices;
-use crate::serve_state::{NativeServeState, ServeStateFactory};
 use crate::serve_timing::ServeTiming;
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
 use crate::serve_watch::{WatchInputs, WatchedInputs};
@@ -65,6 +60,15 @@ pub(super) fn run(
         }
     };
     let cancellation: Arc<dyn Cancellation> = Arc::new(ServeCancellation::default());
+    let progress = Arc::new(ServeProgress::new(
+        style.clone(),
+        terminal,
+        cancellation.clone(),
+        std::io::stdout().is_terminal(),
+    ));
+    let diagnostics = progress.clone().diagnostics(redactor.clone());
+    let terminal: Arc<dyn Terminal> = progress.clone();
+    let progress: Arc<dyn Progress> = progress;
     let warnings: Arc<dyn WarningScopes> = Arc::new(ServeWarnings::new(
         cancellation.clone(),
         terminal.clone(),
@@ -79,7 +83,7 @@ pub(super) fn run(
         style: style.clone(),
         redactor: redactor.clone(),
     });
-    let services = match ServeServices::new(&cwd, common, redactor.clone(), cancellation.clone()) {
+    let services = match ServeServices::new(&cwd, common, diagnostics, cancellation.clone()) {
         Ok(services) => services,
         Err(error) => {
             reporter.preparation_failed(attempt.as_ref(), &error);
@@ -106,8 +110,17 @@ pub(super) fn run(
             Ok(signals) => signals,
             Err(source) => return Err(ServerError::Internal(InternalError::Io { source })),
         };
+        let animation = {
+            let progress = progress.clone();
+            let stopped = receiver.clone();
+            tokio::spawn(async move {
+                progress.animate(stopped).await;
+            })
+        };
         let phase = Arc::new(serve_shutdown::Phase::default());
+        let git = Arc::new(ServeGit::new(Arc::new(SystemRunners)));
         let lifecycle = Arc::new(ServeLifecycle {
+            git: git.clone(),
             watch: Mutex::new(None),
             cancellation: cancellation.clone(),
             pool: services.pool.clone(),
@@ -162,35 +175,32 @@ pub(super) fn run(
             if *receiver.borrow() {
                 return Ok(ExitCode::SUCCESS);
             }
-            let assets: &dyn ViewerAssets = &PackageAssets { tree: tree.clone() };
-            let dist = crate::viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
-            let states: Arc<dyn ServeStateFactory> = Arc::new(NativeServeState {
-                tree: tree.clone(),
-                projector: Arc::new(Projector {
-                    deployment_id: entropy.secret(),
-                    render_token: entropy.secret(),
-                }),
-                assets: assets.load(&dist)?,
-                base: common.base.clone(),
-            });
+            let states = serve_delivery::states(StateInputs {
+                services: &services,
+                common,
+                style,
+                entropy: entropy.clone(),
+                git,
+                warnings: warnings.clone(),
+                progress: progress.clone(),
+                reporter: reporter.clone(),
+                cancellation: cancellation.clone(),
+                terminal: terminal.clone(),
+                redactor: redactor.clone(),
+            })?;
             let snapshot = states.create(&prepared, 1, attempt.clone())?;
             let base = snapshot.index.base.clone().unwrap_or_default();
-            let publications = Arc::new(SharedPublication::new(snapshot));
-            let work = Arc::new(Workers::new(workers, reporter.clone()));
-            let background: Arc<dyn Background> = Arc::new(UsagePass {
-                publications: publications.clone(),
-                work: work.clone(),
-                diagnostics: reporter.clone(),
-            });
-            let app = Arc::new(Application::new(
-                publications.clone(),
-                Arc::new(MemoryPreviews::new(
-                    Arc::new(MonotonicClock::default()),
-                    entropy.secret(),
-                )),
-                work,
+            let delivery = serve_delivery::create(
+                snapshot,
+                workers,
+                entropy.clone(),
                 reporter.clone(),
-            ));
+                !options.no_watch,
+                services.sidecars.clone(),
+            );
+            let publications = delivery.publications;
+            let background = delivery.background;
+            let app = delivery.app;
             let transport: &dyn ServerRuntime = &TokioServer;
             let server = transport.bind(options.port.unwrap_or(4173)).await?;
             let url = format!("http://{}", server.address());
@@ -216,11 +226,6 @@ pub(super) fn run(
                             timing.elapsed(),
                         ));
                     });
-                    terminal.stdout(&serve_output::changes_unavailable(
-                        style,
-                        "Git comparison is unavailable in this build.",
-                        &redactor,
-                    ));
                 })
             {
                 reserved = Some(server);
@@ -275,6 +280,7 @@ pub(super) fn run(
         }
         stop.send_replace(true);
         let shutdown = shutdown.await;
+        let _ = animation.await;
         signals.abort();
         let finished = serve_shutdown::finish(shutdown);
         drop(reserved);

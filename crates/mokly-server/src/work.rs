@@ -1,45 +1,29 @@
 //! Blocking graph admission, per-page replacement, cancellation, and draining.
 
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
 
 use async_trait::async_trait;
 use mokly_model::data::Props;
-use tokio::sync::{Notify, OwnedSemaphorePermit, Semaphore};
+use tokio::sync::Semaphore;
 
 use crate::assets::File;
 use crate::backend::{Documents, PreviewDocument};
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
+use crate::foreground::Foreground;
 use crate::priority::Priority;
 use crate::public_read::OpenedFile;
 use crate::render_request::Rejection;
 use crate::revision::RenderLease;
-
-struct Page {
-    gate: Arc<Semaphore>,
-    next: AtomicU64,
-    changed: Notify,
-    queued: Mutex<Weak<OwnedSemaphorePermit>>,
-}
+use crate::work_page::Page;
 
 /// Bound native HTTP and render scheduling to available machine parallelism.
 pub fn parallelism(available: usize) -> u32 {
     available.clamp(1, 8) as u32
 }
-impl Default for Page {
-    fn default() -> Self {
-        Self {
-            gate: Arc::new(Semaphore::new(1)),
-            next: AtomicU64::new(0),
-            changed: Notify::new(),
-            queued: Mutex::new(Weak::new()),
-        }
-    }
-}
-
 /// Injectable HTTP worker scheduler.
 #[cfg_attr(test, unimock::unimock(api = WorkMock))]
 #[async_trait]
@@ -76,6 +60,12 @@ pub struct Workers {
 }
 
 impl Workers {
+    /// Share whole-request priority with the command's sidecar admission.
+    pub fn with_foreground(mut self, shared: Arc<dyn Foreground>) -> Self {
+        self.priority = Arc::new(Priority::new(shared));
+        self
+    }
+
     /// Create a bounded scheduler without starting threads or jobs.
     pub fn new(parallelism: u32, diagnostics: Arc<dyn Diagnostics>) -> Self {
         let parallelism = parallelism.max(1);

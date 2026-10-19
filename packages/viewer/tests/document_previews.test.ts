@@ -20,7 +20,6 @@ test("removed document descriptors and requests retain historical schemes", asyn
     data,
     { comparisonUrl },
     "https://example.test",
-    false,
   );
   assert.ok(request);
   assert.ok(request.endpoint.pathname.endsWith("/previews/guide/index.json"));
@@ -61,9 +60,12 @@ test("removed document descriptors and requests retain historical schemes", asyn
     ],
   );
   assert.equal(
-    previewEndpoint(data, undefined, "https://example.test", false)?.endpoint
-      .search,
-    "?page=guide",
+    previewEndpoint(data, undefined, "https://example.test"),
+    undefined,
+  );
+  assert.equal(
+    previewEndpoint(data, { comparisonUrl: null }, "https://example.test"),
+    undefined,
   );
   for (const colorSchemes of [
     undefined,

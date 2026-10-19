@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { completed } from "./helpers/mokly_serve.js";
 import { noisySidecar } from "./helpers/sidecar_diagnostics.js";
 
 for (const verb of ["build", "serve"] as const)
@@ -13,12 +14,15 @@ for (const verb of ["build", "serve"] as const)
     async (context) => {
       const running = await noisySidecar(context, verb);
       if (verb === "serve") {
-        await running.ready();
+        const url = await running.ready();
         assert.deepEqual(await running.completion(), {
           written: "yes",
           tail: null,
           exit: null,
         });
+        const { index } = await completed(url, context.signal, "home");
+        assert.equal(index.changesStatus, "unavailable");
+        await running.gitFailure();
         running.child.kill("SIGINT");
       }
       const result = await running.result;
@@ -31,12 +35,18 @@ for (const verb of ["build", "serve"] as const)
       assert.equal(result.signal, null);
       const pieces = result.stderr.split("\n").filter(Boolean);
       assert.ok(pieces.length > 0);
+      const isGitFailure = (line: string) =>
+        line.startsWith("[mokly/git-failed]");
+      assert.equal(
+        pieces.filter(isGitFailure).length,
+        verb === "serve" ? 1 : 0,
+      );
       for (const piece of pieces) {
         assert.ok(
           piece.length <= 65_536,
           `oversized diagnostic: ${piece.length}`,
         );
-        assert.match(piece, /^(L+|R+|S+|T+)$/u);
+        if (!isGitFailure(piece)) assert.match(piece, /^(L+|R+|S+|T+)$/u);
       }
       assert.equal(
         pieces

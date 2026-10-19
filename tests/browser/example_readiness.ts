@@ -30,7 +30,11 @@ export async function exampleReady(
         )
           ready = false;
       }
-      if (ready) return;
+      if (ready) {
+        if (index.changesStatus !== "unavailable")
+          throw new Error("Shared example Changes must be unavailable");
+        return;
+      }
       if ((await stream.read()).done)
         throw new Error("Example publication stream ended before readiness");
     }

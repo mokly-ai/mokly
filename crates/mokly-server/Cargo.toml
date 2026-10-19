@@ -10,6 +10,8 @@ publish = false
 mock = []
 
 [dependencies]
+mokly-css = { workspace = true }
+mokly-compare = { workspace = true }
 mokly-model = { workspace = true }
 mokly-catalogue = { workspace = true }
 mokly-graph = { workspace = true }
@@ -43,3 +45,4 @@ reqwest = { version = "0.13.5", features = ["json", "stream"] }
 tempfile = "3.27.0"
 tokio = { version = "1.53.3", features = ["test-util"] }
 tower = { version = "0.5.3", features = ["util"] }
+tracing-subscriber = "0.3.23"

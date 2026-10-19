@@ -24,8 +24,12 @@ generation: `comparisonUrl` is the artifact-root-relative path of its
 `review.json`, or `null` while Changes is not ready, is unavailable, or is
 disabled. A selected-only generation of the
 [on-demand contract](./mokly-on-demand.md) leaves it `null`, and a superseded
-completion cannot set it. Only reading a generation renews its retention;
-publishing the pointer does not. A route whose generation is gone returns 404
+completion cannot set it. Serve keeps the advertised classification's JSON
+while the current index names it. Its snapshot files expire after 60 idle
+seconds and can be captured again from the retained base handles. Reading a
+generation renews its idle retention. After replacement, its JSON follows the
+same idle rule. All retained bytes count against the selected-comparison bounds.
+A route whose generation is gone returns 404
 and never redirects or starts work. The shell derives every snapshot and
 preview URL from that response URL and the entry's path; no descriptor and no
 second pointer exists.
@@ -46,8 +50,10 @@ The development shell requests a comparison on demand at
 `/mokly-viewer/diffs/review.json?path=<entry path>` under the
 [selected comparison contract](./mokly-selected-comparisons.md), and a
 removed page's or document's preview under the
-[removed previews contract](./mokly-removed-previews.md). The response
-redirects to an immutable generation named `selected-<uuid>`, whose files are
+[removed previews contract](./mokly-removed-previews.md). Removed component
+parents and variants request the index's advertised generation in every host.
+They renew that same URL before loading another view or mode.
+The selected endpoint response redirects to an immutable generation named `selected-<uuid>`, whose files are
 captured in memory from the render cache and the base-side render; snapshot
 URLs resolve relative to that response URL. A selected generation projects the
 completed background classification onto the selected entry; it renders
