@@ -1,7 +1,8 @@
 /**
  * An entry detail's `reasons` under the shell delivery contract: the review
- * v8 reason shapes in sorted unique order, ready included membership only,
- * and additive fields ignored as the detail's other records ignore them.
+ * v8 reason shapes in sorted unique order, with additive fields ignored as
+ * the detail's other records ignore them. A pair whose reasons disagree with
+ * the index stays accepted, so a detail written before them still loads.
  */
 
 import assert from "node:assert/strict";
@@ -155,38 +156,30 @@ test("a reason ignores additive fields but keeps its own", () => {
   ]);
 });
 
-test("reasons exist exactly while the index record is ready and included", () => {
+test("the fence keeps a pair whose reasons disagree with the index", () => {
+  // A detail written before decision D1 has no reasons, and a host can pair
+  // its own records; Details then ignore what the index does not list.
   const index = indexFixture();
   const fence = (path: string, reasons?: unknown) =>
     fenceDetail(index, { path }, readEntryDetail(current(path, reasons))).kind;
-  assert.equal(
-    fence("product/browse/home", [{ kind: "material" }]),
-    "accepted",
-  );
-  assert.equal(fence("product/browse/home"), "rejected");
-  // A pure move is included with no reason.
-  assert.equal(fence("product/browse/details", []), "accepted");
-  assert.equal(fence("product/browse/details"), "rejected");
-  assert.equal(fence("product", [{ kind: "added" }]), "accepted");
-  // Ready but not included, so no reason may arrive.
-  assert.equal(fence("guide"), "accepted");
-  assert.equal(fence("guide", []), "rejected");
-  assert.equal(fence("components/action", [{ kind: "material" }]), "rejected");
-  // Changes that are not ready yet carry no reason either.
+  for (const [path, reasons] of [
+    ["product/browse/home", [{ kind: "material" }]],
+    ["product/browse/home", undefined],
+    ["product/browse/details", []],
+    ["product/browse/details", undefined],
+    ["guide", undefined],
+    ["guide", []],
+    ["components/action", [{ kind: "material" }]],
+  ] as const)
+    assert.equal(fence(path, reasons), "accepted", `${path} ${reasons}`);
   const pending = pendingIndex();
   const home = { path: "product/browse/home" };
-  assert.equal(
-    fenceDetail(pending, home, readEntryDetail(current(home.path))).kind,
-    "accepted",
-  );
-  assert.equal(
-    fenceDetail(
-      pending,
-      home,
-      readEntryDetail(current(home.path, [{ kind: "material" }])),
-    ).kind,
-    "rejected",
-  );
+  for (const reasons of [undefined, [{ kind: "material" }]])
+    assert.equal(
+      fenceDetail(pending, home, readEntryDetail(current(home.path, reasons)))
+        .kind,
+      "accepted",
+    );
 });
 
 test("a removed detail carries its removed reason", () => {
@@ -206,6 +199,6 @@ test("a removed detail carries its removed reason", () => {
   delete raw.reasons;
   assert.equal(
     fenceDetail(index, request, readEntryDetail(raw)).kind,
-    "rejected",
+    "accepted",
   );
 });

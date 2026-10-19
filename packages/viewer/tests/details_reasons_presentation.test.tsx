@@ -166,3 +166,21 @@ test("a publication without reasons clears the held ones", () => {
     0,
   );
 });
+
+test("Details ignore reasons that the index does not list", () => {
+  // The index keeps the screen outside Changes, so its detail's reasons stay
+  // hidden, and an included record whose detail predates reasons shows none.
+  const outside = workspace("product/browse/home/empty", ({ current }) => {
+    current["product/browse/home/empty"]!.reasons = [{ kind: "material" }];
+  });
+  assert.equal(outside.reasons, undefined);
+  const earlier = workspace(HOME, ({ current }) => {
+    delete current[HOME]!.reasons;
+  });
+  assert.equal(earlier.reasons, undefined);
+  for (const data of [outside, earlier])
+    assert.equal(
+      count(renderToStaticMarkup(<WorkspaceEvidence data={data} />), MATERIAL),
+      0,
+    );
+});

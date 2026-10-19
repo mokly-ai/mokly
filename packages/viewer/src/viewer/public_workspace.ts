@@ -125,6 +125,9 @@ export function publicWorkspace(
     source.views.some((view) => view.usage.status === "omitted"),
   );
   const entryStatus = publicEntryStatus(original);
+  // Reasons describe a Changes row; a record outside Changes shows none.
+  const listed =
+    original.changes.status === "ready" && original.changes.included;
   const variants = rowSources.map((source) =>
     workspaceRow(model, source, parentRemoved),
   );
@@ -176,7 +179,7 @@ export function publicWorkspace(
     ...(detail ? {} : { usageComplete: false }),
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
-    ...(held?.reasons ? { reasons: held.reasons } : {}),
+    ...(listed && held?.reasons ? { reasons: held.reasons } : {}),
     ...(resourceEvidence.length ? { resourceEvidence } : {}),
   };
 }
