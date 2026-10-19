@@ -17,6 +17,7 @@ use crate::closure::{Closure, GeneratedResources};
 use crate::error::Result;
 use crate::key::NodeKey;
 use crate::resource_inputs::ResourceObserver;
+use crate::workers::ComparisonWorker;
 
 /// A document's input key and render recipe, available before rendering.
 #[derive(Clone, Debug)]
@@ -70,6 +71,15 @@ pub struct ComparisonCapture {
     pub encoded_bytes: usize,
 }
 
+/// One transient comparison input, released after the caller encodes its batch.
+#[derive(Debug)]
+pub struct ComparisonDocument {
+    /// Exact document bytes and composed tree.
+    pub artifact: Arc<Artifact>,
+    /// Validated authored resources and comparison evidence.
+    pub closure: Closure,
+}
+
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
@@ -92,6 +102,45 @@ pub trait RenderGeneration: GeneratedResources {
     fn render(&self, route: &str) -> Result<Arc<Artifact>>;
     /// Compose comparison material before closure checks, without changing document bytes.
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>>;
+    /// Maximum number of transient comparison inputs in one scheduled batch.
+    fn comparison_parallelism(&self) -> usize {
+        1
+    }
+    /// Schedule a wrapper's own input checks on this generation's workers.
+    fn schedule_comparison(
+        &self,
+        routes: &[String],
+        worker: &dyn ComparisonWorker,
+    ) -> Vec<Result<ComparisonDocument>> {
+        routes.iter().map(|route| worker.input(route)).collect()
+    }
+    /// Compose and validate one input after checking command cancellation.
+    fn comparison_input(&self, route: &str) -> Result<ComparisonDocument> {
+        self.check_cancelled()?;
+        let artifact = {
+            let span = tracing::info_span!("review.capture-document", status = "error");
+            let _entered = span.enter();
+            let artifact = self.comparison_document(route)?;
+            span.record("status", "ok");
+            artifact
+        };
+        let closure = {
+            let span = tracing::info_span!("review.capture-closure", status = "error");
+            let _entered = span.enter();
+            let closure = self.closure(route)?;
+            span.record("status", "ok");
+            closure
+        };
+        Ok(ComparisonDocument { artifact, closure })
+    }
+    /// Return one input per route in request order, or the first route's failure.
+    /// Callers limit each batch to comparison_parallelism; wrappers default to serial work.
+    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
+        routes
+            .iter()
+            .map(|route| self.comparison_input(route))
+            .collect()
+    }
     /// Read a confined resource by its public route. Missing regular targets return None.
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>>;
     /// Hash a resource with bounded memory; absent resources return None.

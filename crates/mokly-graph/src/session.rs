@@ -21,10 +21,10 @@ use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
 use crate::resource_inputs::ResourceObserver;
 use crate::types::{
-    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, ResourcePlan,
-    TemporaryDocument,
+    ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
+    ResourcePlan, TemporaryDocument,
 };
-use crate::workers::{RenderWorkers, check_cancelled};
+use crate::workers::{ComparisonWorker, RenderWorkers, check_cancelled};
 use crate::{route_inventory, styles, temporary, validation};
 
 #[derive(Clone)]
@@ -136,6 +136,19 @@ impl RenderGeneration for Session {
     }
     fn catalogue(&self) -> &PreparedCatalogue {
         &self.state.catalogue
+    }
+    fn comparison_parallelism(&self) -> usize {
+        self.state.workers.comparison_parallelism()
+    }
+    fn schedule_comparison(
+        &self,
+        routes: &[String],
+        worker: &dyn ComparisonWorker,
+    ) -> Vec<Result<ComparisonDocument>> {
+        self.state.workers.comparison(routes, worker)
+    }
+    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
+        self.schedule_comparison(routes, self).into_iter().collect()
     }
     fn comparison_document(&self, route: &str) -> Result<Arc<Artifact>> {
         let artifact = self.raw(route)?;

@@ -26,7 +26,11 @@ fn source(
     Arc::new(Unimock::new(source_calls(side, count, events)))
 }
 
-fn source_calls(side: &'static str, count: usize, events: Arc<Mutex<Vec<String>>>) -> impl Clause {
+pub(super) fn source_calls(
+    side: &'static str,
+    count: usize,
+    events: Arc<Mutex<Vec<String>>>,
+) -> impl Clause {
     let plans = (0..count)
         .map(|index| {
             let route = format!("{index}/index.html");

@@ -56,6 +56,12 @@ Cross-view anchor checks retain successful destination renders in this same
 bounded cache. Repeated links reuse those documents. Each requested fragment
 is still checked in every destination view, including cache hits.
 
+Comparison batches use the same render pool and sidecar count as validation.
+They return transient documents and closures in requested route order.
+The comparison caller limits each batch to the pool's existing worker count.
+Other generation adapters use sequential batches unless they forward scheduling
+and their cancellation checks together.
+
 `RenderGeneration::comparison_document` composes the same tree before closure
 validation. Both sides require complete, valid closures. A missing referenced
 head resource is `build-invalid`. `resource_bytes` reads confined public routes
