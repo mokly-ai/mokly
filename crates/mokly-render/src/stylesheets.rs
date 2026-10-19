@@ -1,6 +1,6 @@
 //! Stylesheet roots follow ordered module edges and renderer exclusion.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
@@ -96,15 +96,23 @@ pub(crate) fn compiler(
     })
 }
 
+#[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]
 pub(crate) fn roots(
     modules: &BTreeMap<String, Vec<String>>,
     renderer: Option<&str>,
     entries: &[String],
     loaders: &BTreeMap<String, String>,
 ) -> Vec<StylesheetRoot> {
+    let ancestors = stylesheet_ancestors(modules);
     let mut renderer_files = Vec::new();
     if let Some(renderer) = renderer {
-        visit(renderer, modules, &mut BTreeSet::new(), &mut renderer_files);
+        visit(
+            renderer,
+            modules,
+            &ancestors,
+            &mut BTreeSet::new(),
+            &mut renderer_files,
+        );
     }
     let excluded: BTreeSet<_> = renderer_files.iter().cloned().collect();
     renderer_files.retain(|path| !ignored(path, loaders));
@@ -119,9 +127,13 @@ pub(crate) fn roots(
             local_css: false,
         });
     }
+    let mut seen_roots = BTreeSet::new();
     for entry in entries {
+        if !seen_roots.insert(entry) {
+            continue;
+        }
         let mut files = Vec::new();
-        visit(entry, modules, &mut BTreeSet::new(), &mut files);
+        visit(entry, modules, &ancestors, &mut BTreeSet::new(), &mut files);
         files.retain(|file| !excluded.contains(file) && !ignored(file, loaders));
         if !files.is_empty() {
             roots.push(StylesheetRoot {
@@ -135,14 +147,41 @@ pub(crate) fn roots(
     roots
 }
 
+fn stylesheet_ancestors(modules: &BTreeMap<String, Vec<String>>) -> BTreeSet<&str> {
+    let mut parents: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    let mut pending = VecDeque::new();
+    for (path, imports) in modules {
+        if path.ends_with(".css") {
+            pending.push_back(path.as_str());
+        }
+        for imported in imports {
+            parents.entry(imported).or_default().push(path);
+            if imported.ends_with(".css") {
+                pending.push_back(imported.as_str());
+            }
+        }
+    }
+    let mut ancestors = BTreeSet::new();
+    while let Some(path) = pending.pop_front() {
+        if ancestors.insert(path) {
+            pending.extend(parents.get(path).into_iter().flatten().copied());
+        }
+    }
+    ancestors
+}
+
 fn visit(
     path: &str,
     modules: &BTreeMap<String, Vec<String>>,
+    ancestors: &BTreeSet<&str>,
     seen: &mut BTreeSet<String>,
     files: &mut Vec<String>,
 ) {
     let mut pending = vec![path];
     while let Some(path) = pending.pop() {
+        if !path.ends_with(".css") && !ancestors.contains(path) {
+            continue;
+        }
         if !seen.insert(path.into()) {
             continue;
         }

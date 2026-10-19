@@ -31,6 +31,7 @@ mod resource_edges;
 pub mod resource_inputs;
 mod resource_keys;
 mod routing_inputs;
+mod routing_records;
 mod session;
 mod session_render;
 mod styles;
