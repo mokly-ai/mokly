@@ -36,7 +36,8 @@ enum Content<'a> {
     },
     Component {
         visual: Visual<'a>,
-        slots: &'a [String],
+        #[serde(skip_serializing_if = "Option::is_none")]
+        slots: Option<&'a [String]>,
         supplied: &'a [String],
     },
     Page,
@@ -47,9 +48,11 @@ enum Content<'a> {
 #[derive(Serialize)]
 struct Visual<'a> {
     schemes: &'a [ColorScheme],
-    schema: &'a PropSchema,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schema: Option<&'a PropSchema>,
     props: &'a Props,
-    controls: &'a BTreeMap<String, ComponentControl>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    controls: Option<&'a BTreeMap<String, ComponentControl>>,
 }
 
 pub(crate) fn projection(
@@ -57,13 +60,14 @@ pub(crate) fn projection(
     catalogue: &CatalogueModel,
     paths: &BTreeMap<String, String>,
 ) -> Result<String> {
+    let shared_fields = entry.metadata.variant_of.is_none();
     let content = match &entry.content {
         EntryContent::Screen {
             visual: fields,
             address,
             use_case_paths,
         } => Content::Screen {
-            visual: visual(fields),
+            visual: visual(fields, shared_fields),
             address,
             memberships: path_set(use_case_paths, paths),
         },
@@ -73,8 +77,8 @@ pub(crate) fn projection(
             supplied_slots,
             ..
         } => Content::Component {
-            visual: visual(fields),
-            slots,
+            visual: visual(fields, shared_fields),
+            slots: shared_fields.then_some(slots.as_slice()),
             supplied: supplied_slots,
         },
         EntryContent::Page => Content::Page,
@@ -135,12 +139,12 @@ pub(crate) fn projection(
     .compare()
 }
 
-fn visual(visual: &VisualEntry) -> Visual<'_> {
+fn visual(visual: &VisualEntry, shared_fields: bool) -> Visual<'_> {
     Visual {
         schemes: &visual.color_schemes,
-        schema: &visual.prop_schema,
+        schema: shared_fields.then_some(&visual.prop_schema),
         props: &visual.props,
-        controls: &visual.controls,
+        controls: shared_fields.then_some(&visual.controls),
     }
 }
 

@@ -121,6 +121,8 @@ working files are streamed without retaining their bytes. Remaining source
 budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
+Metadata comparison keeps schema, controls, and declared slots on the parent.
+Variants compare their own metadata, props, and supplied slots independently.
 
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.

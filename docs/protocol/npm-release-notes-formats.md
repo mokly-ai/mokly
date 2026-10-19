@@ -65,6 +65,8 @@ configuration, authoring modules, generated output, or caches.
   stylesheet token. Replace the `componentStylesheets` JavaScript export
   with this token in the JSON stylesheet list. `WatchConfig` and `ReviewConfig`
   are removed configuration types.
+  Replace extglob stylesheet matches such as `@(a|b)` with brace alternatives
+  such as `{a,b}`.
 - Do not commit generated output. `build` defaults to `mokly-static/`, which
   must be ignored by Git. Remove committed `mokly-generated/` output and
   `.mokly-cache`. Serve and comparisons render in memory. Base extraction and
@@ -135,6 +137,12 @@ Configured CSS uses `styles/{repository-relative stylesheet path}` under
 `static/mokly-generated/`; referenced authored files use their repository
 paths under `static/`. Base snapshots include the same generated delivery
 roots as current output.
+Rewrite authored relative URLs so they resolve from the document route to
+`static/{repository path}`.
+
+Schema, control, and declared-slot metadata changes list the component parent.
+Variants keep independent metadata, props, and supplied-slot changes. A shared
+schema edit alone does not add one Changes row per variant.
 
 Caller-owned component props remain material when the rendered HTML is equal.
 Review records keep every applicable reason, including both `inputs` and

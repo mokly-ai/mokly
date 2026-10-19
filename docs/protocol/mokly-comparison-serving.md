@@ -69,6 +69,11 @@ invalidates pending captures and discards the cached selection. Superseded
 snapshots stay available briefly for in-flight requests. Shutdown stops
 admission and drains active generation work before the server exits.
 
+Base capture checks cancellation before each view read and encode, including
+cache hits, and returns the generation's cancellation error. Replacing an
+unfinished classification cancels its base workers as well as its source reads
+and sidecar calls. Command shutdown cancels both current and base work.
+
 ## Build And Publish
 
 `build` writes one complete comparison into the output directory unless

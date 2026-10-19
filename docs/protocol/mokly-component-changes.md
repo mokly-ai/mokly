@@ -12,19 +12,20 @@ apply as for every entry; an affected-only screen does not make its use cases
 changed. The [comparison contract](./mokly-comparison.md#changes-membership)
 owns the membership list. This page states how a component edit is attributed.
 
-| Edit                                                    | Direct Changes entries | Secondary impact                                              |
-| ------------------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
-| Component render, or the styles its render returns      | Component              | Its consuming screens and components                          |
-| Screen supplies different props to an instance          | Screen                 | None from this edit alone                                     |
-| Screen changes the slot content it supplies             | Screen                 | None from this edit alone                                     |
-| Screen adds, removes, replaces, or reorders an instance | Screen                 | Usage links update                                            |
-| Screen changes surrounding content or layout            | Screen                 | The ordinary screen and use case rules                        |
-| Parent component changes the props it passes to a child | Parent component       | The parent's consumers                                        |
-| Child render changes with the parent's inputs unchanged | Child component        | Parent components and consuming screens                       |
-| Component and a consuming screen both change directly   | Component and screen   | The screen is also a consumer                                 |
-| Variant props, title, or description change             | That variant entry     | Consumers only when their render or rendered resources change |
-| Prop schema, controls, slots, or parent metadata change | Component              | Consumers only when their render or rendered resources change |
-| Temporary control edits in Serve                        | None                   | None                                                          |
+| Edit                                                    | Direct Changes entries                                    | Secondary impact                                              |
+| ------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------- |
+| Component render, or the styles its render returns      | Component                                                 | Its consuming screens and components                          |
+| Screen supplies different props to an instance          | Screen                                                    | None from this edit alone                                     |
+| Screen changes the slot content it supplies             | Screen                                                    | None from this edit alone                                     |
+| Screen adds, removes, replaces, or reorders an instance | Screen                                                    | Usage links update                                            |
+| Screen changes surrounding content or layout            | Screen                                                    | The ordinary screen and use case rules                        |
+| Parent component changes the props it passes to a child | Parent component                                          | The parent's consumers                                        |
+| Child render changes with the parent's inputs unchanged | Child component                                           | Parent components and consuming screens                       |
+| Component and a consuming screen both change directly   | Component and screen                                      | The screen is also a consumer                                 |
+| Variant props, title, or description change             | That variant entry                                        | Consumers only when their render or rendered resources change |
+| Prop schema, controls, or declared slots change         | Component parent                                          | Consumers only when their render or rendered resources change |
+| Other parent metadata changes                           | Parent and each variant whose metadata projection changes | Consumers only when their render or rendered resources change |
+| Temporary control edits in Serve                        | None                                                      | None                                                          |
 
 | CSS delivery path                   | Direct Changes entries                                                                           | Secondary impact                      |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- |
