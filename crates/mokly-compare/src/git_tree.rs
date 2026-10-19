@@ -7,8 +7,8 @@ use std::sync::{Arc, Mutex};
 
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::{Limits, Mode};
-use mokly_model::material::digest;
 use mokly_source_interface::error::{InternalError, Result, SourceError};
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
 use crate::error::Error;
@@ -24,7 +24,7 @@ pub struct GitTree {
     pub(crate) cache: Mutex<SourceCache>,
     failure: Mutex<Option<Arc<Error>>>,
     children: Mutex<DirectoryIndex>,
-    digests: Mutex<BTreeMap<RepoPath, String>>,
+    pub(crate) digests: Mutex<BTreeMap<RepoPath, String>>,
 }
 
 /// Metadata only grows within a commit; rebuild child lists once per index expansion.
@@ -200,39 +200,16 @@ impl SourceTree for GitTree {
         Ok(bytes)
     }
 
+    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
+        self.opaque_stream(path)
+    }
+
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        self.digest_file(path, true)
+    }
+
     fn digest(&self, path: &Path) -> Result<String> {
-        let Some(relative) = self.relative(path)? else {
-            return Err(failure("digest", path, io::ErrorKind::IsADirectory));
-        };
-        if let Some(hash) = self
-            .digests
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get(&relative)
-            .cloned()
-        {
-            return Ok(hash);
-        }
-        if let Err(source) = self.sources.ensure(std::slice::from_ref(&relative)) {
-            return Err(self.failed("digest", path, source));
-        }
-        let index = self.index(path)?;
-        let Some(entry) = index.entries.get(&relative) else {
-            return Err(failure("digest", path, io::ErrorKind::NotFound));
-        };
-        let hash = if entry.size > 16 * 1024 * 1024 {
-            match self.sources.digest(&relative) {
-                Ok(hash) => hash,
-                Err(source) => return Err(self.failed("digest", path, source)),
-            }
-        } else {
-            digest(&self.read_public(path)?)
-        };
-        self.digests
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .insert(relative, hash.clone());
-        Ok(hash)
+        self.digest_file(path, false)
     }
 
     fn prefetch(&self, requested: &[PathBuf]) -> Result<()> {

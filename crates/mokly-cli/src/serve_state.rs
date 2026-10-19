@@ -6,6 +6,7 @@ use std::sync::Arc;
 use mokly_catalogue::config::relative;
 use mokly_cli::serve::PreparedServe;
 use mokly_graph::policy::FilePolicy;
+use mokly_server::asset_streams::TemporaryAssets;
 use mokly_server::assets::File;
 use mokly_server::backend::GraphDocuments;
 use mokly_server::error::{Result, ServerError};
@@ -88,6 +89,7 @@ impl NativeServeState {
                 policy: Arc::new(policy),
             }),
             warnings.clone(),
+            Arc::new(TemporaryAssets),
         ));
         let base = self
             .base

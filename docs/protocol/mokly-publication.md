@@ -78,10 +78,12 @@ entry's stub is written once at `view/<path>/index.html`.
 
 ## Consistent Publication Snapshot
 
-A build captures one validated in-memory render: every view, page, and
+A build captures one validated immutable render: every view, page, and
 document, the bundled CSS, the opaque assets, the catalogue model, and the
-authored closure, all from the render cache. Nothing on disk is read back. The
-stylesheet freshness pass and the scoped npm URL checks apply.
+authored closure. Generated resources follow the shared
+[delivery contract](./mokly-imported-styles-assets.md#validation-and-the-render-cache).
+Installed output is never read back. The stylesheet freshness pass and the
+scoped npm URL checks apply.
 
 The fingerprint boundary, source capture, and final live recheck follow
 step 3 of the [Output Transaction](./mokly-export.md#output-transaction).

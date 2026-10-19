@@ -16,3 +16,9 @@ mock = ["dep:unimock"]
 
 [target."cfg(unix)".dependencies]
 libc = "0.2.190"
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation"] }
+
+[dev-dependencies]
+unimock = "0.6.8"

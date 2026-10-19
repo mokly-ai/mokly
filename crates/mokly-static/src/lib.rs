@@ -86,3 +86,5 @@ mod reservation_tests;
 #[cfg(test)]
 #[path = "_tests_/comparison/mod.rs"]
 mod comparison_tests;
+
+mod resource_bytes;

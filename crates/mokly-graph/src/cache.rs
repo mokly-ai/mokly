@@ -13,7 +13,7 @@ use crate::weight;
 /// One rendered artifact. Cloned handles do not duplicate retained bytes.
 #[derive(Clone, Debug)]
 pub struct Artifact {
-    /// Complete document, stylesheet, or opaque resource bytes.
+    /// Complete document, stylesheet, or fragment response bytes.
     pub bytes: Vec<u8>,
     /// Parsed tree and evidence for a document, absent for other resources.
     pub document: Option<Composed>,

@@ -60,6 +60,11 @@ mod evidence_scale_tests;
 #[path = "_tests_/replacement_tests.rs"]
 mod replacement_tests;
 
+pub mod asset_streams;
+
+mod generated_routes;
+mod work_delivery;
+
 #[cfg(test)]
 #[path = "_tests_/replacement_publication_tests.rs"]
 mod replacement_publication_tests;

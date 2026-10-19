@@ -9,8 +9,8 @@ or the renderer module imports with `import "./theme.css"` or
 `import styles from "./card.module.css"`, reach documents one way. Mokly
 bundles each delivery root into one stylesheet on `lightningcss` in the Rust
 core, resolves its `@import` chain and `url()` assets, and delivers the
-stylesheet and its assets as resources of the render cache under the
-`static/mokly-generated/` namespace. A configured HTTP(S) URL is linked
+stylesheet through the render cache and its assets through verified source
+streams under the `static/mokly-generated/` namespace. A configured HTTP(S) URL is linked
 unchanged and never fetched. The sources stay private. This contract
 extends [imported CSS configuration](./mokly-configuration-imported-styles.md),
 [rendering](./mokly-rendering.md), and
@@ -33,7 +33,9 @@ configured `design/base.css` delivers `styles/design/base.css`; the two
 forms never collide because a module path never ends in `.css`. `styles` and
 `assets` are reserved as the
 first segment of document routes. Nothing is written into the repository:
-Serve answers the routes from the render cache, `build` writes them into its
+Serve answers the routes through
+[generation delivery](./mokly-imported-styles-assets.md#validation-and-the-render-cache),
+`build` writes them into its
 output directory, publish uploads that output, and the base side of a
 comparison bundles the base commit's sources the same way under the
 [dependency tiers](./mokly-comparison.md#sides).
