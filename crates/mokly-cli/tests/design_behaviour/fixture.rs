@@ -92,6 +92,16 @@ fn mutate(root: &Path, mutation: &str) {
             "change = \"Appearance changed\"",
             "change = \"Wrong recorded change\"",
         ),
+        "stack-swap" => (
+            "components/parts/preview.tsx",
+            "after={<ComparedVersion before={false} subject={subject} />}\n          before={<ComparedVersion before subject={subject} />}",
+            "after={<ComparedVersion before subject={subject} />}\n          before={<ComparedVersion before={false} subject={subject} />}",
+        ),
+        "caption-record" => (
+            "components/parts/comparison_fixtures.ts",
+            "export const actionComparison = {\n  status: \"changed\",\n  reason: \"output\",",
+            "export const actionComparison = {\n  status: \"changed\",\n  reason: \"styles\",",
+        ),
         "checklist" => (
             "components/parts/component_page.tsx",
             "return \"checklist\";",
