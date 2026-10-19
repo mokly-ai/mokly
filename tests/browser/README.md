@@ -188,6 +188,8 @@ catalogue with the source hook, compared with `base` (`fixture-base` unless
 given). Its `baseURL` serves that copy, and the worker fixture
 `additionsCopy` holds its read-only `directory`. Setup uses the isolated
 180,000 ms budget. The default and branch copies keep their membership.
+A copy built with base `HEAD` and no hook publishes ready Changes with no
+change.
 
 | Hook                         | Entries and evidence                                                                                                             |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
