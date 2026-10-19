@@ -108,6 +108,19 @@ test("benchmark options reject unused generation flags and record opt-in limits"
   assert.equal(input.sidecarTimeoutMs, 300000);
   assert.equal(options(["benchmark"]).memoryStopKiB, 1_750_000);
   assert.equal(options(["benchmark"]).sidecarTimeoutMs, undefined);
+  assert.deepEqual(options(["benchmark", "--scenario", "startup"]).selected, [
+    "startup",
+  ]);
+  assert.deepEqual(options(["benchmark", "--scenario", "all"]).selected, [
+    "build",
+    "serve",
+    "changes",
+    "watch",
+  ]);
+  assert.throws(
+    () => options(["benchmark", "--scenario", "unknown"]),
+    /Unknown fixture/,
+  );
   for (const value of ["-1", "1.5", "NaN"])
     assert.throws(
       () => options(["benchmark", "--memory-stop-kib", value]),

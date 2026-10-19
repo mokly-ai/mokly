@@ -42,6 +42,10 @@ after preserving the complete fixture record. Setup time is separate from Serve.
 
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
 select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
+Use `--scenario startup` for focused cold/warm startup acceptance. It keeps
+those browser checks and the real base, but does not wait for Changes or review
+availability. Its result omits those measurements. `all` keeps the four complete
+scenarios; `serve` includes delivered Changes and available review.
 Cold and warm runs each use a new Serve process and browser context.
 Both keep the native comparison caches. Cold means application-cold, not an
 empty disk cache. Serve prepares the pinned fixture base through M9: HTML

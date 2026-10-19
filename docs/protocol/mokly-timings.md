@@ -156,6 +156,11 @@ count held constant and other heavy work idle:
 4. Watch: an edit to one screen, one component, and one stylesheet, each
    measured from the file write to the frame reload in the browser.
 
+A focused `startup` selection measures the same cold/warm usable startup and
+checks previews, axes, live props, cached bytes, and pages with the real base.
+It finishes without waiting for Changes or review availability and reports
+neither value. `all` retains the four complete scenarios above.
+
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
 Changes, and reports each measurement as JSON on stdout. It writes one progress
