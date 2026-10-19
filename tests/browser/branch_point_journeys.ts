@@ -214,7 +214,10 @@ const reusedParent: Check = async (page) => {
   ).toHaveCount(0);
 };
 
-/** Every case's checks, keyed by the shared fixture case name. */
+/**
+ * The checks of the five branch-copy scenarios, keyed by the case names that
+ * the old suite used and the test titles keep.
+ */
 export const BRANCH_POINT_CHECKS: Readonly<Record<string, Check>> = {
   "moved-consumers": movedConsumers,
   "moved-parent": movedParent,
