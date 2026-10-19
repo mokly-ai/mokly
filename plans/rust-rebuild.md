@@ -1805,6 +1805,12 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - F1 follow-up finding 1: resolve Checklist current-page marks and row
+    selection. Severity Medium, effort Small. Recommended: A, retain
+    `aria-current` on both same-target links and check Default-only selection
+    with the active class. The requested Default-only `aria-current` assertion
+    conflicts with the self-link decision in `be30a10a`; wait for the user.
+    Evidence: `.context/f1/selection-decision.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
