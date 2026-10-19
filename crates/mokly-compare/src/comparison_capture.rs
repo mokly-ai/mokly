@@ -59,7 +59,13 @@ pub(crate) fn capture_with_bound(
     } else {
         source
     };
-    let summary = source.render_all()?;
+    let summary = {
+        let span = tracing::info_span!("review.capture-validate", status = "error");
+        let _entered = span.enter();
+        let summary = source.render_all()?;
+        span.record("status", "ok");
+        summary
+    };
     let mut budget = Budget::new(bound);
     if !budget.retain(mem::size_of::<CapturedGeneration>() + capture_weight::summary(&summary)) {
         complete(0, summary.documents, 0, 0);
@@ -73,9 +79,21 @@ pub(crate) fn capture_with_bound(
     let mut views = BTreeMap::new();
     for route in source.plans().keys() {
         source.check_cancelled()?;
-        let artifact = source.comparison_document(route)?;
+        let artifact = {
+            let span = tracing::info_span!("review.capture-document", status = "error");
+            let _entered = span.enter();
+            let artifact = source.comparison_document(route)?;
+            span.record("status", "ok");
+            artifact
+        };
         let document = capture_error::graph(EncodedView::encode(&artifact))?;
-        let closure = source.closure(route)?;
+        let closure = {
+            let span = tracing::info_span!("review.capture-closure", status = "error");
+            let _entered = span.enter();
+            let closure = source.closure(route)?;
+            span.record("status", "ok");
+            closure
+        };
         let cost =
             256 + route.len() + document.retained_bytes() + capture_weight::closure(&closure);
         if budget.retain(cost) {

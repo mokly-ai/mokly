@@ -94,6 +94,8 @@ Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
+Capture timings separate full validation, document composition, encoding,
+and closure collection. They contain no source data or error payloads.
 Before each view is read and encoded, capture checks the generation's
 cancellation state and returns its error without processing a later view.
 Every generated route that fits retains its digest. Usage, links, resources,

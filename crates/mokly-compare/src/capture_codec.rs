@@ -41,6 +41,7 @@ pub(crate) struct EncodedView {
 
 impl EncodedView {
     /// Encode one validated document and retain its complete metadata.
+    #[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
     pub(crate) fn encode(artifact: &Artifact) -> Result<Self> {
         let payload = Payload {
             tree: artifact
@@ -61,7 +62,7 @@ impl EncodedView {
             serde_json::to_writer(&mut writer, &payload).capture()?;
             writer.flush().capture()?;
         }
-        Ok(Self {
+        let encoded = Self {
             payload: encoder.finish().capture()?.into_boxed_slice(),
             bytes_len: artifact.bytes.len(),
             warnings: artifact
@@ -74,7 +75,9 @@ impl EncodedView {
                 .document
                 .as_ref()
                 .map_or(0, capture_weight::metadata),
-        })
+        };
+        tracing::Span::current().record("status", "ok");
+        Ok(encoded)
     }
 
     /// Encoded document and tree payload length.

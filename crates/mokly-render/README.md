@@ -89,6 +89,8 @@ their dependency classification. Installation lookup metadata uses private
 names so tracked directories cannot hide installed package membership.
 Each sidecar worker keeps one source working directory. Head and base module
 evaluation and render callbacks use their own files through `process.cwd()`.
+Core fragment spans include JavaScript calls and their transport and queue
+waits. Sidecar render spans measure work inside each process.
 Both sides forward identical trusted style records into the composed tree
 and comparison.
 Both sides use the current package version and
