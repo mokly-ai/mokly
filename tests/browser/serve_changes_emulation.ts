@@ -6,7 +6,7 @@
  * writes an index before its classification completes.
  */
 
-import type { Page } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
 
 import type { ReadyPredicate } from "./serve_comparison_fixture.js";
 
@@ -67,6 +67,32 @@ export async function emulateChangesStatus(page: Page): Promise<{
   return {
     set(status) {
       current = status;
+    },
+  };
+}
+
+/**
+ * Hold every incomplete index the page requests, so the shell adopts one
+ * ready publication after another, as when Serve combines a rebuild and its
+ * classification into one publication. A newer event normally supersedes a
+ * held request; `release` answers any that remain with a fresh index.
+ */
+export async function combinePublications(page: Page): Promise<{
+  release(): Promise<void>;
+}> {
+  const held: Route[] = [];
+  await page.route("**/mokly-viewer/index.json", async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as JsonRecord;
+    if (body["changesStatus"] === "ready") await route.fulfill({ response });
+    else held.push(route);
+  });
+  return {
+    async release() {
+      for (const route of held.splice(0)) {
+        const response = await route.fetch().catch(() => undefined);
+        if (response) await route.fulfill({ response }).catch(() => undefined);
+      }
     },
   };
 }
