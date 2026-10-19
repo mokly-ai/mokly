@@ -165,21 +165,9 @@ follows before the page viewport moves.
 
 ## Acceptance
 
-The page cases are proved by the four
-`tests/browser/comparison_alignment*.spec.ts` suites, whose inner-region cases
-prove an app shell's panel scrolls every version while its page stays.
-The region, key, and anchor cases are proved by
-`tests/browser/comparison_regions.spec.ts` (Overlay, Difference, Side by side
-in both directions, Both, and shorter regions),
-`comparison_regions_pairing.spec.ts` (a component, nested, horizontal,
-unmatched, `off`, and ambiguous regions), `comparison_regions_input.spec.ts`
-(every listed key after a pointer press, focus moving into a panel, a touch
-drag, a scroll the browser made in the lower layer, and anchors through a
-panel and then the page in Overlay and Side by side), and
-`comparison_regions_keys.spec.ts` (keys from focus, a key falling back to the
-page at a region's end, right-to-left arrows, and instant two-axis writes
-under smooth-scroll CSS). The Scroll together and region pairing contracts
-name their own proofs. Controller unit tests under `packages/viewer/tests/`
-cover measurement, key routing including right-to-left regions, anchors,
-echoes, and the page mirror; removed-preview scrolling stays proved by
-`tests/browser/removed_previews.spec.ts`.
+Browser regressions, listed in the
+[browser test guide](../../tests/browser/README.md#comparison-scrolling-suites), prove
+the page, region, key, and anchor cases in every comparison mode and the
+scrolling of a previous version, and controller unit tests prove measurement,
+key routing including right-to-left regions, anchors, echoes, and the page
+mirror.
