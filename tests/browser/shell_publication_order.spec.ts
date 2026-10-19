@@ -1,7 +1,8 @@
 /**
  * Publication order in Serve, under the shell delivery contract: a refresh
  * that a newer publication overtakes cannot replace the newer state, whether
- * the held response is the index or the routed entry's detail.
+ * the held response is the index or the routed entry's detail, and the shell
+ * adopts both publications without a page load.
  */
 
 import { expect, type Route } from "@playwright/test";
@@ -32,6 +33,14 @@ for (const held of ["index", "detail"] as const)
         'nav.mbk-nav a[data-nav-row][data-entry-id="home"]',
       );
       await expect(heading).toHaveText("Home");
+      // A property that only this page load carries; a page load drops it.
+      await page.evaluate(() => {
+        (window as unknown as { specMounted?: boolean }).specMounted = true;
+      });
+      let loads = 0;
+      page.on("load", () => {
+        loads += 1;
+      });
       const holding: Route[] = [];
       await page.route(
         held === "index"
@@ -70,6 +79,13 @@ for (const held of ["index", "detail"] as const)
       await expect(
         page.frameLocator('[data-workspace-frame="desktop"]').locator("h1"),
       ).toHaveText("Home three body");
+      // The shell adopted both publications in place, without a page load.
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { specMounted?: boolean }).specMounted,
+        ),
+      ).toBe(true);
+      expect(loads).toBe(0);
     } finally {
       await closeServe(page, server);
     }
