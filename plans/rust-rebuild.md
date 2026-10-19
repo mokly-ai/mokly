@@ -915,7 +915,7 @@ renders again.
       route/detail races, frame handoff, live prop edits, and preserved focus.
   - [x] Port the route, history, detail fence, mount, publication, and live
         edit cases.
-  - [ ] Port the cases that stay under the viewer client-shell TODO in the
+  - [x] Port the cases that stay under the viewer client-shell TODO in the
         sweep: mount-time frame ownership and the Browse exact-resource
         handoff; live edit validation, the viewport switch, an expired
         preview, and a context change during a pending render; the React
@@ -923,10 +923,16 @@ renders again.
         inspector tabs; the design library's unset, Reset, and nested styles;
         an older response for the same route; use-case and page frames and
         the Usage loading state while evidence is unavailable; instance deep
-        links; focus on an unchanged Usage link while a Changes completion
-        is adopted; a published scheme swap while a redirect replaces a frame
-        source; and the review-base sentence while a detail loads, which needs
-        a served catalogue with a Git base.
+        links; and a published scheme swap while a redirect replaces a frame
+        source.
+  - [x] Port the review-base sentence while a detail loads, on the copied
+        comparison output.
+  - [ ] Port the two cases that wait for the shared Serve Changes fixture:
+        focus on an unchanged Usage link while a Changes completion is
+        adopted, which needs a changed component with a consumer; and the
+        design library component's Unmodified status after temporary edits
+        and Reset, which needs an unchanged component with editable props in
+        the fixture's base commit.
   - [ ] When Serve stops publishing a render completion that changes no
         detail (review 8 finding 1, for the Serve owner), restore one index
         read (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts`
@@ -1055,6 +1061,12 @@ rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
 `.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
 Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
+The remaining client-shell cases of the sweep and their generator inputs:
+`.context/rust-rebuild/delegation/m7/report-22.md` and
+`.context/rust-rebuild/delegation/m7/sweep-overrides-shell-2.json`.
+Review 11 fixes, the negative zero fix of live edit renders, and the merge of
+the rebuild tip: `.context/rust-rebuild/delegation/m7/report-23.md`. Merge
+decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
 - [ ] Commit.
 
@@ -1232,6 +1244,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
           Cached source and dependency reuse still publishes preparing. The
           one-line edit smoke took 5m19s to Changes ready with three sidecars.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-8/cache-retention-measurement.md`.
+      - [x] Measure one worker with an old capture held by an in-flight request.
+            The default-count probe stops at the common memory allowance before
+            ready; its edit time and overlap peak need a probe-budget decision.
+            Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/measurements.md`.
     - [x] Use an intentionally unresolved base for the shared browser example,
           with terminal quiescence and one Git diagnostic. Real Changes specs
           keep independent fixtures. Keep the 600-second guard and one sidecar.
@@ -1824,6 +1840,15 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     no navigation event once and passed unchanged after rerun. M8 viewer owns
     the suspected message/animation-frame ordering. Recommended A: wait for
     the message event. Evidence is in the browser delegate's `report-4.md`.
+  - M8 sidecar follow-up, Low severity, Small effort: the Rust test
+    `serve_trace::sidecar_trace_tests::spawn_and_replacement_cover_hello_and_keep_error_until_success`
+    in `mokly-cli` failed once in `cargo test --workspace` with "Original
+    Unimock instance destroyed on a different thread than the one it was
+    created on", then passed 20 isolated runs and 15 runs of the whole
+    `mokly-cli` binary test set. Suspected source: the sidecar pool drops a
+    replaced worker's mock on another thread, depending on timing.
+    Recommended A: clone the mocks before they move to the pool, as the
+    message says. Separate branch. Evidence: m7 `report-23.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

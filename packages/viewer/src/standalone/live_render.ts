@@ -1,4 +1,7 @@
-/** Validation of the render route's answers; nothing here enters catalogue data. */
+/**
+ * The render route's request body and the validation of its answers;
+ * nothing here enters catalogue data.
+ */
 
 import {
   readInstance,
@@ -23,6 +26,28 @@ const CODES = new Map(
     code as RenderErrorCode,
   ]),
 );
+
+/**
+ * The JSON body of one render request. `JSON.stringify` writes negative zero
+ * as `0`, so an edited `-0` would reach Serve as zero; this writer spells it
+ * `-0`, which Serve reads back as negative zero, as prop values keep it.
+ */
+export function renderRequestBody(request: ComponentRenderRequest): string {
+  return json(request);
+}
+
+/** `JSON.stringify` of plain request data, except that negative zero stays `-0`. */
+function json(value: unknown): string {
+  if (Object.is(value, -0)) return "-0";
+  if (Array.isArray(value))
+    return `[${value.map((item) => (item === undefined ? "null" : json(item))).join(",")}]`;
+  if (value !== null && typeof value === "object")
+    return `{${Object.entries(value)
+      .filter(([, item]) => item !== undefined)
+      .map(([key, item]) => `${JSON.stringify(key)}:${json(item)}`)
+      .join(",")}}`;
+  return JSON.stringify(value);
+}
 
 /**
  * The typed error of one failed render answer. Its message is Serve's own

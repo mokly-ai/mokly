@@ -40,8 +40,17 @@ export function tourFile(title: string): string {
   return `title: ${title}\nsteps:\n  - screenPath: home\n  - screenPath: other\n`;
 }
 
-/** Serve the fixture with the watcher, once it is settled; the spec closes it. */
-export async function serveLiveCatalogue() {
+/**
+ * Serve the fixture with the watcher, once it is settled; the spec closes it.
+ * `files` replaces or adds catalogue files, and `config` adds configuration.
+ */
+export async function serveLiveCatalogue({
+  files = {},
+  config = {},
+}: {
+  files?: Record<string, string>;
+  config?: Record<string, unknown>;
+} = {}) {
   const server = await serveCatalogue(
     {
       "specs/home.screen.html": screenFile(
@@ -51,8 +60,9 @@ export async function serveLiveCatalogue() {
       "specs/other.screen.html": screenFile("Other", "<h1>Other v1</h1>"),
       "specs/card.component.html": cardFile(),
       "specs/tour.use-case.yaml": tourFile("Tour"),
+      ...files,
     },
-    {},
+    config,
     { watch: true },
   );
   try {
