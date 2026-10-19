@@ -6,33 +6,18 @@ import { write } from "./static_changes.js";
 
 const source = (metadata: Record<string, unknown>, body: string) =>
   `---\n${JSON.stringify(metadata)}\n---\n${body}`;
-const schema = (property: string) => ({
-  type: "object",
-  additionalProperties: false,
-  properties: { [property]: { type: "string" } },
-});
 
 /** Entries that only the viewer-state Serve journeys add to both commits. */
 export const viewerStatePaths = {
-  variantParent: "viewer/home",
-  quietScreenVariant: "viewer/home/empty",
-  changedScreenVariant: "viewer/home/error",
-  removedScreenVariant: "viewer/home/gone",
   chip: "viewer/chip",
   plainChip: "viewer/chip/plain",
   nightChip: "viewer/chip/night",
-  removedConsumer: "viewer/legacy",
-  lightOnlyChanged: "viewer/pale",
-  lightOnlyRemoved: "viewer/faded",
-  fragmentPage: "viewer/handbook",
 } as const;
 
 /**
- * Add the viewer-state shapes under `viewer/`: an unmodified screen with
- * unmodified, changed, and removed variants; an unmodified component whose
- * Night variant changes only in Dark; a removed screen that used Card; a
- * changed and a removed light-only screen; and an unchanged page with an
- * anchor and a catalogue link. Specs opt in per file.
+ * Add an unmodified component under `viewer/` whose Night variant changes
+ * only in Dark, through a dark stylesheet that matches that variant alone.
+ * Specs opt in per file.
  */
 export const addViewerStateSources: ComparisonAdditions = async (
   root,
@@ -49,25 +34,6 @@ export const addViewerStateSources: ComparisonAdditions = async (
       darkStylesheets: ["night.css"],
     });
     await write(root, "mokly.config.json", JSON.stringify(config));
-    await write(
-      root,
-      "specs/viewer/legacy.screen.html",
-      source(
-        { title: "Legacy screen" },
-        '<h1>Legacy screen</h1><ui-card label="Legacy card"></ui-card>',
-      ),
-    );
-    await write(
-      root,
-      "specs/viewer/faded.screen.html",
-      source(
-        { title: "Faded screen", colorSchemes: ["light"] },
-        "<h1>Faded screen</h1>",
-      ),
-    );
-  } else {
-    for (const file of ["legacy.screen.html", "faded.screen.html"])
-      await fs.rm(path.join(root, "specs/viewer", file));
   }
   await write(
     root,
@@ -76,45 +42,16 @@ export const addViewerStateSources: ComparisonAdditions = async (
   );
   await write(
     root,
-    "specs/viewer/home.screen.html",
-    source(
-      {
-        title: "Home",
-        propSchema: schema("state"),
-        props: { state: "Ready" },
-        variants: [
-          {
-            slug: "empty",
-            title: "Empty workspace",
-            props: { state: "Nothing here yet" },
-          },
-          {
-            slug: "error",
-            title: "Save failed",
-            props: { state: before ? "Could not save" : "Save failed again" },
-          },
-          ...(before
-            ? [
-                {
-                  slug: "gone",
-                  title: "Workspace deleted",
-                  props: { state: "Deleted" },
-                },
-              ]
-            : []),
-        ],
-      },
-      "<h1>Home</h1><p>{{state}}</p>",
-    ),
-  );
-  await write(
-    root,
     "specs/viewer/chip.component.html",
     source(
       {
         title: "Chip",
         element: "viewer-chip",
-        propSchema: schema("label"),
+        propSchema: {
+          type: "object",
+          additionalProperties: false,
+          properties: { label: { type: "string" } },
+        },
         props: { label: "Chip" },
         variants: [
           { slug: "plain", title: "Plain", props: { label: "Plain chip" } },
@@ -122,22 +59,6 @@ export const addViewerStateSources: ComparisonAdditions = async (
         ],
       },
       '<span class="chip">{{label}}</span>',
-    ),
-  );
-  await write(
-    root,
-    "specs/viewer/handbook.page.html",
-    source(
-      { title: "Handbook" },
-      '<!doctype html><html><head><title>Handbook</title></head><body><h1>Handbook</h1><p><a href="mock:screens/stable">Stable screen</a></p><div style="height:1600px">Introduction</div><h2 id="overview">Overview</h2><div style="height:1600px">Details</div></body></html>',
-    ),
-  );
-  await write(
-    root,
-    "specs/viewer/pale.screen.html",
-    source(
-      { title: "Pale screen", colorSchemes: ["light"] },
-      `<main>Pale ${before ? "before" : "after"}</main>`,
     ),
   );
 };

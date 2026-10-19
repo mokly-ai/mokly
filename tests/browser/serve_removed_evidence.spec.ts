@@ -7,11 +7,6 @@
 
 import { expect, type Page } from "@playwright/test";
 
-import {
-  addViewerStateSources,
-  viewerStatePaths,
-} from "../helpers/viewer_state_sources.js";
-
 import { chooseFilter, navRow } from "./comparison_ui.js";
 import {
   combinePublications,
@@ -22,8 +17,6 @@ import {
 } from "./serve_changes_emulation.js";
 import { joinFixtureHistory } from "./serve_comparison_git.js";
 import { test } from "./serve_comparison_test.js";
-
-test.use({ comparisonSources: { add: addViewerStateSources } });
 
 /** Requests for removed page preview metadata, in the order the page made them. */
 function previewRequests(page: Page): string[] {
@@ -161,35 +154,35 @@ test("a background baseline places a removed variant under its parent", async ({
   page,
   changes,
 }) => {
-  const parent = viewerStatePaths.variantParent;
+  const parent = changes.paths.screenParent;
   const row = page.locator(
-    `a[data-nav-row][data-route="${viewerStatePaths.removedScreenVariant}/index.html"]`,
+    `a[data-nav-row][data-route="${changes.paths.screenRemovedVariant}/index.html"]`,
   );
   const list = page.locator(`[data-nav-disclosure="variants:${parent}"]`);
-  const home = navRow(page, parent);
+  const parentRow = navRow(page, parent);
   await changes.moveBase("head");
   const combined = await combinePublications(page);
   await page.goto(`/view/${parent}/`);
-  await expect(home).toHaveAttribute("aria-current", "page");
+  await expect(parentRow).toHaveAttribute("aria-current", "page");
   await expect(row).toHaveCount(0);
-  await expect(home).not.toHaveAttribute("data-changed-variants", "true");
+  await expect(parentRow).not.toHaveAttribute("data-changed-variants", "true");
 
   await changes.moveBase("base");
   await combined.release();
 
   await expect(list.locator(row)).toHaveCount(1);
-  await expect(home).toHaveAttribute("aria-current", "page");
-  await expect(home).toHaveAttribute("data-changed-variants", "true");
+  await expect(parentRow).toHaveAttribute("aria-current", "page");
+  await expect(parentRow).toHaveAttribute("data-changed-variants", "true");
   await expect(row).toBeHidden();
 
   await chooseFilter(page, "changed");
   await expect(row).toBeVisible();
   await expect(row).toContainText("Workspace deleted · Removed");
-  await expect(home).toBeVisible();
+  await expect(parentRow).toBeVisible();
 
   await page.fill("[data-mokly-search]", "Workspace deleted");
   await expect(row).toBeVisible();
-  await expect(home).toBeVisible();
+  await expect(parentRow).toBeVisible();
   await expect(navRow(page, changes.paths.changed)).toBeHidden();
 
   await page.fill("[data-mokly-search]", "");
@@ -210,6 +203,6 @@ test("a background baseline places a removed variant under its parent", async ({
   await changes.moveBase("head");
   await combined.release();
   await expect(row).toHaveCount(0);
-  await expect(home).toHaveAttribute("aria-current", "page");
-  await expect(home).not.toHaveAttribute("data-changed-variants", "true");
+  await expect(parentRow).toHaveAttribute("aria-current", "page");
+  await expect(parentRow).not.toHaveAttribute("data-changed-variants", "true");
 });
