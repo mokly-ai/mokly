@@ -1,4 +1,4 @@
-//! Usage completions replace one complete publication without changing document keys.
+//! Completion records publish only changed details and keep document keys intact.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -51,12 +51,7 @@ pub(crate) fn complete(
     if changed.is_empty() {
         return Ok(None);
     }
-    let Some(revision) = current.index.revision.checked_add(1) else {
-        return Ok(None);
-    };
     let mut next = current.clone();
-    next.lease = Arc::new(RevisionLease::default());
-    next.index.revision = revision;
     let mut dirty = BTreeSet::new();
     for (view, usage) in changed {
         if let Some(detail) = next.details.get_mut(&view.path) {
@@ -95,15 +90,30 @@ pub(crate) fn complete(
             }
         }
     }
+    dirty.retain(|path| {
+        let Some(detail) = next.details.get_mut(path) else {
+            return false;
+        };
+        if let Some(previous) = current.details.get(path)
+            && **detail == **previous
+        {
+            *detail = previous.clone();
+            false
+        } else {
+            true
+        }
+    });
+    if dirty.is_empty() {
+        return Ok(Some(Arc::new(next)));
+    }
+    let Some(revision) = current.index.revision.checked_add(1) else {
+        return Ok(None);
+    };
+    next.lease = Arc::new(RevisionLease::default());
+    next.index.revision = revision;
     let mut schemas = UsageSchemas::new(&next.index.components);
     for path in dirty {
         if let Some(detail) = next.details.get_mut(&path) {
-            if let Some(previous) = current.details.get(&path)
-                && **detail == **previous
-            {
-                *detail = previous.clone();
-                continue;
-            }
             let detail = Arc::make_mut(detail);
             detail.revision = Some(revision);
             next.files.insert(

@@ -136,3 +136,7 @@ mod background_tests;
 pub(crate) fn stopped(stop: &watch::Receiver<bool>) -> bool {
     *stop.borrow() || stop.has_changed().is_err()
 }
+
+#[cfg(test)]
+#[path = "_tests_/quiet_background_tests.rs"]
+mod quiet_background_tests;

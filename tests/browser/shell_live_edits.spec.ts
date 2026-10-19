@@ -90,12 +90,10 @@ test("an edit renders again after a revision adoption and after a live.generatio
       "specs/tour.use-case.yaml",
       tourFile("Tour v2"),
     );
-    // Serve can publish once more after it settles (a background render
-    // completion carries no marker), so the render may use a later revision.
     const adopted = await settleLive(server.url, first.revision);
     await expect
       .poll(() => sent.at(-1) && renderBody(sent.at(-1)!).revision)
-      .toBeGreaterThanOrEqual(adopted);
+      .toBe(adopted);
     expect((await liveIndex(server.url)).generation).toBe(first.generation);
     expect(renderBody(sent.at(-1)!).label).toBe("Kept edit");
 
@@ -110,8 +108,7 @@ test("an edit renders again after a revision adoption and after a live.generatio
       "specs/card.component.html",
       cardFile('<i class="marker">v2</i>'),
     );
-    // The tour edit can still publish above `adopted`, so the wait also needs
-    // the card edit's own result: a new live generation.
+    // Wait for the card edit's new live generation.
     await settleLive(
       server.url,
       adopted,
@@ -184,12 +181,10 @@ test("a 409 refreshes the index once and retries while the event stream is down"
         expect.stringContaining("After the publication 1"),
         expect.stringContaining("After the publication 1"),
       ]);
-    // The shell reads the index once for each revision that Serve rejected;
-    // a background publication after the wait can add a second round.
     expect(rejected.size).toBeGreaterThan(0);
     expect(rejected.has(before.revision)).toBe(true);
     expect(statuses.at(-1)).toBe(200);
-    expect(indexReads).toHaveLength(rejected.size);
+    expect(indexReads).toHaveLength(1);
     expect(renderBody(sent.at(-1)!).revision).toBeGreaterThan(before.revision);
   } finally {
     await closeServe(page, server);
