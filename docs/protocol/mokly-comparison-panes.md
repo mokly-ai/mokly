@@ -167,8 +167,8 @@ Browser regressions, listed in the
 every item below in live Serve through the selected comparison path. A static
 build and an embedded viewer through both frame adapters also prove stack
 alignment, frame attributes, and inert links and anchors; the static build also
-proves Side by side mirroring, and both hosts prove the pane failure path. Unit
-tests cover the controllers.
+proves Side by side mirroring, and the static build and the cross-origin adapter
+prove the pane failure path. Unit tests cover the controllers.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer

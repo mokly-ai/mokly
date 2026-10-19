@@ -169,7 +169,8 @@ reason that contradicts its record is dropped: `removed` on a current record,
 `added` on a record with a base side, `screen` outside a use case, and
 `implementation` outside a component parent. A viewer still loads such a
 detail, and a detail whose reasons disagree with its record's Changes
-membership, so that details written before reasons existed keep loading.
+membership; Details then show only the reasons that fit, so that a recoverable
+mismatch never hides the entry.
 
 | Reason           | Sentence                                                 |
 | ---------------- | -------------------------------------------------------- |
