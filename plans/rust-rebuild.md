@@ -1770,9 +1770,19 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       excludes these paths. New input bounds or wider rewrites need a decision.
 - [ ] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
-- [ ] Measure generation source-snapshot retention and per-root CSS asset
+- [x] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
+      Digest-only repeat at `0cda750a` on the same machine: 48 routes and 166
+      documents; four PNG assets shared by four CSS roots; `build --no-changes`.
+      Asset inputs: 16,790,336/67,152,192 bytes. Final source retention stayed
+      70,425 bytes. First asset-root preparation: 339/1,368 ms; each other
+      sharing root: 0–1 ms. Build: 4.022/10.033 s; CLI RSS: 142,196/192,128 KiB;
+      whole harness RSS: 348,316/383,028 KiB, below its 4 GiB observation stop.
+      All eight output hashes matched; each asset had one generated output.
+      These are observations, not new total-memory acceptance budgets.
+      Evidence: `.context/m14-measurements/assets-16mib/.context/measurements.json`
+      and `.context/m14-measurements/assets-64mib/.context/measurements.json`.
   - [x] Measure repository snapshot payload and CSS-root preparation with large
         asset inputs through the guarded build harness.
   - [x] Review opaque CSS asset retention before a redesign or larger probes.
