@@ -60,8 +60,11 @@ const tag = (side: Side) =>
 /**
  * The changed screen: a shorter Before page and panel, a panel link, a
  * catalogue link, and an anchor whose target can reach the viewport top.
+ * Only Before's main element holds the class that the canvas rule matches.
  */
-const content = (side: Side) => `<main>
+const content = (
+  side: Side,
+) => `<main${side === "Before" ? ' class="shorter"' : ""}>
 <h1>${side} screen</h1>
 <a id="snapshot-link" href="mock:screens/stable">Open the stable screen</a>
 <a id="jump" href="#end">Jump to the end</a>
@@ -86,11 +89,13 @@ async function writeSide(root: string, side: Side): Promise<void> {
     "theme.css",
     `.accent { color: ${before ? "rgb(180, 30, 30)" : "rgb(30, 60, 180)"}; }\n`,
   );
-  // Only the custom property changes; the canvas colour is the same on both sides.
+  // Only the custom property changes. The canvas rule is the same on both
+  // sides, but only Before's markup matches it, so each version has its own
+  // canvas colour.
   await write(
     root,
     "changed.css",
-    `:root { --page-tint: ${before ? "rgb(250, 250, 250)" : "rgb(244, 246, 250)"}; }\nhtml { background: rgb(250, 240, 230); }\n`,
+    `:root { --page-tint: ${before ? "rgb(250, 250, 250)" : "rgb(244, 246, 250)"}; }\nhtml:has(main.shorter) { background: rgb(250, 240, 230); }\n`,
   );
   await write(
     root,

@@ -9,7 +9,8 @@ use crate::build::{BuildChanges, BuildSummary};
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 use crate::serve_output::{
-    accept_failure, accept_recovery, catalogue, changes_unavailable, ready, shortcuts,
+    accept_failure, accept_recovery, catalogue, changes_ready, changes_unavailable, ready,
+    shortcuts,
 };
 
 #[test]
@@ -129,4 +130,31 @@ fn accept_failure_and_recovery_are_visible_in_both_modes() {
             "! Serve can accept connections again."
         );
     }
+}
+
+#[test]
+fn changes_ready_uses_the_shared_counts_and_a_separate_duration_column() {
+    let rich = Style {
+        mode: Mode::Rich,
+        color: false,
+        ascii: false,
+        columns: 90,
+    };
+    let line = changes_ready(&rich, 5, 1, 2, Duration::from_millis(3600));
+    assert!(line.starts_with("  ✔ Changes ready · 5 changes · 1 moved · 2 ignored-only"));
+    assert!(line.ends_with("3.6s\n"));
+    assert_eq!(unicode_width::UnicodeWidthStr::width(line.trim_end()), 90);
+    assert!(
+        changes_ready(
+            &Style {
+                mode: Mode::Plain,
+                ..rich
+            },
+            5,
+            1,
+            2,
+            Duration::ZERO
+        )
+        .is_empty()
+    );
 }

@@ -171,6 +171,8 @@ removed entry opens its base render under
 another server process reloads the page; no other update does: the shell
 replaces the index and the details in place and reloads only the frames
 whose `documentKey` changed.
+A usage completion that changes no detail publishes nothing. Reused ready
+usage counts as complete in the new Serve snapshot.
 
 ## Component Workspaces
 
@@ -207,6 +209,8 @@ Shutdown runs in this order:
 
 1. Stop accepting connections, end every event stream, and close every
    remaining client connection, including incomplete requests.
+   Event-stream connections have a 250 ms grace period to flush their final
+   chunk before the other connections close.
 2. Stop the watcher and discard a configuration candidate that has not been
    adopted.
 3. Cancel outstanding render, background, and comparison work; drain the

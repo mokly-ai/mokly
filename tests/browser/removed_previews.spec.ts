@@ -1,10 +1,11 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type Request } from "@playwright/test";
 
 import { passRenderingUpdates } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   chooseFilter,
   comparisonIndex,
+  endedRequests,
   navRow,
   snapshotOf,
   type ComparisonIndex,
@@ -221,29 +222,33 @@ test("navigation fences a late response and keeps history usable", async ({
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  let settled: Promise<void> | undefined;
-  await page.route(`**${document}`, (route) => {
-    settled = (async () => {
-      await held;
-      await route.continue().catch(() => undefined);
-    })();
-    return settled;
+  const heldRequests: Request[] = [];
+  await page.route(`**${document}`, async (route) => {
+    heldRequests.push(route.request());
+    await held;
+    await route.continue().catch(() => undefined);
   });
+  const ended = endedRequests(page);
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseFilter(page, "changed");
   await navRow(page, comparisonPaths.removedPage).click();
   await expect(page.locator(".mbk-preview-status")).toHaveText(
     "Loading previous version…",
   );
+  // Move on only once the shell holds a request for the page document.
+  await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
   await navRow(page, comparisonPaths.removedScreen).click();
   const screen = page
     .frameLocator(SCREEN_PREVIEW)
     .getByRole("heading", { name: "Historical screen" });
   await expect(screen).toBeVisible();
-  // Deliver the late page document, then let the shell handle it.
+  // Release the held document, wait until the browser ends that request
+  // (the shell cancels it when the reader moves on), then let the shell
+  // handle the outcome.
   release();
-  expect(settled).toBeDefined();
-  await settled;
+  await expect
+    .poll(() => heldRequests.every((held) => ended.has(held)))
+    .toBe(true);
   await passRenderingUpdates(page);
   await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
   await expect(screen).toBeVisible();

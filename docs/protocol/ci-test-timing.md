@@ -99,8 +99,11 @@ An expected-state allowance inside a test can be longer than the runner timeout.
 The runner timeout then bounds the whole test.
 The inner allowance sets the failure message when it expires first.
 
-The fixture setup budgets live in `tests/helpers/fixture_timing.ts`. Fixture
-phase reporting follows [CI suite evidence](./ci-suite-evidence.md).
+The fixture setup budgets live in `tests/helpers/fixture_timing.ts`. Full
+catalogue setup uses a 600,000 ms budget. The isolated link-control catalogue
+uses a 180,000 ms budget in its `beforeAll` hook. Its tests keep the normal
+60,000 ms timeout. Fixture phase reporting follows
+[CI suite evidence](./ci-suite-evidence.md).
 
 ## Shared Evidence Helpers
 

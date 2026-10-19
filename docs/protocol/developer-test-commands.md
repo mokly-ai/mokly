@@ -160,8 +160,10 @@ npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
 After a build, the same selection can use
 `npx playwright test tests/browser/pages.spec.ts -g "retain metadata"`. The
 browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
-`.only`. Spec discovery is defined in
-[CI verification](./ci-verification.md#gate-ownership).
+`.only`. [CI verification](./ci-verification.md#gate-ownership) defines spec discovery.
+
+Shared Serve uses `refs/mokly/browser-suite-no-base` and waits for settled usage and unavailable Changes.
+It requires one `git-failed` line. Real Changes specs own separate Git fixtures.
 
 Global setup copies the current-only example for most `static_*.spec.ts`, `stage_centring`,
 and `review_snapshot_links`. A second two-commit fixture serves comparison specs; [fixture APIs](../../tests/browser/README.md) describe both.
@@ -172,9 +174,8 @@ npx mokly build --config examples/basic/mokly.config.json --no-changes --out ../
 MOKLY_PLAYWRIGHT_STATIC_DIR=.context/example npm run test:browser -- tests/browser/browse_chrome.spec.ts
 ```
 
-The host uses exact files and a free port; supplied output must have Changes disabled.
-Browser specs support POSIX systems only. Specs must not assume an empty Changes set:
-remote Testboxes hold branch edits as working-tree changes against their base.
+The host uses exact files and a free port. Supplied output must have Changes disabled.
+Browser specs support POSIX only. Do not assume empty Changes in remote Testboxes.
 `MOKLY_PLAYWRIGHT_FILE_DIR` selects the same built directory for design checks
 that open portable documents directly through `file://` URLs.
 

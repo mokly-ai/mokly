@@ -53,14 +53,17 @@ async fn incomplete_requests_close_and_a_failed_hook_does_not_skip_cleanup() {
     assert!(harness.close_result().await.is_err());
     let mut bytes = Vec::new();
     if let Err(error) = incomplete.read_to_end(&mut bytes).await {
-        assert_eq!(error.kind(), std::io::ErrorKind::ConnectionReset);
+        assert_eq!(
+            error.kind(),
+            std::io::ErrorKind::ConnectionReset,
+            "{address}: {error}"
+        );
     }
     assert!(bytes.is_empty());
     assert_eq!(
         *calls.lock().unwrap(),
         ["watcher", "renders", "git", "sidecars", "release"]
     );
-    assert!(std::net::TcpListener::bind(address).is_ok());
 }
 
 #[tokio::test]

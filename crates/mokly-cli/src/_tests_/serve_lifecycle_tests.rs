@@ -23,9 +23,13 @@ async fn watcher_cancellation_and_idle_shutdown_follow_the_documented_order() {
                 assert!(observed.requested());
                 Ok(())
             })),
+        crate::serve_git::GitWorkMock::cancel
+            .next_call(matching!())
+            .returns(()),
         PoolMock::shutdown.next_call(matching!()).returns(Ok(())),
     ));
     let lifecycle = ServeLifecycle {
+        git: Arc::new(mock.clone()),
         watch: Mutex::new(Some(Arc::new(mock.clone()))),
         pool: Arc::new(mock.clone()),
         cancellation: cancellation.clone(),

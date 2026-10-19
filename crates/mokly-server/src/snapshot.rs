@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::sync::Arc;
 
+use mokly_compare::projection_index;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::canonical;
 use mokly_model::catalogue::CatalogueModel;
@@ -18,6 +19,7 @@ use mokly_model::shell;
 
 use crate::assets::File;
 use crate::backend::Documents;
+use crate::changes::Accepted;
 use crate::detail_encoding::ValidatedDetails;
 use crate::error::{InternalError, Result};
 use crate::evidence::{Completion, RenderRoute};
@@ -29,6 +31,8 @@ use crate::revision_file::RevisionFile;
 /// One immutable publication; replacement swaps this whole value.
 #[derive(Clone)]
 pub struct Snapshot {
+    /// Accepted classification, replaced atomically with its public records.
+    pub changes: Option<Arc<Accepted>>,
     /// Document keys used to retain proven usage across render generations.
     pub document_keys: BTreeMap<String, String>,
     /// Shared routes, assets, and backend for this generation.
@@ -138,26 +142,14 @@ impl Projector {
         input: SnapshotInput,
         previous: Option<&Snapshot>,
     ) -> Result<Arc<Snapshot>> {
-        let keys: Vec<_> = generation
-            .plans()
-            .values()
-            .map(|plan| ViewKey {
-                path: generation.catalogue().model.entries[plan.entry]
-                    .metadata
-                    .path
-                    .clone(),
-                viewport: plan.viewport,
-                color_scheme: plan.color_scheme,
-                key: plan.key.0.clone(),
-            })
-            .collect();
+        let keys = projection_index::keys(generation.as_ref());
         let live_generation = generation.generation_key().to_owned();
         let state = Publication {
             config_path: input.config_path,
             deployment_id: self.deployment_id.clone(),
             revision: input.revision,
             base: input.base,
-            changes_status: ChangesStatus::Unavailable,
+            changes_status: ChangesStatus::Pending,
             live_generation: Some(live_generation.clone()),
         };
         let (index, encoded) = build_index(&generation.catalogue().model, &keys, &state)?;
@@ -169,7 +161,7 @@ impl Projector {
             .map(|(route, plan)| (route.clone(), plan.key.0.clone()))
             .collect();
         let mut details = projection::pending_details(&generation.catalogue().model, &index, &keys);
-        replacement::reuse_usage(&mut details, &index, &document_keys, previous);
+        let completed = replacement::reuse_usage(&mut details, &index, &document_keys, previous);
         let details =
             replacement::encode_details(details, &index, previous, &mut files, &ValidatedDetails)?;
         let render_token = self.render_token.clone();
@@ -202,6 +194,10 @@ impl Projector {
             .map(|route| (route.route.clone(), route.clone()))
             .collect();
         let shared = Arc::new(Generation {
+            model: Arc::new(generation.catalogue().model.clone()),
+            view_keys: keys,
+            config_path: state.config_path,
+            changes: None,
             routes,
             views,
             assets,
@@ -217,10 +213,11 @@ impl Projector {
             render_token,
         });
         Ok(Arc::new(Snapshot {
+            changes: None,
             generation: shared,
             document_keys,
             details,
-            completed: BTreeMap::new(),
+            completed,
             lease: Arc::new(RevisionLease::default()),
             index,
             files,
@@ -252,7 +249,7 @@ fn build_index(
     Ok((index, file))
 }
 
-fn checked_index(index: &CatalogueReadModel) -> Result<File> {
+pub(crate) fn checked_index(index: &CatalogueReadModel) -> Result<File> {
     let encoded = encode(index)?;
     if let Err(source) = readers::index(&String::from_utf8_lossy(&encoded.bytes)) {
         return Err(InternalError::Read { source }.into());

@@ -1,7 +1,6 @@
 //! Native CLI composition of the shared JavaScript and HTML rendering services.
 
 use std::env;
-use std::io::{self, Write};
 use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -9,7 +8,6 @@ use std::sync::Arc;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::grammar::Common;
-use mokly_cli::redaction::Redactor;
 use mokly_cli::version::VERSION;
 use mokly_graph::cache::MemoryCache;
 use mokly_graph::error::Result;
@@ -96,20 +94,6 @@ fn runtime(
         VERSION.into(),
         None,
     ))
-}
-
-pub(super) fn diagnostics(redactor: Arc<Redactor>) -> Arc<dyn Diagnostics> {
-    Arc::new(Reporter { redactor })
-}
-
-struct Reporter {
-    redactor: Arc<Redactor>,
-}
-
-impl Diagnostics for Reporter {
-    fn emit(&self, message: &str) {
-        let _ = writeln!(io::stderr().lock(), "{}", self.redactor.safe(message));
-    }
 }
 
 fn sidecar_entry(cwd: &Path) -> PathBuf {

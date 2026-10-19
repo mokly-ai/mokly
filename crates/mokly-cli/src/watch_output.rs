@@ -10,6 +10,24 @@ use crate::output::{Mode, Style, bounded};
 use crate::redaction::Redactor;
 use crate::serve_output::{columns, duration};
 
+/// One resolved Git change, without creating a new catalogue warning attempt.
+pub fn git_refresh(style: &Style, reference: &str, time: &str, redactor: &Redactor) -> String {
+    if style.mode == Mode::Plain {
+        return String::new();
+    }
+    let glyph = if style.ascii { "G" } else { "⟲" };
+    format!(
+        "{}\n",
+        bounded(
+            &format!(
+                "  {time}  {glyph} {} moved  comparing again",
+                redactor.safe(reference)
+            ),
+            style.columns
+        )
+    )
+}
+
 /// One settled watch event with an injected clock label for deterministic tests.
 pub fn line(
     style: &Style,

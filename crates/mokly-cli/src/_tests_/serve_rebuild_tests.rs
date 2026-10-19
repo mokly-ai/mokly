@@ -35,6 +35,7 @@ pub(super) fn initial() -> Arc<Snapshot> {
     .unwrap();
     index.revision = 1;
     Arc::new(Snapshot {
+        changes: None,
         document_keys: BTreeMap::new(),
         index,
         details: BTreeMap::new(),
@@ -42,6 +43,15 @@ pub(super) fn initial() -> Arc<Snapshot> {
         files: BTreeMap::new(),
         lease: Arc::new(RevisionLease::default()),
         generation: Arc::new(Generation {
+            model: Arc::new(CatalogueModel {
+                entries: Vec::new(),
+                folders: Vec::new(),
+                sources: Vec::new(),
+                color_schemes: Vec::new(),
+            }),
+            view_keys: Vec::new(),
+            config_path: "mokly.config.json".into(),
+            changes: None,
             routes: Vec::new(),
             views: BTreeMap::new(),
             assets: BTreeMap::new(),

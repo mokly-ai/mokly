@@ -74,6 +74,20 @@ documents. Background work is bounded, yields to foreground renders, and
 cannot publish after its state is superseded by a watched change; a
 superseded result is discarded. `--no-watch` runs this work once.
 
+Sidecar admission preserves foreground priority for each whole HTTP render.
+Queued base calls wait until those requests finish their sidecar work. With
+one worker, a foreground burst needs at most one switch to the head root and
+one switch back.
+Active calls finish under their existing deadlines. Both sides share the
+configured worker bound, including when the pool has one worker. Replacement
+and shutdown wake queued calls to check cancellation before pool admission.
+
+The event stream sends a comment after 15 seconds without a publication to
+keep idle connections active during background work. These comments carry no
+revision or data field. EventSource clients ignore comments under the
+[SSE format](https://html.spec.whatwg.org/multipage/server-sent-events.html#authoring-notes).
+Shutdown ends the stream before its next comment.
+
 A source or configuration change replaces the catalogue model and the moved
 graph nodes together under the [watch contract](./mokly-watch.md); a failed
 candidate keeps the last-good state. Replacement invalidates the cached
@@ -85,14 +99,16 @@ before cleanup completes.
 
 ## Comparison Snapshots
 
-No comparison generation is assembled until the reader selects a diff or opens a removed
-entry. The shell then requests `/mokly-viewer/diffs/review.json?path=<path>`
-for the selected screen or component entry, with `refresh=1` for an explicit
-retry, under the
-[selected comparison contract](./mokly-selected-comparisons.md). Serve takes
-the base views from the bounded capture or pinned-source fallback and the head
-views from the bounded render cache. It renders evicted head views again from
-the same inputs, treats missing or pending evidence as the
+No comparison generation is assembled until the reader selects a diff or opens a
+removed entry. For a current screen or component, the shell requests
+`/mokly-viewer/diffs/review.json?path=<path>`, with `refresh=1` for an explicit
+retry, under the [selected comparison contract](./mokly-selected-comparisons.md).
+Removed component parents and variants use the advertised generation URL.
+Historical screens, pages, and documents use that generation under the
+[removed previews contract](./mokly-removed-previews.md). The selected endpoint
+takes the current entry's base views from the bounded capture or pinned-source
+fallback and its head views from the bounded render cache. It renders evicted
+head views again from the same inputs, treats missing or pending evidence as the
 retryable failure, writes the review result v8 and the two snapshot trees into one
 immutable in-memory generation, and redirects to
 `/mokly-viewer/diffs/generations/<generation>/review.json`. Snapshot files

@@ -84,7 +84,10 @@ tests start. Both runners print the value they use.
 
 Each Playwright worker owns one example server. Global setup starts and readies
 the workers concurrently. It starts the shim
-with `--base HEAD --no-watch --port 0 --sidecars 1`. Serve binds a free loopback port and
+with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 1`.
+The shared example does not test Changes. Its intentionally unresolved base
+produces `unavailable` and one `git-failed` diagnostic. Real Changes specs
+own separate Git fixtures. Serve binds a free loopback port and
 prints its listening address. Setup waits for the initial usage publication
 and for Changes to leave its pending or preparing state. It fails on an
 unavailable example render. It publishes the addresses to workers through

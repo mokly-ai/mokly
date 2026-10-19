@@ -31,6 +31,9 @@ Process-local elapsed times cannot be compared across processes; use `role`
 and `pid` to separate the core from each sidecar. A start without an end
 identifies work still in progress or a terminated process. `ok` means a
 phase returned successfully, not that optional Git evidence was available.
+Serve classification succeeds when ready or unavailable state commits.
+Replaced or failed publications keep error status. A `review.capture` span succeeds only after
+its files are installed. Its Serve duration includes queue time.
 
 ## Core Spans
 
