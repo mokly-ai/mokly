@@ -111,11 +111,22 @@ function readStack(section: Locator): Promise<[number, number][]> {
   });
 }
 
-/** Every rendering update right after a wheel shows each document at its viewport. */
-async function expectInstantFollow(page: Page, section: Locator) {
-  for (const sample of await sampleFrames(page, () => readStack(section), 20))
+/**
+ * Every rendering update right after a wheel shows each document at its
+ * viewport. When `mirrored`, Side by side's two viewports also show one offset
+ * in every sampled frame.
+ */
+async function expectInstantFollow(
+  page: Page,
+  section: Locator,
+  mirrored = false,
+) {
+  for (const sample of await sampleFrames(page, () => readStack(section), 20)) {
     for (const [document, viewport] of sample)
       expect(document, JSON.stringify(sample)).toBe(viewport);
+    if (mirrored)
+      expect(sample[1]![1], JSON.stringify(sample)).toBe(sample[0]![1]);
+  }
 }
 
 test("smooth-scroll CSS in the documents and the host still moves every version at once", async ({
@@ -154,6 +165,6 @@ test("smooth-scroll CSS in the documents and the host still moves every version 
   await expectSmooth();
   await expectMirrored(desktop, 0);
   await wheelOver(page, paneFrame(desktop, "before"), 300);
-  await expectInstantFollow(page, desktop);
+  await expectInstantFollow(page, desktop, true);
   await expectMirrored(desktop, 300);
 });

@@ -5,6 +5,7 @@
  * their declaration order.
  */
 
+import { reasonKey } from "../catalogue/reason_order.js";
 import { canonicalJson } from "../components/data.js";
 import type { EvidenceOwner } from "../generated/catalogue/EvidenceOwner.js";
 import type { ResourceEvidence } from "../generated/catalogue/ResourceEvidence.js";
@@ -14,7 +15,6 @@ import { requireOrdered } from "./result_helpers.js";
 import type {
   AffectedConsumer,
   AffectedUsageEvidence,
-  EntryChangeReason,
   ReviewEntry,
   ReviewView,
 } from "./types.js";
@@ -35,18 +35,6 @@ const RANK: Readonly<Record<string, string>> = {
 const key = (...parts: readonly string[]) => parts.join(SEPARATOR);
 const owner = (value: EvidenceOwner) =>
   value.kind === "entry" ? key("entry", "") : key("component", value.path);
-
-/** Lexical reason kind, then its explicit target. */
-function reasonKey(reason: EntryChangeReason): string {
-  return key(
-    reason.kind,
-    reason.kind === "dependency"
-      ? reason.path
-      : reason.kind === "screen"
-        ? reason.screenPath
-        : "",
-  );
-}
 
 function ruleKey(rule: RuleEvidence): string {
   return key(rule.stylesheet, rule.selector, rule.status, owner(rule.owner));

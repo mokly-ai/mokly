@@ -6,7 +6,11 @@ import {
   type GeneratedComponentView,
 } from "../components/views.js";
 import { reviewEntry } from "../review/entries.js";
-import type { ReviewEntry, ViewResourceEvidence } from "../review/types.js";
+import type {
+  EntryChangeReason,
+  ReviewEntry,
+  ViewResourceEvidence,
+} from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -72,6 +76,11 @@ export interface WorkspaceData {
   status?: EntryStatus;
   /** The routed entry's review record while Changes lists it. */
   change?: ReviewEntry;
+  /**
+   * The routed entry's direct reasons from its detail, while Changes is
+   * ready and includes it; a pure move has none.
+   */
+  reasons?: readonly EntryChangeReason[];
   /** The screen's review record, or the component parent with its variants. */
   comparison?: ReviewEntry;
   resourceEvidence?: readonly ViewResourceEvidence[];

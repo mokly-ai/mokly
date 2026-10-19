@@ -9,6 +9,7 @@ use crate::error::Result;
 use crate::pool::Pool;
 use crate::pool_cleanup;
 use crate::pool_state::State;
+use crate::pool_timing::Reason;
 
 pub(super) enum Notice {
     Work,
@@ -135,11 +136,19 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
             Ok(changed) => (Some(slot), changed),
             Err(error) => {
                 tracing::warn!(%error, "sidecar cleanup failed");
-                let _ = slot.control.kill();
+                let stopped = pool_cleanup::lock(state)?.stopped;
+                let _ = if stopped {
+                    slot.control.kill()
+                } else {
+                    Reason::Replacement.kill(slot.control.as_ref())
+                };
                 (None, true)
             }
         };
         let mut state = pool_cleanup::lock(state)?;
+        if slot.is_none() {
+            state.replacement_reasons.insert(index, Reason::Replacement);
+        }
         state.slots[index] = if state.stopped { None } else { slot };
         if state.slots[index].is_none() {
             state.controls.remove(&index);
@@ -157,3 +166,7 @@ fn clean_idle(state: &Mutex<State>, ready: &Condvar, timeout: Option<u64>) -> Re
 #[cfg(test)]
 #[path = "_tests_/pool_release_ownership_tests.rs"]
 mod pool_release_ownership_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_release_timing_tests.rs"]
+mod pool_release_timing_tests;

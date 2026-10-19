@@ -46,6 +46,7 @@ const session = new Session(
       }),
     );
   },
+  timings,
 );
 const input = parentInput();
 try {

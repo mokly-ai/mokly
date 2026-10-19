@@ -2,7 +2,7 @@
 
 use std::sync::mpsc::SyncSender;
 
-use crate::process_io::Reaper;
+use crate::process_reaper::Reaper;
 
 #[cfg_attr(test, unimock::unimock(api = CompletionWaitMock))]
 pub(super) trait CompletionWait {

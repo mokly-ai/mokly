@@ -18,6 +18,8 @@ import type { VirtualOrigin } from "./bundle-errors.js";
 import { moduleGraph } from "./bundle-graph.js";
 import { bundleResult, fileDigest, restore } from "./compiled.js";
 import { SidecarError } from "./errors.js";
+import { unmeasured } from "./measurements.js";
+import type { Measurements } from "./measurements.js";
 import { ModulePaths } from "./module-paths.js";
 import { logical } from "./path-scope.js";
 import { confinedFile, consumerRequire } from "./paths.js";
@@ -58,6 +60,7 @@ export interface BundleExports {
 export async function bundle(
   params: BundleParams,
   compile: typeof build,
+  measurements: Measurements = unmeasured,
 ): Promise<{ generation: Generation; result: BundleResult }> {
   const virtualOrigins = new Map<string, VirtualOrigin>();
   let sources: ModulePaths | undefined;
@@ -158,25 +161,32 @@ export async function bundle(
       ...resolutionOptions(params.sourceRoot, resolution),
       loader: loaders as Record<string, Loader>,
     } satisfies Parameters<typeof build>[0];
-    const compiled = await compile(options);
-    const { modules: graph, physical } = moduleGraph(compiled.metafile!, paths);
+    const compiled = await measurements.run("sidecar.bundle.compile", () =>
+      compile(options),
+    );
+    const { modules: graph, physical } = measurements.runSync(
+      "sidecar.bundle.graph",
+      () => moduleGraph(compiled.metafile!, paths),
+    );
     const hash = createHash("sha256");
     const physicalInputs: Record<string, string | null> = {};
     const metadataInputs: Record<string, string | null> = {};
-    for (const module of graph) {
-      const absolute = physical.get(module.path)!;
-      const text = inputs.files.get(absolute);
-      if (text === undefined)
-        throw new Error(
-          `Bundled source bytes were not recorded: ${module.path}`,
-        );
-      module.digest = createHash("sha256").update(text).digest("hex");
-      hash.update(JSON.stringify([module.path, module.imports]));
-      if (!module.path.endsWith(".css")) {
-        hash.update(text);
-        physicalInputs[absolute] = module.digest;
+    measurements.runSync("sidecar.bundle.inputs", () => {
+      for (const module of graph) {
+        const absolute = physical.get(module.path)!;
+        const text = inputs.files.get(absolute);
+        if (text === undefined)
+          throw new Error(
+            `Bundled source bytes were not recorded: ${module.path}`,
+          );
+        module.digest = createHash("sha256").update(text).digest("hex");
+        hash.update(JSON.stringify([module.path, module.imports]));
+        if (!module.path.endsWith(".css")) {
+          hash.update(text);
+          physicalInputs[absolute] = module.digest;
+        }
       }
-    }
+    });
     for (const file of params.storiesFiles.length ? previews : []) {
       const absolute = path.resolve(params.sourceRoot, file);
       metadataInputs[file] = physicalInputs[absolute] =
@@ -206,11 +216,15 @@ export async function bundle(
       ))
         throw error;
     }
-    const directories = await resolutionInputs(
-      paths,
-      physical.values(),
-      physicalInputs,
-      metadataInputs,
+    const directories = await measurements.run(
+      "sidecar.bundle.resolution",
+      () =>
+        resolutionInputs(
+          paths,
+          physical.values(),
+          physicalInputs,
+          metadataInputs,
+        ),
     );
     hash.update(JSON.stringify(metadataInputs));
     hash.update(

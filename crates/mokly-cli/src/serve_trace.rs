@@ -14,6 +14,7 @@ use tracing_subscriber::Layer;
 use tracing_subscriber::layer::{Context, SubscriberExt};
 use tracing_subscriber::registry::LookupSpan;
 
+use crate::serve_trace_stages::stage;
 use crate::terminal::Terminal;
 
 pub(super) struct Timings {
@@ -64,6 +65,9 @@ impl Visit for Fields {
             "viewport" | "scheme" | "action" | "operation" => {
                 self.values.insert(field.name().into(), json!(value));
             }
+            "reason" if matches!(value, "recycle" | "replacement" | "retry" | "root-switch") => {
+                self.values.insert(field.name().into(), json!(value));
+            }
             "status" => self.error = value == "error",
             "sidecar_timing" => self.sidecar_timing = Some(value.to_owned()),
             _ => {}
@@ -104,53 +108,6 @@ impl Visit for Fields {
             self.record_str(field, &format!("{value:?}"));
         }
     }
-}
-
-fn stage(name: &str) -> bool {
-    matches!(
-        name,
-        "serve.ready"
-            | "watch.action"
-            | "serve.background"
-            | "config.load"
-            | "catalogue.discover"
-            | "catalogue.validate"
-            | "catalogue.describe"
-            | "graph.prepare"
-            | "render.document"
-            | "render.fragment"
-            | "css.bundle"
-            | "css.postcss"
-            | "index.build"
-            | "detail.build"
-            | "build"
-            | "publish"
-            | "output.write"
-            | "output.fingerprint"
-            | "output.input-digests"
-            | "output.input-read"
-            | "output.recheck"
-            | "output.stage"
-            | "output.install"
-            | "output.capture"
-            | "output.rollback"
-            | "output.cleanup"
-            | "changes.classify"
-            | "review.base-commit"
-            | "review.base-tree"
-            | "review.base-dependencies"
-            | "review.changed-paths"
-            | "review.compare-views"
-            | "review.capture-side"
-            | "review.resource-graph"
-            | "review.css-analysis"
-            | "review.capture"
-            | "sidecar.spawn"
-            | "sidecar.recycle"
-            | "upload.plan"
-            | "upload.blobs"
-            | "upload.complete"
-    )
 }
 
 impl Timings {
@@ -287,3 +244,7 @@ mod serve_trace_tests;
 #[cfg(test)]
 #[path = "_tests_/sidecar_trace_tests.rs"]
 mod sidecar_trace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/sidecar_stop/mod.rs"]
+mod sidecar_stop_tests;

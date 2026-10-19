@@ -7,6 +7,7 @@ use crate::methods::Call;
 use crate::pool::Pool;
 use crate::pool_requests::generation;
 use crate::pool_state::Slot;
+use crate::pool_timing::Reason;
 
 impl Pool {
     pub(super) fn source_root(&self, call: &Call) -> Result<Option<PathBuf>> {
@@ -34,7 +35,14 @@ impl Pool {
         if let (Some(current), Some(root)) = (slot.as_ref(), root)
             && root != current.source_root
         {
-            current.control.kill()?;
+            if self.lock()?.stopped {
+                current.control.kill()?;
+            } else {
+                Reason::RootSwitch.kill(current.control.as_ref())?;
+            }
+            self.lock()?
+                .replacement_reasons
+                .insert(index, Reason::RootSwitch);
             tracing::debug!(slot = index, previous_root = %current.source_root.display(), source_root = %root.display(), "sidecar source root replaced");
             *slot = None;
             self.forget_other_roots(index, root)?;

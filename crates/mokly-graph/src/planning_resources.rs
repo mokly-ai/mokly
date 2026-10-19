@@ -20,6 +20,7 @@ pub(crate) struct Resources {
 }
 
 impl Resources {
+    #[tracing::instrument(name = "graph.prepare.resources", skip_all, err)]
     pub(crate) fn prepare(
         config: &ResolvedConfig,
         catalogue: &PreparedCatalogue,

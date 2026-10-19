@@ -120,6 +120,6 @@ grammar, roles, accessible names, and fingerprints;
 counts, ineligible picks, and each row of the table above; and
 `comparison_region_mirror.test.ts` proves caching, reservations, the reverse
 pair, and matching afresh after a measurement. In the browser,
-`tests/browser/comparison_regions.spec.ts` pairs an app shell's panels by
+`tests/browser/comparison_regions_pairing.spec.ts` pairs an app shell's panels by
 authored name, id, landmark and label, and text alone, and leaves an ambiguous,
 an `off`, and a new panel unpaired.

@@ -89,6 +89,17 @@ copied output; the source repository and first output are removed.
 | `removedComponent`     | `components/retired`: removed component parent                                                                                                                                                                                                                                                                                                         |
 | `removedVariant`       | `components/card/archived`: removed variant of a surviving component                                                                                                                                                                                                                                                                                   |
 
+The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
+switch filters and modes, and measure pane, viewport, and region offsets.
+
+Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
+removed record's `snapshotId`. Use the canonical `/view/{path}/` route and
+`snapshot` query when selecting a historical record. The fixture provides
+native comparison data for comparison modes, removed previews, Changed
+membership, navigation disclosure, focus, scrolling, and stylesheet Details.
+Each spec owns its browser state and assertions; the fixture does not mock
+read models or alter responses.
+
 ## Embedded comparison viewer
 
 `comparison_viewer_host.ts` mounts the public `MoklyViewer` over the native
@@ -102,17 +113,6 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
 `comparisonViewerHost(source)` mounts another copy instead, such as the
 branch copy's `branchCopy.directory`.
-
-The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
-switch filters and modes, and measure pane, viewport, and region offsets.
-
-Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
-removed record's `snapshotId`. Use the canonical `/view/{path}/` route and
-`snapshot` query when selecting a historical record. The fixture provides
-native comparison data for comparison modes, removed previews, Changed
-membership, navigation disclosure, focus, scrolling, and stylesheet Details.
-Each spec owns its browser state and assertions; the fixture does not mock
-read models or alter responses.
 
 ## Branch-point delivery copy
 
@@ -181,6 +181,24 @@ A pure move is included even when its kind is `unmodified`.
 | `moves/current/guide`              | `moves/previous/guide`           | unmodified   | yes      | Pure-moved full HTML page                        |
 | `moves/icon`                       | —                                | unmodified   | no       | Shared nested input target                       |
 | `moves/ring`                       | —                                | unmodified   | no       | Slot container for the glyph                     |
+
+## Small comparison copies
+
+`additions_copy_test.ts` supplies `additionsCopyTest(name, additions?, base?)`.
+The returned `test` builds its own comparison copy once per worker: the default
+catalogue with the source hook, compared with `base` (`fixture-base` unless
+given). Its `baseURL` serves that copy, and the worker fixture
+`additionsCopy` holds its read-only `directory`. Setup uses the isolated
+180,000 ms budget. The default and branch copies keep their membership.
+A copy built with base `HEAD` and no hook publishes ready Changes with no
+change.
+
+| Hook                         | Entries and evidence                                                                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected                               |
+| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                                                |
+| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                                                   |
+| `addImportedCssSources`      | `imported/home`: a JavaScript screen whose CSS Module colour changes and loads a PNG through `url()`; links the repository's `node_modules`, which Git ignores |
 
 ## Shared Serve comparison fixture
 

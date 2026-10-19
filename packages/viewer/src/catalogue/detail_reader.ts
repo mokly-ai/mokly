@@ -8,6 +8,7 @@ import {
   readRange,
   readSlot,
 } from "./component_values.js";
+import { readDetailReasons } from "./detail_reasons.js";
 import { assertPublicDetail } from "./privacy.js";
 import type {
   CatalogueUsage,
@@ -72,6 +73,9 @@ export function readEntryDetail(value: unknown): EntryDetailV1 {
         ? {}
         : { snapshotId: hash(entry.snapshotId) }),
     },
+    ...(input.reasons === undefined
+      ? {}
+      : { reasons: readDetailReasons(input.reasons) }),
     views: array(input.views).map(readDetailView),
     ...(input.resourceEvidence === undefined
       ? {}

@@ -8,6 +8,7 @@ use crate::bindings::Bindings;
 use crate::compiled::CompiledGeneration;
 use crate::memory_schedule::MemorySchedule;
 use crate::methods::{Bundle, CssModules};
+use crate::pool_timing::Reason;
 use crate::results::Module;
 use crate::workers::{Worker, WorkerControl};
 
@@ -34,6 +35,7 @@ pub(super) struct Affinity {
 
 #[derive(Default)]
 pub(super) struct State {
+    pub(super) replacement_reasons: BTreeMap<usize, Reason>,
     pub(super) memory: BTreeMap<usize, MemorySchedule>,
     pub(super) slots: Vec<Option<Slot>>,
     pub(super) available: VecDeque<usize>,

@@ -9,15 +9,16 @@ use mokly_html::{parse, props};
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::routes;
 use pulldown_cmark::{Event, Parser, Tag};
-use serde_json::json;
 
 use crate::error::Result;
-use crate::key::{NodeKey, NodeKind, data_key};
+use crate::key::NodeKey;
+use crate::routing_records::RoutingRecords;
 
 pub(crate) fn key(
     entry: &ModelEntry,
     components: &BTreeSet<String>,
     catalogue: &PreparedCatalogue,
+    records: &RoutingRecords<'_>,
 ) -> Result<NodeKey> {
     let mut targets = BTreeSet::new();
     let mut opaque = false;
@@ -64,49 +65,7 @@ pub(crate) fn key(
             }
         }
     }
-    if opaque {
-        targets.extend(
-            catalogue
-                .model
-                .entries
-                .iter()
-                .map(|entry| entry.metadata.path.clone()),
-        );
-    }
-    let mut records = Vec::new();
-    let mut visited = BTreeSet::new();
-    while let Some(path) = targets.pop_first() {
-        if !visited.insert(path.to_ascii_lowercase()) {
-            continue;
-        }
-        let found = catalogue.model.entries.iter().find(|entry| {
-            entry.metadata.path.eq_ignore_ascii_case(&path)
-                || entry
-                    .metadata
-                    .moved_from
-                    .as_deref()
-                    .is_some_and(|old| old.eq_ignore_ascii_case(&path))
-        });
-        let Some(entry) = found else {
-            records.push(json!({"missing":path}));
-            continue;
-        };
-        let (schemes, first) = match &entry.content {
-            EntryContent::Screen { visual, .. } | EntryContent::Component { visual, .. } => {
-                (visual.color_schemes.clone(), None)
-            }
-            EntryContent::Document { color_schemes, .. } => (color_schemes.clone(), None),
-            EntryContent::UseCase { steps } => {
-                (Vec::new(), steps.first().map(|step| &step.screen_path))
-            }
-            EntryContent::Page => (Vec::new(), None),
-        };
-        if let Some(first) = first {
-            targets.insert(first.clone());
-        }
-        records.push(json!({"requested":path,"path":entry.metadata.path,"kind":entry.content.kind(),"schemes":schemes,"first":first}));
-    }
-    data_key(NodeKind::Document, json!(records))
+    records.key(targets, opaque)
 }
 
 fn scan(
@@ -173,3 +132,7 @@ fn target(
         targets.insert(path);
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/routing_tests.rs"]
+mod routing_tests;
