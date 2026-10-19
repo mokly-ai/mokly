@@ -1,7 +1,5 @@
 //! Markdown metadata and title extraction; document rendering belongs to composition.
 
-use std::collections::BTreeMap;
-
 use mokly_model::paths::title_from_slug;
 use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 use serde_json::{Map, Value};
@@ -11,11 +9,12 @@ use crate::front_matter;
 use crate::input::{EntryInput, ParsedEntry};
 use crate::locations::at;
 use crate::yaml::Document;
+use crate::yaml_positions::Positions;
 
 pub(crate) fn parse(text: String, path: &str) -> Result<ParsedEntry, Issue> {
     let block = front_matter::split(&text, path, false)?;
     let mut object = Map::new();
-    let mut positions = BTreeMap::new();
+    let mut positions = Positions::default();
     if let Some(header) = block.header {
         let header_offset = text.find('\n').map_or(text.len(), |offset| offset + 1);
         let mut offset = header_offset;
@@ -58,7 +57,7 @@ pub(crate) fn parse(text: String, path: &str) -> Result<ParsedEntry, Issue> {
                 return Err(failure(type_reason(key)));
             }
             object.insert(key.into(), value);
-            positions.insert(format!("/{key}"), location);
+            positions.insert(&format!("/{key}"), location);
             offset += line.len() + if header.contains("\r\n") { 2 } else { 1 };
         }
     }
