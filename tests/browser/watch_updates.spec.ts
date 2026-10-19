@@ -47,7 +47,9 @@ test("watched authored edits replace the changed document and retain Browse stat
     );
     await markDocument(frame);
     const details = page.locator("[data-workspace-inspector]");
+    await expect(details).not.toHaveAttribute("data-open", "true");
     await page.getByRole("tab", { name: "Details", exact: true }).click();
+    await expect(details).toHaveAttribute("data-open", "true");
     await page.getByRole("tab", { name: "Details", exact: true }).click();
     await expect(details).not.toHaveAttribute("data-open", "true");
     await page.setViewportSize({ width: 420, height: 900 });
@@ -72,6 +74,7 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(
       frame.contentFrame().locator('[data-watch-version="2"]'),
     ).toHaveText("Updated home");
+    await expectFrameSource(frame, /home\/index\.mobile\.dark\.html$/u);
     expect(await documentMark(frame)).toBeUndefined();
     expect(await hasMarker(page)).toBe(true);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
