@@ -8,6 +8,7 @@ use crate::move_types::{EntryPair, MovePair, Pairing};
 
 use super::support::{classified, entry, paired_result};
 
+/// Move one variant while its donor either keeps a sibling or is removed.
 pub(super) fn reparented(keep_donor: bool) -> ComparisonResult {
     let before = vec![
         entry("badge", EntryKind::Component, None),
