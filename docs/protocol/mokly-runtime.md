@@ -221,10 +221,10 @@ Shutdown runs in this order:
    period of the sidecar contract.
 6. Release the port and the file locks, and exit.
 
-No orphan process survives a normal shutdown, a failed startup, or an
-interruption, and a step that fails does not skip the steps after it. `build`
-and `publish` check cancellation before and after the output transaction's
-commit point and never leave a partial output directory in place.
+No orphan process survives shutdown, failed startup, or interruption. A failed step never skips later steps.
+`build` and `publish` check cancellation before and after the output commit point and leave no partial output.
+Base capture checks cancellation before each view read and encode, including cache hits,
+and returns the generation's cancellation error.
 
 ## No Writes
 

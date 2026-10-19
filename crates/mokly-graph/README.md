@@ -21,7 +21,9 @@ roots, the bundle generation, component stylesheet lists, and exporting
 modules from the sidecar adapter. Its `prepare` method reads stylesheet
 inputs and computes document plans. It checks worker cancellation before each
 entry and stylesheet root. Config-relative stylesheet paths normalize dot
-segments inside `repoRoot`. It renders no document. Each plan carries
+segments inside `repoRoot`. A prepared generation exposes the same worker
+cancellation through `check_cancelled` for callers that process views in a loop.
+Preparation renders no document. Each plan carries
 a route and the document node's input hash, which is the public
 `documentKey`. Stylesheet dependency edits recompute their bundles. Equal
 emitted CSS and asset bytes preserve document keys. `dyn RenderGeneration` supports on-demand rendering, a full

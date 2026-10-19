@@ -1255,6 +1255,10 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
   - [ ] Replay the eleven full references after the sidecar and source
         migration are ready. Every captured catalogue has JavaScript entries.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-references.md`.
+  - [x] Check cancellation between bounded base-capture views. Return the
+        generation's cancellation error before a later view is read or encoded.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/cancellation-after.log`.
 - [ ] Port the deferred native Changes browser fixtures in the M8 browser
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI

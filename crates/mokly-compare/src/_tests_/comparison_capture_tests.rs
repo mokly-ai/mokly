@@ -40,6 +40,9 @@ fn source(
         })
         .collect::<BTreeMap<_, _>>();
     Arc::new(Unimock::new((
+        RenderGenerationMock::check_cancelled
+            .each_call(matching!())
+            .answers(&|_| Ok(())),
         RenderGenerationMock::comparison_capture
             .each_call(matching!())
             .returns(None),
