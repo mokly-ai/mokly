@@ -993,10 +993,13 @@ renders again.
         classification of the nine shared sheets per scenario, the rule
         records and the changed-entry union, and bounded base-side Git
         batching.
-  - [ ] Add the Rust behaviour tests over the design catalogue after
+  - [x] Add the Rust behaviour tests over the design catalogue after
         Milestone 9: a parent component renders its own views from its own
         props, the stacked frames' structure, every comparison caption tied to
         its recorded change, and the Checklist's Changes.
+        Evidence: rebuild/m8-design-behaviour 82da46a1 (four tests in
+        crates/mokly-cli/tests/design_behaviour_tests.rs); review follow-ups are
+        tracked by the orchestrator.
   - [x] Exercise the same journeys in the static output under the M8
         copied-static-output TODO, and cover the Review snapshot link fallback.
   - Keep the three design inventories aligned when a design changes:
@@ -1834,6 +1837,7 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
 Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/merge-decisions-1.md`.
 
 Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
+Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
