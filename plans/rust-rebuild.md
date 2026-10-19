@@ -1805,12 +1805,11 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - F1 follow-up finding 1: resolve Checklist current-page marks and row
-    selection. Severity Medium, effort Small. Recommended: A, retain
-    `aria-current` on both same-target links and check Default-only selection
-    with the active class. The requested Default-only `aria-current` assertion
-    conflicts with the self-link decision in `be30a10a`; wait for the user.
-    Evidence: `.context/f1/selection-decision.md`.
+  - F1 follow-up finding 1: settled by the orchestrator on 2026-10-19,
+    decision 1A. Keep `aria-current` on both links because both open the
+    current page. Check Default-only selection through the active class.
+    Reject changing the current-page marks to follow row selection. This
+    keeps the self-link decision in `be30a10a` and changes no protocol.
   - F1 verification: `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`
     failed with `Original Unimock instance destroyed on a different thread`
     and passed on the isolated rerun. Suspected source: tracing subscriber

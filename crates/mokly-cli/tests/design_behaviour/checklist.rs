@@ -68,7 +68,19 @@ pub(crate) fn check() {
                 rows.iter()
                     .map(|row| row.get("aria-current"))
                     .collect::<Vec<_>>(),
-                [None, Some("page")]
+                [Some("page"), Some("page")]
+            );
+            assert_eq!(
+                rows.iter()
+                    .map(|row| {
+                        row.get("class").is_some_and(|classes| {
+                            classes
+                                .split_ascii_whitespace()
+                                .any(|class| class == "active")
+                        })
+                    })
+                    .collect::<Vec<_>>(),
+                [false, true]
             );
             let counts = dom::class(&document.tree, "mbk-nav-filter-count");
             assert_eq!(counts.len(), 1);
