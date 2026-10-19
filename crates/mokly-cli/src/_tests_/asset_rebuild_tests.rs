@@ -55,16 +55,24 @@ fn stale_assets_coalesce_one_regeneration_and_shutdown_does_not_request_work() {
 
 #[test]
 fn snapshot_asset_failures_name_the_input_and_require_an_explicit_restart() {
-    for mode in [Mode::Plain, Mode::Rich] {
+    for (mode, expected) in [
+        (
+            Mode::Plain,
+            "[mokly/build-invalid] Source changed during delivery: /repo/asset.svg. Restart Serve or use watching.\n",
+        ),
+        (
+            Mode::Rich,
+            "✖ The catalogue could not be built.  [mokly/build-invalid]\n  Source changed during delivery: /repo/asset.svg.\n  Restart Serve or use watching.\n",
+        ),
+    ] {
         let reporter = ServeLines {
             rebuild: None,
             cwd: "/repo".into(),
             cancellation: Arc::new(ServeCancellation::default()),
             terminal: Arc::new(Unimock::new(
                 TerminalMock::stderr
-                    .next_call(matching!((text) if text.contains("/repo/asset.svg")
-                        && text.contains("Restart Serve or use watching.")))
-                    .returns(()),
+                    .next_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, text| assert_eq!(text, expected))),
             )),
             style: Style {
                 mode,

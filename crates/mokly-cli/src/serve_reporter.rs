@@ -66,22 +66,14 @@ impl Diagnostics for ServeLines {
             return;
         }
         let mut output = serve_errors::failure(&self.style, error, &self.redactor);
-        if matches!(
-            error,
-            ServerError::Render {
-                source: GraphError::InputsChanged { .. }
-            }
-        ) {
+        if let ServerError::Render {
+            source: GraphError::InputsChanged { path },
+        } = error
+        {
             if let Some(rebuild) = &self.rebuild {
                 let _ = rebuild.try_send(());
             } else {
-                let guidance = "Restart Serve or use watching.";
-                let line = if self.style.mode == Mode::Plain {
-                    guidance.into()
-                } else {
-                    bounded(&format!("  {guidance}"), self.style.columns)
-                };
-                output.push_str(&format!("{line}\n"));
+                output = serve_errors::snapshot_asset_changed(&self.style, path, &self.redactor);
             }
         }
         self.terminal.stderr(&output);
