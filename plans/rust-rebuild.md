@@ -2221,9 +2221,9 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
     conversion for base render/resource bytes; retain raw Git blob bytes.
-  - Milestone 12 static review 3, finding 4: the packed native binary scan for
-    `MOKLY_TEST_` needs user approval for a new gate. The module-erasure test
-    checks only compiler exclusion of the debug fault module.
+  - Milestone 12 static review 3, finding 4: settled on 2026-10-19 by decision
+    2 = A. Packed-native inspection rejects `MOKLY_TEST_` for all five targets,
+    including reused archives. The module-erasure test remains.
   - Milestone 12 static review 2, finding 6: settle forced build exit during
     install, rollback, and cleanup. Keep the current forced exit until decided.
   - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;

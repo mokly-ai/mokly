@@ -361,6 +361,10 @@ points; see the
   downloads, logs, and interrupt cleanup.
 - [`scripts/verification`](./scripts/verification) — the verification scripts
   that CI and the gate share.
+- [`scripts/release/inspect-native.mjs`](./scripts/release/inspect-native.mjs) —
+  verifies the packed target and its TLS dependencies. Packed manifest
+  inspection rejects `MOKLY_TEST_` bytes in every native archive. Runtime
+  inspection uses `readelf` on Linux, `otool` on macOS, and `dumpbin` on Windows.
 - [`examples/basic`](./examples/basic/README.md) — the reference consumer and
   design catalogue.
 

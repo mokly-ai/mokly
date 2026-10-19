@@ -64,14 +64,15 @@ separate Visual C++ runtime installation. Both macOS architectures require
 macOS 11.0 or newer, the Node 22 floor. Their builds set
 `MACOSX_DEPLOYMENT_TARGET=11.0` and use the system frameworks.
 
-`inspect-native.mjs` records imported libraries and the highest required GLIBC
+Every packed native executable must contain no `MOKLY_TEST_` byte sequence.
+Inspection reads the executable from the archive for each of the five targets.
+It rejects test hooks before publication, including when archives are reused.
+
+Native inspection records imported libraries and the highest required GLIBC
 version, the macOS `minos`, or the Windows DLL list. It rejects a GLIBC
 requirement above 2.28, a macOS minimum above 11.0, a dynamic MSVC runtime, or
-an unintended crypto shared library. It uses `readelf` on Linux, `otool -L`
-and `otool -l` on macOS, and Visual Studio `dumpbin /dependents` on Windows.
-The macOS reader accepts `LC_BUILD_VERSION` and `LC_VERSION_MIN_MACOSX` and
-checks every recorded minimum. Missing inspection data or tools fail the
-release.
+an unintended crypto shared library. It checks every recorded macOS minimum.
+Missing inspection data or tools fail the release.
 
 ## Release Build Matrix And Publication Order
 

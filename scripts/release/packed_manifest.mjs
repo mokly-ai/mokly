@@ -6,6 +6,7 @@ import { list } from "tar";
 
 import { validatePackageReport } from "./archive.mjs";
 import { validateExportFiles, validatePackageManifest } from "./manifest.mjs";
+import { nativeTarget } from "./targets.mjs";
 
 /** Inspect the archive itself so prepack cannot silently change the contract. */
 export async function inspectPackedManifest(archivePath, report) {
@@ -25,6 +26,10 @@ export async function inspectPackedManifest(archivePath, report) {
   );
   validatePackageReport(report, report.name);
   const files = [];
+  const native = report.name.startsWith("@mokly/native-")
+    ? nativeTarget(report.name)
+    : undefined;
+  const binary = [];
   let json;
   await list({
     file: archivePath,
@@ -37,6 +42,8 @@ export async function inspectPackedManifest(archivePath, report) {
           size: entry.size,
         });
       }
+      if (native && entry.path === `package/bin/${native.executable}`)
+        entry.on("data", (chunk) => binary.push(chunk));
       if (entry.path !== "package/package.json") return;
       assert.equal(json, undefined, "duplicate packed package.json");
       json = "";
@@ -54,6 +61,11 @@ export async function inspectPackedManifest(archivePath, report) {
     sorted(report.files),
     "archive inventory must match its report",
   );
+  if (native)
+    assert.ok(
+      !Buffer.concat(binary).includes("MOKLY_TEST_"),
+      `${native.name}: packed native binary contains MOKLY_TEST_`,
+    );
   assert.equal(typeof json, "string", "missing packed package.json");
   const metadata = JSON.parse(json);
   validatePackageManifest(metadata, report.name);

@@ -156,7 +156,7 @@ jobs:
         run: node scripts/release/verify-fresh.mjs
       - name: Build and pack target
         run: node scripts/release/build-native.mjs "$RELEASE_TARGET"
-      - name: Inspect native TLS dependencies
+      - name: Inspect packed native binary and TLS dependencies
         run: node scripts/release/inspect-native.mjs "$RELEASE_TARGET"
       - name: Recheck native release source
         run: node scripts/release/verify-ref.mjs "$PUBLISH_REF" "$VIEWER_REF"
