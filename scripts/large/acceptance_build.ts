@@ -117,7 +117,9 @@ export async function verifyAcceptanceBinary(
   const shim = await fs.realpath(
     path.join(root, "node_modules/@mokly/mokly/bin/mokly.mjs"),
   );
-  const require = createRequire(shim);
+  const require = createRequire(
+    path.resolve(path.dirname(shim), "../dist/runtime.mjs"),
+  );
   const target = hostTarget();
   const manifest = require.resolve(`${target.name}/package.json`);
   const binary = path.join(path.dirname(manifest), "bin", target.executable);

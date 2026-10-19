@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -11,6 +12,7 @@ import {
   buildAcceptanceBinary,
   verifyAcceptanceBinary,
 } from "../scripts/large/acceptance_build.js";
+import type { AcceptanceBuild } from "../scripts/large/acceptance_build.js";
 import { nativeTarget } from "../scripts/release/targets.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -108,4 +110,54 @@ test("acceptance builds select the release target and verify the packaged bytes"
     acceptanceForFixture(fixture),
     /differs from its release build/,
   );
+});
+
+test("release verification follows the runtime module's native lookup", async (t) => {
+  const root = await fs.mkdtemp(
+    path.join(repositoryRoot, ".context/acceptance-lookup-"),
+  );
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const target = nativeTarget(
+    platformPackage(process.platform, process.arch, systemRuntime().glibc),
+  );
+  const modules = path.join(root, "node_modules");
+  const packageRoot = path.join(modules, "@mokly/mokly");
+  await fs.mkdir(path.join(packageRoot, "bin"), { recursive: true });
+  await fs.writeFile(path.join(packageRoot, "bin/mokly.mjs"), "");
+  const outer = path.join(modules, target.name);
+  const nested = path.join(packageRoot, "dist/node_modules", target.name);
+  for (const [directory, bytes] of [
+    [outer, "release"],
+    [nested, "development"],
+  ] as const) {
+    await fs.mkdir(path.join(directory, "bin"), { recursive: true });
+    await fs.writeFile(
+      path.join(directory, "package.json"),
+      JSON.stringify({ name: target.name, version: "0.14.0" }),
+    );
+    await fs.writeFile(path.join(directory, "bin", target.executable), bytes);
+  }
+  const built: AcceptanceBuild = {
+    profile: "release",
+    target: target.target,
+    binarySha256: createHash("sha256").update("release").digest("hex"),
+    sourceCommit: "fixture",
+    sourceTree: "fixture",
+    dirty: false,
+  };
+  const fixture = {
+    root,
+    toolchain: { mode: "install" as const },
+    acceptanceBuild: built,
+  };
+  await assert.rejects(
+    acceptanceForFixture(fixture),
+    /differs from its release build/,
+  );
+  await fs.writeFile(path.join(nested, "bin", target.executable), "release");
+  await fs.writeFile(
+    path.join(outer, "bin", target.executable),
+    "unused development binary",
+  );
+  assert.deepEqual(await acceptanceForFixture(fixture), built);
 });
