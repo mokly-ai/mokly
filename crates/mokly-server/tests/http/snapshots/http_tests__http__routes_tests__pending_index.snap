@@ -4,19 +4,19 @@ assertion_line: 77
 expression: bytes
 ---
 {
-  "changesStatus": "unavailable",
+  "changesStatus": "pending",
   "comparisonUrl": null,
   "components": [
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "colorSchemes": [
         "light",
         "dark"
       ],
       "comparison": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "controls": {
         "count": {
@@ -104,7 +104,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "6f977f0d819c1fd99963ddbf67a11c6308c9557d513dfcecf75ce1032ba104b3",
           "viewport": "mobile"
@@ -112,7 +112,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "29d4741a5aef396e8d013f67c39a4d0a59aaadfa48eeb20252753acbace21044",
           "viewport": "mobile"
@@ -120,7 +120,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "7cdd08a90d677761c4094ffbdfaaba67ff3f95d839ce101d824041d71302d542",
           "viewport": "desktop"
@@ -128,7 +128,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "66bd8e40e97392a2a1fa5d46510af297e0b5f48375af0fccd47c8298a1a7bf20",
           "viewport": "desktop"
@@ -137,14 +137,14 @@ expression: bytes
     },
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "colorSchemes": [
         "light",
         "dark"
       ],
       "comparison": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "controls": {
         "count": {
@@ -235,7 +235,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "9d0de258ecce8c02d39594f0fa699ba81ff860233d70c15c48c980978641ff9f",
           "viewport": "mobile"
@@ -243,7 +243,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "727a9be68b4f55e7faf4228a9258ab77c7ec953403760167e5bef8ec1a37dead",
           "viewport": "mobile"
@@ -251,7 +251,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "c618738553d8fb1cec2207cd4618320f3f0d1429028c35206a2b36122b1ccedc",
           "viewport": "desktop"
@@ -259,7 +259,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "c1eb8f6a24eb38ee2bb7bd71ba2f9d273edac12c407ca449afc079f6c215421c",
           "viewport": "desktop"
@@ -268,14 +268,14 @@ expression: bytes
     },
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "colorSchemes": [
         "light",
         "dark"
       ],
       "comparison": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "controls": {
         "ignored": {
@@ -328,7 +328,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "c1839c74d102540149289f5701de6cd1642a7d1effe535483887c1304bfedb8a",
           "viewport": "mobile"
@@ -336,7 +336,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "945cb3add90a6a38b9f39bc4ebbd3986824864c9a712b99ee10d3cd58305a536",
           "viewport": "mobile"
@@ -344,7 +344,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "24e65acaffb51fdac101a88b1c3f66a58d66dee96e0466b08683a9ef01829d48",
           "viewport": "desktop"
@@ -352,7 +352,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "508f18fbfa6fd39cd25a40ab6a38f90bbd2f4681b07fe663b5450a8e593c9116",
           "viewport": "desktop"
@@ -364,7 +364,7 @@ expression: bytes
   "documents": [
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "colorSchemes": [
         "light",
@@ -401,7 +401,7 @@ expression: bytes
   "pages": [
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "details": {
         "description": "",
@@ -421,7 +421,7 @@ expression: bytes
   "screens": [
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "colorSchemes": [
         "light",
@@ -511,7 +511,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "ed844837bf958328e0849254a9c63929bc39e309bf913b83ac4889a2436a24c9",
           "viewport": "mobile"
@@ -519,7 +519,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "c5b9785fa1f4f35187abf504cb8ec562d1b7a2b658a90e776a902d585946ba7b",
           "viewport": "mobile"
@@ -527,7 +527,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "b9dc3e11db5c648290529a83790f2e21d40e3c4d37d561d4c24fdef569b0fbf4",
           "viewport": "desktop"
@@ -535,7 +535,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "9fa139913dbcd495d8cb3f6d5b948556e16e410ac1780529c4d5c82975679894",
           "viewport": "desktop"
@@ -544,7 +544,7 @@ expression: bytes
     },
     {
       "changes": {
-        "status": "unavailable"
+        "status": "pending"
       },
       "colorSchemes": [
         "light",
@@ -635,7 +635,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "e5de02600de19a9551f88c92fa170a2d585e0ec5c92f876c47fe37c0e493ac9b",
           "viewport": "mobile"
@@ -643,7 +643,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "239664cc077d13271197658a115601de91a627001f02998f2a596915a797768e",
           "viewport": "mobile"
@@ -651,7 +651,7 @@ expression: bytes
         {
           "colorScheme": "light",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "5464049c8592a3ddac96b06d20617ae0104a4487881bb332c5419bcba9e5e7fc",
           "viewport": "desktop"
@@ -659,7 +659,7 @@ expression: bytes
         {
           "colorScheme": "dark",
           "comparison": {
-            "status": "unavailable"
+            "status": "pending"
           },
           "documentKey": "7d6cc068a30b1d8a7a453a8e6c2c30e7bae35d4ce099a55d019ba612eb3a4ca0",
           "viewport": "desktop"

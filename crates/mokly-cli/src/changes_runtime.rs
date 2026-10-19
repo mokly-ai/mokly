@@ -151,23 +151,28 @@ struct CacheReporter {
 }
 impl Reporter for CacheReporter {
     fn opened(&self, directory: &Path) {
-        let line = if self.style.mode == Mode::Plain {
-            plain_line(directory)
-        } else {
-            format!("  cache {}\n", directory.display())
-        };
-        let safe = self.redactor.safe(line.trim_end_matches('\n'));
-        let safe = if self.style.mode == Mode::Rich {
-            bounded(&safe, self.style.columns)
-        } else {
-            safe
-        };
-        let line = if self.style.mode == Mode::Rich && self.style.color {
-            format!("\x1b[2m{safe}\x1b[0m\n")
-        } else {
-            format!("{safe}\n")
-        };
-        self.phases.note(&line);
+        self.phases
+            .note(&cache_line(directory, &self.style, &self.redactor));
+    }
+}
+
+/// Format the first comparison cache path identically for Serve and one-shot commands.
+pub(super) fn cache_line(directory: &Path, style: &Style, redactor: &Redactor) -> String {
+    let line = if style.mode == Mode::Plain {
+        plain_line(directory)
+    } else {
+        format!("  cache {}\n", directory.display())
+    };
+    let safe = redactor.safe(line.trim_end_matches('\n'));
+    let safe = if style.mode == Mode::Rich {
+        bounded(&safe, style.columns)
+    } else {
+        safe
+    };
+    if style.mode == Mode::Rich && style.color {
+        format!("\x1b[2m{safe}\x1b[0m\n")
+    } else {
+        format!("{safe}\n")
     }
 }
 

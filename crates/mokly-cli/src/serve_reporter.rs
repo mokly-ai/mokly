@@ -22,6 +22,25 @@ use crate::serve_rebuild::RebuildReporter;
 use crate::serve_warnings::{AttemptWarnings, WarningScopes};
 use crate::terminal::Terminal;
 
+#[cfg_attr(test, unimock::unimock(api = GitRefreshMock))]
+pub(super) trait GitRefresh: Send + Sync {
+    fn refreshing(&self, reference: &str);
+}
+
+impl GitRefresh for ServeLines {
+    fn refreshing(&self, reference: &str) {
+        if self.cancellation.requested() {
+            return;
+        }
+        self.terminal.stdout(&watch_output::git_refresh(
+            &self.style,
+            reference,
+            &chrono::Local::now().format("%H:%M:%S").to_string(),
+            &self.redactor,
+        ));
+    }
+}
+
 pub(super) struct ServeLines {
     pub(super) rebuild: Option<mpsc::Sender<()>>,
     pub(super) cwd: PathBuf,

@@ -133,13 +133,16 @@ test("a shorter document stays aligned past its own end", async ({ page }) => {
   await expectAligned(500);
   await wheelOver(page, paneFrame(desktop, "after"), 5_000);
   await expectAligned(after.range);
-  // Past its own end, the shorter version's surface keeps its canvas colour.
+  // Past its own end, the shorter version's surface keeps its own canvas
+  // colour. After has a transparent canvas, so its surface shows only the
+  // screen background.
+  const canvas = {
+    before: "linear-gradient(rgb(250, 240, 230), rgb(250, 240, 230))",
+    after: "linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0))",
+  };
   for (const side of ["before", "after"] as const) {
     const surface = desktop.locator(`.mb-pane--${side} .mb-pane-doc`);
-    await expect(surface).toHaveCSS(
-      "background-image",
-      "linear-gradient(rgb(250, 240, 230), rgb(250, 240, 230))",
-    );
+    await expect(surface).toHaveCSS("background-image", canvas[side]);
     await expect(surface).toHaveCSS("background-color", "rgb(255, 255, 255)");
   }
 });

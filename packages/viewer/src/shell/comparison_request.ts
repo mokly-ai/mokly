@@ -18,6 +18,8 @@ export interface LoadedComparison {
 /** Entry identity selected for comparison generation. */
 export interface ComparisonScope {
   id: string;
+  /** Removed entries use the advertised classification in every host. */
+  comparisonUrl?: string | null;
 }
 
 /** Request current metadata, scoped only for live on-demand generation. */
@@ -35,7 +37,13 @@ export async function requestComparison(
     credentials: delivery.kind === "pinned" ? "omit" : "same-origin",
     headers: { accept: "application/json" },
   });
-  validateResponse(baseUrl, delivery, endpoint, response.url);
+  validateResponse(
+    baseUrl,
+    delivery,
+    endpoint,
+    response.url,
+    scope.comparisonUrl !== undefined,
+  );
   if (!response.ok) throw new Error(await failureDetails(response));
   return {
     result: parseReviewResult(await response.json()),
@@ -66,6 +74,11 @@ export async function renewComparison(
   const current = safeUrl(loaded.url);
   if (!current || !isLiveGeneration(baseUrl, current))
     throw new Error("The comparison is unavailable.");
+  if (
+    scope.comparisonUrl !== undefined &&
+    current.href !== comparisonEndpoint(baseUrl, delivery, scope, false).href
+  )
+    throw new Error("The comparison is unavailable.");
   const response = await environment.fetch(current, {
     method: "HEAD",
     cache: "no-store",
@@ -85,20 +98,26 @@ function comparisonEndpoint(
   scope: ComparisonScope,
   refresh: boolean,
 ): URL {
-  if (delivery.kind === "pinned" && delivery.comparisonUrl === null)
+  const advertised =
+    scope.comparisonUrl !== undefined
+      ? scope.comparisonUrl
+      : delivery.kind === "pinned"
+        ? delivery.comparisonUrl
+        : undefined;
+  if (advertised === null)
     throw new Error("Comparisons are unavailable in this catalogue.");
   const endpoint = new URL(
-    delivery.kind === "live"
+    advertised === undefined
       ? `/${VIEWER_DIRECTORY}/diffs/review.json`
-      : `/${delivery.comparisonUrl}`.replace(/^\/\//, "/"),
+      : `/${advertised}`.replace(/^\/\//, "/"),
     baseUrl,
   );
   if (!sameOrigin(baseUrl, endpoint))
     throw new Error("The comparison is unavailable.");
-  if (delivery.kind === "live") {
+  if (advertised === undefined) {
     endpoint.searchParams.set("path", scope.id);
+    if (refresh) endpoint.searchParams.set("refresh", "1");
   }
-  if (refresh) endpoint.searchParams.set("refresh", "1");
   return endpoint;
 }
 
@@ -107,11 +126,12 @@ function validateResponse(
   delivery: ComparisonDelivery,
   endpoint: URL,
   responseUrl: string,
+  advertised: boolean,
 ): void {
   const response = safeUrl(responseUrl);
   if (!response || !sameOrigin(baseUrl, response))
     throw new Error("The comparison is unavailable.");
-  if (delivery.kind === "pinned") {
+  if (delivery.kind === "pinned" || advertised) {
     if (
       response.pathname !== endpoint.pathname ||
       response.search !== endpoint.search

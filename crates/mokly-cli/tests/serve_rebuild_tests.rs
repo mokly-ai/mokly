@@ -100,13 +100,14 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
     })
     .await
     .unwrap();
-    let first = ready(&host, None).await;
+    let first = ready(&host, 1).await;
     let capability: Value =
         serde_json::from_str(&get(&host, "/mokly-viewer/live.json").await).unwrap();
-    assert_eq!(first["revision"], 2);
+    assert_eq!(first["revision"], 3);
+    assert_eq!(first["changesStatus"], "unavailable");
     fs::write(&source, "---\ntitle: Home\n---\n<h1>Second render</h1>").unwrap();
-    let second = ready(&host, Some(&first["revision"])).await;
-    assert_eq!(second["revision"], first["revision"].as_u64().unwrap() + 2);
+    let second = ready(&host, first["revision"].as_u64().unwrap() + 3).await;
+    assert_eq!(second["revision"], first["revision"].as_u64().unwrap() + 3);
     assert_eq!(first["deploymentId"], second["deploymentId"]);
     assert_ne!(first["live"], second["live"]);
     let detail: Value =
@@ -125,8 +126,8 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         next_capability["render"]["token"]
     );
     input.write_all(b"r").unwrap();
-    let manual = ready(&host, Some(&second["revision"])).await;
-    assert!(manual["revision"].as_u64().unwrap() > second["revision"].as_u64().unwrap());
+    let manual = ready(&host, second["revision"].as_u64().unwrap() + 2).await;
+    assert_eq!(manual["revision"], second["revision"].as_u64().unwrap() + 2);
     assert_eq!(manual["deploymentId"], second["deploymentId"]);
     assert!(
         get(&host, "/static/mokly-generated/home/index.mobile.html")
@@ -135,11 +136,20 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
     );
     fs::write(&source, "---\ntitle: Broken").unwrap();
     let mut errors = BufReader::new(child.stderr.take().unwrap()).lines();
-    let error = tokio::time::timeout(Duration::from_secs(15), errors.next_line())
-        .await
-        .unwrap()
-        .unwrap()
-        .unwrap();
+    let error = tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let line = errors.next_line().await.unwrap().unwrap();
+            if line.contains("✖ specs/home.screen.html") {
+                break line;
+            }
+            assert!(
+                !line.contains("[mokly/") || line.contains("[mokly/git-failed]"),
+                "{line}"
+            );
+        }
+    })
+    .await
+    .unwrap();
     assert!(error.contains("✖ specs/home.screen.html"), "{error}");
     let error = errors.next_line().await.unwrap().unwrap();
     assert!(
@@ -163,18 +173,19 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
     assert!(std::net::TcpListener::bind(host).is_ok());
 }
 
-async fn ready(host: &str, previous: Option<&Value>) -> Value {
+async fn ready(host: &str, minimum_revision: u64) -> Value {
     tokio::time::timeout(Duration::from_secs(15), async {
         loop {
             let index: Value =
                 serde_json::from_str(&get(host, "/mokly-viewer/index.json").await).unwrap();
             let detail: Value =
                 serde_json::from_str(&get(host, "/mokly-viewer/entries/home.json").await).unwrap();
-            if detail["workspace"].is_object()
+            if !matches!(
+                index["changesStatus"].as_str(),
+                Some("pending" | "preparing")
+            ) && detail["workspace"].is_object()
                 && detail["revision"] == index["revision"]
-                && previous.is_none_or(|previous| {
-                    index["revision"].as_u64().unwrap() >= previous.as_u64().unwrap() + 2
-                })
+                && index["revision"].as_u64().unwrap() >= minimum_revision
             {
                 return index;
             }

@@ -13,6 +13,7 @@ import {
 } from "../packages/mokly/src/version.mjs";
 
 import { exampleServerCommand } from "./browser/example_servers.js";
+import { EXAMPLE_BASE } from "./helpers/example_base.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CI_WORKFLOW = ".github/workflows/ci.yml";
@@ -198,9 +199,9 @@ test("the Testbox toolchain matches the CI toolchain", async () => {
   }
 });
 
-test("example servers compare with the checked-out tree", () => {
+test("shared example servers use the reserved unavailable base", () => {
   const args = exampleServerCommand();
-  assert.equal(args[args.indexOf("--base") + 1], "HEAD");
+  assert.equal(args[args.indexOf("--base") + 1], EXAMPLE_BASE);
   assert.equal(args[0], "packages/mokly/bin/mokly.mjs");
 });
 

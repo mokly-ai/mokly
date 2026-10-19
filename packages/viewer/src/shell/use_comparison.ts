@@ -57,11 +57,13 @@ export interface ComparisonController {
 export function useComparison({
   effectiveColorScheme,
   eligible,
+  historical = false,
   entryId,
   owner,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
+  historical?: boolean;
   entryId: string;
   owner?: string;
 }): ComparisonController {
@@ -70,8 +72,17 @@ export function useComparison({
   const selection = store?.state.selection;
   // A publication returns an active comparison to Current.
   const evidenceKey = String(store?.catalogue.publicModel?.revision ?? 0);
-  const scope = useMemo<ComparisonScope>(() => ({ id: entryId }), [entryId]);
-  const scopeKey = useMemo(() => JSON.stringify([entryId]), [entryId]);
+  const comparisonUrl = historical
+    ? (store?.catalogue.publicModel?.comparisonUrl ?? null)
+    : undefined;
+  const scope = useMemo<ComparisonScope>(
+    () => ({
+      id: entryId,
+      ...(comparisonUrl === undefined ? {} : { comparisonUrl }),
+    }),
+    [entryId, comparisonUrl],
+  );
+  const scopeKey = useMemo(() => JSON.stringify(scope), [scope]);
   const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
   const [modeState, setModeState] = useReducer(
     (

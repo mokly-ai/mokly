@@ -1,10 +1,15 @@
 import fs from "node:fs/promises";
 
-import { expect } from "@playwright/test";
+import { expect, type Request } from "@playwright/test";
 
 import { passRenderingUpdates } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonIndex, modeButton, navRow } from "./comparison_ui.js";
+import {
+  comparisonIndex,
+  endedRequests,
+  modeButton,
+  navRow,
+} from "./comparison_ui.js";
 import { responseFailure } from "./shell_error_allowances.js";
 
 const REVIEW = "**/mokly-viewer/diffs/generations/*/review.json";
@@ -17,26 +22,30 @@ test("pending requests cannot replace Current or a newly navigated screen", asyn
   const waiting = new Promise<void>((resolve) => {
     release = resolve;
   });
-  let settled: Promise<void> | undefined;
-  await page.route(REVIEW, (route) => {
-    settled = (async () => {
-      const response = await route.fetch();
-      await waiting;
-      await route.fulfill({ response }).catch(() => undefined);
-    })();
-    return settled;
+  const heldRequests: Request[] = [];
+  await page.route(REVIEW, async (route) => {
+    heldRequests.push(route.request());
+    const response = await route.fetch();
+    await waiting;
+    await route.fulfill({ response }).catch(() => undefined);
   });
+  const ended = endedRequests(page);
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await modeButton(page, "Overlay").click();
   await expect(page.locator(stage)).toContainText("Loading comparison");
+  // Move on only once the shell holds a request for the review.
+  await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
   await modeButton(page, "Current").click();
   await expect(page.locator("[data-current-screen]")).toBeVisible();
   await navRow(page, comparisonPaths.unchanged).click();
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
-  // Deliver the late review, then let the shell handle and render it.
+  // Release the held review, wait until the browser ends that request (the
+  // shell cancels it when the reader chooses Current), then let the shell
+  // handle and render the outcome.
   release();
-  expect(settled).toBeDefined();
-  await settled;
+  await expect
+    .poll(() => heldRequests.every((held) => ended.has(held)))
+    .toBe(true);
   await passRenderingUpdates(page);
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
   await expect(page.locator(`${stage} iframe`)).toHaveCount(0);

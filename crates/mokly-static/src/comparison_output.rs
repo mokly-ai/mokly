@@ -4,11 +4,10 @@ use std::collections::BTreeMap;
 
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_index, projection_removed, projection_workspace};
-use mokly_model::axes::EntryKind;
 use mokly_model::canonical;
 use mokly_model::material::digest;
 use mokly_model::output::artifact::File;
-use mokly_model::public_detail::{EntryDetailV1, Workspace};
+use mokly_model::public_detail::EntryDetailV1;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{readers, routes};
@@ -35,17 +34,7 @@ pub(crate) fn append(
         &historical,
         &"0".repeat(64),
     ))?;
-    for detail in details.values_mut() {
-        if matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component) {
-            detail.workspace = Some(Workspace {
-                comparison_eligible: false,
-                used_by: Vec::new(),
-                affected: Vec::new(),
-                related_components: Vec::new(),
-                input_changes: Vec::new(),
-            });
-        }
-    }
+    projection_removed::workspaces(&mut details);
     let mut inventory = Inventory::default();
     inventory.insert("review.json".into(), identity::json(&result.review)?.into())?;
     side(

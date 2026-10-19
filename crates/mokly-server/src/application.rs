@@ -24,6 +24,8 @@ use crate::{generated_routes, live, render_request, response, security};
 
 /// Application services are independent of socket and signal ownership.
 pub struct Application {
+    /// Retained Changes and on-demand comparison generations.
+    pub comparisons: Option<Arc<dyn crate::comparison_store::Comparisons>>,
     /// One atomic source for every route and event.
     pub publications: Arc<dyn Publications>,
     /// Isolated bounded temporary documents.
@@ -41,6 +43,7 @@ impl Application {
         diagnostics: Arc<dyn Diagnostics>,
     ) -> Self {
         Self {
+            comparisons: None,
             publisher: Arc::new(CompletionQueue::new(
                 publications.clone(),
                 diagnostics.clone(),
@@ -83,6 +86,9 @@ impl HttpApplication for Application {
     async fn stop_renders(&self) {
         self.publisher.close().await;
         self.work.stop().await;
+        if let Some(comparisons) = &self.comparisons {
+            comparisons.stop().await;
+        }
         self.previews.clear();
     }
 }
@@ -206,6 +212,9 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             Lookup::Missing => response::missing(),
         };
     }
+    if let Some(response) = crate::comparison_routes::route(app, &path, request.uri()).await {
+        return response;
+    }
     if let Some(status) = shell(&path, &snapshot) {
         return response::bytes(status, "text/html; charset=utf-8", snapshot.stub.clone());
     }
@@ -242,7 +251,29 @@ fn shell(path: &str, snapshot: &Snapshot) -> Option<StatusCode> {
         .or_else(|| path.strip_suffix('/'))
         .unwrap_or(path);
     is_entry_path(path).then(|| {
-        if snapshot.entries.contains(path) {
+        if snapshot.entries.contains(path)
+            || snapshot
+                .index
+                .removed_entries
+                .iter()
+                .any(|removed| match &removed.entry {
+                    mokly_model::public_records::CatalogueRecord::Screen(entry) => {
+                        entry.entry.path == path
+                    }
+                    mokly_model::public_records::CatalogueRecord::Component(entry) => {
+                        entry.entry.path == path
+                    }
+                    mokly_model::public_records::CatalogueRecord::Page(entry) => {
+                        entry.entry.path == path
+                    }
+                    mokly_model::public_records::CatalogueRecord::Document(entry) => {
+                        entry.entry.path == path
+                    }
+                    mokly_model::public_records::CatalogueRecord::UseCase(entry) => {
+                        entry.entry.path == path
+                    }
+                })
+        {
             StatusCode::OK
         } else {
             StatusCode::NOT_FOUND

@@ -350,7 +350,10 @@ only changed search, tag or Changes filters reveal their matching groups.
 renders the band's mode group, the Scroll together switch (a native checkbox
 with `role="switch"`, shown in every diff mode including loading and failure)
 and Refresh. `use_comparison.ts` requests, renews and fences the selected
-comparison, while `comparison_presentation.ts` owns its request identity and
+comparison. Current entries use Serve's selected endpoint. Removed component
+parents and variants use the current index's advertised generation in every
+host, which separates historical entries from current entries at the same path.
+`comparison_presentation.ts` owns its request identity and
 axes; `comparison_selection.ts` picks the views and snapshot addresses
 the selection shows; and `use_comparison_documents.ts` presents every selected
 pane document through the shared snapshot loader of the comparison's immutable

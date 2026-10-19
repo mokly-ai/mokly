@@ -2315,6 +2315,7 @@ dependencies = [
  "insta",
  "mime_guess",
  "mokly-catalogue",
+ "mokly-compare",
  "mokly-css",
  "mokly-graph",
  "mokly-html",
@@ -2331,6 +2332,7 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+ "tracing-subscriber",
  "unimock",
 ]
 

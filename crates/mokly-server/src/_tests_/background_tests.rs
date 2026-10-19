@@ -13,18 +13,24 @@ use crate::background::{Background, UsagePass};
 use crate::evidence::RenderRoute;
 use crate::generation::Generation;
 use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
+use crate::publication_support;
 use crate::revision::RevisionLease;
 use crate::snapshot::Snapshot;
 use crate::work::WorkMock;
 
 fn snapshot(paths: Vec<String>, documents: Arc<dyn Documents>) -> Arc<Snapshot> {
     Arc::new(Snapshot {
+        changes: None,
         document_keys: Default::default(),
         index: readers::index(include_str!(
             "../../../../docs/protocol/fixtures/catalogue-v7.json"
         ))
         .unwrap(),
         generation: Arc::new(Generation {
+            model: Arc::new(publication_support::empty_model()),
+            view_keys: Vec::new(),
+            config_path: "mokly.config.json".into(),
+            changes: None,
             views: Default::default(),
             assets: Default::default(),
             routes: paths
@@ -124,6 +130,7 @@ async fn each_catalogue_route_runs_once_in_order_and_a_replacement_restarts_the_
         ));
         let diagnostics = Unimock::new(());
         let pass = UsagePass {
+            changes: None,
             publications: Arc::new(mock.clone()),
             work: Arc::new(mock.clone()),
             diagnostics: Arc::new(diagnostics.clone()),

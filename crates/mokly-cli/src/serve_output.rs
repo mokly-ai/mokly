@@ -2,11 +2,13 @@
 
 use std::time::Duration;
 
+use mokly_compare::comparison_types::ComparisonCounts;
+
 use crate::build::BuildSummary;
-use crate::build_output;
 use crate::output::{Mode, Style, bounded};
 use crate::redaction::Redactor;
 use crate::version::VERSION;
+use crate::{build_output, changes_output};
 
 /// Render only the stable ready address and its requested watch mode.
 pub fn ready(
@@ -99,6 +101,40 @@ pub fn catalogue(style: &Style, summary: &BuildSummary, elapsed: Duration) -> St
         style.columns,
     );
     let glyph = if style.ascii { "+" } else { "✔" };
+    let line = if style.color {
+        line.replacen(glyph, &format!("\x1b[32m{glyph}\x1b[0m"), 1)
+    } else {
+        line
+    };
+    format!("{line}\n")
+}
+
+/// Report accepted Changes counts with a separate elapsed-time column.
+pub fn changes_ready(
+    style: &Style,
+    changes: usize,
+    moved: usize,
+    ignored: usize,
+    elapsed: Duration,
+) -> String {
+    if style.mode == Mode::Plain {
+        return String::new();
+    }
+    let glyph = if style.ascii { "+" } else { "✔" };
+    let full = Style {
+        color: false,
+        columns: usize::MAX,
+        ..style.clone()
+    };
+    let summary = changes_output::ready(
+        &full,
+        ComparisonCounts {
+            changes,
+            moved,
+            ignored_only: ignored,
+        },
+    );
+    let line = columns(summary.trim_end(), &duration(elapsed), style.columns);
     let line = if style.color {
         line.replacen(glyph, &format!("\x1b[32m{glyph}\x1b[0m"), 1)
     } else {

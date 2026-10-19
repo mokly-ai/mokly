@@ -114,3 +114,41 @@ fn failed_actions_print_warnings_before_indented_diagnostics() {
         "warning\nfailure\n"
     );
 }
+
+#[test]
+fn git_refresh_uses_the_watch_clock_glyph_and_action() {
+    let style = Style {
+        mode: Mode::Rich,
+        color: false,
+        ascii: false,
+        columns: 100,
+    };
+    assert_eq!(
+        crate::watch_output::git_refresh(&style, "origin/main", "12:05:20", &Redactor::default()),
+        "  12:05:20  ⟲ origin/main moved  comparing again\n"
+    );
+    assert_eq!(
+        crate::watch_output::git_refresh(
+            &Style {
+                ascii: true,
+                ..style.clone()
+            },
+            "base",
+            "12:05:20",
+            &Redactor::default()
+        ),
+        "  12:05:20  G base moved  comparing again\n"
+    );
+    assert!(
+        crate::watch_output::git_refresh(
+            &Style {
+                mode: Mode::Plain,
+                ..style
+            },
+            "base",
+            "12:05:20",
+            &Redactor::default()
+        )
+        .is_empty()
+    );
+}
