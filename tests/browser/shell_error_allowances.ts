@@ -36,6 +36,14 @@ export function responseFailure(
   );
 }
 
+/** The sandbox reports each form submission that a read-only document blocks. */
+export const blockedFormSubmission: ErrorAllowance = {
+  kind: "console",
+  message:
+    /^Blocked form submission to 'https:\/\/example\.com\/form' because the form's frame is sandboxed and the 'allow-forms' permission is not set\.$/u,
+  url: /^about:srcdoc$/u,
+};
+
 /** A named request deliberately aborted by its shell recovery test. */
 export function networkFailure(
   origin: string,

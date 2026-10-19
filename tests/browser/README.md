@@ -60,6 +60,18 @@ copied output; the source repository and first output are removed.
 | `removedComponent`     | `components/retired`: removed component parent                                                                                                                                                                                                                                                                                                         |
 | `removedVariant`       | `components/card/archived`: removed variant of a surviving component                                                                                                                                                                                                                                                                                   |
 
+## Embedded comparison viewer
+
+`comparison_viewer_host.ts` mounts the public `MoklyViewer` over the native
+comparison copy through both frame adapters. It copies the output into its own
+directory, adds the host page of `comparison_viewer_entry.tsx`, and serves
+that directory on three origins: the artifact origin, the host origin, and the
+host origin behind a strict Content Security Policy. `/viewer.html` takes
+`adapter=same-origin` or `adapter=cross`, and optionally `entry`, `snapshot`,
+`view`, `viewport`, `base=none` (an index without `base`), and
+`responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
+`viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
+
 The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
 

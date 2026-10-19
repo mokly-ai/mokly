@@ -18,14 +18,7 @@ import {
   viewportOffset,
 } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-
-/** The sandbox reports the one form submission that it blocks. */
-const BLOCKED_FORM = {
-  kind: "console",
-  message:
-    /^Blocked form submission to 'https:\/\/example\.com\/form' because the form's frame is sandboxed and the 'allow-forms' permission is not set\.$/u,
-  url: /^about:srcdoc$/u,
-} as const;
+import { blockedFormSubmission } from "./shell_error_allowances.js";
 
 /** Mark the pane's window, so that a replaced document is seen. */
 async function markPane(frame: Locator): Promise<void> {
@@ -59,7 +52,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     page,
     allowBrowserError,
   }) => {
-    allowBrowserError(BLOCKED_FORM);
+    allowBrowserError(blockedFormSubmission);
     await openComparison(
       page,
       comparisonPaths.changed,
