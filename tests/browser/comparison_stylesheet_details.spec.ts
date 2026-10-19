@@ -206,7 +206,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toBeVisible();
       await expect(
         page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
-      ).toHaveText("13");
+      ).toHaveText("17");
       if (name === "mobile")
         await page
           .getByRole("button", { name: "Open catalogue navigation" })

@@ -87,6 +87,72 @@ test("a failed comparison stays in the screen and retries explicitly", async ({
   );
 });
 
+test("a retry presents the pinned generation, and leaving abandons a pending refresh", async ({
+  page,
+  request,
+  baseURL,
+  allowBrowserError,
+}) => {
+  const index = await comparisonIndex(request, baseURL);
+  const generation = new URL(index.comparisonUrl, baseURL).href.replace(
+    /review\.json$/u,
+    "",
+  );
+  allowBrowserError(responseFailure(baseURL!, `/${index.comparisonUrl}`, 503));
+  await page.route(
+    REVIEW,
+    (route) =>
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: "{}",
+      }),
+    { times: 1 },
+  );
+  await page.goto(`/view/${comparisonPaths.changed}/?viewport=mobile`);
+  await modeButton(page, "Overlay").click();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  const frames = page.locator(`${stage} iframe`);
+  await expect(frames).toHaveCount(2);
+  const file = `mokly-generated/${comparisonPaths.changed}/index.mobile.html`;
+  expect(
+    await frames.evaluateAll((items) =>
+      items.map((item) => item.getAttribute("data-mokly-preview-source")),
+    ),
+  ).toEqual([
+    `${generation}snapshots/before/${file}`,
+    `${generation}snapshots/after/${file}`,
+  ]);
+
+  // Hold the refresh's read, and leave the screen while it is pending.
+  let release = (): void => undefined;
+  const waiting = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const held: Request[] = [];
+  await page.route(REVIEW, async (route) => {
+    held.push(route.request());
+    const response = await route.fetch();
+    await waiting;
+    await route.fulfill({ response }).catch(() => undefined);
+  });
+  const ended = endedRequests(page);
+  await page.getByRole("button", { name: "Refresh comparison" }).click();
+  await expect.poll(() => held.length).toBe(1);
+  await expect(page.locator(stage)).toHaveAttribute("aria-busy", "true");
+  await navRow(page, comparisonPaths.unchanged).click();
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  release();
+  await expect.poll(() => held.every((item) => ended.has(item))).toBe(true);
+  await passRenderingUpdates(page);
+  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  await expect(frames).toHaveCount(0);
+  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  await expect(page.locator("[data-workspace-status]")).toHaveText(
+    "Unmodified",
+  );
+});
+
 test("released review v6 uses the standalone version message", async ({
   page,
 }) => {

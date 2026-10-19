@@ -22,6 +22,12 @@ export const comparisonPaths = {
   quietRemoved: "components/tag/old",
   added: "screens/added",
   darkOnly: "screens/dusk",
+  lightOnly: "screens/daylight",
+  removedLightOnly: "screens/former",
+  screenParent: "screens/workspace",
+  screenVariant: "screens/workspace/error",
+  screenSibling: "screens/workspace/empty",
+  screenRemovedVariant: "screens/workspace/gone",
 } as const;
 
 type Side = "Before" | "After";
@@ -58,14 +64,26 @@ const tag = (side: Side) =>
     '<span class="tag">{{label}}</span><div style="height:1400px">Tag body</div>',
   );
 /**
- * The changed screen: a shorter Before page and panel, a panel link, a
- * catalogue link, and an anchor whose target can reach the viewport top.
- * Only Before's main element holds the class that the canvas rule matches.
+ * A screen parent whose own views stay unmodified, with a changed variant, an
+ * unmodified variant, and a variant that the second commit removes.
+ */
+const workspace = (side: Side) => `---
+title: Workspace screen
+props: {message: Workspace ready}
+variants: [{slug: error, title: Save failed, props: {message: Save failed ${side}}}, {slug: empty, title: Empty workspace, props: {message: Nothing here yet}}${side === "Before" ? ", {slug: gone, title: Workspace deleted, props: {message: Workspace deleted}}" : ""}]
+---
+<h1>{{message}}</h1>`;
+/**
+ * The changed screen: a form field at the top right, outside the page flow,
+ * a shorter Before page and panel, a panel link, a catalogue link, and an
+ * anchor whose target can reach the viewport top. Only Before's main element
+ * holds the class that the canvas rule matches.
  */
 const content = (
   side: Side,
 ) => `<main${side === "Before" ? ' class="shorter"' : ""}>
 <h1>${side} screen</h1>
+<form action="https://example.com/form" method="get" style="position:absolute;top:8px;right:8px;margin:0"><input id="field" aria-label="Query" name="q"><button>Send</button></form>
 <a id="snapshot-link" href="mock:screens/stable">Open the stable screen</a>
 <a id="jump" href="#end">Jump to the end</a>
 <p class="accent">A stylesheet-owned change</p>
@@ -102,6 +120,12 @@ async function writeSide(root: string, side: Side): Promise<void> {
     "dusk.css",
     `.dusk { color: ${before ? "rgb(200, 200, 200)" : "rgb(240, 200, 120)"}; }\n`,
   );
+  await write(
+    root,
+    "specs/screens/daylight.screen.html",
+    `---\ntitle: Daylight screen\ncolorSchemes: [light]\n---\n<h1>Daylight ${side}</h1>`,
+  );
+  await write(root, "specs/screens/workspace.screen.html", workspace(side));
   await write(root, "specs/components/card.component.html", card(side));
   await write(root, "specs/components/tag.component.html", tag(side));
 }
@@ -155,6 +179,11 @@ export async function createComparisonCatalogue(root: string): Promise<void> {
   );
   await write(
     root,
+    "specs/screens/former.screen.html",
+    '---\ntitle: Former screen\ncolorSchemes: [light]\n---\n<h1>Former screen</h1>\n<ui-card label="Former card"></ui-card>',
+  );
+  await write(
+    root,
     "specs/pages/retired.page.html",
     screen(
       "Retired page",
@@ -202,6 +231,7 @@ propSchema: {type: object, additionalProperties: false, properties: {}}
   );
   for (const file of [
     "screens/retired.screen.html",
+    "screens/former.screen.html",
     "pages/retired.page.html",
     "notes/retired.md",
     "components/retired.component.html",

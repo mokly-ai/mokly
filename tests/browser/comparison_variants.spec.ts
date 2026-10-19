@@ -1,31 +1,16 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { accentFill } from "./browse_assertions.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { chooseFilter, navRow } from "./comparison_ui.js";
+import {
+  changedDot,
+  changedText,
+  chooseFilter,
+  navRow,
+} from "./comparison_ui.js";
 
 const CARD_LIST = `[data-nav-disclosure="variants:${comparisonPaths.component}"]`;
 const TAG_LIST = `[data-nav-disclosure="variants:${comparisonPaths.quietParent}"]`;
-
-/** The trailing changed dot the stylesheet draws, or `none` when unmarked. */
-function changedDot(page: Page, entryPath: string) {
-  return navRow(page, entryPath).evaluate((row) => {
-    const style = getComputedStyle(row, "::after");
-    return {
-      color: style.backgroundColor,
-      content: style.content,
-      radius: style.borderTopLeftRadius,
-      width: style.width,
-    };
-  });
-}
-
-/** How the row's accessible change wording resolves for assistive tech. */
-function changedText(page: Page, entryPath: string) {
-  return navRow(page, entryPath)
-    .locator(".mbk-nav-changed-text")
-    .evaluate((mark) => getComputedStyle(mark).display);
-}
 
 test("the Changes filter shows a changed variant under its marked parent", async ({
   page,
