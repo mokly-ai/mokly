@@ -86,8 +86,6 @@ Each fallback has a typed trace reason.
 the caller proves base usage. Static output and Serve share this policy.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-Rendered and canonical trees use iterative traversal, equality, move
-fingerprinting, and release. Deep rendered trees need no enlarged thread stack.
 Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
@@ -106,6 +104,11 @@ parsed page set. The API supports capture reuse, which tests exercise;
 production callers supply fresh bases. Serve can hold an accepted capture while
 building its replacement, so two captures can overlap. The separate 256 MiB
 render cache and the sidecar pool keep their own bounds.
+The static build's captured source forwards opaque asset streams and membership
+checks to its pinned source.
+Rendered-tree walks implemented by this crate, canonical equality, move
+fingerprinting, and canonical-value release use explicit stacks. CSS selector
+matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
@@ -120,6 +123,11 @@ budgets make Changes unavailable with the path and limit. Actual-instance implem
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
 
+Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
+copies it to the destination. Digest cache misses each start one
+`cat-file blob` command; each delivery starts one bounded `cat-file --batch`
+command. Hash-only preparation does not fill the source-byte LRU.
+
 `GitBaseLookup` implements `dyn BaseLookup` and pins one repository, ref, and
 merge base. Static commands retain that `PinnedBase` before current rendering.
 `Changes` implements `dyn ChangesService` and reuses the pin when supplied. `BaseProvider` supplies the base
@@ -132,6 +140,8 @@ Historical runtime failures follow the typed policy in base preparation.
 one complete comparison. `projection_index::apply` projects the retained
 classification onto current or historical public records. The index must be
 from the same retained catalogue state, with every published record classified.
+`projection_detail::apply_evidence` supplies included entry reasons and resource
+evidence independently of workspace readiness for current and removed details.
 `projection_workspace::apply` joins ready usage with indexed affected links
 and caller-owned input changes. Both Serve and static output use these
 functions; neither changes the render bytes. An absent workspace stays absent

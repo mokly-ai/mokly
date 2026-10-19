@@ -189,6 +189,7 @@ pub fn pending_details(
                         snapshot_id: None,
                     },
                     views,
+                    reasons: None,
                     resource_evidence: None,
                     workspace: None,
                 },

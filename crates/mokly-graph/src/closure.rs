@@ -8,6 +8,7 @@ use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
 use mokly_model::namespace;
 use mokly_source_interface::tree::SourceTree;
 
+use crate::asset_delivery::AssetRead;
 use crate::closure_prefetch;
 use crate::error;
 use crate::error::{Result, invalid};
@@ -23,6 +24,14 @@ use crate::urls::local_target;
 pub trait GeneratedResources: Send + Sync {
     /// Obtain pending stylesheet or asset bytes; documents are not followed.
     fn resource(&self, route: &str) -> Result<Option<Vec<u8>>>;
+    /// Open a digest-only generated asset; other resource types return None.
+    fn open_asset(&self, _route: &str) -> Result<Option<Box<dyn AssetRead>>> {
+        Ok(None)
+    }
+    /// Test pending opaque membership without reading its payload.
+    fn contains_resource(&self, route: &str) -> Result<bool> {
+        Ok(self.resource(route)?.is_some())
+    }
     /// Test whether a route is a declared catalogue document.
     fn is_document(&self, route: &str) -> bool;
 }
@@ -152,6 +161,13 @@ impl ClosureBuilder for Walker {
                                 },
                             ));
                         }
+                        continue;
+                    }
+                    if generated.starts_with("assets/") {
+                        if !self.generated.contains_resource(generated)? {
+                            return Err(missing(route, &reference.url));
+                        }
+                        edges.insert(target.clone(), Vec::new());
                         continue;
                     }
                     self.generated

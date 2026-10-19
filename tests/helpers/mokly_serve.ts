@@ -31,10 +31,15 @@ export async function consumer(
   return root;
 }
 
-export function serve(context: TestContext, root: string, group = false) {
+export function serve(
+  context: TestContext,
+  root: string,
+  group = false,
+  extra: string[] = [],
+) {
   const child = spawn(
     process.execPath,
-    [shim, "serve", "--no-watch", "--port", "0", "--sidecars", "1"],
+    [shim, "serve", "--no-watch", "--port", "0", "--sidecars", "1", ...extra],
     {
       cwd: root,
       detached: group,

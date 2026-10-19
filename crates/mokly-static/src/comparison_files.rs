@@ -7,6 +7,7 @@ use mokly_model::routes;
 
 use crate::error::{Error, InternalError, Result};
 use crate::inventory::Inventory;
+use crate::resource_bytes;
 use crate::transaction::Cancellation;
 
 pub(crate) fn checkpoint(cancellation: &dyn Cancellation) -> Result<()> {
@@ -20,6 +21,7 @@ pub(crate) fn checkpoint(cancellation: &dyn Cancellation) -> Result<()> {
 pub(crate) fn graph<T>(result: std::result::Result<T, GraphError>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
+        Err(GraphError::InputsChanged { path }) => Err(Error::InputsChanged { path }),
         Err(source) => Err(Error::Render {
             source: Box::new(source),
         }),
@@ -42,13 +44,13 @@ pub(crate) fn side(
     }
     for route in generation.resource_routes() {
         checkpoint(cancellation)?;
-        let bytes = graph(generation.resource(&route))?.ok_or_else(|| Error::Invalid {
-            path: route.clone(),
+        let path = routes::comparison_snapshot(side, &format!("mokly-generated/{route}"));
+        let bytes = resource_bytes::generated(generation, &route, &path)?.ok_or_else(|| {
+            Error::Invalid {
+                path: route.clone(),
+            }
         })?;
-        inventory.insert(
-            routes::comparison_snapshot(side, &format!("mokly-generated/{route}")),
-            bytes.into(),
-        )?;
+        inventory.insert(path, bytes.into())?;
     }
     for path in generation.public_files() {
         checkpoint(cancellation)?;

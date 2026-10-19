@@ -32,14 +32,7 @@ fn entry_order(entry: &mut ReviewEntry) {
     entry
         .views
         .sort_by_key(|view| (view.viewport, view.color_scheme));
-    entry.reasons.sort_by(|left, right| {
-        let (left_kind, left_target) = reason_key(left);
-        let (right_kind, right_target) = reason_key(right);
-        left_kind
-            .cmp(right_kind)
-            .then_with(|| compare_utf16(left_target, right_target))
-    });
-    entry.reasons.dedup();
+    normalize_reasons(&mut entry.reasons);
     for view in &mut entry.views {
         view.ignored_ids
             .sort_by(|left, right| compare_utf16(left, right));
@@ -52,6 +45,18 @@ fn entry_order(entry: &mut ReviewEntry) {
     for variant in entry.variants.iter_mut().flatten() {
         entry_order(variant);
     }
+}
+
+/// Put direct reasons in the review's sorted unique order, including UTF-16 targets.
+pub fn normalize_reasons(reasons: &mut Vec<EntryChangeReason>) {
+    reasons.sort_by(|left, right| {
+        let (left_kind, left_target) = reason_key(left);
+        let (right_kind, right_target) = reason_key(right);
+        left_kind
+            .cmp(right_kind)
+            .then_with(|| compare_utf16(left_target, right_target))
+    });
+    reasons.dedup();
 }
 
 /// Lexical reason kind followed by its explicit target.

@@ -39,7 +39,8 @@ exists, so a top-level folder may be named `screens`, `pages`, or
 `components`.
 
 The namespace is a route prefix, not a directory in the repository. Serve
-answers `/static/mokly-generated/<route>` from the render cache, and `build`
+answers `/static/mokly-generated/<route>` through
+[generation delivery](./mokly-imported-styles-assets.md#validation-and-the-render-cache), and `build`
 writes `static/mokly-generated/<route>` into its output directory under the
 [shell delivery contract](./mokly-shell-delivery.md). A route uses the
 authored case of each segment; the output inventory rejects two files whose

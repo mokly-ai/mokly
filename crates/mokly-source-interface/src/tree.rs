@@ -1,11 +1,13 @@
 //! Object-safe filesystem and Git-tree boundary.
 
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use sha2::{Digest, Sha256};
 
 use crate::error::Result;
+use crate::stream::{OpenedSource, SourceStream};
 
 /// An entry's kind before following any symbolic link.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -57,6 +59,18 @@ pub trait SourceTree: Send + Sync {
     /// Read public resource bytes without retaining them in a source snapshot.
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
         self.read(path)
+    }
+    /// Open an opaque source for chunked delivery without source-snapshot retention.
+    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
+        let bytes = self.read_public(path)?;
+        Ok(Box::new(OpenedSource {
+            length: bytes.len() as u64,
+            reader: Box::new(Cursor::new(bytes)),
+        }))
+    }
+    /// Hash opaque input without promoting its payload into a private source cache.
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        self.digest(path)
     }
     /// Read immutable bytes without copying a retained source on cache hits.
     fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {

@@ -22,6 +22,7 @@ use mokly_graph::workers::ThreadWorkers;
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::DeferredFragments;
 use mokly_server::application::Application;
+use mokly_server::asset_streams::TemporaryAssets;
 use mokly_server::assets::File;
 use mokly_server::backend::GraphDocuments;
 use mokly_server::clock::MonotonicClock;
@@ -144,6 +145,7 @@ impl Harness {
                 policy: Arc::new(policy),
             }),
             Arc::new(TracingWarnings),
+            Arc::new(TemporaryAssets),
         ));
         let projector: &dyn SnapshotFactory = &Projector {
             deployment_id: "a".repeat(64),

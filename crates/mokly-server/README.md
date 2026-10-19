@@ -70,6 +70,8 @@ metadata. Serve uses those shared functions and the shared snapshot route builde
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
 all current details together. Ready state installs the review pointer, Changes
 membership, moved paths, removed records, and per-view evidence in one revision.
+Included details carry classification reasons in the review v8 shape even without a workspace.
+Non-ready publications remove those reasons with the other comparison evidence.
 Capacity is checked before ready-state projection and again at installation.
 A full store therefore retries without repeating that projection.
 New classification files enter the comparison store after ready-state projection
@@ -94,9 +96,17 @@ budgets cannot bypass these checks through the wrapped generation.
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after
 60 seconds without a read, except the classification JSON that the current
-index names. Its snapshot files still expire and can be recaptured from the
-retained base handles. GET and HEAD renew retention. The store allows 64
-generations, 128 MiB total, and 64 MiB per generation. It rejects capacity
+index names. Its snapshot files still expire to release duplicated delivery
+bytes. The accepted base capture restores retained documents without another
+base render; uncaptured views use the pinned-source fallback. GET and HEAD
+renew retention. The store keeps only weak classification references, so
+cached files cannot retain an old base capture after its last owner exits.
+A missing historical snapshot can be restored only while an owner remains.
+The store allows 64 generations, 128 MiB total, and 64 MiB per generation.
+Each classification can separately retain up to 256 MiB of base capture,
+beside the graph's 256 MiB render cache. Old captures held by in-flight work
+can overlap a new classification's capture. These bounds do not cap process
+memory. The store rejects capacity
 without evicting retained files. A full store delays classification publication
 and retries installation without repeating comparison work. Missing generations return 404. Replacement
 fences pending selected captures; shutdown cancels and drains all captures.
@@ -105,6 +115,20 @@ fences pending selected captures; shutdown cancels and drains all captures.
 document. Public authored reads require both reached closure membership and a
 fresh policy check. `ConfinedReader` opens each directory and the final regular
 file without following symlinks. Routes never fall back to repository files.
+Generated opaque assets use `dyn AssetStreams`. It captures the generation's
+source stream into an unnamed temporary file and verifies its digest before
+headers or payload reach the browser. GET streams that checked file; HEAD
+sends its checked length without a body. The response owns the file until it
+closes. A mismatch fails delivery. Watched Serve asks the CLI's coalesced
+rebuild queue for a new generation. With `--no-watch`, the generation stays
+fixed and the CLI names the asset and tells the user to restart Serve or use
+watching.
+Each GET and HEAD reads, hashes, and captures the whole opaque asset. Requests
+for the same route do not share a capture. Worker parallelism bounds active
+captures, and the opened length bounds each file. The worker permit ends
+after capture; the response keeps its file until it closes. Live response
+files have no aggregate byte bound. The OS temporary directory can use
+`tmpfs`, whose storage consumes memory outside process RSS measurements.
 The built viewer's browser manifest lists the only client modules served.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning

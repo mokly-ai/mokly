@@ -3,6 +3,7 @@
 use std::fs;
 use std::path::Path;
 
+use mokly_graph::error::GraphError;
 use tempfile::TempDir;
 
 mod support;
@@ -207,7 +208,7 @@ fn source_and_resource_edits_move_only_their_document_input_keys() {
 }
 
 #[test]
-fn opaque_generated_assets_keep_generation_bytes_after_eviction() {
+fn opaque_generated_assets_verify_generation_digests_after_eviction() {
     let directory = catalogue("<h1>Home</h1>", "<h1>Target</h1>");
     fs::create_dir(directory.path().join("css")).unwrap();
     fs::write(
@@ -223,12 +224,15 @@ fn opaque_generated_assets_keep_generation_bytes_after_eviction() {
     fs::write(directory.path().join("assets/a.png"), "before").unwrap();
     let (before, _) = support::prepare(directory.path(), 0, 1);
     let before = before.unwrap();
-    fs::write(directory.path().join("assets/a.png"), "after").unwrap();
-    let (after, _) = support::prepare(directory.path(), 0, 1);
-    let after = after.unwrap();
     assert_eq!(
         before.resource("assets/assets/a.png").unwrap().unwrap(),
         b"before"
+    );
+    fs::write(directory.path().join("assets/a.png"), "after").unwrap();
+    let (after, _) = support::prepare(directory.path(), 0, 1);
+    let after = after.unwrap();
+    assert!(
+        matches!(before.resource("assets/assets/a.png"), Err(GraphError::InputsChanged { path }) if path.ends_with("assets/a.png"))
     );
     assert_eq!(
         after.resource("assets/assets/a.png").unwrap().unwrap(),

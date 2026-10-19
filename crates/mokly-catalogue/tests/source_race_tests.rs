@@ -3,6 +3,7 @@
 #![cfg(unix)]
 
 use std::fs;
+use std::io;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -10,6 +11,7 @@ use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::{Discoverer, Discovery};
 use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::working_tree::WorkingTree;
+use mokly_source_interface::error::SourceError;
 use mokly_source_interface::tree::{SourceTree, SourceTreeMock};
 use tempfile::TempDir;
 use unimock::{MockFn, Unimock, matching};
@@ -79,4 +81,20 @@ fn source_reads_do_not_follow_a_symlink_swapped_after_projection() {
     fs::remove_file(&original).unwrap();
     std::os::unix::fs::symlink(&secret, &original).unwrap();
     assert!(WorkingTree.read(&projected.identity).is_err());
+}
+
+#[test]
+fn malformed_stream_paths_remain_invalid_input_errors() {
+    for name in ["relative.svg", "/repo/../image.svg"] {
+        let path = Path::new(name);
+        for error in [
+            WorkingTree.open_stream(path).err().unwrap(),
+            WorkingTree.digest_unretained(path).unwrap_err(),
+        ] {
+            assert!(
+                matches!(error, SourceError::Io { path: captured, source, .. }
+                if captured == path && source.kind() == io::ErrorKind::InvalidInput)
+            );
+        }
+    }
 }

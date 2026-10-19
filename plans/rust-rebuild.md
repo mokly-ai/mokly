@@ -941,9 +941,10 @@ renders again.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
       allowances for expected failures. Keep the shared sandbox notice rule.
-- [ ] M8 browser follow-up: add Serve browser specs for the example's HTML
+- [x] M8 browser follow-up: add Serve browser specs for the example's HTML
       screens, slot components, document page, and YAML user flow under
       `examples/basic/specs/example/team`, including native HTML screen links.
+      Evidence: `.context/rust-rebuild/delegation/m12-static/report-14.md`.
 
 - [ ] Add the design catalogue checks that the verification and adoption
       sections of `mokly-design-components.md`,
@@ -1234,11 +1235,20 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
     - [x] Group foreground sidecar calls before queued base calls. Prove
           one-worker and three-worker admission bounds and cancellation.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/interleaving-measurement.md`.
+    - Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/merge-decisions.md`.
+    - [x] Release replaced base captures independently of cached delivery files.
+          Keep the 60-second snapshot trim for duplicated delivery bytes, count
+          the separate capture budget, and assert the real Serve capture trace.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
     - [ ] Repeat the combined measurement after shared-engine batching merges.
           Each run creates a fresh base runtime, bundle cache, and CSS context.
           Cached source and dependency reuse still publishes preparing. The
           one-line edit smoke took 5m19s to Changes ready with three sidecars.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-8/cache-retention-measurement.md`.
+      - [x] Measure one worker with an old capture held by an in-flight request.
+            The default-count probe stops at the common memory allowance before
+            ready; its edit time and overlap peak need a probe-budget decision.
+            Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/measurements.md`.
     - [x] Use an intentionally unresolved base for the shared browser example,
           with terminal quiescence and one Git diagnostic. Real Changes specs
           keep independent fixtures. Keep the 600-second guard and one sidecar.
@@ -1334,6 +1344,15 @@ Tags: ui
         and a removed-entry fixture, and fix the viewer defects that it finds.
   - [ ] Settle how Details shows the review reasons, including
         `implementation`, before a comparison loads (report 18, decision D1).
+    - [x] D1 spec correction, backend: carry `reasons` in the review v8 shape at the
+          detail root for ready included current and removed entries, independent
+          of workspace readiness. Share the projection across static output and
+          Serve, clear stale reasons, and generate the additive v1 field.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-10.md`.
+    - [x] Apply review 7: define page and document reasons, check detail reasons
+          against ready included membership, and use UTF-16 source reason order.
+          The orchestrator confirms that changed deployment identities are required.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1700,6 +1719,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
         per-element copy of enclosing instances in `owned_style_instances::walk`.
+  - [ ] Resolve rendered-depth recursion in the `selectors` crate's `:has()`
+        matching path. Its subtree search uses one native frame per rendered
+        tree level. A depth bound or an explicit-stack matcher needs the user's
+        decision before implementation (M14 review 5, finding 1).
   - [ ] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
@@ -1726,11 +1749,21 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Review opaque CSS asset retention before a redesign or larger probes.
         Private source snapshots pin these bytes without a byte bound. Preserve
         generation consistency when choosing how to limit retained data.
-- [ ] Make opaque CSS assets digest-only inputs: store the route, path, and
+- [ ] Review the CSS matching tree's per-element containment-list copies.
+      Retention grows with element count times nesting depth. Decide on shared
+      containment storage with the CSS attribution work (M14 review 5, finding 2).
+- [x] Make opaque CSS assets digest-only inputs: store the route, path, and
       digest instead of the bytes; use the digest in the cache keys; stream the
       bytes at delivery and check them against the digest; one entry per asset
       path across roots; first audit and record the copies of each asset per
       build with the harness.
+- [ ] Decide on one shared verified opaque-asset spool per generation and
+      route with the M14 Serve budgets. Account for GET and HEAD capture work,
+      live response files after worker permits end, and OS temporary storage
+      outside process RSS (M14 review 6, finding 5; accepted interim design A).
+- [ ] Measure Git opaque-asset digest commands and buffered delivery under
+      the M14 comparison workloads. Use the cost to decide on streamed blob
+      copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
@@ -1749,7 +1782,12 @@ Input fingerprint and memory evidence: `.context/rust-rebuild/delegation/m14/rep
 Input fingerprint review evidence: `.context/rust-rebuild/delegation/m14/report-5.md`.
 Final fingerprint fixes and replay evidence: `.context/rust-rebuild/delegation/m14/report-6.md`.
 Comparison walk and timing-field evidence: `.context/rust-rebuild/delegation/m14/report-7.md`.
+Comparison review corrections and CSS asset evidence: `.context/rust-rebuild/delegation/m14/report-8.md`.
+Opaque asset review fixes and merged verification: `.context/rust-rebuild/delegation/m14/report-9.md`.
+Final asset fixes and engine integration: `.context/rust-rebuild/delegation/m14/report-10.md`.
+Final asset merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions-2.md`.
 Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md`.
+Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/merge-decisions-1.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -1796,6 +1834,17 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
     thread. The isolated case and the complete CLI/compare rerun passed
     unchanged. Suspected source: cross-thread mock ownership during pool cleanup.
     Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round14/cli-compare.log` and `cli-compare-retry.log` there.
+  - [x] Integrate browser fix `f81b7744` for the M14 `design_modern_controls`
+        screen-loop timeout. It splits screens into five groups of at most
+        12 screens and keeps the per-test limit. The rebuild tip `690eb698`
+        contains this commit. Verification: M14 `report-9.md`.
+  - [x] Integrate browser fix `9653a6d0` for the M14 `link_controls.spec.ts`
+        fixture-startup timeout. It gives the `beforeAll` hook the approved
+        180-second preparation budget. The rebuild tip `690eb698` contains
+        this commit. Verification: M14 `report-9.md`.
+  - [x] Resolve the M14 `static_comparison_deployment.spec.ts` navigation race.
+        Commit `9299c3c0` waits for replacement and the new stylesheet bytes.
+        Verification: M14 `report-9.md`.
   - [x] Resolve the Serve Changes verification sidecar `EPIPE` flake through
         accepted commit `e10af987`. The sidecar stops on closed parent pipes.
         The regression is `postcss_failures_use_exact_catalogued_codes_and_logical_paths`.
