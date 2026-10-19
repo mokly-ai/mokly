@@ -13,8 +13,7 @@ use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::projection_affected;
 use crate::projection_context::Context;
 
-use super::affected_fixtures::reparented;
-use super::support::{classified, entry, paired_result, result};
+use super::support::{classified, entry, paired_result, result, transferred_variant_result};
 
 fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
     AffectedUsageEvidence {
@@ -154,32 +153,6 @@ fn before_only_variant_evidence_uses_its_accepted_move_and_current_spelling() {
 }
 
 #[test]
-fn before_variant_moving_from_a_surviving_donor_links_to_its_current_entry() {
-    let projected = links(
-        &mut reparented(true),
-        "donor",
-        vec![evidence(ReviewSide::Before, "donor/primary")],
-    );
-    assert_eq!(projected.len(), 1);
-    assert_eq!(projected[0].entry_path, "receiver/primary");
-    assert_eq!(projected[0].title, "receiver/primary");
-    assert!(!projected[0].removed);
-}
-
-#[test]
-fn before_variant_moving_from_a_removed_donor_links_to_its_current_entry() {
-    let projected = links(
-        &mut reparented(false),
-        "donor",
-        vec![evidence(ReviewSide::Before, "donor/primary")],
-    );
-    assert_eq!(projected.len(), 1);
-    assert_eq!(projected[0].entry_path, "receiver/primary");
-    assert_eq!(projected[0].title, "receiver/primary");
-    assert!(!projected[0].removed);
-}
-
-#[test]
 fn removed_variant_evidence_keeps_its_historical_destination() {
     let badge = entry("badge", EntryKind::Component, None);
     let parent = entry("status", EntryKind::Component, None);
@@ -250,4 +223,27 @@ fn a_document_at_the_old_component_path_does_not_get_an_affected_link() {
         )
         .is_empty()
     );
+}
+
+fn assert_transferred_variant_destination(remove_donor: bool) {
+    let mut result = transferred_variant_result(remove_donor);
+    let projected = links(
+        &mut result,
+        "donor",
+        vec![evidence(ReviewSide::Before, "donor/primary")],
+    );
+    assert_eq!(projected.len(), 1);
+    assert_eq!(projected[0].entry_path, "receiver/primary");
+    assert_eq!(projected[0].title, "Transferred primary");
+    assert!(!projected[0].removed);
+}
+
+#[test]
+fn transferred_variant_uses_its_pair_with_a_surviving_donor() {
+    assert_transferred_variant_destination(false);
+}
+
+#[test]
+fn transferred_variant_uses_its_pair_with_a_removed_donor() {
+    assert_transferred_variant_destination(true);
 }

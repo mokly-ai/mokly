@@ -4,11 +4,15 @@ use mokly_html::tree::Node;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::wire_props::ComponentWireValue;
 
-use super::{catalogue, dom};
+use super::{catalogue, dom, records};
 
 /// Keep the one-entry Changes story and its sole output edit explicit.
 pub(crate) fn check() {
     let fixture = catalogue::shared();
+    let records = records::read(&fixture);
+    let checklist = &records["checklist"];
+    let target = checklist["to"].as_str().unwrap();
+    let label = checklist["label"].as_str().unwrap();
     let views = fixture.views("design/components/pages/stacked/overlay-tall");
     assert_eq!(views.len(), 2);
     let mut artboards = Vec::new();
@@ -36,9 +40,12 @@ pub(crate) fn check() {
             ));
             let nav = dom::class(&document.tree, "mbk-nav-scroll");
             assert_eq!(nav.len(), 1);
-            let labels: Vec<_> = dom::class(&nav[0].children, "mbk-nav-row")
+            let rows: Vec<_> = dom::class(&nav[0].children, "mbk-nav-row")
                 .into_iter()
                 .filter(|element| element.name == "a")
+                .collect();
+            let labels: Vec<_> = rows
+                .iter()
                 .map(|element| {
                     element
                         .children
@@ -50,7 +57,31 @@ pub(crate) fn check() {
                         .collect::<String>()
                 })
                 .collect();
-            assert_eq!(labels, ["Checklist", "Default"]);
+            assert_eq!(labels, [label, "Default"]);
+            assert_eq!(
+                rows.iter()
+                    .map(|row| row.get("data-mokly-link"))
+                    .collect::<Vec<_>>(),
+                [Some(target), Some(target)]
+            );
+            assert_eq!(
+                rows.iter()
+                    .map(|row| row.get("aria-current"))
+                    .collect::<Vec<_>>(),
+                [Some("page"), Some("page")]
+            );
+            assert_eq!(
+                rows.iter()
+                    .map(|row| {
+                        row.get("class").is_some_and(|classes| {
+                            classes
+                                .split_ascii_whitespace()
+                                .any(|class| class == "active")
+                        })
+                    })
+                    .collect::<Vec<_>>(),
+                [false, true]
+            );
             let counts = dom::class(&document.tree, "mbk-nav-filter-count");
             assert_eq!(counts.len(), 1);
             assert_eq!(dom::text(&counts[0].children), "1");
@@ -61,7 +92,22 @@ pub(crate) fn check() {
             let count = dom::class(&shortcuts[0].children, "ce-change-count");
             assert_eq!(count.len(), 1);
             assert_eq!(dom::text(&count[0].children), "1");
+            let changes: Vec<_> = dom::elements(&shortcuts[0].children)
+                .into_iter()
+                .filter(|element| {
+                    element.name == "a" && dom::text(&element.children).contains("Changes")
+                })
+                .collect();
+            assert_eq!(changes.len(), 1);
+            assert_eq!(changes[0].get("data-mokly-link"), Some(target));
         }
+        assert_eq!(
+            dom::class(&document.tree, "ce-change-status")
+                .iter()
+                .map(|badge| dom::text(&badge.children))
+                .collect::<Vec<_>>(),
+            ["Changed"]
+        );
         let inspector = dom::class(&document.tree, "ce-inspector");
         assert_eq!(inspector.len(), 1);
         let panels = dom::elements(&inspector[0].children);
@@ -81,7 +127,9 @@ pub(crate) fn check() {
             "{usage_text}"
         );
         assert!(!usage_text.contains("Affected screens"), "{usage_text}");
-        for preview in dom::class(&document.tree, "ce-preview-view") {
+        let previews = dom::class(&document.tree, "ce-preview-view");
+        assert_eq!(previews.len(), 2);
+        for preview in previews {
             let before = dom::class(&preview.children, "mbk-stack-layer--before");
             let after = dom::class(&preview.children, "mbk-stack-layer--after");
             assert_eq!((before.len(), after.len()), (1, 1));

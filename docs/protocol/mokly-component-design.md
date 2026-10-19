@@ -173,10 +173,10 @@ links, selection semantics, counts, missing states, responsive overflow, mask
 geometry, and the stacked frames' layers, blending, single scroller and drawn
 offset; the Rust behaviour tests pin parents' own-props views, the stacked
 frames' structure, every comparison caption tied to its recorded change, and
-the Checklist's Changes. These four focused checks run in the default Rust
-workspace suite. The [CLI development guide](../../crates/mokly-cli/README.md#development)
-documents the focused test target and fixture. The full attribution matrix
-remains opt-in.
+the Checklist's Changes.
+These four focused checks run in the default Rust workspace suite. The
+[CLI development guide](../../crates/mokly-cli/README.md#development) gives the
+focused command and the optional full attribution matrix.
 Visually inspect all rendered mobile and desktop pages in the served frames and
 in the `mokly build` output, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the

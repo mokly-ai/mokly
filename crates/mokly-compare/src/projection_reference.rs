@@ -21,18 +21,18 @@ pub(crate) struct LinkTarget<'a> {
     pub(crate) removed: bool,
 }
 
-/// Ownership belongs to the evidence side even when its destination moved.
-#[derive(Clone, Copy)]
+/// Original ownership metadata paired with its navigable destination.
 struct ResolvedReference<'a> {
-    source: &'a EntryMetadata,
+    original: &'a EntryMetadata,
     destination: LinkTarget<'a>,
 }
 
 /// Side-specific reference indexes for one borrowed comparison generation.
 pub(crate) struct References<'a> {
-    current: BTreeMap<Key, ResolvedReference<'a>>,
-    paired: BTreeMap<Key, ResolvedReference<'a>>,
-    removed: BTreeMap<Key, ResolvedReference<'a>>,
+    before: BTreeMap<Key, LinkTarget<'a>>,
+    current: BTreeMap<Key, LinkTarget<'a>>,
+    paired: BTreeMap<Key, LinkTarget<'a>>,
+    removed: BTreeMap<Key, LinkTarget<'a>>,
 }
 
 impl<'a> References<'a> {
@@ -51,12 +51,9 @@ impl<'a> References<'a> {
                 let right = after.entries.get(pair.after?)?;
                 Some((
                     key(left.content.kind(), &left.metadata.path),
-                    ResolvedReference {
-                        source: &left.metadata,
-                        destination: LinkTarget {
-                            metadata: &right.metadata,
-                            removed: false,
-                        },
+                    LinkTarget {
+                        metadata: &right.metadata,
+                        removed: false,
                     },
                 ))
             })
@@ -68,11 +65,12 @@ impl<'a> References<'a> {
             .filter_map(|record| {
                 let key = key(record.entry.kind(), &record.entry.metadata().path);
                 let mut target = *base.get(&key)?;
-                target.destination.removed = true;
+                target.removed = true;
                 Some((key, target))
             })
             .collect();
         Self {
+            before: base,
             current,
             paired,
             removed,
@@ -89,37 +87,48 @@ impl<'a> References<'a> {
             ConsumerKind::Screen => EntryKind::Screen,
             ConsumerKind::Component => EntryKind::Component,
         };
-        let consumer = self.reference(ReviewSide::Before, kind, &effect.consumer.path)?;
+        let consumer = self.destination(ReviewSide::Before, kind, &effect.consumer.path)?;
         if kind != EntryKind::Component || evidence.context.kind != ConsumerKind::Component {
-            return Some(consumer.destination);
+            return Some(consumer);
         }
         let entry = self.reference(evidence.side, kind, &evidence.context.entry.path)?;
-        let owner = match &entry.source.variant_of {
-            None => Some(entry),
+        let owner = match &entry.original.variant_of {
+            None => Some(entry.destination),
             Some(parent) => self
-                .reference(evidence.side, kind, parent)
-                .filter(|parent| parent.source.variant_of.is_none()),
+                .destination(evidence.side, kind, parent)
+                .filter(|parent| parent.metadata.variant_of.is_none()),
         };
         if owner.is_some_and(|owner| {
             owner
-                .destination
                 .metadata
                 .path
-                .eq_ignore_ascii_case(&consumer.destination.metadata.path)
+                .eq_ignore_ascii_case(&consumer.metadata.path)
         }) {
             Some(entry.destination)
         } else {
-            Some(consumer.destination)
+            Some(consumer)
         }
     }
 
-    /// Before references prefer accepted pairs, then current identities and removals.
+    /// Keep the evidence-side entry separate from its current or historical destination.
     fn reference(
         &self,
         side: ReviewSide,
         kind: EntryKind,
         path: &str,
     ) -> Option<ResolvedReference<'a>> {
+        let originals = match side {
+            ReviewSide::Before => &self.before,
+            ReviewSide::After => &self.current,
+        };
+        Some(ResolvedReference {
+            original: originals.get(&key(kind, path))?.metadata,
+            destination: self.destination(side, kind, path)?,
+        })
+    }
+
+    /// Before references prefer accepted pairs, then current identities and removals.
+    fn destination(&self, side: ReviewSide, kind: EntryKind, path: &str) -> Option<LinkTarget<'a>> {
         let key = key(kind, path);
         match side {
             ReviewSide::After => self.current.get(&key),
@@ -133,19 +142,16 @@ impl<'a> References<'a> {
     }
 }
 
-fn entries(model: &CatalogueModel) -> BTreeMap<Key, ResolvedReference<'_>> {
+fn entries(model: &CatalogueModel) -> BTreeMap<Key, LinkTarget<'_>> {
     model
         .entries
         .iter()
         .map(|entry| {
             (
                 key(entry.content.kind(), &entry.metadata.path),
-                ResolvedReference {
-                    source: &entry.metadata,
-                    destination: LinkTarget {
-                        metadata: &entry.metadata,
-                        removed: false,
-                    },
+                LinkTarget {
+                    metadata: &entry.metadata,
+                    removed: false,
                 },
             )
         })

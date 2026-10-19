@@ -1275,11 +1275,20 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
           Keep the 60-second snapshot trim for duplicated delivery bytes, count
           the separate capture budget, and assert the real Serve capture trace.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
-    - [ ] Repeat the combined measurement after shared-engine batching merges.
+    - [x] Repeat the combined measurement after shared-engine batching merges.
           Each run creates a fresh base runtime, bundle cache, and CSS context.
           Cached source and dependency reuse still publishes preparing. The
           one-line edit smoke took 5m19s to Changes ready with three sidecars.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-8/cache-retention-measurement.md`.
+          Quiet-machine repeat on 2026-10-19 at `a3cc0828`: eight default
+          sidecars, base `4cc9e004`, default deadlines, 4 GB stop, 50 ms PSS
+          samples with per-process RSS fallback. The authorized incomplete
+          render returned 100 Continue before the edit and 400 after release.
+          Edit to ready: 127.955 s. Initial peak: 2.615 GB. Held reclassification
+          and new-capture-to-release peaks: 2.054 GB. Initial/replacement
+          sidecar starts: 14/12; source-root groups: 3/2. Machine: eight CPUs,
+          16.25 GiB RAM, Node 24.21.0, Rust 1.95.0 development build.
+          Evidence: `.context/m14-measurements/m9-default/summary.json`.
       - [x] Measure one worker with an old capture held by an in-flight request.
             The default-count probe stops at the common memory allowance before
             ready; its edit time and overlap peak need a probe-budget decision.
@@ -1800,11 +1809,36 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
   - [x] Port HTML/React generation, both-variant build, and HTML Serve measurement.
-  - [ ] Measure React Serve on a suitable machine with a configurable memory stop.
-  - [ ] Connect Changes and watch to their delivered browser events.
-  - [ ] Measure `review.capture-side` retained and uncaptured views on the large
+  - [x] Measure React Serve on a suitable machine with a configurable memory stop.
+        At `a3cc0828`, the default 1,620-route/5,850-document React fixture used
+        two sidecars, default deadlines, workspace dependencies, and a 6 GiB
+        whole-harness RSS stop. Cold/warm usable startup: 184.370/183.713 s;
+        both failed the unchanged 5 s budget. Browser checks passed. CLI RSS
+        peaks: 1,368,268/1,591,676 KiB; whole harness: 2,744,332/3,435,732 KiB.
+        Same eight-CPU, 16.25 GiB machine and development build as the M9 repeat.
+        Evidence: `.context/m14-measurements/large-react/.context/measurements.json`.
+  - [ ] Resolve the React large-fixture startup budget failure. `graph.prepare`
+        took 167.990/167.741 s in the cold/warm development-build observations.
+        Profile preparation and repeat with the intended acceptance build profile.
+        Keep the approved usable startup budget below 5000 ms.
+  - [x] Connect Changes and watch to their delivered browser events.
+        Evidence: `.context/m14-harness/browser-focused.log` and
+        `.context/m14-harness/watch-smoke/.context/measurements.json`.
+  - [x] Drain browser measurements and restore sources before reporting failure
+        when Serve stops, including runs with a caller-owned browser.
+        Evidence: `.context/m14-harness/cleanup-green.log` and `review.md` there.
+  - [x] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
         per-entry charges until the capacity measurements support a decision.
+        At `a3cc0828`, both default fixtures retained 5,850 views and left zero
+        uncaptured. HTML/React retained 66,405,523/83,932,642 bytes and encoded
+        19,511,762/37,797,065 bytes. Capture spans: 759.466/1,025.018 s.
+        Capture-phase process-family PSS peaks: 0.834/1.510 GB with RSS fallback.
+        Two sidecars, default deadlines, and a 6 GiB stop on the same machine.
+        Stop after capture; complete Changes classification was not measured.
+        Keep the 256 MiB bound and every per-entry charge.
+        Evidence: `.context/m14-measurements/capture-html/summary.json` and
+        `.context/m14-measurements/capture-react/summary.json`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -1813,8 +1847,32 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         matching path. Its subtree search uses one native frame per rendered
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
-  - [ ] Measure isolated dependency installs and propose additional budgets;
+  - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
+        At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
+        cold/warm npm caches, including package packing. `npm ci` took
+        7.328/5.446 s. Full fixture setup, including catalogue generation and
+        Git setup, took 28.948/21.024 s.
+        Setup process-family RSS peaked at 784,814,080/916,635,648
+        bytes. Both installed CLI and React rendering smoke checks passed.
+        Unmodified setup failed twice: `EUSAGE`, four non-host native packages
+        missing from the lockfile. Measurements used fixture-only metadata
+        archives for those skipped optional targets. No product code changed.
+        Evidence: `.context/m14-measurements/install-metadata-cold-evidence/summary.json`
+        and `.context/m14-measurements/install-metadata-warm-evidence/summary.json`.
+  - [x] Repair isolated setup for unpublished non-host native packages and
+        repeat the install measurements without fixture-only overrides.
+        Reproduce with `fixture:large --toolchain install` at `0cda750a`.
+        Evidence: `.context/m14-measurements/install-cold-evidence/summary.json`.
+    - [x] Repair single-host isolated setup and record three unmodified installs.
+          Evidence: `.context/m14-installs/measurements.json` and `report.md` there.
+  - [ ] Decide proposed isolated-setup budgets after that repair: under 60,000 ms
+        cold and warm, and under 1.5 GiB process-family RSS including the setup
+        harness. Proposal dated 2026-10-19, not approved or enforced. Alternative:
+        retain observation-only results. Recommend the budgets after three
+        unmodified repetitions; these samples leave time and memory headroom.
+        Keep the approved usable startup budget below 5000 ms and leave the
+        separate base dependency preparation allowance unchanged.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
@@ -1829,11 +1887,23 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
-- [ ] Replace the old baseline-output cold reset with M9 leased-cache preparation
+- [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
-- [ ] Measure generation source-snapshot retention and per-root CSS asset
+      Evidence: `.context/m14-harness/changes-tests-3.log` and
+      `.context/m14-harness/changes-smoke/`.
+- [x] Measure generation source-snapshot retention and per-root CSS asset
       preparation with large asset inputs; keep total working memory within
       the approved acceptance budgets, in addition to the artifact-cache bound.
+      Digest-only repeat at `0cda750a` on the same machine: 48 routes and 166
+      documents; four PNG assets shared by four CSS roots; `build --no-changes`.
+      Asset inputs: 16,790,336/67,152,192 bytes. Final source retention stayed
+      70,425 bytes. First asset-root preparation: 339/1,368 ms; each other
+      sharing root: 0–1 ms. Build: 4.022/10.033 s; CLI RSS: 142,196/192,128 KiB;
+      whole harness RSS: 348,316/383,028 KiB, below its 4 GiB observation stop.
+      All eight output hashes matched; each asset had one generated output.
+      These are observations, not new total-memory acceptance budgets.
+      Evidence: `.context/m14-measurements/assets-16mib/.context/measurements.json`
+      and `.context/m14-measurements/assets-64mib/.context/measurements.json`.
   - [x] Measure repository snapshot payload and CSS-root preparation with large
         asset inputs through the guarded build harness.
   - [x] Review opaque CSS asset retention before a redesign or larger probes.
@@ -1881,6 +1951,8 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
 
 Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
+Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
+F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -1898,11 +1970,20 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - F2 item 2: choose the canonical consumer for Before variant evidence when
-    another kind reuses its donor parent's path. Severity Medium, effort
-    Medium. Recommended: B, use the resolved variant when its original parent
-    has no destination, retaining original evidence paths. The spec does not
-    define this fallback. Evidence: `.context/f2/item-2-decision.md`.
+  - [x] Fix integration batch 3 review finding 1: keep original ownership
+        metadata separate from resolved Usage destinations. A transferred
+        variant follows its own pair when its donor survives or is removed.
+        Evidence: `.context/integration-3/review-fixes/`.
+  - [x] Fix integration batch 3 review finding 2: keep the focused design
+        test command in the CLI README and preparation mechanics in fixture
+        comments. Retain the default-suite requirement in the protocol.
+        Evidence: `.context/integration-4/`.
+  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
+    another entry kind reuses the donor path needs a requirement decision.
+    F2 item 2: Severity Medium, effort Medium. Recommended: B, use the resolved
+    variant when its original parent has no destination, retaining original
+    evidence paths. The spec does not define this fallback.
+    Evidence: `.context/f2/item-2-decision.md`.
   - [ ] Decide whether extglob-shaped stylesheet matches need a warning
         (M9 review 10 finding 5B, user item 54). Keep the migration release note;
         add no diagnostic before approval.
@@ -1919,6 +2000,18 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
     renames. Keep the requested-file and browser-error assertions.
     Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/browser-3.log`
     and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/static-deployment-rerun.log`.
+  - F1 follow-up finding 1: settled by the orchestrator on 2026-10-19,
+    decision 1A. Keep `aria-current` on both links because both open the
+    current page. Check Default-only selection through the active class.
+    Reject changing the current-page marks to follow row selection. This
+    keeps the self-link decision in `be30a10a` and changes no protocol.
+    Merge preservation: `.context/f1-round2/merge-decisions.md`.
+  - [x] Resolve the F1 tracing failure in
+        `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`.
+        The earlier failure reported an original Unimock destroyed on another
+        thread. Commit `7b4dd657` retains original mocks until the tracing
+        subscriber releases its clones. The requested merge includes this fix.
+        Evidence: `.context/f1-round2/serve-trace.log`.
   - [x] Resolve the M9 engine round 15 preparation-warning test flake in
         `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`.
         Match the watched source's failure line, so a delayed Git comparison

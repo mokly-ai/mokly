@@ -1,9 +1,10 @@
-//! Share one live generation while tests overlap; release it before removing its source.
+//! Share one prepared authored catalogue while behaviour tests overlap.
+//! Render documents on demand and release the generation before removing its source.
 
 use std::env;
 use std::num::NonZeroUsize;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex, MutexGuard, Weak};
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
 use mokly_catalogue::discovery::Discoverer;
@@ -39,13 +40,19 @@ pub(super) struct Catalogue {
 
 /// Reuse preparation only while another test still owns the generation.
 pub(super) fn shared() -> Arc<Catalogue> {
-    let mut shared = SHARED.lock().unwrap();
+    let mut shared = preparation_lock(&SHARED);
     if let Some(catalogue) = shared.upgrade() {
         return catalogue;
     }
     let catalogue = Arc::new(prepare());
     *shared = Arc::downgrade(&catalogue);
     catalogue
+}
+
+fn preparation_lock(shared: &Mutex<Weak<Catalogue>>) -> MutexGuard<'_, Weak<Catalogue>> {
+    shared.lock().unwrap_or_else(|_| {
+        panic!("design catalogue preparation failed in another test; see its failure")
+    })
 }
 
 fn prepare() -> Catalogue {
@@ -134,7 +141,14 @@ impl Catalogue {
 struct StopPool(Arc<dyn SidecarPool>);
 impl Drop for StopPool {
     fn drop(&mut self) {
-        self.0.shutdown().unwrap();
+        let result = self.0.shutdown();
+        if std::thread::panicking() {
+            if let Err(error) = result {
+                eprintln!("design catalogue sidecar shutdown failed during panic: {error}");
+            }
+        } else {
+            result.unwrap();
+        }
     }
 }
 
@@ -144,3 +158,7 @@ impl Diagnostics for ProbeDiagnostics {
         eprintln!("{message}");
     }
 }
+
+#[cfg(test)]
+#[path = "catalogue_tests.rs"]
+mod tests;

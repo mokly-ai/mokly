@@ -42,7 +42,23 @@ pub(crate) fn check() {
                         .unwrap()
                         .contains("mbk-stack-layer--after")
                 );
+                if !tall {
+                    assert_eq!(
+                        layers
+                            .iter()
+                            .map(|layer| dom::class(&layer.children, "ce-action--before").len())
+                            .collect::<Vec<_>>(),
+                        [1, 0],
+                        "Before and Current content stays in its own layer: {path}",
+                    );
+                }
                 for layer in layers {
+                    let subject = if tall { "ce-checklist" } else { "ce-action" };
+                    assert_eq!(
+                        dom::class(&layer.children, subject).len(),
+                        1,
+                        "one subject per layer: {path}"
+                    );
                     assert_eq!(dom::class(&layer.children, "ce-canvas-content").len(), 1);
                     assert!(dom::class(&layer.children, "ce-canvas-label").is_empty());
                     assert!(dom::class(&layer.children, "mbk-stack-viewport").is_empty());
@@ -58,6 +74,17 @@ pub(crate) fn check() {
                 let compare = dom::class(&preview.children, "mbk-compare");
                 assert_eq!(compare.len(), 1);
                 assert_eq!(compare[0].get("data-compare-mode"), Some(mode));
+                for class in [
+                    "mbk-compare-side",
+                    "mbk-compare-label",
+                    "browser-frame",
+                    "phone-frame",
+                ] {
+                    assert!(
+                        dom::class(&compare[0].children, class).is_empty(),
+                        "no separate version frame {class}: {path}"
+                    );
+                }
                 let ordered = dom::elements(&frame.children);
                 let caption = ordered
                     .iter()

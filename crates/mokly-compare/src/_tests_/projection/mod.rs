@@ -1,6 +1,5 @@
 //! Shared projection branch coverage through mocked generations.
 
-mod affected_fixtures;
 mod affected_reference_tests;
 mod detail_tests;
 mod index_tests;

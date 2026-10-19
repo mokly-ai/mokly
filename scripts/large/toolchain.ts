@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 
 import { platformPackage } from "../../packages/mokly/src/platform.mjs";
 import { systemRuntime } from "../../packages/mokly/src/runtime.mjs";
+import { NATIVE_TARGETS } from "../release/targets.mjs";
 
 const execute = promisify(execFile);
 export type ToolchainMode = "workspace" | "install";
@@ -49,7 +50,12 @@ export async function prepareToolchain(
     systemRuntime().glibc,
   );
   const dependencies: Record<string, string> = {};
-  for (const name of ["@mokly/mokly", "@mokly/viewer", native]) {
+  const optionalDependencies: Record<string, string> = {};
+  for (const name of [
+    "@mokly/mokly",
+    "@mokly/viewer",
+    ...NATIVE_TARGETS.map((target) => target.name),
+  ]) {
     const directory = path.join(
       repository,
       "packages",
@@ -63,7 +69,11 @@ export async function prepareToolchain(
     const packedFiles = JSON.parse(packed.stdout) as { filename: string }[];
     const filename = packedFiles[0]?.filename;
     if (!filename) throw new Error(`npm pack returned no archive for ${name}`);
-    dependencies[name] = `file:tooling/${filename}`;
+    const destination =
+      name.startsWith("@mokly/native-") && name !== native
+        ? optionalDependencies
+        : dependencies;
+    destination[name] = `file:tooling/${filename}`;
   }
   const lock = JSON.parse(
     await fs.readFile(path.join(repository, "package-lock.json"), "utf8"),
@@ -85,10 +95,12 @@ export async function prepareToolchain(
         private: true,
         type: "module",
         dependencies,
-        overrides: {
-          "@mokly/viewer": "$@mokly/viewer",
-          [native]: `$${native}`,
-        },
+        optionalDependencies,
+        overrides: Object.fromEntries(
+          ["@mokly/viewer", ...NATIVE_TARGETS.map((target) => target.name)].map(
+            (name) => [name, `$${name}`],
+          ),
+        ),
       },
       null,
       2,

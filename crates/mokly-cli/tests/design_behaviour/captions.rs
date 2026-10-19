@@ -2,20 +2,12 @@
 
 use std::collections::BTreeSet;
 
-use serde_json::Value;
-
-use super::{catalogue, dom};
+use super::{catalogue, dom, records};
 
 /// Pair each rendered comparison caption with its authored factual record.
 pub(crate) fn check() {
     let fixture = catalogue::shared();
-    let records = fixture.views("behaviour-records");
-    let record_tree = &records[0].document.as_ref().unwrap().tree;
-    let pre = dom::elements(record_tree)
-        .into_iter()
-        .find(|element| element.get("id") == Some("records"))
-        .unwrap();
-    let records: Value = serde_json::from_str(&dom::text(&pre.children)).unwrap();
+    let records = records::read(&fixture);
     let expected = records["captions"].as_object().unwrap();
     assert_eq!(expected.len(), 8);
     let paths: Vec<_> = fixture

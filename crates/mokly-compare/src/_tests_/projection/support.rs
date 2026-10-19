@@ -15,7 +15,7 @@ use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_types::{ComparisonResult, DocumentComparison, EntryClassification, ViewKey};
-use crate::move_types::{EntryPair, Pairing};
+use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::{projection_index, snapshots};
 
 pub(super) fn entry(path: &str, kind: EntryKind, parent: Option<&str>) -> ModelEntry {
@@ -197,4 +197,65 @@ pub(super) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV1>
         }
     }
     details
+}
+
+/// Transfer one variant while retaining or removing its former parent.
+pub(super) fn transferred_variant_result(remove_donor: bool) -> ComparisonResult {
+    let before = vec![
+        entry("badge", EntryKind::Component, None),
+        entry("donor", EntryKind::Component, None),
+        entry("receiver", EntryKind::Component, None),
+        entry("donor/primary", EntryKind::Component, Some("donor")),
+    ];
+    let mut after = before.clone();
+    after[3].metadata.path = "receiver/primary".into();
+    after[3].metadata.title = "Transferred primary".into();
+    after[3].metadata.variant_of = Some("receiver".into());
+    let mut pairs: Vec<_> = (0..4)
+        .map(|index| EntryPair {
+            before: Some(index),
+            after: Some(index),
+            moved: index == 3,
+        })
+        .collect();
+    if remove_donor {
+        after.remove(1);
+        pairs[1].after = None;
+        pairs[2].after = Some(1);
+        pairs[3].after = Some(2);
+    }
+    let mut variant = classified(
+        "receiver/primary",
+        EntryKind::Component,
+        ReviewState::Unchanged,
+    );
+    variant.previous_path = Some("donor/primary".into());
+    variant.documents[0].before_route = Some("donor/primary/index.desktop.html".into());
+    paired_result(
+        before,
+        after,
+        vec![
+            classified("badge", EntryKind::Component, ReviewState::Changed),
+            classified(
+                "donor",
+                EntryKind::Component,
+                if remove_donor {
+                    ReviewState::Removed
+                } else {
+                    ReviewState::Unchanged
+                },
+            ),
+            classified("receiver", EntryKind::Component, ReviewState::Unchanged),
+            variant,
+        ],
+        Pairing {
+            entries: pairs,
+            moves: vec![MovePair {
+                kind: EntryKind::Component,
+                path: "receiver/primary".into(),
+                previous_path: "donor/primary".into(),
+            }],
+            diagnostics: vec![],
+        },
+    )
 }
