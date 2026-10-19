@@ -124,6 +124,14 @@ entry routes of the form `path/index.html`. Globs are case-sensitive POSIX globs
 `*` does not cross `/`, and `**` can cross directories. Stylesheet matchers use
 `globset` brace alternatives and character classes directly, with backslash
 escaping disabled. Root-file validation and expansion apply to `roots[].files`.
+An extglob opening (`@(`, `!(`, `+(`, `*(`, or `?(`) outside a character class
+produces one `stylesheet-extglob` configuration warning per matcher. Its message is:
+
+```text
+stylesheet match <JSON-quoted-pattern> uses unsupported extglob syntax. Use brace alternatives such as "{a,b}" instead.
+```
+
+The warning leaves matching unchanged. Normal [strict warning handling](./mokly-build-warnings.md#strict-mode) applies.
 Stylesheet matchers compile once per generation; the first matching rule applies.
 HTTP(S) stylesheet URLs are allowed. `colorSchemes` is a non-empty,
 duplicate-free subset of `"light" | "dark"` that must include `"light"`; it

@@ -1979,9 +1979,12 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
   - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
     another entry kind reuses the donor path needs a requirement decision.
     Separate branch.
-  - [ ] Decide whether extglob-shaped stylesheet matches need a warning
-        (M9 review 10 finding 5B, user item 54). Keep the migration release note;
-        add no diagnostic before approval.
+  - [x] Decision 54A, approved on 2026-10-19: warn on extglob-shaped stylesheet
+        matchers and suggest brace alternatives. Keep globset matching and the
+        existing strict-warning policy. Reject silent omission of the diagnostic.
+        F4 defines `stylesheet-extglob`, tests all five openings and exact
+        terminal output, and verifies strict failure before output replacement.
+        Evidence: `.context/f4/`.
   - M9 reference replay verification: investigate the unchanged
     `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`
     test's `warning.0 < failure` assertion failure. Its isolated rerun passed.
