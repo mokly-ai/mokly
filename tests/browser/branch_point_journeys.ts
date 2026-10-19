@@ -124,13 +124,14 @@ async function parentActivation(
   parent: string,
   removed: string,
 ): Promise<void> {
+  // Each activation starts on another route, so each one must navigate.
   await activateRow(page, parent);
   await expectRouted(page, parent);
   await search(page, "secondary");
-  await activateRow(page, parent);
-  await expectRouted(page, parent);
   await activateRow(page, removed);
   await expectRouted(page, removed);
+  await activateRow(page, parent);
+  await expectRouted(page, parent);
 }
 
 const movedParent: Check = async (page) => {

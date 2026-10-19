@@ -59,6 +59,11 @@ for (const change of ["theme", "viewport"] as const)
     await chooseScheme(page, "light");
     await loadComparison(page, "Overlay");
     await modeButton(page, "Difference").click();
+    // The mode switch renews the generation first; its panes show only after.
+    await expect(page.locator(".mb-panes")).toHaveAttribute(
+      "data-compare-mode",
+      "difference",
+    );
     await expect(page.frameLocator(before).locator("h1")).toHaveText(
       "Before screen",
     );
