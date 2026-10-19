@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { Definitions } from "../packages/mokly/src/generated/sidecar/Definitions.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
 
