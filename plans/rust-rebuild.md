@@ -1822,11 +1822,12 @@ Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
     Reject changing the current-page marks to follow row selection. This
     keeps the self-link decision in `be30a10a` and changes no protocol.
     Merge preservation: `.context/f1-round2/merge-decisions.md`.
-  - F1 verification: `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`
-    failed with `Original Unimock instance destroyed on a different thread`
-    and passed on the isolated rerun. Suspected source: tracing subscriber
-    cleanup drops the original mock across threads. Separate branch.
-    Evidence: `.context/f1/gate.log` and `.context/f1/serve-trace-rerun.log`.
+  - [x] Resolve the F1 tracing failure in
+        `serve_trace::serve_trace_tests::unsuccessful_review_spans_remain_error_and_emit_no_complete_counts`.
+        The earlier failure reported an original Unimock destroyed on another
+        thread. Commit `7b4dd657` retains original mocks until the tracing
+        subscriber releases its clones. The requested merge includes this fix.
+        Evidence: `.context/f1-round2/serve-trace.log`.
   - [x] Resolve the M9 engine round 15 preparation-warning test flake in
         `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`.
         Match the watched source's failure line, so a delayed Git comparison
