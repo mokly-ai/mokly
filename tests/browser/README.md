@@ -20,6 +20,17 @@ disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
 `changesStatus` is not `disabled`.
 
+## Deployment replacement
+
+`static_deployment.spec.ts` hosts two immutable copies. The static host's root
+callback selects the published copy once per request, before filesystem work.
+Publication changes that selection in one synchronous step. Pending requests
+keep their selected copy until teardown. The deployment test keeps its reload,
+history, frame-content, request-status, and browser-error assertions.
+
+`tests/static_server_deployment.test.ts` holds an old request while a request
+for the replacement copy completes. Both must return their selected file.
+
 ## Native comparison copy
 
 `comparison_test.ts` supplies `test`, `copiedComparisonUrl()`,

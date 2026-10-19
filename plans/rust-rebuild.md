@@ -1792,11 +1792,12 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
         ordering, repair, and cleanup assertion. A controlled log sequence
         proves the old failure; the fixed case passes 20 isolated runs.
         Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
-  - [ ] Resolve the M9 engine round 15 copied-deployment test flake in
-        `static_deployment.spec.ts`: two directory renames temporarily remove
-        the served root and return 404 for `inspector.js`. Publish an immutable
-        copy through one root selection and keep each pending request on its
-        selected copy. Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
+  - [x] Resolve the M9 engine round 15 copied-deployment test flake in
+        `static_deployment.spec.ts`. Publish immutable copies through one root
+        selection per request. A controlled request between the old renames
+        proves the 404; a held-request test keeps each response on its selected
+        copy. The browser case passes 20 runs in distinct workers with every
+        assertion retained. Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
