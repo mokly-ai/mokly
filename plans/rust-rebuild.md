@@ -1732,9 +1732,18 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Profile preparation and repeat with the intended acceptance build profile.
         Keep the approved usable startup budget below 5000 ms.
   - [ ] Connect Changes and watch to their delivered browser events.
-  - [ ] Measure `review.capture-side` retained and uncaptured views on the large
+  - [x] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
         per-entry charges until the capacity measurements support a decision.
+        At `a3cc0828`, both default fixtures retained 5,850 views and left zero
+        uncaptured. HTML/React retained 66,405,523/83,932,642 bytes and encoded
+        19,511,762/37,797,065 bytes. Capture spans: 759.466/1,025.018 s.
+        Capture-phase process-family PSS peaks: 0.834/1.510 GB with RSS fallback.
+        Two sidecars, default deadlines, and a 6 GiB stop on the same machine.
+        Stop after capture; complete Changes classification was not measured.
+        Keep the 256 MiB bound and every per-entry charge.
+        Evidence: `.context/m14-measurements/capture-html/summary.json` and
+        `.context/m14-measurements/capture-react/summary.json`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
