@@ -14,6 +14,7 @@ use tracing_subscriber::Layer;
 use tracing_subscriber::layer::{Context, SubscriberExt};
 use tracing_subscriber::registry::LookupSpan;
 
+use crate::serve_trace_stages::stage;
 use crate::terminal::Terminal;
 
 pub(super) struct Timings {
@@ -107,58 +108,6 @@ impl Visit for Fields {
             self.record_str(field, &format!("{value:?}"));
         }
     }
-}
-
-fn stage(name: &str) -> bool {
-    matches!(
-        name,
-        "serve.ready"
-            | "watch.action"
-            | "serve.background"
-            | "config.load"
-            | "catalogue.discover"
-            | "catalogue.validate"
-            | "catalogue.describe"
-            | "graph.prepare"
-            | "graph.prepare.documents"
-            | "graph.prepare.resources"
-            | "graph.prepare.stylesheet-roots"
-            | "graph.prepare.routing-records"
-            | "render.document"
-            | "render.fragment"
-            | "css.bundle"
-            | "css.postcss"
-            | "index.build"
-            | "detail.build"
-            | "build"
-            | "publish"
-            | "output.write"
-            | "output.fingerprint"
-            | "output.input-digests"
-            | "output.input-read"
-            | "output.recheck"
-            | "output.stage"
-            | "output.install"
-            | "output.capture"
-            | "output.rollback"
-            | "output.cleanup"
-            | "changes.classify"
-            | "review.base-commit"
-            | "review.base-tree"
-            | "review.base-dependencies"
-            | "review.changed-paths"
-            | "review.compare-views"
-            | "review.capture-side"
-            | "review.resource-graph"
-            | "review.css-analysis"
-            | "review.capture"
-            | "sidecar.spawn"
-            | "sidecar.recycle"
-            | "sidecar.stop"
-            | "upload.plan"
-            | "upload.blobs"
-            | "upload.complete"
-    )
 }
 
 impl Timings {

@@ -2013,6 +2013,9 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
         through one helper. Builds with Changes disabled omit the pinned
         base. Default builds and Serve retain the fixture's pinned base.
         Evidence: `.context/integration-4/review-fix/`.
+  - [x] Split core timing stage selection after integration batch 5 combines
+        stop timing and startup stages. Retain every stage and the file cap.
+        Evidence: `.context/integration-5/length-before.log` and `targeted.log`.
   - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
     another entry kind reuses the donor path needs a requirement decision.
     Separate branch.
