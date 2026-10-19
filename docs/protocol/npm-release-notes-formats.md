@@ -66,7 +66,9 @@ configuration, authoring modules, generated output, or caches.
   with this token in the JSON stylesheet list. `WatchConfig` and `ReviewConfig`
   are removed configuration types.
   Replace extglob stylesheet matches such as `@(a|b)` with brace alternatives
-  such as `{a,b}`.
+  such as `{a,b}`. Unsupported extglob matchers emit a `stylesheet-extglob`
+  configuration warning that names the pattern and suggests brace alternatives.
+  `--strict` fails on this warning under the normal build-warning policy.
 - Do not commit generated output. `build` defaults to `mokly-static/`, which
   must be ignored by Git. Remove committed `mokly-generated/` output and
   `.mokly-cache`. Serve and comparisons render in memory. Base extraction and
