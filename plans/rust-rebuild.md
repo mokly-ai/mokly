@@ -1978,12 +1978,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         test command in the CLI README and preparation mechanics in fixture
         comments. Retain the default-suite requirement in the protocol.
         Evidence: `.context/integration-4/`.
-  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
-    another entry kind reuses the donor path needs a requirement decision.
-    F2 item 2: Severity Medium, effort Medium. Recommended: B, use the resolved
-    variant when its original parent has no destination, retaining original
-    evidence paths. The spec does not define this fallback.
-    Evidence: `.context/f2/item-2-decision.md`.
+  - [x] F3 item 1: the orchestrator approved F2 decision B on 2026-10-19.
+        Use the resolved variant as the canonical affected consumer when its
+        original parent has no destination. Keep the original evidence paths.
+        Reject omission of valid variant evidence. Never link to a replacement
+        document or restore the suppressed parent. The lookup protocol defines
+        the fallback. Evidence: `.context/f3/item-1-red.log` and `item-1-green.log`.
   - [ ] Decide whether extglob-shaped stylesheet matches need a warning
         (M9 review 10 finding 5B, user item 54). Keep the migration release note;
         add no diagnostic before approval.
