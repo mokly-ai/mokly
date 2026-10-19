@@ -1752,8 +1752,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         matching path. Its subtree search uses one native frame per rendered
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
-  - [ ] Measure isolated dependency installs and propose additional budgets;
+  - [x] Measure isolated dependency installs and propose additional budgets;
         retain the approved usable startup budget of under 5000 ms.
+        At `0cda750a`, isolated React fixture setup took 28.076/20.160 s with
+        cold/warm npm caches, including package packing. `npm ci` took
+        7.328/5.446 s. Setup process-family RSS peaked at 784,814,080/916,635,648
+        bytes. Both installed CLI and React rendering smoke checks passed.
+        Unmodified setup failed twice: `EUSAGE`, four non-host native packages
+        missing from the lockfile. Measurements used fixture-only metadata
+        archives for those skipped optional targets. No product code changed.
+        Evidence: `.context/m14-measurements/install-metadata-cold-evidence/summary.json`
+        and `.context/m14-measurements/install-metadata-warm-evidence/summary.json`.
+  - [ ] Repair isolated setup for unpublished non-host native packages and
+        repeat the install measurements without fixture-only overrides.
+        Reproduce with `fixture:large --toolchain install` at `0cda750a`.
+        Evidence: `.context/m14-measurements/install-cold-evidence/summary.json`.
+  - [ ] Decide proposed isolated-setup budgets after that repair: under 60,000 ms
+        cold and warm, and under 1.5 GiB process-family RSS including the setup
+        harness. Proposal dated 2026-10-19, not approved or enforced. Alternative:
+        retain observation-only results. Recommend the budgets after three
+        unmodified repetitions; these samples leave time and memory headroom.
+        Keep the approved usable startup budget below 5000 ms and leave the
+        separate base dependency preparation allowance unchanged.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
