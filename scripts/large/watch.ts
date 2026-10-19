@@ -1,6 +1,6 @@
 /** Edit-to-publication and visible reload observations on one browser clock. */
 import { expect } from "@playwright/test";
-import type { Browser, Frame, Page } from "@playwright/test";
+import type { BrowserContext, Frame, Page } from "@playwright/test";
 
 import { availableReview, firstScreen } from "./changes.js";
 import {
@@ -71,71 +71,62 @@ async function measureEdit(
 }
 
 export async function watch(
-  browser: Browser,
+  context: BrowserContext,
   url: string,
   fixture: PreparedFixture,
   edits: WatchMeasurement[],
 ) {
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 1000 },
-  });
-  context.setDefaultTimeout(60_000);
-  context.setDefaultNavigationTimeout(60_000);
-  try {
-    const page = await context.newPage();
-    await observeDelivery(page);
-    await page.goto(`${url}/view/${firstScreen}/`);
-    await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
-    for (const edit of await fixtureEdits(fixture)) {
-      await edit.verify(page, false);
-      const before = await delivered(page);
-      if (!before.index.live) throw new Error("Watch needs a live generation");
-      const frame = page.locator('[data-workspace-frame="desktop"]');
-      const previousSrc = await frame.getAttribute("src");
-      if (!previousSrc) throw new Error("Watch preview has no source URL");
-      let navigations = 0;
-      const previewPath = new URL(previousSrc, url).pathname;
-      const navigated = (frame: Frame) => {
-        if (
-          frame.parentFrame() === page.mainFrame() &&
-          new URL(frame.url()).pathname === previewPath
-        )
-          navigations++;
-      };
-      page.on("framenavigated", navigated);
-      const beginning = await page.evaluate(() => performance.now());
-      try {
-        await withFixtureEdit(edit, async () => {
-          edits.push(
-            await measureEdit(
-              page,
-              fixture,
-              edit,
-              before,
-              beginning,
-              () => navigations,
-            ),
-          );
-        });
-      } finally {
-        page.off("framenavigated", navigated);
-      }
-      const measured = edits.at(-1)!;
-      await edit.verify(page, false);
-      const restored = await delivered(page, {
-        afterRevision: measured.changesRevision,
-        previousGeneration: measured.generation,
-      });
-      await changesVisible(page, restored.index);
-      if (changedEntries(restored.index).length)
-        throw new Error(`Restoring ${edit.file} left Changes`);
-    }
-    return {
-      edits,
-      clock:
-        "Browser monotonic clock; starts immediately before requesting the file write. Includes driver dispatch.",
+  const page = await context.newPage();
+  await observeDelivery(page);
+  await page.goto(`${url}/view/${firstScreen}/`);
+  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
+  for (const edit of await fixtureEdits(fixture)) {
+    await edit.verify(page, false);
+    const before = await delivered(page);
+    if (!before.index.live) throw new Error("Watch needs a live generation");
+    const frame = page.locator('[data-workspace-frame="desktop"]');
+    const previousSrc = await frame.getAttribute("src");
+    if (!previousSrc) throw new Error("Watch preview has no source URL");
+    let navigations = 0;
+    const previewPath = new URL(previousSrc, url).pathname;
+    const navigated = (frame: Frame) => {
+      if (
+        frame.parentFrame() === page.mainFrame() &&
+        new URL(frame.url()).pathname === previewPath
+      )
+        navigations++;
     };
-  } finally {
-    await context.close();
+    page.on("framenavigated", navigated);
+    const beginning = await page.evaluate(() => performance.now());
+    try {
+      await withFixtureEdit(edit, async () => {
+        edits.push(
+          await measureEdit(
+            page,
+            fixture,
+            edit,
+            before,
+            beginning,
+            () => navigations,
+          ),
+        );
+      });
+    } finally {
+      page.off("framenavigated", navigated);
+    }
+    const measured = edits.at(-1)!;
+    await edit.verify(page, false);
+    const restored = await delivered(page, {
+      afterRevision: measured.changesRevision,
+      previousGeneration: measured.generation,
+    });
+    await changesVisible(page, restored.index);
+    if (changedEntries(restored.index).length)
+      throw new Error(`Restoring ${edit.file} left Changes`);
   }
+  return {
+    edits,
+    clock:
+      "Browser monotonic clock; starts immediately before requesting the file write. Includes driver dispatch.",
+  };
 }

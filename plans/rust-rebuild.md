@@ -1714,6 +1714,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
+  - [x] Drain browser measurements and restore sources before reporting failure
+        when Serve stops, including runs with a caller-owned browser.
+        Evidence: `.context/m14-harness/cleanup-green.log` and `review.md` there.
   - [ ] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
         per-entry charges until the capacity measurements support a decision.

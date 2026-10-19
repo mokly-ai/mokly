@@ -1,6 +1,6 @@
 /** Delivered Changes over the native M9 base preparation path. */
 import { expect } from "@playwright/test";
-import type { Browser, Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 
 import { parseReviewResult } from "../../packages/viewer/src/review/result_validation.js";
 
@@ -46,48 +46,39 @@ export async function availableReview(
 }
 
 export async function changes(
-  browser: Browser,
+  context: BrowserContext,
   url: string,
   fixture: PreparedFixture,
   beginning: number,
 ) {
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 1000 },
-  });
-  context.setDefaultTimeout(60_000);
-  context.setDefaultNavigationTimeout(60_000);
-  try {
-    const page = await context.newPage();
-    await observeDelivery(page);
-    await page.goto(`${url}/view/${firstScreen}/`);
-    const current = await delivered(page);
-    const indexReadyMs = performance.now() - beginning;
-    await changesVisible(page, current.index);
-    const changesReadyMs = performance.now() - beginning;
-    const review = await availableReview(page, fixture, current);
-    const reviewAvailableMs = performance.now() - beginning;
-    if (
-      changedEntries(current.index).length ||
-      review.included ||
-      review.affected
-    )
-      throw new Error(
-        `The unrelated CSS edit produced Changes: ${JSON.stringify(review)}`,
-      );
-    await page.locator("[data-filter=changed]").click();
-    await expect(page.locator("[data-nav-status-text]")).toHaveText(
-      "No changes found.",
+  const page = await context.newPage();
+  await observeDelivery(page);
+  await page.goto(`${url}/view/${firstScreen}/`);
+  const current = await delivered(page);
+  const indexReadyMs = performance.now() - beginning;
+  await changesVisible(page, current.index);
+  const changesReadyMs = performance.now() - beginning;
+  const review = await availableReview(page, fixture, current);
+  const reviewAvailableMs = performance.now() - beginning;
+  if (
+    changedEntries(current.index).length ||
+    review.included ||
+    review.affected
+  )
+    throw new Error(
+      `The unrelated CSS edit produced Changes: ${JSON.stringify(review)}`,
     );
-    return {
-      indexReadyMs,
-      changesReadyMs,
-      reviewAvailableMs,
-      review,
-      publication: current.publication,
-      revision: current.index.revision,
-      generation: current.index.live?.generation,
-    };
-  } finally {
-    await context.close();
-  }
+  await page.locator("[data-filter=changed]").click();
+  await expect(page.locator("[data-nav-status-text]")).toHaveText(
+    "No changes found.",
+  );
+  return {
+    indexReadyMs,
+    changesReadyMs,
+    reviewAvailableMs,
+    review,
+    publication: current.publication,
+    revision: current.index.revision,
+    generation: current.index.live?.generation,
+  };
 }

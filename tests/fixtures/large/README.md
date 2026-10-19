@@ -54,6 +54,8 @@ dispatch. Publication and index timestamps come from the shell's own stream
 and fetch responses. Frame and control times include browser assertion work.
 Every edit restores its original bytes. The next edit waits for the restored
 frame and Changes state. A failed run keeps completed edits in its report.
+When Serve stops during a measurement, the harness closes that measurement's
+browser context and waits for source restoration before it reports failure.
 For ordinary development, reuse a generated configuration with
 `npx mokly serve --config .context/large-html/mokly.config.json`.
 

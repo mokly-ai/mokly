@@ -6,6 +6,7 @@ import { chromium } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
 import { browse } from "./browse.js";
+import { browserMeasurement } from "./browser_measurement.js";
 import { changes } from "./changes.js";
 import { comparisonProfile } from "./comparison_profile.js";
 import { inputProfile } from "./input_profile.js";
@@ -135,16 +136,20 @@ export async function benchmark(
               /Mokly listening at (http:\/\/127\.0\.0\.1:\d+)/,
             );
             const readinessMs = performance.now() - beginning;
-            const measured = await Promise.race([
+            const context = await browser.newContext({
+              viewport: { width: 1440, height: 1000 },
+            });
+            context.setDefaultTimeout(60_000);
+            context.setDefaultNavigationTimeout(60_000);
+            const measured = await browserMeasurement(
+              context,
+              running.done,
               scenario === "changes"
-                ? changes(browser, match[1]!, fixture, beginning)
+                ? changes(context, match[1]!, fixture, beginning)
                 : scenario === "watch"
-                  ? watch(browser, match[1]!, fixture, completedEdits)
-                  : browse(browser, match[1]!, fixture, beginning),
-              running.done.then(() => {
-                throw new Error("Serve stopped before browser verification");
-              }),
-            ]);
+                  ? watch(context, match[1]!, fixture, completedEdits)
+                  : browse(context, match[1]!, fixture, beginning),
+            );
             const elapsedMs = performance.now() - beginning;
             const reason =
               "usableMs" in measured
