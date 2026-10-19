@@ -263,8 +263,9 @@ still arrives as a real watched publication, and Serve keeps no test seam.
 Specs that run the same comparison checks on the copied output and on Serve
 register them from a `*_cases.ts` module. Checks that each host reaches
 through its own setup are helpers instead. `light_only_band.ts` checks the
-Light only band. `serve_light_only_band.spec.ts` drops Dark through a watched
-configuration edit.
+Light only band. `imported_css_panes.ts` checks the panes of the screen that
+`tests/helpers/imported_css_sources.ts` adds. `serve_light_only_band.spec.ts`
+drops Dark through a watched configuration edit.
 
 A spec adds its own sources to both commits with
 `test.use({ comparisonSources: { add: hook } })`. The hook runs after the
