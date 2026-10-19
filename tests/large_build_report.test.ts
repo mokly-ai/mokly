@@ -59,6 +59,13 @@ for (const event of ['start', 'end']) {
     );
     assert.equal(args[0], "build");
     assert.equal(args.includes("--no-changes"), options.buildChanges === false);
+    if (options.buildChanges === false) {
+      assert.equal(args.includes("--base"), false);
+    } else {
+      const baseIndex = args.indexOf("--base");
+      assert.notEqual(baseIndex, -1);
+      assert.equal(args[baseIndex + 1], "test");
+    }
     assert.equal(stored.results.length, 1);
     const measured = stored.results[0];
     assert.ok(measured && "status" in measured && "inputProfile" in measured);

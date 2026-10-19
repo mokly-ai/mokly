@@ -1976,6 +1976,10 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
         test command in the CLI README and preparation mechanics in fixture
         comments. Retain the default-suite requirement in the protocol.
         Evidence: `.context/integration-4/`.
+  - [x] Fix integration batch 4 review finding 1: select comparison flags
+        through one helper. Builds with Changes disabled omit the pinned
+        base. Default builds and Serve retain the fixture's pinned base.
+        Evidence: `.context/integration-4/review-fix/`.
   - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
     another entry kind reuses the donor path needs a requirement decision.
     Separate branch.
