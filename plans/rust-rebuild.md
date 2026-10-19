@@ -1858,13 +1858,18 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         peaks: 1,368,268/1,591,676 KiB; whole harness: 2,744,332/3,435,732 KiB.
         Same eight-CPU, 16.25 GiB machine and development build as the M9 repeat.
         Evidence: `.context/m14-measurements/large-react/.context/measurements.json`.
-  - [ ] Resolve the React large-fixture startup budget failure. `graph.prepare`
+  - [x] Resolve the React large-fixture startup budget failure. `graph.prepare`
         took 167.990/167.741 s in the cold/warm development-build observations.
         Profile preparation and repeat with the intended acceptance build profile.
         Apply decision 57 C: React usable startup stays below 15,000 ms on the
         optimized release build; HTML stays below 5,000 ms.
-    - [ ] Enforce variant-specific startup acceptance on a verified release
+    - [x] Enforce variant-specific startup acceptance on a verified release
           binary and repeat the large React startup measurement.
+          At `caf7b383`, the default React fixture passed at 8.564/8.533 s
+          cold/warm with two sidecars, default deadlines, and a 6 GiB RSS stop.
+          The focused startup selection checked real previews, search, axes,
+          props, cached bytes, and a page. The machine had eight CPUs and
+          16.25 GiB RAM. Evidence: `.context/m14-round3/measurements-summary.json`.
           Merge preservation: `.context/m14-round3/merge-decisions.md`.
     - [x] Measure optimized startup and profile core, sidecar, and serial work.
           The release baseline at `9257b131` used the same fixture, two sidecars,
@@ -1931,8 +1936,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Approve isolated-setup budgets after the repair, decision 55 B on
         2026-10-19: under 60,000 ms and under 1.5 GiB setup-family RSS,
         including the setup harness.
-    - [ ] Enforce both isolated-setup budgets with synthetic boundary tests
+    - [x] Enforce both isolated-setup budgets with synthetic boundary tests
           and repeat one complete isolated install.
+          At `caf7b383`, full React fixture setup took 23.567 s with an empty
+          dedicated npm cache. Setup-family RSS peaked at 821,160 KiB across
+          472 samples at 50 ms intervals. Both budgets passed. Product release
+          preparation preceded measurement; installed binary verification passed.
+          Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
