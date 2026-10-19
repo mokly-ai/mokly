@@ -24,7 +24,7 @@ Other ranges and links stay inspectable. Inspector failures carry a typed reason
 and the document route. It builds canonical index v7 and detail
 v1 files with revision zero and no live capability. The shared model writer
 adds publication metadata when requested and writes the ownership marker last.
-Ready Changes supplies review v8, view evidence, workspace lists,
+Ready Changes supplies review v8, detail-root reasons, view evidence, workspace lists,
 and removed records from the same comparison result. Snapshot v4 stays private. Both pinned graph sides
 supply immutable documents and resources. Removed details carry their historical
 snapshot ID and generation; removed page and document previews carry metadata v3.

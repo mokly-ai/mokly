@@ -82,6 +82,10 @@ test(
         "mokly-viewer/entries/home.json",
       );
       assert.equal(detail.deploymentId, ready.index.deploymentId);
+      assert.deepEqual(
+        detail.reasons,
+        review.entries.find((entry) => entry.path === "home")!.reasons,
+      );
       for (const view of detail.views)
         assert.ok(
           view.resourceEvidence!.resources.some(
@@ -102,6 +106,7 @@ test(
         assert.equal(historical.entry.snapshotId, removed.snapshotId);
         assert.equal(historical.deploymentId, undefined);
         assert.equal(historical.revision, undefined);
+        assert.deepEqual(historical.reasons, [{ kind: "removed" }]);
         assert.equal(removed.preview!.kind, removed.entry.kind);
         if (removed.entry.kind !== "screen")
           assert.ok(

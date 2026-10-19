@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import {
@@ -33,6 +34,16 @@ test(
         ...ready.index.useCases,
       ];
       const removed = ready.index.removedEntries.map((record) => record.entry);
+      for (const entry of current) {
+        const detail = await json<EntryDetailV1>(
+          ready.output,
+          `mokly-viewer/entries/${entry.path}.json`,
+        );
+        assert.equal(
+          Object.hasOwn(detail, "reasons"),
+          entry.changes.status === "ready" && entry.changes.included,
+        );
+      }
       const count = [...current, ...removed].filter(
         (record) =>
           record.changes.status === "ready" && record.changes.included,
@@ -69,6 +80,17 @@ test(
       assert.deepEqual(unavailable.index.removedEntries, []);
       assert.match(unavailable.stdout, /Changes unavailable · .+/u);
       assert.match(unavailable.stderr, /base .*config/iu);
+      for (const entry of current)
+        assert.equal(
+          Object.hasOwn(
+            await json<EntryDetailV1>(
+              unavailable.output,
+              `mokly-viewer/entries/${entry.path}.json`,
+            ),
+            "reasons",
+          ),
+          false,
+        );
       assert.ok(
         ![...(await files(ready.output)).keys()].some((name) =>
           name.includes("diffs/generations/"),
@@ -79,6 +101,17 @@ test(
       assert.equal(disabled.index.base, undefined);
       assert.equal(disabled.index.comparisonUrl, null);
       assert.deepEqual(disabled.index.removedEntries, []);
+      for (const entry of current)
+        assert.equal(
+          Object.hasOwn(
+            await json<EntryDetailV1>(
+              disabled.output,
+              `mokly-viewer/entries/${entry.path}.json`,
+            ),
+            "reasons",
+          ),
+          false,
+        );
       assert.ok(
         !/Changes ready|Changes unavailable|Comparing with/u.test(
           disabled.stdout,

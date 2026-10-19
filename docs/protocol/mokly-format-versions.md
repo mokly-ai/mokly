@@ -7,7 +7,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 | Boundary                                | Version                   | Reason and reader                                                                                                           |
 | --------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Public catalogue index                  | 7                         | The read model without per-view usage and resource evidence; screens carry props and controls; the index reader requires 7. |
-| Entry detail                            | 1                         | One entry's per-view usage, resource evidence, and workspace lists; the detail reader requires 1.                           |
+| Entry detail                            | 1                         | One entry's per-view usage, resource evidence, direct reasons, and workspace lists; the detail reader requires 1.           |
 | Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                     |
 | Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                       |
 | Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the render generation.           |

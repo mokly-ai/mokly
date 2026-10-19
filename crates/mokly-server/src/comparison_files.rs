@@ -1,7 +1,7 @@
 //! Generation lookup never redirects and never revives collected generations.
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use async_trait::async_trait;
 use mokly_model::namespace::GENERATED_DIRECTORY;
@@ -35,10 +35,10 @@ impl Comparisons for MemoryComparisons {
         state
             .bundles
             .entry(accepted.id.clone())
-            .and_modify(|bundle| bundle.accepted = Some(accepted.clone()))
+            .and_modify(|bundle| bundle.accepted = Some(Arc::downgrade(&accepted)))
             .or_insert_with(|| Bundle {
                 files,
-                accepted: Some(accepted),
+                accepted: Some(Arc::downgrade(&accepted)),
                 touched: self.clock.milliseconds(),
             });
         Ok(())
@@ -59,7 +59,7 @@ impl Comparisons for MemoryComparisons {
                 bundle.touched = self.clock.milliseconds();
                 return Ok(Some(file.clone()));
             }
-            let Some(accepted) = &bundle.accepted else {
+            let Some(accepted) = bundle.accepted.as_ref().and_then(Weak::upgrade) else {
                 return Ok(None);
             };
             let Some(route) = path.strip_prefix(&routes::comparison_snapshot(
@@ -132,6 +132,7 @@ impl Comparisons for MemoryComparisons {
                 bundle
                     .accepted
                     .as_ref()
+                    .and_then(Weak::upgrade)
                     .map(|accepted| accepted.cancel.clone())
             }));
             self.serial.close();

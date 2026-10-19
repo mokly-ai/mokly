@@ -70,6 +70,8 @@ metadata. Serve uses those shared functions and the shared snapshot route builde
 `dyn ChangeSource` outside the HTTP loop. Each status replaces the index and
 all current details together. Ready state installs the review pointer, Changes
 membership, moved paths, removed records, and per-view evidence in one revision.
+Included details carry classification reasons in the review v8 shape even without a workspace.
+Non-ready publications remove those reasons with the other comparison evidence.
 Capacity is checked before ready-state projection and again at installation.
 A full store therefore retries without repeating that projection.
 New classification files enter the comparison store after ready-state projection
@@ -94,9 +96,17 @@ budgets cannot bypass these checks through the wrapped generation.
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after
 60 seconds without a read, except the classification JSON that the current
-index names. Its snapshot files still expire and can be recaptured from the
-retained base handles. GET and HEAD renew retention. The store allows 64
-generations, 128 MiB total, and 64 MiB per generation. It rejects capacity
+index names. Its snapshot files still expire to release duplicated delivery
+bytes. The accepted base capture restores retained documents without another
+base render; uncaptured views use the pinned-source fallback. GET and HEAD
+renew retention. The store keeps only weak classification references, so
+cached files cannot retain an old base capture after its last owner exits.
+A missing historical snapshot can be restored only while an owner remains.
+The store allows 64 generations, 128 MiB total, and 64 MiB per generation.
+Each classification can separately retain up to 256 MiB of base capture,
+beside the graph's 256 MiB render cache. Old captures held by in-flight work
+can overlap a new classification's capture. These bounds do not cap process
+memory. The store rejects capacity
 without evicting retained files. A full store delays classification publication
 and retries installation without repeating comparison work. Missing generations return 404. Replacement
 fences pending selected captures; shutdown cancels and drains all captures.
