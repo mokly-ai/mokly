@@ -1253,8 +1253,18 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Add the index v7/detail v1/review v8 adapter and HTML behavior fixtures.
   - [x] Run the bounded previous-contract and test-title sweep.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
-  - [ ] Replay the eleven full references after the sidecar and source
+  - [x] Replay the eleven full references after the sidecar and source
         migration are ready. Every captured catalogue has JavaScript entries.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-references.md`.
+  - [ ] Settle inherited schema, controls, and slot metadata on component
+        variants. The move and removal replays mark 39 extra variants for a
+        parent schema edit; the specification does not state this propagation.
+        Keep the behaviour until the parent-only or per-variant rule is decided.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-references.md`.
+  - [ ] Complete the four large Changes reviews, resource inventories, and
+        closures. The reference replay Build attempts reached the ten-minute
+        capture guard before they produced complete comparison artifacts.
+        Keep the shared-machine memory bound for further captures.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-references.md`.
   - [x] Check cancellation between bounded base-capture views. Return the
         generation's cancellation error before a later view is read or encoded.
@@ -1759,6 +1769,19 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - M9 reference replay verification: investigate the unchanged
+    `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`
+    test's `warning.0 < failure` assertion failure. Its isolated rerun passed.
+    Suspected source: asynchronous watcher or reporter ordering; not proven.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/repository-final.log`
+    and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/serve-warning-rerun.log`.
+  - M9 reference replay verification: investigate the unchanged
+    `static_deployment` copied-catalogue reload test's transient
+    `404 /mokly-viewer/client/inspector.js`. Its isolated rerun passed.
+    Suspected source: an in-flight request during the fixture's two directory
+    renames. Keep the requested-file and browser-error assertions.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/browser-3.log`
+    and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/static-deployment-rerun.log`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:

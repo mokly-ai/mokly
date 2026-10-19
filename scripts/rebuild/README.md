@@ -31,6 +31,9 @@ hits rendered elements), `uncertain` (conservative retention), or
 `resource-change` (a dependency without selector evidence). Excluded
 stylesheets use `no-selector-hit`. An affected-consumer chain keeps component
 paths and their depth; it does not compare instance identifiers.
+Component variant contexts keep the parent path and a separate `variantPath`.
+The Rust adapter derives both from that side's declared variant address,
+including moves between parents, added variants, and removed variants.
 
 The inventory contributes `exportedResources`: resource paths and sides,
 without size or digest fields. It excludes shell files, viewer runtime files,
