@@ -168,13 +168,12 @@ test("a scroll the browser makes inside the lower version pulls every version al
   expect((await regionOffsets(desktop, panel)).after.x).toBe(0);
 });
 
-test("a touch drag over a panel moves every version's panel", async ({
-  browser,
-  baseURL,
-}) => {
-  const context = await browser.newContext({ hasTouch: true, baseURL });
-  const page = await context.newPage();
-  try {
+test.describe("touch input", () => {
+  test.use({ hasTouch: true });
+
+  test("a touch drag over a panel moves every version's panel", async ({
+    page,
+  }) => {
     await openComparison(page, changed, "desktop", "Overlay");
     const desktop = comparisonSection(page, "desktop");
     const box = await paneFrame(desktop, "after")
@@ -182,7 +181,7 @@ test("a touch drag over a panel moves every version's panel", async ({
       .locator(panel)
       .boundingBox();
     expect(box).not.toBeNull();
-    const client = await context.newCDPSession(page);
+    const client = await page.context().newCDPSession(page);
     const x = Math.round(box!.x + box!.width / 2);
     const y = Math.round(box!.y + box!.height - 20);
     const touch = (
@@ -196,7 +195,5 @@ test("a touch drag over a panel moves every version's panel", async ({
     // Both versions' panels rest together past the top; the page stays.
     await expectRegionsAtRest(desktop, panel, (offset) => offset > 0);
     await expectStackAt(desktop, 0);
-  } finally {
-    await context.close();
-  }
+  });
 });
