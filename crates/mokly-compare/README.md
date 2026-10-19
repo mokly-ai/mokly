@@ -90,6 +90,8 @@ Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
+Before each view is read and encoded, capture checks the generation's
+cancellation state and returns its error without processing a later view.
 Every generated route that fits retains its digest. Usage, links, resources,
 and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
@@ -122,6 +124,8 @@ working files are streamed without retaining their bytes. Remaining source
 budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
+Metadata comparison keeps schema, controls, and declared slots on the parent.
+Variants compare their own metadata, props, and supplied slots independently.
 
 Opaque Git asset delivery buffers one blob under the 64 MiB Git limit and
 copies it to the destination. Digest cache misses each start one

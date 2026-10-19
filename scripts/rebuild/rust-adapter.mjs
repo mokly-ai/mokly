@@ -29,6 +29,7 @@ export function adaptRustScenario({
     entry,
     ...(entry.variants ?? []),
   ]);
+  const parents = variantParents(review?.entries ?? []);
   const resultFor = (entry) =>
     results.find(
       (result) => result.path === entry.path && result.kind === entry.kind,
@@ -146,7 +147,7 @@ export function adaptRustScenario({
       evidence: consumer.evidence.map((item) => ({
         side: item.side,
         kind: item.context.kind,
-        path: item.context.entry.path,
+        ...contextAddress(item, parents),
         viewport: item.context.viewport,
         colorScheme: item.context.colorScheme,
         via: item.via.map((edge, depth) => ({
@@ -182,6 +183,30 @@ export function adaptRustScenario({
         )?.kind ?? "unknown",
     })),
   };
+}
+
+function variantParents(entries) {
+  const parents = new Map();
+  for (const entry of entries) {
+    if (entry.kind !== "component") continue;
+    for (const variant of entry.variants ?? [])
+      for (const side of ["before", "after"])
+        if (variant[side])
+          parents.set(
+            JSON.stringify([side, variant[side].path]),
+            variant[side].path.slice(0, variant[side].path.lastIndexOf("/")),
+          );
+  }
+  return parents;
+}
+
+function contextAddress(item, parents) {
+  const path = item.context.entry.path;
+  const parent =
+    item.context.kind === "component"
+      ? parents.get(JSON.stringify([item.side, path]))
+      : undefined;
+  return parent ? { path: parent, variantPath: path } : { path };
 }
 
 function kept(evidence, entry) {

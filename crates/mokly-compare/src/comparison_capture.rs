@@ -72,6 +72,7 @@ pub(crate) fn capture_with_bound(
         .sum::<usize>();
     let mut views = BTreeMap::new();
     for route in source.plans().keys() {
+        source.check_cancelled()?;
         let artifact = source.comparison_document(route)?;
         let document = capture_error::graph(EncodedView::encode(&artifact))?;
         let closure = source.closure(route)?;
@@ -130,6 +131,10 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn check_cancelled(&self) -> Result<()> {
+        self.source.check_cancelled()
+    }
+
     fn comparison_capture(&self) -> Option<ComparisonCapture> {
         Some(ComparisonCapture {
             source: self.source.clone(),
@@ -211,3 +216,7 @@ impl RenderGeneration for CapturedGeneration {
 #[cfg(test)]
 #[path = "_tests_/comparison_capture_tests.rs"]
 mod comparison_capture_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_cancellation_tests.rs"]
+mod capture_cancellation_tests;

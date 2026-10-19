@@ -66,6 +66,8 @@ with one worker. Attempt cancellation wakes queued base calls without polling.
 A merge-base change retains the current warning attempt and current render graph.
 A changed HEAD or base tip with the same merge base keeps the Changes evidence.
 Content replacement starts a new attempt and invalidates pending captures.
+Each classification gives its base workers the run's cancellation token.
+Replacing the run stops capture before another cached view is read or encoded.
 The command supplies tracked Git runners to both classification and retained
 historical sources. The ordered Git shutdown hook closes admission, cancels
 process groups, and waits for every command and pipe to drain. Git processes

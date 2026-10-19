@@ -5,11 +5,32 @@ use std::sync::Arc;
 
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
+use mokly_graph::error::GraphError;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
 use mokly_model::material::digest;
+use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::comparison_graph::FrozenResources;
+
+#[test]
+fn frozen_resources_preserve_the_generation_cancellation_error() {
+    let graph: &dyn RenderGeneration = &FrozenResources::new(Arc::new(Unimock::new(
+        RenderGenerationMock::check_cancelled
+            .next_call(matching!())
+            .returns(Err(GraphError::Runtime {
+                source: RuntimeDiagnostic {
+                    code: RuntimeCode::Cancelled,
+                    message: "cancelled generation".into(),
+                },
+            })),
+    )));
+    let GraphError::Runtime { source } = graph.check_cancelled().unwrap_err() else {
+        panic!("expected cancellation")
+    };
+    assert_eq!(source.code, RuntimeCode::Cancelled);
+    assert_eq!(source.message, "cancelled generation");
+}
 
 #[test]
 fn capture_reuse_cannot_bypass_frozen_resource_checks() {

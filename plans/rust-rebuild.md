@@ -347,6 +347,13 @@ more than re-deriving the behaviour from the requirements.
     Unicode-3.0, and Apache-2.0 WITH LLVM-exception OR BSL-1.0 for
     `dragonbox_ecma`. Review Oxc's 0.x API changes with dependency updates.
 
+41. Consumer-relative affected chains (orchestrator, 2026-10-19): accept review
+    v8 `via` chains that start inside the named consumer and omit its own
+    instance and outer ancestors. Contexts keep their side and variant address.
+    A direct child has one chain element, including in another entry's view.
+    This aligns the round 15 specification with the producer and the viewer's
+    direct-use flag. Decision: M9 review 10 finding 3A, approved in changes-12.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -845,8 +852,10 @@ renders again.
       component contracts.
   - [x] Read and classify the previous rendering and component rules and tests
         for the core integration gap sweep.
-  - [ ] Compare captured example and large scenarios after the example port
+  - [x] Compare captured example and large scenarios after the example port
         and comparison integration land.
+        Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
+        The remaining large Changes artifacts belong to the M9 large-fixture gap.
   - [x] Add the callback-only regressions from the M5 HTML sweep: conflicting
         inputs from impure slot replay, renderer mutation isolation, and the
         page helper call count. Cover and document the render-time failure of
@@ -1279,8 +1288,23 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Add the index v7/detail v1/review v8 adapter and HTML behavior fixtures.
   - [x] Run the bounded previous-contract and test-title sweep.
         Part 2 sweep: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-compare.md`.
-  - [ ] Replay the eleven full references after the sidecar and source
+  - [x] Replay the eleven full references after the sidecar and source
         migration are ready. Every captured catalogue has JavaScript entries.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-references.md`.
+  - [x] Align variant metadata with the parent rules: schema, controls, and
+        declared slots belong to the parent. Keep independent variant metadata,
+        props, and supplied slots. Rerun move and removal with 24 and 25 Changes.
+        Decision: R15-D1 option A, approved as spec alignment in changes-12.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/sweeps/m9-references.md`.
+  - [x] Check cancellation between bounded base-capture views. Return the
+        generation's cancellation error before a later view is read or encoded.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/cancellation-after.log`.
+  - [x] Bind Serve base workers to the classification token, including cached
+        captures. Verify that replacing a run cancels its prepared base graph
+        while the command and current workers remain active.
+        Evidence: `.context/rust-rebuild/m9-round16a/` and
+        `.context/rust-rebuild/delegation/m9-compare/report-16a.md`.
+        Merge decisions: `.context/rust-rebuild/delegation/m9-compare/merge-decisions-15.md`.
 - [ ] Port the deferred native Changes browser fixtures in the M8 browser
       sweep: base references, moved/removed entries, comparison requests and
       renewal, and CSS evidence. M9 supplies the fixtures; M10 owns their UI
@@ -1323,6 +1347,17 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       prove large-scale Changes with the Rust implementation.
   - [x] Prove bounded full-comparison work at 128 and 512 component parents
         with variants, and shared before/after CSS parse reuse.
+  - [ ] Complete reviews, resource inventories, and closures for the two
+        distinct large states: the unrelated-rule edit and the watch edits.
+        Use one sidecar, a detached run, an external 60-minute guard, and the
+        same 1.85 GB process-family PSS bound. The earlier external ten-minute
+        guards stopped base rendering before capture started; they are not
+        product limits. Three earlier states have identical source trees.
+        Before each run, record its exact expected Changes and rule evidence.
+        The unrelated-rule edit must list no Changes and retain `no-selector-hit`
+        exclusions on views that link `shared-1.css`. Classify every differing
+        field in both completed results before accepting the artifacts.
+        Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -1816,6 +1851,22 @@ Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [ ] Decide whether extglob-shaped stylesheet matches need a warning
+        (M9 review 10 finding 5B, user item 54). Keep the migration release note;
+        add no diagnostic before approval.
+  - M9 reference replay verification: investigate the unchanged
+    `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`
+    test's `warning.0 < failure` assertion failure. Its isolated rerun passed.
+    Suspected source: asynchronous watcher or reporter ordering; not proven.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/repository-final.log`
+    and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/serve-warning-rerun.log`.
+  - M9 reference replay verification: investigate the unchanged
+    `static_deployment` copied-catalogue reload test's transient
+    `404 /mokly-viewer/client/inspector.js`. Its isolated rerun passed.
+    Suspected source: an in-flight request during the fixture's two directory
+    renames. Keep the requested-file and browser-error assertions.
+    Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/browser-3.log`
+    and `/home/vercel-sandbox/mokly/.context/rust-rebuild/m9-round15/static-deployment-rerun.log`.
   - [x] Resolve the M9 engine round 15 preparation-warning test flake in
         `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`.
         Match the watched source's failure line, so a delayed Git comparison
