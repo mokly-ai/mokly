@@ -189,9 +189,11 @@ given). Its `baseURL` serves that copy, and the worker fixture
 `additionsCopy` holds its read-only `directory`. Setup uses the isolated
 180,000 ms budget. The default and branch copies keep their membership.
 
-| Hook                       | Entries and evidence                                                                                                             |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `addImplementationSources` | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected |
+| Hook                         | Entries and evidence                                                                                                             |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected |
+| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                  |
+| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                     |
 
 ## Shared Serve comparison fixture
 
