@@ -7,10 +7,8 @@ import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
-import {
-  addBranchPointSources,
-  branchPointPaths,
-} from "../helpers/branch_point_sources.js";
+import { addComparisonFixtureSources } from "../helpers/additional_comparison_sources.js";
+import { branchPointPaths } from "../helpers/branch_point_sources.js";
 import {
   comparisonPaths,
   createComparisonCatalogue,
@@ -20,6 +18,7 @@ import {
   ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS,
   timeFixturePhase,
 } from "../helpers/fixture_timing.js";
+import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 import { git, write } from "../helpers/static_changes.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
@@ -46,7 +45,7 @@ export async function serveComparisonCatalogue() {
     })());
   ownBrowserCleanup(close);
   try {
-    await createComparisonCatalogue(root, addBranchPointSources);
+    await createComparisonCatalogue(root, addComparisonFixtureSources);
     const baseCommit = await git(root, "rev-parse", "fixture-base");
     const headCommit = await git(root, "rev-parse", "HEAD");
     const signal = AbortSignal.any([
@@ -119,7 +118,7 @@ export async function serveComparisonCatalogue() {
       ready,
       baseCommit,
       headCommit,
-      paths: { ...comparisonPaths, ...branchPointPaths },
+      paths: { ...comparisonPaths, ...branchPointPaths, ...movedFixturePaths },
       /** One watched source write, followed by its accepted Changes publication. */
       async edit(name: string, contents: string) {
         const previous = await index();

@@ -3,6 +3,8 @@ import { expect } from "@playwright/test";
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
 import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
+import { expectComparisonFixture } from "./comparison_fixture_membership.js";
+import { expectMovedInputs } from "./moved_fixture_assertions.js";
 import { test } from "./serve_comparison_test.js";
 
 test("shared Serve comparison fixture publishes a private pinned base and CSS evidence", async ({
@@ -51,6 +53,7 @@ test("shared Serve comparison fixture retains moved counterparts and removed mem
 }) => {
   const index = await changes.index();
   const paths = changes.paths;
+  expectComparisonFixture(index);
   const current = [...index.screens, ...index.components];
   for (const [after, before] of [
     [paths.movedScreen, paths.previousScreen],
@@ -65,32 +68,13 @@ test("shared Serve comparison fixture retains moved counterparts and removed mem
       index.removedEntries.some((record) => record.entry.path === before),
     ).toBe(false);
   }
-  expect(
-    current.find((entry) => entry.path === paths.unchanged)?.changes,
-  ).toEqual({
-    status: "ready",
-    included: false,
-    kind: "unmodified",
-  });
-  const removedPaths = [
-    paths.removedScreen,
-    paths.removedPage,
-    paths.removedDocument,
-    paths.removedComponent,
-    paths.removedVariant,
-    paths.quietRemoved,
-    paths.removedChild,
-    paths.caseRemoved,
-    paths.reusedRemoved,
-  ];
-  expect(
-    index.removedEntries.map((record) => record.entry.path).sort(),
-  ).toEqual(removedPaths.sort());
   const generation = new URL(".", new URL(index.comparisonUrl!, changes.url));
   for (const entryPath of [
     paths.removedScreen,
     paths.removedPage,
     paths.removedChild,
+    paths.removedActionVariant,
+    paths.removedInvoiceVariant,
   ]) {
     const removed = index.removedEntries.find(
       (record) => record.entry.path === entryPath,
@@ -103,4 +87,27 @@ test("shared Serve comparison fixture retains moved counterparts and removed mem
     expect(detail.entry.snapshotId).toBe(removed.snapshotId);
     expect(detail.entry.kind).toBe(removed.entry.kind);
   }
+});
+
+test("shared Serve comparison fixture retains affected consumers and moved nested inputs", async ({
+  request,
+  changes,
+}) => {
+  await expectMovedInputs(request, changes.url);
+  const card = readEntryDetail(
+    await (
+      await request.get(`/mokly-viewer/entries/${changes.paths.component}.json`)
+    ).json(),
+  );
+  expect(card.workspace!.affected.map((link) => link.entryPath)).toContain(
+    changes.paths.consumer,
+  );
+  const consumer = readEntryDetail(
+    await (
+      await request.get(`/mokly-viewer/entries/${changes.paths.consumer}.json`)
+    ).json(),
+  );
+  expect(
+    consumer.workspace!.relatedComponents.map((component) => component.path),
+  ).toContain(changes.paths.component);
 });

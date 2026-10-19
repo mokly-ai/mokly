@@ -1,5 +1,5 @@
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
-import { addBranchPointSources } from "../helpers/branch_point_sources.js";
+import { addComparisonFixtureSources } from "../helpers/additional_comparison_sources.js";
 import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 
 import { test as base } from "./browser_test.js";
@@ -17,7 +17,7 @@ export const test = base.extend<
       void browserName;
       const copy = await startComparisonStaticHost(
         AbortSignal.timeout(ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS),
-        addBranchPointSources,
+        addComparisonFixtureSources,
         "browser-branch-point",
       );
       ownBrowserCleanup(copy.close);

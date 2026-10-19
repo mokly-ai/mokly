@@ -81,25 +81,69 @@ component's path. The moved consumers also retain distinct base and head SVG
 bytes. The case-only entries use no changed styles. Both hosts below use the
 same authored sources.
 
+`addComparisonFixtureSources` composes `addBranchPointSources` with
+`addMovedFixtureSources`. The second hook adds the `branch/moves/` entries:
+a pure-moved screen, a moved component with distinct variant states and
+nested slot inputs, a moved screen with a removed variant, and a moved page.
+The branch copy and Serve use this composition. The default copy uses no hook.
+
+The table pins every branch entry at the original fixture base. Both path
+columns are relative to `branch/`. Each row has Changes status `ready`.
+A pure move is included even when its kind is `unmodified`.
+
+| Path                               | Previous path                    | Changes kind | Included | Evidence                                         |
+| ---------------------------------- | -------------------------------- | ------------ | -------- | ------------------------------------------------ |
+| `consumers/badge`                  | —                                | changed      | yes      | Changed component text and SVG resource          |
+| `consumers/badge/default`          | —                                | changed      | yes      | Same implementation change in a saved variant    |
+| `consumers/archive/status`         | `consumers/status`               | changed      | yes      | Moved component consumer                         |
+| `consumers/archive/status/default` | `consumers/status/default`       | changed      | yes      | Moved saved consumer                             |
+| `consumers/archive/receipt`        | `consumers/receipt`              | changed      | yes      | Moved screen consumer                            |
+| `parent/archive/action`            | `parent/action`                  | unmodified   | yes      | Moved parent with its own unchanged view         |
+| `parent/archive/action/primary`    | `parent/action/primary`          | changed      | yes      | Continue becomes Submit                          |
+| `parent/action/secondary`          | —                                | removed      | yes      | Former parent title Action                       |
+| `variant/donor`                    | —                                | unmodified   | no       | Surviving donor parent                           |
+| `variant/donor/spare`              | —                                | unmodified   | no       | Retained donor variant                           |
+| `variant/receiver`                 | —                                | unmodified   | no       | Surviving receiver parent                        |
+| `variant/receiver/default`         | —                                | unmodified   | no       | Retained receiver variant                        |
+| `variant/receiver/primary`         | `variant/donor/primary`          | changed      | yes      | Transferred variant with changed props           |
+| `case/receipt`                     | —                                | changed      | yes      | Case-only screen rename                          |
+| `case/action`                      | —                                | changed      | yes      | Case-only parent rename                          |
+| `case/action/primary`              | —                                | changed      | yes      | Case-only variant rename with changed props      |
+| `case/Action/secondary`            | —                                | removed      | yes      | Former parent title Case action                  |
+| `reused/action`                    | —                                | added        | yes      | Document replaces the component path             |
+| `reused/action/default`            | —                                | removed      | yes      | Former parent title Former action                |
+| `moves/current/receipt`            | `moves/previous/receipt`         | unmodified   | yes      | Pure-moved screen                                |
+| `moves/current/action`             | `moves/previous/action`          | unmodified   | yes      | Moved component parent                           |
+| `moves/current/action/primary`     | `moves/previous/action/primary`  | unmodified   | yes      | Unmodified moved variant                         |
+| `moves/current/action/ghost`       | `moves/previous/action/ghost`    | changed      | yes      | Description-only variant change                  |
+| `moves/current/action/iconic`      | `moves/previous/action/iconic`   | changed      | yes      | Nested glyph input changes from arrow to chevron |
+| `moves/previous/action/secondary`  | —                                | removed      | yes      | Former parent title Action                       |
+| `moves/current/invoice`            | `moves/previous/invoice`         | changed      | yes      | Changed due text after a screen move             |
+| `moves/current/invoice/overdue`    | `moves/previous/invoice/overdue` | unmodified   | yes      | Retained screen variant                          |
+| `moves/previous/invoice/paid`      | —                                | removed      | yes      | Former parent title Invoice                      |
+| `moves/current/guide`              | `moves/previous/guide`           | unmodified   | yes      | Pure-moved full HTML page                        |
+| `moves/icon`                       | —                                | unmodified   | no       | Shared nested input target                       |
+| `moves/ring`                       | —                                | unmodified   | no       | Slot container for the glyph                     |
+
 ## Shared Serve comparison fixture
 
 Import `test` from `serve_comparison_test.ts` for viewer Changes journeys.
 Each test gets a private `changes` fixture and its URL as `baseURL`. It owns
 a two-commit Git repository, a `fixture-base` branch, a watcher, and real
 comparison generations. It waits for ready Changes at the pinned base.
-The `comparisonPaths` entries and all five branch-point cases are available.
+The `comparisonPaths` entries and both additive source hooks are available.
 The existing `serve_changes_fixture.ts` remains the smaller engine fixture.
 
-| API                                        | Purpose                                                         |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `changes.paths`                            | Named paths from `comparisonPaths` and `branchPointPaths`       |
-| `changes.url`, `changes.root`              | Loopback origin and private source directory                    |
-| `changes.baseCommit`, `changes.headCommit` | Independent base and head commit IDs                            |
-| `await changes.index()`                    | Read and validate the current catalogue index                   |
-| `await changes.ready(afterRevision?)`      | Wait for a newer ready Changes publication                      |
-| `await changes.edit(relativeFile, text)`   | Change one source file and wait for its accepted publication    |
-| `await changes.moveBase("head" \| "base")` | Switch the private base ref and wait for that pinned comparison |
-| `await changes.close()`                    | Drain Serve before removing the repository; safe to repeat      |
+| API                                        | Purpose                                                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------- |
+| `changes.paths`                            | Named paths from `comparisonPaths`, `branchPointPaths`, and `movedFixturePaths` |
+| `changes.url`, `changes.root`              | Loopback origin and private source directory                                    |
+| `changes.baseCommit`, `changes.headCommit` | Independent base and head commit IDs                                            |
+| `await changes.index()`                    | Read and validate the current catalogue index                                   |
+| `await changes.ready(afterRevision?)`      | Wait for a newer ready Changes publication                                      |
+| `await changes.edit(relativeFile, text)`   | Change one source file and wait for its accepted publication                    |
+| `await changes.moveBase("head" \| "base")` | Switch the private base ref and wait for that pinned comparison                 |
+| `await changes.close()`                    | Drain Serve before removing the repository; safe to repeat                      |
 
 The `changed` screen has a matched `.accent` rule from `theme.css`, an
 unresolved root rule, and native component usage. Read `comparisonUrl` from
