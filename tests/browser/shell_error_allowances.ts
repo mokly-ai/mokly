@@ -4,6 +4,7 @@ const exact = (text: string) =>
   new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "u");
 
 const reasons = {
+  404: "Not Found",
   409: "Conflict",
   422: "Unprocessable Entity",
   500: "Internal Server Error",
@@ -34,6 +35,14 @@ export function responseFailure(
     `Failed to load resource: the server responded with a status of ${status} (${reasons[status]})`,
   );
 }
+
+/** The sandbox reports each form submission that a read-only document blocks. */
+export const blockedFormSubmission: ErrorAllowance = {
+  kind: "console",
+  message:
+    /^Blocked form submission to 'https:\/\/example\.com\/form' because the form's frame is sandboxed and the 'allow-forms' permission is not set\.$/u,
+  url: /^about:srcdoc$/u,
+};
 
 /** A named request deliberately aborted by its shell recovery test. */
 export function networkFailure(

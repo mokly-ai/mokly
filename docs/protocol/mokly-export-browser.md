@@ -32,9 +32,10 @@ details under the [fetch rules](./mokly-shell-delivery.md#fetch-and-fences)
 of the shell delivery contract and applies the stored or system appearance
 before its first render, so no pre-paint script exists.
 Removed-content requests are limited to the generation that the index's
-`comparisonUrl` names: the removed entry's detail, the preview metadata, and
-the snapshot documents beneath that generation's permitted sides. There is no
-parallel vanilla Browse or preview runtime.
+`comparisonUrl` names: the removed entry's detail, the generation's
+`review.json` for a removed screen's views, the preview metadata of a removed
+page or document, and the snapshot documents beneath that generation's
+permitted sides. There is no parallel vanilla Browse or preview runtime.
 
 The inspector is `client/inspector.js`: React-free, at the 9,216-byte cap of
 the [published inspector contract](./mokly-published-inspector.md). It runs
