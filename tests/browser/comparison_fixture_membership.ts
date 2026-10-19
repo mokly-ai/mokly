@@ -83,8 +83,6 @@ const removedPaths = [
   paths.removedVariant,
   paths.screenRemovedVariant,
   paths.quietRemoved,
-  paths.removedLightOnly,
-  paths.screenRemovedVariant,
   "branch/parent/action/secondary",
   "branch/case/Action/secondary",
   "branch/reused/action/default",
