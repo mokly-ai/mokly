@@ -77,40 +77,7 @@ async fn html_preparation_failure_flushes_once_and_repair_prints_only_new_warnin
         assert!(serve.html().await.contains("Initial"));
         assert_eq!(count(&serve, "alpha"), 2);
         assert_eq!(count(&serve, "beta"), 1);
-        {
-            let lines = serve.lines.lock().unwrap();
-            let failure = lines
-                .iter()
-                .enumerate()
-                .skip(marker)
-                .find(|(_, line)| {
-                    if mode == "rich" {
-                        line.contains('✖')
-                    } else {
-                        line.starts_with("[mokly/build-invalid]")
-                    }
-                })
-                .unwrap()
-                .0;
-            for prop in ["alpha", "beta"] {
-                let warning = lines
-                    .iter()
-                    .enumerate()
-                    .skip(marker)
-                    .find(|(_, line)| line.contains(&format!("prop \"{prop}\"")))
-                    .unwrap();
-                assert!(warning.0 < failure);
-                let prefix = if mode == "plain" {
-                    "[mokly/warning]"
-                } else {
-                    "  !"
-                };
-                assert_eq!(
-                    warning.1.trim_end_matches('\r'),
-                    format!("{prefix} entry \"home\": prop \"{prop}\" is not read by the body")
-                );
-            }
-        }
+        assert_failure_warnings(&serve.lines.lock().unwrap(), marker, mode);
         edit(
             &serve,
             &source("Repaired", "alpha: old, beta: unused, gamma: new", false),
@@ -142,4 +109,53 @@ async fn html_preparation_failure_flushes_once_and_repair_prints_only_new_warnin
         assert_eq!(count(&serve, "beta"), 1);
         assert_eq!(count(&serve, "gamma"), 1);
     }
+}
+
+/// A published Changes status can precede capture of its terminal Git diagnostic.
+fn assert_failure_warnings(lines: &[String], marker: usize, mode: &str) {
+    let failure = lines
+        .iter()
+        .enumerate()
+        .skip(marker)
+        .find(|(_, line)| {
+            if mode == "rich" {
+                line.contains('✖') && line.contains("specs/home.screen.html")
+            } else {
+                line.starts_with("[mokly/build-invalid]")
+            }
+        })
+        .unwrap()
+        .0;
+    for prop in ["alpha", "beta"] {
+        let warning = lines
+            .iter()
+            .enumerate()
+            .skip(marker)
+            .find(|(_, line)| line.contains(&format!("prop \"{prop}\"")))
+            .unwrap();
+        assert!(warning.0 < failure, "{mode} output: {lines:?}");
+        let prefix = if mode == "plain" {
+            "[mokly/warning]"
+        } else {
+            "  !"
+        };
+        assert_eq!(
+            warning.1.trim_end_matches('\r'),
+            format!("{prefix} entry \"home\": prop \"{prop}\" is not read by the body")
+        );
+    }
+}
+
+#[test]
+fn preparation_warning_order_ignores_a_late_comparison_diagnostic() {
+    let lines = [
+        "  ✖ Git operation failed (git-failed)",
+        "  ! entry \"home\": prop \"alpha\" is not read by the body",
+        "  ! entry \"home\": prop \"beta\" is not read by the body",
+        "  12:05:31  ✖ specs/home.screen.html",
+        "            specs/home.screen.html:5:1 [mokly/html-element] unknown element ui-missing",
+        "            The last good catalogue is still being served.",
+    ]
+    .map(String::from);
+    assert_failure_warnings(&lines, 0, "rich");
 }

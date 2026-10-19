@@ -1785,6 +1785,18 @@ Part 1 merge decisions: `.context/rust-rebuild/delegation/m14/merge-decisions.md
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Resolve the M9 engine round 15 preparation-warning test flake in
+        `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`.
+        Match the watched source's failure line, so a delayed Git comparison
+        diagnostic cannot become the preparation failure. Keep every warning,
+        ordering, repair, and cleanup assertion. A controlled log sequence
+        proves the old failure; the fixed case passes 20 isolated runs.
+        Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
+  - [ ] Resolve the M9 engine round 15 copied-deployment test flake in
+        `static_deployment.spec.ts`: two directory renames temporarily remove
+        the served root and return 404 for `inspector.js`. Publish an immutable
+        copy through one root selection and keep each pending request on its
+        selected copy. Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
