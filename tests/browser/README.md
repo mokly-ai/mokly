@@ -134,16 +134,17 @@ comparison generations. It waits for ready Changes at the pinned base.
 The `comparisonPaths` entries and both additive source hooks are available.
 The existing `serve_changes_fixture.ts` remains the smaller engine fixture.
 
-| API                                                              | Purpose                                                                         |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `changes.paths`                                                  | Named paths from `comparisonPaths`, `branchPointPaths`, and `movedFixturePaths` |
-| `changes.url`, `changes.root`                                    | Loopback origin and private source directory                                    |
-| `changes.baseCommit`, `changes.headCommit`                       | Independent base and head commit IDs                                            |
-| `await changes.index()`                                          | Read and validate the current catalogue index                                   |
-| `await changes.ready(afterRevision?, expectedBase?, predicate?)` | Wait for a newer ready publication and the optional semantic predicate          |
-| `await changes.edit(relativeFile, text, predicate?)`             | Atomically replace one source and wait for its accepted semantic state          |
-| `await changes.moveBase("head" \| "base" \| commit)`             | Switch the private ref to a fixture alias or commit and wait for its merge base |
-| `await changes.close()`                                          | Drain Serve before removing the repository; safe to repeat                      |
+| API                                                              | Purpose                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `changes.paths`                                                  | Named paths from `comparisonPaths`, `branchPointPaths`, and `movedFixturePaths`       |
+| `changes.url`, `changes.root`                                    | Loopback origin and private source directory                                          |
+| `changes.baseCommit`, `changes.headCommit`                       | Independent base and head commit IDs                                                  |
+| `await changes.index()`                                          | Read and validate the current catalogue index                                         |
+| `await changes.ready(afterRevision?, expectedBase?, predicate?)` | Wait for a newer ready publication and the optional semantic predicate                |
+| `await changes.edit(relativeFile, text, predicate?)`             | Atomically replace one source and wait for its accepted semantic state                |
+| `await changes.commitBase(files, parent = "base")`               | Create a commit through a temporary index; values are text or `null` to remove a file |
+| `await changes.moveBase("head" \| "base" \| commit)`             | Switch the private ref to a fixture alias or commit and wait for its merge base       |
+| `await changes.close()`                                          | Drain Serve before removing the repository; safe to repeat                            |
 
 `expectedBase` is the expected pinned merge-base commit in `review.json`.
 A `predicate` receives the accepted index and can return a boolean or a
@@ -153,6 +154,38 @@ Use a changed title, membership, or document key for the semantic condition.
 watched source root, then replaces the target with one rename.
 `moveBase` resolves an arbitrary commit as well as the original fixture
 aliases. Moving to the already selected ref returns its ready publication.
+Moving a ref without changing its merge base also keeps that publication.
+
+`commitBase` accepts `base`, `head`, or a commit as its parent. It leaves
+HEAD, the working index, and watched files untouched. It returns a commit ID.
+A new child of `base` is a sibling of HEAD, so selecting it still compares
+against the original merge base. For changed historical content, explicitly
+join it into the private test history before `moveBase`:
+
+```ts
+const third = await changes.commitBase({
+  "specs/screens/retired.screen.html":
+    "---\ntitle: Retired\n---\n<h1>Other base</h1>",
+});
+const head = await git(changes.root, "rev-parse", "HEAD");
+const joined = await git(
+  changes.root,
+  "commit-tree",
+  `${head}^{tree}`,
+  "-p",
+  head,
+  "-p",
+  third,
+  "-m",
+  "Join fixture base",
+);
+await git(changes.root, "update-ref", "HEAD", joined, head);
+await changes.moveBase(third);
+```
+
+Import `git` from `tests/helpers/static_changes.ts` for this recipe. The
+explicit join changes only private history. Current source and index bytes
+stay fixed. Neither fixture method changes HEAD on the caller's behalf.
 
 To stage a Changes completion for a Usage-focus check, first use
 `await changes.moveBase("head")`, then `await changes.moveBase("base")`.

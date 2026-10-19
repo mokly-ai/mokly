@@ -22,6 +22,7 @@ import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 import { git, write } from "../helpers/static_changes.js";
 
 import { serveHost, type BrowserHost } from "./hosts.js";
+import { commitBaseSources } from "./serve_comparison_git.js";
 
 /** A caller's semantic state, beyond the publication counter and Changes status. */
 export type ReadyPredicate = (
@@ -157,6 +158,16 @@ export async function serveComparisonCatalogue() {
         await replaceSource(root, name, contents);
         return ready(previous.revision, undefined, predicate);
       },
+      /** Create a base commit without changing HEAD, the index, or watched files. */
+      async commitBase(files: Record<string, string | null>, parent = "base") {
+        const selected =
+          parent === "base"
+            ? baseCommit
+            : parent === "head"
+              ? headCommit
+              : parent;
+        return commitBaseSources(root, files, selected);
+      },
       /** Move only the private base ref; the working catalogue and HEAD stay fixed. */
       async moveBase(reference: string) {
         const previous = await index();
@@ -174,10 +185,19 @@ export async function serveComparisonCatalogue() {
           `${selected}^{commit}`,
         );
         const expectedBase = await git(root, "merge-base", commit, "HEAD");
+        const previousBase = await git(
+          root,
+          "merge-base",
+          "fixture-base",
+          "HEAD",
+        );
         if ((await git(root, "rev-parse", "fixture-base")) === commit)
           return ready(0, expectedBase);
         await git(root, "update-ref", "refs/heads/fixture-base", commit);
-        return ready(previous.revision, expectedBase);
+        return ready(
+          previousBase === expectedBase ? 0 : previous.revision,
+          expectedBase,
+        );
       },
     };
   } catch (error) {

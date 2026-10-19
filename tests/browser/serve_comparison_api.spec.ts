@@ -90,16 +90,58 @@ test("the Serve fixture accepts a third base commit and restores the original ba
   changes,
 }) => {
   const before = await changes.index();
-  await git(
-    changes.root,
-    "commit",
-    "--allow-empty",
-    "-qm",
-    "Third fixture commit",
-  );
-  const third = await git(changes.root, "rev-parse", "HEAD");
+  const historical = (index: typeof before) =>
+    new URL(
+      `snapshots/before/mokly-generated/${changes.paths.removedScreen}/index.desktop.html`,
+      new URL(".", new URL(index.comparisonUrl!, changes.url)),
+    ).href;
+  const original = await (await request.get(historical(before))).text();
+  expect(original).toContain("<h1>Historical screen</h1>");
+  const status = await git(changes.root, "status", "--porcelain");
+  const indexTree = await git(changes.root, "write-tree");
+  const file = `specs/${changes.paths.removedScreen}.screen.html`;
+  const contents =
+    "---\ntitle: Retired screen\n---\n<h1>Third historical screen</h1>";
+  const third = await changes.commitBase({
+    [file]: contents,
+    "base-note.txt": "Only in the third base",
+    "specs/notes/retired.md": null,
+  });
   expect(third).not.toBe(changes.baseCommit);
   expect(third).not.toBe(changes.headCommit);
+  expect(await git(changes.root, "rev-parse", `${third}^`)).toBe(
+    changes.baseCommit,
+  );
+  expect(await git(changes.root, "show", `${third}:${file}`)).toBe(contents);
+  expect(await git(changes.root, "show", `${third}:base-note.txt`)).toBe(
+    "Only in the third base",
+  );
+  expect(
+    await git(changes.root, "ls-tree", third, "--", "specs/notes/retired.md"),
+  ).toBe("");
+  expect(await git(changes.root, "rev-parse", "HEAD")).toBe(changes.headCommit);
+  expect(await git(changes.root, "write-tree")).toBe(indexTree);
+  expect(await git(changes.root, "status", "--porcelain")).toBe(status);
+  await expect(fs.stat(path.join(changes.root, file))).rejects.toMatchObject({
+    code: "ENOENT",
+  });
+  const sibling = await changes.moveBase(third);
+  expect(sibling.comparisonUrl).toBe(before.comparisonUrl);
+  expect(sibling.removedEntries).toEqual(before.removedEntries);
+  const atHead = await changes.moveBase("head");
+  expect(atHead.removedEntries).toEqual([]);
+  const joinedHead = await git(
+    changes.root,
+    "commit-tree",
+    indexTree,
+    "-p",
+    changes.headCommit,
+    "-p",
+    third,
+    "-m",
+    "Join third base without changing current sources",
+  );
+  await git(changes.root, "update-ref", "HEAD", joinedHead, changes.headCommit);
   const selected = await changes.moveBase(third);
   expect(
     (
@@ -108,9 +150,17 @@ test("the Serve fixture accepts a third base commit and restores the original ba
       ).json()
     ).baseCommit,
   ).toBe(third);
-  expect(selected.removedEntries).toEqual([]);
+  expect(await (await request.get(historical(selected))).text()).toContain(
+    "<h1>Third historical screen</h1>",
+  );
+  expect(historical(selected)).not.toBe(historical(before));
+  expect(await (await request.get(historical(before))).text()).toBe(original);
   const same = await changes.moveBase(third);
   expect(same.comparisonUrl).toBe(selected.comparisonUrl);
   const restored = await changes.moveBase("base");
   expect(restored.removedEntries).toEqual(before.removedEntries);
+  expect(await (await request.get(historical(restored))).text()).toBe(original);
+  expect(await git(changes.root, "rev-parse", "HEAD")).toBe(joinedHead);
+  expect(await git(changes.root, "write-tree")).toBe(indexTree);
+  expect(await git(changes.root, "status", "--porcelain")).toBe(status);
 });
