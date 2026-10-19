@@ -1,6 +1,8 @@
 import { expect } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
+import { availableReview, firstScreen } from "./changes.js";
+import { changesVisible, delivered, observeDelivery } from "./delivery.js";
 import { previewBytes } from "./http.js";
 import type { PreparedFixture } from "./setup.js";
 
@@ -18,11 +20,10 @@ export async function browse(
   context.setDefaultNavigationTimeout(60_000);
   try {
     const page = await context.newPage();
+    await observeDelivery(page);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    const response = await page.goto(
-      `${url}/view/area-1/screens/activity-group-1/screen-1/`,
-    );
+    const response = await page.goto(`${url}/view/${firstScreen}/`);
     if (!response?.ok())
       throw new Error(`Browse returned HTTP ${response?.status()}`);
     const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
@@ -50,6 +51,11 @@ export async function browse(
     ).toBeHidden();
     const usableMs = performance.now() - beginning;
     await page.getByRole("searchbox").fill("");
+    const current = await delivered(page);
+    await changesVisible(page, current.index);
+    const changesReadyMs = performance.now() - beginning;
+    const review = await availableReview(page, fixture, current);
+    const reviewAvailableMs = performance.now() - beginning;
     for (const viewport of ["desktop", "mobile"]) {
       await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
       for (const scheme of ["dark", "light"]) {
@@ -94,7 +100,15 @@ export async function browse(
         .getByRole("heading", { name: "Getting started" }),
     ).toBeVisible({ timeout: 60_000 });
     if (errors.length) throw new Error(`Browser errors: ${errors.join("; ")}`);
-    return { usableMs, propsMs, cachedPreviewMs, bytes };
+    return {
+      usableMs,
+      propsMs,
+      cachedPreviewMs,
+      bytes,
+      changesReadyMs,
+      reviewAvailableMs,
+      review,
+    };
   } finally {
     await context.close();
   }

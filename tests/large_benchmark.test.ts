@@ -15,13 +15,12 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const run = promisify(execFile);
 
-test("four scenarios distinguish pending integrations from measured work", () => {
+test("Changes uses the delivered benchmark instead of a deferred result", () => {
   assert.deepEqual(scenarios, ["build", "serve", "changes", "watch"]);
   assert.equal(deferred("build"), undefined);
   assert.equal(deferred("serve"), undefined);
-  assert.equal(deferred("changes")?.owner, "M9");
+  assert.equal(deferred("changes"), undefined);
   assert.equal(deferred("watch")?.owner, "M11");
-  assert.equal(deferred("changes")?.status, "deferred");
   assert.equal(deferred("watch")?.status, "deferred");
 });
 

@@ -33,6 +33,15 @@ and runs an isolated install. Its setup time is separate from the benchmark.
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
 select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
 Cold and warm runs each use a new Serve process and browser context.
+Both keep the native comparison caches. Cold means application-cold, not an
+empty disk cache. Serve prepares the pinned fixture base through M9: HTML
+reads Git sources; React acquires source and dependency leases. The harness
+records the announced cache directory and never resets a baseline output.
+Serve reports delivered Changes readiness and review availability separately.
+Changes verifies the browser's own event stream, delivered index, Changes
+control, and advertised review. The unrelated CSS edit must list no Changes.
+Its report includes each classification duration and the union of CSS analysis
+intervals on that classification's core clock. These are observations.
 For ordinary development, reuse a generated configuration with
 `npx mokly serve --config .context/large-html/mokly.config.json`.
 

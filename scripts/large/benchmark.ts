@@ -5,6 +5,8 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 
 import { browse } from "./browse.js";
+import { changes } from "./changes.js";
+import { comparisonProfile } from "./comparison_profile.js";
 import { inputProfile } from "./input_profile.js";
 import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import { start, stop, waitFor } from "./process.js";
@@ -20,13 +22,6 @@ export const scenarios: readonly Scenario[] = [
   "watch",
 ];
 export function deferred(scenario: Scenario) {
-  if (scenario === "changes")
-    return {
-      scenario,
-      status: "deferred",
-      owner: "M9",
-      reason: "Wait for Changes integration and delivered Browse evidence",
-    };
   if (scenario === "watch")
     return {
       scenario,
@@ -58,6 +53,8 @@ export async function benchmark(
     fixture.configPath,
     "--sidecars",
     String(sidecars),
+    "--base",
+    fixture.baseline,
   ];
   const results: object[] = [];
   const report = {
@@ -145,13 +142,18 @@ export async function benchmark(
             );
             const readinessMs = performance.now() - beginning;
             const measured = await Promise.race([
-              browse(browser, match[1]!, fixture, beginning),
+              scenario === "changes"
+                ? changes(browser, match[1]!, fixture, beginning)
+                : browse(browser, match[1]!, fixture, beginning),
               running.done.then(() => {
                 throw new Error("Serve stopped before browser verification");
               }),
             ]);
             const elapsedMs = performance.now() - beginning;
-            const reason = startupBudget(measured.usableMs);
+            const reason =
+              "usableMs" in measured
+                ? startupBudget(measured.usableMs)
+                : undefined;
             results.push({
               scenario,
               state,
@@ -160,11 +162,19 @@ export async function benchmark(
               readinessMs,
               ...measured,
               elapsedMs,
+              comparison: comparisonProfile(running.timings),
+              basePreparation: {
+                baseCommit: fixture.baseline,
+                mode: "M9 Git sources and leased caches; retained across fresh processes",
+                cacheDirectory:
+                  running.output().match(/Mokly cache: ([^\r\n]+)/)?.[1] ??
+                  null,
+              },
               ...(await running.finishMemory()),
             });
             if (reason) throw new Error(reason);
           } finally {
-            await finishRun(fixture.root, `serve-${state}`, running);
+            await finishRun(fixture.root, `${scenario}-${state}`, running);
           }
         }
       } finally {
