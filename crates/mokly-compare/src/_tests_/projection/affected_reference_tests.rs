@@ -13,6 +13,7 @@ use crate::move_types::{EntryPair, MovePair, Pairing};
 use crate::projection_affected;
 use crate::projection_context::Context;
 
+use super::affected_fixtures::reparented;
 use super::support::{classified, entry, paired_result, result};
 
 fn evidence(side: ReviewSide, path: &str) -> AffectedUsageEvidence {
@@ -149,6 +150,32 @@ fn before_only_variant_evidence_uses_its_accepted_move_and_current_spelling() {
     );
     assert_eq!(projected[0].entry_path, "new/status/default");
     assert_eq!(projected[0].title, "new/status/default");
+    assert!(!projected[0].removed);
+}
+
+#[test]
+fn before_variant_moving_from_a_surviving_donor_links_to_its_current_entry() {
+    let projected = links(
+        &mut reparented(true),
+        "donor",
+        vec![evidence(ReviewSide::Before, "donor/primary")],
+    );
+    assert_eq!(projected.len(), 1);
+    assert_eq!(projected[0].entry_path, "receiver/primary");
+    assert_eq!(projected[0].title, "receiver/primary");
+    assert!(!projected[0].removed);
+}
+
+#[test]
+fn before_variant_moving_from_a_removed_donor_links_to_its_current_entry() {
+    let projected = links(
+        &mut reparented(false),
+        "donor",
+        vec![evidence(ReviewSide::Before, "donor/primary")],
+    );
+    assert_eq!(projected.len(), 1);
+    assert_eq!(projected[0].entry_path, "receiver/primary");
+    assert_eq!(projected[0].title, "receiver/primary");
     assert!(!projected[0].removed);
 }
 
