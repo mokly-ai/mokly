@@ -25,6 +25,14 @@ import { git, write } from "../helpers/static_changes.js";
 import { serveHost, type BrowserHost } from "./hosts.js";
 import { commitBaseSources } from "./serve_comparison_git.js";
 
+/**
+ * The waits between index reads while a publication is pending. A watched
+ * edit publishes within about a second, and the default backoff of
+ * `expect.poll` can add up to a second after that. Playwright consumes the
+ * array that it receives, so each wait passes a copy.
+ */
+const PUBLICATION_POLL_INTERVALS: readonly number[] = [50, 100, 200];
+
 /** A caller's semantic state, beyond the publication counter and Changes status. */
 export type ReadyPredicate = (
   index: CatalogueReadModel,
@@ -135,7 +143,7 @@ export async function serveComparisonCatalogue(
               accepted = current;
               return true;
             },
-            { timeout: 30_000 },
+            { intervals: [...PUBLICATION_POLL_INTERVALS], timeout: 30_000 },
           )
           .toBe(true);
       } catch (cause) {
