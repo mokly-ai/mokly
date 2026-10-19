@@ -1774,9 +1774,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       stream before shutdown, clarify replacement timing, redact forwarded
       records, separate partial stderr lines, and test UTF-8 and dependency errors.
       Evidence: `.context/rust-rebuild/delegation/m12-static/report-12.md`.
-- [ ] Measure the old process's stop inside replacement timing after defining
+- [x] Measure the old process's stop inside replacement timing after defining
       span ownership across separate stop and spawn requests (M12 review 8,
       finding 3B; changes-9 authorizes the documented 3A fallback for this round).
+      Approved option A on 2026-10-19 keeps each stop and spawn under its own caller.
+      Evidence: M14 sidecar stop timing final report, `.context/m14-stop/report.md`.
+
+- [x] Include partial factory startup cleanup in stop timing without changing
+      lifecycle calls or errors. Apply stop-timing review finding 1, option B.
+      Evidence: `.context/m14-stop/review.md` and `.context/m14-stop/report.md`.
 
 - [x] Apply M12 review 7 findings 2 to 6: count-record exclusivity, dependency
       span scope and tier tests, portable cache fixtures, and receiver cleanup.
@@ -1951,6 +1957,7 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
 Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
+Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 

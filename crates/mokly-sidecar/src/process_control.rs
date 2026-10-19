@@ -1,14 +1,16 @@
 //! Shared process-tree control, shutdown enqueueing, and guaranteed kill on drop.
 
 use std::sync::mpsc::{Receiver, SyncSender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
+use mokly_platform::error;
 use mokly_platform::processes::ProcessGroup;
 
 use crate::codec::encode;
 use crate::error::{InternalError, Result};
 use crate::methods::{Call, Empty};
 use crate::process_clock::Wait;
+use crate::process_startup::StartupTiming;
 use crate::wire::Request;
 use crate::workers::WorkerControl;
 
@@ -18,6 +20,20 @@ pub(super) struct ProcessControl {
     pub(super) exited: Mutex<Receiver<()>>,
     pub(super) drained: Mutex<Receiver<()>>,
     pub(super) clock: Arc<dyn Wait>,
+    pub(super) startup: Weak<StartupTiming>,
+}
+
+impl ProcessControl {
+    fn kill_group(&self) -> error::Result<()> {
+        let startup = self.startup.upgrade();
+        let span = startup.as_ref().map(|startup| startup.active());
+        let _scope = span.as_ref().map(tracing::Span::enter);
+        let result = self.group.kill();
+        if let Some(startup) = &startup {
+            startup.observe(result.is_ok());
+        }
+        result
+    }
 }
 
 impl WorkerControl for ProcessControl {
@@ -33,7 +49,7 @@ impl WorkerControl for ProcessControl {
     }
 
     fn kill(&self) -> Result<()> {
-        match self.group.kill() {
+        match self.kill_group() {
             Ok(()) => Ok(()),
             Err(source) => Err(InternalError::Platform { source }.into()),
         }
@@ -62,7 +78,7 @@ impl WorkerControl for ProcessControl {
 
 impl Drop for ProcessControl {
     fn drop(&mut self) {
-        if let Err(error) = self.group.kill() {
+        if let Err(error) = self.kill_group() {
             tracing::warn!(%error, "could not stop sidecar tree");
         }
     }

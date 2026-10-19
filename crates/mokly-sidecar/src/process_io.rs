@@ -1,7 +1,7 @@
 //! Pipe tasks bound retained buffers and keep all consumer output off stdout.
 
 use std::io::{Read, Write};
-use std::process::{Child, ChildStderr, ChildStdin, ChildStdout};
+use std::process::{ChildStderr, ChildStdin, ChildStdout};
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, SyncSender};
 
@@ -138,21 +138,6 @@ fn forward_piece(text: &str, diagnostics: &dyn Diagnostics, timings: bool) {
         diagnostics.timing(text);
     } else {
         diagnostics.emit(text);
-    }
-}
-
-pub(super) struct Reaper(pub(super) Child);
-
-impl Reaper {
-    pub(super) fn wait(&mut self) {
-        let _ = self.0.wait();
-    }
-}
-
-impl Drop for Reaper {
-    fn drop(&mut self) {
-        let _ = self.0.kill();
-        let _ = self.0.wait();
     }
 }
 

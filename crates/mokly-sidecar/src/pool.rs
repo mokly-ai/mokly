@@ -10,6 +10,7 @@ use crate::methods::Call;
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_releases::Notice;
 use crate::pool_state::{Slot, State};
+use crate::pool_timing::Reason;
 use crate::wire::MethodResult;
 use crate::workers::{Clock, WorkerFactory};
 use crate::{pool_affinity, pool_cleanup};
@@ -116,8 +117,8 @@ impl Pool {
     }
 
     pub(super) fn spawn(&self, index: usize, source_root: &Path) -> Result<Slot> {
-        let replacement = self.lock()?.memory.contains_key(&index);
-        let recycle = replacement.then(|| tracing::info_span!("sidecar.recycle", status = "error"));
+        let reason = self.lock()?.replacement_reasons.get(&index).copied();
+        let recycle = reason.map(Reason::replacement);
         let _recycle_scope = recycle.as_ref().map(tracing::Span::enter);
         let span = tracing::info_span!("sidecar.spawn", status = "error");
         let _scope = span.enter();
@@ -125,7 +126,11 @@ impl Pool {
             return Err(Error::Cancelled);
         }
         self.forget_other_roots(index, source_root)?;
-        self.lock()?.memory.entry(index).or_default().started();
+        {
+            let mut state = self.lock()?;
+            state.memory.entry(index).or_default().started();
+            state.replacement_reasons.insert(index, Reason::Retry);
+        }
         let launch = Launch {
             repository: source_root.into(),
             ..self.launch.clone()
@@ -143,9 +148,14 @@ impl Pool {
             .worker
             .handshake(self.options.timeout_ms.unwrap_or(30_000))
         {
-            spawned.control.kill()?;
+            if self.lock()?.stopped {
+                spawned.control.kill()?;
+            } else {
+                Reason::Retry.kill(spawned.control.as_ref())?;
+            }
             return Err(error);
         }
+        self.lock()?.replacement_reasons.remove(&index);
         span.record("status", "ok");
         if let Some(recycle) = &recycle {
             recycle.record("status", "ok");
@@ -169,7 +179,16 @@ impl Pool {
             && let Err(error) = self.cleanup(current)
         {
             tracing::warn!(%error, "sidecar cleanup failed");
-            let _ = current.control.kill();
+            let stopped = {
+                let mut state = self.lock()?;
+                state.replacement_reasons.insert(index, Reason::Replacement);
+                state.stopped
+            };
+            let _ = if stopped {
+                current.control.kill()
+            } else {
+                Reason::Replacement.kill(current.control.as_ref())
+            };
             slot = None;
         }
         let mut state = self.lock()?;
