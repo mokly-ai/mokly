@@ -191,11 +191,12 @@ given). Its `baseURL` serves that copy, and the worker fixture
 A copy built with base `HEAD` and no hook publishes ready Changes with no
 change.
 
-| Hook                         | Entries and evidence                                                                                                             |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected |
-| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                  |
-| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                     |
+| Hook                         | Entries and evidence                                                                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected                               |
+| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                                                |
+| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                                                   |
+| `addImportedCssSources`      | `imported/home`: a JavaScript screen whose CSS Module colour changes and loads a PNG through `url()`; links the repository's `node_modules`, which Git ignores |
 
 ## Shared Serve comparison fixture
 
