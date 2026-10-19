@@ -132,12 +132,13 @@ pub(crate) fn validate(result: &ReviewResultV8, inputs: SourceValidation<'_>) ->
 
 fn reasons_equal(entry: &ReviewEntry, classification: &EntryClassification) -> bool {
     let mut expected = classification.reasons.clone();
-    expected.sort_by(|left, right| {
-        review_order::reason_key(left).cmp(&review_order::reason_key(right))
-    });
-    expected.dedup();
+    review_order::normalize_reasons(&mut expected);
     entry.reasons == expected
 }
+
+#[cfg(test)]
+#[path = "_tests_/source_validation_tests.rs"]
+mod source_validation_tests;
 
 pub(crate) fn invalid() -> Error {
     Error::Review {

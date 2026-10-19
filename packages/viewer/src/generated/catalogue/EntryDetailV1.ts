@@ -3,6 +3,7 @@
 import type { CatalogueIdentity } from "./CatalogueIdentity.js";
 import type { DetailEntry } from "./DetailEntry.js";
 import type { DetailView } from "./DetailView.js";
+import type { EntryChangeReason } from "./EntryChangeReason.js";
 import type { ViewEvidence } from "./ViewEvidence.js";
 import type { Workspace } from "./Workspace.js";
 
@@ -32,6 +33,10 @@ generation?: string,
  * Entry identity and optional historical snapshot.
  */
 entry: DetailEntry,
+/**
+ * Direct reasons in the review v8 shape, present for ready included entries of every kind.
+ */
+reasons?: Array<EntryChangeReason>,
 /**
  * Empty for pages, documents, and use cases.
  */

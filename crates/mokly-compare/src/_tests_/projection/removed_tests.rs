@@ -11,7 +11,7 @@ use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::projection;
 use mokly_model::public_index::RemovedPreview;
 use mokly_model::public_records::CatalogueRecord;
-use mokly_model::review::ReviewState;
+use mokly_model::review::{EntryChangeReason, ReviewState};
 use mokly_model::usage::CatalogueUsage;
 use unimock::{MockFn, Unimock, matching};
 
@@ -81,6 +81,7 @@ fn removed_records_and_previews_share_the_pinned_identity_and_metadata() {
 fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidence() {
     let removed = entry("removed", EntryKind::Screen, None);
     let mut change = classified("removed", EntryKind::Screen, ReviewState::Removed);
+    change.reasons = vec![EntryChangeReason::Removed];
     change.documents.clear();
     let mut result = result(vec![removed], vec![], vec![change]);
     let catalogue = result.before.catalogue().clone();
@@ -136,6 +137,10 @@ fn historical_details_use_base_plans_without_inventing_workspace_or_view_evidenc
         Some(result.snapshot.removed_entries[0].snapshot_id.as_str())
     );
     assert!(detail.workspace.is_none());
+    assert_eq!(
+        serde_json::to_value(detail).unwrap()["reasons"],
+        serde_json::json!([{ "kind": "removed" }])
+    );
     assert_eq!(detail.views.len(), 1);
     assert!(matches!(
         detail.views[0].usage,

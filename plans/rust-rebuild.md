@@ -1234,11 +1234,20 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
     - [x] Group foreground sidecar calls before queued base calls. Prove
           one-worker and three-worker admission bounds and cancellation.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/interleaving-measurement.md`.
+    - Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/merge-decisions.md`.
+    - [x] Release replaced base captures independently of cached delivery files.
+          Keep the 60-second snapshot trim for duplicated delivery bytes, count
+          the separate capture budget, and assert the real Serve capture trace.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
     - [ ] Repeat the combined measurement after shared-engine batching merges.
           Each run creates a fresh base runtime, bundle cache, and CSS context.
           Cached source and dependency reuse still publishes preparing. The
           one-line edit smoke took 5m19s to Changes ready with three sidecars.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-8/cache-retention-measurement.md`.
+      - [x] Measure one worker with an old capture held by an in-flight request.
+            The default-count probe stops at the common memory allowance before
+            ready; its edit time and overlap peak need a probe-budget decision.
+            Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-11/measurements.md`.
     - [x] Use an intentionally unresolved base for the shared browser example,
           with terminal quiescence and one Git diagnostic. Real Changes specs
           keep independent fixtures. Keep the 600-second guard and one sidecar.
@@ -1334,6 +1343,15 @@ Tags: ui
         and a removed-entry fixture, and fix the viewer defects that it finds.
   - [ ] Settle how Details shows the review reasons, including
         `implementation`, before a comparison loads (report 18, decision D1).
+    - [x] D1 spec correction, backend: carry `reasons` in the review v8 shape at the
+          detail root for ready included current and removed entries, independent
+          of workspace readiness. Share the projection across static output and
+          Serve, clear stale reasons, and generate the additive v1 field.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-10.md`.
+    - [x] Apply review 7: define page and document reasons, check detail reasons
+          against ready included membership, and use UTF-16 source reason order.
+          The orchestrator confirms that changed deployment identities are required.
+          Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
