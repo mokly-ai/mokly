@@ -4,42 +4,15 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use mokly_graph::types::RenderGenerationMock;
-use mokly_model::snapshot::RemovedEntrySnapshot;
-use mokly_model::snapshot_records::{EntryRecord, RecordMetadata};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::assets::File;
-use crate::changes::Accepted;
 use crate::clock::ClockMock;
 use crate::comparison_capture::CapturerMock;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
-use crate::comparison_support::{accepted, files, historical_inputs, snapshot};
+use crate::comparison_support::{files, historical, historical_inputs, snapshot};
 use crate::error::ServerError;
 use crate::publication::FixedPublication;
-
-fn historical() -> Arc<Accepted> {
-    let mut value = accepted(Arc::new(Unimock::new(())), Arc::new(Unimock::new(())));
-    let result = &mut Arc::get_mut(&mut value).unwrap().result;
-    result.snapshot.removed_entries.push(RemovedEntrySnapshot {
-        entry: EntryRecord::Page {
-            metadata: RecordMetadata {
-                path: "sample".into(),
-                title: "Sample".into(),
-                description: String::new(),
-                rationale: None,
-                moved_from: None,
-                related_docs: Vec::new(),
-                source_path: "sample.page.html".into(),
-                tags: None,
-            },
-        },
-        folder_titles: Vec::new(),
-        parent_title: None,
-        snapshot_id: "c".repeat(64),
-    });
-    result.entries[0].documents[0].before_route = Some("sample/index.html".into());
-    value
-}
 
 #[tokio::test]
 async fn an_identical_replacement_uses_its_live_owner_for_historical_capture() {
