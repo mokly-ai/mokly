@@ -68,6 +68,12 @@ for (const width of [390, 1280])
           page.frameLocator(`${STAGE} iframe`).locator("h1"),
         ).toHaveText(heading);
       }
+      // The base stylesheet still styles a previous version: the card that
+      // screens/former used keeps the Before colour, not the current one.
+      await openRemoved(page, index, comparisonPaths.removedLightOnly);
+      await expect(
+        screenFrame(page, "desktop").locator("article.accent"),
+      ).toHaveCSS("color", "rgb(180, 30, 30)");
     });
 
     test("a removed screen shows its previous frames", async ({
@@ -82,10 +88,21 @@ for (const width of [390, 1280])
       );
       await expect(page.locator(`${STAGE} .phone-frame`)).toHaveCount(1);
       await expect(page.locator(`${STAGE} .browser-frame`)).toHaveCount(1);
-      for (const viewport of ["desktop", "mobile"] as const)
+      // Each frame shows its own viewport's previous document.
+      for (const viewport of ["desktop", "mobile"] as const) {
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );
+        await expect(
+          page.locator(`${STAGE} .mbk-frame-${viewport} iframe`),
+        ).toHaveAttribute(
+          "data-mokly-preview-source",
+          new RegExp(
+            `/snapshots/before/mokly-generated/${comparisonPaths.removedScreen}/index\\.${viewport}\\.html$`,
+            "u",
+          ),
+        );
+      }
       await chooseViewport(page, "mobile");
       await expect(page.locator(`${STAGE} .browser-frame`)).toHaveCount(0);
       await expect(screenFrame(page, "mobile").locator("h1")).toHaveText(

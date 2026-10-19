@@ -38,6 +38,17 @@ test("added and removed screens stay current while a light-only comparison keeps
   const index = await comparisonIndex(request, baseURL);
   await page.goto(`/view/${comparisonPaths.added}/`);
   await chooseViewport(page, "mobile");
+  // The added screen stays current: no snapshot and no comparison.
+  await expect
+    .poll(() => {
+      const address = new URL(page.url());
+      return [
+        address.pathname,
+        address.searchParams.has("snapshot"),
+        address.searchParams.has("comparison"),
+      ];
+    })
+    .toEqual([`/view/${comparisonPaths.added}/`, false, false]);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(

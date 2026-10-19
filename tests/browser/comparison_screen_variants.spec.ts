@@ -118,6 +118,12 @@ test("a removed screen variant keeps a Removed row under its surviving parent", 
     "Workspace deleted",
   );
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
+  await expect(page.locator(".mbk-previous")).toHaveText(
+    "Showing previous version",
+  );
+  await expect(
+    page.frameLocator("[data-mokly-preview] iframe").first().locator("h1"),
+  ).toHaveText("Workspace deleted");
   await expect(
     page
       .getByLabel("Catalogue location")
