@@ -211,6 +211,9 @@ evidence record names its owner. The catalogue change snapshot v4 pairs
 review v8 with the base commit for Serve, the static build, and publication. The generated
 TypeScript types are the normative shapes.
 
+`ignoredIds` lists the sorted unique ids of paired ignore regions removed
+for canonical equality, including equal regions in an `unchanged` view.
+
 Git subprocess environment, bounds, and cancellation follow the
 [Git command runtime](./mokly-git.md).
 

@@ -77,6 +77,17 @@ fn graph(mock: Unimock) -> Graph {
 }
 
 #[test]
+fn a_prepared_generation_exposes_worker_cancellation_without_rendering() {
+    let graph = graph(Unimock::new(
+        RenderWorkersMock::cancelled
+            .next_call(matching!())
+            .returns(true),
+    ));
+    let generation = graph.prepare(config(), catalogue(&[]), None).unwrap();
+    assert_cancelled(generation.check_cancelled().unwrap_err());
+}
+
+#[test]
 fn planning_checks_each_entry_even_when_exports_share_a_source() {
     let graph = graph(Unimock::new((
         RenderWorkersMock::cancelled

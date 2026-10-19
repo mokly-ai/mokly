@@ -2,9 +2,9 @@ import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 
-/** Exact files plus directory indexes: no extension guessing or provider rules. */
+/** Exact files and directory indexes; a root callback selects one copy per request. */
 export async function serveStaticFiles(
-  root: string,
+  root: string | (() => string),
   options: { allowedOrigin?: string; csp?: string } = {},
 ) {
   const allowedOrigins = new Set<string>();
@@ -32,9 +32,13 @@ export async function serveStaticFiles(
       return;
     }
     void (async () => {
+      const requestRoot = typeof root === "string" ? root : root();
       const relative = decodeURIComponent(pathname).replace(/^\/+/, "");
-      let filename = path.resolve(root, relative);
-      if (filename !== root && !filename.startsWith(`${root}${path.sep}`))
+      let filename = path.resolve(requestRoot, relative);
+      if (
+        filename !== requestRoot &&
+        !filename.startsWith(`${requestRoot}${path.sep}`)
+      )
         throw new Error("outside root");
       if ((await fs.promises.stat(filename)).isDirectory())
         filename = path.join(filename, "index.html");

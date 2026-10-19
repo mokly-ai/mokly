@@ -59,6 +59,10 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    fn check_cancelled(&self) -> Result<()> {
+        self.inner.check_cancelled()
+    }
+
     /// Return None so the engine captures through these digest checks.
     fn comparison_capture(&self) -> Option<ComparisonCapture> {
         None

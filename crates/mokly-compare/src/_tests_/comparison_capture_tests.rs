@@ -45,6 +45,9 @@ fn source_calls(side: &'static str, count: usize, events: Arc<Mutex<Vec<String>>
         })
         .collect::<BTreeMap<_, _>>();
     (
+        RenderGenerationMock::check_cancelled
+            .each_call(matching!())
+            .answers(&|_| Ok(())),
         RenderGenerationMock::comparison_capture
             .each_call(matching!())
             .returns(None),

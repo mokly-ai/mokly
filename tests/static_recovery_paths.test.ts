@@ -31,18 +31,20 @@ for (const verb of ["build", "publish"] as const)
         });
         let output: string | undefined;
         try {
-          const result = await faultCommand(
-            root,
-            verb,
-            fault,
-            "rich",
-            {
-              MOKLY_TEST_STATIC_COLUMNS: undefined,
-              TMPDIR: temporaryRoot,
-              TMP: temporaryRoot,
-              TEMP: temporaryRoot,
-            },
-            requested,
+          const result = await (
+            await faultCommand(
+              root,
+              verb,
+              fault,
+              "rich",
+              {
+                MOKLY_TEST_STATIC_COLUMNS: undefined,
+                TMPDIR: temporaryRoot,
+                TMP: temporaryRoot,
+                TEMP: temporaryRoot,
+              },
+              requested,
+            )
           ).result;
           output =
             verb === "build"

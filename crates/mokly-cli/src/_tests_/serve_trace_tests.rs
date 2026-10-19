@@ -1,11 +1,14 @@
 //! Timing records use a mocked clock and terminal and never expose authored fields.
 
 use std::sync::atomic::AtomicU64;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, mpsc};
+use std::thread;
 
 use mokly_cli::redaction::Redactor;
-use mokly_sidecar::workers::{Clock, ClockMock};
+use mokly_sidecar::workers::ClockMock;
 use serde_json::Value;
+use tracing::{Dispatch, Subscriber};
+use tracing_subscriber::Layer;
 use tracing_subscriber::layer::SubscriberExt;
 use unimock::{MockFn, Unimock, matching};
 
@@ -14,16 +17,11 @@ use crate::terminal::TerminalMock;
 use super::Timings;
 
 pub(super) fn capture(run: impl FnOnce()) -> Vec<Value> {
-    collect_lines(
-        run,
-        Arc::new(Unimock::new(
-            ClockMock::now_ms.each_call(matching!()).returns(0u64),
-        )),
-        Arc::new(Redactor::default()),
-    )
-    .iter()
-    .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
-    .collect()
+    let clock = Unimock::new(ClockMock::now_ms.each_call(matching!()).returns(0u64));
+    collect_lines(run, &clock, Arc::new(Redactor::default()), || {})
+        .iter()
+        .map(|line| serde_json::from_str(line.strip_prefix("[mokly:timing] ").unwrap()).unwrap())
+        .collect()
 }
 
 pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
@@ -31,13 +29,26 @@ pub(super) fn capture_lines(run: impl FnOnce()) -> Vec<String> {
 }
 
 pub(super) fn capture_redacted(run: impl FnOnce(), redactor: Redactor) -> Vec<String> {
-    collect_lines(run, Arc::new(Unimock::new(())), Arc::new(redactor))
+    let clock = Unimock::new(());
+    collect_lines(run, &clock, Arc::new(redactor), || {})
+}
+
+/// The inner layer acknowledges destruction after the outer timing layer drops its clones.
+struct CaptureReleased(mpsc::SyncSender<()>);
+
+impl<S: Subscriber> Layer<S> for CaptureReleased {}
+
+impl Drop for CaptureReleased {
+    fn drop(&mut self) {
+        let _ = self.0.send(());
+    }
 }
 
 fn collect_lines(
     run: impl FnOnce(),
-    clock: Arc<dyn Clock>,
+    clock: &Unimock,
     redactor: Arc<Redactor>,
+    after_scope: impl FnOnce(),
 ) -> Vec<String> {
     let records = Arc::new(Mutex::new(Vec::new()));
     let output = records.clone();
@@ -47,14 +58,47 @@ fn collect_lines(
         }),
     ));
     let layer = Timings {
-        terminal: Arc::new(terminal),
+        terminal: Arc::new(terminal.clone()),
         session: "test".into(),
-        clock,
+        clock: Arc::new(clock.clone()),
         next: AtomicU64::new(1),
         redactor,
     };
-    tracing::subscriber::with_default(tracing_subscriber::registry().with(layer), run);
+    let (released, finished) = mpsc::sync_channel(1);
+    tracing::subscriber::with_default(
+        tracing_subscriber::registry()
+            .with(CaptureReleased(released))
+            .with(layer),
+        run,
+    );
+    after_scope();
+    finished.recv().unwrap();
     records.lock().unwrap().clone()
+}
+
+#[test]
+fn timing_mock_verification_waits_for_a_foreign_dispatch_release() {
+    let clock = Unimock::new(());
+    let (send, receive) = mpsc::sync_channel::<Dispatch>(1);
+    let (release, released) = mpsc::sync_channel(1);
+    let worker = thread::spawn(move || {
+        let dispatch = receive.recv().unwrap();
+        released.recv().unwrap();
+        assert!(dispatch.downcast_ref::<Timings>().is_some());
+    });
+    let lines = collect_lines(
+        || {
+            tracing::info!(sidecar_timing = "owned timing record");
+            tracing::dispatcher::get_default(|dispatch| send.send(dispatch.clone()).unwrap());
+        },
+        &clock,
+        Arc::new(Redactor::default()),
+        || {
+            release.send(()).unwrap();
+            worker.join().unwrap();
+        },
+    );
+    assert_eq!(lines, ["owned timing record\n"]);
 }
 
 #[test]

@@ -71,3 +71,26 @@ test("stderr tracking keeps backpressure and every callback form", async () => {
     await completed;
   }
 });
+
+test("timing records keep the captured writer after consumer stderr replacement", () => {
+  const chunks: string[] = [];
+  const stream = new Writable({
+    write(chunk: Buffer, _encoding, callback) {
+      chunks.push(chunk.toString());
+      callback();
+    },
+  });
+  const timing = timingOutput(stream);
+  stream.write("partial consumer output");
+  let intercepted = 0;
+  stream.write = () => {
+    intercepted++;
+    return false;
+  };
+  const first = '[mokly:timing] {"event":"start"}\n';
+  const second = '[mokly:timing] {"event":"end"}\n';
+  assert.equal(timing(first), true);
+  assert.equal(timing(second), true);
+  assert.equal(intercepted, 0);
+  assert.deepEqual(chunks, ["partial consumer output", `\n${first}`, second]);
+});

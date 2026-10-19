@@ -32,10 +32,12 @@ rule reads a source file or a repository path on its own.
   affected-only screen does not make its use cases changed.
 - A use case is listed when a step's `screenPath` names the exact changed
   screen, including a variant, or when its own metadata or steps changed.
-- A variant of either kind is projected independently. Its metadata
-  projection contains `variantOf` and its parent's title, so a changed parent
-  title marks the variant, while a change confined to the variant never adds
-  the parent. A parent that moves carries its variants with it under the
+- A variant of either kind is projected independently. Its projection keeps
+  its own and inherited title, description, tags, related documents, and colour
+  schemes; its props and supplied slots; `variantOf`; and its parent's title.
+  Only the parent projects the schema, controls, and declared slots.
+  A changed parent title marks the variant, while a change confined to the
+  variant never adds the parent. A parent that moves carries its variants under the
   [move contract](./mokly-moves.md).
 - Pages and documents use the same material and resource rules on their
   documents: one per colour scheme for a document, one for a page. They have

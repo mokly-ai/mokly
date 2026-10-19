@@ -142,9 +142,17 @@ output exists: the schema against the profile, the component's own props and
 every variant's merged props against the schema, each control against a
 declared data prop, and the slot names against the data keys. Data keys and
 slot names must be disjoint, and neither may use `moklyInstance`, `key`, or
-`ref`. A `Component` wrapper rendered from a definition that no entry module
-exports fails validation naming the definition; Mokly never registers an
-unreachable component page.
+`ref`.
+
+A private definition can remain unregistered while its `Component` wrapper
+is unused. Invoking the wrapper of a definition that no entry module exports
+fails at render time with `render-failed`, presented by the CLI as `build-invalid`.
+The exact message is
+`{module} export {name} ({viewport}, {colorScheme}): unexported component {title} from {definedIn}`.
+The prefix identifies the invoking entry. The defining module can be an
+imported helper. If its module is outside the owned repository sources,
+`{definedIn}` is `unknown module`. Mokly never registers an unreachable
+component page.
 
 ## Instances And Ownership
 

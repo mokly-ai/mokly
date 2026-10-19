@@ -32,7 +32,9 @@ views use the pinned-source fallback. Reading a generation renews its idle
 retention. After replacement, cached JSON and snapshots follow the same idle
 rule. The store holds only a weak reference to the classification: cached
 files do not retain an old base capture. A missing snapshot can be restored
-only while the classification still has an owner, such as an in-flight request.
+only while the current index's publication, an in-flight request, or a capture
+owns the classification. Otherwise the snapshot route returns 404 and starts
+no work, even while the generation's cached JSON remains available.
 Delivery files count against the 128 MiB comparison store. Each classification
 can also retain a separate base capture of up to 256 MiB, beside the graph's
 256 MiB render cache. An old capture held by in-flight work can overlap a new
@@ -76,6 +78,11 @@ selected comparison contract. A content change or a Changes status move
 invalidates pending captures and discards the cached selection. Superseded
 snapshots stay available briefly for in-flight requests. Shutdown stops
 admission and drains active generation work before the server exits.
+
+Base capture checks cancellation before each view read and encode, including
+cache hits, and returns the generation's cancellation error. Replacing an
+unfinished classification cancels its base workers as well as its source reads
+and sidecar calls. Command shutdown cancels both current and base work.
 
 ## Build And Publish
 

@@ -11,6 +11,69 @@ mod engine_support;
 use engine_support::{Fixture, entry};
 
 #[test]
+fn a_parent_schema_edit_with_variants_lists_only_the_parent_metadata() {
+    let source = concat!(
+        "---\ntitle: Card\nelement: ui-card\n",
+        "propSchema: {type: object, additionalProperties: false, properties: {tone: {type: string, enum: [red, blue]}}}\n",
+        "props: {tone: red}\n",
+        "variants:\n",
+        "  - {slug: one, title: One, props: {tone: red}}\n",
+        "  - {slug: two, title: Two, props: {tone: red}}\n",
+        "  - {slug: three, title: Three, props: {tone: red}}\n",
+        "---\n<article>Card</article>",
+    );
+    let fixture = Fixture::new(&[("specs/card.component.html", source)]);
+    fixture.edit(
+        "specs/card.component.html",
+        &source.replace("[red, blue]", "[red, green]"),
+    );
+    let result = fixture.compare().unwrap();
+    assert_eq!(result.snapshot.changed_entries, ["card"]);
+    assert_eq!(
+        entry(&result, "card").reasons,
+        [EntryChangeReason::Metadata]
+    );
+    for path in ["card/one", "card/two", "card/three"] {
+        let variant = entry(&result, path);
+        assert!(!variant.included, "{path}");
+        assert!(variant.reasons.is_empty(), "{path}");
+        assert_eq!(variant.state, ReviewState::Unchanged, "{path}");
+        assert!(
+            variant
+                .views
+                .iter()
+                .all(|view| view.state == ReviewState::Unchanged)
+        );
+    }
+}
+
+#[test]
+fn a_parent_slot_declaration_edit_does_not_list_variants() {
+    let source = concat!(
+        "---\ntitle: Card\nelement: ui-card\n",
+        "propSchema: {type: object, additionalProperties: false, properties: {}}\n",
+        "slots: [children]\n",
+        "variants: [{slug: one, title: One, props: {}}, {slug: two, title: Two, props: {}}]\n",
+        "---\n<article>Card<slot></slot></article>",
+    );
+    let fixture = Fixture::new(&[("specs/card.component.html", source)]);
+    fixture.edit(
+        "specs/card.component.html",
+        &source.replace("slots: [children]", "slots: [children, footer]"),
+    );
+    let result = fixture.compare().unwrap();
+    assert_eq!(result.snapshot.changed_entries, ["card"]);
+    assert_eq!(
+        entry(&result, "card").reasons,
+        [EntryChangeReason::Metadata]
+    );
+    for path in ["card/one", "card/two"] {
+        assert!(!entry(&result, path).included, "{path}");
+        assert!(entry(&result, path).reasons.is_empty(), "{path}");
+    }
+}
+
+#[test]
 fn metadata_membership_does_not_override_an_unchanged_view_aggregate() {
     let fixture = Fixture::new(&[(
         "specs/home.screen.html",

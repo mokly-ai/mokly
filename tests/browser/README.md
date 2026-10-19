@@ -20,6 +20,17 @@ disabled. `MOKLY_PLAYWRIGHT_STATIC_DIR` or `MOKLY_PLAYWRIGHT_FILE_DIR` can
 supply that current-only input. Setup rejects an index whose
 `changesStatus` is not `disabled`.
 
+## Deployment replacement
+
+`static_deployment.spec.ts` hosts two immutable copies. The static host's root
+callback selects the published copy once per request, before filesystem work.
+Publication changes that selection in one synchronous step. Pending requests
+keep their selected copy until teardown. The deployment test keeps its reload,
+history, frame-content, request-status, and browser-error assertions.
+
+`tests/static_server_deployment.test.ts` holds an old request while a request
+for the replacement copy completes. Both must return their selected file.
+
 ## Native comparison copy
 
 `comparison_test.ts` supplies `test`, `copiedComparisonUrl()`,
@@ -100,25 +111,6 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `view`, `viewport`, `base=none` (an index without `base`), and
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
-
-## Watched catalogue cases
-
-`watch_fixture.ts` extends the automatic console-error fixture. Each test owns
-a small native catalogue through `serveCatalogue(..., { watch: true })` and
-uses the isolated setup budget. Each edit waits for a higher published revision
-and the expected catalogue state through `settleLive`. Document keys and DOM
-marks distinguish changed previews from retained ones without a shell reload.
-The browser leaves the page before the fixture closes its process and directory.
-`watch_updates`, `watch_moves`, `watch_folders`, and `watch_shutdown` cover the
-watched publication and disclosure cases.
-
-## Native team example
-
-The `team_screens`, `team_components`, `team_links`, `team_pages`, and `team_flow`
-specs read the shared Serve example. They do not edit its files. They cover the
-HTML team screens, slot components, saved variants, canonical invitation page,
-Markdown role guide, YAML flow, and native links in Browse and direct documents.
-Each file has at most four cases so Playwright can balance whole files.
 
 ## Branch-point delivery copy
 
@@ -274,3 +266,29 @@ moves without sharing writable state with another test.
 
 Branch-point copy setup and Serve comparison setup use the isolated
 180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.
+
+## Watched catalogue cases
+
+`watch_fixture.ts` extends the automatic console-error fixture. Each test owns
+a small native catalogue through `serveCatalogue(..., { watch: true })` and
+uses the isolated setup budget. Each edit waits for a higher published revision
+and the expected catalogue state through `settleLive`. Document keys and DOM
+marks distinguish changed previews from retained ones without a shell reload.
+The browser leaves the page before the fixture closes its process and directory.
+`watch_updates`, `watch_moves`, `watch_folders`, and `watch_shutdown` cover the
+watched publication and disclosure cases.
+
+`large_changes` and `large_watch` run the opt-in large-fixture harness with
+small HTML and React inputs. They verify native base preparation, delivered
+Changes, event identity, visible reloads, and restoration of edited sources.
+They use the suite browser and assert outcomes without timing budgets.
+`large_watch_failure` holds restoration pending after the owned server exits.
+It requires the harness to close its context and finish restoration before return.
+
+## Native team example
+
+The `team_screens`, `team_components`, `team_links`, `team_pages`, and `team_flow`
+specs read the shared Serve example. They do not edit its files. They cover the
+HTML team screens, slot components, saved variants, canonical invitation page,
+Markdown role guide, YAML flow, and native links in Browse and direct documents.
+Each file has at most four cases so Playwright can balance whole files.

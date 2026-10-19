@@ -73,6 +73,9 @@ pub struct ComparisonCapture {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Return the generation's cancellation error before more view work starts.
+    fn check_cancelled(&self) -> Result<()>;
+
     /// Reuse an existing comparison capture without stacking retained copies.
     /// Ordinary source generations return None.
     /// Wrappers that add checks must return None, not delegate: rebuilding with

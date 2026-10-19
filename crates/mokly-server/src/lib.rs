@@ -80,3 +80,11 @@ mod changes_support;
 #[cfg(test)]
 #[path = "_tests_/changes_trace_support.rs"]
 mod changes_trace_support;
+
+#[cfg(test)]
+#[path = "_tests_/quiet_completion_tests.rs"]
+mod quiet_completion_tests;
+
+#[cfg(test)]
+#[path = "_tests_/quiet_http_completion_tests.rs"]
+mod quiet_http_completion_tests;

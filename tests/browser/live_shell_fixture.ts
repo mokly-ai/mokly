@@ -81,10 +81,8 @@ export async function serveLiveCatalogue({
  * with no pending usage. Each publication on the event stream wakes the
  * check, so the wait needs no sleep. Returns the settled revision.
  *
- * The state does not show every publication still to come: after an edit,
- * Serve can publish a render completion that changes only the revision. So a
- * step after an edit accepts a later revision, and `until` names the result
- * that the edit must show, so that the wait cannot return before it.
+ * `until` names the edit's required result, so the wait cannot return before
+ * that result is published. Equal render completions publish no new revision.
  */
 export async function settleLive(
   url: string,
