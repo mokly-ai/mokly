@@ -1831,12 +1831,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Verify response, operation-count, diagnostic, and IPC closure without sleeps.
       Evidence: `.context/rust-rebuild/delegation/m12-static/part0-done.md`.
 
-- [ ] Obtain user approval for the current 2 GiB per repository cache namespace
+- [x] Obtain user approval for the current 2 GiB per repository cache namespace
       and the shared 120-second dependency preparation allowance before adding
       these values to the timings contract.
   - [x] Record the approved 2 GiB bound for each comparison cache namespace.
         Decision 2 = A on 2026-10-19 preserves the current runtime bound.
-  - [ ] Record the approved shared 120-second dependency preparation allowance.
+  - [x] Record the approved shared 120-second dependency preparation allowance.
+        Decision 2 = A on 2026-10-19 covers version discovery and all installs.
 - [x] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 

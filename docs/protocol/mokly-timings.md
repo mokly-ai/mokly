@@ -232,16 +232,16 @@ CI's small correctness fixtures have
 
 ## Budgets
 
-| Budget                             | Rule                                                                                                        |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `usableMs`                         | under 5000 ms, cold and warm, on both fixture variants                                                      |
-| sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                          |
-| dependency install time limit      | the second tier's limit; a run over it falls to the third tier with the `base-dependencies` warning         |
-| comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs |
-| render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                        |
-| `build` time and peak memory       | recorded per variant from scenario 1                                                                        |
-| `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                 |
-| watch edit-to-reload               | recorded per edit kind from scenario 4                                                                      |
+| Budget                             | Rule                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `usableMs`                         | under 5000 ms, cold and warm, on both fixture variants                                                                         |
+| sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                                             |
+| base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
+| comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
+| render cache bounds                | the byte bounds of the [runtime contract](./mokly-runtime.md#render-graph-and-cache)                                           |
+| `build` time and peak memory       | recorded per variant from scenario 1                                                                                           |
+| `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |
+| watch edit-to-reload               | recorded per edit kind from scenario 4                                                                                         |
 
 Recording rules measure and report values. The runtime enforces the approved
 cache and dependency-preparation limits. The benchmark enforces numeric
