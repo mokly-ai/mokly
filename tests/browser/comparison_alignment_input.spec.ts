@@ -1,4 +1,4 @@
-import { expect, type Locator } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
   comparisonSection,
@@ -219,40 +219,68 @@ test("links stay inert while a version is still loading", async ({ page }) => {
   }
 });
 
+/** Each pane document's offset beside its shared viewport's, in one task. */
+function readStack(section: Locator): Promise<[number, number][]> {
+  return section.evaluate((element) => {
+    const viewports = [
+      ...element.querySelectorAll<HTMLElement>("[data-comparison-viewport]"),
+    ];
+    return (["before", "after"] as const).map((side, index) => {
+      const frame = element.querySelector<HTMLIFrameElement>(
+        `.mb-pane--${side} iframe`,
+      )!;
+      const viewport = viewports[Math.min(index, viewports.length - 1)]!;
+      return [
+        frame.contentDocument!.scrollingElement!.scrollTop,
+        viewport.scrollTop,
+      ];
+    });
+  });
+}
+
+/** Every rendering update right after a wheel shows each document at its viewport. */
+async function expectInstantFollow(page: Page, section: Locator) {
+  for (const sample of await sampleFrames(page, () => readStack(section), 20))
+    for (const [document, viewport] of sample)
+      expect(document, JSON.stringify(sample)).toBe(viewport);
+}
+
 test("smooth-scroll CSS in the documents and the host still moves every version at once", async ({
   page,
 }) => {
-  await openComparison(page, changed, "desktop", "Overlay");
   const smooth = "* { scroll-behavior: smooth !important; }";
+  // Every presentation's stylesheet asks for smooth scrolling.
+  await page.route(
+    "**/snapshots/*/mokly-generated/styles/changed.css",
+    async (route) => {
+      const response = await route.fetch();
+      const css = await response.text();
+      await route.fulfill({ response, body: `${css}\n${smooth}\n` });
+    },
+  );
+  await openComparison(page, changed, "desktop", "Overlay");
   await page.addStyleTag({ content: smooth });
   const desktop = comparisonSection(page, "desktop");
-  for (const side of ["before", "after"] as const)
-    await paneFrame(desktop, side).evaluate((frame: HTMLIFrameElement, css) => {
-      const style = frame.contentDocument!.createElement("style");
-      style.textContent = css;
-      frame.contentDocument!.head.append(style);
-    }, smooth);
-  /** Both documents' offsets and every shared viewport's, in one read. */
-  const offsets = async () => {
-    const layers = await layerOffsets(desktop);
-    const viewports = await sharedViewports(desktop).evaluateAll((nodes) =>
-      nodes.map((node) => node.scrollTop),
-    );
-    return [layers.before.y, layers.after.y, ...viewports];
+  const expectSmooth = async () => {
+    for (const side of ["before", "after"] as const)
+      await expect(
+        paneFrame(desktop, side).contentFrame().locator("html"),
+      ).toHaveCSS("scroll-behavior", "smooth");
   };
+  await expectSmooth();
   await wheelOver(page, paneFrame(desktop, "after"), 400);
+  await expectInstantFollow(page, desktop);
   await expectStackAt(desktop, 400);
-  // Each write is instant: no rendering update shows a step between offsets.
-  for (const sample of await sampleFrames(page, offsets, 20))
-    expect(sample).toEqual([400, 400, 400]);
   await wheelOver(page, paneFrame(desktop, "after"), -400);
+  await expectInstantFollow(page, desktop);
   await expectStackAt(desktop, 0);
 
+  // Side by side presents new documents, which ask for smooth scrolling too.
   await modeButton(page, "Side by side").click();
   await expect(sharedViewports(desktop)).toHaveCount(2);
+  await expectSmooth();
   await expectMirrored(desktop, 0);
   await wheelOver(page, paneFrame(desktop, "before"), 300);
+  await expectInstantFollow(page, desktop);
   await expectMirrored(desktop, 300);
-  for (const sample of await sampleFrames(page, offsets, 20))
-    expect(sample).toEqual([300, 300, 300, 300]);
 });
