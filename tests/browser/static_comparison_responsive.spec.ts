@@ -1,9 +1,10 @@
 /**
  * The copied comparison stage in a wide and a narrow window, under the
- * comparison modes contract. In each viewport, scheme, and mode, every pane
- * frame uses the selected scheme, each version shows its own document, and
- * the page does not scroll sideways. Refresh comparison reads the pinned
- * generation again and presents the same versions.
+ * comparison modes contract. Each case opens at 1,280 px and then sizes the
+ * window. In each viewport, scheme, and mode, every pane frame uses the
+ * selected scheme, each version shows its own document, and the page does
+ * not scroll sideways. Refresh comparison reads the pinned generation again
+ * and presents the same versions.
  */
 
 import { expect, type Page, type Route } from "@playwright/test";
@@ -18,6 +19,21 @@ const VERSIONS = [
   ["Current", "After screen"],
 ] as const;
 
+/** Open the changed screen at 1,280 px, then size the window. */
+async function openAt(
+  page: Page,
+  width: number,
+  viewport: "mobile" | "desktop" | "both",
+): Promise<void> {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/view/${comparisonPaths.changed}/`);
+  await expect(page.locator("#mb-main h2").first()).toHaveText(
+    "Changed screen",
+  );
+  await page.setViewportSize({ width, height: 900 });
+  await chooseViewport(page, viewport);
+}
+
 /** The document source of every pane frame, in order. */
 function sources(page: Page): Promise<(string | null)[]> {
   return page
@@ -28,17 +44,12 @@ function sources(page: Page): Promise<(string | null)[]> {
 }
 
 for (const width of [1280, 390])
-  test(`every comparison mode fits a ${width}px window, and Refresh presents it again`, async ({
-    page,
-    request,
-    baseURL,
-  }) => {
-    const index = await comparisonIndex(request, baseURL);
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(`/view/${comparisonPaths.changed}/`);
-    const frames = page.locator(FRAMES);
-    for (const viewport of ["mobile", "desktop", "both"] as const) {
-      await chooseViewport(page, viewport);
+  for (const viewport of ["mobile", "desktop", "both"] as const)
+    test(`${viewport}: every comparison mode fits a ${width}px window`, async ({
+      page,
+    }) => {
+      await openAt(page, width, viewport);
+      const frames = page.locator(FRAMES);
       const shown = viewport === "both" ? ["mobile", "desktop"] : [viewport];
       for (const scheme of ["light", "dark"] as const) {
         await chooseScheme(page, scheme);
@@ -62,21 +73,34 @@ for (const width of [1280, 390])
           ).toBe(true);
         }
       }
-    }
-
-    const loaded = await sources(page);
-    const held: Route[] = [];
-    await page.route(`**/${index.comparisonUrl}`, (route) => {
-      held.push(route);
     });
-    await page.getByRole("button", { name: "Refresh comparison" }).click();
-    await expect.poll(() => held.length).toBe(1);
-    const stage = page.locator("[data-diff-stage]");
-    await expect(stage).toHaveAttribute("aria-busy", "true");
-    await held[0]!.continue();
-    await expect(stage).not.toHaveAttribute("aria-busy", "true");
-    await expect(frames).toHaveCount(4);
-    await expect.poll(() => sources(page)).toEqual(loaded);
-    await modeButton(page, "Current").click();
-    await expect(frames).toHaveCount(0);
+
+test("Refresh comparison reads the pinned review again and presents the same versions", async ({
+  page,
+  request,
+  baseURL,
+}) => {
+  const index = await comparisonIndex(request, baseURL);
+  await openAt(page, 390, "both");
+  await modeButton(page, "Side by side").click();
+  const frames = page.locator(FRAMES);
+  await expect(frames).toHaveCount(4);
+  for (const frame of await frames.all())
+    await expect(frame.contentFrame().locator("h1")).toBeVisible();
+  const loaded = await sources(page);
+
+  const held: Route[] = [];
+  await page.route(`**/${index.comparisonUrl}`, (route) => {
+    held.push(route);
   });
+  await page.getByRole("button", { name: "Refresh comparison" }).click();
+  await expect.poll(() => held.length).toBe(1);
+  const stage = page.locator("[data-diff-stage]");
+  await expect(stage).toHaveAttribute("aria-busy", "true");
+  await held[0]!.continue();
+  await expect(stage).not.toHaveAttribute("aria-busy", "true");
+  await expect(frames).toHaveCount(4);
+  await expect.poll(() => sources(page)).toEqual(loaded);
+  await modeButton(page, "Current").click();
+  await expect(frames).toHaveCount(0);
+});
