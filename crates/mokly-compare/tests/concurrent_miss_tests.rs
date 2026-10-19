@@ -28,7 +28,7 @@ fn two_callers_miss_before_a_blocked_builder_and_both_retain_leases() {
     let misses = Arc::new(Barrier::new(2));
     let attempts = Arc::new(AtomicUsize::new(0));
     let (contended_tx, contended_rx) = mpsc::channel();
-    cache.locks = Arc::new(Unimock::new((
+    let locks = Unimock::new((
         LocksMock::try_lock
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
@@ -46,7 +46,8 @@ fn two_callers_miss_before_a_blocked_builder_and_both_retain_leases() {
         LocksMock::try_lock_shared
             .each_call(matching!(_))
             .answers(&|_, path| SystemLocks.try_lock_shared(path)),
-    )));
+    ));
+    cache.locks = Arc::new(locks.clone());
     let cache = Arc::new(cache);
     let (started_tx, started_rx) = mpsc::channel();
     let (release_tx, release_rx) = mpsc::channel();

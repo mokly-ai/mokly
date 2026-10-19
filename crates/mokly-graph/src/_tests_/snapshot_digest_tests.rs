@@ -45,7 +45,7 @@ fn binary_resource_validation_keeps_no_snapshot_bytes() {
             .next_call(matching!(_))
             .returns(Ok(digest(&vec![42; 4096]))),
     );
-    let snapshot = Arc::new(SourceSnapshot::new(Arc::new(source)));
+    let snapshot = Arc::new(SourceSnapshot::new(Arc::new(source.clone())));
     let policy = Unimock::new(
         PublicPolicyMock::check
             .next_call(matching!("assets/image.png"))

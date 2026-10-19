@@ -1056,6 +1056,8 @@ rows as generator inputs: `.context/rust-rebuild/delegation/m7/report-16.md`,
 `.context/rust-rebuild/delegation/m7/merge-decisions.md` (Merge 7), and
 `.context/rust-rebuild/delegation/m7/sweep-overrides-shell.json`.
 Client shell review 8 fixes: `.context/rust-rebuild/delegation/m7/report-17.md`.
+Callback review fixes and mock ownership checks:
+`.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
 
 - [ ] Commit.
 

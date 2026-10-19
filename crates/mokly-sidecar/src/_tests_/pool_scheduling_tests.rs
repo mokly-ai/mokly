@@ -14,10 +14,10 @@ use crate::pool_state::Slot;
 use crate::wire::MethodResult;
 use crate::workers::WorkerMock;
 
-fn pool() -> Arc<Pool> {
+fn pool(mock: &Unimock) -> Arc<Pool> {
     Arc::new(Pool::new(
-        Arc::new(Unimock::new(())),
-        Arc::new(Unimock::new(())),
+        Arc::new(mock.clone()),
+        Arc::new(mock.clone()),
         Launch {
             node: "node".into(),
             entry: "sidecar.js".into(),
@@ -43,7 +43,8 @@ fn css() -> Call {
 }
 #[test]
 fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
-    let pool = pool();
+    let factory = Unimock::new(());
+    let pool = pool(&factory);
     let (busy, _) = pool.acquire(&css(), None).unwrap();
     let queued = pool.clone();
     let waiting = thread::spawn(move || {
@@ -80,48 +81,52 @@ fn a_render_uses_an_idle_slot_while_an_earlier_affine_call_waits() {
 }
 #[test]
 fn a_release_during_last_cleanup_is_delivered_when_the_slot_returns_idle() {
-    let pool = pool();
-    let recorded = Arc::new(Mutex::new(Vec::new()));
-    let events = recorded.clone();
-    let owner = Arc::downgrade(&pool);
-    let worker = Unimock::new(
-        WorkerMock::request
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, request, _| {
-                let Call::DisposeContext(params) = &request.call else {
-                    panic!()
-                };
-                events.lock().unwrap().push(params.context.clone());
-                if params.context == "first" {
-                    let pool = owner.upgrade().unwrap();
-                    pool.release_context("last");
-                    pool.synchronize_releases();
-                }
-                Ok(MethodResult::Empty)
-            }))
-            .n_times(2),
-    );
+    let worker;
     {
-        let mut state = pool.lock().unwrap();
-        state.slots.push(None);
-        state.contexts.insert("last".into());
+        let factory = Unimock::new(());
+        let pool = pool(&factory);
+        let recorded = Arc::new(Mutex::new(Vec::new()));
+        let events = recorded.clone();
+        let owner = Arc::downgrade(&pool);
+        worker = Unimock::new(
+            WorkerMock::request
+                .each_call(matching!(_, _))
+                .answers_arc(Arc::new(move |_, request, _| {
+                    let Call::DisposeContext(params) = &request.call else {
+                        panic!()
+                    };
+                    events.lock().unwrap().push(params.context.clone());
+                    if params.context == "first" {
+                        let pool = owner.upgrade().unwrap();
+                        pool.release_context("last");
+                        pool.synchronize_releases();
+                    }
+                    Ok(MethodResult::Empty)
+                }))
+                .n_times(2),
+        );
+        {
+            let mut state = pool.lock().unwrap();
+            state.slots.push(None);
+            state.contexts.insert("last".into());
+        }
+        pool.release(
+            0,
+            Some(Slot {
+                source_root: "/repo".into(),
+                worker: Box::new(worker.clone()),
+                control: Arc::new(worker.clone()),
+                generations: BTreeMap::new(),
+                maps: BTreeSet::new(),
+                described: BTreeSet::new(),
+                bindings: BTreeMap::new(),
+                contexts: BTreeSet::from(["first".into(), "last".into()]),
+                renders: 0,
+                requests: 0,
+            }),
+        )
+        .unwrap();
+        pool.synchronize_releases();
+        assert_eq!(*recorded.lock().unwrap(), ["first", "last"]);
     }
-    pool.release(
-        0,
-        Some(Slot {
-            source_root: "/repo".into(),
-            worker: Box::new(worker.clone()),
-            control: Arc::new(worker),
-            generations: BTreeMap::new(),
-            maps: BTreeSet::new(),
-            described: BTreeSet::new(),
-            bindings: BTreeMap::new(),
-            contexts: BTreeSet::from(["first".into(), "last".into()]),
-            renders: 0,
-            requests: 0,
-        }),
-    )
-    .unwrap();
-    pool.synchronize_releases();
-    assert_eq!(*recorded.lock().unwrap(), ["first", "last"]);
 }
