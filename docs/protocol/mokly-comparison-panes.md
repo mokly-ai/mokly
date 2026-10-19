@@ -164,10 +164,11 @@ each request to its immutable generation and configured sides.
 
 Browser regressions, listed in the
 [browser test guide](../../tests/browser/README.md#comparison-scrolling-suites), prove
-every item below in live Serve through the selected comparison path, and prove
-stack alignment, Side by side mirroring, inert links and anchors, and the pane
-failure path in a static build and in an embedded viewer through both frame
-adapters.
+every item below in live Serve through the selected comparison path. A static
+build and an embedded viewer through both frame adapters also prove stack
+alignment, frame attributes, and inert links and anchors; the static build also
+proves Side by side mirroring, and both hosts prove the pane failure path. Unit
+tests cover the controllers.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer

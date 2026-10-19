@@ -45,7 +45,10 @@ export function registerComponentEvidence(
           ["design/components/states/additions/added", ["added"]],
           ["design/components/states/removed", ["removed"]],
           ["design/components/states/removed-consumer", ["removed"]],
-          ["design/components/inspection/inspection-direct-change", ["inputs"]],
+          [
+            "design/components/inspection/inspection-direct-change",
+            ["inputs", "material"],
+          ],
           [
             "design/components/states/shared-impact/style-changed",
             ["implementation"],

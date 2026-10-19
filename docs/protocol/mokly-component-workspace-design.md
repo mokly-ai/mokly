@@ -167,9 +167,9 @@ reads only through the changed-files list of the
 has no reason sentence. Only a record that Changes lists shows reasons. A
 reason that contradicts its record is dropped: `removed` on a current record,
 `added` on a record with a base side, `screen` outside a use case, and
-`implementation` outside a component parent. The detail itself still loads. A
-viewer does not reject such a detail, as the model crate's reader does,
-because details written before reasons existed must keep loading.
+`implementation` outside a component parent. A viewer still loads such a
+detail, and a detail whose reasons disagree with its record's Changes
+membership, so that details written before reasons existed keep loading.
 
 | Reason           | Sentence                                                 |
 | ---------------- | -------------------------------------------------------- |

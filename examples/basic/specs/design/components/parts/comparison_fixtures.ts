@@ -109,9 +109,10 @@ const componentComparisons: Partial<
 const screenComparisons: Partial<
   Record<ScreenPageState, ChangedComparisonFixture>
 > = {
+  /** A caller-owned prop changes the instance's props digest, so it is material. */
   "direct-change": {
     status: "changed",
-    reasons: ["inputs"],
+    reasons: ["inputs", "material"],
     propChange: footerLabelChange,
     changedComponents: [
       { title: "Action", to: "design/components/pages/affected" },

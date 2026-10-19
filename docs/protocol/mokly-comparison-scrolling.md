@@ -167,7 +167,7 @@ follows before the page viewport moves.
 
 Browser regressions, listed in the
 [browser test guide](../../tests/browser/README.md#comparison-scrolling-suites), prove
-the page, region, key, and anchor cases in every comparison mode and the
-scrolling of a previous version, and controller unit tests prove measurement,
-key routing including right-to-left regions, anchors, echoes, and the page
-mirror.
+the page and region cases in every comparison mode, the key cases in Overlay,
+the anchor cases in Overlay and Side by side, and the scrolling of a previous
+version, and controller unit tests prove measurement, key routing including
+right-to-left regions, anchors, echoes, and the page mirror.
