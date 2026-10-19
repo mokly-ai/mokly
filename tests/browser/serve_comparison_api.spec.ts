@@ -31,7 +31,10 @@ test("the Serve fixture waits for false and asynchronous semantic predicates", a
     release = resolve;
   });
   const observations: string[] = [];
-  let gated = false;
+  let signalGated = () => {};
+  const gated = new Promise<void>((resolve) => {
+    signalGated = resolve;
+  });
   let settled = false;
   let failure: unknown;
   const title = (index: typeof previous) =>
@@ -44,7 +47,7 @@ test("the Serve fixture waits for false and asynchronous semantic predicates", a
         observations.push(title(index));
         if (observations.length === 1 || title(index) !== "Accepted screen")
           return false;
-        gated = true;
+        signalGated();
         await allowed;
         return true;
       },
@@ -60,12 +63,8 @@ test("the Serve fixture waits for false and asynchronous semantic predicates", a
       },
     );
   try {
-    await expect
-      .poll(() => {
-        if (failure) throw failure;
-        return gated;
-      })
-      .toBe(true);
+    await Promise.race([gated, pending]);
+    if (failure) throw failure;
     expect(observations.length).toBeGreaterThan(1);
     expect(observations.at(-1)).toBe("Accepted screen");
     expect(settled).toBe(false);
