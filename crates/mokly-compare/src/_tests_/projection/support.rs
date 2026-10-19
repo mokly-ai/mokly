@@ -131,6 +131,25 @@ pub(super) fn result(
         entries: pairs,
         ..Default::default()
     };
+    finish_result(before, after, entries, pairing)
+}
+
+/// Build an accepted move fixture before validating its removal snapshot.
+pub(super) fn paired_result(
+    before: Vec<ModelEntry>,
+    after: Vec<ModelEntry>,
+    entries: Vec<EntryClassification>,
+    pairing: Pairing,
+) -> ComparisonResult {
+    finish_result(model(before), model(after), entries, pairing)
+}
+
+fn finish_result(
+    before: CatalogueModel,
+    after: CatalogueModel,
+    entries: Vec<EntryClassification>,
+    pairing: Pairing,
+) -> ComparisonResult {
     let snapshot = snapshots::create(
         &"a".repeat(64),
         "base",

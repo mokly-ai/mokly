@@ -109,6 +109,7 @@ mod projection_affected;
 mod projection_context;
 pub mod projection_index;
 mod projection_inputs;
+mod projection_reference;
 pub mod projection_workspace;
 
 #[cfg(test)]

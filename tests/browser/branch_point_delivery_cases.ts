@@ -13,10 +13,12 @@ export interface DeliveryPair {
 export const branchPointCases: readonly {
   name: string;
   pairs: DeliveryPair[];
+  affectedComponent?: string;
   removed?: { path: string; parentTitle: string; text: string };
 }[] = [
   {
     name: "moved screen and component consumer",
+    affectedComponent: "branch/consumers/badge",
     pairs: [
       {
         before: paths.previousScreen,

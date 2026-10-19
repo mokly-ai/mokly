@@ -11,6 +11,7 @@ use crate::comparison_error::CompareResult;
 use crate::comparison_types::ComparisonResult;
 use crate::error::Result;
 use crate::projection_context::Context;
+use crate::projection_reference::References;
 
 #[derive(Default)]
 pub(crate) struct Affected {
@@ -21,6 +22,7 @@ pub(crate) struct Affected {
 
 pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<Affected> {
     let mut output = Affected::default();
+    let references = References::new(result);
     let mut related_seen = BTreeSet::new();
     let mut links_seen = BTreeSet::new();
     for effect in &result.review.affected {
@@ -42,12 +44,21 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
                         .into(),
                 });
         }
-        let after: BTreeSet<_> = effect
+        let projected: Vec<_> = effect
             .evidence
             .iter()
-            .filter(|evidence| evidence.side == ReviewSide::After)
-            .map(|evidence| {
+            .filter_map(|evidence| {
+                references
+                    .affected(effect, evidence)
+                    .map(|target| (evidence, target))
+            })
+            .collect();
+        let after: BTreeSet<_> = projected
+            .iter()
+            .filter(|(evidence, _)| evidence.side == ReviewSide::After)
+            .map(|(evidence, target)| {
                 (
+                    target.metadata.path.as_str(),
                     evidence.context.viewport,
                     evidence.context.color_scheme,
                     evidence
@@ -57,10 +68,10 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
                 )
             })
             .collect();
-        let removed = context.removed.contains(consumer.as_str());
-        for evidence in &effect.evidence {
+        for (evidence, target) in &projected {
             if evidence.side == ReviewSide::Before
                 && after.contains(&(
+                    target.metadata.path.as_str(),
                     evidence.context.viewport,
                     evidence.context.color_scheme,
                     evidence
@@ -79,24 +90,18 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
                 ConsumerKind::Component => EntryKind::Component,
             };
             let link = UsageLink {
-                entry_path: consumer.clone(),
+                entry_path: target.metadata.path.clone(),
                 entry_kind: match kind {
                     EntryKind::Screen => VisualKind::Screen,
                     _ => VisualKind::Component,
                 },
-                title: context
-                    .metadata
-                    .get(consumer.as_str())
-                    .map_or(evidence.context.entry.title.as_str(), |metadata| {
-                        metadata.title.as_str()
-                    })
-                    .into(),
+                title: target.metadata.title.clone(),
                 viewport: evidence.context.viewport,
                 color_scheme: evidence.context.color_scheme,
                 instance_key: instance.instance_key.clone(),
                 direct: evidence.via.len() == 1,
-                removed,
-                comparison_eligible: context.can_compare(consumer, kind),
+                removed: target.removed,
+                comparison_eligible: context.can_compare(&target.metadata.path, kind),
             };
             let key = canonical::to_string(&link).compare()?;
             if links_seen.insert((effect.changed_component_id.as_str(), key)) {

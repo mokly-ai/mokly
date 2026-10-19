@@ -42,6 +42,30 @@ for (const width of [390, 1280]) {
       expect(await fs.readdir(path.dirname(branchCopy.directory))).toEqual([
         "isolated",
       ]);
+      if (scenario.affectedComponent) {
+        const address = `${branchCopy.url}/mokly-viewer/entries/${scenario.affectedComponent}.json`;
+        const detail = readEntryDetail(
+          JSON.parse(
+            (
+              await copiedBytes(request, branchCopy.directory, address)
+            ).toString(),
+          ),
+        );
+        const affected = detail.workspace!.affected.map(
+          (consumer) => consumer.entryPath,
+        );
+        expect(affected).toEqual(
+          expect.arrayContaining([
+            branchPointPaths.movedConsumer,
+            branchPointPaths.movedScreen,
+          ]),
+        );
+        for (const previous of [
+          branchPointPaths.previousConsumer,
+          branchPointPaths.previousScreen,
+        ])
+          expect(affected).not.toContain(previous);
+      }
       for (const pair of scenario.pairs) {
         const record = entries.find((entry) => entry.path === pair.after)!;
         expect(record.before?.path).toBe(pair.before);
@@ -51,6 +75,13 @@ for (const width of [390, 1280]) {
           (entry) => entry.path === pair.after,
         )!;
         expect(current.previousPath).toBe(record.previousPath);
+        if (pair.moved) {
+          const missing = `${generation}snapshots/before/mokly-generated/${pair.after}/${file}`;
+          expect((await request.get(missing)).status()).toBe(404);
+          await expect(
+            fs.stat(path.join(branchCopy.directory, new URL(missing).pathname)),
+          ).rejects.toMatchObject({ code: "ENOENT" });
+        }
         for (const [side, entryPath, text] of [
           ["before", pair.before, pair.text[0]],
           ["after", pair.after, pair.text[1]],
