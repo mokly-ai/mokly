@@ -85,7 +85,10 @@ for (const installed of [false, true]) {
       body: JSON.stringify(observation),
       contentType: "application/json",
     });
-    console.log("[mokly:sandbox-notice-probe]", JSON.stringify(observation));
+    expect(notices).toContainEqual({
+      text: "Blocked script execution in 'about:blank' because the document's frame is sandboxed and the 'allow-scripts' permission is not set.",
+      location: "about:blank",
+    });
     expect(browserErrors).toEqual([]);
   });
 }
