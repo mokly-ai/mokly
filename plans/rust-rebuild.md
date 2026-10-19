@@ -620,11 +620,11 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       check. Keep it outside every gate and CI job.
 - [x] Record the gate approvals from the Status section before adding the gates.
       Decision 2 = A on 2026-10-19 approves all six items recorded above.
-- [ ] After user approval, add `cargo xtask check-generated-types` and the
+- [x] After user approval, add `cargo xtask check-generated-types` and the
       Rust advisory audit to the Repository suite and CI.
   - [x] Add the Rust advisory audit to Repository, the daily dependency audit,
         and release verification, including reused CI evidence.
-  - [ ] Add the generated-TypeScript byte-identity gate.
+  - [x] Add the generated-TypeScript byte-identity gate.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
