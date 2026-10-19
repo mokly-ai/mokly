@@ -5,6 +5,9 @@ use std::error::Error;
 use std::io;
 use std::num::ParseIntError;
 
+#[cfg(windows)]
+use windows_sys::Win32::Foundation::{ERROR_CANT_RESOLVE_FILENAME, ERROR_STOPPED_ON_SYMLINK};
+
 use crate::error::{InternalError, SourceError};
 
 #[test]
@@ -31,6 +34,41 @@ fn filesystem_loop_and_overlong_name_codes_remain_visible() {
             source: io::Error::from_raw_os_error(raw),
         };
         assert_eq!(error.code(), expected);
+        assert!(!error.is_vanished());
+        assert_eq!(error.is_symlink_error(), raw == libc::ELOOP);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn permission_descriptor_and_device_errors_do_not_indicate_replacement() {
+    for raw in [
+        libc::EACCES,
+        libc::EMFILE,
+        libc::EIO,
+        libc::EINVAL,
+        libc::EINTR,
+    ] {
+        let error = SourceError::Io {
+            operation: "open resource stream",
+            path: "image.svg".into(),
+            source: io::Error::from_raw_os_error(raw),
+        };
+        assert!(!error.is_vanished());
+        assert!(!error.is_symlink_error());
+    }
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_resolution_failures_identify_stopped_symlinks() {
+    for raw in [ERROR_CANT_RESOLVE_FILENAME, ERROR_STOPPED_ON_SYMLINK] {
+        let error = SourceError::Io {
+            operation: "open resource stream",
+            path: "image.svg".into(),
+            source: std::io::Error::from_raw_os_error(raw as i32),
+        };
+        assert!(error.is_symlink_error());
         assert!(!error.is_vanished());
     }
 }

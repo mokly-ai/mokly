@@ -99,6 +99,11 @@ impl StylesheetBundler for CachedStylesheets {
         for path in bundle.inputs.keys().chain(bundle.dependency_digests.keys()) {
             stamp.file(self.tree.as_ref(), self.root.join(path));
         }
+        for asset in bundle.assets.values() {
+            for path in asset.input_paths() {
+                stamp.asset(self.tree.as_ref(), self.root.join(path));
+            }
+        }
         stamp.directories(self.tree.as_ref(), &self.root, &bundle.directories);
         let bytes =
             size_of::<Record>() + stylesheet_weight::bundle(&bundle) + stamp.retained_bytes();

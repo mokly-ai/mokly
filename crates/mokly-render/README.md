@@ -61,12 +61,14 @@ Storybook previews, and file membership in consumed-module directories.
 The pool restores compatible code before evaluation-only bundles across slots
 and recycling. Metadata invalidation still recomputes class maps before reusing
 an equivalent generation.
-Stylesheet reuse checks source digests, plugin dependency digests, and
-directory-glob membership. Empty directory recipes observe later additions.
+Stylesheet reuse checks source digests, opaque asset digests and resolved
+identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.
-Evicted stylesheet resources rebuild from that generation's captured bytes.
+Evicted stylesheet text rebuilds from that generation's captured parsed inputs.
+Opaque asset records contain metadata only. Delivery verifies a source stream
+against the generation's digest; assets never enter the stylesheet byte cache.
 Module stylesheet discovery uses an explicit stack and retains import order
 when it crosses shared dependencies or cycles.
 

@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use mokly_graph::error::Result;
 use mokly_graph::workers::{DocumentWorker, RenderWorkers, RenderWorkersMock, ValidatedView};
 use mokly_sidecar::workers::ClockMock;
+use mokly_source_interface::error::SourceError;
 use mokly_source_interface::tree::SourceTree;
 use unimock::{MockFn, Unimock, matching};
 
@@ -69,7 +70,13 @@ fn an_html_only_build_stops_queued_views_after_the_first_interrupt() {
         inner: Arc::new(Unimock::new(())),
         cancellation: cancellation.clone(),
     };
-    assert!(tree.read(Path::new("/repo/later.screen.html")).is_err());
+    let path = Path::new("/repo/later.screen.html");
+    assert!(
+        matches!(tree.read(path), Err(SourceError::Cancelled { path: captured }) if captured == path)
+    );
+    assert!(
+        matches!(tree.open_stream(path), Err(SourceError::Cancelled { path: captured }) if captured == path)
+    );
     assert!(
         cancellation.interrupt(),
         "the second signal requests an immediate exit"

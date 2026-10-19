@@ -24,7 +24,7 @@ entry and stylesheet root. Config-relative stylesheet paths normalize dot
 segments inside `repoRoot`. It renders no document. Each plan carries
 a route and the document node's input hash, which is the public
 `documentKey`. Stylesheet dependency edits recompute their bundles. Equal
-emitted CSS and asset bytes preserve document keys. `dyn RenderGeneration` supports on-demand rendering, a full
+emitted CSS and asset digests preserve document keys. `dyn RenderGeneration` supports on-demand rendering, a full
 build pass, resource reads, and closure queries. `render_props` validates a
 complete transient props map and uses the same composition and closure path.
 Its document does not replace the saved plan or catalogue props. The generation
@@ -76,13 +76,21 @@ JavaScript factories and selected base dependencies through that path.
 Serve must also apply the public policy's read-time confinement rules.
 
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
-storage. Digest-only reads memoize a hash without retaining source bytes.
+storage. `digest_unretained` memoizes an opaque input hash without retaining its payload.
 `SourceSnapshot::retained_bytes()` reports the retained private payload per path.
 The observation excludes map metadata and other owners of the same bytes.
-CSS asset preparation uses private reads and pins those asset bytes for the
-generation. The snapshot has no byte eviction policy. CSS bundles, stylesheet
-results, render artifacts, and static output can own additional asset copies;
-the snapshot counter does not measure those copies.
+Opaque CSS asset preparation retains source identities and digests. A shared
+asset path has one generated resource plan across stylesheet roots. Bundles,
+source snapshots, and render caches retain no opaque payload for preparation.
+`open_asset` supplies a `dyn AssetRead` stream. Its checked copy uses bounded
+chunks and fails with `GraphError::InputsChanged` if the captured digest or
+opened length differs. Consumers keep copied bytes private until verification
+succeeds. Static output retains one final immutable payload; Serve streams a
+verified temporary file. Parsed source snapshots have no byte eviction policy.
+Asset opens report `InputsChanged` for vanished paths, stopped symbolic-link
+resolution, and non-regular replacements. Other open errors keep their IO
+diagnostic. Checked reads retry interruption; explicit cancellation retains
+the cancelled runtime diagnostic.
 Entry-source keys and binary closure validation use digest reads. HTML and
 CSS closure parsing retains the bytes it needs. Resource hash reads require a
 confined regular target before opening it.

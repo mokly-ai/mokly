@@ -54,7 +54,10 @@ fn failure(path: &Path, source: io::Error) -> SourceError {
 }
 
 pub(crate) fn digest(path: &Path) -> Result<String> {
-    let mut file = open(path)?;
+    digest_opened(path, open(path)?)
+}
+
+pub(crate) fn digest_opened(path: &Path, mut file: File) -> Result<String> {
     let mut hash = Sha256::new();
     let mut chunk = [0u8; 64 * 1024];
     loop {

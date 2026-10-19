@@ -1,14 +1,15 @@
 //! Confined CSS assets and physical alias inventory.
 
 use mokly_model::routes;
-use mokly_source_interface::tree::FileKind;
+use mokly_source_interface::tree::{FileKind, Node};
 
 use crate::compiler::Preparation;
 use crate::error::{AssetFailure, CssError, Result};
 use crate::paths;
+use crate::types::OpaqueAsset;
 
 impl Preparation<'_> {
-    pub(crate) fn read(&self, path: &str) -> Option<Vec<u8>> {
+    fn confined_node(&self, path: &str) -> Option<Node> {
         let mut cursor = self.compiler.repo_root.clone();
         for part in path.split('/') {
             if matches!(part, "" | "." | "..") || part.contains(['\\', ':', '\0']) {
@@ -25,11 +26,19 @@ impl Preparation<'_> {
                 return None;
             }
         }
-        if !matches!(self.compiler.tree.project(&cursor), Ok(Some(node)) if node.kind == FileKind::File)
-        {
-            return None;
-        }
-        self.compiler.tree.read(&cursor).ok()
+        self.compiler
+            .tree
+            .project(&cursor)
+            .ok()?
+            .filter(|node| node.kind == FileKind::File)
+    }
+
+    pub(crate) fn read(&self, path: &str) -> Option<Vec<u8>> {
+        self.confined_node(path)?;
+        self.compiler
+            .tree
+            .read(&self.compiler.repo_root.join(path))
+            .ok()
     }
 
     pub(crate) fn alias(&mut self, path: &str, bytes: &[u8], importer: &str) {
@@ -87,15 +96,50 @@ impl Preparation<'_> {
                 ),
             });
         }
-        let bytes = self.read(&target).ok_or_else(failure)?;
         let asset_route = format!("assets/{target}");
-        self.result.inputs.insert(target.clone(), bytes.clone());
-        self.alias(&target, &bytes, stylesheet);
+        if !self.result.assets.contains_key(&asset_route) {
+            let node = self.confined_node(&target).ok_or_else(failure)?;
+            let digest = self
+                .compiler
+                .tree
+                .digest_unretained(&node.identity)
+                .ok()
+                .ok_or_else(failure)?;
+            let mut aliases = Vec::new();
+            if let Ok(identity) = node.identity.strip_prefix(&self.compiler.repo_root) {
+                let identity = identity.to_string_lossy().replace('\\', "/");
+                if identity != target {
+                    if !identity.split('/').any(|part| part == "node_modules") {
+                        self.result.repository_aliases.insert(target.clone());
+                        self.result.repository_aliases.insert(identity.clone());
+                    }
+                    self.result
+                        .imported_by
+                        .insert(identity.clone(), stylesheet.into());
+                    aliases.push(identity);
+                }
+            }
+            self.result.assets.insert(
+                asset_route.clone(),
+                OpaqueAsset {
+                    path: target.clone(),
+                    source: node.identity,
+                    digest,
+                    aliases,
+                },
+            );
+        }
+        if let Some(asset) = self.result.assets.get(&asset_route) {
+            for alias in &asset.aliases {
+                self.result
+                    .imported_by
+                    .insert(alias.clone(), stylesheet.into());
+            }
+        }
         self.result
             .imported_by
-            .entry(target.clone())
+            .entry(target)
             .or_insert_with(|| stylesheet.into());
-        self.result.assets.insert(asset_route.clone(), bytes);
         Ok(routes::relative(&self.result.route, &asset_route).replace("%40", "@") + suffix)
     }
 }

@@ -5,9 +5,10 @@ use std::io;
 use std::path::Path;
 
 use mokly_source_interface::error::{Result, SourceError};
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
 
-use crate::working_tree_read;
+use crate::{working_tree_read, working_tree_stream};
 
 /// Source tree backed by the host filesystem.
 pub struct WorkingTree;
@@ -136,6 +137,14 @@ impl SourceTree for WorkingTree {
             }
         }
         Ok(children)
+    }
+
+    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
+        working_tree_stream::open(path)
+    }
+
+    fn digest_unretained(&self, path: &Path) -> Result<String> {
+        working_tree_stream::digest(path)
     }
 
     fn digest(&self, path: &Path) -> Result<String> {

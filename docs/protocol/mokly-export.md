@@ -150,6 +150,10 @@ Changes; Serve's watcher ignores the same paths.
    An unreadable input or directory has a fixed unreadable marker. Catalogue
    discovery and validation report required-input failures first. An unreadable
    excluded input does not fail the fingerprint check unless its marker changes.
+   Opaque CSS assets keep their first captured digest without retaining their
+   payload during preparation. Delivery copies through bounded chunks and
+   checks that digest before admitting final immutable output bytes. A mismatch
+   is an input change; it cannot replace the baseline with a later digest.
    Before installation, compare selected root membership, unreadable markers,
    resolved identities, and live streaming digests with the captured values.
    This recheck reads no file bodies for parsing or delivery. A change from a

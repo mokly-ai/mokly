@@ -226,7 +226,13 @@ fn shared_css_keeps_each_delivery_roots_relative_asset_urls() {
     let (generation, cache) =
         support::prepare_with_inputs(directory.path(), 2 * 1024 * 1024, 1, inputs);
     let generation = generation.unwrap();
-    assert_eq!(cache.stats().entries, 3);
+    assert_eq!(cache.stats().entries, 2);
+    assert_eq!(generation.resource_routes().len(), 3);
+    assert_eq!(
+        generation.resource("assets/assets/a.png").unwrap().unwrap(),
+        b"opaque"
+    );
+    assert_eq!(cache.stats().entries, 2);
     for (route, expected) in [
         ("styles/src/a.mockup.tsx.css", "../../assets/assets/a.png"),
         (

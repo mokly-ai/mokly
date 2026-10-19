@@ -6,6 +6,7 @@ use std::sync::{Arc, Weak};
 
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
+use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::error::Result;
@@ -107,6 +108,12 @@ fn complete(views: usize, total: usize, retained: usize, encoded: usize) {
 }
 
 impl GeneratedResources for CapturedGeneration {
+    fn open_asset(&self, route: &str) -> Result<Option<Box<dyn AssetRead>>> {
+        self.source.open_asset(route)
+    }
+    fn contains_resource(&self, route: &str) -> Result<bool> {
+        self.source.contains_resource(route)
+    }
     fn resource(&self, route: &str) -> Result<Option<Vec<u8>>> {
         if let Some(style) = self
             .styles

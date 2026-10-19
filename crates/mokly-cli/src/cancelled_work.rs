@@ -1,6 +1,5 @@
 //! Cancellation checkpoints at source IO and between independently scheduled views.
 
-use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -10,9 +9,11 @@ use mokly_graph::error::{GraphError, Result};
 use mokly_graph::workers::{ArtifactWorker, DocumentWorker, RenderWorkers, ValidatedView};
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
+use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::cancellation::Cancellation;
+use crate::cancelled_stream::CancellableStream;
 
 /// Source operations stop at their next boundary after interruption.
 pub struct CancellableTree {
@@ -25,11 +26,7 @@ pub struct CancellableTree {
 impl CancellableTree {
     fn check(&self, path: &Path) -> mokly_source_interface::error::Result<()> {
         if self.cancellation.requested() {
-            Err(SourceError::Io {
-                operation: "cancelled",
-                path: path.into(),
-                source: io::Error::from(io::ErrorKind::Interrupted),
-            })
+            Err(SourceError::Cancelled { path: path.into() })
         } else {
             Ok(())
         }
@@ -46,6 +43,20 @@ impl SourceTree for CancellableTree {
     fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
         self.check(path)?;
         self.inner.read_public(path)
+    }
+    fn open_stream(
+        &self,
+        path: &Path,
+    ) -> mokly_source_interface::error::Result<Box<dyn SourceStream>> {
+        self.check(path)?;
+        Ok(Box::new(CancellableStream {
+            inner: self.inner.open_stream(path)?,
+            cancellation: self.cancellation.clone(),
+        }))
+    }
+    fn digest_unretained(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
+        self.check(path)?;
+        self.inner.digest_unretained(path)
     }
     fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
         self.check(path)?;

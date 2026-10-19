@@ -94,6 +94,9 @@ fn presentation(error: &GraphError) -> String {
         GraphError::Runtime { source } => source.message.clone(),
         GraphError::Html { source } => html(source),
         GraphError::Css { source } => css(source),
+        GraphError::InputsChanged { path } => {
+            format!("Source changed during delivery: {}", path.display())
+        }
         GraphError::Internal(source) => source.to_string(),
     }
 }

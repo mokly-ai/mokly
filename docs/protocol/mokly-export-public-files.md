@@ -6,10 +6,11 @@ Continuation of [Static Build](./mokly-export.md).
 
 ## Output Inventory
 
-`build` trusts only the files of its own render: the rendered views, the
-pages, the document scheme files, the document resources of the closure, and the
-bundled stylesheets and assets, all taken from the render cache. It never
-walks a directory on disk to find output, and nothing on disk is read back.
+`build` selects output from its render generation: rendered views, pages,
+document scheme files, document resources of the closure, bundled stylesheets,
+and opaque asset plans. It takes rendered documents and bundled CSS from the
+render cache and captures opaque assets through digest-checked streams. It
+never scans an output directory to find files or reads installed output back.
 Entry segments such as `coverage`, `dist`, `node_modules`, and `README` do not
 make those files private. Ancestor directories are derived from that set to
 reach exact members, not to admit siblings or a whole subtree. The catalogue
@@ -31,9 +32,10 @@ to add a file to the inventory.
 ## Public Files And Package Boundary
 
 Write every rendered HTML document, bundled stylesheet, and opaque asset
-beneath `static/mokly-generated/` from the render cache's bytes. Copy only the
-authored `assetClosure` beneath `static/`, keeping its repository-relative
-paths. No stale output and no unreferenced authored file participates.
+beneath `static/mokly-generated/`. Use render-cache bytes for HTML and CSS,
+and verified immutable captures for opaque assets. Copy only the authored
+`assetClosure` beneath `static/`, keeping its repository-relative paths.
+No stale output and no unreferenced authored file participates.
 Imported CSS and PostCSS sources stay private; scoped npm asset URLs are
 validated against the same inventory. Keep relative resource and document
 links and verify their transitive HTML and CSS dependencies, including fonts,

@@ -124,6 +124,8 @@ pub mod projection_detail;
 
 pub mod projection_removed;
 
+mod git_asset_io;
+
 mod capture_annotations;
 mod capture_usage;
 mod capture_weight;

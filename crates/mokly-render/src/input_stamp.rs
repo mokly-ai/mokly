@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use mokly_css::dependencies::DirectoryDependency;
-use mokly_source_interface::tree::{FileKind, SourceTree};
+use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::error::RenderError;
 use crate::postcss_scan::Scan;
@@ -13,6 +13,7 @@ use crate::postcss_scan::Scan;
 pub(crate) struct InputStamp {
     pub(crate) memberships: BTreeMap<PathBuf, Option<BTreeSet<PathBuf>>>,
     pub(crate) files: BTreeMap<PathBuf, Option<String>>,
+    pub(crate) assets: BTreeMap<PathBuf, Option<(Node, String)>>,
     pub(crate) directories: BTreeMap<(PathBuf, String), Option<Vec<PathBuf>>>,
 }
 
@@ -55,12 +56,32 @@ impl InputStamp {
                     })
             })
             .sum();
-        (files + directories + memberships).saturating_mul(2)
+        let assets: usize = self
+            .assets
+            .iter()
+            .map(|(path, stamp)| {
+                path.capacity()
+                    + size_of_val(stamp)
+                    + stamp
+                        .as_ref()
+                        .map_or(0, |(node, hash)| node.identity.capacity() + hash.capacity())
+            })
+            .sum();
+        (files + directories + memberships + assets).saturating_mul(2)
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
         let hash = tree.digest(&path).ok();
         self.files.insert(path, hash);
+    }
+
+    pub(crate) fn asset(&mut self, tree: &dyn SourceTree, path: PathBuf) {
+        let stamp = tree.project(&path).ok().flatten().and_then(|node| {
+            tree.digest_unretained(&node.identity)
+                .ok()
+                .map(|hash| (node, hash))
+        });
+        self.assets.insert(path, stamp);
     }
 
     pub(crate) fn directories(
@@ -98,6 +119,9 @@ impl InputStamp {
         for path in self.files.keys() {
             result.file(tree, path.clone());
         }
+        for path in self.assets.keys() {
+            result.asset(tree, path.clone());
+        }
         let mut scan = Scan::default();
         for (path, pattern) in self.directories.keys() {
             let files = scan
@@ -113,3 +137,7 @@ impl InputStamp {
         result
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/asset_stamp_tests.rs"]
+mod asset_stamp_tests;

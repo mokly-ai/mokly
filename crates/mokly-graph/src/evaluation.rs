@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use crate::asset_delivery::AssetRead;
 use crate::cache::Artifact;
 use crate::closure::{ClosureBuilder, GeneratedResources};
 use crate::error::{GraphError, Result, invalid};
@@ -10,7 +11,18 @@ use crate::session::Session;
 use crate::workers::{DocumentWorker, ValidatedView};
 
 impl GeneratedResources for Session {
+    fn open_asset(&self, route: &str) -> Result<Option<Box<dyn AssetRead>>> {
+        self.open_asset_input(route)
+    }
+    fn contains_resource(&self, route: &str) -> Result<bool> {
+        Ok(self.state.resources.contains_key(route))
+    }
+
     fn resource(&self, route: &str) -> Result<Option<Vec<u8>>> {
+        if let Some(mut asset) = self.open_asset(route)? {
+            return Ok(Some(asset.read_bytes()?));
+        }
+
         let Some(plan) = self.state.resources.get(route) else {
             return Ok(None);
         };
@@ -21,15 +33,7 @@ impl GeneratedResources for Session {
             Ok(bundle) => bundle,
             Err(source) => return Err(GraphError::Css { source }),
         };
-        let bytes = if let Some(asset) = &plan.asset {
-            bundle
-                .assets
-                .get(asset)
-                .cloned()
-                .ok_or_else(|| invalid(route, "asset disappeared from its stylesheet recipe"))?
-        } else {
-            bundle.css.into_bytes()
-        };
+        let bytes = bundle.css.into_bytes();
         self.state.cache.insert(
             plan.key.clone(),
             Arc::new(Artifact {

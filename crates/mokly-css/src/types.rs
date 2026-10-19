@@ -1,6 +1,7 @@
 //! Stylesheet delivery requests, results, and the consumer PostCSS boundary.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
 
 use crate::dependencies::{DirectoryDependency, PluginInput};
 use crate::error::Result;
@@ -18,6 +19,26 @@ pub struct StylesheetRoot {
     pub local_css: bool,
 }
 
+/// Opaque resource identity; no payload is retained during stylesheet preparation.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct OpaqueAsset {
+    /// Logical repository-relative input path.
+    pub path: String,
+    /// Confined source-tree identity captured during preparation.
+    pub source: PathBuf,
+    /// SHA-256 of the generation's exact input bytes.
+    pub digest: String,
+    /// Additional physical input names that retain source protection and invalidation.
+    pub aliases: Vec<String>,
+}
+
+impl OpaqueAsset {
+    /// Logical and physical source input names, without duplicate asset payloads.
+    pub fn input_paths(&self) -> impl Iterator<Item = &String> {
+        std::iter::once(&self.path).chain(&self.aliases)
+    }
+}
+
 /// Fully prepared stylesheet bundle and private source inventory.
 #[derive(Clone, Debug)]
 pub struct Bundle {
@@ -25,11 +46,11 @@ pub struct Bundle {
     pub route: String,
     /// Normalized CSS with one final LF.
     pub css: String,
-    /// Generated asset routes and exact opaque bytes.
-    pub assets: BTreeMap<String, Vec<u8>>,
+    /// Generated asset routes and digest-only source identities.
+    pub assets: BTreeMap<String, OpaqueAsset>,
     /// Path-scoped class exports, supplied to the sidecar before evaluation.
     pub css_modules: BTreeMap<String, BTreeMap<String, String>>,
-    /// Source and asset bytes used by the graph key, keyed by logical path.
+    /// Parsed CSS source bytes used by the graph key, keyed by logical path.
     pub inputs: BTreeMap<String, Vec<u8>>,
     /// Importing stylesheet for each protected source and asset.
     pub imported_by: BTreeMap<String, String>,
