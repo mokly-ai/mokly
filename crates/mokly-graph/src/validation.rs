@@ -49,6 +49,7 @@ pub(crate) fn links(session: &Session, links: &[Reference]) -> Result<()> {
                     ),
                 ));
             }
+            session.state.cache.insert(plan.key.clone(), artifact);
         }
     }
     Ok(())
@@ -103,3 +104,7 @@ pub(crate) fn completed(
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "_tests_/validation_cache_tests.rs"]
+mod validation_cache_tests;

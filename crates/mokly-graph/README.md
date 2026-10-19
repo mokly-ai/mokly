@@ -52,6 +52,9 @@ when a prop reaches it through another component.
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
+Cross-view anchor checks retain successful destination renders in this same
+bounded cache. Repeated links reuse those documents. Each requested fragment
+is still checked in every destination view, including cache hits.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
 validation. Both sides require complete, valid closures. A missing referenced

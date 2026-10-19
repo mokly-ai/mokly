@@ -1804,6 +1804,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [ ] Measure `review.capture-side` retained and uncaptured views on the large
         fixture (M9 engine review 9 finding 1). Keep the capture bound and
         per-entry charges until the capacity measurements support a decision.
+  - [ ] Profile optimized capture throughput and remove repeated work without
+        changing the capture bound, entry charges, or preparation contracts.
+    - [x] Reuse anchor-check destination renders through the bounded cache.
+          Evidence: `.context/m14-capture/anchor-release-html/analysis.json`
+          and `.context/m14-capture/anchor-release-react/analysis.json`.
+    - [ ] Measure sidecar waits and capture encoding, then use bounded capture
+          batches on the existing render workers without changing retention order.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
