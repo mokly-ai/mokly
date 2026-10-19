@@ -199,5 +199,37 @@ for live selected comparisons, and add `&refresh=1` for an explicit refresh.
 The test fixture closes automatically. It permits watched edits and base-ref
 moves without sharing writable state with another test.
 
+### Viewer journeys on Serve
+
+`serve_comparison_ui.ts` holds the shared viewer actions. Its waits follow a
+selected comparison request through the redirect to its generation before UI
+deadlines apply. It also records requests to the stable endpoint and holds
+the HEAD renewal of a selected generation. `serve_changes_emulation.ts`
+rewrites the index body into a pending, preparing, or unavailable Changes
+state, the shape Serve writes before classification completes. Each step
+still arrives as a real watched publication, and Serve keeps no test seam.
+Specs that run the same comparison checks on the copied output and on Serve
+register them from a `*_cases.ts` module.
+
+A spec adds its own sources to both commits with
+`test.use({ comparisonSources: { add: hook } })`. The hook runs after the
+shared hooks; the option is unset by default. The object wrapper is needed
+because `test.use` reads a function value as a fixture.
+`tests/helpers/viewer_state_sources.ts` supplies `addViewerStateSources` and
+`viewerStatePaths` for the viewer-state journeys:
+
+| `viewerStatePaths` key | Entry and evidence                                                    |
+| ---------------------- | --------------------------------------------------------------------- |
+| `variantParent`        | `viewer/home`: unmodified screen parent with variants                 |
+| `quietScreenVariant`   | `viewer/home/empty`: unmodified screen variant                        |
+| `changedScreenVariant` | `viewer/home/error`: screen variant whose props changed               |
+| `removedScreenVariant` | `viewer/home/gone`: removed screen variant of the unmodified parent   |
+| `chip`                 | `viewer/chip`: unmodified component parent                            |
+| `plainChip`            | `viewer/chip/plain`: unmodified component variant                     |
+| `nightChip`            | `viewer/chip/night`: only its Dark views change, through a dark sheet |
+| `removedConsumer`      | `viewer/legacy`: removed screen that used Card, an affected consumer  |
+| `lightOnlyChanged`     | `viewer/pale`: light-only screen whose body changed                   |
+| `lightOnlyRemoved`     | `viewer/faded`: light-only removed screen                             |
+
 Branch-point copy setup and Serve comparison setup use the isolated
 180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.

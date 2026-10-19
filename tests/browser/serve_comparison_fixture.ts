@@ -12,6 +12,7 @@ import { branchPointPaths } from "../helpers/branch_point_sources.js";
 import {
   comparisonPaths,
   createComparisonCatalogue,
+  type ComparisonAdditions,
 } from "../helpers/comparison_catalogue.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
@@ -51,8 +52,13 @@ async function replaceSource(root: string, name: string, contents: string) {
   }
 }
 
-/** Real, private Changes state for viewer specs; no checkout history or mock data. */
-export async function serveComparisonCatalogue() {
+/**
+ * Real, private Changes state for viewer specs; no checkout history or mock
+ * data. `additions` adds a spec's own sources after the shared hooks.
+ */
+export async function serveComparisonCatalogue(
+  additions?: ComparisonAdditions,
+) {
   const root = await fs.mkdtemp(
     path.join(
       process.env["MOKLY_VERIFICATION_RESOURCE_ROOT"] ??
@@ -73,7 +79,10 @@ export async function serveComparisonCatalogue() {
     })());
   ownBrowserCleanup(close);
   try {
-    await createComparisonCatalogue(root, addComparisonFixtureSources);
+    await createComparisonCatalogue(root, async (directory, side) => {
+      await addComparisonFixtureSources(directory, side);
+      await additions?.(directory, side);
+    });
     const baseCommit = await git(root, "rev-parse", "fixture-base");
     const headCommit = await git(root, "rev-parse", "HEAD");
     const signal = AbortSignal.any([
