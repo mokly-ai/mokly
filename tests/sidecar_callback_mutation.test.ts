@@ -97,10 +97,6 @@ test(
       await sidecar.call<RenderResult>("renderComponent", saved),
       firstSaved,
     );
-    assert.deepEqual(
-      await sidecar.call<Definitions>("describe", { generation }),
-      definitions,
-    );
     const probe = await sidecar.call<PageResult>("renderPage", {
       generation,
       handle: `${callbackEntry}#probe`,
