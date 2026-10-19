@@ -4,6 +4,11 @@
  * change an entry between the two commits.
  */
 
+import {
+  scrollPaths,
+  scrollStylesheets,
+  writeScrollGroups,
+} from "./comparison_scroll_groups.js";
 import { write } from "./static_changes.js";
 
 type Side = "Before" | "After";
@@ -16,6 +21,7 @@ export const groupPaths = {
   currentDocument: "guides/terms",
   plainScreen: "screens/plain",
   plainComponent: "components/plain",
+  ...scrollPaths,
 } as const;
 
 /** The groups' stylesheet rules, which come before the catch-all rule. */
@@ -24,6 +30,7 @@ export const groupStylesheets = [
     match: "{screens,components}/plain/index.html",
     stylesheets: ["plain.css"],
   },
+  ...scrollStylesheets,
 ];
 
 /**
@@ -78,4 +85,5 @@ export async function writeGroups(root: string, side: Side): Promise<void> {
     "specs/components/plain.component.html",
     '---\ntitle: Plain\nelement: ui-plain\npropSchema: {type: object, additionalProperties: false, properties: {}}\n---\n<p class="plain">Plain component</p>',
   );
+  await writeScrollGroups(root, side);
 }
