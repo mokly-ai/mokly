@@ -67,7 +67,7 @@ for (const width of [390, 1280]) {
               .evaluate((element) => getComputedStyle(element).backgroundImage);
             const asset = /^url\("(.+)"\)$/.exec(background)![1]!;
             expect(asset).toContain(`${generation}snapshots/${side}/`);
-            expect(traffic.urls).toContain(asset);
+            await expect.poll(() => traffic.urls).toContain(asset);
             expect(
               (
                 await copiedBytes(request, branchCopy.directory, asset)

@@ -18,6 +18,7 @@ export const test = base.extend<
       const copy = await startComparisonStaticHost(
         AbortSignal.timeout(ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS),
         addBranchPointSources,
+        "browser-branch-point",
       );
       ownBrowserCleanup(copy.close);
       try {
