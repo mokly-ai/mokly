@@ -1374,10 +1374,12 @@ Tags: ui
           against ready included membership, and use UTF-16 source reason order.
           The orchestrator confirms that changed deployment identities are required.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
-    - [x] D1 viewer: read `reasons` strictly with their shape, order, and
-          membership fence; show them in Details before a comparison loads, once
+    - [x] D1 viewer: read `reasons` strictly with their shape and order; show
+          them in Details for a listed record before a comparison loads, once
           beside a loaded comparison; state the sentence of each reason kind,
           including `implementation`, in `mokly-component-workspace-design.md`.
+          Whether a reader also rejects a detail whose reasons disagree with
+          its index record waits for the round's decision.
     - [ ] Depict the reason sentences in the component explorer design, whose
           Details still read "Rendered output changed" and depict no
           `implementation` reason, after the round's design decision.
