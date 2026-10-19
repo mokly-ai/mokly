@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
 import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
+import { expectBadgeAffected } from "./branch_point_affected.js";
 import { expectComparisonFixture } from "./comparison_fixture_membership.js";
 import { expectMovedInputs } from "./moved_fixture_assertions.js";
 import { test } from "./serve_comparison_test.js";
@@ -94,6 +95,12 @@ test("shared Serve comparison fixture retains affected consumers and moved neste
   changes,
 }) => {
   await expectMovedInputs(request, changes.url);
+  const badge = readEntryDetail(
+    await (
+      await request.get("/mokly-viewer/entries/branch/consumers/badge.json")
+    ).json(),
+  );
+  expectBadgeAffected(badge.workspace!.affected);
   const card = readEntryDetail(
     await (
       await request.get(`/mokly-viewer/entries/${changes.paths.component}.json`)

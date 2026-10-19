@@ -6,6 +6,7 @@ import { expect } from "@playwright/test";
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
 import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
+import { expectBadgeAffected } from "./branch_point_affected.js";
 import { branchPointCases } from "./branch_point_delivery_cases.js";
 import { branchPointPaths, test } from "./branch_point_test.js";
 import {
@@ -51,20 +52,7 @@ for (const width of [390, 1280]) {
             ).toString(),
           ),
         );
-        const affected = detail.workspace!.affected.map(
-          (consumer) => consumer.entryPath,
-        );
-        expect(affected).toEqual(
-          expect.arrayContaining([
-            branchPointPaths.movedConsumer,
-            branchPointPaths.movedScreen,
-          ]),
-        );
-        for (const previous of [
-          branchPointPaths.previousConsumer,
-          branchPointPaths.previousScreen,
-        ])
-          expect(affected).not.toContain(previous);
+        expectBadgeAffected(detail.workspace!.affected);
       }
       for (const pair of scenario.pairs) {
         const record = entries.find((entry) => entry.path === pair.after)!;
