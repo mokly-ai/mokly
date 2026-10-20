@@ -1384,6 +1384,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         Evidence: `.context/rust-rebuild/delegation/m8-browser/report-9.md`.
   - [ ] Complete the 174-case M9/M10 port in `sweeps/m8-browser.md` and
         `next-assignments.md` item 7b.
+        Cold base-source preparation uses real offline builds in
+        `tests/static_cold_base_tiers.test.ts` for all three dependency tiers.
+        Evidence: `.context/cold-base-tiers/inventory.md` and `.context/cold-base-tiers/`.
 - [ ] Add the stylesheet attribution tests over the design catalogue that
       `mokly-component-design.md` and `mokly-design-component-attribution.md`
       define: the nine shared sheets per scenario, the pinned rendered
