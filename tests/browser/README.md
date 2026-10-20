@@ -92,7 +92,8 @@ copied output; the source repository and first output are removed.
 The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
-panes contract requires, for each host that presents panes.
+panes contract requires, on the copied output and in an embedded viewer
+through both frame adapters.
 
 Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
 removed record's `snapshotId`. Use the canonical `/view/{path}/` route and

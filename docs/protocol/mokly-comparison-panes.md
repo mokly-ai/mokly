@@ -202,8 +202,8 @@ every delivery shares. Unit tests cover the controllers and the loader.
   generation; no pane loads a snapshot as its `src`.
 - A document or host that asks for smooth scrolling still moves with the
   shared offset at once, in a stack and in Side by side.
-- Links and forms inside a pane stay inert in Serve, a static build and an
-  embedded viewer, including while a slow resource holds back its load.
+- Links and forms inside a pane stay inert, including while a slow resource
+  holds back its load.
 - Ready waits for every selected document; a pane document that cannot be
   presented renders the failure copy, reaches an embedded host's error event,
   and recovers with Try again; Refresh presents the documents again; the
