@@ -1,9 +1,10 @@
 # Shared Browse shell
 
-## Delivery Status
+Serve, the static build, and React hosts render this same tree in the
+browser.
 
-The React Browse shell plan records
-how Serve, export and the public viewer converged on this tree.
+## Branch name
+
 The exported navigation fallback retains the known branch name.
 The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
 keeps the sentence during loading; an index without a `base` omits it.
