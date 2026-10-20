@@ -2613,6 +2613,22 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     that comparison when follow-up 1 above settles: one changed and one
     affected view, with the inventories and the matrix snapshots. The new
     mockup is Large.
+  - [x] Hub review of `rebuild/defaults-viewer`, fixed on 2026-10-20 in
+        `rebuild/defaults-viewer-fix1`: finding 2, an expanded step frame
+        left a page scrim (`1ea520af`, B); finding 3, unused lookup
+        operations (`fe3624df`, B, except `HistoricalManifest`); and
+        finding 4, the non-goal exception (`e98815dc`, A). The orchestrator
+        also assigned three problems outside its scope: the design's changed
+        component line now follows the Status Lines rule (`69ffa907`), the
+        catalogue column stays at 900px (`eeaea061`), and the dead workspace
+        path for a catalogue without published records is gone (`37e596df`).
+  - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
+    user: `HistoricalManifest` has no user and no published export since
+    `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still
+    names it as a released type. Severity Low, effort Small. Recommended: B,
+    delete the alias and list `Manifest`, `ManifestV10`, and
+    `HistoricalManifest` with the names that `@mokly/viewer/data` stops
+    exporting. Option A keeps the alias and corrects only the release note.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
