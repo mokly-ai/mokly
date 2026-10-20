@@ -171,6 +171,7 @@ impl Checker<'_> {
             .attributes
             .iter()
             .find(|(name, _)| name.as_ref() == b"slot")
+            .filter(|_| ignore_attribute_allowed(&name, "slot"))
             .map(|(_, value)| String::from_utf8_lossy(&value.value).into_owned())
             .unwrap_or_else(|| "children".into());
         self.slot_content(&slot_name, tag.span.start);

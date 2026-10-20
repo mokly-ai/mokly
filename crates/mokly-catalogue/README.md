@@ -85,6 +85,7 @@ provides an empty inventory for injected adapters and tests.
 HTML checks cover forbidden and unknown elements, reserved names, slots,
 component cycles, template references, and unused props. Unknown ignore-wrapper
 attributes warn once per shared body and attribute. Their values are ignored.
+They do not validate logical links or select component slots.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried

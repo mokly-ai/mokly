@@ -2218,6 +2218,14 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       re-review once, and report the rest.
   - [ ] N1: settle unsafe integer schema keyword precision. Severity Medium,
         effort Large. Recommended B: round schema integers with a warning.
+  - Follow-up: filter ignore-wrapper attributes at both HTML parsing boundaries.
+    Effort Large. Covers defaults review finding 1. No previous examples found.
+    The focused repair applies item 16 B before link and slot consumers.
+    Evidence: `.context/defaults-cli/review-1.md`.
+  - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
+    Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
+  - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
+    `0 != 1` on Node 22.14. Separate Node-floor branch.
   - Outside the scope: `tests/serve_process.test.ts`, "the verification registry
     names Serve's group until it drains", failed with
     `Verification owner {id} has no parent`. The isolated rerun passed.
