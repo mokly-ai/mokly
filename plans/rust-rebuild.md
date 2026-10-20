@@ -2550,6 +2550,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Evidence, exact trees, source reports, and final remote observations:
       `.context/ci-shard-balance/timings.md`, `partition.json`, and `remote-final.log`.
 
+- [x] CI round 5 audit follow-up (2026-10-20): update `rustls-webpki` from
+      0.103.15 to 0.103.16 for newly published RUSTSEC-2026-0382. The live
+      remote audit reproduced the certificate-verification advisory. Keep
+      every exception and unrelated lockfile edge unchanged. The live audit
+      and publication/TLS tests pass with the patch.
+      Evidence: `.context/ci-shard-balance/webpki-advisory.md`,
+      `webpki-dependents.log`, and `webpki-green.log`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
