@@ -44,17 +44,17 @@ test(
         path.join(directory, "package.json"),
         JSON.stringify({
           name,
-          version: "0.14.0",
+          version: "0.15.0",
           ...manifest,
         }),
       );
       return directory;
     };
-    await writePackage("@mokly/viewer", {});
+    await writePackage("@mokly/viewer", { version: "0.6.0" });
     await writePackage("@mokly/mokly", {
-      dependencies: { "@mokly/viewer": "0.14.0" },
+      dependencies: { "@mokly/viewer": "0.6.0" },
       optionalDependencies: Object.fromEntries(
-        NATIVE_TARGETS.map(({ name }) => [name, "0.14.0"]),
+        NATIVE_TARGETS.map(({ name }) => [name, "0.15.0"]),
       ),
     });
     for (const target of NATIVE_TARGETS) {
@@ -112,7 +112,7 @@ test(
     const packages = object(lock.packages);
     for (const target of NATIVE_TARGETS) {
       const entry = object(packages[`node_modules/${target.name}`]);
-      assert.equal(entry.version, "0.14.0");
+      assert.equal(entry.version, "0.15.0");
       assert.match(String(entry.resolved), /^file:tooling\//);
       const installed = path.join(
         consumer,

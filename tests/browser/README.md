@@ -302,6 +302,7 @@ To stage a Changes completion for a Usage-focus check, first use
 `await changes.moveBase("head")`, then `await changes.moveBase("base")`.
 The ref changes preserve the current source and documents. A caller can
 keep its browser page and focused link mounted during both publications.
+`serve_usage_focus.spec.ts` follows this recipe.
 
 The `changed` screen has a matched `.accent` rule from `theme.css`, an
 unresolved root rule, and native component usage. Read `comparisonUrl` from
@@ -318,7 +319,9 @@ deadlines apply. It also records requests to the stable endpoint and holds the
 HEAD renewal of a selected generation. A held renewal's release waits until
 the browser ended the request and the page rendered. Its outcomes report
 whether the page received each response or cancelled the request first.
-`serve_changes_emulation.ts` rewrites the index body into a pending,
+`expectCardPane` checks one pane of a Card comparison by its heading and by
+the `.accent` colour of its side, because Card's own heading is the same on
+both sides. `serve_changes_emulation.ts` rewrites the index body into a pending,
 preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
 publication, and Serve keeps no test seam. `serve_generation_removal.ts`

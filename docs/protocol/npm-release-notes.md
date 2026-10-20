@@ -101,6 +101,10 @@ helpers. Import `ColorScheme`, `Viewport`, and `MoklyVersionError` from
 `validateComponentViews`, `validateControlledValues`, `validateControls`, and
 `validateResourcePath`. These have no public replacement.
 
+The entry also removes `CssPageEvidence`, `CssRuleAttribution`,
+`DependencyAnalysis`, `InsertedComponentStylesheet`, `PageResourceEvidence`,
+`ResourceEvidence`, `cssAnalysis`, and `mergeCssAnalysis`.
+
 ## Breaking Path Identity Release Note
 
 The path identity upgrade removes `id`, `navPath`, `entries`, and `entriesDir`.

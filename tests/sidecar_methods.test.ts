@@ -16,7 +16,7 @@ import {
 
 test("sidecar bundles, describes and renders every entry kind", async (context) => {
   const sidecar = startSidecar(context);
-  assert.deepEqual(await sidecar.call("hello"), { version: "0.14.0" });
+  assert.deepEqual(await sidecar.call("hello"), { version: "0.15.0" });
   const bundle = await sidecar.call<BundleResult>("bundle", bundleParams());
   assert.match(bundle.generation, /^[a-f0-9]{64}$/);
   assert.ok(

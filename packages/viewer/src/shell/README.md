@@ -290,7 +290,9 @@ derived from it: `use_workspace_data.ts` exposes loading until the routed
 detail is accepted, and the failed state with retry after a failed or rejected
 load, rather than publishing a partial or false-empty list. It keeps one
 entry-owned workspace object, so a publication that replaces the detail keeps
-loaded usage and local editor state.
+loaded usage and local editor state. `workspace_usage.tsx` keys each Usage row
+by its entry and removal state only, so a publication that changes a row's
+comparison eligibility keeps its link element and the focus on it.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
 from the stub's origin, shows the loading, failed, and version states, and

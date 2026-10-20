@@ -4,12 +4,14 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Workflow Boundary
 
-`.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
-read-only repository contents permission and cancels superseded workflow runs.
+`.github/workflows/ci.yml` runs on pull requests, pushes to `main`, and manual
+dispatch for any branch. It has read-only repository contents permission and
+cancels superseded workflow runs.
 The repository job is every verification job's shared prerequisite and runs the
 audit-first repository suite. The
 [baseline audit contract](./dependency-audit-baseline.md) sets
-`DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests and every push. It
+`DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests, every push,
+and every manual dispatch. It
 sets `strict` for same-repository dependency update and Release Please pull
 requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`. Fork
 branch names and labels cannot select strict mode.

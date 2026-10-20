@@ -12,6 +12,8 @@ import {
   type Request,
 } from "@playwright/test";
 
+import { accentColor } from "../helpers/comparison_catalogue.js";
+
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 
 /** The stable endpoint of Serve's selected comparisons. */
@@ -197,6 +199,25 @@ export async function expectPresentedPane(
   await expect(frame).toHaveAttribute("srcdoc", /\S/u);
   await expect(frame).not.toHaveAttribute("src", /.*/u);
   await expect(frame).toHaveAttribute(PANE_SOURCE, source);
+}
+
+/**
+ * Expect the `side` pane of a Card comparison against the fixture's own base
+ * to show `heading` and the `.accent` colour of that side's commit. Card's
+ * own heading is the same in both commits, so only the colour proves which
+ * version the pane shows.
+ */
+export async function expectCardPane(
+  page: Page,
+  side: "after" | "before",
+  heading: string,
+): Promise<void> {
+  const frame = page.frameLocator(`.mb-pane--${side} iframe`);
+  await expect(frame.locator("h2")).toHaveText(heading);
+  await expect(frame.locator(".accent")).toHaveCSS(
+    "color",
+    accentColor[side === "before" ? "Before" : "After"],
+  );
 }
 
 /** The generation directory that owns one presented snapshot address. */

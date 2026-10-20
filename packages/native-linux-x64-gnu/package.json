@@ -1,6 +1,6 @@
 {
   "name": "@mokly/native-linux-x64-gnu",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Mokly native CLI for linux-x64-gnu.",
   "license": "MIT",
   "os": [
