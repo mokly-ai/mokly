@@ -2225,6 +2225,20 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         2026-10-20: the restored removed-variant journey keeps its parent
         unchanged (`bd05ab75`, B), and the poll comment names no duration
         (`437154a8`, A).
+  - [x] M10 Serve and moved rows reviews 5 and 6: comments and README text
+        that described a failed advertised renewal as Serve's collection, and
+        a README clause that gave the 404 rule a wrong scope. Fixed by
+        `814fc1b1` and `0571ba15`.
+  - M10 Serve and moved rows review 5, open finding 15 for the user: the
+    emulated collection of a selected generation starts only at its renewal,
+    so a pane document request before the renewal still reaches the old
+    generation. Severity Low, effort Small. Recommended: B, collect a selected
+    generation at once and arm the helper after every pane document loaded.
+  - M10 Serve and moved rows review 6, open finding 18 for the user: the
+    helper module, function, and interface still say "collection", although
+    the removed-preview journeys use them only to fail a renewal. Severity
+    Low, effort Small. Recommended: A, keep the names; option C, one helper
+    per generation kind, fits the change for finding 15.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2236,6 +2250,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Separate branch.
+    - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
+      `branch/parent`, so no journey ports the old step that opened the
+      removed sibling through a container row. Separate branch.
+    - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
+      keys the shared case names, but no key equals a name in
+      `tests/fixtures/branch_point_cases.json`. Separate branch.
+    - `tests/browser/serve_generation_collection.ts:63-80`: when the first
+      stable-endpoint request after the failed renewal already asks for a
+      refresh, the next plain request also becomes a refresh. No journey does
+      this. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
