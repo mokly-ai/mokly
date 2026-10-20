@@ -252,8 +252,10 @@ styles. `workspace_stylesheet_list.tsx` renders each file once with its
 sentences and selector lists nested in its item, like the approved card.
 `evidence_details.tsx` holds the shared comparison heading and the files and
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
-same markup; `workspace_evidence.tsx` keeps ignored content and the status
-lines separate. The heading names the branch point only when its name is
+same markup. `workspace_evidence.tsx` follows the designs' order: the reason
+sentences right after the heading and a moved entry's earlier side, then the
+files and exclusions, the paired prop values, and the changed components, with
+ignored content and the status lines last. The heading names the branch point only when its name is
 known; an empty or blank name leaves the heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its
 Details keep the rest of the evidence without that sentence. `workspace_data.ts`

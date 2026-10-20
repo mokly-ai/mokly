@@ -14,8 +14,10 @@ import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
 
 /**
- * Comparison facts for the current entry and optional loaded comparison. A
- * moved entry names the path its earlier side comes from.
+ * Comparison facts for the current entry and optional loaded comparison, in
+ * the designs' order: the branch point and, for a moved entry, the path its
+ * earlier side comes from; one sentence per reason; the changed and excluded
+ * stylesheets; the paired prop values; then the changed components used here.
  */
 export function WorkspaceEvidence({
   data,
@@ -57,12 +59,18 @@ export function WorkspaceEvidence({
               before the move.
             </p>
           ) : null}
-          {data.relatedComponents.map((component) => (
-            <p key={component.path}>
-              Changed component:{" "}
-              <a href={viewHref(component.path)}>{component.title}</a>
-            </p>
+          {evidence.reasons.map((reason, index) => (
+            <Reason key={`${reasonKey(reason)}/${index}`} reason={reason} />
           ))}
+          <StylesheetDetails
+            reasons={evidence.reasons}
+            resources={evidence.resourceViews}
+            subject={
+              data.entry.kind === "component"
+                ? { kind: "component", componentId: evidence.componentId }
+                : { kind: "screen" }
+            }
+          />
           {data.inputChanges
             .filter((item) => item.variantPath === variantPath)
             .map((change) => (
@@ -79,18 +87,12 @@ export function WorkspaceEvidence({
                 <pre>{propText(decodeProps(change.after))}</pre>
               </Fragment>
             ))}
-          {evidence.reasons.map((reason, index) => (
-            <Reason key={`${reasonKey(reason)}/${index}`} reason={reason} />
+          {data.relatedComponents.map((component) => (
+            <p key={component.path}>
+              Changed component:{" "}
+              <a href={viewHref(component.path)}>{component.title}</a>
+            </p>
           ))}
-          <StylesheetDetails
-            reasons={evidence.reasons}
-            resources={evidence.resourceViews}
-            subject={
-              data.entry.kind === "component"
-                ? { kind: "component", componentId: evidence.componentId }
-                : { kind: "screen" }
-            }
-          />
           {ignored.length ? (
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
