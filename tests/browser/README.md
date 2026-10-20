@@ -279,10 +279,13 @@ moves without sharing writable state with another test.
 `serve_comparison_ui.ts` holds the shared viewer actions. Its waits follow a
 selected comparison request through the redirect to its generation before UI
 deadlines apply. It also records requests to the stable endpoint and holds
-the HEAD renewal of a selected generation. `serve_changes_emulation.ts`
-rewrites the index body into a pending, preparing, or unavailable Changes
-state, the shape Serve writes before classification completes. Each step
-still arrives as a real watched publication, and Serve keeps no test seam.
+the HEAD renewal of a selected generation. A held renewal's release waits
+until the browser ended the request and the page rendered, and reports
+whether the page received the response or cancelled the request first.
+`serve_changes_emulation.ts` rewrites the index body into a pending,
+preparing, or unavailable Changes state, the shape Serve writes before
+classification completes. Each step still arrives as a real watched
+publication, and Serve keeps no test seam.
 Specs that run the same comparison checks on the copied output and on Serve
 register them from a `*_cases.ts` module. The copied output registers the
 alignment, input, and Scroll together memory cases in

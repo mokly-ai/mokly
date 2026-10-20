@@ -12,6 +12,8 @@ import {
   type Request,
 } from "@playwright/test";
 
+import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+
 /** The stable endpoint of Serve's selected comparisons. */
 export const SELECTED_ENDPOINT = "/mokly-viewer/diffs/review.json";
 
@@ -109,34 +111,72 @@ export function gate(): { promise: Promise<void>; resolve(): void } {
   return { promise, resolve };
 }
 
-/** Hold every renewal of a selected generation until the spec releases it. */
-export async function holdRenewal(page: Page): Promise<{
+/**
+ * What became of one held renewal: `delivered` when the page received its
+ * response, `cancelled` when the page ended it first, `pending` before then.
+ * Chromium reports `net::ERR_ABORTED` for every fetch HEAD, also one whose
+ * response the page read, so the failure text cannot tell these apart.
+ */
+export type RenewalOutcome = "cancelled" | "delivered" | "pending";
+
+/** Renewals of a selected generation that a spec holds and then releases. */
+export interface HeldRenewal {
+  /** Resolves when the first renewal is held. */
   arrived: Promise<void>;
-  finished: Promise<void>;
-  release(): void;
+  /**
+   * Deliver every held response, then wait until the browser ended each held
+   * request and the page rendered the outcome.
+   */
+  release(): Promise<void>;
+  /** Deliver every held response at once, for cleanup after a failure. */
+  unblock(): void;
+  /** How many renewals the page sent. */
   requests(): number;
-}> {
+  /** The outcome of each held renewal, in request order. */
+  outcomes(): RenewalOutcome[];
+}
+
+/** Hold every renewal of a selected generation until the spec releases it. */
+export async function holdRenewal(page: Page): Promise<HeldRenewal> {
   const arrived = gate();
-  const release = gate();
-  const finished = gate();
-  let requests = 0;
+  const released = gate();
+  const ended = endedRequests(page);
+  const held: Request[] = [];
+  const responded = new Set<Request>();
+  page.on("response", (response) => {
+    if (held.includes(response.request())) responded.add(response.request());
+  });
   await page.route(SELECTED_GENERATION, async (route) => {
     if (route.request().method() !== "HEAD") {
       await route.continue();
       return;
     }
-    requests++;
+    held.push(route.request());
     const response = await route.fetch();
     arrived.resolve();
-    await release.promise;
+    await released.promise;
+    // A request that the page cancelled can no longer be fulfilled.
     await route.fulfill({ response }).catch(() => undefined);
-    finished.resolve();
   });
   return {
     arrived: arrived.promise,
-    finished: finished.promise,
-    release: release.resolve,
-    requests: () => requests,
+    async release() {
+      released.resolve();
+      await expect
+        .poll(() => held.every((request) => ended.has(request)))
+        .toBe(true);
+      await passRenderingUpdates(page);
+    },
+    unblock: released.resolve,
+    requests: () => held.length,
+    outcomes: () =>
+      held.map((request) =>
+        !ended.has(request)
+          ? "pending"
+          : responded.has(request)
+            ? "delivered"
+            : "cancelled",
+      ),
   };
 }
 
