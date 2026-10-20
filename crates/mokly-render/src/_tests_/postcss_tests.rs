@@ -15,18 +15,27 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
     let reads = Arc::new(Mutex::new(Vec::new()));
     let captured = reads.clone();
     let files = BTreeMap::from([
-        ("/repo/inputs/one.txt", b"one".to_vec()),
-        ("/repo/inputs/.hidden.txt", b"hidden".to_vec()),
-        ("/repo/.context/exact.txt", b"exact".to_vec()),
+        (
+            Path::new("/repo/inputs/one.txt").to_owned(),
+            b"one".to_vec(),
+        ),
+        (
+            Path::new("/repo/inputs/.hidden.txt").to_owned(),
+            b"hidden".to_vec(),
+        ),
+        (
+            Path::new("/repo/.context/exact.txt").to_owned(),
+            b"exact".to_vec(),
+        ),
     ]);
     let projected = files.clone();
     let mock = Unimock::new((
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                let kind = if projected.contains_key(path.to_str().unwrap()) {
+                let kind = if projected.contains_key(path) {
                     Some(FileKind::File)
-                } else if matches!(path.to_str().unwrap(), "/repo/inputs" | "/repo/empty") {
+                } else if [Path::new("/repo/inputs"), Path::new("/repo/empty")].contains(&path) {
                     Some(FileKind::Directory)
                 } else {
                     None
@@ -67,7 +76,7 @@ fn explicit_inputs_and_directory_globs_keep_aliases_privacy_and_empty_watches() 
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
                 captured.lock().unwrap().push(path.to_owned());
-                Ok(files[path.to_str().unwrap()].clone())
+                Ok(files[path].clone())
             })),
     ));
     let report = |kind, path: &str| Dependency {
