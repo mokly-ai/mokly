@@ -1,171 +1,187 @@
 //! Local and global selector edits retain authored token spelling elsewhere.
 
-use std::result;
+use std::ops::Range;
 
-use cssparser::{ParseError, Parser, Token};
+use cssparser::Token;
 
 use crate::error;
 use crate::error::Result;
 use crate::rename::Renamer;
+use crate::token_tree::Tokens;
+
+/// A `:local(` or `:global(` colon start, function-token end, and block end.
+type Wrapper = (usize, usize, usize);
 
 impl Renamer<'_> {
+    /// Rename local classes and IDs; return the selector's single local class.
     pub(crate) fn selector(
         &mut self,
-        parser: &mut Parser<'_, '_>,
-        default_local: bool,
+        tokens: &Tokens<'_>,
+        range: Range<usize>,
+        local: bool,
     ) -> Result<Option<String>> {
-        let mut local = default_local;
-        let mut atoms = Vec::new();
-        while !parser.is_exhausted() {
-            let start = parser.position().byte_index();
-            let Ok(token) = parser.next_including_whitespace_and_comments().cloned() else {
-                break;
+        let mut pending = vec![Selector::new(range, local, None)];
+        while let Some(frame) = pending.last_mut() {
+            if tokens.next_significant(&mut frame.range.clone()).is_none() {
+                let own = if frame.atoms.len() == 1 {
+                    frame.atoms.pop().flatten()
+                } else {
+                    None
+                };
+                let wrapper = frame.wrapper;
+                pending.pop();
+                let Some(parent) = pending.last_mut() else {
+                    return Ok(own);
+                };
+                parent.atoms.push(wrapper.and(own));
+                if let Some(wrapper) = wrapper {
+                    self.unwrap(wrapper);
+                }
+                continue;
+            }
+            let Some(index) = tokens.next(&mut frame.range) else {
+                continue;
             };
-            let end = parser.position().byte_index();
-            match token {
+            let node = &tokens.nodes[index];
+            match &node.token {
                 Token::WhiteSpace(_) | Token::Comment(_) => {}
                 Token::Delim('.') => {
-                    let state = parser.state();
-                    let name_start = parser.position().byte_index();
-                    if let Ok(Token::Ident(name)) = parser.next().cloned() {
-                        if local {
-                            self.identifier(
-                                &name,
-                                name_start,
-                                parser.position().byte_index(),
-                                false,
-                            );
-                            self.defined.insert(name.to_string());
-                            atoms.push(Some(name.to_string()));
-                        } else {
-                            atoms.push(None);
-                        }
+                    let mut lookahead = frame.range.clone();
+                    let class = tokens
+                        .next_significant(&mut lookahead)
+                        .map(|index| &tokens.nodes[index]);
+                    let Some((Token::Ident(name), end)) =
+                        class.map(|class| (&class.token, class.end))
+                    else {
+                        frame.atoms.push(None);
+                        continue;
+                    };
+                    frame.range = lookahead;
+                    if frame.local {
+                        self.identifier(name, node.end, end, false);
+                        self.defined.insert(name.to_string());
+                        frame.atoms.push(Some(name.to_string()));
                     } else {
-                        parser.reset(&state);
-                        atoms.push(None);
+                        frame.atoms.push(None);
                     }
                 }
                 Token::IDHash(name) => {
-                    if local {
-                        self.identifier(&name, start, end, true);
+                    if frame.local {
+                        self.identifier(name, node.start, node.end, true);
                     }
-                    atoms.push(None);
+                    frame.atoms.push(None);
                 }
                 Token::Comma => {
-                    local = default_local;
-                    atoms.push(None);
+                    frame.local = frame.default_local;
+                    frame.atoms.push(None);
                 }
                 Token::Colon => {
-                    let state = parser.state();
-                    match parser.next().cloned() {
-                        Ok(Token::Function(name)) if name == "global" || name == "local" => {
-                            let function_end = parser.position().byte_index();
-                            let mut result = Ok(None);
-                            let mut nonempty = false;
-                            let _: result::Result<_, ParseError<'_, ()>> = parser
-                                .parse_nested_block(|nested| {
-                                    nonempty = !nested.is_exhausted();
-                                    result = self.selector(nested, name == "local");
-                                    Ok(())
-                                });
-                            if !nonempty {
+                    let mut lookahead = frame.range.clone();
+                    let Some(next) = tokens.next_significant(&mut lookahead) else {
+                        frame.atoms.push(None);
+                        continue;
+                    };
+                    let after = &tokens.nodes[next];
+                    match &after.token {
+                        Token::Function(name) if *name == "global" || *name == "local" => {
+                            let child = tokens.children(next);
+                            if tokens.next_significant(&mut child.clone()).is_none() {
                                 return Err(self.error(
-                                    start,
+                                    node.start,
                                     &format!("CSS Modules :{name}() has no selector"),
                                     "add a selector inside it or remove it",
                                 ));
                             }
-                            let own = result?;
-                            atoms.push(own);
-                            self.edits.push((start, function_end, String::new()));
-                            self.edits.push((
-                                parser.position().byte_index() - 1,
-                                parser.position().byte_index(),
-                                String::new(),
-                            ));
+                            frame.range = lookahead;
+                            let wrapper = (node.start, after.end, after.after);
+                            pending.push(Selector::new(child, *name == "local", Some(wrapper)));
                         }
-                        Ok(Token::Ident(name)) if name == "global" || name == "local" => {
-                            local = name == "local";
-                            self.edits
-                                .push((start, parser.position().byte_index(), String::new()));
+                        Token::Ident(name) if *name == "global" || *name == "local" => {
+                            frame.local = *name == "local";
+                            frame.range = lookahead;
+                            self.edits.push((node.start, after.end, String::new()));
                         }
-                        Ok(Token::Function(name)) if name == "import" => {
-                            return Err(self.icss(start, ":import"));
+                        Token::Function(name) if *name == "import" => {
+                            return Err(self.icss(node.start, ":import"));
                         }
-                        Ok(Token::Ident(name)) if name == "export" => {
-                            return Err(self.icss(start, ":export"));
+                        Token::Ident(name) if *name == "export" => {
+                            return Err(self.icss(node.start, ":export"));
                         }
-                        _ => {
-                            parser.reset(&state);
-                            atoms.push(None);
-                        }
+                        _ => frame.atoms.push(None),
                     }
                 }
                 Token::Function(_) | Token::ParenthesisBlock => {
-                    let mut result = Ok(None);
-                    let _: result::Result<_, ParseError<'_, ()>> =
-                        parser.parse_nested_block(|nested| {
-                            result = self.selector(nested, local);
-                            Ok(())
-                        });
-                    result?;
-                    atoms.push(None);
+                    let local = frame.local;
+                    pending.push(Selector::new(tokens.children(index), local, None));
                 }
-                _ => atoms.push(None),
+                _ => frame.atoms.push(None),
             }
         }
-        Ok(if atoms.len() == 1 {
-            atoms.pop().flatten()
-        } else {
-            None
-        })
+        Ok(None)
     }
 
-    pub(crate) fn keyframes(&mut self, parser: &mut Parser<'_, '_>) -> Result<()> {
-        let mut local = true;
-        while !parser.is_exhausted() {
-            let start = parser.position().byte_index();
-            let Ok(token) = parser.next_including_whitespace_and_comments().cloned() else {
-                break;
+    /// Rename local keyframes names, including names inside `:local()`.
+    pub(crate) fn keyframes(&mut self, tokens: &Tokens<'_>, range: Range<usize>) -> Result<()> {
+        let mut pending = vec![Keyframes {
+            range,
+            local: true,
+            wrapper: None,
+        }];
+        while let Some(frame) = pending.last_mut() {
+            if tokens.next_significant(&mut frame.range.clone()).is_none() {
+                if let Some(wrapper) = frame.wrapper {
+                    self.unwrap(wrapper);
+                }
+                pending.pop();
+                continue;
+            }
+            let Some(index) = tokens.next(&mut frame.range) else {
+                continue;
             };
-            let end = parser.position().byte_index();
-            match token {
-                Token::Ident(name) if local => self.identifier(&name, start, end, false),
-                Token::QuotedString(name) if local => {
-                    let name = self.name(&name);
+            let node = &tokens.nodes[index];
+            match &node.token {
+                Token::Ident(name) if frame.local => {
+                    self.identifier(name, node.start, node.end, false);
+                }
+                Token::QuotedString(name) if frame.local => {
+                    let name = self.name(name);
                     let mut escaped = String::new();
                     let _ = cssparser::serialize_string(&name, &mut escaped);
-                    self.edits.push((start, end, escaped));
+                    self.edits.push((node.start, node.end, escaped));
                 }
                 Token::Colon => {
-                    if let Ok(Token::Function(name)) = parser.next().cloned()
-                        && (name == "local" || name == "global")
-                    {
-                        let function_end = parser.position().byte_index();
-                        let mut result = Ok(());
-                        let _: result::Result<_, ParseError<'_, ()>> =
-                            parser.parse_nested_block(|nested| {
-                                if name == "local" {
-                                    result = self.keyframes(nested);
-                                } else {
-                                    while nested.next().is_ok() {}
-                                }
-                                Ok(())
-                            });
-                        result?;
-                        self.edits.push((start, function_end, String::new()));
-                        self.edits.push((
-                            parser.position().byte_index() - 1,
-                            parser.position().byte_index(),
-                            String::new(),
-                        ));
-                        local = false;
+                    let Some(next) = tokens.next_significant(&mut frame.range) else {
+                        continue;
+                    };
+                    let function = &tokens.nodes[next];
+                    let Token::Function(name) = &function.token else {
+                        continue;
+                    };
+                    if *name != "local" && *name != "global" {
+                        continue;
+                    }
+                    frame.local = false;
+                    let wrapper = (node.start, function.end, function.after);
+                    if *name == "local" {
+                        pending.push(Keyframes {
+                            range: tokens.children(next),
+                            local: true,
+                            wrapper: Some(wrapper),
+                        });
+                    } else {
+                        self.unwrap(wrapper);
                     }
                 }
                 _ => {}
             }
         }
         Ok(())
+    }
+
+    /// Remove a wrapper's opener and the byte before its block end.
+    fn unwrap(&mut self, (start, function_end, after): Wrapper) {
+        self.edits.push((start, function_end, String::new()));
+        self.edits.push((after - 1, after, String::new()));
     }
 
     fn icss(&self, offset: usize, selector: &str) -> error::CssError {
@@ -178,4 +194,33 @@ impl Renamer<'_> {
             ),
         }
     }
+}
+
+/// One selector level: the authored prelude or a function argument.
+struct Selector {
+    range: Range<usize>,
+    local: bool,
+    default_local: bool,
+    /// A wrapper's edits follow its content's edits, as authored order requires.
+    wrapper: Option<Wrapper>,
+    atoms: Vec<Option<String>>,
+}
+
+impl Selector {
+    fn new(range: Range<usize>, local: bool, wrapper: Option<Wrapper>) -> Self {
+        Self {
+            range,
+            local,
+            default_local: local,
+            wrapper,
+            atoms: Vec::new(),
+        }
+    }
+}
+
+/// One keyframes-name level: the prelude or a `:local()` argument.
+struct Keyframes {
+    range: Range<usize>,
+    local: bool,
+    wrapper: Option<Wrapper>,
 }

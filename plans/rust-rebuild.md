@@ -2053,6 +2053,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
+  - [x] Make the YAML builder and Mokly's CSS scanners iterative, and keep YAML
+        source positions linear in the node count. Child-process depth searches
+        on 2 MiB stacks cover each parser and pipeline.
+        Evidence: `.context/m14-nesting/report.md`.
+  - [x] Keep CSS Modules name ranges after an attribute selector, so
+        `.a[x]:global(.b)` no longer fails the token check.
+  - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
+        serde-derived prop and schema traversal, and schema inference
+        (pending user decision).
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
