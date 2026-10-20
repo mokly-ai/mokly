@@ -2255,6 +2255,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         proves the 404; a held-request test keeps each response on its selected
         copy. The browser case passes 20 runs in distinct workers with every
         assertion retained. Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
+  - [x] F11: resolve the copied-deployment reload assertion race. Wait for the
+        initial previews and the replacement document load before checking its
+        title and marker. Keep every assertion and the atomic publication fixture.
+        Evidence: `.context/f11/reproduction.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
