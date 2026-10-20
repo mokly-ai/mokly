@@ -45,7 +45,7 @@ The native binary owns commands and file writes. The render sidecar and the
 authoring API share this package under the
 [package contract](../../docs/protocol/mokly-package.md).
 
-The supported Node range is `>=22.14.0 <24.14.0 || >=24.19.0`. The shim checks
+The supported Node range is `>=22.15.0 <24.14.0 || >=24.19.0`. The shim checks
 it before package lookup. Supported hosts are Linux x64 and arm64 with glibc,
 macOS x64 and arm64, and Windows x64 with MSVC. Exact optional platform
 packages supply the binary. The shim requires the binary's exact package
@@ -167,7 +167,8 @@ cargo test -p mokly-sidecar
 ```
 
 The package `prepack` builds the viewer before the authoring declarations.
-Release packing creates the viewer archive before the CLI archive.
+Release packing prepares the viewer archive before the CLI archive. It packs
+a new viewer release or downloads the exact published viewer for a CLI-only release.
 The package build emits ESM JavaScript and declarations, the sidecar entry and
 PostCSS child entry, the shim, and packaged Markdown. Each build clears stale package
 output and copied docs first. The package includes the complete guide and

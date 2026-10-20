@@ -24,7 +24,7 @@ Run the steps in this order:
    The public repository lets boxes fetch pushed commits without a token.
 2. Run `useblacksmith/begin-testbox` with `testbox_id: ${{ inputs.testbox_id }}`.
    An empty input uses validation mode, including on push runs.
-3. Install Node 22.14.0 with `actions/setup-node` and npm's download cache.
+3. Install Node 22.15.0 with `actions/setup-node` and npm's download cache.
    Use `cache: npm` and `cache-dependency-path: package-lock.json`.
    Set `package-manager-cache: false`. Then install npm 11.21.0.
 4. Run `rustup toolchain install` in the checkout. It installs Rust 1.95.0 with
@@ -39,7 +39,7 @@ Run the steps in this order:
 8. Run `npx playwright install --with-deps chromium`.
 9. Write the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` to `/etc/environment`.
    Replace previous entries for those two names. Preserve other entries.
-   New Testbox SSH sessions must use Node 22.14.0 and Chromium.
+   New Testbox SSH sessions must use Node 22.15.0 and Chromium.
 10. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
 
 Warmup selects a 30-minute idle timeout. Readiness still uses `10m`.
@@ -100,6 +100,10 @@ suite and passes it to `cargo xtask check`. The command name stays
 `repository`. Invalid arguments fail before any suite starts.
 Both scripts use `validateFingerprint` from `source-tree.mjs`.
 Its error contains no usage text. Each script adds its own usage line.
+
+The first browser shard also checks the example through static HTTP and file
+URLs after its ordinary specs pass. A failure makes that command unsuccessful.
+These selected delivery checks do not replace any of the five suite reports.
 
 ## Readiness And Sync Probe
 
@@ -222,7 +226,7 @@ blacksmith testbox download --id <box-id> .context/verification-reports/remote/<
 Run the existing aggregate after box cleanup:
 
 ```bash
-node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.14.0
+node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.15.0
 ```
 
 The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)

@@ -85,7 +85,7 @@ Actions environment. Other CI systems can invoke the npm CLI directly.
 
 The action exposes no input for the CLI's upload concurrency option; the
 command's default applies. The action sets up the tested Node 24.21.0 lane. Published Mokly releases support
-Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`; the action's pin is a tested
+Node.js `>=22.15.0 <24.14.0` or `>=24.19.0`; the action's pin is a tested
 representative, not the lower bound. The action does not check out the consumer,
 install its dependencies, fetch history, publish an npm package or comment on
 pull requests.

@@ -6,7 +6,8 @@ Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 ## Package Set
 
-One release publishes seven packages from one reviewed commit:
+A CLI release publishes its package and five native packages from one reviewed
+commit. It publishes a changed viewer or reuses the exact existing viewer pin:
 
 | Package                  | Content                                                                                                            |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -16,7 +17,7 @@ One release publishes seven packages from one reviewed commit:
 
 `packages/mokly/package.json` describes the public ESM package `@mokly/mokly`: managed
 version, MIT license, Mokly authorship, exact repository metadata, Node range
-`>=22.14.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
+`>=22.15.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
 its types, the configuration JSON Schema at `config.schema.json`, and the file
 allowlist. It lists the five platform packages as exact
 optional dependencies at its own version and `@mokly/viewer` as an exact
@@ -64,14 +65,15 @@ separate Visual C++ runtime installation. Both macOS architectures require
 macOS 11.0 or newer, the Node 22 floor. Their builds set
 `MACOSX_DEPLOYMENT_TARGET=11.0` and use the system frameworks.
 
-`inspect-native.mjs` records imported libraries and the highest required GLIBC
+Every packed native executable must contain no `MOKLY_TEST_` byte sequence.
+Inspection reads the executable from the archive for each of the five targets.
+It rejects test hooks before publication, including when archives are reused.
+
+Native inspection records imported libraries and the highest required GLIBC
 version, the macOS `minos`, or the Windows DLL list. It rejects a GLIBC
 requirement above 2.28, a macOS minimum above 11.0, a dynamic MSVC runtime, or
-an unintended crypto shared library. It uses `readelf` on Linux, `otool -L`
-and `otool -l` on macOS, and Visual Studio `dumpbin /dependents` on Windows.
-The macOS reader accepts `LC_BUILD_VERSION` and `LC_VERSION_MIN_MACOSX` and
-checks every recorded minimum. Missing inspection data or tools fail the
-release.
+an unintended crypto shared library. It checks every recorded macOS minimum.
+Missing inspection data or tools fail the release.
 
 ## Release Build Matrix And Publication Order
 
@@ -86,10 +88,12 @@ uses its 6-vCPU tier. The one native-build exception is `darwin-x64` on
 GitHub-hosted `macos-26-intel`, with `actions/checkout`; the other build rows
 use Blacksmith checkout. A build refuses a different host OS or architecture.
 Native jobs install npm dependencies with lifecycle scripts disabled.
+Each native release job has a 60-minute hang guard. It must allow at least
+three times the job's typical duration, including setup and builds.
 
 The publish job downloads the five archives, verifies that each archive's
 version equals the CLI version and that its inventory holds exactly the binary
-for its target, packs the viewer and then the CLI from the release checkout,
+for its target, prepares the viewer and then packs the CLI from the release checkout,
 validates every packed manifest and inventory plus the runtime license closure,
 and smoke-tests clean consumers from those exact archives: the CLI with its
 host platform package runs `mokly --version`, `mokly build` of a minimal
@@ -98,6 +102,8 @@ viewer entry in a browser bundle; a NodeNext consumer type-checks the authoring
 API. The smokes install the archives, not the source tree or a workspace link,
 and read protocol documents from the installed package.
 
+A CLI-only release downloads its published viewer archive without rebuilding it.
+Its source identity is the earlier viewer tag. A new viewer uses the CLI commit.
 The first run saves the checked seven-package set for 90 days before any
 publication. A retry reuses those exact archives under the
 [retry contract](./npm-release-management.md#release-recovery). It never
@@ -172,7 +178,7 @@ exercise pending states and command-to-preview timings under the
 
 ## Continuous Integration
 
-The hosted job graph, trusted runtime profiles, checkout ownership, 30-minute
+The hosted job graph, trusted runtime profiles, checkout ownership, job
 timeouts, and stable branch-rule status follow the
 [CI workflow graph contract](./ci-workflow.md). Suite ownership and report
 completeness follow the [CI verification contract](./ci-verification.md).

@@ -27,7 +27,7 @@ dependencies and depends on the exact coordinated `@mokly/viewer` version. It
 declares `react` and `react-dom` `>=19.0.0` as peer dependencies, needed only
 when screens or components are written in React; an HTML-only catalogue runs
 without them and never starts the sidecar. The shim needs the Node.js range of the
-[CI workflow contract](./ci-workflow.md), 22.14 or newer except 24.14 through
+[CI workflow contract](./ci-workflow.md), 22.15 or newer except 24.14 through
 24.18, and rejects another version with an actionable error before it starts
 the binary. It resolves the platform package for the current platform,
 requires its version to equal the CLI package version, and runs the binary

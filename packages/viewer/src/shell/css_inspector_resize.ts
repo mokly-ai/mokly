@@ -1,5 +1,7 @@
 /** Desktop inspector resize affordance and interaction states. */
 
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 /** Styles for the inspector split-panel separator, rotated from the navigation
  * separator so both dividers share one resting, hover, focus and active look.
  *
@@ -63,7 +65,7 @@ export const SHELL_INSPECTOR_RESIZE_CSS = `
   pointer-events: none;
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-inspector[data-open="true"] .mbk-inspector-resize {
     display: none;
   }

@@ -48,7 +48,7 @@ test("release evidence constants match the CI job and artifact namespace", async
   );
   assert.match(
     String(profile?.run),
-    /verification-runtimes=node-22\.14\.0,node-24/,
+    /verification-runtimes=node-22\.15\.0,node-24/,
   );
   for (const jobName of ["viewer", "browser"]) {
     const upload = workflow.jobs[jobName]?.steps.find((step) =>

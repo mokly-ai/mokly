@@ -242,8 +242,8 @@
   margin-top: 20px;
   padding-top: 16px;
 }
-/* A sentence after a list keeps the evidence card's list spacing. */
-.ce-comparison-evidence ul + p {
+/* A sentence after a list or the props table keeps the card's spacing. */
+.ce-comparison-evidence :is(ul, table) + p {
   margin-top: 14px;
 }
 .ce-comparison-paths li {

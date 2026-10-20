@@ -41,6 +41,7 @@ impl PropValidator {
     /// Validate a schema against the profile and the draft 2020-12 metaschema.
     pub fn compile(value: &Value, context: &Context) -> Result<Self> {
         if let Err((path, message)) = limits::check(value, false) {
+            let message = message.to_string();
             return Err(ModelError::Schema(context.diagnostic(true, &path, message)));
         }
         if let Err((path, message)) = profile::check(value, "", true) {
@@ -78,6 +79,7 @@ impl PropValidator {
     /// JSON decoding excludes executable values, cycles and non-finite numbers.
     pub fn validate(&self, props: &Value, context: &Context) -> Result<()> {
         if let Err((path, message)) = limits::check(props, true) {
+            let message = message.to_string();
             return Err(ModelError::Props(context.diagnostic(false, &path, message)));
         }
         if let Err(error) = self.validator.validate(props) {

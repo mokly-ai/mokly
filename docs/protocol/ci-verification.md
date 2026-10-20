@@ -139,7 +139,7 @@ does not inspect or synthesize that body.
 ## CI Workflow Graph
 
 The hosted job graph, checkout ownership, runtime profiles, runner policy,
-30-minute timeouts, and stable `Required CI` status follow the separate
+job timeouts, and stable `Required CI` status follow the separate
 [CI workflow graph contract](./ci-workflow.md). The suites below own the report
 evidence that status validates. Inventory and evidence rules live here because
 local xtask suites and hosted jobs share them.

@@ -10,6 +10,7 @@ import {
   liveProcessGroups,
   processGroupExists,
 } from "./process-groups.mjs";
+import { validateRegistrySnapshot } from "./process-owner-snapshot.mjs";
 
 const DRAIN_TIMEOUT_MS = 5_000;
 const OWNER_FILE = /^owner-([0-9a-f-]{36})\.json$/;
@@ -187,19 +188,7 @@ async function readRegistry(registry) {
     if (ownerMatch) owners.push(parseOwnerRecord(value, ownerMatch[1], file));
     else processes.push(parseProcessRecord(value, file));
   }
-  const ownerIds = new Set(owners.map((record) => record.ownerId));
-  for (const owner of owners) {
-    if (owner.parentId !== null && !ownerIds.has(owner.parentId))
-      throw new Error(`Verification owner ${owner.ownerId} has no parent`);
-  }
-  for (const record of processes) {
-    if (!ownerIds.has(record.ownerId))
-      throw new Error(
-        `Verification process ${record.processGroupId} has no owner`,
-      );
-  }
-  for (const owner of owners) ownerDepth(owners, owner.ownerId);
-  return { owners, processes };
+  return validateRegistrySnapshot(owners, processes);
 }
 
 function parseOwnerRecord(value, filenameId, file) {

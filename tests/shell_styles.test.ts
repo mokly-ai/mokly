@@ -13,7 +13,8 @@ test("shell stylesheet stays aligned with the design contract", () => {
   assert.match(SHELL_CSS, /color-scheme: light/);
   assert.match(SHELL_CSS, /width: 390px/);
   assert.match(SHELL_CSS, /max-width: 1180px/);
-  assert.match(SHELL_CSS, /max-width: 56\.25rem/);
+  assert.match(SHELL_CSS, /@media \(width < 56\.25rem\)/);
+  assert.doesNotMatch(SHELL_CSS, /max-width: 56\.25rem/);
   assert.match(SHELL_CSS, /width: var\(--mbk-nav-width, 248px\)/);
   assert.match(
     SHELL_CSS,
@@ -29,7 +30,7 @@ test("shell stylesheet stays aligned with the design contract", () => {
   );
   assert.match(
     SHELL_CSS,
-    /@media \(max-width: 56\.25rem\) \{[\s\S]*\.mbk-nav-resize \{[\s\S]*display: none;/,
+    /@media \(width < 56\.25rem\) \{[\s\S]*\.mbk-nav-resize \{[\s\S]*display: none;/,
   );
   assert.match(
     SHELL_CSS,
@@ -109,7 +110,7 @@ test("both split dividers share one grip affordance", () => {
   }
   assert.match(
     SHELL_CSS,
-    /@media \(max-width: 56\.25rem\) \{[\s\S]*\.mbk-inspector\[data-open="true"\] \.mbk-inspector-resize \{[\s\S]*display: none;/,
+    /@media \(width < 56\.25rem\) \{[\s\S]*\.mbk-inspector\[data-open="true"\] \.mbk-inspector-resize \{[\s\S]*display: none;/,
   );
 });
 

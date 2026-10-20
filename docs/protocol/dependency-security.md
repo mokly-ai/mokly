@@ -49,6 +49,24 @@ audit has no exceptions. It calls strict `npm audit` directly in the release
 smoke and never loads the workspace exception file. Consumers must maintain and audit their own
 lockfiles, including dependencies they bring to their renderer or application.
 
+## Rust Advisory Audit
+
+The Rust dependency audit is independent of npm baseline comparisons and
+exceptions. `npm run dependencies:check:rust` audits every crate in the committed
+`Cargo.lock` against the current RustSec advisory database. It installs pinned
+`cargo-audit` 0.22.2 with its locked dependencies before running the audit.
+Reported vulnerabilities and audit errors fail verification. Informational
+warnings remain visible. The repository `.cargo/audit.toml` configuration exempts
+only RUSTSEC-2026-0235. `lightningcss` 1.0.0-alpha.72 with `bundler` requires
+`parcel_sourcemap` 2.1.1, which requires `rkyv` 0.7.46. Mokly never reads or
+writes source maps. Review this exception by 2027-01-31 or at the next
+`lightningcss` update, whichever comes first. Every other vulnerability fails.
+The repository suite, daily dependency audit, and release verification run it.
+A release with reusable CI evidence still runs a fresh Rust audit. The daily
+npm update automation keeps its npm report and does not update Rust crates.
+Rust fixes require a reviewed dependency change. A cached tool or build never
+replaces the live advisory check.
+
 ## Reviewed Workspace Exceptions
 
 `scripts/verification/dependency-audit-exceptions.json` is a JSON array. Each

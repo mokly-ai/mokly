@@ -45,6 +45,11 @@ excluded files, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
+Each viewport section of a loaded comparison has one stage heading: “Mobile”
+or “Desktop”, then “ · ” and the view's label, for example “Desktop · Screen
+changed”. A Light view that stands in for a Dark selection adds “ · Light
+only”.
+
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
 changed” when its state is `changed`, its review entry has a reason, every
 reason is a `dependency` reason, each named path has a rule of any status on
@@ -63,7 +68,15 @@ changed components affect it: the view keeps a `matched` or `unresolved` rule
 or a resource that a component owns, or an `affected` evidence item of the
 loaded review names it by side, entry path, viewport, and colour scheme, so a
 moved entry's before side matches its previous path. Every other `unchanged`
-view keeps “No changes to this screen”.
+view keeps the ordinary label below.
+
+| View state     | Screen                          | Component                       |
+| -------------- | ------------------------------- | ------------------------------- |
+| `changed`      | “Screen changed”                | “Variant changed”               |
+| `unchanged`    | “No changes to this screen”     | “No changes to this variant”    |
+| `added`        | “New screen”                    | “New variant”                   |
+| `removed`      | “Screen removed”                | “Variant removed”               |
+| `ignored-only` | “Only excluded content changed” | “Only excluded content changed” |
 
 ## Details Copy
 

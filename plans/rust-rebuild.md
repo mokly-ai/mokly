@@ -366,58 +366,6 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
-**Decision defaults (2026-10-20):**
-
-- Item 4 A, applied by default (user rule): publish warnings are fatal only
-  with `--strict`. Reject always-fatal warnings so recoverable authoring
-  warnings do not block publication. Align the publish and exit-status guides.
-- Item 16 B, applied by default (user rule): unknown attributes on ignore
-  wrappers warn and are ignored. `--strict` turns the warning into a failure.
-  Reject unconditional failure and silent ignoring to catch spelling errors
-  while keeping recoverable input usable.
-- Item 8 A, applied by default (user rule): publish trusts bundled Mozilla
-  roots in addition to the operating system certificate store. Reject OS-only
-  trust so minimal containers can publish through public HTTPS endpoints.
-- Item 22 A and extended A, applied by default (user rule): keep bounds checks
-  on complete merged live props. Warn on saved props or story args outside
-  those bounds. Story hints affect controls and live validation, not schemas.
-  Reject override-only validation and fatal saved-value bounds checks.
-  Fail declared steps that are not schema multiples or are fractional for
-  integer props, so controls cannot offer values the schema rejects.
-- Item 6 C, applied by default (user rule): round unsafe integer props to the
-  nearest binary64 value with a warning before validation and rendering.
-  The core and viewer keep the same value. Reject unconditional failure and
-  silent rounding to keep recoverable input usable and the precision loss visible.
-- Item 9 A, applied by default (user rule): delete exactly the private build
-  snapshot after success, including an already-published response. Preserve
-  failed-upload snapshots and unrelated files. Cleanup failure warns without
-  changing the accepted publication. Reject retaining every successful snapshot
-  because it leaves unused output behind.
-- Item 30 A, applied by default (user rule): defer a forced second Ctrl+C
-  exit while output installation, restoration, or cleanup settles. Exit once
-  that operation finishes without another signal. Reject immediate exit in
-  these operations because it can strand the earlier site in a backup.
-- User decision 86 (2026-10-20): D. Successful and already-published outcomes
-  delete the whole private directory created by publish, including its site
-  and reservation locks. Use its allocated path held in memory and do not
-  follow symbolic links. Failed or cancelled uploads retain the whole directory.
-  Cleanup failure warns with that path and keeps publication successful.
-  This replaces item 9 A's snapshot-only cleanup, which retained lock directories.
-  Evidence: `.context/publish-cleanup/`.
-- Item 23 B, applied by default (user rule): preserve control declaration
-  order in entry detail v2 and show that order in the viewer. Explicit controls
-  use their declaration order. Derived controls use schema property order or
-  first-seen inferred prop order. Reject key sorting because author order
-  communicates the intended editing sequence. Regenerate the shared types.
-
-**Decision 6 C clarification (user, 2026-10-20):** The M4 option covers every
-authored number, including props and schema keywords. Close N1 under 6 C.
-Round unsafe YAML integers before schema validation and warn for schema
-keywords. Numeric choice coercion uses the same rounded values. This restores
-catalogues whose saved props equal an unsafe schema limit. Reject exact core
-keywords and unconditional failure because the core and viewer must agree.
-Evidence: `.context/defaults-cli-fix1/finding1-red.log`.
-
 **Follow-up decision defaults (F8):** These numbers identify the orchestrator's
 follow-up list, not the architecture decisions above.
 
@@ -523,6 +471,65 @@ delete the dead shell path `ShellContext.componentChanges` in
 and the tests that reach their copy only through it. The live-path tests cover
 the same copy.
 
+**Decision defaults (2026-10-20):**
+
+- Item 4 A, applied by default (user rule): publish warnings are fatal only
+  with `--strict`. Reject always-fatal warnings so recoverable authoring
+  warnings do not block publication. Align the publish and exit-status guides.
+- Item 16 B, applied by default (user rule): unknown attributes on ignore
+  wrappers warn and are ignored. `--strict` turns the warning into a failure.
+  Reject unconditional failure and silent ignoring to catch spelling errors
+  while keeping recoverable input usable.
+- Item 8 A, applied by default (user rule): publish trusts bundled Mozilla
+  roots in addition to the operating system certificate store. Reject OS-only
+  trust so minimal containers can publish through public HTTPS endpoints.
+- Item 22 A and extended A, applied by default (user rule): keep bounds checks
+  on complete merged live props. Warn on saved props or story args outside
+  those bounds. Story hints affect controls and live validation, not schemas.
+  Reject override-only validation and fatal saved-value bounds checks.
+  Fail declared steps that are not schema multiples or are fractional for
+  integer props, so controls cannot offer values the schema rejects.
+- Item 6 C, applied by default (user rule): round unsafe integer props to the
+  nearest binary64 value with a warning before validation and rendering.
+  The core and viewer keep the same value. Reject unconditional failure and
+  silent rounding to keep recoverable input usable and the precision loss visible.
+- Item 9 A, applied by default (user rule): delete exactly the private build
+  snapshot after success, including an already-published response. Preserve
+  failed-upload snapshots and unrelated files. Cleanup failure warns without
+  changing the accepted publication. Reject retaining every successful snapshot
+  because it leaves unused output behind.
+- Item 30 A, applied by default (user rule): defer a forced second Ctrl+C
+  exit while output installation, restoration, or cleanup settles. Exit once
+  that operation finishes without another signal. Reject immediate exit in
+  these operations because it can strand the earlier site in a backup.
+- User decision 86 (2026-10-20): D. Successful and already-published outcomes
+  delete the whole private directory created by publish, including its site
+  and reservation locks. Use its allocated path held in memory and do not
+  follow symbolic links. Failed or cancelled uploads retain the whole directory.
+  Cleanup failure warns with that path and keeps publication successful.
+  This replaces item 9 A's snapshot-only cleanup, which retained lock directories.
+  Evidence: `.context/publish-cleanup/`.
+  Merge decisions: `.context/publish-cleanup/merge-decisions.md`.
+- Item 23 B, applied by default (user rule): preserve control declaration
+  order in entry detail v2 and show that order in the viewer. Explicit controls
+  use their declaration order. Derived controls use schema property order or
+  first-seen inferred prop order. Reject key sorting because author order
+  communicates the intended editing sequence. Regenerate the shared types.
+
+**Decision 6 C clarification (user, 2026-10-20):** The M4 option covers every
+authored number, including props and schema keywords. Close N1 under 6 C.
+Round unsafe YAML integers before schema validation and warn for schema
+keywords. Numeric choice coercion uses the same rounded values. This restores
+catalogues whose saved props equal an unsafe schema limit. Reject exact core
+keywords and unconditional failure because the core and viewer must agree.
+Evidence: `.context/defaults-cli-fix1/finding1-red.log`.
+
+**Hub review of `rebuild/defaults-viewer`, finding 2, requirement applied by
+default (user rule), 2026-10-20:** the device chrome contract states that an
+expanded frame that leaves the page collapses, so no scrim stays. The
+rejected alternative left the contract silent on that case, which allowed the
+scrim defect that the review found.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -536,6 +543,28 @@ the same copy.
   Rust advisory audit, the generated-TypeScript byte-identity check, and the
   time and memory budgets of Milestone 14. Milestone 3 records the answer
   before adding any of them.
+
+**CI timeout approval (user, 2026-10-19, decision 5 = D):** browser shards and
+native jobs use 60-minute hang guards. Other jobs keep 30 minutes. The user
+chose longer job limits instead of changing the four-shard browser partition.
+The guards must allow at least three times each job's typical duration.
+
+**Gate approvals (user, 2026-10-19, decision 2 = A):** enable the Rust advisory
+audit, generated-TypeScript byte identity, packed-native `MOKLY_TEST_` scan,
+and CI example checks through static HTTP and `file://`. Approve 2 GiB per
+comparison cache namespace and 120 seconds for base dependency preparation.
+The user chose all six items instead of leaving the checks and bounds pending.
+The gates protect dependency security, generated contracts, release binaries,
+and portable output. The budget values document the existing bounds.
+
+**Node floor, item 60 option C: applied by default (user rule), 2026-10-20.**
+Raise the supported Node floor to 22.15.0. Keep the 24.x range unchanged.
+The PostCSS evidence hooks require `module.registerHooks`, available from
+22.15.0. Apply the floor to package engines, lockfile, shim, CI, Testbox,
+release and verification evidence, and guides. This keeps both evidence
+checks active on every supported runtime. Alternatives were A, skip the two
+checks below 22.15.0, and B, add a fallback without `registerHooks`.
+Evidence: `.context/ci-gates-round2/node-floor-2.log`.
 
 **Review decisions the user gave on 2026-10-12:** every live native engine
 reference is repointed now; head styles, owned and unowned, leave the canonical
@@ -609,7 +638,7 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, and 32;
+design defaults of decision log items 17, 24, 32, 38, and 42;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -784,15 +813,33 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       hosted macOS and Windows runners.
 - [x] Add `cargo xtask check-generated-types` as a standalone byte-identity
       check. Keep it outside every gate and CI job.
-- [ ] Record the gate approvals from the Status section before adding the gates.
-      The generated-TypeScript byte-identity and Rust advisory audit gates
-      wait for the user.
-- [ ] After user approval, add `cargo xtask check-generated-types` and the
+- [x] Record the gate approvals from the Status section before adding the gates.
+      Decision 2 = A on 2026-10-19 approves all six items recorded above.
+- [x] After user approval, add `cargo xtask check-generated-types` and the
       Rust advisory audit to the Repository suite and CI.
+  - [x] Add the Rust advisory audit to Repository, the daily dependency audit,
+        and release verification, including reused CI evidence.
+  - [x] Add the generated-TypeScript byte-identity gate.
+- [x] Resolve RUSTSEC-2026-0235 with item 58 option B, applied by default (user rule), 2026-10-20.
+      Exempt only this advisory in `.cargo/audit.toml`. `lightningcss`
+      1.0.0-alpha.72 with `bundler` requires `parcel_sourcemap` 2.1.1 and
+      `rkyv` 0.7.46. Mokly never reads or writes source maps. Review by
+      2027-01-31 or at the next lightningcss update, whichever comes first.
+      Keep every other vulnerability failing. The alternative was a dependency
+      repair without a compatible published update. The narrow exception lets
+      the audit protect all other dependencies.
+      Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
+- [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
+      approved 2026-10-20, mirrors the trigger in main PR #198. A selected
+      branch runs its own workflow and selects the baseline audit. The
+      alternative was to leave manual dispatch unavailable on the rebuild.
+      Evidence: `.context/ci-gates-round2/manual-dispatch-checks.log`.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
 - [x] Commit.
+
+Merge evidence: `.context/ci-gates-round2/merge-decisions.md`.
 
 Round 3 decision: Required CI only aggregates results and reports. Every job
 that runs checks, and the Testbox, builds the host native artifact.
@@ -1162,6 +1209,16 @@ renders again.
   - [x] Portable design links, shared samples, and inspector disclosures
         directly from real `mokly build` output through `file://` URLs are
         checked by a manual run.
+  - [x] Add a required CI job that builds the example and runs the portable
+        design specs through static HTTP and `file://`. Decision 2 = A on
+        2026-10-19 approves this gate. The complete local and remote gates
+        run the same delivery checks without changing the four browser shards.
+  - [x] Port sweep row `component_fragments.spec.ts:0 [private fixture file:// delivery]`
+        into the delivery job, applied by default (user rule), 2026-10-20.
+        Build the private slot and variant fixture. Open every saved variant
+        through standalone portable links in each viewport and scheme. Disk
+        mode uses no HTTP request and the source is removed before navigation.
+        Evidence: `.context/ci-gates-round2/private-focused-2.log`.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
@@ -1556,10 +1613,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       stylesheet links, the exact per-entry rendered-resource and rule
       records, the exact changed-entry union, no affected consumers for
       unresolved shared rules, and the attribution acceptance matrix.
-      The matrix runs on demand until its CI job is decided.
+      The matrix runs in the separate optional nightly and manual workflow.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
-  - [ ] Decide the CI home of the on-demand design matrix (review 8 finding
-        1B, user decision 50). Add no CI job or timeout change before that decision.
+  - [x] Decide the CI home of the on-demand design matrix: item 50 option B,
+        applied by default (user rule), 2026-10-20. Use a separate optional
+        nightly and manual workflow on eight CPUs. Give the job 120 minutes
+        and the test process a 90-minute hang guard. Preserve every matrix
+        assertion. Alternatives were A, further optimization with uncertain
+        results, and C, a smaller fixture with less coverage. The separate job
+        gives the full matrix continuous coverage without extending Required CI.
+        Evidence: `.context/ci-gates-round2/design-measure-2.log`.
 - [x] Apply engine review 8 fixes: gate the design matrix for on-demand runs;
       bound base capture to 256 MiB and retain cached head reads;
       preserve deep props and private trusted records; cover capture timings,
@@ -1765,6 +1828,8 @@ example build measurement, and the sweep inputs:
 `.context/rust-rebuild/delegation/m10-d1/report-4.md`.
 The F10 follow-ups of round 4, the merge of the rebuild tip `453eef9b`,
 and the sweep renames: `.context/rust-rebuild/delegation/m10-d1/report-f10.md`.
+The F12 follow-ups, the merges of F10 and F11, and the deployment switch
+fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
 
 - [ ] Commit.
 
@@ -2042,8 +2107,20 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         a scratch checkout and record the blocked steps.
   - [ ] Complete the seven-package pack, reuse, and smoke with all native
         archives from the hosted target builds.
-- [ ] Settle Release Please selection for core-only commits under the
-      Milestone 15 review decision.
+- [x] Settle Release Please selection for core-only commits: item 20 option C,
+      applied by default (user rule), 2026-10-20. Make the CLI the root `.`
+      component and remove the `node-workspace` plugin. Core-only changes
+      release the CLI and its five native packages. Reuse the pinned published
+      viewer archive and verify its earlier immutable source. A new viewer
+      releases with the CLI and updates its exact dependency. Alternatives were
+      B, require a CLI-directory edit for every core fix, and A, a custom runner.
+      The root component gives core fixes normal release selection without a
+      redundant viewer version.
+  - [x] Fix CI-gates round 2 review finding 1: separate the root release
+        component from its named public workspace package in the export audit.
+        Preserve the CLI baseline and removal checks after core-only releases.
+        Evidence: `.context/ci-gates-round2/review-ratchet-green.log`.
+        Release selection evidence: `.context/ci-gates-round2/release-all.log`.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.
@@ -2103,9 +2180,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Verify response, operation-count, diagnostic, and IPC closure without sleeps.
       Evidence: `.context/rust-rebuild/delegation/m12-static/part0-done.md`.
 
-- [ ] Obtain user approval for the current 2 GiB per repository cache namespace
+- [x] Obtain user approval for the current 2 GiB per repository cache namespace
       and the shared 120-second dependency preparation allowance before adding
       these values to the timings contract.
+  - [x] Record the approved 2 GiB bound for each comparison cache namespace.
+        Decision 2 = A on 2026-10-19 preserves the current runtime bound.
+  - [x] Record the approved shared 120-second dependency preparation allowance.
+        Decision 2 = A on 2026-10-19 covers version discovery and all installs.
 - [x] Forward sidecar timing records and add core `sidecar.spawn` and
       `sidecar.recycle` spans under the timings contract.
 
@@ -2317,6 +2398,25 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         inference, and accept the `lightningcss` gap. Decision: item 36 option
         B (nesting report decision 10 B), applied by default (user rule),
         2026-10-20.
+  - [x] Restore "or remove it" in the advice for an empty wrapper in a
+        keyframes name, and make the wrapper table test follow each piece of
+        advice to a stylesheet that scopes. Decision: nesting report finding 19
+        options A and C, approved by the orchestrator on 2026-10-20.
+  - [x] Keep the height of each anchored value in the YAML alias scan, so it
+        steps aside at an alias copy that is too deep, and narrow its comment
+        to the three places where it steps aside. Decision: nesting report
+        finding 20 option B, approved by the orchestrator on 2026-10-20.
+  - [x] Let the YAML builder's anchor step alone decide which anchors to
+        keep, and build each kept copy after that check, so unaliased anchors
+        copy no positions. Decision: nesting report finding 21 option B,
+        approved by the orchestrator on 2026-10-20.
+  - [x] Fix the open CSS Modules problems from the nesting reviews, each
+        with a failing test first: wrappers still open at the end of input,
+        wrappers nested in keyframes names, CSS line breaks and character
+        columns in diagnostics, statements without a block in a rule list,
+        comments before `composes`, and the plain-data limit messages.
+        Requested by the orchestrator on 2026-10-20. Only the section-reader
+        follow-up for finding 22 stays open, under the review TODO.
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
@@ -2419,11 +2519,78 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
+        audit into an independent read-only job. Keep write credentials in the
+        npm update job and disable credential persistence in the Rust checkout.
+        Evidence: `.context/ci-gates-hub-fixes/f1-green.log`.
+  - [x] Fix CI gates hub review finding 5 with option A: overwrite the fixed
+        design-attribution evidence artifact on reruns. The wider upload-policy
+        check remains a user decision.
+  - [x] Fix CI gates hub review finding 6 with option A: align release recovery
+        and packing descriptions with an optional new viewer tag and reuse of
+        the pinned published viewer archive.
+  - [x] Fix CI gates hub review finding 7 with option B: keep the design and
+        private-fixture delivery requirement in the protocol. Move the full
+        spec list to the browser README, split its comparison reference into
+        a linked page, and correct the runtime list's conjunction.
+  - [x] Record the available remote timings for CI gates hub review finding 4.
+        Two successful samples per runtime give these median command minutes
+        for Node 22.15.0 / 24.21.0: repository 13.43 / 11.46, viewer 6.64 /
+        5.71, browser shards 1 to 4 respectively 16.99 / 18.77, 14.33 / 15.33,
+        8.61 / 8.48, and 8.71 / 8.90. Shard 1 includes both delivery modes.
+        Combined delivery test times have medians of 7.45 / 8.15 minutes.
+        These proxies exclude Testbox preparation and are not hosted job times.
+        The repository proxy exceeds the 10-minute ceiling for its 30-minute
+        guard. The local design command took 13.85 minutes on eight CPUs.
+        No complete static-delivery, daily Rust audit, or native job sample is
+        available. The hub owns hosted measurements after integration.
+        Evidence and exact trees: `.context/ci-gates-hub-fixes/timings.md`.
+  - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
+        update, whichever comes first. CI gates hub review finding 9A tracks
+        the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
+        `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
+        exposure and the available fixes before retaining the exception.
+  - CI gates hub review finding 2: CLI-only releases can reuse stale viewer
+    source. Severity Medium, effort Medium. Recommended: B, reject an unchanged
+    viewer version on the release PR when its source differs from its tag.
+    The hub owns the user decision.
+  - CI gates hub review finding 3: viewer-only releases have no publish path.
+    Severity Medium, effort Medium. Recommended: B, reject that release PR
+    before tags exist. The hub owns the user decision with finding 2B.
+  - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
+    hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
+    The hub owns the user decision.
+  - Follow-up: isolate the release Rust audit from the privileged publish job.
+    Effort Medium. Covers CI gates hub review finding 1B. Previous example:
+    daily audit isolation in finding 1A. The hub owns the user decision.
+  - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
+    Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
+    the design evidence upload. The hub owns the user decision.
+  - Follow-up: enforce the Rust exception's date, locked version, and sole ID.
+    Effort Medium. Covers CI gates hub review finding 9B. Previous example:
+    the npm exception expiry and dependency-path checks. The hub owns the user decision.
+  - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
+        in the parent process. A suppressed reporter failure cannot pass a
+        skipped or incomplete run. Keep the real Playwright regression.
+        Evidence: `.context/ci-gates/review.md` and
+        `.context/ci-gates/review-fix-red.log`.
+  - `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs`:
+    `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`
+    observed zero stop spans instead of one during CI-gates verification.
+    Its exact rerun and the full workspace rerun passed. Suspected source:
+    concurrent tracing-subscriber capture; not proven. Separate branch.
+    Evidence: `.context/ci-gates/repository-remainder.log` and
+    `.context/ci-gates/sidecar-rerun.log`.
   - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
         Round every authored number, including schema keywords, with warnings.
   - CLI defaults fix1 review 3, finding 2: control-only unsafe numbers lack warnings. Severity Medium, effort Medium. Recommended A: agree field paths, messages, and duplicate rules, then warn on authored control numbers. Broader preparation tracking is option B, Large. Wait for the user.
-  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
-  - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
+  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing
+    boundaries. Effort Large. Covers defaults review finding 1. No previous
+    examples found. The focused repair applies item 16 B before link and slot
+    consumers. Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
+        successful private publish directory, including reservation locks.
+        Evidence: `.context/publish-cleanup/`.
   - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
   - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
@@ -2508,6 +2675,29 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         initial previews and the replacement document load before checking its
         title and marker. Keep every assertion and the atomic publication fixture.
         Evidence: `.context/f11/reproduction.md`.
+  - [x] F12: follow-ups of F10 and F11, given by the orchestrator on
+        2026-10-20, one commit each. F12 merges F10 and F11 first, because
+        both wait in batch 13. Merge decisions: `.context/f12/merge-decisions.md`.
+    - [x] `viewer_details.spec.ts` imports the shared Details copy, paths,
+          viewports and readers, with the heading and list checks.
+    - [x] `mokly-css-evidence-presentation.md` names the stage labels of each
+          view state, as the viewer shows them.
+    - [x] In the standalone shell, a detail of another deployment keeps the
+          destination's loading stage until the full page load. The F11
+          deployment case now fails if the outgoing document shows the
+          unavailable stage. An embedded host behaves as before.
+    - F12 decision 1 for the user: an embedded host shows the unavailable
+      stage with retry after another deployment, which the viewer contract
+      does not name. Severity Medium, effort Small. Recommended: A, state
+      that behaviour in `mokly-viewer.md` and test it.
+    - Follow-up: a use-case route whose step detail fails while the use
+      case detail reports another deployment still shows the unavailable
+      stage before the page load. Effort Small. Covers F12 review finding 2.
+      Previous examples: F11 and `89f8f6cd` for a route with one detail.
+  - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
+        Exclude sampled orphans only when their own records have disappeared.
+        Keep persistent ownership failures and resource retention.
+        Evidence: `.context/f13/reproduction.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:
@@ -2718,11 +2908,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
           id format. Done by `054e994d`.
     - [x] Outside-scope item: the CSS evidence pages let a page use
           component elements without usage records. Done by `65179c45`.
-  - M10 D1 round 4 decision 11: two PostCSS evidence tests fail on the Node
-    22.14.0 viewer runner, which has no `module.registerHooks`. Item 60 C on
-    `rebuild/ci-gates` raises the floor to 22.15.0. That branch applied it by
-    default under the user rule. Until it merges here, these two tests are the
-    only accepted failures of this branch's viewer suite.
+  - [x] M10 D1 round 4 decision 11: item 60 C from `rebuild/ci-gates`
+        raises the Node floor to 22.15.0. Both PostCSS evidence tests must
+        pass on that runtime and 24.21.0. The earlier exception has ended.
   - M10 D1 round 4 decision 13 for the user: write each sweep reason from a
     list of the old test's assertions, and check each port's title. Severity
     Low, effort Small. Covers findings 3 to 6 of review 1 and finding 10
@@ -2780,9 +2968,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     component counterpart map next to `Lookup::counterpart`. Separate branch.
   - `crates/mokly-compare/src/review_projection.rs:73-82` attaches variants
     through the kind-less `Pairing::paths` map next to `Lookup::parent`. Separate branch.
-  - Milestone 12 static review 3, finding 4: the packed native binary scan for
-    `MOKLY_TEST_` needs user approval for a new gate. The module-erasure test
-    checks only compiler exclusion of the debug fault module.
+  - Milestone 12 static review 3, finding 4: settled on 2026-10-19 by decision
+    2 = A. Packed-native inspection rejects `MOKLY_TEST_` for all five targets,
+    including reused archives. The module-erasure test remains.
   - [x] Milestone 12 static review 2, finding 6: settled on 2026-10-20 by
         item 30 A, applied by default (user rule). Defer forced exit during
         installation, rollback, and cleanup.
@@ -2834,9 +3022,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        at `da23c1ce`: the stub declares the packaged Browse icon, so no
        `/favicon.ico` request fails, and the packed smoke has no icon
        allowance.
-  - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
-        item 4 A, applied by default (user rule). Publish build warnings are
-        fatal only with `--strict`.
   - Decision log item 32 follow-ups for the user, raised on 2026-10-20:
     1. A screen or component that only changed components affect offers no
        comparison in the shell. Severity Medium, effort Medium. Its entry
@@ -2848,14 +3033,51 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        such an entry, open it from Affected screens, and depict its pane
        heading. Option A keeps the band hidden and corrects the first
        sentence.
-    2. A variant of an affected component names no changed components.
-       Severity Medium, effort Small. The affected records name the parent
-       as the consumer, so `projection_affected.rs` gives `relatedComponents`
-       to the parent's detail only. A variant page without a loaded review
-       then reads "No changes to this saved view." while its preview changed.
-       Recommended: B, also index each record by the variant whose views its
-       evidence names. Option A documents that only the parent page explains
-       the shared change.
+    2. Related components follow the parent, not the changed views.
+       Severity Medium, effort Medium. The affected records name the parent
+       as the consumer for every view of a component, so `projection_affected.rs`
+       gives `relatedComponents` to the parent's detail only. A variant page
+       without a loaded review then reads "No changes to this saved view."
+       while its preview changed. A parent page whose variant alone uses the
+       changed component claims a shared change in its own preview (hub
+       review finding 1, merged here by the orchestrator on 2026-10-20).
+       Recommended: B, key `relatedComponents` by the entry whose views each
+       evidence item names, in place of the parent, and update the Status
+       Lines rule. Option A documents that only the parent page explains the
+       shared change.
+  - Hub review of `rebuild/defaults-viewer`, finding 5, raised on
+    2026-10-20: no artboard shows the pane heading “Components this screen
+    uses changed”. Severity Low. The shell shows it in a loaded comparison
+    of a screen in Changes, beside a changed view, on an unchanged view that
+    keeps a component-owned record or that the affected records name. Draw
+    that comparison when follow-up 1 above settles: one changed and one
+    affected view, with the inventories and the matrix snapshots. The new
+    mockup is Large.
+  - [x] Hub review of `rebuild/defaults-viewer`, fixed on 2026-10-20 in
+        `rebuild/defaults-viewer-fix1`: finding 2, an expanded step frame
+        left a page scrim (`1ea520af`, B); finding 3, unused lookup
+        operations (`fe3624df`, B, except `HistoricalManifest`); and
+        finding 4, the non-goal exception (`e98815dc`, A). The orchestrator
+        also assigned three problems outside its scope: the design's changed
+        component line now follows the Status Lines rule (`69ffa907`), the
+        catalogue column stays at 900px (`eeaea061`), and the dead workspace
+        path for a catalogue without published records is gone (`37e596df`).
+  - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
+    user: `HistoricalManifest` has no user and no published export since
+    `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still
+    names it as a released type. Severity Low, effort Small. Recommended: B,
+    delete the alias and list `Manifest`, `ManifestV10`, and
+    `HistoricalManifest` with the names that `@mokly/viewer/data` stops
+    exporting. Option A keeps the alias and corrects only the release note.
+  - Outside the scope of the hub review of `rebuild/defaults-viewer`, found
+    by its fix round: eleven shell and viewer modules, such as
+    `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a catalogue
+    without published records, which no delivery builds. Making
+    `publicModel` required in the shell catalogue type would show which are
+    dead. Separate branch.
+  - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
+        item 4 A, applied by default (user rule). Publish build warnings are
+        fatal only with `--strict`.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.
@@ -2922,6 +3144,17 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - 9: settled by Decision 36 on 2026-10-14.
   - 11: settled on 2026-10-14; the format inventory page carries the Status
     line.
+  - Follow-up: classify CSS statements without a block once in the section
+    reader, for the module check, the renamer, and the token check. Effort
+    Medium. Covers M14 nesting report finding 22: a wrapper left open at the
+    end of input in a declaration block gets the generic syntax message,
+    which the wrapper table test pins (option A, kept by the orchestrator on
+    2026-10-20). Previous examples: `.c{}.y`, where the token check fired
+    instead of the syntax check.
+  - `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
+    check always reports line 1, column 1, though its catalogue row shows
+    `{line}:{column}`. Found by the M14 nesting round 6 review. Separate
+    branch.
 
 ## Post-merge follow-up (non-blocking)
 

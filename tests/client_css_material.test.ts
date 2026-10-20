@@ -4,7 +4,10 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
+import type {
+  ReviewResult,
+  ReviewState,
+} from "../packages/viewer/dist/review/types.js";
 import {
   selectedComparisonDocuments,
   selectedComparisonViews,
@@ -88,4 +91,28 @@ test("an effective Light comparison retains the requested Dark fallback label", 
   });
 
   assert.match(markup, /<h3>Mobile · Screen changed · Light only<\/h3>/);
+});
+
+/** The ordinary label of each view state, which the presentation contract names. */
+const STATE_LABELS: readonly (readonly [ReviewState, string])[] = [
+  ["changed", "Screen changed"],
+  ["unchanged", "No changes to this screen"],
+  ["added", "New screen"],
+  ["removed", "Screen removed"],
+  ["ignored-only", "Only excluded content changed"],
+];
+
+test("each view state reads the ordinary label that the contract names", () => {
+  for (const [state, label] of STATE_LABELS) {
+    // The material reason keeps the ordinary label for a changed view.
+    const result = cssSchemaFixture();
+    result.entries[0]!.views[0]!.state = state;
+    const markup = renderComparison(result, {
+      colorScheme: "light",
+      mode: "side",
+      requestedColorScheme: "light",
+      viewport: "mobile",
+    });
+    assert.match(markup, new RegExp(`<h3>Mobile · ${label}</h3>`, "u"), state);
+  }
 });

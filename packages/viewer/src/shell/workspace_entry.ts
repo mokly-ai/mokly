@@ -29,25 +29,6 @@ function parentEntry(
 }
 
 /**
- * Resolve the schema-owning component for a parent or variant route. A
- * variant reaches its parent through the branch-point lookup, so a moved or
- * case-renamed parent still owns its removed variants.
- */
-export function workspaceComponent(
-  catalogue: Catalogue,
-  entry: WorkspaceEntry,
-): ManifestComponent | undefined {
-  if (entry.kind !== "component") return;
-  const candidate = isManifestComponentVariant(entry)
-    ? parentEntry(catalogue, entry)
-    : entry;
-  return candidate?.kind === "component" &&
-    !isManifestComponentVariant(candidate)
-    ? candidate
-    : undefined;
-}
-
-/**
  * The identity a routed workspace mounts under. A component variant shares
  * its resolved parent's workspace, so moving between siblings keeps the
  * workspace state; any other entry, and a variant without an eligible parent,
@@ -60,17 +41,6 @@ export function workspaceKey(
   if (entry.kind !== "component" || !isManifestComponentVariant(entry))
     return entry.path;
   return parentEntry(catalogue, entry)?.path ?? entry.path;
-}
-
-/** Product title for a routed consumer, including its component parent. */
-export function workspaceEntryTitle(
-  catalogue: Catalogue,
-  entry: CatalogueManifestEntry,
-): string {
-  if (entry.kind !== "component" || !isManifestComponentVariant(entry))
-    return entry.title;
-  const parent = parentEntry(catalogue, entry);
-  return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }
 
 /** Parent component evidence or the routed screen's own evidence identity. */

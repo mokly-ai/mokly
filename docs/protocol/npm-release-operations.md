@@ -46,7 +46,7 @@ Before enabling publish, maintainers must configure and verify:
 - each package's trusted-publisher repository, workflow filename, environment,
   and allowed publish action exactly match the values above; and
 - immutable `v*` and `viewer-v*` tag update and deletion protection and who may
-  invoke the manual retry with both tags.
+  invoke the manual retry with the CLI tag and any newly released viewer tag.
 
 No long-lived npm write token is stored in GitHub Actions. See
 [GitHub publishing protections](./npm-github-protections.md) for exact setup,
@@ -55,7 +55,7 @@ blockers.
 
 ## Release Evidence
 
-Each release records one checked commit, both immutable tags and every package
+Each release records its checked CLI commit, viewer tag source, and every package
 version, the CLI's exact viewer and platform dependencies, every uploaded
 tarball and pack report, every registry verification result, the GitHub
 releases, the npm URLs, the provenance and signature results, and every
@@ -68,7 +68,8 @@ Keep the workflow run and the protection read-backs. An interactive bootstrap
 publication has source, hash, and npm signature evidence, not OIDC provenance;
 trusted publications generate provenance automatically. Do not claim a
 signature check proves an attestation exists. A failed publish never changes a
-tag or rebuilds from a branch; retries accept only the existing immutable pair.
+tag or rebuilds from a branch. Retries use the existing immutable CLI tag and
+any newly released viewer tag. A CLI-only retry leaves `viewer_ref` empty.
 
 ## Related Docs
 
