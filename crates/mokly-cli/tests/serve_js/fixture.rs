@@ -3,6 +3,7 @@
 use std::fs::{self, File};
 use std::os::fd::FromRawFd;
 use std::path::{Path, PathBuf};
+use std::ptr;
 
 pub(super) fn terminal(root: &Path, workspace: &Path) -> (PathBuf, File, File) {
     let package = root.join(".fixture-sidecar");
@@ -25,9 +26,9 @@ pub(super) fn terminal(root: &Path, workspace: &Path) -> (PathBuf, File, File) {
             libc::openpty(
                 &mut master,
                 &mut slave,
-                std::ptr::null_mut(),
-                std::ptr::null(),
-                std::ptr::null(),
+                ptr::null_mut(),
+                ptr::null_mut(),
+                ptr::null_mut(),
             )
         },
         0
