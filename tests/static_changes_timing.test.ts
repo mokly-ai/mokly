@@ -56,7 +56,7 @@ test(
 );
 
 test(
-  "Changes timings count final view states and measure sorted changed paths without source data",
+  "Changes timings count final view states without a changed-path stage or source data",
   { timeout: 120_000 },
   async (context) => {
     const root = await publicationFixture();
@@ -123,13 +123,8 @@ test(
         const paths = records.filter(
           (record) => record.stage === "review.changed-paths",
         );
-        assert.deepEqual(
-          paths.map((record) => record.event),
-          ["start", "end"],
-        );
-        assert.equal(paths[1]!.status, "ok");
-        assert.equal(paths[0]!.parentId, count.id);
-        for (const record of [...compared, ...paths]) {
+        assert.deepEqual(paths, []);
+        for (const record of compared) {
           assert.ok(!JSON.stringify(record).includes(root));
           assert.deepEqual(
             Object.keys(record).filter(

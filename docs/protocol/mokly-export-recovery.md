@@ -138,7 +138,7 @@ configuration loading. The window covers these operations:
 
 1. Configuration loading, base resolution, and the base side's source extraction.
 2. Catalogue validation and rendering.
-3. Public-file capture and changed-path evidence collection.
+3. Public-file capture and resource comparison.
 4. Comparison generation, the Changes calculation, and removed preview
    capture.
 5. Output assembly and publication-metadata validation.

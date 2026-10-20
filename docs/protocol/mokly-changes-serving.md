@@ -42,7 +42,7 @@ Changes unavailable with its diagnostic.
 Entry pairing, view pairing, and view states follow
 [Changes and screen comparisons](./mokly-changes.md#entries-and-views). The
 output directory of `build`, with its symlink-resolved in-repository target,
-is excluded before changed-path evidence is read, so a build never affects
+is excluded from source capture and resource comparison, so a build never affects
 its own Changes.
 
 A complete comparison is one generation: `review.json`, the review result v8

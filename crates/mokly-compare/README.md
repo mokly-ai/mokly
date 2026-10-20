@@ -90,8 +90,7 @@ Canonical impact groups stay at the consumer level. A different entry kind
 at an old path supplies no destination.
 
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
-Its timing spans count final view states and measure changed-path collection,
-deduplication, and sorting without recording source data.
+Its timing spans count final view states without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 Capture timings separate full validation, document composition, encoding,

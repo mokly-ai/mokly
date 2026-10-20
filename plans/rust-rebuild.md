@@ -384,6 +384,13 @@ readiness rather than blocking this acceptance round on further startup work.
   This prevents deep-page aborts while preserving honest evidence.
   Alternatives: A, retain the gap; C, replace the recursive matcher.
 
+- Orchestrator item 45 B (2026-10-20, applied by default (user rule)): remove
+  `review.changed-paths` and the claimed Git changed-path comparison input.
+  Keep output exclusions against source capture and resource comparison.
+  Keep the independent publish checkout check. The comparison consumes
+  rendered sources, so no consumer needs Git path discovery. Alternatives:
+  A, retain and rename the span; C, add unused Git discovery.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1132,11 +1139,9 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
 
 ## Milestone 9: Changes
 
-- [ ] Settle the Git changed-path input (user decision 45): the
-      `review.changed-paths` row in `mokly-timings.md` describes Git discovery,
-      but the span measures snapshot changed-entry collection. The comparison
-      contract names Git changed paths as an input that production code does
-      not read. Keep the span and the M12 tick pending the decision.
+- [x] Settle the Git changed-path input with decision default 45 B. Remove
+      the misleading timing stage and Git-input wording. Keep output exclusions
+      for source capture and resource comparison. Keep publish checkout checks.
 
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review

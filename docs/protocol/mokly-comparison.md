@@ -7,8 +7,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 Comparison decides, for every entry and view, whether the base and the head
 differ in a way a reviewer should see, and who owns each difference. Its
 inputs are the head side rendered from the working tree, the base side
-rendered from the base commit under [Sides](#sides), the Git changed paths,
-and the configured review settings. It works on parsed trees. It never reads recorded text offsets, and
+rendered from the base commit under [Sides](#sides), and the configured review
+settings. It works on parsed trees. It never reads recorded text offsets, and
 it never splices document text.
 
 ## Markers
