@@ -129,10 +129,19 @@ export async function activateRow(page: Page, entryId: string): Promise<void> {
   await nav.locator(`a[data-nav-row][data-entry-id="${entryId}"]`).click();
 }
 
-/** Search the catalogue; Changes keeps only the rows the query matches. */
+/**
+ * Search the catalogue; Changes keeps only the rows the query matches. A
+ * narrow viewer shows a compact control: its button opens the field, and
+ * closing it again keeps the query and shows the navigation menu.
+ */
 export async function search(page: Page, query: string): Promise<void> {
   await openChanges(page);
-  await page.locator("[data-mokly-search]").fill(query);
+  const field = page.locator("[data-mokly-search]");
+  const compact = page.getByRole("button", { name: "Search catalogue" });
+  const opened = !(await field.isVisible()) && (await compact.isVisible());
+  if (opened) await compact.click();
+  await field.fill(query);
+  if (opened) await page.getByRole("button", { name: "Close search" }).click();
 }
 
 /** Wait until the head, and the address on a routing host, name one entry. */

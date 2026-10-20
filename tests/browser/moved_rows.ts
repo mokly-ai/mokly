@@ -36,12 +36,14 @@ export const copyMovedHost: MovedHost = {
 
 /**
  * An embedded viewer over the branch copy through one frame adapter. Its
- * host page opens an entry by query and keeps one fixed width.
+ * host page opens an entry by query and gives the viewer the window width,
+ * so a narrow window shows a narrow viewer. The Moved-row case runs this host
+ * at one width, as the old suite did.
  */
 export function embeddedMovedHost(adapter: "cross" | "same-origin"): MovedHost {
   return {
     open: (page, entry) =>
-      page.goto(`/viewer.html?adapter=${adapter}&entry=${entry}`),
+      page.goto(`/viewer.html?adapter=${adapter}&responsive=1&entry=${entry}`),
     comparisons: "published",
     routes: false,
     widths: [1280],
