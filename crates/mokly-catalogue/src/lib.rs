@@ -47,6 +47,7 @@ mod variants;
 pub mod working_tree;
 mod working_tree_read;
 mod yaml;
+mod yaml_aliases;
 mod yaml_frame;
 pub mod yaml_limits;
 mod yaml_positions;

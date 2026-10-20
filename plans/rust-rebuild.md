@@ -2483,7 +2483,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     delivery model; keep the current bundled code and pages pending the user.
   - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
-  - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
+  - [x] Milestone 4 review 1, finding 10: bound YAML alias expansion at
+        1,000,000 nodes per file with `html-front-matter`, before any copy.
+        Decision: item 7 option A, applied by default (user rule), 2026-10-20.
   - Milestone 7 review 1, finding 12: decide whether to delete the
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
     `catalogue-v6.json` and their `.prettierignore` lines; it waits for the

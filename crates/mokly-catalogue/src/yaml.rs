@@ -4,8 +4,10 @@
 //! nesting does not consume native stack. Each node's JSON pointer is built once
 //! from its parent's pointer. A value deeper than [`MAX_DEPTH`] fails where it
 //! starts, so later recursive traversal of the decoded value stays bounded.
+//! Before the build, the alias scan bounds the nodes that aliases expand to,
+//! and the builder keeps copies of only the anchors that an alias refers to.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::str::Chars;
 
 use mokly_model::catalogue::SourceLocation;
@@ -15,8 +17,9 @@ use yaml_rust2::parser::{Event, Parser, Tag};
 use yaml_rust2::scanner::{Marker, TScalarStyle};
 
 use crate::diagnostic::{Code, Issue};
+use crate::yaml_aliases;
 use crate::yaml_frame::{Frame, Rejected};
-use crate::yaml_limits::MAX_DEPTH;
+use crate::yaml_limits::{MAX_ALIAS_NODES, MAX_DEPTH};
 use crate::yaml_positions::{Positions, ROOT};
 use crate::yaml_value::{copy, discard, height};
 
@@ -33,7 +36,16 @@ pub(crate) fn parse(text: &str, path: &str, first_line: usize) -> Result<Documen
         parser: Parser::new_from_str(text),
         path,
         first_line,
+        aliased: BTreeSet::new(),
         anchors: BTreeMap::new(),
+    };
+    reader.aliased = match yaml_aliases::scan(text, MAX_ALIAS_NODES) {
+        Ok(aliased) => aliased,
+        Err(marker) => {
+            let message =
+                format!("YAML aliases exceed {MAX_ALIAS_NODES} expanded nodes; use fewer aliases");
+            return Err(reader.error(marker, message));
+        }
     };
     loop {
         let (event, marker) = reader.next()?;
@@ -55,6 +67,8 @@ struct Reader<'a> {
     parser: Parser<Chars<'a>>,
     path: &'a str,
     first_line: usize,
+    /// The anchors that an alias refers to.
+    aliased: BTreeSet<usize>,
     /// Anchored nodes with locations relative to the node.
     anchors: BTreeMap<usize, Anchor>,
 }
@@ -193,8 +207,12 @@ impl Reader<'_> {
         }
     }
 
-    /// Register an anchored node with its locations relative to the node.
+    /// Register an anchored node that an alias refers to, with its locations
+    /// relative to the node.
     fn anchor(&mut self, anchor: usize, value: &Value, positions: Positions) {
+        if !self.aliased.contains(&anchor) {
+            return;
+        }
         let height = height(value);
         let document = Document {
             value: copy(value),

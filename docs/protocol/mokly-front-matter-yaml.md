@@ -23,6 +23,15 @@ valid front matter, in variant props. A bound of 64 levels, the props bound,
 was rejected because it rejects valid front matter. Without a bound, deep
 YAML could stop Serve or a build before validation reports it.
 
+The aliases of a file expand to at most 1,000,000 nodes. An alias expands
+to every node of its anchored value, mapping keys included. A file whose
+aliases expand to more fails at the alias that passes the bound.
+
+Decision: a fixed bound stops chains of aliases, which let a short file
+expand to billions of nodes, before Mokly copies a value. Rejecting aliases
+was the alternative, and it was rejected because authors share values with
+them.
+
 ## Related Docs
 
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
