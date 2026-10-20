@@ -2074,6 +2074,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Evidence: `.context/m14-nesting/report.md`.
   - [x] Keep CSS Modules name ranges after an attribute selector, so
         `.a[x]:global(.b)` no longer fails the token check.
+  - [x] Limit the CSS Modules empty-wrapper and ICSS checks to selectors and
+        `@scope` preludes; other at-rule preludes stay as authored, as
+        css-loader does. Decision: nesting report item 13 option A, approved
+        by the orchestrator on 2026-10-20.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
         (pending user decision).
