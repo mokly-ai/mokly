@@ -2387,6 +2387,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Outside collector review scope: `crates/mokly-compare/src/comparison.rs`
+    calls `render_all` in `compare_captured` after `build_prepare` validated
+    the head. Evicted head views can compose again. Separate branch.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
