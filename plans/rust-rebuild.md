@@ -2437,9 +2437,15 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
+      - [x] Follow-up F9b item 4: the unchanged component index
+            `branch/parent` is the folder's own page. The moved parent check
+            now activates its container row, which opens the moved parent,
+            and under the search `secondary` opens the removed sibling.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
+      - [x] Follow-up F9b item 4: the comment now says that each key is the
+            case title that starts each test name.
     - `tests/browser/static_component_comparisons.spec.ts:32`,
       `removed_previews_static.spec.ts:76`, and
       `removed_previews_viewer.spec.ts:173`: they repeat the Card `.accent`

@@ -161,9 +161,10 @@ async function movedConsumers(page: Page): Promise<void> {
 
 async function movedParent(page: Page): Promise<void> {
   await openEntry(page, paths.movedChild);
+  // The folder above the moved parent has its own page, so its crumb links.
   await expectHead(page, "Action", [
     "Branch [button]",
-    "Parent [button]",
+    "Parent -> /view/branch/parent/",
     "Archive [button]",
   ]);
   const family = {
@@ -174,6 +175,14 @@ async function movedParent(page: Page): Promise<void> {
   };
   const removedCrumbs = ["Branch [text]", "Parent [text]"];
   await removedSibling(page, family, removedCrumbs);
+  // The folder's unchanged own page is a container row: it opens the first
+  // changed entry it lists, and under a search the removed sibling.
+  await activateRow(page, paths.parentFolder);
+  await expectRouted(page, paths.movedParent);
+  await search(page, "secondary");
+  await activateRow(page, paths.parentFolder);
+  await expectRouted(page, paths.removedChild);
+  await expectHead(page, "Action", removedCrumbs);
   await activation(page, family, removedCrumbs);
 }
 
@@ -239,7 +248,7 @@ async function reusedParent(page: Page): Promise<void> {
   ).toHaveCount(0);
 }
 
-/** Every case's checks, keyed by the shared case name. */
+/** Every case's checks, keyed by the case title that starts each test name. */
 export const BRANCH_POINT_CHECKS = {
   "moved consumers": movedConsumers,
   "moved parent": movedParent,

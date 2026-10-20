@@ -60,6 +60,10 @@ function sources(before: boolean): Sources {
         : [variant("Primary", "Continue"), variant("secondary", "Cancel")],
     );
   const caseScreen = "---\ntitle: Case receipt\n---\n<h1>Case receipt</h1>";
+  // The unchanged own page of the folder above the moved parent, so its row
+  // is a container that Changes activation can open.
+  const parentIndex =
+    "---\ntitle: Parent\nelement: bp-parent\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Parent}\n---\n<aside>{{label}}</aside>";
   return {
     "branch-mark.svg": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><title>${side} branch asset</title><rect width="24" height="24" fill="${before ? "red" : "blue"}"/></svg>`,
     "branch-assets.css":
@@ -80,6 +84,7 @@ function sources(before: boolean): Sources {
       "specs/branch/consumers/archive/status.component.html": consumer(true),
       "specs/branch/consumers/archive/receipt.screen.html": receipt(true),
     }),
+    "specs/branch/parent/index.component.html": parentIndex,
     "specs/branch/parent/action.component.html": before ? action(false) : null,
     ...(!before && {
       "specs/branch/parent/archive/action.component.html": action(true),
@@ -148,6 +153,7 @@ export const branchPointPaths = {
   previousScreen: "branch/consumers/receipt",
   movedConsumer: "branch/consumers/archive/status/default",
   previousConsumer: "branch/consumers/status/default",
+  parentFolder: "branch/parent",
   movedParent: "branch/parent/archive/action",
   movedChild: "branch/parent/archive/action/primary",
   previousChild: "branch/parent/action/primary",
