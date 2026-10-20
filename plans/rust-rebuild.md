@@ -2255,6 +2255,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         proves the 404; a held-request test keeps each response on its selected
         copy. The browser case passes 20 runs in distinct workers with every
         assertion retained. Evidence: `.context/rust-rebuild/delegation/flake-fixes/report-1.md`.
+  - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
+        Exclude sampled orphans only when their own records have disappeared.
+        Keep persistent ownership failures and resource retention.
+        Evidence: `.context/f13/reproduction.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:

@@ -356,6 +356,9 @@ points; see the
   downloads, logs, and interrupt cleanup.
 - [`scripts/verification`](./scripts/verification) — the verification scripts
   that CI and the gate share.
+- [`scripts/verification/process-owner-snapshot.mjs`](./scripts/verification/process-owner-snapshot.mjs)
+  — validates ownership during concurrent cleanup and rejects persistent
+  broken owner and process records.
 - [`examples/basic`](./examples/basic/README.md) — the reference consumer and
   design catalogue.
 
