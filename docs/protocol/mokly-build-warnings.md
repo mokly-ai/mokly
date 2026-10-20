@@ -21,11 +21,14 @@ type BuildDiagnosticCode =
   | "base-dependencies"
   | "duplicate-component-stylesheet"
   | "html-foster-parented"
+  | "html-ignore-attribute"
   | "html-unused-props"
   | "link-control-ancestor"
   | "link-control-descendant"
   | "marker-in-raw-text"
+  | "props-control-bounds"
   | "props-not-data"
+  | "props-unsafe-integer"
   | "stylesheet-extglob";
 
 type BuildDiagnosticSubject = {

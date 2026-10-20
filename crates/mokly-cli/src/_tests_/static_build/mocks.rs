@@ -29,7 +29,7 @@ pub(super) fn mocks_with_cancellation(
     let renders = case.fail != "fingerprint";
     let protects = !matches!(case.fail, "fingerprint" | "render");
     let warned = protects && case.fail != "protect";
-    let assembles = warned && !case.warnings;
+    let assembles = warned;
     let stages = assembles && case.fail != "assemble";
     let verifies = stages && case.fail != "stage";
     let finished = verifies && case.fail != "verify";

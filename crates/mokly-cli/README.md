@@ -208,9 +208,11 @@ unique sorted paths and their recovery hint in both output modes. Completed
 output stays in the private directory after an upload failure. Successful and
 already-published outcomes remove exactly that snapshot and its empty parent.
 Sibling files and symlink targets survive cleanup. A cleanup failure reports
-the retained path without changing the successful receipt. Publish warnings
+the retained path without changing the successful receipt. Rich output uses the
+shared warning glyph and prints that full path on its own recovery line. Publish warnings
 are fatal only with `--strict`. Without it, the command reports warnings and
 continues with output installation and upload.
+Build preparation owns the single strict-warning check for both commands.
 
 ## Quick Start
 
