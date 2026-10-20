@@ -35,7 +35,7 @@ test("native release jobs build locked targets and gate publication on the matri
     ),
   ) as { jobs: Record<string, Job> };
   const native = Object.values(workflow.jobs).find((job) =>
-    job.steps.some((step) =>
+    job.steps?.some((step) =>
       step.run?.includes("scripts/release/build-native.mjs"),
     ),
   );
@@ -103,17 +103,26 @@ test("native release jobs build locked targets and gate publication on the matri
     );
   }
   const publish = workflow.jobs.publish!;
-  assert.ok(publish.needs?.includes("build-native"));
-  const preserve = publish.steps.find(
+  const preparation = workflow.jobs["prepare-release"]!;
+  assert.ok(preparation.needs?.includes("build-native"));
+  assert.ok(publish.needs?.includes("prepare-release"));
+  const called = parse(
+    await fs.readFile(
+      path.join(repositoryRoot, ".github/workflows/release-prepare.yml"),
+      "utf8",
+    ),
+  ) as { jobs: Record<string, Job> };
+  const prepare = called.jobs.prepare!;
+  const preserve = prepare.steps.find(
     (step) => step.name === "Preserve checked artifacts",
   );
   assert.equal(
     preserve?.if,
     "steps.publish_artifacts.outputs.artifact_run_id == ''",
   );
-  assert.match(publish.if!, /needs\.build-native\.result == 'success'/);
+  assert.match(preparation.if!, /needs\.build-native\.result == 'success'/);
   assert.ok(
-    publish.steps.some(
+    prepare.steps.some(
       (step) =>
         step.uses?.startsWith("actions/download-artifact@") &&
         step.with?.["merge-multiple"] === true,
@@ -122,14 +131,14 @@ test("native release jobs build locked targets and gate publication on the matri
   assert.equal(native.permissions?.["id-token"], undefined);
   assert.match(native.if!, /artifact_run_id == ''/);
   assert.ok(
-    publish.steps.some(
+    prepare.steps.some(
       (step) =>
         step.with?.["run-id"] ===
         "${{ steps.publish_artifacts.outputs.artifact_run_id }}",
     ),
   );
   assert.ok(
-    publish.steps.some((step) =>
+    prepare.steps.some((step) =>
       step.run?.includes("pack.mjs .context/release-artifact --reuse"),
     ),
   );

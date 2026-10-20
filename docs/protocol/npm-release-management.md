@@ -66,33 +66,33 @@ The release workflow then:
 1. Selects the root CLI action outputs and an optional new viewer tag.
    Manual retries supply `publish_ref` and leave `viewer_ref` empty for a
    CLI-only release. Ordinary pushes without a release do nothing.
-2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
-3. Resolves the latest available Node 24 patch for the single publish job and
-   installs npm 11.21.0, the `packageManager` version, without a package cache.
-   Rust 1.95.0, the `rust-toolchain.toml` pin, is installed for the live Rust
-   advisory audit in both verification modes. Chromium is installed for the packed viewer smoke
-   in both modes. A tag that predates
-   `rust-toolchain.toml` verifies on the runner's default toolchain.
+2. Starts read-only preparation after native builds succeed, or after validated
+   retry archives replace those builds. Preparation checks out the immutable
+   CLI tag with full history and no persisted checkout credentials.
+3. Resolves the latest available Node 24 patch once and installs npm 11.21.0
+   without a package cache. Publication uses that same exact Node version.
+   Preparation installs the pinned Rust toolchain and Chromium. A tag that
+   predates the Rust toolchain pin uses the runner's default toolchain.
 4. Verifies the CLI tag identifies clean `HEAD` locally and on origin. A new
    viewer tag must identify the same commit. A reused viewer tag must match its
    package version, origin, and an ancestor of `HEAD`.
-5. Runs `npm ci`, performs the live workspace dependency audit, then selects
-   applicable complete CI evidence for the tag's exact tree or falls back to the
-   complete `cargo xtask check --dependency-audit strict` gate. The
+5. Runs dependency installation, the live npm and Rust audits, and verification
+   in the read-only preparation job. It reuses applicable complete CI evidence
+   for the exact tagged tree or runs the complete strict gate. The
    [release verification evidence contract](./npm-release-evidence.md) defines
-   candidate selection, validation and failure semantics.
-6. On the first run, downloads the five platform archives from the build jobs
-   and packs a new viewer before the CLI. A CLI-only release downloads the
-   exact published viewer archive without lifecycle scripts. Its report retains
-   the viewer tag commit and tree; the other reports identify the CLI commit. A retry downloads the first run's
-   checked seven-package archive set and runs `pack.mjs --reuse` without a
-   build. It validates every packed manifest and inventory plus the
-   runtime license closure, and smoke-tests clean consumers from those exact
-   archives under the
-   [release contract](./npm-release.md#release-build-matrix-and-publication-order).
-   Each archive has its own integrity, shasum, inventory and size report under
-   `release-artifact/<package>`. Rechecks the source and tags after lifecycle
-   scripts and preserves every artifact.
+   selection and failure semantics. No preparation step receives publication
+   credentials or access to the protected npm environment.
+6. On the first run, preparation downloads the five native archives and packs
+   the viewer and CLI. A CLI-only release downloads the pinned published viewer
+   without lifecycle scripts. Its report retains the viewer tag's commit and
+   tree. Other reports identify the CLI commit. A retry reuses the original
+   checked seven-package set without rebuilding it. Preparation checks packed
+   manifests, inventories, runtime licenses, and clean-consumer smokes. It then
+   rechecks source and tags and preserves the archives and evidence.
+   Publication waits for preparation, downloads that exact saved set, installs
+   dependencies with lifecycle scripts disabled, and rechecks archives and tags.
+   It runs no Rust build, package build, or consumer smoke. Missing or invalid
+   archives stop publication instead of causing a privileged rebuild.
 7. Queries npm. A recognized missing-version response (`E404` or `ETARGET`)
    permits a publish; any other lookup failure stops the workflow. An existing
    version must byte-for-byte match the checked report and commit or the
@@ -132,6 +132,8 @@ or rebuilding different release bytes.
 
 The publish job alone receives `id-token: write`, plus read-only Actions and
 contents access, and runs in the protected GitHub environment named `npm`.
+Preparation receives only read-only Actions and contents access. It receives
+no inherited secrets. Both checkouts disable credential persistence.
 Release-please receives only contents, pull-request, and issue write
 permissions. Prefer a repository-owned fine-grained token or GitHub App
 credential in the `RELEASE_PLEASE_TOKEN` secret so release PR events trigger
@@ -158,8 +160,9 @@ When the tags exist but publication fails, rerun the failed job. Before a
 publication, the workflow saves `mokly-release-{cli-version}` with every
 checked archive and report. It retains this set and the native build artifacts
 for 90 days. Initial uploads use `overwrite: true`. A failed publish-job rerun
-selects the saved complete set and skips its upload, so it cannot delete the
-only retained copy. No package lifecycle rebuilds reused archives.
+downloads the saved set selected by preparation. Only preparation uploads a
+first-run set. A preparation retry reuses a saved set without replacing it,
+so publication cannot delete the retained copy. No package lifecycle rebuilds reused archives.
 
 Use **Re-run failed jobs**. A full workflow rerun repeats Release Please. The
 releases already exist, so Release Please reports no newly created CLI release and

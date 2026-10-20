@@ -8,6 +8,7 @@ import { parse } from "yaml";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 interface WorkflowJob {
+  uses?: string;
   permissions?: Readonly<Record<string, string>>;
   "runs-on"?: unknown;
   steps?: readonly { run?: string }[];
@@ -41,6 +42,11 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
 
     for (const [jobName, job] of Object.entries(workflow.jobs)) {
       const context = `${workflowName}:${jobName}`;
+      if (job.uses) {
+        assert.equal(context, "release.yml:prepare-release");
+        assert.equal(job.uses, "./.github/workflows/release-prepare.yml");
+        continue;
+      }
       const runsOn = job["runs-on"];
       assert.ok(typeof runsOn === "string", `${context} runner`);
       if (context === "design-attribution.yml:design-attribution") {

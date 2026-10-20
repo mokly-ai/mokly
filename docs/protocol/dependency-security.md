@@ -67,7 +67,9 @@ ignores any other advisory ID. These conditions require review before the audit
 can pass. Removing the approved ID remains allowed and restores its audit result.
 The repository suite, daily dependency audit, and release verification run it.
 A release with reusable CI evidence still runs a fresh Rust audit. The daily
-npm update automation keeps its npm report and does not update Rust crates.
+and release Rust audits run with read-only permissions and no publication
+credentials. Release publication depends on successful read-only preparation.
+The daily npm update automation keeps its npm report and does not update Rust crates.
 Rust fixes require a reviewed dependency change. A cached tool or build never
 replaces the live advisory check.
 

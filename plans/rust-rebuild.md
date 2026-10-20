@@ -2295,9 +2295,17 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         and code reference in a linked development guide to keep files short.
         Evidence: `.context/ci-release-checks/decision78-red.log` and
         `.context/ci-release-checks/decision78-green.log`.
-  - Follow-up: isolate the release Rust audit from the privileged publish job.
-    Effort Medium. Covers CI gates hub review finding 1B. Previous example:
-    daily audit isolation in finding 1A. The hub owns the user decision.
+  - [x] User decision 81 (2026-10-20): apply option B for CI gates hub review
+        finding 1. Move the release Rust audit and all verification, packing,
+        and consumer smokes into read-only preparation. Publication requires
+        that job and rechecks its exact saved archives. Disable publication
+        dependency lifecycle scripts and checkout credential persistence.
+        Keep the npm environment and OIDC token only in publication. Use the
+        same resolved Node version in both jobs. This removes privileged build
+        work instead of leaving complete-gate fallback in the publish job.
+        Retain original-run retry selection and immutable archive checks.
+        Evidence: `.context/ci-release-checks/decision81-red.log` and
+        `.context/ci-release-checks/decision81-green.log`.
   - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
     Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
     the design evidence upload. The hub owns the user decision.
