@@ -122,6 +122,7 @@
     "design/components/states/loading/usage-loading",
     "design/components/states/removed",
     "design/components/states/removed-consumer",
+    "design/components/states/shared-impact/affected-screen",
     "design/components/states/shared-impact/shared-impact",
     "design/components/states/shared-impact/style-changed",
     "design/components/states/shared-impact/style-outside",

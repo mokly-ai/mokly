@@ -73,9 +73,14 @@ test("a copied catalogue reloads on another deployment without comparison change
   const requests = staticRequests(page);
   await page.goto(`${host.url}/view/home/`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
+  await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(2);
   await markPage(page);
   site = next;
+  // The detail response can trigger a reload after the click has finished.
+  // Observe the replacement document before reading its title or marker.
+  const reloaded = page.waitForEvent("load");
   await page.locator('a[data-route="details/index.html"]').click();
+  await reloaded;
   await expect(page.locator("#mb-main h2")).toHaveText("New details");
   expect(await hasMarker(page)).toBe(false);
   await expect(

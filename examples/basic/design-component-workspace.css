@@ -139,6 +139,15 @@
 .ce-preview-view[data-preview-viewport="desktop"] {
   min-width: 720px;
 }
+/* A current desktop canvas sizes its view, centred while it fits and
+   otherwise from the left edge of the scrolling preview pane. */
+.ce-preview-set:has(.ce-canvas--current) {
+  justify-content: safe center;
+}
+.ce-preview-view[data-preview-viewport="desktop"]:has(.ce-canvas--current) {
+  flex: 0 0 auto;
+  min-width: 0;
+}
 .ce-preview-view[data-preview-viewport="mobile"] {
   min-width: min-content;
 }

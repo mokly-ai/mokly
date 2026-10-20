@@ -6,7 +6,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type { ManifestPage, ManifestV10 } from "../src/registry/types.js";
-import { viewEvidenceReasons } from "../src/review/view_evidence.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { ShellMain } from "../src/shell/views.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
@@ -80,7 +79,7 @@ test("an added document shows Added without a terminal line", () => {
   );
 });
 
-test("live classification supplies the same page facts without a published catalogue", () => {
+test("a catalogue without published records reads only its Changes list", () => {
   const page = fixture.pages.find((item) => item.path === "guide");
   assert.ok(page);
   const entry: ManifestPage = {
@@ -98,18 +97,12 @@ test("live classification supplies the same page facts without a published catal
     sourceFiles: [entry.sourcePath],
     entries: [entry],
   });
-  const live = (changedEntries: readonly string[], baseline = [entry]) =>
-    renderPage(createCatalogue(manifest), {
-      changedEntries,
-      componentChanges: {
-        baseline: { ...manifest, entries: baseline },
-        pageEvidence: [{ path: "guide", ...viewEvidenceReasons(CHANGED) }],
-      },
-    });
-  const changed = live(["guide"]);
+  const listed = (changedEntries: readonly string[]) =>
+    renderPage(createCatalogue(manifest), { changedEntries });
+  const changed = listed(["guide"]);
   assert.deepEqual(status(changed), ["Changed"]);
-  assert.equal(section(changed), CHANGED_SECTION);
-  assert.deepEqual(status(live([], [])), ["Added"]);
+  assert.doesNotMatch(changed, /mbk-evidence-files|Examined and excluded/);
+  assert.deepEqual(status(listed([])), ["Unmodified"]);
   const unknown = renderPage(createCatalogue(manifest));
   assert.deepEqual(status(unknown), []);
   assert.equal(section(unknown), undefined);

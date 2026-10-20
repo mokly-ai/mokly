@@ -52,7 +52,7 @@ export function ExplorerShell({
         : scenario === "screen" || scenario === "removed"
           ? 2
           : 1),
-    changedOnly: scenario !== "all",
+    changedOnly: scenario !== "all" && scenario !== "styles-all",
     nodes: explorerNodes(scenario, active, design, activeKey),
     ...(activeKey === undefined ? {} : { activeKey }),
   };

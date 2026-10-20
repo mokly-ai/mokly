@@ -208,7 +208,11 @@ go under `.context/verification-reports/remote/<run>/` and logs under
 beside the logs records checkout `HEAD`, base, ahead count, and fingerprint.
 A failed command shows its last 60 log lines and the log path. The summary
 names the base, the aggregate outcome as `passed` or `failed`, and the count
-of boxes that are neither stopped nor proven completed.
+of boxes that are neither stopped nor proven completed. Every failed or
+interrupted final result carries that actual count, including failed final
+fingerprint reads. An unreadable final fingerprint reports an unknown tree
+comparison and fails verification. Each failed aggregate or fingerprint read
+prints a warning, including reads cancelled by an interrupt.
 
 Local fallback happens only before the first suite command starts. After that
 boundary every failure fails the check, and one check never mixes local and
@@ -303,7 +307,8 @@ code.
 - [`src/remote/availability.rs`](./src/remote/availability.rs) and
   [`policy.rs`](./src/remote/policy.rs) own the ordered availability checks.
   [`runner.rs`](./src/remote/runner.rs) owns the remote phase order,
-  [`plan.rs`](./src/remote/plan.rs) the six-command inventory,
+  [`verdict.rs`](./src/remote/verdict.rs) attaches the final cleanup count,
+  [`plan.rs`](./src/remote/plan.rs) owns the six-command inventory,
   [`phases.rs`](./src/remote/phases.rs) parallel warmup and the all-probes
   barrier, and [`suites.rs`](./src/remote/suites.rs) concurrent suite
   execution and report downloads.

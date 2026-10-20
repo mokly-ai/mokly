@@ -266,6 +266,24 @@
       "target": "design/components/states/shared-impact/style-changed"
     },
     {
+      "source": "design/components/states/shared-impact/style-changed",
+      "within": "ce-affected",
+      "name": "Welcome↗",
+      "target": "design/components/states/shared-impact/affected-screen"
+    },
+    {
+      "source": "design/components/states/shared-impact/affected-screen",
+      "viewports": ["desktop"],
+      "name": "ActionChanged",
+      "target": "design/components/states/shared-impact/style-changed"
+    },
+    {
+      "source": "design/components/states/shared-impact/affected-screen",
+      "within": "ce-comparison-evidence",
+      "name": "Action",
+      "target": "design/components/states/shared-impact/style-changed"
+    },
+    {
       "source": "design/components/overview",
       "within": "ce-variants",
       "name": "Disabled",

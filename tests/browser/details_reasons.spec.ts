@@ -8,7 +8,16 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { parseReviewResult } from "../../packages/viewer/src/review/result_validation.js";
+import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
 
+import {
+  BASE,
+  FILES_LEAD,
+  MATCHED_LEAD,
+  OUTSIDE_LEAD,
+  UNRESOLVED_LEAD,
+  openEvidence,
+} from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   changesPaths,
@@ -18,17 +27,8 @@ import {
   showMode,
 } from "./comparison_ui.js";
 
-/** Inspector copy fixed by the CSS evidence and shell delivery contracts. */
-const BASE = "Compared with the branch point on fixture-base.";
+/** The reason sentence fixed by the workspace design contract. */
 const MATERIAL = "Rendered content changed.";
-const OUTSIDE_LEAD =
-  "These changed styles also apply outside the changed components on this screen:";
-const UNRESOLVED_LEAD =
-  "This change can apply anywhere on the screen, so the screen stays in Changes:";
-const MATCHED_LEAD = "Changed styles that apply to this screen:";
-const THEME = "static/mokly-generated/styles/theme.css";
-const CHANGED_CSS = "static/mokly-generated/styles/changed.css";
-const COMPACT_CSS = "static/mokly-generated/styles/compact.css";
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
@@ -39,17 +39,6 @@ function reviewRequests(page: Page): { count: number } {
     if (new URL(request.url()).pathname.endsWith("/review.json")) seen.count++;
   });
   return seen;
-}
-
-/** Open the Details tab and return the comparison details it reveals. */
-async function openEvidence(page: Page): Promise<Locator> {
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  const evidence = page.locator("[data-workspace-evidence]");
-  await expect(evidence).toBeVisible();
-  await expect(evidence.locator("p").first()).toHaveText(BASE);
-  return evidence;
 }
 
 /**
@@ -81,15 +70,10 @@ test("Current, a loaded comparison and Changes show the same facts once", async 
   await page.goto(`/view/${comparisonPaths.changed}/`);
   const evidence = await openEvidence(page);
   const expected = {
-    sentences: [
-      BASE,
-      MATERIAL,
-      "Changes to these files may affect this screen:",
-      "Changed component: Card",
-    ],
+    sentences: [BASE, MATERIAL, FILES_LEAD, "Changed component: Card"],
     files: [
-      [CHANGED_CSS, [UNRESOLVED_LEAD, ":root"]],
-      [THEME, [OUTSIDE_LEAD, ".accent"]],
+      [sheets.changed, [UNRESOLVED_LEAD, ":root"]],
+      [sheets.theme, [OUTSIDE_LEAD, ".accent"]],
     ],
   };
   // The detail's reasons arrive before any comparison is requested.
@@ -125,8 +109,8 @@ test("classification evidence arrives first and survives the comparison", async 
   await page.goto(`/view/${comparisonPaths.mobileOnlyChange}/`);
   const evidence = await openEvidence(page);
   const expected = {
-    sentences: [BASE, "Changes to these files may affect this screen:"],
-    files: [[COMPACT_CSS, [MATCHED_LEAD, ".auth"]]],
+    sentences: [BASE, FILES_LEAD],
+    files: [[sheets.compact, [MATCHED_LEAD, ".auth"]]],
   };
   await expect.poll(() => facts(evidence)).toEqual(expected);
   await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);

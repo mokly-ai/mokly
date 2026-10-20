@@ -27,7 +27,7 @@ async function expectKeptDocument(page: Page): Promise<void> {
   ).toBe(true);
 }
 
-/** Card's Usage lists the three screens that its change affects. */
+/** Card's Usage lists the component and the three screens that its change affects. */
 async function expectAffectedConsumers(page: Page): Promise<void> {
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   const affected = page.locator('[data-usage-section="affected"]');
@@ -35,6 +35,7 @@ async function expectAffectedConsumers(page: Page): Promise<void> {
     "Affected screens and components",
   );
   await expect(affected.getByRole("link")).toHaveText([
+    "Toolbar",
     "Changed screen",
     "Consumer screen",
     "Former screen · Removed",

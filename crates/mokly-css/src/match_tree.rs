@@ -4,6 +4,8 @@ use std::collections::BTreeMap;
 
 use mokly_model::evidence::EvidenceOwner;
 
+use crate::containment::ContainmentPath;
+
 /// Physical containment by a composed component region.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Containment {
@@ -28,8 +30,8 @@ pub struct MatchElement {
     pub children: Vec<usize>,
     /// Whether any direct text node has nonzero length.
     pub text: bool,
-    /// Inclusive physical component regions, from outermost to innermost.
-    pub regions: Vec<Containment>,
+    /// Shared inclusive physical component ancestry, visited innermost first.
+    pub regions: ContainmentPath,
     /// Nearest input owner, including slot suppliers.
     pub owner: EvidenceOwner,
 }

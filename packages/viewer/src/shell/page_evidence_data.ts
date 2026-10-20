@@ -5,7 +5,6 @@ import { viewEvidenceReasons } from "../review/view_evidence.js";
 import { publicEntryStatus } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import type { ShellContext } from "./context.js";
 import type { EntryStatus } from "./view_status.js";
 
@@ -18,10 +17,11 @@ export interface PageComparisonEvidence {
 }
 
 /**
- * Read a current page's facts from its published catalogue record or, when
- * the shell renders private data, from live classification. A page has no
- * views, so its one record is the whole evidence. A removed page, and Changes
- * that are not ready, have no facts.
+ * Read a current page's facts from its published catalogue record. A page has
+ * no views, so its one record is the whole evidence. A catalogue without
+ * published records knows only the context's Changes list, so it shows a
+ * status and no evidence. A removed page, and Changes that are not ready,
+ * have no facts.
  */
 export function pageComparisonEvidence(
   catalogue: Catalogue,
@@ -41,25 +41,11 @@ export function pageComparisonEvidence(
         }
       : {};
   }
-  const current = catalogue.manifest.entries.find(
+  const current = catalogue.manifest.entries.some(
     (entry) => entry.kind === "page" && entry.path === path,
   );
-  const snapshot = context.componentChanges;
-  if (
-    !current ||
-    (snapshot === undefined && context.changedEntries === undefined)
-  )
-    return {};
-  const live = snapshot?.pageEvidence?.find((item) => item.path === path);
-  const { path: _path, ...resources } = live ?? { path };
+  if (!current || context.changedEntries === undefined) return {};
   return {
-    status:
-      snapshot &&
-      !branchPoints(catalogue).baselineEntry(current, snapshot.baseline.entries)
-        ? "Added"
-        : (snapshot?.changedEntries ?? context.changedEntries)?.includes(path)
-          ? "Changed"
-          : "Unmodified",
-    ...(live ? { resources } : {}),
+    status: context.changedEntries.includes(path) ? "Changed" : "Unmodified",
   };
 }

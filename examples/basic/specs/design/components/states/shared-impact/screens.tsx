@@ -29,6 +29,14 @@ export function StyleOutsideMobile() {
   return <ScreenPage state="style-outside" viewport="mobile" />;
 }
 
+export function AffectedScreenDesktop() {
+  return <ScreenPage state="affected-screen" viewport="desktop" />;
+}
+
+export function AffectedScreenMobile() {
+  return <ScreenPage state="affected-screen" viewport="mobile" />;
+}
+
 /** Stylesheet changes that change a component, reach past it, or reach nothing. */
 export const styleChangedScreen = defineScreen({
   ...componentDesignMetadata,
@@ -56,6 +64,20 @@ export const styleOutsideScreen = defineScreen({
   ...artboards({
     desktop: <StyleOutsideDesktop />,
     mobile: <StyleOutsideMobile />,
+  }),
+});
+export const affectedScreenScreen = defineScreen({
+  ...componentDesignMetadata,
+  slug: "affected-screen",
+  title: "Screen affected by a changed component",
+  colorSchemes: ["light"],
+  description:
+    "Welcome opened from Action's Affected screens in Component with changed styles. Welcome has no Changes row of its own, yet the Action it uses renders differently, so Details explain the shared component change.",
+  rationale:
+    "Welcome's own content is unchanged, so its views stay unchanged, it reads Unmodified, and All shows it with no comparison controls. Details list the changed stylesheet with the styles that apply to Welcome, link Action, and end with the sentence that explains the change in place of the no-changes line.",
+  ...artboards({
+    desktop: <AffectedScreenDesktop />,
+    mobile: <AffectedScreenMobile />,
   }),
 });
 export const sharedImpactScreen = defineScreen({

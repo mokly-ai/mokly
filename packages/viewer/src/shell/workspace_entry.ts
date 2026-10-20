@@ -6,8 +6,6 @@ import {
   type ManifestComponentVariant,
 } from "../components/manifest_types.js";
 import type { ManifestScreen } from "../registry/types.js";
-import { reviewComponent } from "../review/entries.js";
-import type { ReviewEntry, ReviewResult } from "../review/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
@@ -62,24 +60,6 @@ export function workspaceKey(
   if (entry.kind !== "component" || !isManifestComponentVariant(entry))
     return entry.path;
   return parentEntry(catalogue, entry)?.path ?? entry.path;
-}
-
-/**
- * The component review a workspace reads: its resolved parent's entry, or for
- * a variant without an eligible parent, the parent entry that groups it.
- */
-export function componentReview(
-  result: ReviewResult | undefined,
-  component: ManifestComponent | undefined,
-  entry: WorkspaceEntry,
-): ReviewEntry | undefined {
-  if (component)
-    return result?.entries.find(
-      (item) => item.kind === "component" && item.path === component.path,
-    );
-  return entry.kind === "component" && isManifestComponentVariant(entry)
-    ? reviewComponent(result, entry.path)
-    : undefined;
 }
 
 /** Product title for a routed consumer, including its component parent. */

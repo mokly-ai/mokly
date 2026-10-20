@@ -74,9 +74,11 @@ fails the build with its referring route; a public reader returns not found
 for an unlisted file. One closure governs Serve, `build`, publish, and
 Changes.
 
-Declaring a component stylesheet grants no exception: its links, transitive
-imports, and assets pass the same closure. Declarations and owner claims
-never decide CSS rule attribution.
+Declaring a component stylesheet grants no source-delivery exception. It is a
+delivery root under the [stylesheet contract](./mokly-imported-styles.md).
+Its source, imports, and asset inputs stay private; its generated bundle and
+delivered assets pass the same closure. Declarations and owner claims never
+decide CSS rule attribution.
 
 ## Complete Source Inventory
 

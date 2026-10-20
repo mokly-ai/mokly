@@ -129,6 +129,7 @@ design/library/chrome/top-bar -> design/components/states/loading/usage-failed
 design/library/chrome/top-bar -> design/components/states/loading/usage-loading
 design/library/chrome/top-bar -> design/components/states/removed
 design/library/chrome/top-bar -> design/components/states/removed-consumer
+design/library/chrome/top-bar -> design/components/states/shared-impact/affected-screen
 design/library/chrome/top-bar -> design/components/states/shared-impact/shared-impact
 design/library/chrome/top-bar -> design/components/states/shared-impact/style-changed
 design/library/chrome/top-bar -> design/components/states/shared-impact/style-outside

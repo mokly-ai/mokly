@@ -32,7 +32,8 @@ recorded in the
 `design/changes/impact/styles/unresolved-unnamed/unresolved` and `design/changes/impact/styles/unresolved-unnamed/unnamed`, and the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
-`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`, and
+`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`,
+`design/components/states/shared-impact/affected-screen`, and
 `design/components/states/shared-impact/shared-impact`. These screens follow these presentation
 rules:
 
@@ -80,11 +81,20 @@ rules:
   file's item. The mockup card must render that spacing as authored, whatever
   other inspector stylesheets the design page loads. The shell keeps its
   separator treatment rather than the mockup's bordered card.
+- A screen or component that only changed components affect stays
+  Unmodified with no Changes row. Its Details keep the full matched styles of
+  each file, link each changed component, and end with “Shared component
+  changes affect this preview. This page has no independent entry in
+  Changes.” in place of the terminal line, as
+  `design/components/states/shared-impact/affected-screen` depicts. In a
+  loaded comparison, each of its affected views reads the stage heading
+  "Components this screen uses changed".
 - A whole-document page in Changes keeps its plain document pane, with no
   comparison toolbar and no stage heading. Its Details hold the same
   comparison details and files list, led by "Changes to these files may affect
   this page:", with the page sentences of the presentation contract under each
-  file. A page consumes no components, so its Details link no changed component.
+  file. A page may use component elements, but it has no usage records, so its
+  Details link no changed component.
   Its status sits beside its title, as a screen's does. The open Details panel
   takes at most 60% of the main region and scrolls, with its bar kept in view,
   so long evidence stays reachable and the document stays visible. On narrow

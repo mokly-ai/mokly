@@ -8,24 +8,34 @@ import type {
 } from "../review/types.js";
 
 /**
- * Whether a view reads as a style change: the view is `changed`, every
- * reason of its entry is a `dependency`, and each named path has a retained
- * (matched or unresolved) rule on this view. An excluded rule says no changed
- * style applies, and a resource is no rule, so either keeps the ordinary
- * label; so does an entry that names no reason.
+ * Whether a view reads as a style change: the view is `changed`, its entry
+ * has a reason, every reason is a `dependency`, each named path has a rule of
+ * any status on this view, and at least one named path has a retained
+ * (matched or unresolved) rule on this view. So a stylesheet whose changes
+ * apply to other views only, with its `excluded` record here, keeps this
+ * view's style heading while another named stylesheet applies. A resource is
+ * no rule, so a named font or image keeps the ordinary label; so does a view
+ * whose named stylesheets are all excluded, because no changed style applies.
  */
 export function isStyleOnlyView(
   view: ReviewView,
   reasons: readonly EntryChangeReason[],
 ): boolean {
   if (view.state !== "changed" || !reasons.length) return false;
-  const ruled = new Set(
-    (view.rules ?? []).flatMap((rule) =>
+  const rules = view.rules ?? [];
+  const ruled = new Set(rules.map((rule) => rule.stylesheet));
+  const retained = new Set(
+    rules.flatMap((rule) =>
       rule.status === "excluded" ? [] : [rule.stylesheet],
     ),
   );
-  return reasons.every(
-    (reason) => reason.kind === "dependency" && ruled.has(reason.path),
+  return (
+    reasons.every(
+      (reason) => reason.kind === "dependency" && ruled.has(reason.path),
+    ) &&
+    reasons.some(
+      (reason) => reason.kind === "dependency" && retained.has(reason.path),
+    )
   );
 }
 

@@ -124,6 +124,9 @@ fn rejected_metadata_installation_publishes_no_pointer_or_event() {
     catalogue.model.color_schemes = vec![ColorScheme::Light];
     let model = Arc::new(catalogue.model.clone());
     let graph = Unimock::new((
+        RenderGenerationMock::generation_key
+            .each_call(matching!())
+            .returns("after"),
         RenderGenerationMock::plans
             .each_call(matching!())
             .returns(BTreeMap::new()),
