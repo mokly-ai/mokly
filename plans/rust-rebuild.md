@@ -2468,15 +2468,6 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
     d371e17c. Recommended: B, one helper in
     `tests/browser/serve_comparison_ui.ts` for every Card pane check.
-  - Decision log item 32 follow-up for the user, raised on 2026-10-20: a
-    screen or component that only changed components affect offers no
-    comparison in the shell. Severity Medium, effort Medium. Its entry detail
-    marks it comparison-eligible and the static build writes both snapshots,
-    but the shell hides the band because its own views are unchanged.
-    `mokly-component-changes.md` says an Affected screens link opens the
-    comparison; `mokly-component-workspace-design.md` says Unmodified omits
-    the band. Recommended: A, offer the comparison for such an entry, open it
-    from Affected screens, and depict its pane heading.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2591,6 +2582,25 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        at `da23c1ce`: the stub declares the packaged Browse icon, so no
        `/favicon.ico` request fails, and the packed smoke has no icon
        allowance.
+  - Decision log item 32 follow-ups for the user, raised on 2026-10-20:
+    1. A screen or component that only changed components affect offers no
+       comparison in the shell. Severity Medium, effort Medium. Its entry
+       detail marks it comparison-eligible and the static build writes both
+       snapshots, but the shell hides the band because its own views are
+       unchanged. `mokly-component-changes.md` says an Affected screens link
+       opens the comparison; `mokly-component-workspace-design.md` says
+       Unmodified omits the band. Recommended: B, offer the comparison for
+       such an entry, open it from Affected screens, and depict its pane
+       heading. Option A keeps the band hidden and corrects the first
+       sentence.
+    2. A variant of an affected component names no changed components.
+       Severity Medium, effort Small. The affected records name the parent
+       as the consumer, so `projection_affected.rs` gives `relatedComponents`
+       to the parent's detail only. A variant page without a loaded review
+       then reads "No changes to this saved view." while its preview changed.
+       Recommended: B, also index each record by the variant whose views its
+       evidence names. Option A documents that only the parent page explains
+       the shared change.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
