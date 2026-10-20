@@ -173,7 +173,7 @@ prove the pane failure path. Unit tests cover the controllers.
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
   rectangles, for desktop, mobile, both viewports at once, and a component
-  comparison; the same spec failed before the implementation landed.
+  comparison.
 - With the default control on, scrolling one Side by side viewport moves the
   other to the same offset in both directions, and an anchor in either pane
   moves both.
