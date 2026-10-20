@@ -1,74 +1,29 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
+import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
+
+import {
+  BASE,
+  COMPONENT_FILES_LEAD,
+  COMPONENT_LEAD,
+  EXAMINED_LEAD,
+  EXCLUDED_LEAD,
+  FILES_LEAD,
+  INSPECTOR_VIEWPORTS,
+  MATCHED_LEAD,
+  OUTSIDE_LEAD,
+  SAVED_VIEW_UNRESOLVED_LEAD,
+  SCREEN_TERMINAL,
+  UNRESOLVED_LEAD,
+  VARIANT_EXCLUDED_LEAD,
+  VARIANT_TERMINAL,
+  evidenceFiles,
+  openEvidence,
+  type EvidenceFile,
+} from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseFilter, modeButton, navRow } from "./comparison_ui.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
-
-/** Inspector copy fixed by docs/protocol/mokly-css-evidence-shell.md. */
-const BASE = "Compared with the branch point on fixture-base.";
-const FILES_LEAD = "Changes to these files may affect this screen:";
-const MATCHED_LEAD = "Changed styles that apply to this screen:";
-const OUTSIDE_LEAD =
-  "These changed styles also apply outside the changed components on this screen:";
-const UNRESOLVED_LEAD =
-  "This change can apply anywhere on the screen, so the screen stays in Changes:";
-const EXCLUDED_LEAD =
-  "This stylesheet changed, but none of the changed styles apply to this screen.";
-const VARIANT_EXCLUDED_LEAD =
-  "This stylesheet changed, but none of the changed styles apply to this variant.";
-const EXAMINED_LEAD = "Examined and excluded:";
-const SCREEN_TERMINAL = "No changes to this screen.";
-const VARIANT_TERMINAL = "No changes to this saved view.";
-const COMPONENT_FILES_LEAD =
-  "Changes to these files may affect this component:";
-const COMPONENT_LEAD = "Changed styles that apply to this component:";
-const SAVED_VIEW_UNRESOLVED_LEAD =
-  "This change can apply anywhere on the saved view, so the saved view stays in Changes:";
-const THEME = "static/mokly-generated/styles/theme.css";
-const CARD_CSS = "static/mokly-generated/styles/card.css";
-const CHANGED_CSS = "static/mokly-generated/styles/changed.css";
-const DUSK_CSS = "static/mokly-generated/styles/dusk.css";
-const INSPECTOR_VIEWPORTS = [
-  ["desktop", { width: 1440, height: 1000 }],
-  ["mobile", { width: 390, height: 844 }],
-] as const;
-
-/** Open the Details tab and return the comparison details it reveals. */
-async function openEvidence(page: Page): Promise<Locator> {
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  const evidence = page.locator("[data-workspace-evidence]");
-  await expect(evidence).toBeVisible();
-  await expect(evidence.locator("p").first()).toHaveText(BASE);
-  return evidence;
-}
-
-/** A listed file: its own path text, then each nested lead and its styles. */
-type EvidenceFile = [path: string, outcomes: [string, string[]][]];
-
-/** The one changed-files list as it is grouped, or none when it is absent. */
-function evidenceFiles(scope: Locator): Promise<EvidenceFile[]> {
-  return scope.evaluate((panel) => {
-    const list = panel.querySelector(".mbk-evidence-files");
-    if (!list) return [];
-    return [...list.children].map((item): EvidenceFile => {
-      const outcomes: [string, string[]][] = [];
-      for (const child of item.children)
-        if (child.tagName === "P")
-          outcomes.push([child.textContent?.trim() ?? "", []]);
-        else
-          outcomes
-            .at(-1)?.[1]
-            .push(
-              ...[...child.querySelectorAll("code")].map(
-                (code) => code.textContent ?? "",
-              ),
-            );
-      return [item.firstChild?.textContent?.trim() ?? "", outcomes];
-    });
-  });
-}
 
 /** Status literals of the evidence format never reach the reader. */
 async function expectNoStatusWords(evidence: Locator): Promise<void> {
@@ -93,7 +48,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      const files: EvidenceFile[] = [[DUSK_CSS, [[MATCHED_LEAD, [".dusk"]]]]];
+      const files: EvidenceFile[] = [
+        [sheets.dusk, [[MATCHED_LEAD, [".dusk"]]]],
+      ];
       await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       await expect(evidence.locator("code.mbk-code")).toHaveText([".dusk"]);
       // The shared stylesheet changed too, but no changed style reaches it.
@@ -136,7 +93,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toBeVisible();
       await expect
         .poll(async () => (await evidenceFiles(evidence))[0])
-        .toEqual([CHANGED_CSS, [[UNRESOLVED_LEAD, [":root"]]]]);
+        .toEqual([sheets.changed, [[UNRESOLVED_LEAD, [":root"]]]]);
       await expectNoStatusWords(evidence);
     });
 
@@ -151,8 +108,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([
-          [CHANGED_CSS, [[UNRESOLVED_LEAD, [":root"]]]],
-          [THEME, [[OUTSIDE_LEAD, [".accent"]]]],
+          [sheets.changed, [[UNRESOLVED_LEAD, [":root"]]]],
+          [sheets.theme, [[OUTSIDE_LEAD, [".accent"]]]],
         ]);
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
@@ -179,8 +136,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         EXAMINED_LEAD,
         SCREEN_TERMINAL,
       ]);
-      await expect.poll(() => evidenceFiles(evidence)).toEqual([]);
-      await expect(evidence.locator("ul > li")).toHaveText([THEME]);
+      await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
+      await expect(evidence.locator("ul > li")).toHaveText([sheets.theme]);
       await expectNoStatusWords(evidence);
       if (name === "mobile")
         await page
@@ -200,7 +157,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       const evidence = await openEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
-        .toEqual([[THEME, [[MATCHED_LEAD, [".accent"]]]]]);
+        .toEqual([[sheets.theme, [[MATCHED_LEAD, [".accent"]]]]]);
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toBeVisible();
@@ -258,13 +215,13 @@ test("the comparison heading leads with the style outcome", async ({
     .poll(() => evidenceFiles(evidence))
     .toEqual([
       [
-        CARD_CSS,
+        sheets.card,
         [
           [COMPONENT_LEAD, [".accent"]],
           [SAVED_VIEW_UNRESOLVED_LEAD, [":root"]],
         ],
       ],
-      [THEME, [[COMPONENT_LEAD, [".accent"]]]],
+      [sheets.theme, [[COMPONENT_LEAD, [".accent"]]]],
     ]);
   await expect(
     evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),

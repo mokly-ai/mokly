@@ -96,6 +96,11 @@ copied output; the source repository and first output are removed.
 
 The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
+`comparison_evidence_page.ts` holds the Details copy and readers that the
+stylesheet Details specs share. Its readers require one Comparison details
+heading and exactly one changed-files list. `configuredStylesheets` and
+`pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
+stylesheets as the shell shows them.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
 panes contract requires, on the copied output and in an embedded viewer
 through both frame adapters.

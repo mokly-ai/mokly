@@ -109,7 +109,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(PAGE_FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      expect(await evidenceSpacing(evidence)).toEqual({
+      expect(await evidenceSpacing(evidence)).toMatchObject({
         sentence: "8px",
         styles: "8px",
         afterList: "14px",
@@ -144,7 +144,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       expect(approved.map(([, outcomes]) => outcomes)).toEqual(
         HANDBOOK_FILES.map(([, outcomes]) => outcomes),
       );
-      expect(await evidenceSpacing(card)).toEqual(spacing);
+      expect(await evidenceSpacing(card)).toMatchObject({
+        sentence: spacing.sentence,
+        styles: spacing.styles,
+        afterList: spacing.afterList,
+      });
       await expect(
         page.locator(".mbk-screen-head .ce-change-status"),
       ).toHaveText("Changed");

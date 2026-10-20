@@ -33,6 +33,16 @@ export const evidenceStylesheets = [
   { match: "components/card/**", stylesheets: ["theme.css", "card.css"] },
 ];
 
+/** The default copy's configured stylesheets, as the shell names them. */
+export const configuredStylesheets = {
+  theme: "static/mokly-generated/styles/theme.css",
+  changed: "static/mokly-generated/styles/changed.css",
+  dusk: "static/mokly-generated/styles/dusk.css",
+  card: "static/mokly-generated/styles/card.css",
+  fade: "static/mokly-generated/styles/fade.css",
+  compact: "static/mokly-generated/styles/compact.css",
+} as const;
+
 /** The stylesheets that the pages link, as the shell names them. */
 export const pageStylesheets = {
   actions: "static/mokly-generated/styles/actions.css",
