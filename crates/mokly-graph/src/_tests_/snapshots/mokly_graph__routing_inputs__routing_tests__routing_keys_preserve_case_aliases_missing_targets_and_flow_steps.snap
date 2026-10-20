@@ -1,0 +1,26 @@
+---
+source: crates/mokly-graph/src/_tests_/routing_tests.rs
+expression: keys
+---
+{
+    "Alpha/index.html": (
+        "1f857b315055111b87b2034c11cf0be24d111f478d72a62423c13eb8cbf08c01",
+        "1f857b315055111b87b2034c11cf0be24d111f478d72a62423c13eb8cbf08c01",
+    ),
+    "local/index.html": (
+        "c6cbf91261b256548597c68089fe5f9b7c0c30251b0f6269a8a1d96f4c2e0293",
+        "c6cbf91261b256548597c68089fe5f9b7c0c30251b0f6269a8a1d96f4c2e0293",
+    ),
+    "notes/index.dark.html": (
+        "0a9f0a50c2363be70c0652fc8495f016976d9b7cdb284726822a87f3b04f1f50",
+        "0a9f0a50c2363be70c0652fc8495f016976d9b7cdb284726822a87f3b04f1f50",
+    ),
+    "notes/index.html": (
+        "ed2b5fcfa8d375a438a163ff0b654b3949bfb8be94771fb8ce71c988265cba86",
+        "ed2b5fcfa8d375a438a163ff0b654b3949bfb8be94771fb8ce71c988265cba86",
+    ),
+    "opaque/index.html": (
+        "b508f74c91b4e5094dff305df94d7b15f28c1e6b7fac9d1c36b7e1dc34d57332",
+        "b508f74c91b4e5094dff305df94d7b15f28c1e6b7fac9d1c36b7e1dc34d57332",
+    ),
+}

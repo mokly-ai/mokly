@@ -34,6 +34,7 @@ mod serve_signals;
 mod serve_state;
 mod serve_timing;
 mod serve_trace;
+mod serve_trace_stages;
 mod serve_warnings;
 mod serve_watch;
 mod serve_watch_events;

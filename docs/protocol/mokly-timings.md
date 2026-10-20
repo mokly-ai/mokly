@@ -123,19 +123,39 @@ code replaces `process.stderr.write`.
 
 A sidecar emits records with `role: "sidecar"` and its own `pid` and session
 for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
-`screen`, `component`, `story`, or `page`), and `sidecar.process-css`, each
-measured inside the process from request receipt to response write. The core
-emits `sidecar.spawn` for a spawn through the `hello` exchange, and
-`sidecar.recycle` for every later spawn in the same pool slot, for example a planned
-recycle, a crash or timeout replacement, a retry after failed hello, or a
-source-root switch. The replacement span measures the new process through
-hello; it excludes the old process's stop and the wait for another request.
-The difference between a core
-`render.fragment` span and the matching sidecar span is transport and queue
-time.
+`screen`, `component`, `story`, or `page`), and `sidecar.process-css`, measured
+from request receipt to response write. The difference from the matching core
+`render.fragment` span includes transport and queue time.
 
-Spawn and replacement spans start with error status and record `ok` only after
-hello succeeds. A replacement span encloses its spawn/hello span.
+The core emits `sidecar.spawn` for process start through hello. Every later
+spawn in a pool slot is enclosed by `sidecar.recycle`. These spans measure the
+new process through hello, excluding the old stop and time between requests.
+They start with error status and record `ok` only after hello succeeds.
+
+`sidecar.stop` measures the old process's retirement. It includes the lifecycle
+operations that its cause requires: shutdown, grace, kill, reaping, and bounded
+stderr drainage where those operations apply. It adds no lifecycle operation,
+retry, deadline, or wait for the next request. A stop starts with error status;
+it records `ok` only if every attempted lifecycle operation succeeds. A failed
+operation keeps error status even if a later fallback kill succeeds.
+
+`sidecar.stop` and `sidecar.recycle` carry a `reason` string on start and end:
+
+| Reason        | Cause                                                              |
+| ------------- | ------------------------------------------------------------------ |
+| `recycle`     | The render-count or memory-pressure policy retires the worker.     |
+| `replacement` | A request or cleanup failure makes the worker unusable.            |
+| `retry`       | Process startup or hello fails before a usable worker is returned. |
+| `root-switch` | A request needs a different source root from a live worker.        |
+
+The stop belongs to the span that performs retirement. A failed hello's stop
+is a child of `sidecar.spawn`. Other stops use the active caller; without one,
+`parentId` is absent. A later replacement belongs to the later caller. No span
+or parent reference stays open between requests. The slot retains only its
+replacement reason; that reason describes retirement, not a promised retry.
+No stop is emitted when startup created no process. Command shutdown and
+cancellation are outside these replacement stages. The added stage and reason
+are diagnostic details within timing schema version 1.
 
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.

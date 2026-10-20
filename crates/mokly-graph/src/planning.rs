@@ -11,10 +11,12 @@ use mokly_model::routes;
 use crate::error::{Result, invalid};
 use crate::graph::Graph;
 use crate::key::{NodeKey, NodeKind, key};
+use crate::routing_records::RoutingRecords;
 use crate::types::{DocumentPlan, ResourcePlan};
 use crate::workers::check_cancelled;
 use crate::{component_keys, error, planning_resources, resource_digests, routing_inputs, styles};
 
+#[tracing::instrument(name = "graph.prepare.documents", skip_all, err)]
 pub(crate) fn documents(
     graph: &Graph,
     config: &ResolvedConfig,
@@ -55,6 +57,7 @@ pub(crate) fn documents(
             &mut BTreeSet::new(),
         )?;
     }
+    let routing_records = RoutingRecords::new(catalogue)?;
     let mut output = BTreeMap::new();
     for (index, entry) in catalogue.model.entries.iter().enumerate() {
         check_cancelled(graph.workers.as_ref())?;
@@ -95,7 +98,7 @@ pub(crate) fn documents(
         if matches!(entry.content, EntryContent::Component { .. }) {
             components.insert(parent.clone());
         }
-        let routing = routing_inputs::key(entry, &components, catalogue)?;
+        let routing = routing_inputs::key(entry, &components, catalogue, &routing_records)?;
         for (viewport, scheme) in views {
             let route = viewport.map_or_else(
                 || routes::document(&entry.metadata.path, scheme),

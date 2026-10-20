@@ -959,6 +959,7 @@ renders again.
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
         exact revision in the first half of its adoption spec. Review 8 finding
         1, for the Serve owner. Implementation: `3961636d`.
+        The red run on the old code failed five of the six new Rust tests.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-12/browser-observations.json`.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
@@ -1385,6 +1386,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         capture creation and preserve advertised historical generation URLs.
         Compile the on-demand matrix without executing it.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
+- [x] Keep a view that exists on one side out of implementation impact when
+      its entry has both sides; adding Dark to a light-only catalogue made
+      every build and Serve classification invalid.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -1402,6 +1406,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         exclusions on views that link `shared-1.css`. Classify every differing
         field in both completed results before accepting the artifacts.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -1436,21 +1441,37 @@ Tags: ui
           against ready included membership, and use UTF-16 source reason order.
           The orchestrator confirms that changed deployment identities are required.
           Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/report-11.md`.
+    - [x] D1 viewer: read `reasons` strictly with their shape and order; show
+          them in Details for a listed record before a comparison loads, once
+          beside a loaded comparison; state the sentence of each reason kind,
+          including `implementation`, in `mokly-component-workspace-design.md`.
+          Whether a reader also rejects a detail whose reasons disagree with
+          its index record waits for the round's decision.
+    - [ ] Depict the reason sentences in the component explorer design, whose
+          Details still read "Rendered output changed" and depict no
+          `implementation` reason, after the round's design decision.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
   - [ ] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
-  - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
+  - [x] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
-  - [ ] Port the moved-entry cases with the shared moved fixtures in the
+  - [x] Port the moved-entry cases with the shared moved fixtures in the
         branch-point copy and `serve_comparison_test.ts`.
-  - [ ] Port the two D1 cases, Details before a comparison loads and the
+  - [x] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
   - [x] Port the cases that need an embedded viewer host through both frame
         adapters; `sweep-overrides-comparisons.json` and
         `sweep-overrides-comparisons-3.json` in
         `.context/rust-rebuild/delegation/m7/` name each row.
+  - [x] Register the moved-entry viewer cases on the embedded viewer host
+        through both frame adapters, over the branch copy. The case that
+        follows the page address runs only on Serve and the branch copy.
+  - [x] When `rebuild/m10-d1-and-copies` merges, make its copied-output
+        `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
+        call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve
+        instances use, so each check lives once.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1493,6 +1514,12 @@ and scroll fixture groups, the review 12 fixes, the sweep inputs, and the rows
 that remain: `.context/rust-rebuild/delegation/m7/report-25.md`. Merge
 decisions for the rebuild tip `a3cc0828`:
 `.context/rust-rebuild/delegation/m7/merge-decisions-round25.md`.
+The D1 viewer reasons, the two D1 rows and the `implementation` case, the
+light-only document, imported CSS, HEAD-baseline, and branch-point rows on
+small comparison copies, the round 25 follow-ups with the component light-only
+note fix, the sweep inputs, and the merge decisions for the rebuild tip
+`ef7458f2` and the delivery fixtures `f4829d8d`:
+`.context/rust-rebuild/delegation/m10-d1/report-1.md`.
 
 - [ ] Commit.
 
@@ -1774,9 +1801,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       stream before shutdown, clarify replacement timing, redact forwarded
       records, separate partial stderr lines, and test UTF-8 and dependency errors.
       Evidence: `.context/rust-rebuild/delegation/m12-static/report-12.md`.
-- [ ] Measure the old process's stop inside replacement timing after defining
+- [x] Measure the old process's stop inside replacement timing after defining
       span ownership across separate stop and spawn requests (M12 review 8,
       finding 3B; changes-9 authorizes the documented 3A fallback for this round).
+      Approved option A on 2026-10-19 keeps each stop and spawn under its own caller.
+      Evidence: M14 sidecar stop timing final report, `.context/m14-stop/report.md`.
+
+- [x] Include partial factory startup cleanup in stop timing without changing
+      lifecycle calls or errors. Apply stop-timing review finding 1, option B.
+      Evidence: `.context/m14-stop/review.md` and `.context/m14-stop/report.md`.
 
 - [x] Apply M12 review 7 findings 2 to 6: count-record exclusivity, dependency
       span scope and tier tests, portable cache fixtures, and receiver cleanup.
@@ -1802,6 +1835,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       or supply immutable generation inputs. Paths and rereads after a plugin
       runs cannot establish the consumed bytes. Plugin file dependencies outside
       roots and bundle modules retain an accepted late baseline until this work.
+  - [x] Compare read observers with immutable PostCSS inputs, including native
+        plugins, child processes, descriptors, cost, and supported platforms.
+  - [ ] Decide M14-PC1: staged observed-read digests with explicit opaque gaps,
+        enforced immutable inputs, or continued deferral. No runtime change is
+        selected; the full consumed-byte requirement remains open.
+        Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
+        Evidence: `.context/rust-rebuild/m14-postcss-digests/` and
+        `.context/rust-rebuild/delegation/m9-compare/report-16.md`.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1820,6 +1861,23 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         took 167.990/167.741 s in the cold/warm development-build observations.
         Profile preparation and repeat with the intended acceptance build profile.
         Keep the approved usable startup budget below 5000 ms.
+    - [x] Measure optimized startup and profile core, sidecar, and serial work.
+          The release baseline at `9257b131` used the same fixture, two sidecars,
+          default deadlines, and 6 GiB RSS stop. Cold/warm usable startup:
+          24.838/25.858 s. Core preparation used one CPU; sidecars were idle.
+          Evidence: `.context/m14-round2/baseline/`.
+    - [x] Share routing inventories and remove repeated stylesheet-root walks.
+          Preserve routing-key snapshots, stylesheet order, and result checks.
+          Operation counts cover both input sizes. The final release source
+          tree `9ad26d863edb4eb7cfe3f0e8178c696c3d005c04` took 10.551/10.538 s
+          cold/warm. Core preparation fell to 0.260/0.177 s; stylesheet-root
+          discovery took 2 ms. Compilation still took 7.491/7.019 s.
+          Both browser checks passed; both startup budget checks failed.
+          Evidence: `.context/m14-round2/final/`.
+    - [ ] Choose the remaining startup approach before changing readiness or
+          compilation boundaries. Keep the 5 s budget. Compare reusable
+          compilation units with staged navigation and selected-preview readiness.
+          A persistent cache alone cannot meet the first cold cache miss.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
@@ -1960,6 +2018,9 @@ Integration batch 1 decisions: `.context/rust-rebuild/delegation/integration/mer
 Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
+Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
+Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
+F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -1985,12 +2046,30 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
         test command in the CLI README and preparation mechanics in fixture
         comments. Retain the default-suite requirement in the protocol.
         Evidence: `.context/integration-4/`.
-  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
-    another entry kind reuses the donor path needs a requirement decision.
-    Separate branch.
-  - [ ] Decide whether extglob-shaped stylesheet matches need a warning
-        (M9 review 10 finding 5B, user item 54). Keep the migration release note;
-        add no diagnostic before approval.
+  - [x] Fix integration batch 4 review finding 1: select comparison flags
+        through one helper. Builds with Changes disabled omit the pinned
+        base. Default builds and Serve retain the fixture's pinned base.
+        Evidence: `.context/integration-4/review-fix/`.
+  - [x] Split core timing stage selection after integration batch 5 combines
+        stop timing and startup stages. Retain every stage and the file cap.
+        Evidence: `.context/integration-5/length-before.log` and `targeted.log`.
+  - [x] F3 item 1: the orchestrator approved F2 decision B on 2026-10-19.
+        Use the resolved variant as the canonical affected consumer when its
+        original parent has no destination. Keep the original evidence paths.
+        Reject omission of valid variant evidence. Never link to a replacement
+        document or restore the suppressed parent. The lookup protocol defines
+        the fallback. Evidence: `.context/f3/item-1-red.log` and `item-1-green.log`.
+  - [x] F3 item 2: release the authorization snapshot before reading a render
+        request body. Take the validation snapshot after the body arrives.
+        Keep the revision fence. Held-body tests prove snapshot and base-capture
+        release through weak references without sleeps.
+        Evidence: `.context/f3/item-2-red-corrected.log` and `item-2-green.log`.
+  - [x] Decision 54A, approved on 2026-10-19: warn on extglob-shaped stylesheet
+        matchers and suggest brace alternatives. Keep globset matching and the
+        existing strict-warning policy. Reject silent omission of the diagnostic.
+        F4 defines `stylesheet-extglob`, tests all five openings and exact
+        terminal output, and verifies strict failure before output replacement.
+        Evidence: `.context/f4/`.
   - M9 reference replay verification: investigate the unchanged
     `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`
     test's `warning.0 < failure` assertion failure. Its isolated rerun passed.
@@ -2126,6 +2205,60 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
         Fixed by `7b4dd657`. Controlled cross-thread drops reproduce the error;
         original mocks stay on their owner thread through subscriber and pool
         completion. Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
+  - M10 Serve and moved rows decision 6, Severity High, effort Small: Serve
+    answers 503 to a selected comparison of a component variant whose
+    dependency evidence names a rule that its parent owns, for example
+    `components/card/featured`. Recommended A: the selected projection keeps
+    the parent record with only the selected variant. Until the user
+    decides, the Serve variant specs use the Badge family.
+  - M10 Serve and moved rows review 1, open findings for the user:
+    1. Expiry emulation cannot fail its snapshot checks. Severity Medium,
+       effort Small. Recommended: C, one shared helper fakes a complete
+       collection of the expired generation and its previews.
+    2. Renewal fence checks pass before the late response. Severity Medium,
+       effort Small. Recommended: B, the held renewal release waits until
+       the browser ends each held request.
+    3. Regression test proves one shape of the fix. Severity Low, effort
+       Small. Recommended: A, CLI tests for a lost Dark view, a variant that
+       gains Dark, and a removed component with a surviving consumer.
+    4. The copy drops the moved variant comparison. Severity Low, effort
+       Small. Recommended: A, register the moved variant comparison on the
+       branch copy too.
+  - M10 Serve and moved rows review 3, open finding 7 for the user (review 3
+    finding 1): the kept ports lack two steps of the dropped copies, the
+    parent activation while a search shows only the removed sibling, and the
+    removed page's Location row. Severity Low, effort Small. Recommended: B,
+    add both steps to the kept ports when the branches merge.
+  - M10 Serve and moved rows decision 10, Severity Low, effort Small: each
+    sweep override lists the old checks that its port does not prove, and a
+    dropped duplicate moves its extra checks into the kept port. Covers
+    review 3 findings 1 and 2 and review 4 finding 2; previous examples
+    0858e172, 4d6a21a4, and abf52983. Recommended A: add the rule to the sweep
+    procedure.
+  - M10 Serve and moved rows review 4, open finding 12 for the user: the
+    restored removed-variant journey also changes the parent entry, because
+    its private base gives `screens/plain` props. Severity Low, effort Small.
+    Recommended: B, drop the props and check that the parent row has no
+    changed mark.
+  - M10 Serve and moved rows review 4, open finding 13 for the user: the Serve
+    fixture's poll comment misstates the publication time. Severity Low,
+    effort Small. Recommended: A, drop the duration from the comment.
+  - Outside the scope of the M10 Serve and moved rows review:
+    - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
+      Verification paragraph asks for an advanced server clock, and Serve
+      has no test hook for it. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:115`: one shared set of
+      base commits must feed Rust and browser tests, but Rust reads
+      `tests/fixtures/branch_point_cases.json` and the browser writes its
+      own sources. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
+      must run through Serve, `build`, and the embedded viewer, but they run
+      only on the branch copy. Separate branch.
+  - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
+    "Back and Forward restore each route's stage scroll", expected 120 but
+    received 0, then passed all five isolated repeats. Suspected source:
+    scripted scroll races history persistence. Separate branch.
+    Evidence: `.context/integration-6/scroll-flake.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

@@ -57,3 +57,24 @@ export async function commitBaseSources(
     await fs.rm(temporary, { recursive: true, force: true });
   }
 }
+
+/**
+ * Join `commit` into the private HEAD history so that the base ref can
+ * select it as the merge base. The tree and the watched sources stay fixed.
+ */
+export async function joinFixtureHistory(root: string, commit: string) {
+  const run = async (...args: string[]) =>
+    (await exec("git", args, { cwd: root })).stdout.trim();
+  const head = await run("rev-parse", "HEAD");
+  const joined = await run(
+    "commit-tree",
+    `${head}^{tree}`,
+    "-p",
+    head,
+    "-p",
+    commit,
+    "-m",
+    "Join fixture base",
+  );
+  await run("update-ref", "HEAD", joined, head);
+}

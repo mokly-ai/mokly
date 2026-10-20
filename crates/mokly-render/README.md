@@ -71,6 +71,8 @@ Opaque asset records contain metadata only. Delivery verifies a source stream
 against the generation's digest; assets never enter the stylesheet byte cache.
 Module stylesheet discovery uses an explicit stack and retains import order
 when it crosses shared dependencies or cycles.
+Definitions from the same module share one stylesheet root. A generation-wide
+reachability index excludes module branches that cannot contribute CSS.
 
 `BaseSide` takes the source lease and the complete dependency selection from
 `mokly-compare`. Bundle requests use that extraction, its selected dependencies,

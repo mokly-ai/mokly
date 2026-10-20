@@ -9,6 +9,7 @@ import { ComparisonHeading } from "../src/shell/evidence_details.js";
 import { indexFixture, rawIndexFixture } from "./catalogue_v7_fixture.js";
 import {
   CHANGED,
+  CHANGED_REASONS,
   CHANGED_SECTION,
   publishedDetails,
   publishedIndex,
@@ -94,7 +95,7 @@ test("a changed page of an index without a base keeps each file and style withou
       { changes: { status: "ready", kind: "changed", included: true } },
       null,
     ),
-    details: publishedDetails(CHANGED),
+    details: publishedDetails(CHANGED, CHANGED_REASONS),
     path: "/view/guide/",
   });
   assert.equal(section(html), CHANGED_SECTION.replace(sentence, ""));

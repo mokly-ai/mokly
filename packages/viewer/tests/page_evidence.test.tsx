@@ -20,6 +20,7 @@ import { componentWorkspaceFixture } from "./component_workspace_fixture.js";
 import {
   BASE,
   CHANGED,
+  CHANGED_REASONS,
   CHANGED_SECTION,
   published,
   publishedDetails,
@@ -169,7 +170,7 @@ test("a removed document keeps its Removed badge and no comparison details", () 
 test("the standalone shell renders the page evidence of the held detail", () => {
   const html = standaloneMarkup({
     index: publishedIndex(CHANGED_PAGE),
-    details: publishedDetails(CHANGED),
+    details: publishedDetails(CHANGED, CHANGED_REASONS),
     path: "/view/guide/",
   });
   assert.deepEqual(status(html), ["Changed"]);

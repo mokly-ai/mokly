@@ -12,6 +12,7 @@ interface Timing {
   elapsedMs: number;
   durationMs?: number;
   status?: string;
+  reason?: "recycle" | "replacement" | "retry" | "root-switch";
   tier?: number;
   views?: number;
   uncapturedViews?: number;

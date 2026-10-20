@@ -90,6 +90,8 @@ Closed parent output pipes and IPC channels stop the sidecar and PostCSS child
 quietly. Late writes do not add a crash stack to consumer diagnostics.
 The optional `hello.params.timings` boolean enables process-local timing JSON on
 stderr. Bundle, describe, render, and PostCSS spans contain no authored data.
+Bundle child spans separate compilation, module-graph construction, consumed
+input hashing, and resolution metadata. Each keeps the enclosing bundle id.
 Records start on a separate line after partial Node stderr writes. The core
 redacts tokens and escapes controls in forwarded lines; ordinary timing records
 retain their bytes. After child exit, completion drains stderr within the shared

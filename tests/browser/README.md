@@ -89,6 +89,17 @@ copied output; the source repository and first output are removed.
 | `removedComponent`     | `components/retired`: removed component parent                                                                                                                                                                                                                                                                                                         |
 | `removedVariant`       | `components/card/archived`: removed variant of a surviving component                                                                                                                                                                                                                                                                                   |
 
+The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
+switch filters and modes, and measure pane, viewport, and region offsets.
+
+Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
+removed record's `snapshotId`. Use the canonical `/view/{path}/` route and
+`snapshot` query when selecting a historical record. The fixture provides
+native comparison data for comparison modes, removed previews, Changed
+membership, navigation disclosure, focus, scrolling, and stylesheet Details.
+Each spec owns its browser state and assertions; the fixture does not mock
+read models or alter responses.
+
 ## Embedded comparison viewer
 
 `comparison_viewer_host.ts` mounts the public `MoklyViewer` over the native
@@ -100,17 +111,8 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `view`, `viewport`, `base=none` (an index without `base`), and
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
-
-The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
-switch filters and modes, and measure pane, viewport, and region offsets.
-
-Read `mokly-viewer/index.json` to get the immutable `comparisonUrl` and each
-removed record's `snapshotId`. Use the canonical `/view/{path}/` route and
-`snapshot` query when selecting a historical record. The fixture provides
-native comparison data for comparison modes, removed previews, Changed
-membership, navigation disclosure, focus, scrolling, and stylesheet Details.
-Each spec owns its browser state and assertions; the fixture does not mock
-read models or alter responses.
+`comparisonViewerHost(source)` mounts another copy instead, such as the
+branch copy's `branchCopy.directory`.
 
 ## Branch-point delivery copy
 
@@ -133,6 +135,14 @@ same authored sources.
 a pure-moved screen, a moved component with distinct variant states and
 nested slot inputs, a moved screen with a removed variant, and a moved page.
 The branch copy and Serve use this composition. The default copy uses no hook.
+
+Viewer journeys on this copy register shared case modules.
+`static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
+Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
+viewer over this copy through both frame adapters. Each host passes a
+`MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`static_development_mount.spec.ts` serves the `development_shell.ts` bundle
+with React's development build.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
@@ -171,6 +181,24 @@ A pure move is included even when its kind is `unmodified`.
 | `moves/current/guide`              | `moves/previous/guide`           | unmodified   | yes      | Pure-moved full HTML page                        |
 | `moves/icon`                       | —                                | unmodified   | no       | Shared nested input target                       |
 | `moves/ring`                       | —                                | unmodified   | no       | Slot container for the glyph                     |
+
+## Small comparison copies
+
+`additions_copy_test.ts` supplies `additionsCopyTest(name, additions?, base?)`.
+The returned `test` builds its own comparison copy once per worker: the default
+catalogue with the source hook, compared with `base` (`fixture-base` unless
+given). Its `baseURL` serves that copy, and the worker fixture
+`additionsCopy` holds its read-only `directory`. Setup uses the isolated
+180,000 ms budget. The default and branch copies keep their membership.
+A copy built with base `HEAD` and no hook publishes ready Changes with no
+change.
+
+| Hook                         | Entries and evidence                                                                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected                               |
+| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                                                |
+| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                                                   |
+| `addImportedCssSources`      | `imported/home`: a JavaScript screen whose CSS Module colour changes and loads a PNG through `url()`; links the repository's `node_modules`, which Git ignores |
 
 ## Shared Serve comparison fixture
 
@@ -245,6 +273,41 @@ the index for removed records. Use `/mokly-viewer/diffs/review.json?path={path}`
 for live selected comparisons, and add `&refresh=1` for an explicit refresh.
 The test fixture closes automatically. It permits watched edits and base-ref
 moves without sharing writable state with another test.
+
+### Viewer journeys on Serve
+
+`serve_comparison_ui.ts` holds the shared viewer actions. Its waits follow a
+selected comparison request through the redirect to its generation before UI
+deadlines apply. It also records requests to the stable endpoint and holds
+the HEAD renewal of a selected generation. `serve_changes_emulation.ts`
+rewrites the index body into a pending, preparing, or unavailable Changes
+state, the shape Serve writes before classification completes. Each step
+still arrives as a real watched publication, and Serve keeps no test seam.
+Specs that run the same comparison checks on the copied output and on Serve
+register them from a `*_cases.ts` module. The copied output registers the
+alignment, input, and Scroll together memory cases in
+`comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
+`comparison_regions_toggle.spec.ts`. Serve registers them in
+`serve_comparison_alignment.spec.ts`,
+`serve_comparison_alignment_input.spec.ts`, and
+`serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
+through its own setup are helpers instead. `light_only_band.ts` checks the
+Light only band. `imported_css_panes.ts` checks the panes of the screen that
+`tests/helpers/imported_css_sources.ts` adds. `serve_light_only_band.spec.ts`
+drops Dark through a watched configuration edit.
+
+A spec adds its own sources to both commits with
+`test.use({ comparisonSources: { add: hook } })`. The hook runs after the
+shared hooks; the option is unset by default. The object wrapper is needed
+because `test.use` reads a function value as a fixture.
+`tests/helpers/viewer_state_sources.ts` supplies `addViewerStateSources` and
+`viewerStatePaths` for the one shape that the default catalogue lacks:
+
+| `viewerStatePaths` key | Entry and evidence                                                    |
+| ---------------------- | --------------------------------------------------------------------- |
+| `chip`                 | `viewer/chip`: unmodified component parent                            |
+| `plainChip`            | `viewer/chip/plain`: unmodified component variant                     |
+| `nightChip`            | `viewer/chip/night`: only its Dark views change, through a dark sheet |
 
 Branch-point copy setup and Serve comparison setup use the isolated
 180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.

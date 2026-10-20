@@ -47,6 +47,9 @@ Document keys include component paths and element names. Logical links depend
 on their destination routes, including use-case first steps. An unresolved link
 substitution inside a component depends on the routing inventory, including
 when a prop reaches it through another component.
+One immutable routing inventory serves each generation. Opaque entries share
+its complete key. Explicit case spellings, moved aliases, and missing targets
+keep their requested identities in the document key.
 
 `MemoryCache` implements `dyn RenderCache`. It charges document bytes, parsed
 trees, and evidence. It evicts by access order. Oversized artifacts return
@@ -135,6 +138,7 @@ imports and assets, portable links, repeated slots, and cache eviction.
 ### Key Code
 
 - [Graph preparation](./src/graph.rs) and [document planning](./src/planning.rs).
+- [Routing inputs](./src/routing_inputs.rs) and [shared routing records](./src/routing_records.rs).
 - [Generation interface](./src/types.rs), [session](./src/session.rs), and [workers](./src/workers.rs).
 - [Node keys](./src/key.rs), [cache](./src/cache.rs), and [memory accounting](./src/weight.rs).
 - [Public policy](./src/policy.rs), [closure](./src/closure.rs), and [Markdown links](./src/markdown_links.rs).

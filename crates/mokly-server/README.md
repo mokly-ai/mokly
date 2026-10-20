@@ -53,8 +53,8 @@ between documents and waits while foreground requests need the worker pool.
 Document responses queue completion notices without waiting for publication.
 One application-owned task coalesces notices and skips recorded routes and
 routes with no detail views. A completed background
-pass publishes its changed evidence in one batch. Equal completions only record
-the route as completed. They keep the revision and live render validity and send
+pass publishes its changed evidence in one batch. Completions that change no detail
+only record the route. They keep the revision and live render validity and send
 no event. A replacement starts a new pass. With `--no-watch`, Serve computes it
 once. Old backends cannot publish into a replacement.
 Workspace lists stay absent until all consumer usage is proven. One unavailable
@@ -151,7 +151,10 @@ Every response uses `no-store` and `nosniff`. No route adds a CORS header.
 
 Temporary renders validate the installed revision, view, controls, and complete
 props. They use the graph's shared prop render path outside the HTTP event
-loop. The CLI supplies the shared JavaScript runtime, so React entries use
+loop. Body reads keep only the authorization token. Validation and render
+admission take the current snapshot after the body arrives. A stalled body
+cannot retain a replaced snapshot or its comparison capture.
+The CLI supplies the shared JavaScript runtime, so React entries use
 the same pool, cache, renderer, PostCSS, and fragment keys as their saved
 views. The HTTP token and revision checks apply before that render path.
 `MemoryPreviews` holds at most 16 bundles and 32 MiB for five minutes.

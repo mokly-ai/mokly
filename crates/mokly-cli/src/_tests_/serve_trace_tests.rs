@@ -201,6 +201,37 @@ fn each_successful_dependency_tier_is_a_numeric_end_field() {
 }
 
 #[test]
+fn preparation_detail_spans_keep_parentage_and_exclude_inputs() {
+    let records = capture(|| {
+        let _graph = tracing::info_span!("graph.prepare").entered();
+        let _documents = tracing::info_span!("graph.prepare.documents").entered();
+        {
+            let _resources = tracing::info_span!(
+                "graph.prepare.resources",
+                path = "private.png",
+                source = "private source"
+            )
+            .entered();
+        }
+        let _routing =
+            tracing::info_span!("graph.prepare.routing-records", path = "private-entry").entered();
+    });
+    assert_eq!(records.len(), 8);
+    let documents = &records[1];
+    assert_eq!(documents["parentId"], records[0]["id"]);
+    for record in [&records[2], &records[4]] {
+        assert_eq!(record["parentId"], documents["id"]);
+    }
+    for record in records {
+        assert!(record.get("path").is_none());
+        assert!(record.get("source").is_none());
+        if record["event"] == "end" {
+            assert_eq!(record["status"], "ok");
+        }
+    }
+}
+
+#[test]
 fn static_input_counters_use_camel_case_at_creation_and_later_recording() {
     let records = capture(|| {
         let span = tracing::info_span!(
