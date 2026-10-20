@@ -71,6 +71,31 @@ function fakeStorage(context: test.TestContext): Map<string, string> {
   return saved;
 }
 
+test("a recorded folder close precedes filter reveal and returns when filtering ends", (context) => {
+  const saved = fakeStorage(context);
+  const model = baseModel();
+  const folder = "folder:specs:product/browse";
+  const { state, store } = harness(model, initialState(model, "/"));
+  store.setDisclosure(folder, true);
+  store.setDisclosure(folder, false);
+  const beforeFilter = saved.get("mokly:nav-disclosure:v4");
+  assert.ok(beforeFilter);
+  assert.equal(state().disclosures[folder], false);
+  assert.equal(JSON.parse(beforeFilter)[folder], false);
+
+  store.setSearch("home");
+  assert.equal(state().disclosures[folder], true);
+  assert.equal(state().filterBaseline?.[folder], false);
+  assert.equal(saved.get("mokly:nav-disclosure:v4"), beforeFilter);
+
+  store.setDisclosure(folder, false);
+  assert.equal(state().disclosures[folder], false);
+  assert.equal(saved.get("mokly:nav-disclosure:v4"), beforeFilter);
+  store.setSearch("");
+  assert.equal(state().disclosures[folder], false);
+  assert.equal(state().filterBaseline, undefined);
+});
+
 test("revealFolder opens and focuses a folder, saving v4 without touching earlier keys", (context) => {
   const saved = fakeStorage(context);
   saved.set("mokly:nav-disclosure:v3", '{"folder:pages:product/browse":false}');
