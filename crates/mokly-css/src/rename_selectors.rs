@@ -86,11 +86,7 @@ impl Renamer<'_> {
                         Token::Function(name) if *name == "global" || *name == "local" => {
                             let child = tokens.children(next);
                             if tokens.next_significant(&mut child.clone()).is_none() {
-                                return Err(self.error(
-                                    node.start,
-                                    &format!("CSS Modules :{name}() has no selector"),
-                                    "add a selector inside it or remove it",
-                                ));
+                                return Err(self.empty_wrapper(node.start, name));
                             }
                             frame.range = lookahead;
                             let wrapper = (node.start, after.end, after.after);
@@ -120,7 +116,8 @@ impl Renamer<'_> {
         Ok(None)
     }
 
-    /// Rename local keyframes names, including names inside `:local()`.
+    /// Rename local keyframes names, including names inside `:local()`. An
+    /// empty wrapper fails, as in a selector.
     pub(crate) fn keyframes(&mut self, tokens: &Tokens<'_>, range: Range<usize>) -> Result<()> {
         let mut pending = vec![Keyframes {
             range,
@@ -160,11 +157,15 @@ impl Renamer<'_> {
                     if *name != "local" && *name != "global" {
                         continue;
                     }
+                    let child = tokens.children(next);
+                    if tokens.next_significant(&mut child.clone()).is_none() {
+                        return Err(self.empty_wrapper(node.start, name));
+                    }
                     frame.local = false;
                     let wrapper = (node.start, function.end, function.after);
                     if *name == "local" {
                         pending.push(Keyframes {
-                            range: tokens.children(next),
+                            range: child,
                             local: true,
                             wrapper: Some(wrapper),
                         });
@@ -182,6 +183,15 @@ impl Renamer<'_> {
     fn remove_wrapper(&mut self, (start, function_end, after): Wrapper) {
         self.edits.push((start, function_end, String::new()));
         self.edits.push((after - 1, after, String::new()));
+    }
+
+    /// The catalogued failure for a `:global()` or `:local()` with no content.
+    fn empty_wrapper(&self, offset: usize, name: &str) -> error::CssError {
+        self.error(
+            offset,
+            &format!("CSS Modules :{name}() has no selector"),
+            "add a selector inside it or remove it",
+        )
     }
 
     fn icss(&self, offset: usize, selector: &str) -> error::CssError {
