@@ -2252,6 +2252,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         script change even when the approved advisory ID is absent.
   - [x] Fix CI release checks hub review finding 6 with option A: state the
         Node floor and excluded Node 24 versions as current product facts.
+  - [x] Fix CI release checks hub review finding 7 with option B: run bootstrap
+        fixture Git commands with an empty global configuration and system
+        configuration disabled. Reuse the shared isolated Git environment.
+        Reproduce global commit signing, tag signing, and hooks before the fix.
+        Cover system hooks too. Evidence: `.context/ci-release-fixes/finding7-red.log`,
+        `finding7-red-repeat.log`, `finding7-red-system.log`, and `finding7-green.log` there.
   - CI release checks hub review finding 1: a stale PR base can keep an old
     release check green. Severity Medium, effort Small. Recommended: A, require
     branches to be up to date before merge. The hub owns the user decision.
