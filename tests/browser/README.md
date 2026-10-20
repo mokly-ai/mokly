@@ -302,6 +302,7 @@ To stage a Changes completion for a Usage-focus check, first use
 `await changes.moveBase("head")`, then `await changes.moveBase("base")`.
 The ref changes preserve the current source and documents. A caller can
 keep its browser page and focused link mounted during both publications.
+`serve_usage_focus.spec.ts` follows this recipe.
 
 The `changed` screen has a matched `.accent` rule from `theme.css`, an
 unresolved root rule, and native component usage. Read `comparisonUrl` from
