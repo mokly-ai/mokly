@@ -51,6 +51,9 @@ Serialization and metadata repair share the parser-context state. Foreign
 foreign-content repair puts the element in HTML parsing mode.
 End tags close the surviving matching parser ancestor after foreign-content
 repair. This keeps later text in the correct mode when a nested tag was popped.
+Normalization checks the predicted plaintext start against its reparsed repair
+identity. If the parser did not create an HTML `plaintext` element there, it
+retries with every text node escaped before restoring metadata.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 Sidecar style elements carry typed owner annotations through HTML reparsing.

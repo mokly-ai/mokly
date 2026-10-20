@@ -416,6 +416,13 @@ readiness rather than blocking this acceptance round on further startup work.
 
 **Comparison filter follow-up (2026-10-20):**
 
+- Defaults-engine round 3 finding 2 B (2026-10-20, approved): confirm the
+  predicted plaintext element against the reparsed HTML namespace and repair
+  identity. Retry with all text escaped when it does not agree. This covers
+  the MathML void-element and ignored nested-form divergences without a new
+  rejection. Alternative A repairs one context; structural option C lets the
+  parser choose the raw-text point and remains pending with the class decision.
+
 - Defaults-engine round 3 finding 5 B (2026-10-20, approved): preserve the
   rebuild tip's shared physical containment and use a second shared path for
   supplier ancestry, indexed by exact instance key. Linked proof retains only

@@ -12,7 +12,21 @@ enum Step<'a> {
 
 /// Serialize an owned tree, writing markers only for instance and slot regions.
 pub fn html(nodes: &[Node]) -> String {
+    document(nodes, false).html
+}
+
+/// Internal serialization evidence for the normalization parse.
+pub(crate) struct Serialized {
+    /// Bytes for the next parser pass.
+    pub(crate) html: String,
+    /// Repair identity of the element that activated predicted plaintext mode.
+    pub(crate) plaintext: Option<String>,
+}
+
+/// Escape every text node on a conservative retry, including normally raw text.
+pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
     let mut output = String::new();
+    let mut plaintext_start = None;
     let mut pending: Vec<_> = nodes
         .iter()
         .rev()
@@ -43,7 +57,7 @@ pub fn html(nodes: &[Node]) -> String {
             }
         };
         match node {
-            Node::Text(text) if raw || mode.plaintext() => output.push_str(text),
+            Node::Text(text) if !escape_text && (raw || mode.plaintext()) => output.push_str(text),
             Node::Text(text) => output.push_str(&escape(text)),
             Node::Comment(text) => {
                 if !(mode.plaintext() && text.starts_with("mokly-normalize:")) {
@@ -55,6 +69,9 @@ pub fn html(nodes: &[Node]) -> String {
                 let plaintext = mode.plaintext();
                 start(element, &mut output, plaintext);
                 let token = mode.enter(element);
+                if !plaintext && mode.plaintext() {
+                    plaintext_start = Some(element.get(ATTRIBUTE).unwrap_or_default().into());
+                }
                 if !(element.is_html() && void(&element.name)) {
                     pending.push(Step::ElementEnd(&element.name, plaintext, token));
                 } else {
@@ -98,7 +115,10 @@ pub fn html(nodes: &[Node]) -> String {
             }
         }
     }
-    output
+    Serialized {
+        html: output,
+        plaintext: plaintext_start,
+    }
 }
 
 /// Escape text or an attribute value exactly once.

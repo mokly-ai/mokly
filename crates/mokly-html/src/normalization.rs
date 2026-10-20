@@ -11,7 +11,7 @@ use mokly_model::usage::CatalogueUsage;
 use crate::composition::Composed;
 use crate::error::Result;
 use crate::links::{self, Reference};
-use crate::tree::{Element, Node, Region, RegionKind};
+use crate::tree::{self, Element, Node, Region, RegionKind};
 use crate::{normalization_annotate, normalized_regions};
 use crate::{normalized_usage, parse, regions, serialize};
 
@@ -83,7 +83,13 @@ fn reparse(
 ) -> (Vec<Node>, Vec<Warning>) {
     let mut repair = Repair::default();
     let marked = normalization_annotate::annotate(nodes, &mut repair);
-    let mut parsed = parse::document(&serialize::html(&marked));
+    let serialized = serialize::document(&marked, false);
+    let mut parsed = parse::document(&serialized.html);
+    if let Some(id) = &serialized.plaintext
+        && !confirmed_plaintext(&parsed, id)
+    {
+        parsed = parse::document(&serialize::document(&marked, true).html);
+    }
     normalized_regions::classify(&parsed, &mut repair);
     parsed = normalized_regions::restore(parsed, &mut repair);
     let warnings = repair
@@ -126,6 +132,15 @@ fn reparse(
     (parsed, warnings)
 }
 
+fn confirmed_plaintext(nodes: &[Node], id: &str) -> bool {
+    tree::walk(nodes)
+        .find_map(|node| match node {
+            Node::Element(element) if element.get(ATTRIBUTE) == Some(id) => Some(element),
+            _ => None,
+        })
+        .is_some_and(|element| element.is_html() && element.name == "plaintext")
+}
+
 pub(crate) fn marker(node: &Node) -> Option<(&str, bool)> {
     let Node::Comment(text) = node else {
         return None;
@@ -147,3 +162,7 @@ pub(crate) fn metadata(element: &mut Element, repair: &Repair) {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/plaintext_validation_tests.rs"]
+mod plaintext_validation_tests;

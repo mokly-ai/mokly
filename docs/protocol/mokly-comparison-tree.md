@@ -47,6 +47,8 @@ that the browser receives. The repaired tree and its bytes stay stable on
 further parse/serialize passes, including repair of annotated composed content.
 Serialization writes text raw throughout plaintext mode, including formatting
 clones and later nodes. Authored characters and entity spellings stay literal.
+The parsed element must confirm the predicted HTML plaintext start. If it
+does not, composition retries with all text escaped so authored text stays inert.
 Serialization omits private markers and attributes inside plaintext mode. Other
 HTML text modes keep their escaping rules. `pre`, `textarea`, and `listing`
 preserve the leading line feed that the HTML parser would otherwise remove.
