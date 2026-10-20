@@ -12,7 +12,7 @@ use crate::composition::Composed;
 use crate::error::Result;
 use crate::links::{self, Reference};
 use crate::tree::{self, Element, Node, Region, RegionKind};
-use crate::{normalization_annotate, normalized_regions};
+use crate::{normalization_annotate, normalized_plaintext, normalized_regions};
 use crate::{normalized_usage, parse, regions, serialize};
 
 pub(crate) const ATTRIBUTE: &str = "data-mokly-normalize";
@@ -85,14 +85,17 @@ fn reparse(
     let marked = normalization_annotate::annotate(nodes, &mut repair);
     let serialized = serialize::document(&marked, false);
     let mut parsed = parse::document(&serialized.html);
-    if let Some(start) = &serialized.plaintext
-        && (!confirmed_plaintext(&parsed, &start.id)
+    if let Some(start) = &serialized.plaintext {
+        if !confirmed_plaintext(&parsed, &start.id)
             || !confirmed_plaintext(
                 &parse::document(&serialized.html[..start.prefix_end]),
                 &start.id,
-            ))
-    {
-        parsed = parse::document(&serialize::document(&marked, true).html);
+            )
+        {
+            parsed = parse::document(&serialize::document(&marked, true).html);
+        } else {
+            normalized_plaintext::close_root(&mut parsed, &repair, &start.id);
+        }
     }
     normalized_regions::classify(&parsed, &mut repair);
     parsed = normalized_regions::restore(parsed, &mut repair);

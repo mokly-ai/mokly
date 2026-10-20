@@ -56,6 +56,9 @@ identity in both the full document and the prefix through that start tag.
 Later literal text cannot provide a replacement identity. If the parser did
 not create an HTML `plaintext` element at the predicted point, normalization
 retries with every text node escaped before restoring metadata.
+Confirmed plaintext keeps the component's own-page root when it consumes the
+trailing repair marker. Root recovery changes no served bytes and keeps Usage
+ready. Split instance, slot, and ignore regions retain their existing policy.
 Every raw-text tag uses the namespace returned by the parser-context helper.
 An HTML tag grafted into foreign content therefore keeps its text escaped.
 

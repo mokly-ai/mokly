@@ -47,6 +47,8 @@ that the browser receives. The repaired tree and its bytes stay stable on
 further parse/serialize passes, including repair of annotated composed content.
 Serialization writes text raw throughout plaintext mode, including formatting
 clones and later nodes. Authored characters and entity spellings stay literal.
+Plaintext on a component's own page retains its root range and ready Usage
+through repair, even though plaintext consumes the trailing root boundary.
 The parsed element must confirm the predicted HTML plaintext start. If it
 does not, composition retries with all text escaped so authored text stays inert.
 Serialization omits private markers and attributes inside plaintext mode. Other

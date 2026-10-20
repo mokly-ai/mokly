@@ -2577,11 +2577,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         implements decision 73 without changing its contract. Evidence:
         `.context/defaults-engine-round2/supplier-red.log` and
         `.context/defaults-engine-round2/supplier-integration-green.log`.
-  - Defaults-engine round 1 smoke: an HTML component's own `plaintext` page
-    loses its root range and fails static detail validation. Severity Medium,
-    effort Medium. Recommended: preserve own-page root ownership after repair;
-    the alternative marks Usage unavailable. User decision pending. Evidence:
-    `.context/defaults-engine-round1/plaintext-own-page-export.md`.
+  - [x] Item 101 (2026-10-20, approved): keep the own-page root through
+        confirmed plaintext repair. Static detail validates and Usage remains
+        ready. Preserve raw authored text and the separate noscript policy.
+        Do not mark Usage unavailable. The original round 1 smoke is fixed.
+        Evidence: `.context/defaults-engine-round4/item101-cli-red.log`.
   - [x] Defaults-engine round 1 post-push review, finding 1: apply foreign
         end-tag rules after a breakout removed the original element. Shared
         parser context closes the surviving matching ancestor and keeps later

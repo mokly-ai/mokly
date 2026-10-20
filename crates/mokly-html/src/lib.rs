@@ -45,6 +45,7 @@ mod marker_syntax;
 mod markers;
 mod normalization_annotate;
 mod normalized_keys;
+mod normalized_plaintext;
 mod normalized_regions;
 mod normalized_usage;
 mod placeholders;
@@ -112,3 +113,7 @@ mod deep_context_tests;
 #[cfg(test)]
 #[path = "_tests_/style_metadata_tests.rs"]
 mod style_metadata_tests;
+
+#[cfg(test)]
+#[path = "_tests_/plaintext_root_tests.rs"]
+mod plaintext_root_tests;
