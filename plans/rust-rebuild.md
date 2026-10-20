@@ -2620,10 +2620,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         texts. It equals the old list, and its guards stop a missing case.
   - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
         `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
-  - F9b re-review finding 30 for the user: the mobile embedded runs do not
-    assert a narrow viewer, so a wide viewer would pass them again. Severity
-    Low, effort Small. Recommended: B, a host marker that makes the search
-    helper expect the compact control or the field.
+  - [x] F9b re-review finding 30: the mobile embedded runs did not assert a
+        narrow viewer. Decided B by the orchestrator on 2026-10-20, as
+        follow-up F15 item 2. Each host's `compactSearch` marker says
+        whether a narrow window shows the compact search control. Opening an
+        entry and searching expect the control or the field from it. Without
+        `responsive=1`, all ten mobile embedded runs fail and the desktop
+        runs pass.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate

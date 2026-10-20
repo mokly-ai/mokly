@@ -198,7 +198,10 @@ viewer over this copy through both frame adapters. Each host passes a
 `entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
 page path it shows for that entry. An embedded host keeps `/viewer.html`, so
 a link that leaves the viewer for the standalone shell fails the case. Its
-host page gives the viewer the window width.
+host page gives the viewer the window width. The `compactSearch` marker says
+that a narrow window shows the compact search control in place of the field.
+The branch-point checks expect the control or the field from that marker,
+so a wide embedded viewer fails their mobile runs.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 

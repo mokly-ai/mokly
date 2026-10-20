@@ -116,10 +116,10 @@ async function activation(
   removedCrumbs: readonly string[],
 ): Promise<void> {
   const { title, parent, removed } = family;
-  await search(page, "");
+  await search(page, host, "");
   await activateRow(page, parent);
   await expectRouted(page, host, parent);
-  await search(page, "secondary");
+  await search(page, host, "secondary");
   await activateRow(page, removed);
   await expectRouted(page, host, removed);
   await expectHead(page, title, removedCrumbs);
@@ -190,7 +190,7 @@ async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
   // changed entry it lists, and under a search the removed sibling.
   await activateRow(page, paths.parentFolder);
   await expectRouted(page, host, paths.movedParent);
-  await search(page, "secondary");
+  await search(page, host, "secondary");
   await activateRow(page, paths.parentFolder);
   await expectRouted(page, host, paths.removedChild);
   await expectHead(page, "Action", removedCrumbs);

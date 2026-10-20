@@ -1,7 +1,7 @@
 /**
- * How a host opens an entry, and which page path it shows while it shows
- * that entry. Shared case sets take a host, so each host checks its own
- * address after every navigation.
+ * How a host opens an entry, which page path it shows while it shows that
+ * entry, and which search control a narrow window shows. Shared case sets
+ * take a host, so each host checks its own address after every navigation.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -12,12 +12,18 @@ export interface EntryHost {
   open(page: Page, entry: string): Promise<unknown>;
   /** The page path while the host shows `entry`. */
   path(entry: string): string;
+  /**
+   * A narrow window shows the viewer's compact search control in place of
+   * its search field. The standalone shell keeps the field at every width.
+   */
+  compactSearch: boolean;
 }
 
 /** A standalone shell or Serve: each entry opens at its own route. */
 export const routedHost: EntryHost = {
   open: (page, entry) => page.goto(`/view/${entry}/`),
   path: (entry) => `/view/${entry}/`,
+  compactSearch: false,
 };
 
 /**
@@ -31,6 +37,7 @@ export function embeddedHost(adapter: "cross" | "same-origin"): EntryHost {
     open: (page, entry) =>
       page.goto(`/viewer.html?adapter=${adapter}&responsive=1&entry=${entry}`),
     path: () => "/viewer.html",
+    compactSearch: true,
   };
 }
 
