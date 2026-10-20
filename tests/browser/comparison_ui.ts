@@ -61,6 +61,10 @@ export function snapshotOf(index: ComparisonIndex, entryPath: string): string {
     ({ entry }) => entry.path === entryPath,
   );
   if (!record) throw new Error(`${entryPath} is not a removed entry`);
+  // A snapshot id is a SHA-256 digest in lowercase hexadecimal.
+  expect(record.snapshotId, `${entryPath} snapshot id`).toMatch(
+    /^[a-f0-9]{64}$/u,
+  );
   return record.snapshotId;
 }
 
