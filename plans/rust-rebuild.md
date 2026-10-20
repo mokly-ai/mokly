@@ -2517,6 +2517,39 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Evidence: `.context/ci-shard-balance/delivery-green-node.log` and
       `.context/ci-shard-balance/delivery-green-rust.log`.
 
+- [x] CI round 5, item 3 (2026-10-20): record hosted and remote duration
+      observations against their current guards. These measurements do not
+      change a limit, assertion, runner, or test inventory. User item 100
+      owns the remaining guard and runner decision.
+
+      Hosted run `39455750846`, commit `b1f3c86f`, observed these job minutes:
+
+      | Job | Observed minutes | Limit minutes | Three times observation |
+      | --- | ---: | ---: | ---: |
+      | Repository | 24.15 | 30 | 72.45 |
+      | Viewer | 11.27 | 30 | 33.80 |
+      | Static delivery | 18.88 | 60 | 56.65 |
+      | Browser 1 | 18.42 | 60 | 55.25 |
+      | Browser 2 | 25.22 | 60 | 75.65 |
+      | Browser 3 | 11.50 | 60 | 34.50 |
+      | Browser 4 | 19.67 | 60 | 59.00 |
+
+      Repository, Viewer, and Browser 2 lack the required three-times margin.
+      The native jobs failed and do not establish successful typical durations.
+      The latest previous Node 22 remote run at `a3ede4bd` observed repository
+      16.20, viewer 7.16, and browser 1 to 4 at 18.55, 23.70, 9.97, and 9.63
+      minutes against 30-minute job guards. Browser 1 included both delivery
+      modes. Browser 2 failed in the unrelated React watch test. A prior
+      browser-1 command at `3d07196e` ended after 30.55 minutes when Testbox
+      reached its job limit. These command observations exclude preparation
+      and are not successful gate acceptance.
+      The new current-inventory assignments contain 339, 515, 695, and 700 tests
+      against a 703-test cap. Estimated test work is 10.258 minutes each,
+      with a 0.005-percent maximum/minimum difference. Two new specs use
+      the median cost. Hosted confirmation belongs to the hub.
+      Evidence, exact trees, source reports, and final remote observations:
+      `.context/ci-shard-balance/timings.md`, `partition.json`, and `remote-final.log`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public
