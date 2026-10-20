@@ -9,6 +9,7 @@ use mokly_model::canonical;
 
 use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES};
 use crate::comparison_capture::{CapturedGeneration, capture_with_bound};
+use crate::comparison_types::Comparison;
 
 use super::support::{self, Probe};
 
@@ -55,7 +56,7 @@ fn zero_and_partial_captures_fall_back_with_identical_review_bytes() {
         }
         let after = support::generation("head", 4, probe.clone(), 128);
         let result = support::engine()
-            .compare_captured(&support::request(), before, after)
+            .compare_prepared(&support::request(), before, after)
             .unwrap();
         assert_eq!(result.counts.changes, 4);
         assert!(

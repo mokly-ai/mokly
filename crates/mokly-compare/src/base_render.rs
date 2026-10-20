@@ -13,7 +13,6 @@ use mokly_model::material::catalogue_key;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::base_selection::{BaseLookup, PinnedBase};
-use crate::comparison_capture;
 use crate::comparison_error::CompareResult;
 use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
 use crate::error::{Error, Result};
@@ -157,7 +156,7 @@ impl ChangesService for Changes {
                     });
                 }
             };
-            let before = match comparison_capture::capture(before) {
+            let before = match self.comparison.capture_base(before) {
                 Ok(before) => before,
                 Err(source) => {
                     if let Some(source) = failures.failure() {
@@ -168,7 +167,7 @@ impl ChangesService for Changes {
                     }
                     return Err(Error::Base {
                         commit: commit.to_string(),
-                        source: Box::new(Error::Graph { source }),
+                        source: Box::new(source),
                     });
                 }
             };

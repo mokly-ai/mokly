@@ -97,8 +97,9 @@ fn compare(base: &Consumer, head: &Consumer) -> ComparisonResult {
         moves: Arc::new(Detector),
         css: Arc::new(MemoryParsedCss::new(1024 * 1024)),
     };
+    let previous = engine.capture_base(previous).unwrap();
     engine
-        .compare(
+        .compare_prepared(
             &ComparisonRequest {
                 base_ref: "base".into(),
                 base_commit: "a".repeat(40),
