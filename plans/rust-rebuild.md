@@ -477,6 +477,14 @@ expanded frame that leaves the page collapses, so no scrim stays. The
 rejected alternative left the contract silent on that case, which allowed the
 scrim defect that the review found.
 
+**User decision 82 (2026-10-20): B.** The user: "it should still be possible
+to view the diffs for affected screens, they just don't appear in the changes
+list". A screen or component that only changed components affect, whose entry
+detail marks it comparison-eligible, offers the comparison band. It stays out
+of Changes and keeps its Unmodified status, and an Affected screens link opens
+its comparison. The rejected option A kept the band hidden and corrected the
+spec sentence that says the link opens the comparison.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -563,7 +571,8 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, 32, 38, and 42;
+design defaults of decision log items 17, 24, 32, 38, and 42 and user decision
+82;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -1757,6 +1766,27 @@ Tags: ui
       move the copy checks that reached Details through it to live inputs.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
+## Milestone 10.3: Affected-only comparisons in the designs
+
+Tags: mockup
+
+- [ ] User decision 82 B: depict the comparison band and its pane heading
+      on `design/components/states/shared-impact/affected-screen`, which
+      Action's Affected screens open in Component with changed styles. Update
+      the design inventories and the matrix snapshots.
+- [ ] Run the mockup check and smoke-test the changed pages through Serve.
+
+## Milestone 10.4: Affected-only comparisons in the viewer
+
+Tags: ui
+
+- [ ] User decision 82 B: show the comparison band for a screen or component
+      that only changed components affect, when its entry detail marks it
+      comparison-eligible. It stays out of Changes and keeps its Unmodified
+      status. Cover the static build and Serve.
+- [ ] Open that comparison from the Affected screens list.
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
+
 ## Milestone 11: Watch and incremental rendering
 
 - [x] Reuse unchanged encoded details across watched generation rebuilds
@@ -2764,15 +2794,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        allowance.
   - Decision log item 32 follow-ups for the user, raised on 2026-10-20:
     1. A screen or component that only changed components affect offers no
-       comparison in the shell. Severity Medium, effort Medium. Its entry
-       detail marks it comparison-eligible and the static build writes both
-       snapshots, but the shell hides the band because its own views are
-       unchanged. `mokly-component-changes.md` says an Affected screens link
-       opens the comparison; `mokly-component-workspace-design.md` says
-       Unmodified omits the band. Recommended: B, offer the comparison for
-       such an entry, open it from Affected screens, and depict its pane
-       heading. Option A keeps the band hidden and corrects the first
-       sentence.
+       comparison in the shell. Severity Medium, effort Medium. Settled on
+       2026-10-20 by user decision 82 B, which Milestones 10.3 and 10.4
+       apply: the shell offers the comparison for such an entry, opens it
+       from Affected screens, and the design depicts its pane heading.
     2. Related components follow the parent, not the changed views.
        Severity Medium, effort Medium. The affected records name the parent
        as the consumer for every view of a component, so `projection_affected.rs`
@@ -2785,14 +2810,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        evidence item names, in place of the parent, and update the Status
        Lines rule. Option A documents that only the parent page explains the
        shared change.
-  - Hub review of `rebuild/defaults-viewer`, finding 5, raised on
-    2026-10-20: no artboard shows the pane heading “Components this screen
-    uses changed”. Severity Low. The shell shows it in a loaded comparison
-    of a screen in Changes, beside a changed view, on an unchanged view that
-    keeps a component-owned record or that the affected records name. Draw
-    that comparison when follow-up 1 above settles: one changed and one
-    affected view, with the inventories and the matrix snapshots. The new
-    mockup is Large.
+  - [ ] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
+        2026-10-20: no artboard shows the pane heading “Components this
+        screen uses changed”. Severity Low. Milestone 10.3 closes it: the
+        `design/components/states/shared-impact/affected-screen` artboard
+        depicts that heading in its loaded comparison.
   - [x] Hub review of `rebuild/defaults-viewer`, fixed on 2026-10-20 in
         `rebuild/defaults-viewer-fix1`: finding 2, an expanded step frame
         left a page scrim (`1ea520af`, B); finding 3, unused lookup
