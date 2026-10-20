@@ -127,3 +127,26 @@ fn build_warning_strict_failures_use_singular_and_plural_counts() {
         )));
     }
 }
+
+#[test]
+fn stylesheet_extglob_warning_has_exact_plain_and_rich_terminal_text() {
+    for (mode, prefix) in [(Mode::Plain, "[mokly/warning]"), (Mode::Rich, "  !")] {
+        let style = Style {
+            mode,
+            color: false,
+            ascii: false,
+            columns: 240,
+        };
+        let warning = Warning {
+            code: "stylesheet-extglob",
+            subject: WarningSubject::Configuration("tools/mokly.json".into()),
+            message: "stylesheet match \"@(a|b)\" uses unsupported extglob syntax. Use brace alternatives such as \"{a,b}\" instead.".into(),
+        };
+        assert_eq!(
+            warnings(&style, &[warning], &Redactor::default()),
+            format!(
+                "{prefix} configuration \"tools/mokly.json\": stylesheet match \"@(a|b)\" uses unsupported extglob syntax. Use brace alternatives such as \"{{a,b}}\" instead.\n"
+            )
+        );
+    }
+}

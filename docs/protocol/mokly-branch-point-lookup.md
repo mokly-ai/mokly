@@ -45,6 +45,14 @@ the path and suppress its removal under the
 [removal rule](./mokly-catalogue-changes.md#removal-selection-and-precedence).
 Never link that evidence to the replacement entry.
 
+When a component variant's original parent has no destination, group its
+affected-usage evidence under the resolved variant itself as the canonical
+consumer. Keep each evidence item's original context and chain paths.
+The variant's destination can be current or removed. If it has no destination,
+omit that usage row. Never restore a parent suppressed by removal precedence
+or link to the entry that replaced it. When the original parent has a
+destination, retain the existing parent grouping.
+
 ## Counterparts And Previous Paths
 
 The counterpart of a current entry is its base identity:

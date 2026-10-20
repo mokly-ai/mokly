@@ -959,6 +959,7 @@ renders again.
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
         exact revision in the first half of its adoption spec. Review 8 finding
         1, for the Serve owner. Implementation: `3961636d`.
+        The red run on the old code failed five of the six new Rust tests.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-12/browser-observations.json`.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
@@ -2009,6 +2010,8 @@ Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
+Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
+F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -2041,12 +2044,23 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
   - [x] Split core timing stage selection after integration batch 5 combines
         stop timing and startup stages. Retain every stage and the file cap.
         Evidence: `.context/integration-5/length-before.log` and `targeted.log`.
-  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
-    another entry kind reuses the donor path needs a requirement decision.
-    Separate branch.
-  - [ ] Decide whether extglob-shaped stylesheet matches need a warning
-        (M9 review 10 finding 5B, user item 54). Keep the migration release note;
-        add no diagnostic before approval.
+  - [x] F3 item 1: the orchestrator approved F2 decision B on 2026-10-19.
+        Use the resolved variant as the canonical affected consumer when its
+        original parent has no destination. Keep the original evidence paths.
+        Reject omission of valid variant evidence. Never link to a replacement
+        document or restore the suppressed parent. The lookup protocol defines
+        the fallback. Evidence: `.context/f3/item-1-red.log` and `item-1-green.log`.
+  - [x] F3 item 2: release the authorization snapshot before reading a render
+        request body. Take the validation snapshot after the body arrives.
+        Keep the revision fence. Held-body tests prove snapshot and base-capture
+        release through weak references without sleeps.
+        Evidence: `.context/f3/item-2-red-corrected.log` and `item-2-green.log`.
+  - [x] Decision 54A, approved on 2026-10-19: warn on extglob-shaped stylesheet
+        matchers and suggest brace alternatives. Keep globset matching and the
+        existing strict-warning policy. Reject silent omission of the diagnostic.
+        F4 defines `stylesheet-extglob`, tests all five openings and exact
+        terminal output, and verifies strict failure before output replacement.
+        Evidence: `.context/f4/`.
   - M9 reference replay verification: investigate the unchanged
     `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`
     test's `warning.0 < failure` assertion failure. Its isolated rerun passed.
@@ -2222,6 +2236,11 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Separate branch.
+  - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
+    "Back and Forward restore each route's stage scroll", expected 120 but
+    received 0, then passed all five isolated repeats. Suspected source:
+    scripted scroll races history persistence. Separate branch.
+    Evidence: `.context/integration-6/scroll-flake.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

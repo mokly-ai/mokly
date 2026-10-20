@@ -128,6 +128,9 @@ working files are streamed without retaining their bytes. Remaining source
 budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
+Affected usage groups a variant under its own resolved destination when its
+original parent has none. Evidence keeps the original side's paths, and no
+group links to a different-kind replacement at the parent's path.
 Metadata comparison keeps schema, controls, and declared slots on the parent.
 Variants compare their own metadata, props, and supplied slots independently.
 
