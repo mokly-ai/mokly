@@ -109,15 +109,43 @@ fn names_after_attribute_selectors_keep_their_own_source_ranges() {
 }
 
 #[test]
-fn custom_property_block_values_never_start_a_composition() {
+fn custom_property_values_keep_their_blocks_to_the_semicolon() {
     let path = "ui/mixin.module.css";
-    let source = ".b{color:red}.a{--mixin:{color:blue} composes: b;}";
-    let (css, exports) = scope(path, source).unwrap();
+    let class = |local| format!(".{}{{", scoped_name(path, local));
+    let spin = scoped_name(path, "spin");
+    for (source, locals) in [
+        (".a{--m:{animation:spin};}@keyframes spin{to{opacity:0}}", 2),
+        (".a{--a:{x} --b:{.c{color:red}};}", 1),
+        (".b{color:red}.a{--mixin:{color:blue} composes: b;}", 2),
+        (".b{color:red}.a{--m:{composes:b};}", 2),
+        (".a{--x:{a} @value y;}", 1),
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        let expected = source
+            .replace(".a{", &class("a"))
+            .replace(".b{", &class("b"))
+            .replace("@keyframes spin", &format!("@keyframes {spin}"));
+        assert_eq!(css, expected, "{source}");
+        assert_eq!(exports.len(), locals, "{source}");
+        assert_eq!(exports["a"], scoped_name(path, "a"), "{source}");
+    }
+    let error = scope(path, ".a{--x:{a};@value y;}").unwrap_err();
+    assert!(
+        error.to_string().contains(&format!("{path}:1:12;")),
+        "{error}"
+    );
+}
+
+#[test]
+fn nested_group_rules_scope_animation_names_like_their_rule() {
+    let path = "ui/motion.module.css";
+    let source = "@keyframes spin{to{opacity:0}}.a{@media (min-width:1px){animation:spin 1s}}";
+    let (css, _) = scope(path, source).unwrap();
+    let spin = scoped_name(path, "spin");
     let expected = source
-        .replace(".b{", &format!(".{}{{", scoped_name(path, "b")))
+        .replace("spin", &spin)
         .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
     assert_eq!(css, expected);
-    assert_eq!(exports["a"], scoped_name(path, "a"));
 }
 
 #[test]
@@ -139,4 +167,28 @@ fn animation_names_after_functions_keep_their_own_ranges() {
         .replace("spin", &scoped_name(path, "spin"))
         .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
     assert_eq!(css, expected);
+}
+
+#[test]
+fn nested_at_rule_preludes_stay_as_authored() {
+    let path = "ui/nested.module.css";
+    let class = |local| format!(".{}{{", scoped_name(path, local));
+    for source in [
+        ".a{@layer base.theme{color:red}}",
+        ".a{@supports (color: color-mix(in srgb, #fff 50%, red)){color:red}}",
+        ".a{@container style(--c:#fff){color:red}}",
+        ".a{@foo .b{color:red}}",
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        assert_eq!(css, source.replace(".a{", &class("a")), "{source}");
+        assert_eq!(exports.len(), 1, "{source}");
+    }
+    let source = ".a{@scope (.b) to (.c){color:red}}";
+    let (css, exports) = scope(path, source).unwrap();
+    let expected = source
+        .replace(".a{", &class("a"))
+        .replace("(.b)", &format!("(.{})", scoped_name(path, "b")))
+        .replace("(.c)", &format!("(.{})", scoped_name(path, "c")));
+    assert_eq!(css, expected);
+    assert_eq!(exports.len(), 3);
 }

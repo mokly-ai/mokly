@@ -3,15 +3,17 @@
 use cssparser::{Parser, ParserInput, Token};
 
 use crate::error::{CssError, Result, TransformFailure};
-use crate::token_sections;
+use crate::rename::grouping;
+use crate::token_sections::{self, Grammar};
 use crate::token_tree::Tokens;
 
-/// Reject `@value` at any rule level; custom property blocks are not rules.
+/// Reject `@value` at any rule level. Custom property values are not rules.
 pub(crate) fn check(path: &str, source: &str) -> Result<()> {
     let tokens = Tokens::new(source);
-    let mut pending = vec![tokens.root()];
-    while let Some(range) = pending.last_mut() {
-        let Some(section) = token_sections::next(&tokens, range) else {
+    let mut pending = vec![(tokens.root(), Grammar::Rules)];
+    while let Some((range, grammar)) = pending.last_mut() {
+        let grammar = *grammar;
+        let Some(section) = token_sections::next(&tokens, range, grammar) else {
             pending.pop();
             continue;
         };
@@ -32,11 +34,12 @@ pub(crate) fn check(path: &str, source: &str) -> Result<()> {
                 ),
             });
         }
-        if let Some(body) = section.body {
-            if matches!(first, Some(Token::Ident(name)) if name.starts_with("--")) {
+        if let Some(body) = section.body.clone() {
+            if section.custom_property(&tokens) {
                 continue;
             }
-            pending.push(body);
+            let grouping = matches!(first, Some(Token::AtKeyword(name)) if grouping(&name.to_ascii_lowercase()));
+            pending.push((body, grammar.nested(grouping)));
         }
     }
     Ok(())

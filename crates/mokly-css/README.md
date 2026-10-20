@@ -49,7 +49,15 @@ CSS inputs by their authored paths.
 `mokly_{first-12-SHA256-path-digits}_{local}`. The map is suitable for the
 sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
 retain their values. An independent token check rejects scoping that changes
-anything beyond local names and the module scope/composition syntax.
+anything beyond local names and the module scope/composition syntax. The
+renamer, the module check, and the token check share one statement grammar.
+In a style rule and the blocks nested in it, they read statements as
+`lightningcss` does: a custom property runs through its `{}` blocks to the
+next `;` and keeps its value as authored, and a rule nested in a declaration
+block is itself a declaration block. Declaration-only at-rules such as
+`@font-face` end a non-custom statement at its first `{}` block, as postcss
+does. A nested at-rule keeps its prelude as authored, except the keyframes
+name and an `@scope` selector.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration

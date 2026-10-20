@@ -2,7 +2,8 @@
 //!
 //! A stack overflow aborts the whole process, so each depth runs in a fresh
 //! copy of this test binary. The child runs one probe on a thread with a fixed
-//! stack size and exits successfully only when the probe returns.
+//! stack size and exits successfully only when the probe returns. The
+//! `mokly-catalogue` depth tests include this file as well.
 
 use std::env;
 use std::process::Command;

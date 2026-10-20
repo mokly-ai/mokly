@@ -2,12 +2,14 @@
 //!
 //! A child-process search finds each limit for the current build profile and
 //! prints it. The YAML parser's block nesting and Mokly's builder reach the
-//! search cap. Deep props stop where serde-derived traversal overflows.
+//! search cap. Deep props stop where serde-derived traversal overflows, far
+//! deeper than the deepest front matter that validation accepts.
 
 use mokly_catalogue::error::CatalogueError;
 use tempfile::TempDir;
 use yaml_rust2::parser::{Event, Parser};
 
+#[path = "../../mokly-css/tests/depth_search/mod.rs"]
 mod depth_search;
 mod support;
 
@@ -16,9 +18,11 @@ use depth_search::{Failure, Probe, search};
 const CHILD: &str = "depth_probe_child";
 /// The search stops at this depth when nothing overflows.
 const CAP: usize = 100_000;
+/// The props depth that validation accepts, counted from the props map.
+const PROPS: usize = 64;
 /// Validation accepts no deeper front matter: variant props sit three levels
-/// below the root and allow 64 more.
-const VALID: usize = 67;
+/// below the root and allow `PROPS` more.
+const VALID: usize = 3 + PROPS;
 
 /// Count the sequences that the YAML parser opens before the stream ends.
 fn sequences(source: &str) -> usize {
@@ -69,11 +73,36 @@ fn front_matter_props(depth: usize) {
     prepare("props", depth, "exceeds 64 nesting levels");
 }
 
+/// Prepare a screen whose variant props reach `depth` levels below their props
+/// map: a `deep` array holds `depth - 1` nested sequences. The schema accepts
+/// any array, so the props bound decides the result. The body cannot read an
+/// array prop, so the only warning is the unused prop.
+fn front_matter_valid(depth: usize) {
+    let directory = TempDir::new().unwrap();
+    support::write(directory.path(), "mokly.config.json", "{}");
+    let source = format!(
+        "---\ntitle: Deep\npropSchema:\n  type: object\n  additionalProperties: false\n  properties:\n    deep:\n      type: array\nvariants:\n  - slug: deeper\n    title: Deeper\n    props:\n      deep:\n        {}leaf\n---\n<p>Deep</p>\n",
+        "- ".repeat(depth - 1)
+    );
+    support::write(directory.path(), "specs/deep.screen.html", &source);
+    let prepared = support::prepare(directory.path(), None).unwrap();
+    assert_eq!(prepared.model.entries.len(), 2);
+    assert!(
+        prepared
+            .warnings
+            .iter()
+            .all(|warning| warning.code == "html-unused-props"),
+        "{:?}",
+        prepared.warnings
+    );
+}
+
 const PROBES: &[Probe] = &[
     ("yaml_block", yaml_block),
     ("yaml_flow", yaml_flow),
     ("front_matter_extra", front_matter_extra),
     ("front_matter_props", front_matter_props),
+    ("front_matter_valid", front_matter_valid),
 ];
 
 #[test]
@@ -106,4 +135,9 @@ fn rejected_front_matter_fields_reach_the_search_cap() {
 fn deep_props_survive_every_valid_front_matter_depth() {
     let limit = search(CHILD, "front_matter_props", CAP);
     assert!(limit.depth >= VALID, "{limit:?}");
+}
+
+#[test]
+fn the_deepest_valid_front_matter_prepares_cleanly() {
+    assert_eq!(search(CHILD, "front_matter_valid", PROPS).depth, PROPS);
 }
