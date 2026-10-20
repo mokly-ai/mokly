@@ -149,6 +149,10 @@ export function registerComponentEvidence(
             "design/components/states/removed-consumer",
             "Highlighting is unavailable for removed screens",
           ],
+          [
+            "design/components/states/shared-impact/affected-screen",
+            "Highlighting is unavailable in comparisons",
+          ],
         ]) {
           await page.goto(componentDesignUrl(route!, viewport));
           const toggle = page.getByRole("switch", {
