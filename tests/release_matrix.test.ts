@@ -97,6 +97,7 @@ test("native release jobs build locked targets and gate publication on the matri
   );
   for (const checkout of checkouts) {
     assert.equal(checkout.with?.["fetch-depth"], 0);
+    assert.equal(checkout.with?.["persist-credentials"], false);
     assert.equal(
       checkout.with?.ref,
       "${{ needs.select-release.outputs.publish_ref }}",

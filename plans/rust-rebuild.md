@@ -2258,6 +2258,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         Reproduce global commit signing, tag signing, and hooks before the fix.
         Cover system hooks too. Evidence: `.context/ci-release-fixes/finding7-red.log`,
         `finding7-red-repeat.log`, `finding7-red-system.log`, and `finding7-green.log` there.
+  - [x] Apply the authorized CI release checks hub hardening: disable credential
+        persistence in both native-build checkouts. Cover both checkout actions
+        in the existing native release workflow test. Preserve build behavior.
+        Evidence: `.context/ci-release-fixes/native-checkout-red.log` and
+        `.context/ci-release-fixes/native-checkout-green.log`.
   - CI release checks hub review finding 1: a stale PR base can keep an old
     release check green. Severity Medium, effort Small. Recommended: A, require
     branches to be up to date before merge. The hub owns the user decision.
