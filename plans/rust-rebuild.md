@@ -2043,6 +2043,11 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
+        in the parent process. A suppressed reporter failure cannot pass a
+        skipped or incomplete run. Keep the real Playwright regression.
+        Evidence: `.context/ci-gates/review.md` and
+        `.context/ci-gates/review-fix-red.log`.
   - `crates/mokly-sidecar/src/_tests_/pool_release_timing_tests.rs`:
     `cleanup_retirement_keeps_only_the_cause_after_active_or_idle_failure`
     observed zero stop spans instead of one during CI-gates verification.

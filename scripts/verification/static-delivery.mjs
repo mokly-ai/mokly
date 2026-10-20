@@ -1,9 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { verificationIdentity, writeReport } from "./evidence.mjs";
+import { readReport, verificationIdentity, writeReport } from "./evidence.mjs";
 import { requirePrepared } from "./prepared.mjs";
 import { runInherited } from "./process.mjs";
+import { checkDeliveryMode } from "./static-delivery-mode.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
 await requirePrepared(root, { browser: true });
@@ -41,13 +42,17 @@ try {
     env.MOKLY_DELIVERY_REPORT = path.join(reports, `${mode}.json`);
     await fs.rm(env.MOKLY_DELIVERY_REPORT, { force: true });
     console.log(`Static delivery: ${mode}`);
-    await run(
-      [
-        "node_modules/@playwright/test/cli.js",
-        "test",
-        "--config=playwright.delivery.config.ts",
-      ],
-      env,
+    await checkDeliveryMode(
+      () =>
+        run(
+          [
+            "node_modules/@playwright/test/cli.js",
+            "test",
+            "--config=playwright.delivery.config.ts",
+          ],
+          env,
+        ),
+      () => readReport(env.MOKLY_DELIVERY_REPORT),
     );
   }
 } finally {

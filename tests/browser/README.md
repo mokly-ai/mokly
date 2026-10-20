@@ -25,6 +25,9 @@ It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
 The configuration selects the portable design specs. The delivery reporter
 rejects skips, missing or duplicate results, and empty discovery. Reports live
 under `.context/static-delivery`, outside the complete suite report directory.
+The parent checks each saved report through
+[`static-delivery-mode.mjs`](../../scripts/verification/static-delivery-mode.mjs).
+A zero Playwright exit cannot hide a missing or invalid report.
 
 ## Deployment replacement
 
