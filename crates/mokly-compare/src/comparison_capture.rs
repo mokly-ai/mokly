@@ -178,7 +178,14 @@ impl RenderGeneration for CapturedGeneration {
         self.source.closure(route)
     }
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
-        self.source.collect_comparison(collector)
+        let summary = self.summary.clone();
+        collector.summary(&summary);
+        for route in self.source.plans().keys() {
+            let input = self.comparison_input(route)?;
+            self.check_cancelled()?;
+            collector.collect(route, input)?;
+        }
+        Ok(summary)
     }
     fn render_all(&self) -> Result<RenderSummary> {
         Ok(self.summary.clone())
