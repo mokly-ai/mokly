@@ -1,5 +1,7 @@
 import { MockLink } from "@mokly/mokly";
 
+import { CompareGrid, ComparisonStage, Pane } from "../../parts/compare.js";
+import { FramedShot } from "../../parts/compare_page.js";
 import { useCurrentPage } from "../../parts/design_navigation.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../parts/stage.js";
@@ -27,11 +29,17 @@ export type ScreenPageState =
 
 /** A single consumer screen reused by Current, inspection, and comparison mockups. */
 export function WelcomeExample({
+  actionBefore = false,
   directChange = false,
+  inert = false,
   outsideAction = false,
   selection = "off",
 }: {
+  /** Draws every Action that Welcome uses as the branch point renders it. */
+  actionBefore?: boolean;
   directChange?: boolean;
+  /** A comparison version: no inspection regions, so it opens nothing. */
+  inert?: boolean;
   /** Welcome's own link that reuses the action's style outside Action. */
   outsideAction?: boolean;
   selection?: InspectionSelection;
@@ -40,7 +48,7 @@ export function WelcomeExample({
     <div className="ce-welcome-example">
       <h2>Welcome</h2>
       <div className="ce-demo-toolbar">
-        <ToolbarExample />
+        <ToolbarExample before={actionBefore} />
       </div>
       <div className="ce-demo-content">
         <h3>Your next step starts here</h3>
@@ -48,6 +56,7 @@ export function WelcomeExample({
       </div>
       <div className="ce-demo-footer">
         <ActionExample
+          before={actionBefore}
           label={
             directChange ? footerLabelChange.after : footerLabelChange.before
           }
@@ -56,8 +65,38 @@ export function WelcomeExample({
           <span className="ce-action ce-outside-action">Not now</span>
         ) : null}
       </div>
-      <HighlightMask selection={selection === "off" ? "outer" : selection} />
+      {inert ? null : (
+        <HighlightMask selection={selection === "off" ? "outer" : selection} />
+      )}
     </div>
+  );
+}
+
+/**
+ * Welcome's loaded side-by-side comparison, which Action's Affected screens
+ * open. Welcome's own content is unchanged, so its versions differ only
+ * inside the Action it uses, and the heading names the changed components.
+ */
+export function AffectedComparison({
+  viewport,
+}: {
+  viewport: ArtboardViewport;
+}) {
+  return (
+    <ComparisonStage state="components-changed" viewport={viewport}>
+      <CompareGrid>
+        <Pane label="Before" side="before">
+          <FramedShot address="example.test/welcome" viewport={viewport}>
+            <WelcomeExample actionBefore inert />
+          </FramedShot>
+        </Pane>
+        <Pane label="Current" side="after">
+          <FramedShot address="example.test/welcome" viewport={viewport}>
+            <WelcomeExample inert />
+          </FramedShot>
+        </Pane>
+      </CompareGrid>
+    </ComparisonStage>
   );
 }
 

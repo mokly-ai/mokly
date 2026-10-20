@@ -36,6 +36,14 @@ const changedDesigns = new Set([
   "design/changes/impact/styles/matched-excluded/excluded",
 ]);
 
+/**
+ * Unmodified screens that only changed components affect. They stay out of
+ * Changes, yet their comparison stays available.
+ */
+const affectedDesigns = new Set([
+  "design/components/states/shared-impact/affected-screen",
+]);
+
 async function assertFragmentEligibility(
   page: Page,
   testInfo: TestInfo,
@@ -55,6 +63,7 @@ async function assertFragmentEligibility(
     (await page.locator(".ce-variants").count()) > 0;
   const expected =
     changedDesigns.has(entry.path) ||
+    affectedDesigns.has(entry.path) ||
     changedComponentOrScreen ||
     removedComponent;
   const toolbar = page.locator(".mbk-cmp-toolbar");

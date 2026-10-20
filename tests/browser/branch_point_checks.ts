@@ -137,7 +137,9 @@ async function movedConsumers(
   await inspectorTab(page, "Usage");
   await expect(page.locator("[data-usage-section='used-by']")).toBeVisible();
   const affected = page.locator("[data-usage-section='affected'] a");
-  // A variant consumer is its own destination, titled by the variant.
+  // A variant consumer is its own destination, titled by the variant. Each
+  // link asks for its consumer's comparison; a moved consumer is in Changes
+  // as a move with unchanged views, so it opens Current.
   await expect(affected).toHaveCount(3);
   expect(
     await affected.evaluateAll((links) =>
@@ -151,9 +153,9 @@ async function movedConsumers(
       }),
     ),
   ).toEqual([
-    ["Status", "/view/branch/consumers/archive/status/", false],
-    ["default", `/view/${paths.movedConsumer}/`, false],
-    ["Receipt", `/view/${paths.movedScreen}/`, false],
+    ["Status", "/view/branch/consumers/archive/status/", true],
+    ["default", `/view/${paths.movedConsumer}/`, true],
+    ["Receipt", `/view/${paths.movedScreen}/`, true],
   ]);
   await affected.nth(1).click();
   await expectRouted(page, host, paths.movedConsumer);

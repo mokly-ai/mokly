@@ -186,7 +186,7 @@ export function registerDesignStylesheetEvidence(
         ).toHaveText(["Action"]);
       });
 
-      test("an affected screen explains the shared change and returns to Action", async ({
+      test("an affected screen opens in its comparison and returns to Action", async ({
         page,
       }) => {
         const story = componentDesignUrl(
@@ -210,7 +210,23 @@ export function registerDesignStylesheetEvidence(
         await expect(
           page.locator(".mbk-screen-head .ce-change-status"),
         ).toHaveText("Unmodified");
-        await expect(page.locator(".mbk-cmp-toolbar")).toHaveCount(0);
+        // Welcome stays out of Changes, yet Action's link opens its comparison.
+        const toolbar = page.locator(".mbk-cmp-toolbar");
+        await expect(toolbar).toHaveCount(1);
+        await expect(
+          toolbar.getByRole("button", { name: "Side by side", exact: true }),
+        ).toHaveAttribute("aria-pressed", "true");
+        const heading = "Components this screen uses changed";
+        // The shown view reads the heading over its two versions.
+        const stages = page.locator(".mbk-comparison-stage:visible");
+        await expect(stages.locator(":scope > h3")).toHaveText([
+          `${viewport === "desktop" ? "Desktop" : "Mobile"} · ${heading}`,
+        ]);
+        for (const stage of await stages.all())
+          await expect(stage.locator(".mbk-compare-label")).toHaveText([
+            "Before",
+            "Current",
+          ]);
         const evidence = page.locator(".ce-comparison-evidence");
         await expect(
           evidence.locator(".mbk-evidence-files > li > p"),

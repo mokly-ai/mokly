@@ -530,6 +530,22 @@ expanded frame that leaves the page collapses, so no scrim stays. The
 rejected alternative left the contract silent on that case, which allowed the
 scrim defect that the review found.
 
+**User decision 82 (2026-10-20): B.** The user: "it should still be possible
+to view the diffs for affected screens, they just don't appear in the changes
+list". A screen or component that only changed components affect, whose entry
+detail marks it comparison-eligible, offers the comparison band. It stays out
+of Changes and keeps its Unmodified status, and an Affected screens link opens
+its comparison. The rejected option A kept the band hidden and corrected the
+spec sentence that says the link opens the comparison.
+
+**Serve pane heading, requirement applied by default (user rule),
+2026-10-20:** a view also says "Components this screen uses changed" when its
+usage holds an instance of a changed component that the entry detail's
+`relatedComponents` names. The rejected alternative read only records and
+`affected` evidence. Serve's selected comparison carries no `affected` records,
+so a component's markup change left its affected consumer's views reading "No
+changes to this screen" beside a band that offers their comparison.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -638,7 +654,8 @@ through Decision 27.
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** changing the viewer's presentation beyond the
-design defaults of decision log items 17, 24, 32, 38, and 42;
+design defaults of decision log items 17, 24, 32, 38, and 42 and user decision
+82;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -1867,6 +1884,42 @@ Tags: ui
 - [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
       move the copy checks that reached Details through it to live inputs.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
+
+## Milestone 10.3: Affected-only comparisons in the designs
+
+Tags: mockup
+
+- [x] User decision 82 B: depict the comparison band and its pane heading
+      on `design/components/states/shared-impact/affected-screen`, which
+      Action's Affected screens open in Component with changed styles. Update
+      the design inventories and the matrix snapshots. The artboard opens in
+      Side by side; the inventories, link expectations, and matrix snapshots
+      needed no change, because the artboard keeps its path, its links, and
+      its library components.
+- [x] Run the mockup check and smoke-test the changed pages through Serve.
+      Evidence: `.context/defaults-viewer-82b/` (mockup check log and shots).
+
+## Milestone 10.4: Affected-only comparisons in the viewer
+
+Tags: ui
+
+- [x] User decision 82 B: show the comparison band for a screen or component
+      that only changed components affect, when its entry detail marks it
+      comparison-eligible. It stays out of Changes and keeps its Unmodified
+      status. Cover the static build and Serve.
+- [x] Open that comparison from the Affected screens list.
+- [x] Head a view that uses a changed component, which the entry detail
+      names, with "Components this screen uses changed", so Serve's selected
+      comparison heads a component's markup change too. Applied by default;
+      see the Serve pane heading record.
+- [x] Keep each browser shard within its share limit. This milestone's new
+      specs put browser shard 3 one test over its limit, because
+      `static_design_library.spec.ts` (150 tests) ended that shard. Each
+      design library spec now registers one viewport, and a `_mobile` spec
+      beside it registers the other. Evidence:
+      `.context/defaults-viewer-82b/shards/`.
+- [x] Pass the complete gate on the final commit, push the branch, and report.
+      Evidence: `.context/defaults-viewer-82b/gate.log`.
 
 ## Milestone 11: Watch and incremental rendering
 
@@ -3193,15 +3246,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        allowance.
   - Decision log item 32 follow-ups for the user, raised on 2026-10-20:
     1. A screen or component that only changed components affect offers no
-       comparison in the shell. Severity Medium, effort Medium. Its entry
-       detail marks it comparison-eligible and the static build writes both
-       snapshots, but the shell hides the band because its own views are
-       unchanged. `mokly-component-changes.md` says an Affected screens link
-       opens the comparison; `mokly-component-workspace-design.md` says
-       Unmodified omits the band. Recommended: B, offer the comparison for
-       such an entry, open it from Affected screens, and depict its pane
-       heading. Option A keeps the band hidden and corrects the first
-       sentence.
+       comparison in the shell. Severity Medium, effort Medium. Settled on
+       2026-10-20 by user decision 82 B, which Milestones 10.3 and 10.4
+       apply: the shell offers the comparison for such an entry, opens it
+       from Affected screens, and the design depicts its pane heading.
     2. Related components follow the parent, not the changed views.
        Severity Medium, effort Medium. The affected records name the parent
        as the consumer for every view of a component, so `projection_affected.rs`
@@ -3214,14 +3262,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
        evidence item names, in place of the parent, and update the Status
        Lines rule. Option A documents that only the parent page explains the
        shared change.
-  - Hub review of `rebuild/defaults-viewer`, finding 5, raised on
-    2026-10-20: no artboard shows the pane heading “Components this screen
-    uses changed”. Severity Low. The shell shows it in a loaded comparison
-    of a screen in Changes, beside a changed view, on an unchanged view that
-    keeps a component-owned record or that the affected records name. Draw
-    that comparison when follow-up 1 above settles: one changed and one
-    affected view, with the inventories and the matrix snapshots. The new
-    mockup is Large.
+  - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
+        2026-10-20: no artboard shows the pane heading “Components this
+        screen uses changed”. Severity Low. Milestone 10.3 closes it: the
+        `design/components/states/shared-impact/affected-screen` artboard
+        depicts that heading in its loaded comparison.
   - [x] Hub review of `rebuild/defaults-viewer`, fixed on 2026-10-20 in
         `rebuild/defaults-viewer-fix1`: finding 2, an expanded step frame
         left a page scrim (`1ea520af`, B); finding 3, unused lookup
@@ -3231,6 +3276,24 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         component line now follows the Status Lines rule (`69ffa907`), the
         catalogue column stays at 900px (`eeaea061`), and the dead workspace
         path for a catalogue without published records is gone (`37e596df`).
+  - User decision 82 follow-ups for the user, raised on 2026-10-20:
+    1. A moved consumer of a changed component offers no comparison.
+       Severity Low, effort Small. Its Affected screens link asks for the
+       comparison, but Changes lists it as a pure move with unchanged views,
+       so it opens Current, and its Details end with "No changes to this
+       screen." Recommended: B, apply the affected rule to every entry whose
+       own views are all unchanged and whose detail names changed components,
+       with the shared-component sentence. Option A keeps the rule to entries
+       that Changes does not list.
+    2. No artboard depicts an affected-only component's comparison, which
+       reads "Components this variant uses changed". Severity Low, effort
+       Large, because it is a new artboard. Recommended: B, draw it when the
+       design's Affected screens list also shows components, as the viewer's
+       list does. Option A keeps the component case in the design copy only.
+  - Outside the scope of user decision 82:
+    `examples/basic/specs/design/components/parts/component_usage.tsx` lists
+    only screens under "Affected screens", while the viewer lists screens and
+    components under "Affected screens and components". Separate branch.
   - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
     user: `HistoricalManifest` has no user and no published export since
     `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still

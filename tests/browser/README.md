@@ -55,6 +55,7 @@ A zero Playwright exit cannot hide a missing or invalid report.
 - `design_component_stacks.spec.ts`
 - `design_index_entries.spec.ts`
 - `design_library.spec.ts`
+- `design_library_mobile.spec.ts`
 - `design_modern_controls.spec.ts`
 - `design_portable.spec.ts`
 - `design_scroll_together.spec.ts`
