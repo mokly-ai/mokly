@@ -150,7 +150,7 @@ entry's fallback status and eligibility. `publicWorkspace` sets
 `affectedComparison` when Changes does not list the routed entry but its entry
 detail marks it comparison-eligible, because changed components affect it, and
 `workspace_views.ts` then keeps the comparison eligible while the shown views
-read Unmodified (user decision 82 B).
+read Unmodified.
 `workspace_context.tsx` owns one routed workspace and its resolved views for
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
