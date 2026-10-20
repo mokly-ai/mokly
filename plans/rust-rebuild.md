@@ -2327,6 +2327,20 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         are not preserved. Options B, stop retaining after the first skip or
         trim, and C, restore the old rule with final-capacity rerenders, remain
         for the user. No retention rule changes in this follow-up.
+        Collector follow-up finding 1, option B (2026-10-20): matched-span
+        release observations cover all of `changes.classify`. The React fixture
+        has 5,850 views, eight render workers, and two sidecars on one host.
+        At `324fcfbb`, family peak RSS was 2,557,532 KiB over 270.069 s.
+        With the final collector code at `5107d4ce`, it was 2,014,376 KiB over
+        188.282 s. Both use Node 24.21.0 and their matching sidecar sources.
+        The baseline peak includes a 1,006,284 KiB esbuild helper before
+        capture. The collector peak includes a 702,500 KiB helper.
+        The whole classification did not regress in this sample, so option C,
+        stopping idle esbuild services after bundling, is not selected.
+        These observations set no budget or limit. Method and raw samples:
+        `.context/m14-collector-fix1/measurement-method.md` and
+        `.context/m14-collector-fix1/observations.json`. Final-commit repeat:
+        `.context/m14-collector-fix1/final-analysis.json`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
