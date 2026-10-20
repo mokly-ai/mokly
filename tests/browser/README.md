@@ -22,7 +22,10 @@ supply that current-only input. Setup rejects an index whose
 
 `npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
 It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
-The configuration selects the portable design specs. The delivery reporter
+The configuration selects the portable design specs and `component_fragments.spec.ts`.
+The private slot and saved-variant fixture builds its own output, removes its
+source, and checks every viewport and scheme through standalone links. Disk
+mode requires `file://` navigation without HTTP requests. The delivery reporter
 rejects skips, missing or duplicate results, and empty discovery. Reports live
 under `.context/static-delivery`, outside the complete suite report directory.
 The parent checks each saved report through

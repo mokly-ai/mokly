@@ -12,6 +12,7 @@ export default defineConfig({
     "component_design_inspection",
     "component_design_selection",
     "component_evidence",
+    "component_fragments",
     "component_inspector",
     "component_surfaces",
     "component_workspace",

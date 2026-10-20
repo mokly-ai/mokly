@@ -1030,6 +1030,12 @@ renders again.
         design specs through static HTTP and `file://`. Decision 2 = A on
         2026-10-19 approves this gate. The complete local and remote gates
         run the same delivery checks without changing the four browser shards.
+  - [x] Port sweep row `component_fragments.spec.ts:0 [private fixture file:// delivery]`
+        into the delivery job, applied by default (user rule), 2026-10-20.
+        Build the private slot and variant fixture. Open every saved variant
+        through standalone portable links in each viewport and scheme. Disk
+        mode uses no HTTP request and the source is removed before navigation.
+        Evidence: `.context/ci-gates-round2/private-focused-2.log`.
   - [ ] Complete the remaining design checks with their feature owners:
         M8 viewer owns live props; M9/M10 own stylesheet attribution and
         comparison output; M8 browser owns the static build acceptance checks.
