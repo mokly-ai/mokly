@@ -2654,6 +2654,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       case detail reports another deployment still shows the unavailable
       stage before the page load. Effort Small. Covers F12 review finding 2.
       Previous examples: F11 and `89f8f6cd` for a route with one detail.
+  - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
+        Exclude sampled orphans only when their own records have disappeared.
+        Keep persistent ownership failures and resource retention.
+        Evidence: `.context/f13/reproduction.md`.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:

@@ -365,6 +365,9 @@ points; see the
   verifies the packed target and its TLS dependencies. Packed manifest
   inspection rejects `MOKLY_TEST_` bytes in every native archive. Runtime
   inspection uses `readelf` on Linux, `otool` on macOS, and `dumpbin` on Windows.
+- [`scripts/verification/process-owner-snapshot.mjs`](./scripts/verification/process-owner-snapshot.mjs)
+  — validates ownership during concurrent cleanup and rejects persistent
+  broken owner and process records.
 - [`examples/basic`](./examples/basic/README.md) — the reference consumer and
   design catalogue.
 
