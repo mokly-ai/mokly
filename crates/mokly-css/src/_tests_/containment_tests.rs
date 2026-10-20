@@ -128,8 +128,8 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
         component: Some("parent".into()),
         rules,
     };
-    let linked = attribution::attribute(&[page(linked)]);
-    let inline = attribution::attribute(&[page(inline)]);
+    let linked = attribution::attribute(vec![page(linked)]);
+    let inline = attribution::attribute(vec![page(inline)]);
     assert_eq!(
         linked.changed_components.into_iter().collect::<Vec<_>>(),
         ["parent"]

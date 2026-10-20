@@ -131,6 +131,7 @@ owner sets. The shared nested test keeps supplier input ancestry and
 self-nested copies. Each source uses matched, unresolved, or excluded records.
 Physical and supplier ancestry use separate shared paths. Each instance key
 retains one supplier path, and linked proof retains only physical ancestry.
+The engine transfers observations into catalogue attribution without cloning them.
 Exact owned-instance proof uses the same unfiltered own-page sets after the
 catalogue pass, and retains only paired instances with unchanged caller inputs.
 Own render, resource, and rule impact share one unchanged-input check. Saved

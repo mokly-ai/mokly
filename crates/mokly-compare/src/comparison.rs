@@ -88,7 +88,7 @@ impl Engine {
             .collect();
         let mut observations: Vec<PageObservation> = Vec::new();
         for pair in &pairing.entries {
-            let views = comparison_views::collect(
+            let mut views = comparison_views::collect(
                 pair,
                 before.clone(),
                 after.clone(),
@@ -97,10 +97,15 @@ impl Engine {
                 &before_plans,
                 &after_plans,
             )?;
-            observations.extend(views.views.iter().map(|view| view.observation.clone()));
+            observations.extend(
+                views
+                    .views
+                    .iter_mut()
+                    .map(|view| mem::take(&mut view.observation)),
+            );
             pairs.push(views);
         }
-        let mut attributed = attribution::attribute(&observations);
+        let mut attributed = attribution::attribute(observations);
         let mut impact = mem::take(&mut attributed.changed_components);
         let mut instance_proofs = Vec::new();
         let mut own_impact = OwnImpact::default();

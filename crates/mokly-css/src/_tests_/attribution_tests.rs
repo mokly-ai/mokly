@@ -42,7 +42,7 @@ fn copies_across_bundles_share_own_page_proof_but_keep_their_public_paths() {
             rules: vec![proof("static/home.css", ".card", &[("card", false)])],
         },
     ];
-    let result = attribute(&pages);
+    let result = attribute(Vec::from(pages));
     assert_eq!(
         result.changed_components.into_iter().collect::<Vec<_>>(),
         ["card"]
@@ -72,7 +72,7 @@ fn unfiltered_nested_matches_take_parent_proof_without_a_fixed_point() {
             rules: vec![proof("static/z.css", ".hit", &[("z", true)])],
         },
     ];
-    let result = attribute(&pages);
+    let result = attribute(Vec::from(pages));
     assert_eq!(
         result.changed_components.into_iter().collect::<Vec<_>>(),
         ["z"]
@@ -100,7 +100,7 @@ fn unresolved_rules_coexist_with_component_rules_and_exclusions_are_single_recor
             missing,
         ],
     }];
-    let result = attribute(&pages);
+    let result = attribute(Vec::from(pages));
     assert_eq!(result.pages[0].len(), 3);
     assert_eq!(
         result.pages[0]
@@ -122,7 +122,11 @@ fn a_nested_self_instance_never_takes_its_own_component_proof() {
             &[("card", true), ("card", false)],
         )],
     }];
-    assert!(attribute(&pages).changed_components.contains("card"));
+    assert!(
+        attribute(Vec::from(pages))
+            .changed_components
+            .contains("card")
+    );
 }
 
 #[test]
@@ -145,7 +149,7 @@ fn the_innermost_changed_component_owns_a_nested_match() {
             )],
         },
     ];
-    let result = attribute(&pages);
+    let result = attribute(Vec::from(pages));
     assert_eq!(result.changed_components.len(), 2);
     assert_eq!(result.pages[2].len(), 1);
     assert_eq!(
@@ -198,7 +202,7 @@ fn owned_and_unowned_copies_share_nested_proof_and_one_record_reducer() {
             ],
         },
     ];
-    let result = attribute(&pages);
+    let result = attribute(Vec::from(pages));
     assert_eq!(result.component_pages.into_iter().collect::<Vec<_>>(), [1]);
     for rules in &result.pages[..3] {
         assert_eq!(rules.len(), 1);

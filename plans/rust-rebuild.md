@@ -416,6 +416,12 @@ readiness rather than blocking this acceptance round on further startup work.
 
 **Comparison filter follow-up (2026-10-20):**
 
+- Defaults-engine round 3 finding 3 A (2026-10-20, approved): move observations
+  out of pending views and pass the vector into attribution by value. Merge
+  rule observations in place without cloning their retained paths. Keep
+  per-view owned proof indexes and address candidates until option B is decided.
+  Alternative B compacts that state; alternative C measures its retained size.
+
 - Defaults-engine round 3 finding 4 A (2026-10-20, approved): decide every
   raw-text tag from the parser-context namespace returned at element entry.
   Preserve raw text at HTML integration points and escape foreign grafts.
@@ -2513,6 +2519,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Defaults-engine round 3 finding 3 B: compact pending owned proof into
     matched instance chains and one address pair per view. Severity Medium,
     effort Medium. Recommended: B. User pending; apply only approved A now.
+  - [x] Defaults-engine round 3 findings 2 B, 3 A, 4 A, 5 B, and 6 A:
+        verify predicted plaintext against the parsed element, consume rule
+        observations, share raw-text context and containment paths, and align
+        the two supplier-ancestry passages. Evidence:
+        `.context/defaults-engine-round3/`.
   - [x] Defaults-engine hub review 1, finding 1: apply user decision 73 C
         through catalogue-wide rule proof and supplier input ancestry.
   - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`

@@ -1,6 +1,7 @@
 //! Catalogue-wide own-page membership, nested filtering, and wire evidence.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::mem;
 
 use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
 use mokly_model::review_affected::ReviewSide;
@@ -155,14 +156,10 @@ pub(crate) fn observe_ancestry(
 }
 
 /// Resolve all own-page matches before attributing any entry's records.
-pub fn attribute(observations: &[PageObservation]) -> Attribution {
-    let pages: Vec<_> = observations
-        .iter()
-        .map(|page| PageObservation {
-            component: page.component.clone(),
-            rules: observation::merge(page.rules.clone()),
-        })
-        .collect();
+pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
+    for page in &mut pages {
+        page.rules = observation::merge(mem::take(&mut page.rules));
+    }
     let mut unfiltered = OwnPageMatches::new();
     for page in &pages {
         let Some(component) = &page.component else {

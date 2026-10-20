@@ -79,6 +79,7 @@ path stays private, so a caller cannot read a receiver through a head proof.
 
 `attribution::attribute` joins equal rule observations, collects unfiltered
 own-page matches, and filters nested components before one record reduction.
+It consumes the observation vector and moves retained paths into the reducer.
 Owned head styles, ownerless head styles, and linked CSS share that reducer.
 A source with no kept rule has one empty-selector `excluded` record.
 Unresolved proof takes precedence for the same selector and source.
