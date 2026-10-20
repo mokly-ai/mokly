@@ -49,7 +49,7 @@ pub(super) fn artifact(comparison: bool) -> Artifact {
         files.push(file(&comparison.path, &serde_json::to_vec(&json!({"schemaVersion":8,"baseRef":comparison.base_ref,"baseCommit":comparison.base_sha})).unwrap()));
     }
     Artifact::finalize(
-        PathBuf::from("/private/publish"),
+        PathBuf::from("/private/publish/site"),
         files,
         Some(publication().metadata(&inventory).unwrap()),
     )

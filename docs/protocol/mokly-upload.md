@@ -60,11 +60,13 @@ only with `--strict`. Without it, warnings print and publication continues.
 Strict mode is opt-in so recoverable authoring warnings do not block publication.
 
 After a successful publication or an already-published response, delete exactly
-the private build snapshot. Remove its parent only when empty. Preserve sibling
-files and symlink targets. A failed or cancelled upload retains its snapshot.
-If snapshot removal fails, report its path as a warning and keep publication
-successful. The receiver has already accepted it. Retaining every successful
-snapshot would leave unused output behind.
+the private directory created by this publication, including its site and
+reservation directory. Use the allocated path retained by the command, never
+a path reconstructed from output or environment data. Do not follow symbolic
+links. A failed or cancelled upload retains the whole private directory.
+If removal fails, warn with the private directory path and keep publication
+successful. The receiver has already accepted it. Removing only the snapshot
+would leave the reservation directory behind.
 
 Publish requires a Git checkout with a commit even without comparisons, to
 identify the uploaded revision. With comparisons enabled, the base side renders

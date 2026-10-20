@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use mokly_graph::asset_delivery::AssetReadMock;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResourcesMock};
+use mokly_graph::collection::ComparisonCollectorMock;
 use mokly_graph::error::GraphError;
 use mokly_graph::key::{NodeKind, key};
 use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock, RenderSummary};
@@ -49,6 +50,20 @@ pub(super) fn source_calls(
         })
         .collect::<BTreeMap<_, _>>();
     (
+        RenderGenerationMock::collect_comparison
+            .each_call(matching!(_))
+            .answers(&|mock, collector| {
+                let summary = mock.render_all()?;
+                collector.summary(&summary);
+                let routes: Vec<_> = mock.plans().keys().cloned().collect();
+                for batch in routes.chunks(mock.comparison_parallelism().max(1)) {
+                    for (route, input) in batch.iter().zip(mock.comparison_batch(batch)?) {
+                        mock.check_cancelled()?;
+                        collector.collect(route, input)?;
+                    }
+                }
+                Ok(summary)
+            }),
         RenderGenerationMock::check_cancelled
             .each_call(matching!())
             .answers(&|_| Ok(())),
@@ -225,8 +240,8 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
         RenderGenerationMock::comparison_capture
             .each_call(matching!())
             .returns(None),
-        RenderGenerationMock::render_all
-            .next_call(matching!())
+        RenderGenerationMock::collect_comparison
+            .next_call(matching!(_))
             .returns(Err(GraphError::Runtime {
                 source: RuntimeDiagnostic {
                     code: RuntimeCode::Cancelled,
@@ -237,4 +252,28 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
     assert!(
         matches!(capture(source), Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled)
     );
+}
+
+#[test]
+fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_source() {
+    let reads = Arc::new(Mutex::new(Vec::new()));
+    let captured = capture(source("base", 4, reads.clone())).unwrap();
+    let mut collector = Unimock::new(
+        ComparisonCollectorMock::collect
+            .each_call(matching!(_, _))
+            .answers(&|_, route, input| {
+                assert_eq!(input.artifact.bytes, format!("base:{route}").as_bytes());
+                assert!(input.closure.files.contains(route));
+                Ok(())
+            })
+            .n_times(4),
+    );
+    assert_eq!(
+        captured
+            .collect_comparison(&mut collector)
+            .unwrap()
+            .documents,
+        4
+    );
+    assert_eq!(reads.lock().unwrap().len(), 4);
 }

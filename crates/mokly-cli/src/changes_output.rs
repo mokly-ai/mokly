@@ -4,7 +4,7 @@ use mokly_compare::comparison_types::ComparisonCounts;
 
 use crate::build::BuildChanges;
 use crate::codes::Code;
-use crate::output::{Mode, Style, bounded};
+use crate::output::{Mode, Style, bounded, warning_line};
 use crate::redaction::Redactor;
 
 /// A historical source diagnostic keeps its terminal category.
@@ -65,20 +65,15 @@ pub fn summary_with_duration(
 ) -> String {
     match changes {
         BuildChanges::Disabled => String::new(),
-        BuildChanges::Unavailable { reason, .. } if style.mode == Mode::Rich => {
-            format!(
-                "{}\n",
-                bounded(
-                    &format!(
-                        "  {} Changes unavailable · {}{}",
-                        glyph(style, "!", 33),
-                        redactor.safe(reason),
-                        suffix(elapsed)
-                    ),
-                    style.columns
-                )
-            )
-        }
+        BuildChanges::Unavailable { reason, .. } if style.mode == Mode::Rich => warning_line(
+            style,
+            &format!(
+                "Changes unavailable · {}{}",
+                redactor.safe(reason),
+                suffix(elapsed)
+            ),
+            true,
+        ),
         BuildChanges::Unavailable { .. } => String::new(),
         BuildChanges::Ready(result) => {
             let mut output = String::new();

@@ -1,4 +1,4 @@
-//! Pure mapping preserves cancellation, warning policy, and transaction recovery errors.
+//! Pure mapping preserves cancellation, strict failures, and transaction recovery errors.
 
 use mokly_publish::{error, runtime::Cancellation};
 
@@ -21,7 +21,6 @@ pub fn checkout_result<T>(result: error::Result<T>, cancellation: &dyn Cancellat
 pub fn build_result<T>(result: std::result::Result<T, BuildError>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),
-        Err(BuildError::Warnings) => Err(Error::BuildWarnings),
         Err(failure) => Err(Error::Build {
             failure: Box::new(failure),
         }),

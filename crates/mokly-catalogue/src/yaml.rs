@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::Chars;
 
 use mokly_model::catalogue::SourceLocation;
+use mokly_model::data::round_unsafe_integer;
 use serde_json::{Number, Value};
 use yaml_rust2::Yaml;
 use yaml_rust2::parser::{Event, Parser, Tag};
@@ -257,7 +258,7 @@ fn scalar(text: &str) -> Option<Value> {
     match Yaml::from_str(text) {
         Yaml::Null => Some(Value::Null),
         Yaml::Boolean(value) => Some(Value::Bool(value)),
-        Yaml::Integer(value) => Some(Value::Number(value.into())),
+        Yaml::Integer(value) => Some(Value::Number(round_unsafe_integer(value.into()))),
         Yaml::Real(value) => value
             .parse::<f64>()
             .ok()

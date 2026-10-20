@@ -77,7 +77,7 @@ props: {count: 0}
     assert.equal(result.code, 0, result.stderr);
     assert.equal(
       result.stderr.match(/outside the JavaScript safe integer range/g)?.length,
-      1,
+      2,
       result.stderr,
     );
     const html = await fs.readFile(
@@ -121,7 +121,7 @@ variants:
     assert.equal(built.code, 0, built.stderr);
     assert.equal(
       built.stderr.match(/outside the JavaScript safe integer range/g)?.length,
-      2,
+      3,
       built.stderr,
     );
     const index = readCatalogueIndex(
@@ -152,6 +152,6 @@ variants:
       context.signal,
     ).result;
     assert.equal(strict.code, 1, strict.stderr);
-    assert.match(strict.stderr, /2 build warnings with --strict/);
+    assert.match(strict.stderr, /3 build warnings with --strict/);
   },
 );

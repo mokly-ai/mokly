@@ -89,7 +89,6 @@ fn run(cleanup: bool) {
             viewer: vec![],
             repository: Path::new("/repo"),
             publication: None,
-            warnings_are_fatal: false,
         },
         &mut transaction,
     );

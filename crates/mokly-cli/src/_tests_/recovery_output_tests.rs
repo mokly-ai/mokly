@@ -9,7 +9,34 @@ use crate::build_output::failure;
 use crate::output::{Mode, Style};
 use crate::redaction::Redactor;
 
-use super::path;
+use super::{path, retained_publication};
+
+#[test]
+fn retained_publication_keeps_plain_bytes_and_full_rich_paths() {
+    let path = format!("/private/{}/site", "long-path-".repeat(20));
+    for color in [false, true] {
+        let mut style = Style {
+            mode: Mode::Plain,
+            color,
+            ascii: true,
+            columns: 24,
+        };
+        assert_eq!(
+            retained_publication(&style, &path),
+            format!(
+                "[mokly/warning] Publication completed. The local build remains at {path}. Remove it when you no longer need it.\n"
+            )
+        );
+        style.mode = Mode::Rich;
+        let output = retained_publication(&style, &path);
+        assert_eq!(
+            output.lines().nth(1),
+            Some(format!("  Recovery path: {path}").as_str())
+        );
+        assert!(output.starts_with(if color { "  \x1b[33m!\x1b[0m " } else { "  ! " }));
+        assert!(output.lines().next().unwrap().ends_with('…'));
+    }
+}
 
 fn root() -> PathBuf {
     PathBuf::from(if cfg!(windows) { "C:\\repo" } else { "/repo" })

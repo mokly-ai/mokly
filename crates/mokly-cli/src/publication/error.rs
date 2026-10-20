@@ -46,11 +46,6 @@ pub enum Error {
         /// Original typed build or recovery error.
         failure: Box<dyn BuildFailure>,
     },
-    /// The selected warning policy refused publication.
-    #[error(
-        "[mokly-cli/publication/build-invalid] The catalogue has build warnings. Fix the reported warnings and retry."
-    )]
-    BuildWarnings,
     /// Private output allocation failed before the static builder started.
     #[error(
         "[mokly-cli/publication/export-invalid] Unable to prepare temporary output at {temporary_root:?}. Set TMPDIR, or TMP on Windows, to a writable directory outside the checkout."

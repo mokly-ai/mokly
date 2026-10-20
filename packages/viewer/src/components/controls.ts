@@ -163,7 +163,7 @@ function acceptsOnly(
 function count(value: unknown, at: string): void {
   if (
     value !== undefined &&
-    (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0)
+    (typeof value !== "number" || !Number.isInteger(value) || value < 0)
   )
     invalidData(at, "expected a nonnegative integer");
 }

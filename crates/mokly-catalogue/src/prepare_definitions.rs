@@ -156,6 +156,7 @@ impl Builder {
                             );
                         }
                         prepared.model.entries.extend(result.entries);
+                        prepared.warnings.extend(result.warnings);
                         issues.extend(result.issues);
                     }
                     Err(issue) => issues.push(issue),
