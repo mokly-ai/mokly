@@ -619,6 +619,11 @@
   },
   {
     "kind": "screen",
+    "path": "design/components/states/shared-impact/affected-screen",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
     "path": "design/components/states/shared-impact/shared-impact",
     "colorSchemes": ["light"]
   },

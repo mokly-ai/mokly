@@ -67,5 +67,6 @@ export const COMPONENT_NAVIGATION_STATES = {
   [INSPECTION_PAGES["inspection-loading"]]: {},
   [INSPECTION_PAGES["removed-consumer"]]: {},
   [INSPECTION_PAGES["style-outside"]]: {},
+  [INSPECTION_PAGES["affected-screen"]]: {},
   [INSPECTION_PAGES["screen-props"]]: {},
 } satisfies Record<ComponentDesignDestination, NavigationState>;

@@ -32,7 +32,8 @@ recorded in the
 `design/changes/impact/styles/unresolved-unnamed/unresolved` and `design/changes/impact/styles/unresolved-unnamed/unnamed`, and the
 component explorer's Stylesheet evidence gallery, recorded in the
 [component design inventory](./mokly-component-design.md#owning-catalogue) as
-`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`, and
+`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`,
+`design/components/states/shared-impact/affected-screen`, and
 `design/components/states/shared-impact/shared-impact`. These screens follow these presentation
 rules:
 

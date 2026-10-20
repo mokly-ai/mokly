@@ -22,6 +22,7 @@ export type ScreenPageState =
   | "inspection-loading"
   | "removed-consumer"
   | "style-outside"
+  | "affected-screen"
   | "screen-props";
 
 /** A single consumer screen reused by Current, inspection, and comparison mockups. */

@@ -27,6 +27,7 @@ export const COMPONENT_PAGES = {
 /** Screen inspection states remain separate from the existing Browse subjects. */
 export const INSPECTION_PAGES = {
   "style-outside": "design/components/states/shared-impact/style-outside",
+  "affected-screen": "design/components/states/shared-impact/affected-screen",
   closed: "design/components/inspector/screen-inspector-closed",
   details: "design/components/inspection/inspection-details",
   highlight: "design/components/inspection/inspection-highlight",

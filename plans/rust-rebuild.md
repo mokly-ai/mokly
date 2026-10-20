@@ -1609,9 +1609,12 @@ The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
 
 Tags: mockup
 
-- [ ] Item 32 A: depict an unchanged screen that a changed component affects,
-      reached from that component's Affected screens: its comparison pane
-      heading and its Details explanation.
+- [x] Item 32 A: depict an unchanged screen that a changed component affects,
+      reached from that component's Affected screens, with its Details
+      explanation: `design/components/states/shared-impact/affected-screen`.
+      The shell offers no comparison for such a screen, so no artboard draws
+      its pane heading; the open decision on affected-only comparisons under
+      the final review TODO owns that depiction.
 - [ ] Item 25 B: draw the desktop component canvas at the fixed 1024px layout
       width, and state it in the component design.
 - [ ] Item 35 A: confirm that the design catalogue depicts the
@@ -2452,6 +2455,15 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
     d371e17c. Recommended: B, one helper in
     `tests/browser/serve_comparison_ui.ts` for every Card pane check.
+  - Decision log item 32 follow-up for the user, raised on 2026-10-20: a
+    screen or component that only changed components affect offers no
+    comparison in the shell. Severity Medium, effort Medium. Its entry detail
+    marks it comparison-eligible and the static build writes both snapshots,
+    but the shell hides the band because its own views are unchanged.
+    `mokly-component-changes.md` says an Affected screens link opens the
+    comparison; `mokly-component-workspace-design.md` says Unmodified omits
+    the band. Recommended: A, offer the comparison for such an entry, open it
+    from Affected screens, and depict its pane heading.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve

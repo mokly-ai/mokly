@@ -236,6 +236,10 @@
   margin-top: 20px;
   padding-top: 16px;
 }
+/* A sentence after a list keeps the evidence card's list spacing. */
+.ce-comparison-evidence ul + p {
+  margin-top: 14px;
+}
 .ce-comparison-paths li {
   overflow-wrap: anywhere;
 }

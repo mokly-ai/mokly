@@ -182,6 +182,43 @@ export function registerDesignStylesheetEvidence(
             .getByRole("link"),
         ).toHaveText(["Action"]);
       });
+
+      test("an affected screen explains the shared change and returns to Action", async ({
+        page,
+      }) => {
+        const story = componentDesignUrl(
+          "design/components/states/shared-impact/style-changed",
+          viewport,
+        );
+        await page.goto(story);
+        await page
+          .getByRole("region", { name: "Affected screens", exact: true })
+          .getByRole("link", { name: "Welcome" })
+          .click();
+        await expect(page).toHaveURL(
+          componentDesignUrl(
+            "design/components/states/shared-impact/affected-screen",
+            viewport,
+          ),
+        );
+        const count =
+          viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count";
+        await expect(page.locator(count)).toHaveText("4");
+        await expect(
+          page.locator(".mbk-screen-head .ce-change-status"),
+        ).toHaveText("Unmodified");
+        await expect(page.locator(".mbk-cmp-toolbar")).toHaveCount(0);
+        const evidence = page.locator(".ce-comparison-evidence");
+        await expect(
+          evidence.locator(".mbk-evidence-files > li > p"),
+        ).toHaveText(["Changed styles that apply to this screen:"]);
+        await expect(evidence.locator(":scope > p").last()).toHaveText(
+          "Shared component changes affect this preview. This page has no independent entry in Changes.",
+        );
+        await expect(evidence).not.toContainText("No changes to this screen.");
+        await evidence.getByRole("link", { name: "Action" }).click();
+        await expect(page).toHaveURL(story);
+      });
     });
   }
 }
