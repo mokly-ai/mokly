@@ -2145,6 +2145,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Remove the duplicate base render between validation and capture through
+      one bounded, ordered collector. Keep aggregate errors, warnings,
+      retention order, cancellation, fallback, and every charge and bound.
+      User decision 62 (2026-10-20): B now, in parallel.
+      Move this item from the post-merge follow-up into Milestone 14.
+      Evidence: `.context/m14-collector/observations.json`,
+      `.context/m14-collector/example-parity.json`, and
+      `.context/m14-collector/final-verification.json`.
+      Integration: `.context/m14-collector/merge-resolution.md`.
+
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2303,6 +2313,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.
         User decision 62 (2026-10-20): A, keep the two passes now. B, one
         bounded, ordered collector, is a post-merge follow-up.
+        User decision 62 (2026-10-20): B now, in parallel. This later instruction
+        supersedes the deferral. The collector must not delay the final pull request.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -3221,13 +3233,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 - [ ] Run the bookfolio catalogue through build, serve, Changes, and watch
       after the user supplies access. The user took it out of the rebuild
       scope on 2026-10-20.
-
-- [ ] Remove the duplicate base render between validation and capture: one
-      bounded, ordered collector that keeps aggregate errors, warnings,
-      retention order, cancellation, fallback, and all charges (capture
-      decision 2, option B; user decision 62, 2026-10-20). Measured on
-      2026-10-20: React capture 95 s, of which validation 27 s; 5,790
-      JavaScript renders in each pass.
 
 - [ ] Share one verified opaque-asset spool for each Serve generation and
       route, released with its generation, under the M14 Serve budgets (M14

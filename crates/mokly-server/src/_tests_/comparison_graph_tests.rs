@@ -6,8 +6,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
+use mokly_graph::collection::ComparisonCollectorMock;
 use mokly_graph::error::GraphError;
-use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
+use mokly_graph::types::{
+    ComparisonDocument, RenderGeneration, RenderGenerationMock, RenderSummary,
+};
 use mokly_model::material::digest;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
@@ -198,4 +201,59 @@ fn scheduled_batches_keep_frozen_document_and_resource_checks() {
     assert!(graph.comparison_batch(&routes).is_err());
     assert!(graph.resource_bytes("static/image.png").is_err());
     assert_eq!(calls.load(Ordering::SeqCst), 4);
+}
+
+#[test]
+fn validated_collection_preserves_frozen_document_and_resource_checks() {
+    let graph = FrozenResources::new(Arc::new(Unimock::new((
+        RenderGenerationMock::collect_comparison
+            .each_call(matching!(_))
+            .answers(&|_, collector| {
+                let summary = RenderSummary {
+                    documents: 1,
+                    ..Default::default()
+                };
+                collector.summary(&summary);
+                collector.collect(
+                    "sample/index.html",
+                    ComparisonDocument {
+                        artifact: Arc::new(Artifact {
+                            bytes: b"before".to_vec(),
+                            content_type: "text/html".into(),
+                            document: None,
+                            fragment: None,
+                        }),
+                        closure: Closure {
+                            edges: BTreeMap::from([("static/image.png".into(), vec![])]),
+                            ..Default::default()
+                        },
+                    },
+                )?;
+                Ok(summary)
+            }),
+        RenderGenerationMock::resource_digest
+            .next_call(matching!("static/image.png"))
+            .returns(Ok(Some(digest(b"image")))),
+        RenderGenerationMock::resource_bytes
+            .next_call(matching!("static/image.png"))
+            .returns(Ok(Some(b"changed".to_vec()))),
+        RenderGenerationMock::render
+            .next_call(matching!("sample/index.html"))
+            .returns(Ok(Arc::new(Artifact {
+                bytes: b"changed".to_vec(),
+                content_type: "text/html".into(),
+                document: None,
+                fragment: None,
+            }))),
+    ))));
+    let mut collector = Unimock::new((
+        ComparisonCollectorMock::summary.next_call(matching!((summary) if summary.documents == 1)).returns(()),
+        ComparisonCollectorMock::collect.next_call(matching!((route, input) if *route == "sample/index.html" && input.artifact.bytes == b"before")).returns(Ok(())),
+    ));
+    assert_eq!(
+        graph.collect_comparison(&mut collector).unwrap().documents,
+        1
+    );
+    assert!(graph.resource_bytes("static/image.png").is_err());
+    assert!(graph.render("sample/index.html").is_err());
 }
