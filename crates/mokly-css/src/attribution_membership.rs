@@ -4,6 +4,15 @@ use std::collections::BTreeSet;
 
 use crate::attribution::MatchProof;
 
+/// Own-page proof covers its whole root; declared claims stop at their instance.
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum Boundary {
+    /// Filter every nested region below the component's own root.
+    OwnPage,
+    /// Stop before examining the declared instance or any of its ancestors.
+    DeclaredInstance,
+}
+
 pub(crate) fn own_root(matched: &MatchProof, component: &str) -> bool {
     matched
         .trusted_owner
@@ -18,16 +27,20 @@ pub(crate) fn kept(
     matched: &MatchProof,
     component: &str,
     unfiltered: Option<&BTreeSet<String>>,
+    boundary: Boundary,
 ) -> bool {
-    !matched.regions().any(|region| {
-        !region.root
-            && region.path != component
-            && unfiltered.is_some_and(|paths| paths.contains(&region.path))
-            && matched
-                .inputs
-                .as_ref()
-                .is_none_or(|inputs| inputs.iter().any(|input| input == region))
-    })
+    !matched
+        .regions()
+        .take_while(|region| boundary == Boundary::OwnPage || region.path != component)
+        .any(|region| {
+            !region.root
+                && region.path != component
+                && unfiltered.is_some_and(|paths| paths.contains(&region.path))
+                && matched
+                    .inputs
+                    .as_ref()
+                    .is_none_or(|inputs| inputs.iter().any(|input| input == region))
+        })
 }
 
 pub(crate) fn owner(
@@ -40,7 +53,7 @@ pub(crate) fn owner(
         .as_ref()
         .filter(|owner| {
             matched.regions().any(|region| &region.path == *owner)
-                && kept(matched, owner, unfiltered)
+                && kept(matched, owner, unfiltered, Boundary::DeclaredInstance)
         })
         .cloned();
     declared.or_else(|| {

@@ -2532,6 +2532,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         CSS ownership, supplier protection, and exact receiver proof. Retain
         the eight requested acceptance groups. Evidence:
         `.context/defaults-engine-round4/`.
+  - [x] Defaults-engine round 4 post-push review finding 1: distinguish
+        whole-root own-page filtering from declared-instance filtering. An
+        outer supplier cannot block a receiver's declared physical claim.
+        This applies option B within decision 96. Evidence:
+        `.context/defaults-engine-round4/ancestor-cli-red.log`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.

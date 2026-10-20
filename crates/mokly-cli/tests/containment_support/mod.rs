@@ -10,14 +10,23 @@ use mokly_model::review::ReviewResultV8;
 use super::changes_support;
 
 pub fn build(before: Vec<(String, String)>, after: Vec<(String, String)>) -> ReviewResultV8 {
+    build_configured(before, after, "{\"review\":{\"base\":\"fixture-base\"}}")
+}
+
+pub fn build_configured(
+    before: Vec<(String, String)>,
+    after: Vec<(String, String)>,
+    config: &str,
+) -> ReviewResultV8 {
     let sources: Vec<_> = before
         .into_iter()
         .map(|(file, source)| (format!("specs/{file}"), source))
         .collect();
-    let files: Vec<_> = sources
+    let mut files: Vec<_> = sources
         .iter()
         .map(|(file, source)| (file.as_str(), source.as_str()))
         .collect();
+    files.push(("mokly.config.json", config));
     let root = changes_support::base(&files);
     let modules = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../node_modules");
     #[cfg(unix)]

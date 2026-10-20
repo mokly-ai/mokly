@@ -7,6 +7,7 @@ use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::review_order::rule_key;
 
+use crate::attribution_membership::Boundary;
 use crate::containment::ContainmentPath;
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
@@ -196,7 +197,12 @@ pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
                 .flat_map(|selector| &selector.matches)
                 .any(|matched| {
                     attribution_membership::own_root(matched, component)
-                        && attribution_membership::kept(matched, component, unfiltered)
+                        && attribution_membership::kept(
+                            matched,
+                            component,
+                            unfiltered,
+                            Boundary::OwnPage,
+                        )
                 });
             if kept {
                 if rule
@@ -207,7 +213,12 @@ pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
                     .any(|matched| {
                         matched.trusted_owner.is_none()
                             && attribution_membership::own_root(matched, component)
-                            && attribution_membership::kept(matched, component, unfiltered)
+                            && attribution_membership::kept(
+                                matched,
+                                component,
+                                unfiltered,
+                                Boundary::OwnPage,
+                            )
                     })
                 {
                     changed_components.insert(component.clone());

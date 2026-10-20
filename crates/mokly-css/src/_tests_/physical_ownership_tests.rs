@@ -68,6 +68,30 @@ fn a_declared_receiver_claims_supplied_content_without_an_own_page_match() {
 }
 
 #[test]
+fn an_outer_supplier_cannot_block_the_receivers_declared_claim() {
+    let result = attribution::attribute(vec![
+        page(
+            Some("supplier"),
+            None,
+            &[("supplier", true)],
+            &[("supplier", true)],
+        ),
+        page(
+            None,
+            Some("receiver"),
+            &[("supplier", false), ("receiver", false)],
+            &[("supplier", false)],
+        ),
+    ]);
+    assert_eq!(
+        result.pages[1][0].owner,
+        EvidenceOwner::Component {
+            path: "receiver".into()
+        }
+    );
+}
+
+#[test]
 fn an_unowned_receiver_needs_catalogue_proof_for_supplied_content() {
     let consumer = || page(None, None, &[("receiver", false)], &[]);
     let result = attribution::attribute(vec![consumer()]);
