@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
+import { viewsUsingComponents } from "../review/shared_impact.js";
+
 import { useShellStore } from "./store_context.js";
 import {
   useWorkspaceData,
@@ -25,6 +27,11 @@ export interface WorkspacePresentation {
   status: EntryStatus | undefined;
   comparisonEligible: boolean;
   marks: ViewMarks;
+  /**
+   * The axes keys of the selected views whose usage holds a changed
+   * component that the routed entry's detail names.
+   */
+  usingChanged: ReadonlySet<string>;
 }
 
 interface ActiveWorkspace extends WorkspaceDataState {
@@ -69,11 +76,22 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       viewport,
     ],
   );
+  const usingChanged = useMemo(
+    () =>
+      viewsUsingComponents(
+        data?.views.filter(
+          (view) => view.variantPath === variant?.value.path,
+        ) ?? [],
+        data?.relatedComponents ?? [],
+      ),
+    [data?.relatedComponents, data?.views, variant?.value.path],
+  );
   const presentation: WorkspacePresentation | undefined =
     workspace && resolvedView
       ? {
           status: resolvedView.status,
           comparisonEligible: resolvedView.comparisonEligible,
+          usingChanged,
           marks: viewMarks(
             selectedChangedViews(
               workspaceEvidenceEntry(workspace.data),

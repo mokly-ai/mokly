@@ -275,7 +275,10 @@ components affect it, by the facts of `../review/shared_impact.ts`: the
 detail's related components, a component-owned record on a shown view, or the
 loaded review's `affected` evidence. The same facts give an unchanged view in
 `comparison_selection.ts` its "Components this screen uses changed" pane
-heading. The heading names
+heading, and so does a view whose usage holds a changed component that the
+detail names: `workspace_context.tsx` collects those views with
+`viewsUsingComponents`, because a selected comparison in Serve carries no
+`affected` records. The heading names
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its

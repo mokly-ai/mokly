@@ -226,6 +226,7 @@ export function ComponentWorkspace({
                 entryId={variantPath ?? entry.path}
                 entryKind={entry.kind}
                 eligible={presentation.comparisonEligible}
+                usingChanged={presentation.usingChanged}
               >
                 {stage}
               </ControlledDiffScreen>

@@ -485,6 +485,14 @@ of Changes and keeps its Unmodified status, and an Affected screens link opens
 its comparison. The rejected option A kept the band hidden and corrected the
 spec sentence that says the link opens the comparison.
 
+**Serve pane heading, requirement applied by default (user rule),
+2026-10-20:** a view also says "Components this screen uses changed" when its
+usage holds an instance of a changed component that the entry detail's
+`relatedComponents` names. The rejected alternative read only records and
+`affected` evidence. Serve's selected comparison carries no `affected` records,
+so a component's markup change left its affected consumer's views reading "No
+changes to this screen" beside a band that offers their comparison.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1789,6 +1797,10 @@ Tags: ui
       comparison-eligible. It stays out of Changes and keeps its Unmodified
       status. Cover the static build and Serve.
 - [x] Open that comparison from the Affected screens list.
+- [x] Head a view that uses a changed component, which the entry detail
+      names, with "Components this screen uses changed", so Serve's selected
+      comparison heads a component's markup change too. Applied by default;
+      see the Serve pane heading record.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering
