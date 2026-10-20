@@ -204,8 +204,8 @@ adding it, a maintainer pushes a commit or closes and reopens the pull request.
 The bot pull request selects strict mode from its head ref before the label
 is added.
 
-The Release workflow's direct `npm run dependencies:check` publish step stays
-strict. It runs before reusable evidence or the complete fallback is selected.
+Read-only release preparation runs the strict npm dependency audit before
+it selects reusable evidence or the complete fallback.
 The complete fallback runs `cargo xtask check --dependency-audit strict`, so
 its repeated workspace audit also stays strict.
 The scheduled audit and dependency update pull requests stay strict. On every

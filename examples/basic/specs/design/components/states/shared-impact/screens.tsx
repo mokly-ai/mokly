@@ -72,9 +72,9 @@ export const affectedScreenScreen = defineScreen({
   title: "Screen affected by a changed component",
   colorSchemes: ["light"],
   description:
-    "Welcome opened from Action's Affected screens in Component with changed styles. Welcome has no Changes row of its own, yet the Action it uses renders differently, so Details explain the shared component change.",
+    "Welcome opened from Action's Affected screens in Component with changed styles, which opens its side-by-side comparison. Welcome has no Changes row of its own, yet the Action it uses renders differently, so each view's heading names the changed components and Details explain the shared component change.",
   rationale:
-    "Welcome's own content is unchanged, so its views stay unchanged, it reads Unmodified, and All shows it with no comparison controls. Details list the changed stylesheet with the styles that apply to Welcome, link Action, and end with the sentence that explains the change in place of the no-changes line.",
+    "Welcome's own content is unchanged, so its views stay unchanged, it reads Unmodified, and All shows it outside Changes. Changed components still change how it renders, so the band offers its comparison, and each shown view reads Components this screen uses changed over its two versions. A component in the same position reads Components this variant uses changed. Details list the changed stylesheet with the styles that apply to Welcome, link Action, and end with the sentence that explains the change in place of the no-changes line.",
   ...artboards({
     desktop: <AffectedScreenDesktop />,
     mobile: <AffectedScreenMobile />,

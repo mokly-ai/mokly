@@ -7,6 +7,7 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
+use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::error::{GraphError, InternalError, Result};
 
 use mokly_graph::resource_inputs::ResourceObserver;
@@ -14,7 +15,6 @@ use mokly_graph::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
     TemporaryDocument,
 };
-use mokly_graph::workers::ComparisonWorker;
 use mokly_model::data::Props;
 use mokly_model::material::digest;
 use mokly_model::namespace::generated;
@@ -60,11 +60,6 @@ impl GeneratedResources for FrozenResources {
         self.inner.is_document(route)
     }
 }
-impl ComparisonWorker for FrozenResources {
-    fn input(&self, route: &str) -> Result<ComparisonDocument> {
-        self.comparison_input(route)
-    }
-}
 impl RenderGeneration for FrozenResources {
     fn check_cancelled(&self) -> Result<()> {
         self.inner.check_cancelled()
@@ -83,19 +78,6 @@ impl RenderGeneration for FrozenResources {
     }
     fn catalogue(&self) -> &PreparedCatalogue {
         self.inner.catalogue()
-    }
-    fn comparison_parallelism(&self) -> usize {
-        self.inner.comparison_parallelism()
-    }
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.inner.schedule_comparison(routes, worker)
-    }
-    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
-        self.schedule_comparison(routes, self).into_iter().collect()
     }
     fn render(&self, route: &str) -> Result<Arc<Artifact>> {
         let artifact = self.inner.render(route)?;
@@ -136,6 +118,12 @@ impl RenderGeneration for FrozenResources {
         }
         Ok(closure)
     }
+    fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
+        self.inner.collect_comparison(&mut CheckedCollector {
+            resources: self,
+            inner: collector,
+        })
+    }
     fn render_all(&self) -> Result<RenderSummary> {
         self.inner.render_all()
     }
@@ -156,6 +144,25 @@ impl RenderGeneration for FrozenResources {
     }
     fn contains_public_file(&self, path: &str) -> bool {
         self.inner.contains_public_file(path)
+    }
+}
+
+struct CheckedCollector<'a> {
+    resources: &'a FrozenResources,
+    inner: &'a mut dyn ComparisonCollector,
+}
+
+impl ComparisonCollector for CheckedCollector<'_> {
+    fn summary(&mut self, summary: &RenderSummary) {
+        self.inner.summary(summary);
+    }
+    fn collect(&mut self, route: &str, input: ComparisonDocument) -> Result<()> {
+        self.resources
+            .check(&generated(route), Some(digest(&input.artifact.bytes)))?;
+        for resource in input.closure.edges.keys() {
+            self.resources.resource_digest(resource)?;
+        }
+        self.inner.collect(route, input)
     }
 }
 

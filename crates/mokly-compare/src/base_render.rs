@@ -156,22 +156,25 @@ impl ChangesService for Changes {
                     });
                 }
             };
-            if let Err(source) = before.render_all() {
-                if let Some(source) = failures.failure() {
+            let before = match self.comparison.capture_base(before) {
+                Ok(before) => before,
+                Err(source) => {
+                    if let Some(source) = failures.failure() {
+                        return Err(Error::Base {
+                            commit: commit.to_string(),
+                            source: Box::new(Error::SourceFailure { source }),
+                        });
+                    }
                     return Err(Error::Base {
                         commit: commit.to_string(),
-                        source: Box::new(Error::SourceFailure { source }),
+                        source: Box::new(source),
                     });
                 }
-                return Err(Error::Base {
-                    commit: commit.to_string(),
-                    source: Box::new(Error::Graph { source }),
-                });
-            }
+            };
             base_span.record("status", "ok");
             (before, failures)
         };
-        let result = self.comparison.compare(
+        let result = self.comparison.compare_prepared(
             &ComparisonRequest {
                 base_ref: base.into(),
                 base_commit: commit.to_string(),

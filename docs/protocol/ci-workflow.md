@@ -57,6 +57,10 @@ only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
 
+The same trusted release PR profile requires the
+[release component and viewer-source check](./npm-release-management.md#release-management)
+in Repository before downstream verification. A failure blocks Required CI before tags exist.
+
 The repository job resolves floating Node 24 once. An explicit shell step reads
 `process.versions.node` and exposes that exact version, the selected matrix,
 and the report-runtime identities as job outputs. Every viewer and browser job
@@ -73,12 +77,8 @@ artifacts can be published. Release Please normally updates its pull request
 after a releasable merge, keeping that feedback close to the originating change
 without paying for both functional profiles on every ordinary event.
 
-The supported range is Node.js `>=22.15.0 <24.14.0` or `>=24.19.0`. Node 24.14.0
-through 24.18.x can abort concurrent ESM-to-CommonJS loading before JavaScript
-can handle an error. The upstream
-[`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
-shipped in Node 24.19.0. The shim and the sidecar run on the consumer's Node,
-so the shim rejects affected versions before it resolves the binary.
+The [package contract](./mokly-package.md#node-support) defines supported Node
+versions and exclusions. CI runtime representatives do not change that range.
 
 Local verification uses the supported floor at 22.15.0 and Node 24.21.0. These
 are tested representatives rather than the bounds of the supported range. The

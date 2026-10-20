@@ -2,12 +2,14 @@
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
+use mokly_graph::collection::ComparisonCollectorMock;
 use mokly_graph::error::GraphError;
-use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
+use mokly_graph::types::{
+    ComparisonDocument, RenderGeneration, RenderGenerationMock, RenderSummary,
+};
 use mokly_model::material::digest;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use unimock::{MockFn, Unimock, matching};
@@ -145,57 +147,56 @@ fn closure_capture_freezes_ignored_resources_without_an_extra_catalogue_pass() {
 }
 
 #[test]
-fn scheduled_batches_keep_frozen_document_and_resource_checks() {
-    let calls = Arc::new(AtomicUsize::new(0));
-    let renders = calls.clone();
+fn validated_collection_preserves_frozen_document_and_resource_checks() {
     let graph = FrozenResources::new(Arc::new(Unimock::new((
-        RenderGenerationMock::comparison_parallelism
-            .next_call(matching!())
-            .returns(2_usize),
-        RenderGenerationMock::schedule_comparison
-            .each_call(matching!(_, _))
-            .answers(&|_, routes, worker| {
-                assert_eq!(routes, ["first/index.html", "second/index.html"]);
-                routes.iter().map(|route| worker.input(route)).collect()
-            }),
-        RenderGenerationMock::check_cancelled
-            .each_call(matching!())
-            .answers(&|_| Ok(())),
-        RenderGenerationMock::comparison_document
+        RenderGenerationMock::collect_comparison
             .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, route| {
-                let changed = renders.fetch_add(1, Ordering::SeqCst) >= 2;
-                Ok(Arc::new(Artifact {
-                    bytes: format!("{route}:{changed}").into_bytes(),
-                    content_type: "text/html".into(),
-                    document: None,
-                    fragment: None,
-                }))
-            })),
-        RenderGenerationMock::closure
-            .each_call(matching!(_))
-            .answers(&|_, _| {
-                Ok(Closure {
-                    edges: BTreeMap::from([("static/image.png".into(), Vec::new())]),
+            .answers(&|_, collector| {
+                let summary = RenderSummary {
+                    documents: 1,
                     ..Default::default()
-                })
+                };
+                collector.summary(&summary);
+                collector.collect(
+                    "sample/index.html",
+                    ComparisonDocument {
+                        artifact: Arc::new(Artifact {
+                            bytes: b"before".to_vec(),
+                            content_type: "text/html".into(),
+                            document: None,
+                            fragment: None,
+                        }),
+                        closure: Closure {
+                            edges: BTreeMap::from([("static/image.png".into(), vec![])]),
+                            ..Default::default()
+                        },
+                    },
+                )?;
+                Ok(summary)
             }),
         RenderGenerationMock::resource_digest
             .next_call(matching!("static/image.png"))
-            .returns(Ok(Some(digest(b"before")))),
+            .returns(Ok(Some(digest(b"image")))),
         RenderGenerationMock::resource_bytes
             .next_call(matching!("static/image.png"))
-            .returns(Ok(Some(b"after".to_vec()))),
+            .returns(Ok(Some(b"changed".to_vec()))),
+        RenderGenerationMock::render
+            .next_call(matching!("sample/index.html"))
+            .returns(Ok(Arc::new(Artifact {
+                bytes: b"changed".to_vec(),
+                content_type: "text/html".into(),
+                document: None,
+                fragment: None,
+            }))),
     ))));
-    assert_eq!(graph.comparison_parallelism(), 2);
-    let routes = vec!["first/index.html".into(), "second/index.html".into()];
-    let inputs = graph.comparison_batch(&routes).unwrap();
-    assert_eq!(inputs.len(), 2);
-    for (input, route) in inputs.iter().zip(&routes) {
-        assert_eq!(input.artifact.bytes, format!("{route}:false").as_bytes());
-        assert!(input.closure.edges.contains_key("static/image.png"));
-    }
-    assert!(graph.comparison_batch(&routes).is_err());
+    let mut collector = Unimock::new((
+        ComparisonCollectorMock::summary.next_call(matching!((summary) if summary.documents == 1)).returns(()),
+        ComparisonCollectorMock::collect.next_call(matching!((route, input) if *route == "sample/index.html" && input.artifact.bytes == b"before")).returns(Ok(())),
+    ));
+    assert_eq!(
+        graph.collect_comparison(&mut collector).unwrap().documents,
+        1
+    );
     assert!(graph.resource_bytes("static/image.png").is_err());
-    assert_eq!(calls.load(Ordering::SeqCst), 4);
+    assert!(graph.render("sample/index.html").is_err());
 }

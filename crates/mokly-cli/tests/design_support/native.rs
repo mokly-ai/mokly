@@ -133,7 +133,11 @@ impl Session {
             assert!(prepared.warnings.is_empty());
             let graph = self.graphs.create(&config).unwrap();
             let after = graph.prepare(config, prepared, None).unwrap();
-            let result = self.comparison.compare(&request, before, after).unwrap();
+            let before = self.comparison.capture_base(before).unwrap();
+            let result = self
+                .comparison
+                .compare_prepared(&request, before, after)
+                .unwrap();
             assert!(result.after.render_all().unwrap().warnings.is_empty());
             return Arc::new(result);
         }

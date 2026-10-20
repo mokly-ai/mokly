@@ -10,27 +10,21 @@ import {
   testboxHarness,
 } from "./helpers/testbox_suite.js";
 
-test("remote delivery failures propagate and failed browser shards stop first", async () => {
-  const args = [
-    "--expect",
-    TESTBOX_FINGERPRINT,
-    "--suite",
-    "browser",
-    "--shard",
-    "1/4",
-  ];
-  for (const failure of ["browser", "delivery"]) {
+test("delivery build and mode failures propagate from their own command", async () => {
+  const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", "static-delivery"];
+  for (const failure of ["build", "test:delivery:prepared"]) {
     const harness = testboxHarness();
-    harness.outcomes.set(
-      failure === "browser"
-        ? "cargo xtask check --executor local --suite browser --shard 1/4"
-        : "npm run test:delivery:prepared",
-      { exitCode: 7, stdout: "", stderr: "failed" },
-    );
+    harness.outcomes.set(`npm run ${failure}`, {
+      exitCode: 7,
+      stdout: "",
+      stderr: "failed",
+    });
     assert.equal(await runTestboxSuite(args, harness.dependencies), 7);
     assert.equal(
-      harness.commands.some(({ file }) => file === "npm"),
-      failure === "delivery",
+      harness.commands.some(({ args }) =>
+        args.includes("test:delivery:prepared"),
+      ),
+      failure === "test:delivery:prepared",
     );
   }
 });

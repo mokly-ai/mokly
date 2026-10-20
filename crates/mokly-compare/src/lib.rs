@@ -134,3 +134,9 @@ mod capture_weight;
 #[cfg(test)]
 #[path = "_tests_/capture_engine/mod.rs"]
 mod capture_engine_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_producer.rs"]
+mod capture_producer;
+
+mod capture_collection;

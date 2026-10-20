@@ -17,7 +17,10 @@ Removed when any is Removed, else Unmodified. Comparison eligibility follows
 that shown status under the kind rule: Changed is eligible, and
 Removed is eligible only for a component. Thus an entry with
 changes can show Unmodified with no comparison band while the marks on the view
-controls and the `Changed views` row point to the views that changed.
+controls and the `Changed views` row point to the views that changed. An
+entry that Changes does not list, whose entry detail marks it
+comparison-eligible because changed components affect it, stays eligible in
+every shown view while it shows Unmodified.
 
 Per-view evidence is authoritative only when it names every effective view in
 the current selection. Unknown, pending, or partial per-view evidence preserves
@@ -32,8 +35,8 @@ Controlled selection and comparison deep links use the same decision; a deep lin
 evidence uses the fallback decision.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
-band beneath the heading. Added and Unmodified views retain their current
-preview without that band; removed screens show their
+band beneath the heading. Added and Unmodified views of any other entry retain
+their current preview without that band; removed screens show their
 [previous version](./mokly-removed-previews.md) without it. Affected-only
 consumers can compare actual rendered differences while staying outside
 Changes. Current is selected initially, including after navigation and reload.

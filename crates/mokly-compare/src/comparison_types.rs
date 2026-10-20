@@ -10,6 +10,8 @@ use mokly_model::evidence::ViewEvidence;
 use mokly_model::review::{EntryChangeReason, ReviewResultV8, ReviewState};
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 
+use crate::comparison_capture;
+use crate::comparison_error::CompareResult;
 use crate::error::Result;
 use crate::move_types::Pairing;
 use crate::resource_memo::ResourceWork;
@@ -109,8 +111,14 @@ impl fmt::Debug for ComparisonResult {
 /// One catalogue-wide policy serves every command and comparison route.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonMock))]
 pub trait Comparison: Send + Sync {
-    /// Render through the supplied generations, classify, and validate complete evidence.
-    fn compare(
+    /// Validate and retain bounded base inputs before comparison begins.
+    fn capture_base(&self, before: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
+        comparison_capture::capture(before).compare()
+    }
+
+    /// Classify a base whose complete validation and bounded capture already finished.
+    /// The base can be the original source when its validation summary did not fit.
+    fn compare_prepared(
         &self,
         request: &ComparisonRequest,
         before: Arc<dyn RenderGeneration>,

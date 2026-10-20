@@ -26,8 +26,8 @@ fn failed_capture_never_records_ok_or_success_counts() {
             RenderGenerationMock::comparison_capture
                 .next_call(matching!())
                 .returns(None),
-            RenderGenerationMock::render_all
-                .next_call(matching!())
+            RenderGenerationMock::collect_comparison
+                .next_call(matching!(_))
                 .returns(Err(GraphError::Runtime {
                     source: RuntimeDiagnostic {
                         code: RuntimeCode::Cancelled,
@@ -42,7 +42,12 @@ fn failed_capture_never_records_ok_or_success_counts() {
         };
         assert!(
             engine
-                .compare(&request, before, Arc::new(Unimock::new(())))
+                .capture_base(before)
+                .and_then(|before| engine.compare_prepared(
+                    &request,
+                    before,
+                    Arc::new(Unimock::new(()))
+                ))
                 .is_err()
         );
     });
@@ -125,15 +130,12 @@ fn empty_base_capture_emits_successful_zero_view_counts() {
             RenderGenerationMock::comparison_capture
                 .next_call(matching!())
                 .returns(None),
-            RenderGenerationMock::render_all
-                .next_call(matching!())
+            RenderGenerationMock::collect_comparison
+                .next_call(matching!(_))
                 .returns(Ok(RenderSummary::default())),
             RenderGenerationMock::resource_routes
                 .next_call(matching!())
                 .returns(vec![]),
-            RenderGenerationMock::plans
-                .next_call(matching!())
-                .returns(BTreeMap::new()),
         )));
         let after = Arc::new(Unimock::new(
             RenderGenerationMock::render_all
@@ -150,7 +152,8 @@ fn empty_base_capture_emits_successful_zero_view_counts() {
             base_commit: "a".repeat(40),
             catalogue_identity: "b".repeat(64),
         };
-        assert!(engine.compare(&request, before, after).is_err());
+        let before = engine.capture_base(before).unwrap();
+        assert!(engine.compare_prepared(&request, before, after).is_err());
     });
     let records: Vec<_> = records
         .iter()
@@ -222,7 +225,8 @@ fn reused_full_partial_and_zero_captures_count_uncaptured_base_views() {
                 base_commit: "a".repeat(40),
                 catalogue_identity: "b".repeat(64),
             };
-            assert!(engine.compare(&request, before, after).is_err());
+            let before = engine.capture_base(before).unwrap();
+            assert!(engine.compare_prepared(&request, before, after).is_err());
         });
         let records: Vec<_> = records
             .iter()

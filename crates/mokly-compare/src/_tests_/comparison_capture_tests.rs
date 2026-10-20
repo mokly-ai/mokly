@@ -6,15 +6,18 @@ use std::sync::{Arc, Mutex};
 use mokly_graph::asset_delivery::AssetReadMock;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResourcesMock};
+use mokly_graph::collection::ComparisonCollectorMock;
 use mokly_graph::error::GraphError;
 use mokly_graph::key::{NodeKind, key};
-use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock, RenderSummary};
+use mokly_graph::types::{DocumentPlan, RenderGeneration, RenderGenerationMock};
 use mokly_html::composition::Composed;
 use mokly_html::parse;
 use mokly_model::axes::ColorScheme;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::usage::CatalogueUsage;
 use unimock::{Clause, MockFn, Unimock, matching};
+
+use crate::capture_producer;
 
 use super::{capture, capture_with_bound};
 
@@ -49,6 +52,7 @@ pub(super) fn source_calls(
         })
         .collect::<BTreeMap<_, _>>();
     (
+        capture_producer::collection(),
         RenderGenerationMock::check_cancelled
             .each_call(matching!())
             .answers(&|_| Ok(())),
@@ -61,14 +65,6 @@ pub(super) fn source_calls(
         RenderGenerationMock::resource_routes
             .each_call(matching!())
             .returns(vec!["styles/shared.CSS".into(), "assets/image.png".into()]),
-        RenderGenerationMock::render_all
-            .each_call(matching!())
-            .answers_arc(Arc::new(move |_| {
-                Ok(RenderSummary {
-                    documents: count,
-                    ..Default::default()
-                })
-            })),
         GeneratedResourcesMock::resource
             .each_call(matching!("styles/shared.CSS"))
             .answers(&|_, _| Ok(Some(b"p{color:red}".to_vec()))),
@@ -225,8 +221,8 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
         RenderGenerationMock::comparison_capture
             .each_call(matching!())
             .returns(None),
-        RenderGenerationMock::render_all
-            .next_call(matching!())
+        RenderGenerationMock::collect_comparison
+            .next_call(matching!(_))
             .returns(Err(GraphError::Runtime {
                 source: RuntimeDiagnostic {
                     code: RuntimeCode::Cancelled,
@@ -237,4 +233,28 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
     assert!(
         matches!(capture(source), Err(GraphError::Runtime { source }) if source.code == RuntimeCode::Cancelled)
     );
+}
+
+#[test]
+fn collecting_a_retained_capture_replays_its_inputs_without_returning_to_the_source() {
+    let reads = Arc::new(Mutex::new(Vec::new()));
+    let captured = capture(source("base", 4, reads.clone())).unwrap();
+    let mut collector = Unimock::new(
+        ComparisonCollectorMock::collect
+            .each_call(matching!(_, _))
+            .answers(&|_, route, input| {
+                assert_eq!(input.artifact.bytes, format!("base:{route}").as_bytes());
+                assert!(input.closure.files.contains(route));
+                Ok(())
+            })
+            .n_times(4),
+    );
+    assert_eq!(
+        captured
+            .collect_comparison(&mut collector)
+            .unwrap()
+            .documents,
+        4
+    );
+    assert_eq!(reads.lock().unwrap().len(), 4);
 }

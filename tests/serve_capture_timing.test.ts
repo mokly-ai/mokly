@@ -41,7 +41,7 @@ test(
       const parent = records.find(
         (record) => record.event === "start" && record.id === counts.parentId,
       );
-      assert.equal(parent?.stage, "review.compare-views");
+      assert.equal(parent?.stage, "review.base-tree");
       const classification = records.find(
         (record) => record.event === "start" && record.id === parent?.parentId,
       );

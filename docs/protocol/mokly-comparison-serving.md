@@ -79,6 +79,10 @@ invalidates pending captures and discards the cached selection. Superseded
 snapshots stay available briefly for in-flight requests. Shutdown stops
 admission and drains active generation work before the server exits.
 
+Complete base validation and capture must use the same rendered input for each
+view. Capture must preserve validation failures and warning order, including
+when another view fails later. A failed validation publishes no partial capture.
+
 Base capture checks cancellation before each view read and encode, including
 cache hits, and returns the generation's cancellation error. Replacing an
 unfinished classification cancels its base workers as well as its source reads

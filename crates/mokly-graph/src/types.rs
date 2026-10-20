@@ -14,6 +14,7 @@ use mokly_model::data::Props;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
+use crate::collection::ComparisonCollector;
 use crate::error::Result;
 use crate::key::NodeKey;
 use crate::resource_inputs::ResourceObserver;
@@ -133,14 +134,6 @@ pub trait RenderGeneration: GeneratedResources {
         };
         Ok(ComparisonDocument { artifact, closure })
     }
-    /// Return one input per route in request order, or the first route's failure.
-    /// Callers limit each batch to comparison_parallelism; wrappers default to serial work.
-    fn comparison_batch(&self, routes: &[String]) -> Result<Vec<ComparisonDocument>> {
-        routes
-            .iter()
-            .map(|route| self.comparison_input(route))
-            .collect()
-    }
     /// Read a confined resource by its public route. Missing regular targets return None.
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>>;
     /// Hash a resource with bounded memory; absent resources return None.
@@ -152,6 +145,8 @@ pub trait RenderGeneration: GeneratedResources {
     fn closure(&self, route: &str) -> Result<Closure>;
     /// Render and validate every view across the worker pool.
     fn render_all(&self) -> Result<RenderSummary>;
+    /// Validate the generation and consume its comparison inputs in bounded route order.
+    fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary>;
     /// All generated stylesheet and asset routes of this generation.
     fn resource_routes(&self) -> Vec<String>;
     /// Consumer PostCSS directory watches, including empty matching sets.

@@ -9,6 +9,7 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::{Closure, GeneratedResources};
+use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
@@ -17,16 +18,23 @@ use mokly_graph::types::{
 use mokly_model::data::Props;
 
 use crate::capture_codec::EncodedView;
+use crate::capture_collection::Collector;
 use crate::capture_error;
 use crate::capture_styles::{self, EncodedResource};
 use crate::capture_weight::{self, Budget, DEFAULT_BASE_CAPTURE_BYTES};
 
-struct CapturedView {
-    document: EncodedView,
-    closure: Closure,
+pub(crate) struct CapturedView {
+    pub(crate) document: EncodedView,
+    pub(crate) closure: Closure,
 }
 
-struct CapturedGeneration {
+impl CapturedView {
+    pub(crate) fn charge(&self, route: &str) -> usize {
+        256 + route.len() + self.document.retained_bytes() + capture_weight::closure(&self.closure)
+    }
+}
+
+pub(crate) struct CapturedGeneration {
     source: Arc<dyn RenderGeneration>,
     views: BTreeMap<String, CapturedView>,
     summary: RenderSummary,
@@ -59,10 +67,11 @@ pub(crate) fn capture_with_bound(
     } else {
         source
     };
+    let mut collector = Collector::new(bound);
     let summary = {
         let span = tracing::info_span!("review.capture-validate", status = "error");
         let _entered = span.enter();
-        let summary = source.render_all()?;
+        let summary = source.collect_comparison(&mut collector)?;
         span.record("status", "ok");
         summary
     };
@@ -71,30 +80,18 @@ pub(crate) fn capture_with_bound(
         complete(0, summary.documents, 0, 0);
         return Ok(source);
     }
-    let styles = capture_styles::capture(source.as_ref(), &mut budget)?;
+    let styles = capture_styles::capture(source.as_ref(), &mut budget, &mut |remaining| {
+        collector.trim(remaining)
+    })?;
+    let mut views = BTreeMap::new();
     let mut encoded_bytes = styles
         .values()
         .map(EncodedResource::encoded_bytes)
         .sum::<usize>();
-    let mut views = BTreeMap::new();
-    let parallelism = source.comparison_parallelism().max(1);
-    let mut routes = source.plans().keys();
-    loop {
-        let batch: Vec<_> = routes.by_ref().take(parallelism).cloned().collect();
-        if batch.is_empty() {
-            break;
-        }
-        let inputs = source.comparison_batch(&batch)?;
-        for (route, input) in batch.into_iter().zip(inputs) {
-            source.check_cancelled()?;
-            let document = capture_error::graph(EncodedView::encode(&input.artifact))?;
-            let closure = input.closure;
-            let cost =
-                256 + route.len() + document.retained_bytes() + capture_weight::closure(&closure);
-            if budget.retain(cost) {
-                encoded_bytes += document.bytes();
-                views.insert(route, CapturedView { document, closure });
-            }
+    for (route, view) in collector.views {
+        if budget.retain(view.charge(&route)) {
+            encoded_bytes += view.document.bytes();
+            views.insert(route, view);
         }
     }
     complete(
@@ -181,6 +178,16 @@ impl RenderGeneration for CapturedGeneration {
             return Ok(view.closure.clone());
         }
         self.source.closure(route)
+    }
+    fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
+        let summary = self.summary.clone();
+        collector.summary(&summary);
+        for route in self.source.plans().keys() {
+            let input = self.comparison_input(route)?;
+            self.check_cancelled()?;
+            collector.collect(route, input)?;
+        }
+        Ok(summary)
     }
     fn render_all(&self) -> Result<RenderSummary> {
         Ok(self.summary.clone())

@@ -1,5 +1,6 @@
 /** The independently executable repository suites. */
-export type TestboxSuite = "repository" | "viewer" | "browser";
+export type TestboxSuite =
+  "repository" | "viewer" | "browser" | "static-delivery";
 
 /** Workspace audit policy forwarded to the repository suite. */
 export type TestboxDependencyAudit = "baseline" | "strict";

@@ -61,20 +61,9 @@ Key login saves the key in the local CLI credential file.
 It replaces any saved login for the same organization.
 The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
 
-[`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
-executes the lockfile stamp step and the environment step on Linux hosts with
-controlled inputs and asserts the written files. The environment run redirects
-`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
-pins are review-owned literals.
-
-Pin each action to these immutable revisions. Keep the version comments.
-
-| Action                        | Commit                                     | Comment    |
-| ----------------------------- | ------------------------------------------ | ---------- |
-| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
-| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
-| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
-| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |
+Workflow action revisions and their version comments require review.
+The [verification reference](../../scripts/verification/README.md#testbox-workflow-reference)
+lists the revisions and the controlled workflow-step tests.
 
 ## Remote Commands
 
@@ -83,17 +72,19 @@ Each box runs `node scripts/verification/testbox-suite.mjs` with
 repository root. Derive the command name from the suite and optional shard.
 Use that name for its report and log.
 
-| Command name     | Wrapper arguments                              |
-| ---------------- | ---------------------------------------------- |
-| `repository`     | `--suite repository --dependency-audit <mode>` |
-| `viewer`         | `--suite viewer`                               |
-| `browser-1-of-4` | `--suite browser --shard 1/4`                  |
-| `browser-2-of-4` | `--suite browser --shard 2/4`                  |
-| `browser-3-of-4` | `--suite browser --shard 3/4`                  |
-| `browser-4-of-4` | `--suite browser --shard 4/4`                  |
+| Command name      | Wrapper arguments                              |
+| ----------------- | ---------------------------------------------- |
+| `repository`      | `--suite repository --dependency-audit <mode>` |
+| `viewer`          | `--suite viewer`                               |
+| `browser-1-of-4`  | `--suite browser --shard 1/4`                  |
+| `browser-2-of-4`  | `--suite browser --shard 2/4`                  |
+| `browser-3-of-4`  | `--suite browser --shard 3/4`                  |
+| `browser-4-of-4`  | `--suite browser --shard 4/4`                  |
+| `static-delivery` | `--suite static-delivery`                      |
 
-The wrapper accepts only the suite and shard forms from
-[CI verification](./ci-verification.md#verification-boundary).
+The wrapper accepts the suite and shard forms from
+[CI verification](./ci-verification.md#verification-boundary), plus the
+independent `static-delivery` command without a shard.
 `<mode>` is the complete gate's `--dependency-audit` value, `baseline` by
 default or `strict`. The wrapper accepts that option only with the repository
 suite and passes it to `cargo xtask check`. The command name stays
@@ -101,9 +92,11 @@ suite and passes it to `cargo xtask check`. The command name stays
 Both scripts use `validateFingerprint` from `source-tree.mjs`.
 Its error contains no usage text. Each script adds its own usage line.
 
-The first browser shard also checks the example through static HTTP and file
-URLs after its ordinary specs pass. A failure makes that command unsuccessful.
+Static delivery runs on its own box. It builds the source and checks the
+example through static HTTP and file URLs. Both modes must pass.
 These selected delivery checks do not replace any of the five suite reports.
+No browser shard runs delivery after its ordinary specs. Browser work and portable
+delivery use separate 30-minute Testbox job guards.
 
 ## Readiness And Sync Probe
 
@@ -151,6 +144,9 @@ fallback at this boundary.
    Run `cargo xtask check --executor local --suite <suite>`.
    Add `--shard INDEX/4` for a browser shard.
    Explicit local mode prevents recursive remote execution.
+   For `static-delivery`, run `npm run build`, then
+   `npm run test:delivery:prepared` instead. A failed or interrupted build
+   prevents delivery. The parent validates both delivery reports before exit.
 6. Return the suite's exit code. A wrapper preparation failure returns nonzero.
 
 Stream child standard output and standard error. Forward SIGINT and SIGTERM
@@ -206,7 +202,7 @@ nonzero. The probe checks that SHA independently from the digest.
 The suite wrapper writes each report on its box to
 `.context/verification-reports/remote/<command>.json`.
 Only the viewer command and browser shards 1 through 4 produce the five
-required reports. The repository outcome uses its command exit.
+required reports. Repository and static-delivery outcomes use their command exits.
 
 Allocate a new local report directory for each run:
 `.context/verification-reports/remote/<run>/`.
