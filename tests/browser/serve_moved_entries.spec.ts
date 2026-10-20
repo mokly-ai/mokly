@@ -6,4 +6,4 @@ import { test } from "./serve_comparison_test.js";
 
 registerMovedRowCases(test, serveMovedHost);
 registerMovedComponentCases(test, serveMovedHost);
-registerMovedComparisonCases(test, serveMovedHost, true);
+registerMovedComparisonCases(test, serveMovedHost);
