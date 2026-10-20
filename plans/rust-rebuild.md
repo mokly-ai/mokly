@@ -2393,6 +2393,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         `expectCardPane` in `tests/browser/serve_comparison_ui.ts`, checks
         every Card pane on Serve by its heading and its side's `.accent`
         colour. Done by `f858cc02`.
+  - M10 Serve and moved rows review 9, finding 22 for the user: the Usage row
+    key tests miss the removal state and the list order. Severity Low,
+    effort Small. Recommended: A, add a case for a removed row alone and
+    beside its current row, and a case for a row with and without another
+    entry's row before it.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2410,6 +2415,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
+    - `tests/browser/static_component_comparisons.spec.ts:32`,
+      `removed_previews_static.spec.ts:76`, and
+      `removed_previews_viewer.spec.ts:173`: they repeat the Card `.accent`
+      colours as literals instead of reading `accentColor`. Separate branch.
+    - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
+      temporary prop edit stays out of local storage. Separate branch.
+    - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
+      split rule, with no recorded exception. Separate branch.
+    - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
+      with no recorded exception. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
