@@ -108,3 +108,48 @@ fn value_rules_count_columns_in_characters() {
         error("/*😀*/@value x: 1;")
     );
 }
+
+/// The renamer and the token check read every statement through one
+/// classification, so no statement form, with or without a block and at any
+/// nesting level, fails the token check.
+#[test]
+fn no_statement_form_fails_the_token_check() {
+    let statements = [
+        "color:red",
+        "--x:{a:b}",
+        ".a",
+        "a",
+        "a:hover",
+        "@keyframes x",
+        "@scope (.a)",
+        "@apply x",
+        ":export",
+        ":global(.a)",
+        "*zoom:1",
+        "",
+        "composes:b",
+        "animation:spin 1s",
+        ".b :global(.a",
+        "@keyframes :local(k",
+    ];
+    let levels = [
+        ("", ""),
+        ("@media all{", "}"),
+        (".p{", "}"),
+        ("@font-face{", "}"),
+    ];
+    for statement in statements {
+        for block in ["", ";", "{}", "{color:red}"] {
+            for (open, close) in levels {
+                let source = format!(".b{{}}{open}{statement}{block}{close}");
+                if let Err(error) = scope(PATH, &source) {
+                    let message = error.to_string();
+                    assert!(
+                        !message.contains("would change more than local names"),
+                        "{source:?}: {message}"
+                    );
+                }
+            }
+        }
+    }
+}

@@ -50,14 +50,24 @@ CSS inputs by their authored paths.
 sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
 retain their values. An independent token check rejects scoping that changes
 anything beyond local names and the module scope/composition syntax. The
-renamer, the module check, and the token check share one statement grammar.
-In a style rule and the blocks nested in it, they read statements as
-`lightningcss` does: a custom property runs through its `{}` blocks to the
-next `;` and keeps its value as authored, and a rule nested in a declaration
-block is itself a declaration block. Declaration-only at-rules such as
-`@font-face` end a non-custom statement at its first `{}` block, as postcss
-does. A nested at-rule keeps its prelude as authored, except the keyframes
-name and an `@scope` selector.
+renamer, the module check, and the token check share one statement grammar,
+and the section reader classifies each statement once for all three, as
+`lightningcss` reads the block that holds it. In the stylesheet and in its
+conditional, layer, scope, and starting-style blocks, every statement is a
+rule or an at-rule. In a style rule, in an `@-moz-document` block, and in
+those grouping blocks nested in them, a custom property runs through its `{}`
+blocks to the next `;` and keeps its value as authored. There, a statement
+without a block is a declaration when it starts with an identifier and a
+colon, and otherwise a rule or an at-rule, also while it is still open at the
+end of input. An at-rule under a keyframes name that `lightningcss` does not
+know stays as authored text there. In any other block, such as `@font-face`,
+a keyframe, or an unknown at-rule, where `lightningcss` keeps, drops, or
+rejects text, a statement without a block is a declaration or text that stays
+as authored, except that `@value` fails. Keyframes and `@document` blocks read
+their statements as rules. Declaration-only at-rules such as `@font-face` end a
+non-custom statement at its first `{}` block, as postcss does. A nested
+at-rule keeps its prelude as authored, except the keyframes name and an
+`@scope` selector.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration

@@ -6,7 +6,7 @@ use cssparser::Token;
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
-use crate::token_sections::{self, Grammar};
+use crate::token_sections::{self, Grammar, Statement};
 use crate::token_tree::{Tokens, opening};
 
 pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
@@ -38,41 +38,23 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                     continue;
                 };
                 pending.push(Work::Block(range, grammar));
-                let mut header = section.prelude.clone();
-                let first = tokens
-                    .next_significant(&mut header)
-                    .map(|index| &tokens.nodes[index].token);
-                let at = section.at_rule(&tokens);
                 if let Some(block) = section.block {
-                    let names = renamed_prelude(at.as_deref());
+                    let names = renamed_prelude(&section.statement);
                     pending.push(Work::Emit("}"));
                     pending.push(Work::Block(block.range, block.grammar));
                     pending.push(Work::Emit("{"));
                     pending.push(Work::Tokens(section.prelude, names));
                 } else {
-                    let colon = tokens
-                        .next_significant(&mut header)
-                        .is_some_and(|index| matches!(tokens.nodes[index].token, Token::Colon));
-                    let property = match first {
-                        Some(Token::Ident(name)) if grammar == Grammar::Declarations && colon => {
-                            Some(name.to_ascii_lowercase())
-                        }
-                        _ => None,
-                    };
-                    if property.as_deref() == Some("composes") {
-                        continue;
-                    }
-                    let names = match grammar {
-                        Grammar::Rules => renamed_prelude(at.as_deref()),
-                        Grammar::Declarations => property.as_deref().is_some_and(|name| {
-                            matches!(
-                                name,
-                                "animation"
-                                    | "animation-name"
-                                    | "-webkit-animation"
-                                    | "-webkit-animation-name"
-                            )
-                        }),
+                    let names = match &section.statement {
+                        Statement::Declaration(property) if property == "composes" => continue,
+                        Statement::Declaration(property) => matches!(
+                            property.as_str(),
+                            "animation"
+                                | "animation-name"
+                                | "-webkit-animation"
+                                | "-webkit-animation-name"
+                        ),
+                        statement => renamed_prelude(statement),
                     };
                     if section.semicolon {
                         pending.push(Work::Emit(";"));
@@ -144,11 +126,14 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
     output
 }
 
-/// True where the renamer renames a prelude: a selector, a keyframes name, or
-/// an `@scope` prelude. A statement in a rule list follows this rule with or
-/// without a block, as the renamer reads both alike.
-fn renamed_prelude(at: Option<&str>) -> bool {
-    at.is_none_or(|name| name.ends_with("keyframes") || name == "scope")
+/// True where the renamer renames a prelude: a rule's selector, a keyframes
+/// name, or an `@scope` prelude, with or without a block.
+fn renamed_prelude(statement: &Statement) -> bool {
+    match statement {
+        Statement::Rule => true,
+        Statement::AtRule(name) => name.ends_with("keyframes") || name == "scope",
+        Statement::Declaration(_) | Statement::Text(_) => false,
+    }
 }
 
 /// Pending fingerprint work, popped in authored order.

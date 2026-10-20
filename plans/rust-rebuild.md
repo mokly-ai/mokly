@@ -2632,17 +2632,31 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - 9: settled by Decision 36 on 2026-10-14.
   - 11: settled on 2026-10-14; the format inventory page carries the Status
     line.
-  - Follow-up: classify CSS statements without a block once in the section
-    reader, for the module check, the renamer, and the token check. Effort
-    Medium. Covers M14 nesting report finding 22: a wrapper left open at the
-    end of input in a declaration block gets the generic syntax message,
-    which the wrapper table test pins (option A, kept by the orchestrator on
-    2026-10-20). Previous examples: `.c{}.y`, where the token check fired
-    instead of the syntax check.
+  - [x] Follow-up: classify CSS statements without a block once in the
+        section reader, for the module check, the renamer, and the token
+        check. Effort Medium. Covers M14 nesting report finding 22: a wrapper
+        left open at the end of input in a declaration block got the generic
+        syntax message. Previous examples: `.c{}.y`, where the token check
+        fired instead of the syntax check. Done on 2026-10-20 in nesting
+        round 7, as the orchestrator asked: in a style rule's block, those
+        cases now get the catalogued empty-wrapper message, which the wrapper
+        table test pins. In a block where lightningcss reads no rules, such a
+        statement stays as authored.
   - `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
     check always reports line 1, column 1, though its catalogue row shows
     `{line}:{column}`. Found by the M14 nesting round 6 review. Separate
     branch.
+  - `crates/mokly-css/src/rename_selectors.rs:99`: removing a bare `:global`
+    or `:local` before an at-keyword turns a rule into an at-rule, for
+    example `:global@media all{}` into `@media all{}`, and the token check
+    misses it where both blocks read alike. Found by the M14 nesting round 7
+    differential. Separate branch.
+  - `crates/mokly-css/src/module_checks.rs:30`: in a rule list, the module
+    check skips the block of a statement that starts like a custom property,
+    though the renamer and the token check read it as a rule. Reading it as
+    a rule rejects an `@value` there, also in keyframes and `@document`
+    blocks that build today, so it needs a user decision. Found by the M14
+    nesting round 7 differential. Separate branch.
 
 ## Post-merge follow-up (non-blocking)
 

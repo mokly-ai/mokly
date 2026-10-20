@@ -6,17 +6,32 @@ use cssparser::Token;
 
 use crate::token_tree::Tokens;
 
-/// How the statements of one block end. Style rules and the blocks nested in
-/// them follow lightningcss. Declaration-only at-rules such as `@font-face`
-/// end a non-custom statement at its first `{}` block, as postcss does.
+/// How the statements of one block end and read. lightningcss parses rules
+/// strictly in the stylesheet, in style rules, and in the grouping rules among
+/// them: a rule without a block there fails the stylesheet. In a keyframes or
+/// `@document` block, and in an at-rule block that holds declarations or
+/// text, lightningcss keeps, drops, or rejects text instead.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Grammar {
-    /// The stylesheet, and grouping at-rule blocks outside declaration blocks:
-    /// a statement ends at its `{}` block or at `;`.
+    /// The stylesheet, and the block of a conditional, layer, scope, or
+    /// starting-style rule in it: a statement ends at its `{}` block or at
+    /// `;`, and it is a rule or an at-rule.
     Rules,
-    /// Style rules, declaration at-rules, and every block nested in them: a
-    /// custom property runs through its `{}` blocks to the next `;`. Every
-    /// other statement ends as in [`Grammar::Rules`].
+    /// A style rule's block and an `@-moz-document` block, and the block of a
+    /// conditional, layer, scope, starting-style, or `@-moz-document` rule in
+    /// one: a custom property runs through its `{}` blocks to the next `;`,
+    /// and a statement without a block that starts with an identifier and a
+    /// colon is a declaration. Every other statement is a rule or an at-rule.
+    Style,
+    /// A keyframes or `@document` block, and a grouping block in one, which
+    /// lightningcss does not parse as rules: statements end and read as in
+    /// [`Grammar::Rules`], and the other blocks they open are
+    /// [`Grammar::Declarations`].
+    Lenient,
+    /// Any other block, such as `@font-face`, a keyframe, or an unknown
+    /// at-rule, and every block in one: statements end as in
+    /// [`Grammar::Style`], and a statement without a block is a declaration
+    /// or text.
     Declarations,
 }
 
@@ -27,6 +42,30 @@ pub(crate) struct Block {
     pub(crate) range: Range<usize>,
     /// The grammar of the statements inside the block.
     pub(crate) grammar: Grammar,
+}
+
+/// What a statement is, read as lightningcss reads the block that holds it.
+/// Every scanner reads a statement through this one classification.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum Statement {
+    /// A statement that is not text and starts with an at-keyword, by its
+    /// lowercase name.
+    AtRule(String),
+    /// A statement without a block that starts with an identifier and a
+    /// colon, by its lowercase property name, in a style or declarations
+    /// block. A custom property is one, because its value keeps its `{}`
+    /// blocks.
+    Declaration(String),
+    /// Any other statement that is not text: a qualified rule, whose prelude
+    /// is a selector. A rule that is still open at the end of input has no
+    /// block, but it is still a rule.
+    Rule,
+    /// A statement without a block that lightningcss keeps or drops as text,
+    /// so scanners keep it as authored: any statement that is not a
+    /// declaration in a declarations block, and an at-rule under a keyframes
+    /// name that lightningcss does not know, such as `@-khtml-keyframes`, in
+    /// a style block. Holds the lowercase at-keyword that starts it, if any.
+    Text(Option<String>),
 }
 
 /// One rule or declaration at a block's own level.
@@ -41,6 +80,8 @@ pub(crate) struct Section {
     pub(crate) block: Option<Block>,
     /// True when a `;` ends the section.
     pub(crate) semicolon: bool,
+    /// What the statement is.
+    pub(crate) statement: Statement,
 }
 
 impl Section {
@@ -53,11 +94,6 @@ impl Section {
     pub(crate) fn lead(&self, tokens: &Tokens<'_>) -> usize {
         self.first(tokens)
             .map_or(self.start, |index| tokens.nodes[index].start)
-    }
-
-    /// The lowercase name of the at-rule that the statement starts with.
-    pub(crate) fn at_rule(&self, tokens: &Tokens<'_>) -> Option<String> {
-        at_rule(tokens, self.prelude.clone())
     }
 
     /// True when the statement starts with a dashed ident and a colon.
@@ -81,16 +117,18 @@ pub(crate) fn next(
     tokens.next_significant(&mut range.clone())?;
     let begin = range.start;
     let start = tokens.offset(begin);
-    let custom = grammar == Grammar::Declarations && custom_property(tokens, range.clone());
+    let custom = matches!(grammar, Grammar::Style | Grammar::Declarations)
+        && custom_property(tokens, range.clone());
     while let Some(index) = tokens.next(range) {
         let node = &tokens.nodes[index];
         let body = !custom && matches!(node.token, Token::CurlyBracketBlock);
         let semicolon = matches!(node.token, Token::Semicolon);
         if body || semicolon {
             let prelude = begin..index;
+            let statement = classify(tokens, prelude.clone(), grammar, body);
             let block = body.then(|| Block {
                 range: tokens.children(index),
-                grammar: nested(grammar, at_rule(tokens, prelude.clone()).as_deref()),
+                grammar: nested(grammar, &statement, html_comment(tokens, prelude.clone())),
             });
             return Some(Section {
                 prelude,
@@ -98,11 +136,14 @@ pub(crate) fn next(
                 end: node.start,
                 block,
                 semicolon,
+                statement,
             });
         }
     }
+    let prelude = begin..range.end;
     Some(Section {
-        prelude: begin..range.end,
+        statement: classify(tokens, prelude.clone(), grammar, false),
+        prelude,
         start,
         end: tokens.offset(range.end),
         block: None,
@@ -110,18 +151,82 @@ pub(crate) fn next(
     })
 }
 
-/// The grammar of a block that a statement opens. Inside declarations, every
-/// nested block declares. In rules, only a grouping at-rule holds rules.
-fn nested(grammar: Grammar, at_rule: Option<&str>) -> Grammar {
-    if grammar == Grammar::Rules && at_rule.is_some_and(grouping) {
-        Grammar::Rules
-    } else {
-        Grammar::Declarations
+/// Classify a statement by its first tokens and its block, as lightningcss
+/// reads the block that holds it.
+fn classify(
+    tokens: &Tokens<'_>,
+    mut prelude: Range<usize>,
+    grammar: Grammar,
+    block: bool,
+) -> Statement {
+    let mut significant = || {
+        tokens
+            .next_significant(&mut prelude)
+            .map(|index| &tokens.nodes[index].token)
+    };
+    let (first, second) = (significant(), significant());
+    let at_rule = match first {
+        Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
+        _ => None,
+    };
+    let declarations = matches!(grammar, Grammar::Style | Grammar::Declarations);
+    let text = match grammar {
+        Grammar::Declarations => true,
+        Grammar::Style => at_rule.as_deref().is_some_and(unknown_keyframes),
+        Grammar::Rules | Grammar::Lenient => false,
+    };
+    match (first, second) {
+        (Some(Token::Ident(name)), Some(Token::Colon)) if declarations && !block => {
+            Statement::Declaration(name.to_ascii_lowercase())
+        }
+        _ if text && !block => Statement::Text(at_rule),
+        _ => at_rule.map_or(Statement::Rule, Statement::AtRule),
     }
 }
 
-/// At-rules whose blocks hold rules: keyframes, conditional, layer, document,
+/// True for an at-rule name that ends with `keyframes` but that lightningcss
+/// does not parse. In a style rule, lightningcss keeps such an at-rule
+/// without a block as text.
+fn unknown_keyframes(name: &str) -> bool {
+    name.ends_with("keyframes")
+        && !matches!(
+            name,
+            "keyframes" | "-webkit-keyframes" | "-moz-keyframes" | "-o-keyframes" | "-ms-keyframes"
+        )
+}
+
+/// The grammar of the block that a statement opens. An `@-moz-document`
+/// block reads as a style rule's block, so a keyframes block in it holds
+/// declarations. cssparser skips `<!--` and `-->` before a statement in the
+/// stylesheet, so a rule that starts with one can be an at-rule there, and
+/// its block holds declarations.
+fn nested(grammar: Grammar, statement: &Statement, html_comment: bool) -> Grammar {
+    match (grammar, statement) {
+        (Grammar::Rules, Statement::AtRule(name)) if rule_list(name) => Grammar::Rules,
+        (Grammar::Rules | Grammar::Style, Statement::AtRule(name))
+            if rule_list(name) || name == "-moz-document" =>
+        {
+            Grammar::Style
+        }
+        (Grammar::Rules | Grammar::Style, Statement::Rule) if !html_comment => Grammar::Style,
+        (Grammar::Rules | Grammar::Lenient, Statement::AtRule(name)) if grouping(name) => {
+            Grammar::Lenient
+        }
+        _ => Grammar::Declarations,
+    }
+}
+
+/// At-rules whose blocks lightningcss parses as rules: conditional, layer,
 /// scope, and starting-style rules.
+fn rule_list(name: &str) -> bool {
+    matches!(
+        name,
+        "media" | "supports" | "container" | "layer" | "scope" | "starting-style"
+    )
+}
+
+/// At-rules whose blocks the scanners read as rules: keyframes, conditional,
+/// layer, document, scope, and starting-style rules.
 fn grouping(name: &str) -> bool {
     name.ends_with("keyframes")
         || matches!(
@@ -130,15 +235,11 @@ fn grouping(name: &str) -> bool {
         )
 }
 
-/// The lowercase at-keyword name when the range starts with an at-rule.
-fn at_rule(tokens: &Tokens<'_>, mut range: Range<usize>) -> Option<String> {
-    match tokens
+/// True when the statement starts with `<!--` or `-->`.
+fn html_comment(tokens: &Tokens<'_>, mut range: Range<usize>) -> bool {
+    tokens
         .next_significant(&mut range)
-        .map(|index| &tokens.nodes[index].token)
-    {
-        Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-        _ => None,
-    }
+        .is_some_and(|index| matches!(tokens.nodes[index].token, Token::CDO | Token::CDC))
 }
 
 /// True when the statement starts with a dashed ident and a colon.
@@ -151,3 +252,7 @@ fn custom_property(tokens: &Tokens<'_>, mut range: Range<usize>) -> bool {
     matches!(significant(), Some(Token::Ident(name)) if name.starts_with("--"))
         && matches!(significant(), Some(Token::Colon))
 }
+
+#[cfg(test)]
+#[path = "_tests_/token_sections_tests.rs"]
+mod token_sections_tests;
