@@ -1862,13 +1862,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
-- [ ] Remove the duplicate base render between validation and capture: one
-      bounded, ordered collector that keeps aggregate errors, warnings,
-      retention order, cancellation, fallback, and all charges (capture
-      decision 2, option B, deferred by the user's performance-later rule).
-      Measured on 2026-10-20: React capture 95 s, of which validation 27 s;
-      5,790 JavaScript renders in each pass.
-
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2018,9 +2011,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep replay order, deadlines, updates, and recycling unchanged.
         Evidence: `.context/m14-capture/replay-green.log` and
         `.context/m14-capture/replay-release-react/analysis.json`.
-  - [ ] Decide whether to combine validation and capture through bounded ordered
+  - [x] Decide whether to combine validation and capture through bounded ordered
         collection. Severity Medium, effort Large. Recommended: B, share the
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.
+        User decision 62 (2026-10-20): A, keep the two passes now. B, one
+        bounded, ordered collector, is a post-merge follow-up.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2134,10 +2129,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       bytes at delivery and check them against the digest; one entry per asset
       path across roots; first audit and record the copies of each asset per
       build with the harness.
-- [ ] Decide on one shared verified opaque-asset spool per generation and
+- [x] Decide on one shared verified opaque-asset spool per generation and
       route with the M14 Serve budgets. Account for GET and HEAD capture work,
       live response files after worker permits end, and OS temporary storage
       outside process RSS (M14 review 6, finding 5; accepted interim design A).
+      User decision 61 (2026-10-20): A, keep one private capture for each
+      request. `mokly-imported-styles-assets.md` documents its bound. A
+      shared spool is a post-merge follow-up.
 - [ ] Measure Git opaque-asset digest commands and buffered delivery under
       the M14 comparison workloads. Use the cost to decide on streamed blob
       copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
@@ -2616,6 +2614,17 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Remove the duplicate base render between validation and capture: one
+      bounded, ordered collector that keeps aggregate errors, warnings,
+      retention order, cancellation, fallback, and all charges (capture
+      decision 2, option B; user decision 62, 2026-10-20). Measured on
+      2026-10-20: React capture 95 s, of which validation 27 s; 5,790
+      JavaScript renders in each pass.
+
+- [ ] Share one verified opaque-asset spool for each Serve generation and
+      route, released with its generation, under the M14 Serve budgets (M14
+      review 6, finding 5, option B; user decision 61, 2026-10-20).
 
 - [ ] Bring large React usable startup under 5,000 ms
       (compilation cache redesign, decision 57 option A); measured 10.5 s
