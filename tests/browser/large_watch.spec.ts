@@ -10,14 +10,8 @@ import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
 
-for (const [variant, watchKinds] of [
-  ["html", undefined],
-  ["react", ["screen"]],
-  ["react", ["component"]],
-  ["react", ["stylesheet"]],
-] as const) {
-  const subject = `${variant}${watchKinds ? ` ${watchKinds[0]}` : ""}`;
-  test(`large watch delivers browser evidence for ${subject}`, async ({
+for (const variant of ["html", "react"] as const) {
+  test(`large watch delivers browser evidence for ${variant}`, async ({
     browser,
   }) => {
     test.setTimeout(300_000);
@@ -36,7 +30,6 @@ for (const [variant, watchKinds] of [
       const report = await benchmark(fixture, ["watch"], 1, {
         memoryStopKiB: 0,
         browser,
-        ...(watchKinds ? { watchKinds } : {}),
       });
       const result = report.results[0];
       assert.ok(result && "status" in result && result.status === "measured");
@@ -44,7 +37,7 @@ for (const [variant, watchKinds] of [
       const edits: unknown[] = result.edits;
       assert.deepEqual(
         edits.map((edit) => object(edit).kind),
-        watchKinds ?? ["screen", "component", "stylesheet"],
+        ["screen", "component", "stylesheet"],
       );
       for (const raw of edits) {
         const edit = object(raw);

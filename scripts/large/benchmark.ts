@@ -45,7 +45,6 @@ export async function benchmark(
     buildChanges?: boolean;
     buildDeadlineMs?: number;
     browser?: Browser;
-    watchKinds?: readonly WatchMeasurement["kind"][];
   } = {},
 ) {
   const memoryStopKiB = options.memoryStopKiB ?? DEFAULT_MEMORY_STOP_KIB;
@@ -171,13 +170,7 @@ export async function benchmark(
               scenario === "changes"
                 ? changes(context, match[1]!, fixture, beginning)
                 : scenario === "watch"
-                  ? watch(
-                      context,
-                      match[1]!,
-                      fixture,
-                      completedEdits,
-                      options.watchKinds,
-                    )
+                  ? watch(context, match[1]!, fixture, completedEdits)
                   : browse(
                       context,
                       match[1]!,

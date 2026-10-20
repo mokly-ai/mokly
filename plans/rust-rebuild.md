@@ -2530,6 +2530,10 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         total guard on two CPUs without a missed watcher event. A keeps the
         rare timeout. C adds the deferred compiled-recipe cache from decision 59. B keeps coverage without a larger timeout or a new cache policy.
         Investigation and phase costs: `.context/f17/investigation.md`.
+  - [x] User decision 105 (2026-10-20): A, keep the combined React large
+        watch test and record the limit. It replaces F17 decision 1 B. F20
+        item 1 reverts the split from `a1c8259c`, keeps the 300-second guard,
+        and records the accepted exception in `docs/protocol/ci-test-timing.md`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.

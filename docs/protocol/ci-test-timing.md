@@ -104,6 +104,13 @@ An expected-state allowance inside a test can be longer than the runner timeout.
 The runner timeout then bounds the whole test.
 The inner allowance sets the failure message when it expires first.
 
+The combined React large-fixture watch journey is the one accepted exception
+to the three-times rule. It keeps a 300,000 ms runner timeout. On two CPUs it
+takes 185 to 218 seconds, about 155 of them in twelve JavaScript compilations.
+One busy process per CPU pushed it past 300 seconds, so its rare timeouts are
+accepted. One test per edit kind was rejected, because the combined journey
+proves that one Serve process handles the three React edits in order.
+
 The fixture setup budgets live in `tests/helpers/fixture_timing.ts`. Full
 catalogue setup uses a 600,000 ms budget. Isolated catalogue setup uses a
 180,000 ms budget: the link-control `beforeAll` hook, the watched catalogue
