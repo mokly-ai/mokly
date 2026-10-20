@@ -40,6 +40,30 @@ test("the current and removed rows of one entry have different keys", () => {
   assert.notEqual(rows[0]!.key, rows[1]!.key);
 });
 
+test("a removed row keeps its key alone and beside the current row of its entry", () => {
+  const removed = link({ removed: true });
+  const [alone] = usageRows([removed]);
+  const beside = usageRows([link(), removed]);
+  assert.deepEqual(
+    beside.map((row) => row.links[0]!.removed),
+    [false, true],
+  );
+  assert.equal(beside[1]!.key, alone!.key);
+});
+
+test("a row keeps its key with and without another entry's row before it", () => {
+  const [alone] = usageRows([link()]);
+  const after = usageRows([
+    link({ entryId: "screens/changed", title: "Changed screen" }),
+    link(),
+  ]);
+  assert.deepEqual(
+    after.map((row) => row.links[0]!.entryId),
+    ["screens/changed", "screens/consumer"],
+  );
+  assert.equal(after[1]!.key, alone!.key);
+});
+
 test("rows that differ only in eligibility stay apart with distinct keys", () => {
   const rows = usageRows([
     link(),
