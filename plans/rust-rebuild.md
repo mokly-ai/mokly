@@ -2638,6 +2638,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     which the wrapper table test pins (option A, kept by the orchestrator on
     2026-10-20). Previous examples: `.c{}.y`, where the token check fired
     instead of the syntax check.
+  - `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
+    check always reports line 1, column 1, though its catalogue row shows
+    `{line}:{column}`. Found by the M14 nesting round 6 review. Separate
+    branch.
 
 ## Post-merge follow-up (non-blocking)
 
