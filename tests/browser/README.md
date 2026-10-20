@@ -253,6 +253,9 @@ It checks mouse and keyboard activation, reveal, and baseline restoration.
 small HTML and React inputs. They verify native base preparation, delivered
 Changes, event identity, visible reloads, and restoration of edited sources.
 They use the suite browser and assert outcomes without timing budgets.
+React watch uses one test per edit kind. Each keeps the real baseline,
+publication, frame, Changes, review, and restoration checks. HTML keeps the
+complete three-edit journey through one process.
 `large_startup` checks real preview and prop behavior while Changes is
 unavailable. The focused probe completes; the full Serve probe reports the
 unavailable comparison. The test applies no elapsed-time budget.

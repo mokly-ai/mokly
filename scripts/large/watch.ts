@@ -75,12 +75,14 @@ export async function watch(
   url: string,
   fixture: PreparedFixture,
   edits: WatchMeasurement[],
+  kinds?: readonly Edit["kind"][],
 ) {
   const page = await context.newPage();
   await observeDelivery(page);
   await page.goto(`${url}/view/${firstScreen}/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   for (const edit of await fixtureEdits(fixture)) {
+    if (kinds && !kinds.includes(edit.kind)) continue;
     await edit.verify(page, false);
     const before = await delivered(page);
     if (!before.index.live) throw new Error("Watch needs a live generation");

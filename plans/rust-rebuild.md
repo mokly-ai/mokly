@@ -2522,6 +2522,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         and Unix names. Evidence: `.context/f17/windows-red.log` and
         `.context/f17/xtask.log`. The F16 dependency merge preserves both
         branches without conflicts: `.context/f17/merge-decisions.md`.
+  - [x] F17 decision 1: B, applied by default (user rule), 2026-10-20.
+        Split React watch into one browser test per edit kind. Keep every
+        evidence and restoration check and the existing timeout. HTML keeps
+        the complete three-edit journey. Severity Low, effort Small.
+        The accumulated React and base compilations can exhaust the test's
+        total guard on two CPUs without a missed watcher event. A keeps the
+        rare timeout. C adds the deferred compiled-recipe cache from decision 59. B keeps coverage without a larger timeout or a new cache policy.
+        Investigation and phase costs: `.context/f17/investigation.md`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
