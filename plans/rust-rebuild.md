@@ -403,6 +403,12 @@ delete the dead shell path `ShellContext.componentChanges` in
 and the tests that reach their copy only through it. The live-path tests cover
 the same copy.
 
+**Hub review of `rebuild/defaults-viewer`, finding 2, requirement applied by
+default (user rule), 2026-10-20:** the device chrome contract states that an
+expanded frame that leaves the page collapses, so no scrim stays. The
+rejected alternative left the contract silent on that case, which allowed the
+scrim defect that the review found.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -2661,6 +2667,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     delete the alias and list `Manifest`, `ManifestV10`, and
     `HistoricalManifest` with the names that `@mokly/viewer/data` stops
     exporting. Option A keeps the alias and corrects only the release note.
+  - Outside the scope of the hub review of `rebuild/defaults-viewer`, found
+    by its fix round: eleven shell and viewer modules, such as
+    `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a catalogue
+    without published records, which no delivery builds. Making
+    `publicModel` required in the shell catalogue type would show which are
+    dead. Separate branch.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
