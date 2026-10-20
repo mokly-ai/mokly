@@ -81,6 +81,7 @@ order, the operating system, or the absolute checkout path.
 | `link-control-descendant`        | A styled link control containing a warning-tier descendant ([link controls](./mokly-link-controls.md))                |
 | `marker-in-raw-text`             | A marker inside raw text of a sidecar fragment ([comparison](./mokly-comparison.md#markers))                          |
 | `props-not-data`                 | A non-data prop value excluded from an inferred schema ([entry props](./mokly-entry-props.md#schema-inference))       |
+| `props-control-bounds`           | A saved prop or story arg outside its editing bounds ([component controls](./mokly-component-controls.md))            |
 | `stylesheet-extglob`             | A configuration stylesheet matcher with unsupported extglob syntax ([configuration](./mokly-configuration.md#shape))  |
 
 Each producing contract defines its own message. A new producer adds a row

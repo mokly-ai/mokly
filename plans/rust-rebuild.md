@@ -378,6 +378,12 @@ readiness rather than blocking this acceptance round on further startup work.
 - Item 8 A, applied by default (user rule): publish trusts bundled Mozilla
   roots in addition to the operating system certificate store. Reject OS-only
   trust so minimal containers can publish through public HTTPS endpoints.
+- Item 22 A and extended A, applied by default (user rule): keep bounds checks
+  on complete merged live props. Warn on saved props or story args outside
+  those bounds. Story hints affect controls and live validation, not schemas.
+  Reject override-only validation and fatal saved-value bounds checks.
+  Fail declared steps that are not schema multiples or are fractional for
+  integer props, so controls cannot offer values the schema rejects.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 

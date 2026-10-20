@@ -12,6 +12,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::config::relative;
 use crate::config_types::ResolvedConfig;
 use crate::config_warnings;
+use crate::control_warnings;
 use crate::definition_provider::DefinitionProvider;
 use crate::diagnostic::{Code, Issue, Warning, normalize_warnings};
 use crate::discovery::{Discovery, Inventory, SourceKind};
@@ -214,6 +215,9 @@ impl Builder {
             &markdown_targets,
         ));
         prepared.warnings.extend(config_warnings::collect(config));
+        prepared
+            .warnings
+            .extend(control_warnings::collect(&prepared.model.entries));
         normalize_warnings(&mut prepared.warnings);
         if !issues.is_empty() {
             return Err(CatalogueError::Invalid {

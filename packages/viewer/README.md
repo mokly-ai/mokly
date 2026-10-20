@@ -325,6 +325,10 @@ instance regions in the live page from them.
 
 ### Live controls
 
+Saved props must satisfy their schema. A saved value outside its narrower
+editing bounds remains visible. The build reports a warning, while live edits
+must satisfy the complete merged props and control bounds.
+
 Every screen and component is a render over props, and the Props tab of the
 inspector derives its controls from the entry's prop schema. In `mokly serve`,
 the standalone shell edits props temporarily through the render capability of

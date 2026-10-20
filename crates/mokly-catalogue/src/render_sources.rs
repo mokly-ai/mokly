@@ -71,7 +71,7 @@ pub struct JavaScriptCatalogue {
     pub entries: BTreeMap<String, RenderSource>,
 }
 
-/// Storybook annotations enrich controls without changing schema validation.
+/// Storybook annotations enrich controls and their live bounds without changing the schema.
 #[derive(Clone, Debug, Default)]
 pub struct StoryControlHint {
     /// Primitive select choices.

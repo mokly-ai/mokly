@@ -58,6 +58,10 @@ controls pass the Rust validator. Story control hints do not change schemas.
 Declared number controls carry their effective schema bounds and step into
 the read model. Authored bounds win; omitted values fall back to the schema,
 including an integer step of one when no multiple is declared.
+Declared steps must be schema multiples and integral for integer props.
+Saved props outside the effective control bounds produce `props-control-bounds`
+warnings. This includes merged variants and Storybook args after control hints.
+Live edits still validate the complete merged props against those bounds.
 Inference exclusions become warnings only after final path derivation. Runtime
 failures retain typed terminal categories across provider boundaries. JavaScript
 diagnostics retain module and export attribution without invented coordinates. `DeferredDefinitions`
