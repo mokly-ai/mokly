@@ -2880,9 +2880,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         edited viewer README passages to `packages/viewer/docs/`. The merge
         carries each side's edits to the passage's new place. Merge
         decisions: `.context/m10/f15/merge2-decisions.md`.
-  - F15 review finding 33 for the user: the delivery spec selects the
-    reused-parent check by its case name. Severity Low, effort Small.
-    Recommended: A, add the document path to the case's delivery facts.
+  - [x] F15 review finding 33: the delivery spec selected the reused-parent
+        check by its case name. Applied A as follow-up F18 item 1, as the
+        orchestrator directed on 2026-10-20. The case's delivery facts hold
+        the document path, and the spec checks the index for each case that
+        has one. A mutation that points the fact at a component fails both
+        reused-parent tests.
   - F15 review finding 34 for the user: the delivery pairs repeat the shared
     moves. Severity Low, effort Small. Recommended: B, derive each moved
     pair's previous path and flag from the case's moves.

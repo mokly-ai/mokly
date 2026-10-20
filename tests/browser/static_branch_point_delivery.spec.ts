@@ -8,7 +8,7 @@ import type { ReviewResultV8 } from "../../packages/viewer/src/generated/catalog
 
 import { expectBadgeAffected } from "./branch_point_affected.js";
 import { branchPointDeliveryCases } from "./branch_point_delivery_cases.js";
-import { branchPointPaths, test } from "./branch_point_test.js";
+import { test } from "./branch_point_test.js";
 import {
   copiedBytes,
   deliveryIndex,
@@ -122,12 +122,12 @@ for (const width of [390, 1280]) {
         expect(historical.before?.path).toBe(removed.entry.path);
         expect(historical.after).toBeUndefined();
       }
-      if (scenario.case === "reused-parent") {
+      if (scenario.document) {
         expect(index.documents.map((entry) => entry.path)).toContain(
-          branchPointPaths.reusedParent,
+          scenario.document,
         );
         expect(index.components.map((entry) => entry.path)).not.toContain(
-          branchPointPaths.reusedParent,
+          scenario.document,
         );
       }
       for (const address of new Set(traffic.urls))

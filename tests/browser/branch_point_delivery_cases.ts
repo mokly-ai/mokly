@@ -32,6 +32,11 @@ interface DeliveryFacts {
   name: string;
   pairs: DeliveryPair[];
   affectedComponent?: string;
+  /**
+   * A path that held a component at the base commit and holds a document in
+   * the head commit, so the index lists it only as a document.
+   */
+  document?: string;
   /** The button text of the case's removed record, when it has one. */
   removedText?: string;
 }
@@ -122,15 +127,16 @@ const FACTS: Readonly<Record<string, DeliveryFacts>> = {
   "reused-parent": {
     name: "document reusing a removed component path",
     pairs: [],
+    document: paths.reusedParent,
     removedText: "Go",
   },
 };
 
 /**
  * Each case of `tests/fixtures/branch_point_cases.json` with its copied
- * facts, its removed record, and its shared case name. A case without facts,
- * facts without a case, or a removed record without a button text stops the
- * spec from loading, so the delivery checks cover every shared case.
+ * facts and its removed record. A case without facts, facts without a case,
+ * or a removed record without a button text stops the spec from loading, so
+ * the delivery checks cover every shared case.
  */
 export const branchPointDeliveryCases = branchPointCases.map(
   ({ name, removed }) => {
@@ -149,7 +155,7 @@ export const branchPointDeliveryCases = branchPointCases.map(
       parentTitle: record[1],
       text: removedText!,
     };
-    return { ...facts, case: name, removed: recorded };
+    return { ...facts, removed: recorded };
   },
 );
 if (branchPointDeliveryCases.length !== Object.keys(FACTS).length)
