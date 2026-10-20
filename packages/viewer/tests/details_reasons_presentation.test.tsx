@@ -137,6 +137,19 @@ test("each reason reads as its one sentence after the branch point", () => {
   }
 });
 
+test("a screen reason, which only a use case carries, has no sentence", () => {
+  const data = workspace(HOME);
+  const none = renderToStaticMarkup(
+    <WorkspaceEvidence data={{ ...data, reasons: [] }} />,
+  );
+  const screen = renderToStaticMarkup(
+    <WorkspaceEvidence
+      data={{ ...data, reasons: [{ kind: "screen", screenPath: HOME }] }}
+    />,
+  );
+  assert.equal(screen, none);
+});
+
 test("a removed snapshot's Details read its removed reason once", () => {
   const model = shellModelFixture();
   const catalogue = viewerCatalogue(model);

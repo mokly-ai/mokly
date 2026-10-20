@@ -1,15 +1,21 @@
 /**
  * Comparison panes outside Serve, under the comparison panes contract. On the
  * copied comparison output and in an embedded viewer through both frame
- * adapters, a stack scrolls as one, Side by side mirrors, each pane presents
- * its version as a script-free `srcdoc` document, links and forms do
- * nothing, and the anchor moves the shared viewports. A pane document that
- * cannot be presented fails the comparison with Try again, and Try again
- * presents it, in both hosts.
+ * adapters, an Overlay stack scrolls as one, each pane frame carries the
+ * contract's attributes and presents its version as a script-free `srcdoc`
+ * document, links and forms do nothing, and the anchor moves the shared
+ * viewports. On the copied output, Side by side also mirrors. A pane document
+ * that cannot be presented fails the comparison with Try again, and Try again
+ * presents it, on the copied output and through the cross-origin adapter,
+ * which also reports the failure to its host.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import {
+  expectPaneFrameAttributes,
+  generationAddress,
+} from "./comparison_frames.js";
 import {
   comparisonSection,
   expectCoincidentLayers,
@@ -36,29 +42,6 @@ import { chooseViewport } from "./workspace_actions.js";
 
 const changed = comparisonPaths.changed;
 const DOCUMENT = `/snapshots/after/mokly-generated/${changed}/index.desktop.html`;
-
-const literal = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-
-/** A pane presents its version as a script-free `srcdoc` document. */
-async function expectPresentedPanes(section: Locator, origin: string) {
-  for (const side of ["before", "after"] as const) {
-    const frame = paneFrame(section, side);
-    await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
-    await expect(frame).not.toHaveAttribute("src");
-    await expect(frame).toHaveAttribute(
-      "data-mokly-preview-source",
-      new RegExp(
-        `^${literal(origin)}/mokly-viewer/diffs/generations/[a-f0-9]{64}/snapshots/${side}/mokly-generated/${changed}/index\\.desktop\\.html$`,
-        "u",
-      ),
-    );
-    expect(
-      await frame.evaluate(
-        (element: HTMLIFrameElement) => element.contentDocument?.URL,
-      ),
-    ).toBe("about:srcdoc");
-  }
-}
 
 /** Both versions and both shared viewports of Side by side at one offset. */
 async function expectMirroredAt(section: Locator, y: number): Promise<void> {
@@ -104,13 +87,20 @@ async function expectReadOnly(page: Page, section: Locator): Promise<void> {
 
 test("a static export aligns stacks, mirrors Side by side and stays read-only", async ({
   page,
+  request,
   baseURL,
   allowBrowserError,
 }) => {
   allowBrowserError(blockedFormSubmission);
+  const index = await comparisonIndex(request, baseURL);
   await openComparison(page, changed, "desktop", "Overlay");
   const desktop = comparisonSection(page, "desktop");
-  await expectPresentedPanes(desktop, baseURL!);
+  await expectPaneFrameAttributes(
+    desktop,
+    generationAddress(baseURL!, index.comparisonUrl),
+    changed,
+    "desktop",
+  );
   await wheelOver(page, paneFrame(desktop, "after"), 400);
   await expectStackAt(desktop, 400);
   await expectCoincidentLayers(desktop);
@@ -185,9 +175,13 @@ test.describe("embedded viewer", () => {
   for (const adapter of ["same-origin", "cross"] as const)
     test(`an embedded viewer aligns comparisons through the ${adapter} adapter`, async ({
       page,
+      request,
+      baseURL,
       allowBrowserError,
     }) => {
       allowBrowserError(blockedFormSubmission);
+      // The host serves a copy of the same output, with the same generation.
+      const index = await comparisonIndex(request, baseURL);
       await openEmbeddedComparison(
         page,
         `${host.url}/viewer.html?adapter=${adapter}&entry=${changed}`,
@@ -195,9 +189,14 @@ test.describe("embedded viewer", () => {
         "Overlay",
       );
       const desktop = comparisonSection(page, "desktop");
-      await expectPresentedPanes(
+      await expectPaneFrameAttributes(
         desktop,
-        adapter === "cross" ? host.frameOrigin : host.url,
+        generationAddress(
+          adapter === "cross" ? host.frameOrigin : host.url,
+          index.comparisonUrl,
+        ),
+        changed,
+        "desktop",
       );
       await wheelOver(page, paneFrame(desktop, "after"), 400);
       await expectStackAt(desktop, 400);

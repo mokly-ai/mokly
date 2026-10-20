@@ -1478,6 +1478,18 @@ Tags: ui
     - Pages, documents, and use cases show no reason sentences until a
       design exists. Decision 7 A, approved by the orchestrator on
       2026-10-19.
+    - [x] Keep the viewer and the designs consistent: every Browse design of
+          a changed, added, or removed screen reads its reason sentences;
+          Details show the reasons first, in the designs' order; a `screen`
+          reason has no sentence; every pane frame attribute is checked in
+          each host; and the panes page states where its proofs run, with
+          Serve proving presentation and renewal only. Round 3 items of the
+          D1 delegate, given by the orchestrator on 2026-10-20.
+    - Batch 8 integration keeps the shared Serve alignment, input, and
+      Scroll together cases. The pane attribute checks also run on Serve.
+      The live coverage docs include these retained proofs.
+    - The browser test guide stays one page past 300 lines. Decision 2 A of
+      the D1 round 2 report, approved by the orchestrator on 2026-10-20.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
@@ -1555,6 +1567,9 @@ The D1 round 2 decisions (1 B, 2 A, 3 B, 4 A, 5 A), the reason sentences in
 the designs, the comparison suites list in the browser test guide, and the
 merge of the rebuild tip `3d2d1535`:
 `.context/rust-rebuild/delegation/m10-d1/report-2.md`.
+The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
+2 at `659eb918` onto the rebuild tip `d857b6cf`:
+`.context/rust-rebuild/delegation/m10-d1/report-3.md`.
 
 - [ ] Commit.
 

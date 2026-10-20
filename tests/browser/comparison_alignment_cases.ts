@@ -10,6 +10,10 @@ import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import { test as baseTest } from "./browser_test.js";
 import {
+  expectPaneFrameAttributes,
+  generationAddress,
+} from "./comparison_frames.js";
+import {
   comparisonSection,
   documentExtent,
   documentOffset,
@@ -33,20 +37,27 @@ export function registerComparisonAlignment(test = baseTest): void {
   test("Overlay and Difference scroll one desktop stack as one", async ({
     page,
   }) => {
-    await openComparison(page, changed, "desktop", "Overlay");
+    const [accepted] = await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.request().method() === "GET" &&
+          response.ok() &&
+          /\/diffs\/generations\/[^/]+\/review\.json$/u.test(response.url()),
+      ),
+      openComparison(page, changed, "desktop", "Overlay"),
+    ]);
     const desktop = comparisonSection(page, "desktop");
     await wheelOver(page, paneFrame(desktop, "after"), 400);
     await expectStackAt(desktop, 400);
     await expectCoincidentLayers(desktop);
     await expect(desktop.locator(".browser-frame")).toHaveCount(1);
     await expect(desktop.locator(".browser-expand")).toHaveCount(0);
-    for (const side of ["before", "after"] as const) {
-      const frame = paneFrame(desktop, side);
-      await expect(frame).toHaveAttribute("data-mokly-comparison-frame", "");
-      await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
-      await expect(frame).toHaveAttribute("scrolling", "no");
-      await expect(frame).not.toHaveAttribute("src", /.*/);
-    }
+    await expectPaneFrameAttributes(
+      desktop,
+      generationAddress(new URL(accepted.url()).origin, accepted.url()),
+      changed,
+      "desktop",
+    );
 
     await modeButton(page, "Difference").click();
     await expect(desktop.locator(".mb-panes")).toHaveAttribute(

@@ -29,6 +29,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
       activeTitle="Welcome"
       subject="welcome"
       path={ENTRY_PATHS.welcome}
+      reasons={["material"]}
       state="changed"
       title="Welcome"
       viewport={viewport}
@@ -113,6 +114,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       subject="welcome"
       path={ENTRY_PATHS.welcome}
       mode="difference"
+      reasons={["material"]}
       state="changed"
       title="Welcome"
       viewport={viewport}

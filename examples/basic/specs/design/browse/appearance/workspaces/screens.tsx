@@ -117,6 +117,7 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.appearanceSideBySide}
       path={ENTRY_PATHS.welcome}
       nav={<ReviewNav activeTitle="Welcome" />}
+      reasons={["material"]}
       render={(previewViewport) => (
         <CompareGrid>
           <WelcomePanes viewport={previewViewport} />
@@ -138,6 +139,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       path={ENTRY_PATHS.welcome}
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
+      reasons={["material"]}
       render={(previewViewport) => <WelcomeStack viewport={previewViewport} />}
       state="changed"
       subject="welcome"

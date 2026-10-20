@@ -7,6 +7,7 @@ import { DetailsPanel } from "./parts/details.js";
 import { ENTRY_PATHS, SCREEN_CRUMBS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
+import { ReasonSentences } from "./parts/reason_sentences.js";
 import {
   ScreenHead,
   Shell,
@@ -52,7 +53,12 @@ function CatalogueView({
           </PhoneFrame>
         )}
       </Stage>
-      <DetailsPanel subject="welcome" />
+      <DetailsPanel
+        subject="welcome"
+        comparisonEvidence={
+          changes ? <ReasonSentences reasons={["material"]} /> : undefined
+        }
+      />
     </Shell>
   );
 }
