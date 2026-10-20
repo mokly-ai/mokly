@@ -91,6 +91,7 @@ export function registerMovedComponentCases(
       },
     );
     await host.open(page, moves.moveIcon);
+    const opened = new URL(page.url());
     await page
       .locator(
         '[data-nav-disclosure="folder:components:branch/moves/current"] > summary',
@@ -98,6 +99,9 @@ export function registerMovedComponentCases(
       .click();
     await row(page, ACTION).click();
     await expectHostPath(page, host, ACTION);
+    // The row adds no query or hash to the address that the host opened.
+    const routed = new URL(page.url());
+    expect([routed.search, routed.hash]).toEqual([opened.search, opened.hash]);
     await fetched;
     await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
     release();
