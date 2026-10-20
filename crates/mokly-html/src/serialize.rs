@@ -39,7 +39,7 @@ pub fn html(nodes: &[Node]) -> String {
             }
         };
         match node {
-            Node::Text(text) if raw => output.push_str(text),
+            Node::Text(text) if raw || plaintext => output.push_str(text),
             Node::Text(text) => output.push_str(&escape(text)),
             Node::Comment(text) => {
                 if !(plaintext && text.starts_with("mokly-normalize:")) {

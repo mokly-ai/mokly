@@ -399,6 +399,11 @@ readiness rather than blocking this acceptance round on further startup work.
   Alternatives: A, install base packages; C, prepare a base side when package
   CSS is reached.
 
+- Orchestrator item 37 B (2026-10-20, applied by default (user rule)): write all
+  text raw while plaintext mode is active. Formatting clones keep authored
+  characters and literal entity spellings. Repeated parsing and serialization
+  remain stable. Alternative A preserves escaping but shows different text.
+
 **Comparison filter follow-up (2026-10-20):**
 
 - Orchestrator item 11 A is the selected default under the user rule.

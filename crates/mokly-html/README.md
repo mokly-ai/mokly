@@ -44,6 +44,8 @@ browser repair to documents with `plaintext`, including composed content that
 already carries private metadata. Formatting clones and later foster-parented
 nodes become stable literal text. While plaintext mode is active, serialization
 omits private normalization attributes from cloned tags and private markers.
+It writes all text raw, including text inside formatting clones and later
+nodes, so authored ampersands, markup, and entity spellings stay literal.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 Sidecar style elements carry typed owner annotations through HTML reparsing.
