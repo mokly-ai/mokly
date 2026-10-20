@@ -73,6 +73,24 @@ test("a detail from another deployment is reported and not installed", async () 
   assert.deepEqual(fixture.source.detailFailures, []);
 });
 
+test("a source that reloads on another deployment keeps the detail loading", async () => {
+  const fixture = controllerFixture(indexFixture());
+  fixture.source.reloadsOnDeployment = true;
+  fixture.navigate("/view/guide/");
+  fixture.source
+    .detail("guide")
+    .resolve({ ...detailFixture({ path: "guide" }), deploymentId: OTHER });
+  await flush();
+  assert.equal(fixture.source.deploymentChanges, 1);
+  assert.equal(fixture.commits.length, 0);
+  // The full page load replaces the document, so the stage keeps loading.
+  assert.equal(
+    fixture.controller.failed.has(detailKey({ path: "guide" })),
+    false,
+  );
+  assert.deepEqual(fixture.source.detailFailures, []);
+});
+
 test("a newer detail installs with the refetched index of its revision", async () => {
   const fixture = controllerFixture(indexFixture());
   fixture.navigate(`/view/${HOME}/`);

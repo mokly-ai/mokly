@@ -28,6 +28,11 @@ export interface ShellDataSource {
    */
   deploymentChanged(): void;
   /**
+   * Whether `deploymentChanged` replaces the document with a full page load.
+   * The stage of such a source keeps loading until the new document arrives.
+   */
+  readonly reloadsOnDeployment?: boolean;
+  /**
    * A detail could not be loaded or accepted; the entry shows its unavailable
    * state with retry. An embedded host is told once per failed load.
    */

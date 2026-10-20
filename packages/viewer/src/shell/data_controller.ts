@@ -212,8 +212,11 @@ export class ShellDataController {
       this.#host.versionError(outcome.error);
       return;
     }
-    if (outcome.kind === "deployment") this.#source?.deploymentChanged();
-    else this.#source?.detailFailed?.(request);
+    if (outcome.kind === "deployment") {
+      this.#source?.deploymentChanged();
+      // A full page load replaces this document, so the stage keeps loading.
+      if (this.#source?.reloadsOnDeployment) return;
+    } else this.#source?.detailFailed?.(request);
     this.#failed = new Set(this.#failed).add(detailKey(request));
     this.#changed();
   }

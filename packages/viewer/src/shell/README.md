@@ -207,12 +207,15 @@ details as one snapshot and rebinds the route and the disclosures to it;
 `data_store.ts` binds the controller to the store, and `data_context.tsx`
 exposes the routed delivery and the live render capability. The stage renders
 the frames once the routed details arrive; until then `stage_delivery.tsx`
-shows the loading state, or the unavailable state with retry. The element
-generation of `frame_source_hook.ts` advances only when a frame's
-`documentKey` changes at the same source, so a publication reloads only the
-frames whose document changed. Saved component view records supplied by prop
-controls keep their index `documentKey`. Only a temporary render URL bypasses
-that key.
+shows the loading state, or the unavailable state with retry. A detail of
+another deployment is not a failed load in the standalone shell, whose source
+declares that it reloads the page: its stage keeps the loading state until the
+full page load. An embedded host keeps its state and shows the unavailable
+state with retry. The element generation of `frame_source_hook.ts` advances
+only when a frame's `documentKey` changes at the same source, so a publication
+reloads only the frames whose document changed. Saved component view records
+supplied by prop controls keep their index `documentKey`. Only a temporary
+render URL bypasses that key.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical
