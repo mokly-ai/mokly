@@ -9,22 +9,24 @@ use crate::remote::contracts::{ClockMillisMock, ClockStampMock, ClockWaitMock};
 
 use super::harness_tests::Case;
 
-pub(super) fn clock(case: Case, events: Arc<Mutex<Vec<String>>>) -> Arc<Unimock> {
+pub(super) fn clock(case: Case, events: Arc<Mutex<Vec<String>>>, stuck: bool) -> Arc<Unimock> {
     let stamp = ClockStampMock
         .each_call(matching!())
         .returns("20261006T120000Z".to_owned());
     let millis = ClockMillisMock.each_call(matching!()).returns(1000u128);
-    if matches!(
-        case,
-        Case::RetryStop
-            | Case::CompletedOnRetry
-            | Case::CompletedOnFinal
-            | Case::CleanupWarmup
-            | Case::CleanupSuites
-            | Case::CleanupFailedSuite
-            | Case::InterruptCleanupWarmup
-            | Case::InterruptCleanupSuites
-    ) {
+    if stuck
+        || matches!(
+            case,
+            Case::RetryStop
+                | Case::CompletedOnRetry
+                | Case::CompletedOnFinal
+                | Case::CleanupWarmup
+                | Case::CleanupSuites
+                | Case::CleanupFailedSuite
+                | Case::InterruptCleanupWarmup
+                | Case::InterruptCleanupSuites
+        )
+    {
         let wait =
             ClockWaitMock
                 .each_call(matching!(_))
