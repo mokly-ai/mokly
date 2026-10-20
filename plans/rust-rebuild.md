@@ -2450,6 +2450,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
             changed, they and the Serve Card panes still passed.
     - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
       temporary prop edit stays out of local storage. Separate branch.
+      - [x] Follow-up F9b item 3: `serve_temporary_props_status.spec.ts`
+            checks that a temporary edit leaves local storage unchanged and
+            that a reload shows the saved props. A mutation that stores the
+            draft fails it.
     - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
       split rule, with no recorded exception. Separate branch.
     - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
