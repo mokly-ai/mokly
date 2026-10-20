@@ -115,3 +115,26 @@ export const Saved={};`,
     assert.equal(response.status, 200, await response.text());
   },
 );
+
+test(
+  "an omitted integer control step keeps its schema multiple",
+  { timeout: 120_000 },
+  async (context) => {
+    const root = await consumer(context, {
+      "specs/number.mockup.ts": `import React from 'react';
+import {defineScreen} from '@mokly/mokly';
+export default defineScreen({title:'Number',description:'',relatedDocs:[],
+  propSchema:{type:'object',additionalProperties:false,properties:{count:{type:'integer',multipleOf:0.5}}},
+  props:{count:0},controls:{count:{kind:'number'}},render:({count})=>React.createElement('p',null,count)});`,
+    });
+    const result = await command(
+      root,
+      "build",
+      ["--no-changes"],
+      "plain",
+      {},
+      context.signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+  },
+);

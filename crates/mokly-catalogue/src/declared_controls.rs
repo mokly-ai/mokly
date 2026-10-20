@@ -12,6 +12,19 @@ use serde_json::Number;
 
 use crate::diagnostic::{Code, Issue};
 
+/// Validate normalized authored limits before filling defaults from the schema.
+pub(crate) fn prepare(
+    schema: &PropSchema,
+    controls: &BTreeMap<String, ComponentControl>,
+    props: &Props,
+    source: &SourceLocation,
+) -> Result<BTreeMap<String, ComponentControl>, Issue> {
+    let mut normalized = controls.clone();
+    normalized.values_mut().for_each(normalize);
+    validate(schema, &normalized, props, source)?;
+    Ok(effective(schema, &normalized))
+}
+
 /// Store effective numeric bounds so every read-model consumer sees the same limits.
 pub(crate) fn effective(
     schema: &PropSchema,
@@ -19,7 +32,6 @@ pub(crate) fn effective(
 ) -> BTreeMap<String, ComponentControl> {
     let mut effective = controls.clone();
     for (name, control) in &mut effective {
-        normalize(control);
         let Some(property) = schema
             .properties
             .as_ref()

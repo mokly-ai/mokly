@@ -2232,6 +2232,7 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       re-review once, and report the rest.
   - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
         Round every authored number, including schema keywords, with warnings.
+  - CLI defaults fix1 review 3, finding 2: control-only unsafe numbers lack warnings. Severity Medium, effort Medium. Recommended A: agree field paths, messages, and duplicate rules, then warn on authored control numbers. Broader preparation tracking is option B, Large. Wait for the user.
   - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
   - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
   - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.

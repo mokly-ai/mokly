@@ -87,14 +87,12 @@ pub(crate) fn prepare(
             source,
         )?;
         props::validate(&validator, &input.props, None, parsed, source)?;
-        let controls = input
-            .controls
-            .as_ref()
-            .map(|controls| declared_controls::effective(validator.schema(), controls))
-            .unwrap_or_else(|| controls::derive(validator.schema()));
-        if input.controls.is_some() {
-            declared_controls::validate(validator.schema(), &controls, &input.props, source)?;
-        }
+        let controls = match &input.controls {
+            Some(controls) => {
+                declared_controls::prepare(validator.schema(), controls, &input.props, source)?
+            }
+            None => controls::derive(validator.schema()),
+        };
         Ok((schemes, validator, controls))
     };
     match result() {
