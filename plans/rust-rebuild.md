@@ -2538,6 +2538,9 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Follow-up: share a parsed dependency-input model for identity and source validation.
+    Effort Large. Covers pnpm/Yarn review finding 2. Previous lockfile-only examples: none found.
+    Review and regression evidence: `.context/base-pnpm-yarn/`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.

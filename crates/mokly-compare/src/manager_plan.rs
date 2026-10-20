@@ -5,6 +5,7 @@ use crate::error::{Error, Result};
 use crate::inputs::Inputs;
 use crate::local_packages;
 use crate::manager::{Manager, Root, version_major};
+use crate::manager_classic::Configuration;
 use crate::manager_yaml;
 
 pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>> {
@@ -77,6 +78,11 @@ pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>>
             return Err(Error::UnsupportedManager);
         }
         roots.push(Root {
+            classic: if manager == Manager::YarnClassic {
+                Some(Configuration::read(inputs, &directory)?)
+            } else {
+                None
+            },
             directory,
             manager,
             requested,

@@ -1,6 +1,6 @@
 //! Fixed install arguments and process settings for supported manager dialects.
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::process;
 
@@ -57,6 +57,7 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
             ("--lockfile-dir", ""),
         ],
         Manager::YarnClassic => &[
+            ("--use-yarnrc", ".yarnrc"),
             ("--cache-folder", ".yarn-cache"),
             ("--modules-folder", "node_modules"),
             ("--global-folder", ".yarn-global"),
@@ -85,6 +86,13 @@ pub(crate) fn arguments(root: &Root, destination: &Path) -> Vec<OsString> {
         }
     }
     args
+}
+
+pub(crate) fn external_classic_setting(request: &Command, name: &OsStr) -> bool {
+    let name = name.to_string_lossy().to_ascii_lowercase();
+    request.program == "yarn"
+        && request.args.iter().any(|arg| arg == "--use-yarnrc")
+        && (name.starts_with("yarn_") || name.starts_with("npm_config_"))
 }
 
 pub(crate) fn caches(manager: Manager) -> &'static [&'static str] {

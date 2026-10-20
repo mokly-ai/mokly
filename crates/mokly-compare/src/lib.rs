@@ -148,6 +148,10 @@ mod manager_plan_tests;
 mod manager_lockfiles_tests;
 
 #[cfg(test)]
+#[path = "_tests_/manager_classic_tests.rs"]
+mod manager_classic_tests;
+
+#[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]
 mod manager_command_tests;
 

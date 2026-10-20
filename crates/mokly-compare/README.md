@@ -69,6 +69,11 @@ include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
 `base-dependencies` warning. Cancellation propagates without a warning.
 
+Yarn planning collects repository ancestor settings. Berry uses the nearest
+linker setting and rejects the existing restricted keys anywhere in that chain.
+Classic copies only a confined offline mirror setting into private configuration.
+It excludes external configuration and keeps the fixed install policy.
+
 The caller retains the source and dependency leases until its sidecar has
 finished using their directories. `Resolved` returns the primary
 `node_modules` path, the complete `ModuleResolution` value, and typed

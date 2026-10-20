@@ -49,6 +49,13 @@ impl Builder for Install<'_> {
             self.owner.install_bytes,
         )?;
         for root in &self.roots {
+            if let Some(config) = &root.classic {
+                let path = destination.join(&root.directory).join(".yarnrc");
+                self.owner.storage.remove(&path)?;
+                self.owner
+                    .storage
+                    .write(&path, &config.contents(destination)?)?;
+            }
             let timeout = self.deadline.saturating_sub(self.owner.clock.now());
             if timeout.is_zero() {
                 return Err(Error::InstallTimeout);

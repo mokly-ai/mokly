@@ -18,6 +18,7 @@ fn manager_install_flags_disable_network_scripts_and_external_storage() {
             manager,
             requested: None,
             version: String::new(),
+            classic: None,
         };
         let args = arguments(&root, Path::new("/private"));
         if manager == Manager::Pnpm {

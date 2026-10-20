@@ -1,5 +1,6 @@
 //! Host package-manager processes with owned trees and bounded output pipes.
 
+use std::env;
 use std::io::Read;
 use std::process::{self, Stdio};
 use std::sync::Arc;
@@ -30,6 +31,11 @@ struct OwnedChild {
 impl Spawner for SystemSpawner {
     fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
         let mut command = command(request)?;
+        for (name, _) in env::vars_os() {
+            if manager_command::external_classic_setting(request, &name) {
+                command.env_remove(name);
+            }
+        }
         manager_command::environment(request, &mut command);
         command
             .args(&request.args)

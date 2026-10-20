@@ -1,6 +1,7 @@
 //! Supported package-manager dialects and exact version checks.
 
 use crate::error::{Error, Result};
+use crate::manager_classic::Configuration;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum Manager {
@@ -48,6 +49,7 @@ pub(crate) struct Root {
     pub(crate) manager: Manager,
     pub(crate) requested: Option<String>,
     pub(crate) version: String,
+    pub(crate) classic: Option<Configuration>,
 }
 
 impl Root {

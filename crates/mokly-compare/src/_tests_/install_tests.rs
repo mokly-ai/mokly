@@ -33,6 +33,7 @@ fn npm(directory: &str) -> Root {
         manager: Manager::Npm,
         requested: None,
         version: "11.0.0".into(),
+        classic: None,
     }
 }
 
