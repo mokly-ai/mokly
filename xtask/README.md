@@ -148,7 +148,9 @@ inclusive UTC end dates, and a maximum 31-day window under the
 
 `npm run dependencies:check:rust` follows the npm audit in both modes. It
 installs locked `cargo-audit` 0.22.2 and audits `Cargo.lock` against the live
-RustSec database. Vulnerabilities and audit errors stop the suite. The daily
+RustSec database with `.cargo/audit.toml`. Unexcepted vulnerabilities and audit
+errors stop the suite. The configuration records the single dated exception
+and its review conditions. The daily
 audit and release publish job run the same command, including when release
 verification reuses CI evidence. npm exceptions do not cover Rust findings.
 

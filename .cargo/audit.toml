@@ -1,0 +1,6 @@
+[advisories]
+# Item 58B: applied by default (user rule), 2026-10-20.
+# lightningcss 1.0.0-alpha.72 (feature bundler) -> parcel_sourcemap 2.1.1
+# -> rkyv 0.7.46. Mokly never reads or writes source maps.
+# Review by 2027-01-31 or at the next lightningcss update, whichever comes first.
+ignore = ["RUSTSEC-2026-0235"]

@@ -56,7 +56,11 @@ exceptions. `npm run dependencies:check:rust` audits every crate in the committe
 `Cargo.lock` against the current RustSec advisory database. It installs pinned
 `cargo-audit` 0.22.2 with its locked dependencies before running the audit.
 Reported vulnerabilities and audit errors fail verification. Informational
-warnings remain visible. There are no approved Rust advisory exceptions.
+warnings remain visible. The repository `.cargo/audit.toml` configuration exempts
+only RUSTSEC-2026-0235. `lightningcss` 1.0.0-alpha.72 with `bundler` requires
+`parcel_sourcemap` 2.1.1, which requires `rkyv` 0.7.46. Mokly never reads or
+writes source maps. Review this exception by 2027-01-31 or at the next
+`lightningcss` update, whichever comes first. Every other vulnerability fails.
 The repository suite, daily dependency audit, and release verification run it.
 A release with reusable CI evidence still runs a fresh Rust audit. The daily
 npm update automation keeps its npm report and does not update Rust crates.

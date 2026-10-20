@@ -637,10 +637,15 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
   - [x] Add the Rust advisory audit to Repository, the daily dependency audit,
         and release verification, including reused CI evidence.
   - [x] Add the generated-TypeScript byte-identity gate.
-- [ ] Resolve RUSTSEC-2026-0235 before the new advisory gate can pass.
-      `lightningcss` 1.0.0-alpha.72 uses `parcel_sourcemap` 2.1.1, which
-      requires vulnerable `rkyv` 0.7.46. No compatible published update exists.
-      Keep the strict audit until the user approves a dependency repair or exception.
+- [x] Resolve RUSTSEC-2026-0235 with item 58 option B, applied by default (user rule), 2026-10-20.
+      Exempt only this advisory in `.cargo/audit.toml`. `lightningcss`
+      1.0.0-alpha.72 with `bundler` requires `parcel_sourcemap` 2.1.1 and
+      `rkyv` 0.7.46. Mokly never reads or writes source maps. Review by
+      2027-01-31 or at the next lightningcss update, whichever comes first.
+      Keep every other vulnerability failing. The alternative was a dependency
+      repair without a compatible published update. The narrow exception lets
+      the audit protect all other dependencies.
+      Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
 - [x] Apply review 2 findings 1 to 8: isolate xtask builds, preserve LF text,
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
