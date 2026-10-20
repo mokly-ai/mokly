@@ -6,6 +6,7 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { ChevronIcon } from "./icons.js";
 import { useShellIdentifier } from "./identifier_context.js";
+import { activateDisclosure } from "./nav_disclosure.js";
 import { NavFilter, NavStatus } from "./nav_filter.js";
 import {
   catalogueNavSections,
@@ -53,7 +54,10 @@ function SectionRows({
       }}
       open={open}
     >
-      <summary className="mbk-nav-section-head">
+      <summary
+        className="mbk-nav-section-head"
+        onClick={(event) => activateDisclosure(event, store, section.key, open)}
+      >
         <span aria-hidden="true" className="mbk-nav-section-chevron">
           <ChevronIcon />
         </span>

@@ -158,11 +158,3 @@ impl Renamer<'_> {
         }
     }
 }
-
-pub(crate) fn grouping(name: &str) -> bool {
-    name.ends_with("keyframes")
-        || matches!(
-            name,
-            "media" | "supports" | "container" | "layer" | "document" | "scope" | "starting-style"
-        )
-}

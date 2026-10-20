@@ -1,7 +1,8 @@
 /**
  * Selected live comparisons in Serve: a diff mode requests only the shown
- * entry's comparison, a refresh keeps that scope, and a sibling variant keeps
- * the mode while it requests its own result.
+ * entry's comparison, a refresh keeps that scope, and moving from a saved
+ * variant to its parent keeps the mode while the parent requests its own
+ * result.
  */
 
 import { expect } from "@playwright/test";
@@ -9,6 +10,7 @@ import { expect } from "@playwright/test";
 import { test } from "./serve_comparison_test.js";
 import {
   awaitSelectedComparison,
+  expectCardPane,
   expectPresentedPane,
   loadComparison,
   PANE_SOURCE,
@@ -61,25 +63,23 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   page,
   changes,
 }) => {
-  // Card and its saved variant both changed, so each offers a comparison.
+  // Card and its Featured variant both changed, so each offers a comparison.
+  // The changed .accent rule belongs to Card, so Featured's evidence names its
+  // parent as the owner.
   const card = changes.paths.component;
-  const variant = changes.paths.changedVariant;
+  const featured = changes.paths.changedVariant;
   const requests = selectedRequests(page);
   await page.goto(`/view/${card}/`);
   await chooseViewport(page, "mobile");
   await chooseVariant(page, "Featured");
-  await expect(page).toHaveURL(new RegExp(`/view/${variant}/$`, "u"));
+  await expect(page).toHaveURL(new RegExp(`/view/${featured}/$`, "u"));
   await loadComparison(page, "Overlay");
-  await expect(
-    page.frameLocator(".mb-pane--before iframe").locator("h2"),
-  ).toHaveText("Featured Before");
-  await expect(
-    page.frameLocator(".mb-pane--after iframe").locator("h2"),
-  ).toHaveText("Featured After");
+  await expectCardPane(page, "before", "Featured Before");
+  await expectCardPane(page, "after", "Featured After");
   await loadComparison(page, "Refresh comparison");
   expect(requests).toHaveLength(2);
   for (const [index, request] of requests.entries()) {
-    expect(request.searchParams.get("path")).toBe(variant);
+    expect(request.searchParams.get("path")).toBe(featured);
     expect(request.searchParams.size).toBe(index === 0 ? 1 : 2);
   }
   expect(requests[1]!.searchParams.get("refresh")).toBe("1");
@@ -87,9 +87,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await awaitSelectedComparison(page, () => chooseVariant(page, "Card"));
   await expect(page).toHaveURL(new RegExp(`/view/${card}/$`, "u"));
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
-  await expect(
-    page.frameLocator(".mb-pane--after iframe").locator("h2"),
-  ).toHaveText("Card content");
+  await expectCardPane(page, "before", "Card content");
+  await expectCardPane(page, "after", "Card content");
   expect(requests).toHaveLength(3);
   expect(requests.at(-1)!.searchParams.get("path")).toBe(card);
 });

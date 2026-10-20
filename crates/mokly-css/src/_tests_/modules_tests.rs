@@ -192,3 +192,34 @@ fn nested_at_rule_preludes_stay_as_authored() {
     assert_eq!(css, expected);
     assert_eq!(exports.len(), 3);
 }
+
+#[test]
+fn empty_wrappers_and_icss_fail_only_where_names_are_scoped() {
+    let path = "ui/preludes.module.css";
+    let class = format!(".{}{{", scoped_name(path, "a"));
+    for source in [
+        ".a{@supports selector(:global()){color:red}}",
+        "@supports selector(:global(.b)){.a{color:red}}",
+        ".a{@foo :export{color:red}}",
+        "@foo :import(x){.a{color:red}}",
+    ] {
+        let (css, _) = scope(path, source).unwrap();
+        assert_eq!(css, source.replace(".a{", &class), "{source}");
+    }
+    for (source, message) in [
+        (
+            ".a{@scope (:global()){color:red}}",
+            ":global() has no selector",
+        ),
+        (".a :local(){color:red}", ":local() has no selector"),
+        ("@scope (:export){.a{color:red}}", "authored ICSS rule"),
+        (".a{@scope (:import(x)){color:red}}", "authored ICSS rule"),
+        (
+            "@keyframes :local() spin{to{opacity:0}}.a{animation:spin 1s}",
+            ":local() has no selector in ui/preludes.module.css:1:12; add a selector inside it or remove it",
+        ),
+    ] {
+        let error = scope(path, source).unwrap_err().to_string();
+        assert!(error.contains(message), "{source}: {error}");
+    }
+}

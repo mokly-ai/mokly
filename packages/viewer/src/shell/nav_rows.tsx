@@ -3,6 +3,7 @@
 import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
+import { activateDisclosure } from "./nav_disclosure.js";
 import { navRowStyle } from "./nav_guides.js";
 import { LeafRow } from "./nav_leaf_rows.js";
 import { navNodeVisible, UNFILTERED_SELECTION } from "./nav_model.js";
@@ -49,7 +50,11 @@ function GroupRow(props: {
       }}
       open={open}
     >
-      <summary className="mbk-nav-row" style={navRowStyle(props.depth)}>
+      <summary
+        className="mbk-nav-row"
+        onClick={(event) => activateDisclosure(event, store, key, open)}
+        style={navRowStyle(props.depth)}
+      >
         <span className="mbk-nav-ico folder">
           <FolderIcon />
           <FolderOpenIcon />

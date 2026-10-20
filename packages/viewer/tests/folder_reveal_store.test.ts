@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import { activateDisclosure } from "../src/shell/nav_disclosure.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { shellStore } from "../src/shell/store_actions.js";
 import { withFilterSelection } from "../src/shell/store_filters.js";
@@ -70,6 +71,60 @@ function fakeStorage(context: test.TestContext): Map<string, string> {
   });
   return saved;
 }
+
+test("folder activation records its close before filter reveal and baseline restoration", (context) => {
+  const saved = fakeStorage(context);
+  const model = baseModel();
+  const folder = "folder:specs:product/browse";
+  const { state, store } = harness(model, initialState(model, "/"));
+  store.setDisclosure(folder, true);
+  let prevented = 0;
+  activateDisclosure(
+    { preventDefault: () => prevented++ },
+    store,
+    folder,
+    true,
+  );
+  assert.equal(prevented, 1);
+  const beforeFilter = saved.get("mokly:nav-disclosure:v4");
+  assert.ok(beforeFilter);
+  assert.equal(state().disclosures[folder], false);
+  assert.equal(JSON.parse(beforeFilter)[folder], false);
+
+  store.setSearch("home");
+  assert.equal(state().disclosures[folder], true);
+  assert.equal(state().filterBaseline?.[folder], false);
+  assert.equal(saved.get("mokly:nav-disclosure:v4"), beforeFilter);
+
+  store.setDisclosure(folder, false);
+  assert.equal(state().disclosures[folder], false);
+  assert.equal(saved.get("mokly:nav-disclosure:v4"), beforeFilter);
+  store.setSearch("");
+  assert.equal(state().disclosures[folder], false);
+  assert.equal(state().filterBaseline, undefined);
+});
+
+test("disclosure activation leaves native fallback intact and opens interactive groups", () => {
+  const choices: [string, boolean][] = [];
+  let prevented = 0;
+  const event = { preventDefault: () => prevented++ };
+  const store = {
+    interactive: false,
+    setDisclosure: (key: string, open: boolean) => choices.push([key, open]),
+  };
+  activateDisclosure(event, undefined, "section:specs", false);
+  activateDisclosure(event, store, "section:specs", false);
+  assert.equal(prevented, 0);
+  assert.deepEqual(choices, []);
+  activateDisclosure(
+    event,
+    { ...store, interactive: true },
+    "section:specs",
+    false,
+  );
+  assert.equal(prevented, 1);
+  assert.deepEqual(choices, [["section:specs", true]]);
+});
 
 test("revealFolder opens and focuses a folder, saving v4 without touching earlier keys", (context) => {
   const saved = fakeStorage(context);

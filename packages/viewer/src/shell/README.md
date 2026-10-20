@@ -64,7 +64,11 @@ the data it reads.
 native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
 carrying their entry-kind glyph, and a screen or component's variants as a
 container the row's chevron button discloses, because a row cannot be both a
-link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
+link and a `<summary>`. `nav_disclosure.ts` records interactive folder and
+section choices during summary activation, before queued toggle events.
+Search therefore receives the last choice as its pre-filter baseline.
+Non-interactive summaries retain native behavior.
+`nav_tree.ts` lists a folder's own document, page, or
 use case as the folder's first child row, labelled `Overview` when its title
 is the folder's title, and renders a folder whose own page is a screen or
 component as that entry's row, whose container holds the variants and then
@@ -275,7 +279,9 @@ derived from it: `use_workspace_data.ts` exposes loading until the routed
 detail is accepted, and the failed state with retry after a failed or rejected
 load, rather than publishing a partial or false-empty list. It keeps one
 entry-owned workspace object, so a publication that replaces the detail keeps
-loaded usage and local editor state.
+loaded usage and local editor state. `workspace_usage.tsx` keys each Usage row
+by its entry and removal state only, so a publication that changes a row's
+comparison eligibility keeps its link element and the focus on it.
 
 Standalone composition lives in `src/standalone`: `shell.tsx` loads the index
 from the stub's origin, shows the loading, failed, and version states, and

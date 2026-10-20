@@ -36,10 +36,15 @@ bare forms. `@counter-style` names and list-style references,
 `view-transition-name`, custom properties and `var(--token)`, grid-area
 names, and container names stay global. An `@scope` prelude is localized
 like a selector, and its local names are exported and count for collisions.
-A `:global()` or `:local()` wrapper with no selector fails, wherever it
-occurs. CSS whitespace means space, tab, line feed, carriage return, and form
-feed; another Unicode space is a name character, and an escape consumes the
-one whitespace character that ends it.
+In a selector, an `@scope` prelude, or a keyframes name, at any nesting
+level, a `:global()` or `:local()` wrapper with no selector fails. The
+preludes of at-rules other than `@scope` and `@keyframes` are never scoped:
+they keep their text as authored, wrappers included, as css-loader's
+`postcss-modules-local-by-default` does. Rejecting empty wrappers in those
+preludes was not chosen, because css-loader builds such stylesheets. CSS
+whitespace means space, tab, line feed, carriage return, and form feed;
+another Unicode space is a name character, and an escape consumes the one
+whitespace character that ends it.
 
 The scoper does not optimize, prefix, polyfill, or normalize declarations,
 selectors, comments, `@import`s, `url()`s, `image-set()` options, fallbacks,
@@ -54,16 +59,18 @@ PostCSS concern.
 
 ### Composition And Exports
 
-Authored `:import(...)`, `:export`, and `@value` fail before scoping with
-the catalogued diagnostics. `composes` names only a local class defined
-earlier in the same file; a forward or missing name fails with its location,
-which makes local cycles impossible. `composes: name from global` works. A
-`composes` from another file fails as cross-file composition. The default
-export is a plain map of sorted local keys to space-joined values: the owning
-scoped name first, then the composed names in authored order, repeats
-included. Each key that is a valid, non-reserved JavaScript identifier is
-also a named string export with the same value; other keys live on the
-default map only. A plain CSS import supplies no class map.
+Authored `@value` fails at every rule level. Authored `:import(...)` and
+`:export` fail in a selector or an `@scope` prelude, at any nesting level.
+Each failure uses its catalogued diagnostic. `composes` names only a local
+class defined earlier in the same file; a forward or missing name fails with
+its location, which makes local cycles impossible. `composes: name from
+global` works. A `composes` from another file fails as cross-file
+composition. The default export is a plain map of sorted local keys to
+space-joined values: the owning scoped name first, then the composed names in
+authored order, repeats included. Each key that is a valid, non-reserved
+JavaScript identifier is also a named string export with the same value;
+other keys live on the default map only. A plain CSS import supplies no class
+map.
 
 ### Loaders
 

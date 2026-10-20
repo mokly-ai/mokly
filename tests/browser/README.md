@@ -316,6 +316,7 @@ To stage a Changes completion for a Usage-focus check, first use
 `await changes.moveBase("head")`, then `await changes.moveBase("base")`.
 The ref changes preserve the current source and documents. A caller can
 keep its browser page and focused link mounted during both publications.
+`serve_usage_focus.spec.ts` follows this recipe.
 
 The `changed` screen has a matched `.accent` rule from `theme.css`, an
 unresolved root rule, and native component usage. Read `comparisonUrl` from
@@ -332,22 +333,25 @@ deadlines apply. It also records requests to the stable endpoint and holds the
 HEAD renewal of a selected generation. A held renewal's release waits until
 the browser ended the request and the page rendered. Its outcomes report
 whether the page received each response or cancelled the request first.
-`serve_changes_emulation.ts` rewrites the index body into a pending,
+`expectCardPane` checks one pane of a Card comparison by its heading and by
+the `.accent` colour of its side, because Card's own heading is the same on
+both sides. `serve_changes_emulation.ts` rewrites the index body into a pending,
 preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
-publication, and Serve keeps no test seam. `serve_generation_collection.ts`
-fails the next renewal of a generation: that renewal answers 404, and so does
-every request for the generation's files while the generation is gone. For a
-selected generation this emulates Serve's collection of an idle generation,
-and the comparison then gets a new generation. Serve keeps an advertised
-classification generation's `review.json` and recaptures its snapshots, so for
-that generation the failure only exercises the shell's reacquire, and the
-generation returns when the shell reacquires its `review.json`. Specs that run
-the same comparison checks on the copied output and on Serve register them
-from a `*_cases.ts` module. The copied output registers the alignment, input,
-and Scroll together memory cases in `comparison_alignment.spec.ts`,
-`comparison_alignment_input.spec.ts`, and `comparison_regions_toggle.spec.ts`.
-Serve registers them in `serve_comparison_alignment.spec.ts`,
+publication, and Serve keeps no test seam. `serve_generation_removal.ts`
+makes a generation gone once the documents of the given frames have loaded:
+its first renewal answers 404, and every other request for its files answers
+404 and is refused. For a selected generation this emulates Serve's collection
+of an idle generation, and the comparison then gets a new generation. Serve
+keeps an advertised classification generation's `review.json` and recaptures
+its snapshots, so for that generation the failure only exercises the shell's
+reacquire, and the generation returns when the shell reacquires its
+`review.json` after the renewal. Specs that run the same comparison checks on
+the copied output and on Serve register them from a `*_cases.ts` module. The
+copied output registers the alignment, input, and Scroll together memory cases
+in `comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
+`comparison_regions_toggle.spec.ts`. Serve registers them in
+`serve_comparison_alignment.spec.ts`,
 `serve_comparison_alignment_input.spec.ts`, and
 `serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
 through its own setup are helpers instead. `light_only_band.ts` checks the
@@ -385,6 +389,10 @@ marks distinguish changed previews from retained ones without a shell reload.
 The browser leaves the page before the fixture closes its process and directory.
 `watch_updates`, `watch_moves`, `watch_folders`, and `watch_shutdown` cover the
 watched publication and disclosure cases.
+`toggleFolder` waits for an unfiltered click's saved disclosure choice before
+returning. Filtered clicks keep storage unchanged under the disclosure contract.
+`disclosure_order.spec.ts` holds folder and section close events across search.
+It checks mouse and keyboard activation, reveal, and baseline restoration.
 
 `large_changes` and `large_watch` run the opt-in large-fixture harness with
 small HTML and React inputs. They verify native base preparation, delivered
