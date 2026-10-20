@@ -27,7 +27,7 @@ export function selectBrowserShard(inventory, shard, costs = weights) {
   const limit = Math.ceil(
     (inventory.tests.length / shard.total) * BROWSER_SHARD_SHARE_LIMIT,
   );
-  const partitions = Array.from(
+  let partitions = Array.from(
     { length: Math.min(shard.total, specs.length) },
     () => ({ files: [], tests: [], cost: 0 }),
   );
@@ -48,6 +48,8 @@ export function selectBrowserShard(inventory, shard, costs = weights) {
     selected.tests.push(...spec.tests);
     selected.cost += spec.cost;
   }
+  if (partitions.some((partition) => partition.tests.length > limit))
+    partitions = repairCapacity(specs, partitions.length, limit) ?? partitions;
   const selected = partitions[shard.index - 1];
   if (!selected?.tests.length)
     throw new Error("Playwright test discovery was empty");
@@ -57,6 +59,62 @@ export function selectBrowserShard(inventory, shard, costs = weights) {
       compareFiles(left.id, right.id),
     ),
   };
+}
+
+/** Search only when greedy cost placement misses a feasible count packing. */
+function repairCapacity(specs, total, limit) {
+  if (specs.some((spec) => spec.tests.length > limit)) return undefined;
+  const ordered = [...specs].sort(
+    (left, right) =>
+      right.tests.length - left.tests.length ||
+      right.cost - left.cost ||
+      compareFiles(left.file, right.file),
+  );
+  const bins = Array.from({ length: total }, () => ({
+    specs: [],
+    count: 0,
+    cost: 0,
+  }));
+  const rejected = new Set();
+  const place = (index) => {
+    if (index === ordered.length) return bins.every((bin) => bin.count > 0);
+    const remaining = ordered.length - index;
+    const empty = bins.filter((bin) => bin.count === 0).length;
+    if (remaining < empty) return false;
+    const key = `${index}:${bins
+      .map((bin) => bin.count)
+      .sort((a, b) => a - b)
+      .join(",")}`;
+    if (rejected.has(key)) return false;
+    const spec = ordered[index];
+    const seenCounts = new Set();
+    const candidates = [...bins].sort((left, right) => left.cost - right.cost);
+    for (const bin of candidates) {
+      if (
+        bin.count + spec.tests.length > limit ||
+        seenCounts.has(bin.count) ||
+        (remaining === empty && bin.count > 0)
+      )
+        continue;
+      seenCounts.add(bin.count);
+      bin.specs.push(spec);
+      bin.count += spec.tests.length;
+      bin.cost += spec.cost;
+      if (place(index + 1)) return true;
+      bin.specs.pop();
+      bin.count -= spec.tests.length;
+      bin.cost -= spec.cost;
+    }
+    rejected.add(key);
+    return false;
+  };
+  return place(0)
+    ? bins.map((bin) => ({
+        files: bin.specs.map((spec) => spec.file),
+        tests: bin.specs.flatMap((spec) => spec.tests),
+        cost: bin.cost,
+      }))
+    : undefined;
 }
 
 /** Exact file filters keep selected specs whole on POSIX and Windows paths. */

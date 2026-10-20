@@ -2577,6 +2577,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Evidence: `.context/ci-shard-balance/remote-summary.json`,
       `calibration-candidates.json`, and `calibrated-partition.json`.
 
+- [x] CI round 5 review finding 1B: repair a feasible count-cap overflow
+      with deterministic whole-file capacity search. Preserve measured-cost
+      placement when it fits. Keep every test and the existing cap failure
+      when no valid placement exists. The five-file regression failed before
+      the fix and passed afterward. Finding 2A corrects the stale six-Testbox
+      responsibility to seven. Evidence: `.context/ci-shard-balance/review.md`,
+      `review-cap-red.log`, and `review-cap-green.log`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public

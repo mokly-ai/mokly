@@ -63,6 +63,31 @@ test("count capacity takes priority over the least-cost partition", () => {
   );
 });
 
+test("a cheap large spec repairs a feasible greedy count overflow", () => {
+  const full = inventory({ a: 4, b: 4, c: 4, d: 4, e: 8 });
+  const weights = { a: 100, b: 100, c: 100, d: 100, e: 1 };
+  const parts = [1, 2, 3, 4].map((index) =>
+    selectBrowserShard(full, { index, total: 4 }, weights),
+  );
+  validateBrowserShardBalance(
+    parts.map((part, index) => ({
+      assignedTests: part.tests,
+      shard: { index: index + 1 },
+    })),
+    full.tests.length,
+    4,
+  );
+  assert.deepEqual(parts.map((part) => part.tests.length).sort(), [4, 4, 8, 8]);
+  assert.deepEqual(parts.flatMap((part) => part.files).sort(), full.files);
+  assert.deepEqual(
+    parts
+      .flatMap((part) => part.tests)
+      .map((entry) => entry.id)
+      .sort(),
+    full.tests.map((entry) => entry.id).sort(),
+  );
+});
+
 test("discovery includes new files, excludes removed files and fixes tie order", () => {
   const full = inventory({ a: 1, b: 1, new: 1, other: 1 });
   const weights = { a: 2, b: 2, removed: 2 };
@@ -111,6 +136,27 @@ test("an oversized spec stays intact for the existing evidence rejection", () =>
   assert.throws(
     () => selectBrowserShard(full, { index: 4, total: 4 }, {}),
     /Playwright test discovery was empty/,
+  );
+});
+
+test("an impossible whole-file packing still runs every discovered test", () => {
+  const full = inventory({ a: 4, b: 4, c: 4, d: 4, e: 4 });
+  const parts = [1, 2, 3, 4].map((index) =>
+    selectBrowserShard(full, { index, total: 4 }, {}),
+  );
+  assert.deepEqual(parts.flatMap((part) => part.files).sort(), full.files);
+  assert.equal(parts.flatMap((part) => part.tests).length, full.tests.length);
+  assert.throws(
+    () =>
+      validateBrowserShardBalance(
+        parts.map((part, index) => ({
+          assignedTests: part.tests,
+          shard: { index: index + 1 },
+        })),
+        full.tests.length,
+        4,
+      ),
+    /above the limit of 7/,
   );
 });
 

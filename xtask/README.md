@@ -25,7 +25,7 @@ internal binary and is not published to npm or crates.io.
   tags. Check the committed public API reports.
 - Keep local gate coverage equal to CI checks on the host platform. Every
   Native command has local coverage; `npm run build` covers the host build.
-- Run explicit and automatic remote checks on six Testboxes with complete
+- Run explicit and automatic remote checks on seven Testboxes with complete
   shard evidence.
 - Stop warmed boxes on success, failure, SIGINT, SIGTERM, and SIGHUP.
 

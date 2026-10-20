@@ -9,8 +9,11 @@ rules live in the [verification contract](../../docs/protocol/ci-verification.md
 The strict runner discovers the complete Playwright inventory before selecting
 a shard. Both hosted CI and the remote executor call this runner. It assigns
 whole specs by descending estimated cost to the least-cost shard that has
-room under the existing test-count cap. An oversized spec still executes;
-the aggregate reports its existing count-limit failure.
+room under the existing test-count cap. If greedy placement exceeds the cap,
+a deterministic capacity search retries whole-file placements, largest test
+counts first. It retains the weighted assignment when that assignment fits.
+If no complete nonempty assignment fits, every spec still executes and the
+aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
 inputs in estimated milliseconds per test. They combine the per-test
