@@ -1894,7 +1894,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         `.a[x]:global(.b)` no longer fails the token check.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
-        (decision item 36).
+        (pending user decision).
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and

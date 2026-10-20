@@ -1,7 +1,9 @@
 //! Mokly's CSS scanners keep authored nesting on the heap.
 //!
-//! Each test runs on a 64 KiB thread, far below the 2 MiB worker stacks, with
-//! nesting that a recursive scanner could not survive on that stack.
+//! The tests run on 64 KiB threads, far below the 2 MiB worker stacks, with
+//! nesting that a recursive scanner could not survive on that stack. The rule
+//! walk test uses 256 KiB and 2,000 levels, because each selector also goes
+//! through lightningcss and each rule copies its inherited conditions.
 
 use std::thread;
 
