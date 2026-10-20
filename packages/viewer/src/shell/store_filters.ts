@@ -54,9 +54,11 @@ export function withRoute(
   return {
     ...next,
     announcement: `Loaded ${viewTitle(catalogue, route.view)}`,
+    comparisonIntent: route.comparison === "side",
     drawerOpen: false,
     expandedFrame: undefined,
     route,
+    routeInstallation: state.routeInstallation + 1,
     selection,
     tagPickerOpen: false,
   };

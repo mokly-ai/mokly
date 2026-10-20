@@ -16,7 +16,6 @@ export interface ComparisonEnvironment {
   baseUrl: string | URL;
   delivery(): ComparisonDelivery;
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
-  initialMode?(): "side" | undefined;
   reportError?(error: unknown): void;
   /**
    * The reader's Scroll together choice for this viewer; without one, Scroll

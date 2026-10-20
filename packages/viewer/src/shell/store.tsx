@@ -196,9 +196,11 @@ function initialShellState(
     initialState,
   );
   if (!embeddedHost) return state;
+  const hosted = hostRoute(catalogue, embeddedHost.selection);
   return {
     ...withFilterSelection(state, embeddedHost.selection),
-    route: hostRoute(catalogue, embeddedHost.selection),
+    comparisonIntent: hosted.comparison === "side",
+    route: hosted,
   };
 }
 

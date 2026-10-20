@@ -91,6 +91,7 @@ export function withHostRoute(
       route.view.kind === "target"
         ? `Loaded ${viewTitle(catalogue, route.view)}`
         : "Loaded Mokly",
+    comparisonIntent: route.comparison === "side",
     disclosures: openDisclosures(state.disclosures, path),
     drawerOpen: false,
     expandedFrame: undefined,
@@ -98,6 +99,7 @@ export function withHostRoute(
       ? openDisclosures(state.filterBaseline, path)
       : undefined,
     route,
+    routeInstallation: state.routeInstallation + 1,
     tagPickerOpen: false,
   };
 }

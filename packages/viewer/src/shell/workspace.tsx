@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
+import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { controlTarget } from "./control_values.js";
@@ -59,6 +60,10 @@ export function ComponentWorkspace({
   const comparison = useComparison({
     effectiveColorScheme: resolvedView.colorScheme,
     eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    eligibilityKnown: comparisonEligibilityKnown(
+      catalogue.publicModel?.changesStatus,
+      workspace.usageDelivery,
+    ),
     historical: data.removed || variant?.removed === true,
     entryId: variantPath ?? entry.path,
     ...(data.component ? { owner: data.component.path } : {}),

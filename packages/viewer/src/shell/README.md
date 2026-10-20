@@ -165,6 +165,12 @@ so Props and highlighting remain read-only until Current is selected.
 resolves, so a removed variant of a moved or case-renamed parent opens in its
 siblings' workspace and keeps their mode. The mode owner also includes the
 index revision, so a publication returns an active comparison to Current.
+`comparison_intent.ts` applies a route's comparison intent once. The store
+counts route installations and keeps the installed route's intent; the
+routed workspace settles it when `comparisonEligibilityKnown` first reports
+final eligibility, and opens Side by side only for an eligible view. A
+publication keeps the count, so it cannot reopen the comparison, and the mode
+owner never reads the address.
 
 `css.ts` concatenates the shared stylesheet. Split string modules preserve
 its exact bytes. The standalone stylesheet adds one rule to it: a root without

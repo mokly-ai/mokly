@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import { useComparisonEnvironment } from "./comparison_context.js";
+import { useComparisonIntent } from "./comparison_intent.js";
 import {
   comparisonDemand,
   type ComparisonDemand,
@@ -57,12 +58,19 @@ export interface ComparisonController {
 export function useComparison({
   effectiveColorScheme,
   eligible,
+  eligibilityKnown,
   historical = false,
   entryId,
   owner,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
+  /**
+   * Whether `eligible` is final for the routed view, as
+   * `comparisonEligibilityKnown` decides. The route's comparison intent waits
+   * for it.
+   */
+  eligibilityKnown: boolean;
   historical?: boolean;
   entryId: string;
   owner?: string;
@@ -217,15 +225,14 @@ export function useComparison({
     [environment],
   );
 
+  // Another comparison environment starts from Current.
   useEffect(() => {
-    setModeState({
-      ownerKey: currentOwner.current,
-      mode:
-        currentEligibility.current && environment?.initialMode?.() === "side"
-          ? "side"
-          : "current",
-    });
-  }, [eligible, environment, ownerKey]);
+    setModeState({ ownerKey: currentOwner.current, mode: "current" });
+  }, [environment]);
+
+  useComparisonIntent(eligible, eligibilityKnown, () =>
+    setModeState({ ownerKey: currentOwner.current, mode: "side" }),
+  );
 
   useEffect(() => {
     if (!eligible) setModeState({ ownerKey, mode: "current" });
