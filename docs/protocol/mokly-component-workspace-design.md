@@ -163,8 +163,9 @@ soon as the detail arrives: in Current before any comparison loads, in a loaded
 comparison, and under either filter. Each reason is one sentence after the
 branch-point sentence, shown once whatever supplies it. A `dependency` reason
 reads only through the changed-files list of the
-[CSS evidence contract](./mokly-css-evidence-presentation.md), and a pure move
-has no reason sentence. Only a record that Changes lists shows reasons. A
+[CSS evidence contract](./mokly-css-evidence-presentation.md), a `screen`
+reason, which only a use case carries, has no sentence, and a pure move has no
+reason sentence. Only a record that Changes lists shows reasons. A
 reason that contradicts its record is dropped: `removed` on a current record,
 `added` on a record with a base side, `screen` outside a use case, and
 `implementation` outside a component parent. A viewer still loads such a

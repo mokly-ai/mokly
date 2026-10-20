@@ -126,8 +126,13 @@ export function WorkspaceEvidence({
   );
 }
 
+/**
+ * One reason's sentence from the component workspace design's table. A
+ * `dependency` reads only through the changed files, and a `screen` reason,
+ * which only a use case carries, has no sentence.
+ */
 function Reason({ reason }: { reason: ChangeReason }) {
-  if (reason.kind === "dependency") return null;
+  if (reason.kind === "dependency" || reason.kind === "screen") return null;
   const labels = {
     added: "Added to this branch.",
     removed: "Removed on this branch.",
@@ -137,13 +142,7 @@ function Reason({ reason }: { reason: ChangeReason }) {
     structure: "Component instances changed.",
     metadata: "Page details or saved examples changed.",
   } as const;
-  return (
-    <p>
-      {reason.kind === "screen"
-        ? `A screen in this flow changed: ${reason.screenPath}`
-        : labels[reason.kind]}
-    </p>
-  );
+  return <p>{labels[reason.kind]}</p>;
 }
 
 function reasonKey(reason: ChangeReason): string {
