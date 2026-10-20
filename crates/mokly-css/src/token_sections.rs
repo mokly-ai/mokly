@@ -27,10 +27,13 @@ pub(crate) enum Grammar {
     /// declaration. Every other statement is a rule or an at-rule, except the
     /// text that [`Statement::Text`] names.
     Style,
-    /// The block of a keyframes or `@document` rule in a rule list, and the
-    /// block of a grouping rule in one, which lightningcss does not parse as
-    /// rules: statements end and read as in [`Grammar::Rules`], and the other
-    /// blocks they open are [`Grammar::Declarations`].
+    /// A lenient rule list: the block of a keyframes or `@document` rule in a
+    /// rule list, and the block of a keyframes, conditional, layer,
+    /// `@document`, scope, or starting-style rule in a lenient rule list. A
+    /// keyframes rule here is any at-rule whose name ends with `keyframes`.
+    /// lightningcss does not parse these blocks as rules. Statements end and
+    /// read as in [`Grammar::Rules`], and every other block they open is a
+    /// [`Grammar::Declarations`] block, also an `@-moz-document` block.
     Lenient,
     /// Any other block, such as `@font-face`, a keyframe, an unknown at-rule,
     /// or a rule's block in a [`Grammar::Lenient`] block, and every block in

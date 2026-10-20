@@ -828,12 +828,14 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       Keep every other vulnerability failing. The alternative was a dependency
       repair without a compatible published update. The narrow exception lets
       the audit protect all other dependencies.
+      Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
 - [x] Resolve RUSTSEC-2026-0382, published 2026-10-20: `rustls-webpki`
       0.103.15 may accept distrusted intermediate certificates. It reaches
       `mokly-publish` through `reqwest` and `rustls`. `Cargo.lock` takes the
       patched 0.103.16 and changes nothing else. The remote repository suite
       failed on it in M14 nesting round 7, 2026-10-20.
-      Evidence: `.context/ci-gates-round2/rust-audit-2.log`.
+      Evidence: `.context/m14-nesting/r7/audit-before.txt` and
+      `.context/m14-nesting/r7/audit-after.txt`.
 - [x] Add manual CI dispatch on the rebuild branch. User decision 5 = B,
       approved 2026-10-20, mirrors the trigger in main PR #198. A selected
       branch runs its own workflow and selects the baseline audit. The

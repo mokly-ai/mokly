@@ -65,10 +65,15 @@ on its statement and on the block around it:
   custom property runs through its `{}` blocks to the next `;` and keeps its
   value as authored. A statement without a block is a declaration when it
   starts with an identifier and a colon. Any other statement is a rule or an
-  at-rule, also while it is still open at the end of input. An at-rule under
-  a keyframes name that `lightningcss` does not know stays as authored text.
-- The block of a keyframes or `@document` rule in a rule list, and the block
-  of a grouping rule in one, reads its statements as rules.
+  at-rule, also while it is still open at the end of input. An at-rule
+  without a block under a keyframes name that `lightningcss` does not know
+  stays as authored text.
+- The block of a keyframes or `@document` rule in a rule list is a lenient
+  rule list. So is the block of a keyframes, conditional, layer, `@document`,
+  scope, or starting-style rule in a lenient rule list. A keyframes rule
+  there is any at-rule whose name ends with `keyframes`. A lenient rule list
+  reads its statements as rules, but every other block in it is a
+  declarations block, also an `@-moz-document` block.
 - Every other block is a declarations block, for example `@font-face`, a
   keyframe, an unknown at-rule, or a rule's block in a keyframes or
   `@document` block. A rule that starts with an HTML comment token also opens

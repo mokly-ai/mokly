@@ -71,10 +71,15 @@ fn statements_are_classified_as_lightningcss_reads_a_block() {
     assert_eq!(statements(source, Grammar::Lenient), rules);
 }
 
-/// A block opens the grammar of what lightningcss parses in it: rules in a
-/// grouping block of a rule list, a style rule body in a rule's block, and
-/// declarations or text in any other at-rule's block. Keyframes and
-/// `@document` blocks hold lenient rule lists.
+/// A block's grammar depends on its statement and on the grammar around it.
+/// In a rule list, a conditional, layer, scope, or starting-style block is a
+/// rule list, a rule or `@-moz-document` block is a style block, and a
+/// keyframes or `@document` block is a lenient rule list. In a style block, a
+/// rule, conditional, layer, scope, starting-style, or `@-moz-document` block
+/// is a style block. In a lenient rule list, a keyframes, conditional, layer,
+/// `@document`, scope, or starting-style block is a lenient rule list. Every
+/// other block is a declarations block, also the block of a rule that starts
+/// with an HTML comment token.
 #[test]
 fn blocks_open_the_grammar_that_lightningcss_parses() {
     let cases = [
@@ -102,6 +107,8 @@ fn blocks_open_the_grammar_that_lightningcss_parses() {
         (Grammar::Style, "@foo{}", Grammar::Declarations),
         (Grammar::Lenient, "from{}", Grammar::Declarations),
         (Grammar::Lenient, "@media all{}", Grammar::Lenient),
+        (Grammar::Lenient, "@keyframes k{}", Grammar::Lenient),
+        (Grammar::Lenient, "@document y{}", Grammar::Lenient),
         (
             Grammar::Lenient,
             "@-moz-document url-prefix(){}",
@@ -175,4 +182,18 @@ fn statements_without_a_block_stay_as_authored_where_lightningcss_reads_no_rules
         error.contains("@value is unsupported in ui/text.module.css:1:12;"),
         "{error}"
     );
+}
+
+/// In a style rule, an at-rule under a keyframes name that lightningcss does
+/// not know is text only without a block. With a block, the renamer still
+/// reads its keyframes name.
+#[test]
+fn unknown_keyframes_names_scope_only_with_a_block() {
+    let path = "ui/text.module.css";
+    let prefix = scoped_name(path, "");
+    let (css, names) = scope(path, ".p{@-khtml-keyframes k{from{color:red}}}").unwrap();
+    let expected = ".{h}p{@-khtml-keyframes {h}k{from{color:red}}}";
+    assert_eq!(css, expected.replace("{h}", &prefix));
+    let names: Vec<_> = names.keys().map(String::as_str).collect();
+    assert_eq!(names, ["k", "p"]);
 }
