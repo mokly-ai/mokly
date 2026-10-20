@@ -104,3 +104,23 @@ test("resizing across 760px swaps each step between its desktop and mobile view"
   await page.setViewportSize({ width: 761, height: 900 });
   await expectSteps("desktop");
 });
+
+test("an expanded step leaves no scrim once a narrow window shows phones", async ({
+  page,
+}) => {
+  const scrim = /(?:^|\s)frame-expanded(?:\s|$)/u;
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/view/example/team/invite-teammate/");
+  await page.locator(".mbk-flow-screen .browser-expand").first().click();
+  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
+  await expect(page.locator("body")).toHaveClass(scrim);
+  await page.setViewportSize({ width: 760, height: 900 });
+  await expect(page.locator(".mbk-flow-screen > .phone-frame")).toHaveCount(3);
+  await expect(page.locator("body")).not.toHaveClass(scrim);
+  // Widening again shows every step's browser frame collapsed.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator(".mbk-flow-screen > .browser-frame")).toHaveCount(
+    3,
+  );
+  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
+});

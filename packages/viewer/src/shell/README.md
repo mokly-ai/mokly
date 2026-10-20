@@ -34,16 +34,12 @@ counterparts for workspace inputs, variants and nested component instances.
 `branchPoints(catalogue)` is its one construction point: it indexes a catalogue
 generation on first use and returns the same lookup for that catalogue object
 afterwards. `resolve` requires an explicit before/after side and kind.
-`counterpart(current, baseline?)` gives the original baseline identity, and
-`baselineEntry(current, baseline)` the inventory entry at that identity.
 `parent` gives an eligible parent of a resolved variant or a stored title
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
 that entry, in record order. `previousPath` gives only accepted move pairs.
-Results retain current entries or complete removed records. A caller may
-supply a baseline inventory per call; it adds same-path and case-only
-counterparts, while pairs alone prove moved counterparts. No shell module
-supplies one: the entry detail already carries the paired input changes. Usage
+Results retain current entries or complete removed records. The lookup pairs
+no counterparts: the entry detail already carries the paired input changes. Usage
 links, the variant bar, removed tree rows, workspace keys, breadcrumbs,
 details and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
@@ -222,6 +218,10 @@ stage, in `public_stage.tsx`, shows each step's desktop view in a browser
 frame, or, while `narrow_layout.ts` reports a window at most 760px wide, its
 mobile view in a phone frame, under the
 [device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome).
+`layout_breakpoint.ts` holds that contract's layout breakpoint as one media
+query, narrower than 900px, which every shell and viewer rule and script
+reads, so the catalogue drawer, the inspector sheet and the embedded rail
+switch at the same width.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical
@@ -248,10 +248,8 @@ the resolved removed record and route.
 routed screen, component parent, or component variant; component routes retain
 their parent schema separately for controls. The lists of a screen or component
 come from its entry detail's `workspace`, and every value is projected only
-from validated index and detail records. A catalogue without published records
-knows only the context's Changes lists, so its workspace carries statuses and
-the Used by links that `workspace_usage_data.ts` projects from manifest usage,
-and no comparison evidence. `comparison_views.tsx` renders
+from validated index and detail records: every catalogue of a delivery carries
+its published records. `comparison_views.tsx` renders
 React-owned frame chrome around the snapshots from validated comparison
 metadata.
 
