@@ -22,4 +22,8 @@ props: { [key in string]: DataValue },
 /**
  * Controls derived or declared for editing.
  */
-controls: { [key in string]: ComponentControl }, };
+controls: { [key in string]: ComponentControl },
+/**
+ * Editable keys in authored declaration order.
+ */
+controlOrder: Array<string>, };

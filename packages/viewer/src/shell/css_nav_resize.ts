@@ -2,6 +2,8 @@
 
 import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 /** Styles for the navigation split-panel separator. */
 export const SHELL_NAV_RESIZE_CSS = `
 .mbk-nav-resize {
@@ -65,7 +67,7 @@ body.mbk-nav-resizing iframe,
   pointer-events: none;
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   [data-mokly-shell] .mbk-nav[data-resize-ready] .mbk-nav-resize,
   :scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
     display: none;

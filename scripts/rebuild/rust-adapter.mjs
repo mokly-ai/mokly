@@ -1,4 +1,4 @@
-/** Adapt catalogue index v7, entry detail v1, and review v8 captures. */
+/** Adapt catalogue index v7, entry detail v2, and review v8 captures. */
 export function adaptRustScenario({
   catalogue,
   details,
@@ -10,7 +10,7 @@ export function adaptRustScenario({
     ["catalogue", catalogue, 7],
     ["review", review, 8],
     ["export inventory", inventory, 3],
-    ...(details ?? []).map((detail) => ["entry detail", detail, 1]),
+    ...(details ?? []).map((detail) => ["entry detail", detail, 2]),
   ])
     if (input && input.schemaVersion !== version)
       throw new Error(

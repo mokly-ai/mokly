@@ -7,7 +7,7 @@ use pulldown_cmark::{Event, Parser, Tag};
 use crate::diagnostic::Issue;
 use crate::locations::at;
 use crate::relationships;
-use crate::template_types::{ElementRegistry, Template};
+use crate::template_types::{ElementRegistry, Template, ignore_attribute_allowed};
 
 /// A logical destination retains its coordinate before the full source is released.
 pub(crate) struct MarkdownTarget {
@@ -30,6 +30,9 @@ pub(crate) fn html(
         };
         let element = String::from_utf8_lossy(&tag.name);
         for (name, value) in &tag.attributes {
+            if !ignore_attribute_allowed(&element, &String::from_utf8_lossy(name)) {
+                continue;
+            }
             let text = String::from_utf8_lossy(&value.value);
             let target = if name.as_ref() == b"href" {
                 text.strip_prefix("mock:")

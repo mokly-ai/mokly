@@ -71,11 +71,7 @@ function TargetView(props: {
     : undefined;
   const page =
     target.entry.kind === "page" && !removed
-      ? pageComparisonEvidence(
-          props.catalogue,
-          props.context,
-          target.entry.path,
-        )
+      ? pageComparisonEvidence(props.catalogue, target.entry.path)
       : undefined;
   const status = removed ? "Removed" : page?.status;
   const stage = preview ? (

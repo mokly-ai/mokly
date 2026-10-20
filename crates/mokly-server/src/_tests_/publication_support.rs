@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::CatalogueModel;
-use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV1};
+use mokly_model::public_detail::{DetailEntry, DetailView, EntryDetailV2};
 use mokly_model::public_metadata::{CatalogueChanges, ComparisonSelection};
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
@@ -37,8 +37,9 @@ pub(crate) fn snapshot(count: usize, documents: Arc<dyn Documents>) -> Arc<Snaps
         screen.visual.views.truncate(1);
         screen.visual.views[0].comparison = ComparisonSelection::Unavailable;
         let view = &screen.visual.views[0];
-        let detail = EntryDetailV1 {
-            schema_version: 1,
+        let detail = EntryDetailV2 {
+            schema_version: 2,
+            control_order: Some(screen.visual.controls.keys().cloned().collect()),
             identity: index.identity.clone(),
             deployment_id: Some(index.deployment_id.clone()),
             revision: Some(1),

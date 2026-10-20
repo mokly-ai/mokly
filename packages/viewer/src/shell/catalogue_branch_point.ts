@@ -29,23 +29,10 @@ export type EntryResolution =
 export type VariantParentResolution =
   EntryResolution | { readonly source: "title"; readonly title: string };
 
-/** Shared operations for links, variants, inputs, workspace keys and crumbs. */
+/** Operations for links, variants, moved rows, workspace keys and crumbs. */
 export interface BranchPointLookup {
   /** Resolve a sided reference: its pair, its path, then a removed record. */
   resolve(reference: EntryReference): EntryResolution | undefined;
-  /**
-   * A current entry's baseline identity: its accepted pair, else the
-   * case-folded match in a supplied baseline inventory, in that spelling.
-   */
-  counterpart(
-    current: EntryIdentity,
-    baseline?: readonly EntryIdentity[],
-  ): EntryIdentity | undefined;
-  /** The inventory entry at a current entry's counterpart identity. */
-  baselineEntry<T extends EntryIdentity>(
-    current: EntryIdentity,
-    baseline: readonly T[],
-  ): T | undefined;
   /** A resolved variant's eligible same-kind parent, or its stored title. */
   parent(variant: EntryResolution): VariantParentResolution | undefined;
   /** The parent of the current entry or removed record at one identity. */
@@ -76,10 +63,7 @@ export function branchPoints(catalogue: BranchPointInputs): BranchPointLookup {
   return lookup;
 }
 
-/**
- * Index validated inputs once. Without a supplied baseline inventory, only
- * accepted pairs can prove a counterpart. No input is rewritten.
- */
+/** Index validated inputs once. No input is rewritten. */
 function createBranchPointLookup(
   catalogue: BranchPointInputs,
 ): BranchPointLookup {
@@ -100,21 +84,6 @@ function createBranchPointLookup(
     moved.set(identityKey({ kind: entry.kind, path: previousPath }), entry);
     previous.set(identityKey(entry), previousPath);
   }
-  const inventories = new WeakMap<
-    readonly EntryIdentity[],
-    ReadonlyMap<string, number>
-  >();
-  const position = (
-    baseline: readonly EntryIdentity[],
-    identity: EntryIdentity,
-  ): number | undefined => {
-    const known = inventories.get(baseline);
-    const index =
-      known ??
-      new Map(baseline.map((entry, at) => [identityKey(entry), at] as const));
-    if (!known) inventories.set(baseline, index);
-    return index.get(identityKey(identity));
-  };
 
   const resolve = (reference: EntryReference): EntryResolution | undefined => {
     const key = identityKey(reference);
@@ -135,20 +104,6 @@ function createBranchPointLookup(
     return record
       ? { source: "removed", entry: record.entry, record }
       : undefined;
-  };
-  const counterpart = (
-    reference: EntryIdentity,
-    baseline: readonly EntryIdentity[] = [],
-  ): EntryIdentity | undefined => {
-    const key = identityKey(reference);
-    const entry = current.get(key);
-    if (!entry) return undefined;
-    const previousPath = previous.get(key);
-    if (previousPath !== undefined)
-      return { kind: entry.kind, path: previousPath };
-    const at = position(baseline, reference);
-    const match = at === undefined ? undefined : baseline[at];
-    return match ? { kind: match.kind, path: match.path } : undefined;
   };
   const parent = (
     variant: EntryResolution,
@@ -182,12 +137,6 @@ function createBranchPointLookup(
 
   return {
     resolve,
-    counterpart,
-    baselineEntry(reference, baseline) {
-      const identity = counterpart(reference, baseline);
-      const at = identity && position(baseline, identity);
-      return at === undefined ? undefined : baseline[at];
-    },
     parent,
     parentOf(variant) {
       const own = locate(variant);

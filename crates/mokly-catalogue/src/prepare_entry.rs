@@ -70,6 +70,7 @@ pub(crate) fn prepare(
     let failed = validator.is_none();
     let schema = prepared_parent.visual.prop_schema.clone();
     let controls = prepared_parent.visual.controls.clone();
+    let control_order = prepared_parent.visual.control_order.clone();
     let visual = prepared_parent.visual;
     let content = visual_content(
         kind,
@@ -174,6 +175,7 @@ pub(crate) fn prepare(
             prop_schema: schema.clone(),
             props: complete,
             controls: controls.clone(),
+            control_order: control_order.clone(),
         };
         if !failed && variant.slots.keys().any(|name| !input.slots.contains(name)) {
             issues.push(issue(

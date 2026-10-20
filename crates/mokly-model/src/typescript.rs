@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use ts_rs::{Config, TS};
 
 use crate::catalogue::CatalogueModel;
-use crate::public_detail::{EntryDetailV1, LiveDescriptorV3};
+use crate::public_detail::{EntryDetailV2, LiveDescriptorV3};
 use crate::public_index::CatalogueReadModel;
 use crate::review::ReviewResultV8;
 use crate::snapshot::{CatalogueChangeSnapshotV4, RemovedPagePreview};
@@ -48,7 +48,7 @@ pub fn catalogue_modules() -> BTreeMap<String, String> {
     let mut modules = TypeModules::default();
     modules.add::<CatalogueModel>();
     modules.add::<CatalogueReadModel>();
-    modules.add::<EntryDetailV1>();
+    modules.add::<EntryDetailV2>();
     modules.add::<LiveDescriptorV3>();
     modules.add::<ReviewResultV8>();
     modules.add::<CatalogueChangeSnapshotV4>();

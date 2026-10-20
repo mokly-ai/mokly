@@ -21,6 +21,8 @@ The Node implementation lives in `@mokly/mokly`.
 commands, checks response ids, forwards diagnostic events, and decodes each
 result against the pending method. Protocol failures close the session.
 Authoring diagnostics retain their codes and leave a healthy session usable.
+Description preserves the order of data props and explicit controls, so the core
+can carry author order into the read model.
 
 `Pool` consumes `dyn WorkerFactory` and `dyn Clock`, and implements
 `SidecarPool`. Constructing it starts no process. FIFO order per eligible slot bounds active

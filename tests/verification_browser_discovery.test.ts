@@ -119,7 +119,7 @@ test("the verification reporter attributes helper-defined tests to their spec fi
 });
 
 test("completed browser reports require each test's spec file", () => {
-  const report = ciReports(["node-22.14.0"])[1]!;
+  const report = ciReports(["node-22.15.0"])[1]!;
   const entry = report.fullTests![0]!;
   validateCompletedReport(report);
   assert.throws(

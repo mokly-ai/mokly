@@ -160,6 +160,9 @@ export function registerDesignStylesheetEvidence(
         await expect(evidence).toContainText(
           "These changed styles also apply outside the changed components on this screen:",
         );
+        await expect(
+          evidence.getByText("Changed component: Action", { exact: true }),
+        ).toHaveCount(1);
         await evidence.getByRole("link", { name: "Action" }).click();
         await expect(page).toHaveURL(
           componentDesignUrl(
@@ -216,6 +219,9 @@ export function registerDesignStylesheetEvidence(
           "Shared component changes affect this preview. This page has no independent entry in Changes.",
         );
         await expect(evidence).not.toContainText("No changes to this screen.");
+        await expect(
+          evidence.getByText("Changed component: Action", { exact: true }),
+        ).toHaveCount(1);
         await evidence.getByRole("link", { name: "Action" }).click();
         await expect(page).toHaveURL(story);
       });

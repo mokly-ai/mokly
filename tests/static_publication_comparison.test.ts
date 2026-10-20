@@ -20,7 +20,7 @@ import {
   currentBinary,
   historicalBinary,
 } from "./helpers/static_publication_changes.js";
-import { verifyReceived } from "./helpers/static_received.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 test(
   "publish delivers a ready generation with the pinned merge base and exact scoped binary bytes",
@@ -30,19 +30,22 @@ test(
     const server = await exchange();
     let output: string | undefined;
     try {
-      const result = await command(
-        root,
-        "publish",
-        [
-          `--config=${config}`,
-          "--base=requested-base",
-          "--repository=example.com/team/site",
-          `--endpoint=${server.endpoint}`,
-          "--token=private/a==",
-        ],
-        "rich",
-        {},
-        context.signal,
+      const result = await observeBuild(
+        server,
+        command(
+          root,
+          "publish",
+          [
+            `--config=${config}`,
+            "--base=requested-base",
+            "--repository=example.com/team/site",
+            `--endpoint=${server.endpoint}`,
+            "--token=private/a==",
+          ],
+          "rich",
+          {},
+          context.signal,
+        ),
       ).result;
       output = directory(result.stdout);
       assert.equal(result.code, 0, result.stderr);
@@ -50,7 +53,6 @@ test(
       assert.equal(server.completed, 1);
       assert.equal(server.completedInventories.length, 1);
       const received = server.completedInventories[0]!;
-      await verifyReceived(received, output);
       const metadata = upload(received.get("mokly-upload.json")!);
       const index = readCatalogueIndex(
         JSON.parse(received.get("mokly-viewer/index.json")!.toString()),
@@ -108,7 +110,7 @@ test(
             .includes(text),
         );
       }
-      await checkIdentity(output, index.comparisonUrl, index.deploymentId);
+      await checkIdentity(received, index.comparisonUrl, index.deploymentId);
       const phases = [
         "Loading configuration",
         "Rendering catalogue",

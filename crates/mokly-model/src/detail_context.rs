@@ -1,7 +1,9 @@
 //! Context-aware current detail fences, exact view membership, and usage checks.
 
+use std::collections::BTreeSet;
+
 use crate::axes::EntryKind;
-use crate::public_detail::EntryDetailV1;
+use crate::public_detail::EntryDetailV2;
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ComparisonSelection};
 use crate::read_contract::ContractViolation;
@@ -11,20 +13,20 @@ use crate::usage_schemas::UsageSchemas;
 
 /// Decode and validate a current entry detail against the installed index.
 /// Historical callers supply their base-side component schemas to `usage_context`.
-pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV1, ReadError> {
+pub fn read(text: &str, index: &CatalogueReadModel) -> Result<EntryDetailV2, ReadError> {
     let detail = readers::detail(text)?;
     validate(&detail, index)?;
     Ok(detail)
 }
 
 /// Validate the current fence, kind, view order, evidence readiness, and usage.
-pub fn validate(detail: &EntryDetailV1, index: &CatalogueReadModel) -> Result<(), ReadError> {
+pub fn validate(detail: &EntryDetailV2, index: &CatalogueReadModel) -> Result<(), ReadError> {
     validate_with(detail, index, &mut UsageSchemas::new(&index.components))
 }
 
 /// Validate all usage against publication-local compiled schemas.
 pub fn validate_with(
-    detail: &EntryDetailV1,
+    detail: &EntryDetailV2,
     index: &CatalogueReadModel,
     schemas: &mut UsageSchemas<'_>,
 ) -> Result<(), ReadError> {
@@ -77,6 +79,15 @@ pub fn validate_with(
         return Err(invalid(ContractViolation::DetailReasonsPresence));
     }
     if let Some(visual) = visual {
+        let Some(order) = &detail.control_order else {
+            return Err(invalid(ContractViolation::ControlOrder));
+        };
+        if order.len() != visual.controls.len()
+            || order.iter().collect::<BTreeSet<_>>().len() != order.len()
+            || order.iter().any(|key| !visual.controls.contains_key(key))
+        {
+            return Err(invalid(ContractViolation::ControlOrder));
+        }
         if visual.views.len() != detail.views.len() {
             return Err(invalid(ContractViolation::Views));
         }

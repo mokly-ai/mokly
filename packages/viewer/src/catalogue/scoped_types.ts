@@ -2,7 +2,7 @@
 
 import type {
   CatalogueComponent,
-  EntryDetailV1,
+  EntryDetailV2,
   CatalogueDocument,
   CataloguePage,
   CatalogueReadModel,
@@ -70,5 +70,5 @@ export interface ShellCatalogueReadModel extends Omit<
   components: readonly ShellCatalogueComponent[];
   removedEntries: readonly ShellRemovedEntry[];
   /** The accepted details by `detailKey`, each fenced against this index. */
-  details: ReadonlyMap<string, EntryDetailV1>;
+  details: ReadonlyMap<string, EntryDetailV2>;
 }

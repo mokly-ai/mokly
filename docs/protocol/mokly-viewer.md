@@ -23,7 +23,7 @@ Every delivery renders the shell from data in the browser.
 
 ```ts
 import type { CSSProperties, ReactNode, Ref } from "react";
-import type { CatalogueReadModel, EntryDetailV1 } from "@mokly/viewer";
+import type { CatalogueReadModel, EntryDetailV2 } from "@mokly/viewer";
 import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
 import type { InstanceRef, ViewerMarker, MarkerState } from "@mokly/viewer";
 
@@ -40,8 +40,8 @@ interface ViewerSelection {
 }
 /** The catalogue index v7 as an object, or its absolute HTTP(S) URL. */
 type IndexSource = CatalogueReadModel | string | URL;
-type DetailResult = EntryDetailV1 | string | URL;
-/** One entry detail v1, or its URL; a removed entry names its snapshot. */
+type DetailResult = EntryDetailV2 | string | URL;
+/** One entry detail v2, or its URL; a removed entry names its snapshot. */
 type DetailSource = (
   entryPath: string,
   snapshotId?: string,
@@ -125,7 +125,7 @@ that root, and `baseUrl` is invalid for it. Do not resolve artifact paths
 relative to the embedding application. The viewer validates every index as
 [read model v7](./mokly-catalogue.md) before it renders.
 
-`detail` supplies the entry detail v1 of one entry. The viewer calls it with
+`detail` supplies the entry detail v2 of one entry. The viewer calls it with
 the entry path, plus the `snapshotId` of a removed record, when it commits a
 selection whose detail it does not hold. The result is a detail object, a URL
 on the artifact origin root, or a promise of either. A URL is fetched under the

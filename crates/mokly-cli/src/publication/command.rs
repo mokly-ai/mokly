@@ -33,7 +33,7 @@ pub struct Options {
     pub base: Option<String>,
     /// Skip all comparison work and history lookup.
     pub no_changes: bool,
-    /// Keep the grammar while the warning policy decision remains open.
+    /// Fail on build warnings before output installation or upload.
     pub strict: bool,
     /// Pinned operation-owned paths excluded from status, never names guessed from Git output.
     pub owned_paths: Vec<PathBuf>,
@@ -44,6 +44,8 @@ pub struct Options {
 pub trait BuildReporter: Send + Sync {
     /// Report the private build directory exactly once, before calling the builder.
     fn build_directory(&self, directory: &std::path::Path);
+    /// Explain a retained local snapshot after a successful remote publication.
+    fn retained_directory(&self, directory: &std::path::Path);
 }
 
 /// End-to-end publication command boundary.
@@ -150,10 +152,15 @@ impl Publish for Command {
                 source: error::Error::InvalidBundle,
             });
         }
-        self.exchange
+        let receipt = self
+            .exchange
             .publish(prepared, settings, cancellation)
             .await
-            .publication()
+            .publication()?;
+        if self.directories.remove(&directory).is_err() {
+            self.reporter.retained_directory(&directory);
+        }
+        Ok(receipt)
     }
 }
 

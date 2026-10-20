@@ -72,6 +72,20 @@ test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
 });
 
+test("navigation stays a column at 900px and is a drawer below it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 900 });
+  await page.goto("/");
+  await expect(page.locator("[data-mokly-nav]")).toBeVisible();
+  await expect(page.locator("[data-mokly-nav-resize]")).toBeVisible();
+  await expect(page.locator("[data-mokly-menu]")).toBeHidden();
+  await page.setViewportSize({ height: 900, width: 899 });
+  await expect(page.locator("[data-mokly-nav]")).toBeHidden();
+  await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
+  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+});
+
 test("the narrow search bar drops the name and fits its controls", async ({
   page,
 }) => {

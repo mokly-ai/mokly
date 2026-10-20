@@ -6,7 +6,7 @@ use crate::axes::{ColorScheme, Viewport};
 use crate::catalogue::{CatalogueModel, EntryContent};
 use crate::error::{InternalError, Result};
 use crate::material::digest;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV1};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
 use crate::public_index::{CatalogueReadModel, LiveGeneration};
 use crate::public_metadata::{CatalogueIdentity, ChangesStatus};
 use crate::public_records::*;
@@ -155,7 +155,7 @@ pub fn pending_details(
     model: &CatalogueModel,
     index: &CatalogueReadModel,
     keys: &[ViewKey],
-) -> BTreeMap<String, EntryDetailV1> {
+) -> BTreeMap<String, EntryDetailV2> {
     let by_path = key_index(keys);
     model
         .entries
@@ -177,7 +177,7 @@ pub fn pending_details(
             views.sort_by_key(|view| (view.viewport, view.color_scheme));
             (
                 entry.metadata.path.clone(),
-                EntryDetailV1 {
+                EntryDetailV2 {
                     schema_version: versions::ENTRY_DETAIL,
                     identity: index.identity.clone(),
                     deployment_id: Some(index.deployment_id.clone()),
@@ -192,6 +192,13 @@ pub fn pending_details(
                     reasons: None,
                     resource_evidence: None,
                     workspace: None,
+                    control_order: match &entry.content {
+                        EntryContent::Screen { visual, .. }
+                        | EntryContent::Component { visual, .. } => {
+                            Some(visual.control_order.clone())
+                        }
+                        _ => None,
+                    },
                 },
             )
         })

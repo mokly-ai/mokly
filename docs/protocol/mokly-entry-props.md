@@ -69,6 +69,15 @@ TypeScript props type of `render(props, context)` from an `as const` schema; a
 
 ## Schema Inference
 
+Integer prop values outside `[-9007199254740991, 9007199254740991]` round to the
+nearest binary64 value before inference, schema validation, rendering, and keys.
+Ties round to the even binary64 value. Nested objects and arrays follow the same
+rule. Each affected saved entry or component invocation emits a
+`props-unsafe-integer` warning with the property path. `--strict` makes it fatal.
+The core and viewer use that same rounded value. Safe integers and negative zero
+keep their values. Rounding with a warning keeps recoverable inputs usable and
+visible, instead of rejecting them or rounding silently.
+
 When an entry declares no `propSchema`, the schema is inferred, in the
 profile, from the entry's own props and every variant's merged props. Each key
 seen is a property. At the top level the keys of the entry's own props are

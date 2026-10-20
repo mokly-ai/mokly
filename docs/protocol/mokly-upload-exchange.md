@@ -15,6 +15,11 @@ follows no redirect. Plan, Blob and Complete URLs must be absolute `http:` or
 equal the configured endpoint's, so the bearer credential is never sent to a
 different origin or protocol.
 
+HTTPS verifies certificate chains and hostnames. Publish trusts the Mozilla
+root certificates bundled with Mokly as well as the operating system store.
+An empty operating system store still permits a chain to a bundled root.
+OS-only trust is insufficient for minimal containers without CA packages.
+
 ### Plan
 
 POST to the exact configured endpoint, preserving its path and query string

@@ -43,6 +43,10 @@ test("workflows use the smallest Blacksmith tiers and publish to npm from GitHub
       const context = `${workflowName}:${jobName}`;
       const runsOn = job["runs-on"];
       assert.ok(typeof runsOn === "string", `${context} runner`);
+      if (context === "design-attribution.yml:design-attribution") {
+        assert.equal(runsOn, "blacksmith-8vcpu-ubuntu-2404");
+        continue;
+      }
       if (publishesWithProvenance(job)) {
         provenancePublishers.push(context);
         assert.equal(

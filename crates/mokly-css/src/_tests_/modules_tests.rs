@@ -67,6 +67,26 @@ fn unsupported_modules_extensions_and_forward_compositions_fail() {
     assert!(!css.contains("composes"));
 }
 
+/// A comment before `composes` stays in the scoped text, and the
+/// declaration still composes.
+#[test]
+fn comments_before_composes_stay_as_authored() {
+    let path = "ui/compose.module.css";
+    let (a, c) = (scoped_name(path, "a"), scoped_name(path, "c"));
+    for (source, scoped) in [
+        (".a{}.c{/**/composes:a;color:red}", "{/**/color:red}"),
+        (
+            ".a{}.c{color:blue; /* why */ composes: a; color:red}",
+            "{color:blue; /* why */  color:red}",
+        ),
+        (".a{}.c{color:red;/**/composes:a}", "{color:red;/**/}"),
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        assert_eq!(css, format!(".{a}{{}}.{c}{scoped}"));
+        assert_eq!(exports["c"], format!("{c} {a}"));
+    }
+}
+
 #[test]
 fn scoping_preserves_comments_spacing_modern_syntax_and_animation_priority() {
     let source = "/* keep */\n.base{color:red}\n.card { composes: base base; opacity:.5; animation: pulse 2s linear !important; --value: 1.00; }\n@scope (.outer) to (:global(.stop)) { .inner { color:var(--value); } }\n:global .app :local .local { grid-area:main }\n@keyframes pulse { to { opacity:0 } }\n@keyframes \"quoted\" { to { opacity:0 } }\n.quoted {animation-name: \"quoted\" !important}\n";
@@ -134,6 +154,23 @@ fn custom_property_values_keep_their_blocks_to_the_semicolon() {
         error.to_string().contains(&format!("{path}:1:12;")),
         "{error}"
     );
+}
+
+/// Nested wrappers in a keyframes name work as in a selector: the innermost
+/// wrapper decides, and an empty inner wrapper fails.
+#[test]
+fn keyframes_names_follow_nested_wrappers_as_selectors_do() {
+    let path = "ui/motion.module.css";
+    let spin = scoped_name(path, "spin");
+    let (css, exports) = scope(path, "@keyframes :global(:local(spin)){to{opacity:0}}").unwrap();
+    assert_eq!(css, format!("@keyframes {spin}{{to{{opacity:0}}}}"));
+    assert_eq!(exports.keys().collect::<Vec<_>>(), ["spin"]);
+    let (css, exports) = scope(path, "@keyframes :local(:global(spin)){to{opacity:0}}").unwrap();
+    assert_eq!(css, "@keyframes spin{to{opacity:0}}");
+    assert!(exports.is_empty());
+    let error = scope(path, "@keyframes :global(:local()){to{opacity:0}}").unwrap_err();
+    let expected = "CSS Modules :local() has no keyframes name in ui/motion.module.css:1:20";
+    assert!(error.to_string().contains(expected), "{error}");
 }
 
 #[test]
@@ -216,7 +253,7 @@ fn empty_wrappers_and_icss_fail_only_where_names_are_scoped() {
         (".a{@scope (:import(x)){color:red}}", "authored ICSS rule"),
         (
             "@keyframes :local() spin{to{opacity:0}}.a{animation:spin 1s}",
-            ":local() has no keyframes name in ui/preludes.module.css:1:12; add the name inside it",
+            ":local() has no keyframes name in ui/preludes.module.css:1:12; add the name inside it or remove it",
         ),
     ] {
         let error = scope(path, source).unwrap_err().to_string();

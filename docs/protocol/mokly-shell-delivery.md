@@ -20,9 +20,9 @@ rewrite rules.
 | `/`, `/index.html`, `/view/<route>`                                                          | 200       | `index.html`, `view/<route>/index.html` | the shell stub, identical for every route                  |
 | `/404.html`, `/view/`                                                                        | 200 / 404 | `404.html`                              | the same stub; `/view/` has no entry and returns 404       |
 | `/mokly-viewer/index.json`                                                                   | live      | file                                    | the catalogue index v7                                     |
-| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v1                                        |
+| `/mokly-viewer/entries/<entry path>.json`                                                    | live      | one file per current entry              | the entry detail v2                                        |
 | `/mokly-viewer/diffs/generations/<generation>/review.json`                                   | live      | file                                    | review result v8, under the comparison contract            |
-| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v1 of a removed entry's historical record |
+| `/mokly-viewer/diffs/generations/<generation>/entries/<entry path>.json`                     | live      | one file per removed entry              | the entry detail v2 of a removed entry's historical record |
 | `/mokly-viewer/live.json`                                                                    | live      | absent                                  | the live descriptor v3: the render capability              |
 | `/mokly-viewer/events`                                                                       | live      | absent                                  | the event stream: one message per publication              |
 | `/static/**`, `/mokly-viewer/client/**`, `/mokly-viewer/shell.css`, `/mokly-viewer/fonts/**` | live      | files                                   | documents, the shell bundle, styles, and fonts             |
@@ -78,57 +78,11 @@ descriptor. A static build has no `live` field. The index is canonical JSON.
 One detail exists per entry: under `mokly-viewer/entries/` for a current
 entry, and under the comparison generation that records a removed entry.
 
-```ts
-interface EntryDetailV1 {
-  schemaVersion: 1;
-  identity: { id: string; title: string };
-  deploymentId?: string; // current entries: equal to the index
-  revision?: number; // current entries: equal to the index
-  generation?: string; // removed entries: the comparison generation
-  entry: { path: string; kind: CatalogueRecord["kind"]; snapshotId?: string };
-  reasons?: readonly EntryChangeReason[]; // reasons in the review v8 shape
-  views: readonly DetailView[]; // empty for pages, documents, and use cases
-  resourceEvidence?: ViewEvidence; // pages only; present when ready
-  workspace?: Workspace; // screens and components, when all list inputs are proven
-}
-interface DetailView {
-  viewport: Viewport;
-  colorScheme: ColorScheme;
-  usage: CatalogueUsage;
-  resourceEvidence?: ViewEvidence; // present on every ready view
-}
-interface ViewEvidence {
-  rules: readonly RuleEvidence[]; // review v8 with owners; [] when it omits the list
-  resources: readonly ResourceEvidence[]; // review v8 with owners; [] when omitted
-}
-interface Workspace {
-  comparisonEligible: boolean;
-  usedBy: readonly UsageLink[];
-  affected: readonly UsageLink[];
-  relatedComponents: readonly { path: string; title: string }[];
-  inputChanges: readonly InputChange[];
-}
-interface UsageLink {
-  entryPath: string;
-  entryKind: "screen" | "component";
-  title: string;
-  viewport: Viewport;
-  colorScheme: ColorScheme;
-  instanceKey: string;
-  direct: boolean;
-  removed: boolean;
-  comparisonEligible: boolean;
-}
-interface InputChange {
-  instanceId: string;
-  title: string;
-  viewport: Viewport;
-  colorScheme: ColorScheme;
-  variantPath?: string;
-  before: ComponentWireProps;
-  after: ComponentWireProps;
-}
-```
+The [generated entry detail v2 type](../../packages/viewer/src/generated/catalogue/EntryDetailV2.ts)
+defines the detail, view, evidence, and workspace shapes.
+A screen or component detail includes `controlOrder`, listing every editable
+property exactly once in the [control declaration order](./mokly-component-controls.md).
+Other kinds omit it. Current and removed entries follow the same ordering rule.
 
 A current entry's detail carries `deploymentId` and `revision` and no
 `generation`; a removed entry's detail carries `generation` and `snapshotId`

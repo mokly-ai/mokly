@@ -44,7 +44,7 @@ entry props and viewer records. Import `resolveInstance` and
 ## Breaking Viewer Delivery Release Note
 
 The Browse shell renders only in the browser, from the catalogue index v7 and
-one entry detail v1 per entry under the
+one entry detail v2 per entry under the
 [shell delivery contract](./mokly-shell-delivery.md). `@mokly/viewer/server`
 and `@mokly/viewer/runtime` are removed, and `@mokly/viewer/browser` mounts
 the standalone shell without `hydrateMoklyShell`. `MoklyViewer` takes an

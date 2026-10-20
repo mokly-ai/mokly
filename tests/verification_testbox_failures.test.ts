@@ -4,7 +4,36 @@ import test from "node:test";
 
 import { runTestboxSuite } from "../scripts/verification/testbox-suite.mjs";
 
-import { TESTBOX_ARGUMENTS, testboxHarness } from "./helpers/testbox_suite.js";
+import {
+  TESTBOX_ARGUMENTS,
+  TESTBOX_FINGERPRINT,
+  testboxHarness,
+} from "./helpers/testbox_suite.js";
+
+test("remote delivery failures propagate and failed browser shards stop first", async () => {
+  const args = [
+    "--expect",
+    TESTBOX_FINGERPRINT,
+    "--suite",
+    "browser",
+    "--shard",
+    "1/4",
+  ];
+  for (const failure of ["browser", "delivery"]) {
+    const harness = testboxHarness();
+    harness.outcomes.set(
+      failure === "browser"
+        ? "cargo xtask check --executor local --suite browser --shard 1/4"
+        : "npm run test:delivery:prepared",
+      { exitCode: 7, stdout: "", stderr: "failed" },
+    );
+    assert.equal(await runTestboxSuite(args, harness.dependencies), 7);
+    assert.equal(
+      harness.commands.some(({ file }) => file === "npm"),
+      failure === "delivery",
+    );
+  }
+});
 
 test("every failed preparation command stops before cargo and stamp updates", async () => {
   for (const failure of [

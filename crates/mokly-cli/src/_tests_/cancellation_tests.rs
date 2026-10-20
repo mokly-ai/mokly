@@ -101,3 +101,20 @@ fn forwarded_signal_copies_share_one_fixed_interrupt_interval() {
         "the next interruption forces exit at the fixed boundary"
     );
 }
+
+#[test]
+fn output_settlement_releases_a_deferred_exit_without_another_signal() {
+    let cancellation: &dyn Cancellation = &BuildCancellation::new(Arc::new(Unimock::new((
+        ClockMock::now_ms.next_call(matching!()).returns(0_u64),
+        ClockMock::now_ms.next_call(matching!()).returns(1_000_u64),
+    ))));
+    assert!(!cancellation.wait_for_forced_exit());
+    {
+        let _protected = cancellation.protect_output().unwrap();
+        assert!(!cancellation.interrupt());
+        assert!(!cancellation.interrupt());
+        assert!(cancellation.protect_output().is_none());
+    }
+    assert!(cancellation.wait_for_forced_exit());
+    assert!(cancellation.protect_output().is_none());
+}

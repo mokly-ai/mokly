@@ -1,4 +1,7 @@
 /** Package-owned shell styling; concatenation preserves delivered bytes. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const CSS_VIEWS_LAYOUT = `
 .mbk-main {
   display: flex;
@@ -78,7 +81,7 @@ button.mbk-crumb-link {
   letter-spacing: -0.01em;
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-title-row {
     flex-wrap: wrap;
     gap: 6px;

@@ -1,4 +1,4 @@
-/** The entry detail v1 reader: the version gate first, then every field. */
+/** The entry detail v2 reader: the version gate first, then every field. */
 
 import { invalidData, record } from "../components/data.js";
 
@@ -13,7 +13,7 @@ import { assertPublicDetail } from "./privacy.js";
 import type {
   CatalogueUsage,
   DetailView,
-  EntryDetailV1,
+  EntryDetailV2,
   EvidenceOwner,
   InputChange,
   UsageLink,
@@ -35,7 +35,7 @@ import {
 import { MoklyVersionError } from "./version_error.js";
 
 /** The only entry detail number this viewer reads. */
-const ENTRY_DETAIL_VERSION = 1;
+const ENTRY_DETAIL_VERSION = 2;
 
 const KINDS = ["component", "document", "page", "screen", "use-case"] as const;
 const VIEWPORTS = ["mobile", "desktop"] as const;
@@ -43,9 +43,9 @@ const SCHEMES = ["light", "dark"] as const;
 
 /**
  * Gate the version and read one current or removed entry's detail: the
- * fields v1 defines, ignoring any other field a newer writer adds.
+ * fields v2 defines, ignoring any other field a newer writer adds.
  */
-export function readEntryDetail(value: unknown): EntryDetailV1 {
+export function readEntryDetail(value: unknown): EntryDetailV2 {
   const version = record(value) ? value.schemaVersion : undefined;
   if (version !== ENTRY_DETAIL_VERSION)
     throw new MoklyVersionError("detail", version, ENTRY_DETAIL_VERSION);
@@ -54,7 +54,7 @@ export function readEntryDetail(value: unknown): EntryDetailV1 {
   const identity = object(input.identity);
   const entry = object(input.entry);
   const kind = choice(entry.kind, KINDS);
-  const detail: EntryDetailV1 = {
+  const detail: EntryDetailV2 = {
     schemaVersion: ENTRY_DETAIL_VERSION,
     identity: { id: hash(identity.id), title: text(identity.title) },
     ...(input.deploymentId === undefined
@@ -77,6 +77,9 @@ export function readEntryDetail(value: unknown): EntryDetailV1 {
       ? {}
       : { reasons: readDetailReasons(input.reasons) }),
     views: array(input.views).map(readDetailView),
+    ...(input.controlOrder === undefined
+      ? {}
+      : { controlOrder: array(input.controlOrder).map(text) }),
     ...(input.resourceEvidence === undefined
       ? {}
       : { resourceEvidence: readViewEvidence(input.resourceEvidence) }),
@@ -97,6 +100,13 @@ export function readEntryDetail(value: unknown): EntryDetailV1 {
   if (!current && !removed)
     invalidData("$detail", "current and removed fences are exclusive");
   const visual = kind === "screen" || kind === "component";
+  if (visual !== (detail.controlOrder !== undefined))
+    invalidData("$detail", "only screens and components require control order");
+  if (
+    detail.controlOrder &&
+    new Set(detail.controlOrder).size !== detail.controlOrder.length
+  )
+    invalidData("$detail", "control order repeats a property");
   if (!visual && detail.views.length)
     invalidData("$detail", "only screens and components have views");
   if (!visual && detail.workspace)

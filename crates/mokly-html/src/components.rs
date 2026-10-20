@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use mokly_catalogue::numeric_warnings;
 use mokly_catalogue::template_types::RegisteredElement;
 use mokly_model::data::Props;
 use mokly_model::material::{instance_key, props_key};
@@ -99,6 +100,8 @@ impl Engine<'_> {
                 props.insert(name, value);
             }
         }
+        self.warnings
+            .extend(numeric_warnings::for_entry(&props, self.request.entry));
         validate(&component.prop_schema, &props, &component.path)?;
         let key = match instance_key(&context.owner, context.slot_key.as_deref(), id) {
             Ok(key) => key,

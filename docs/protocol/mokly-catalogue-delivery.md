@@ -8,7 +8,7 @@ Continuation of the [public catalogue contract](./mokly-catalogue.md).
 
 The catalogue model lives in process memory. Serve and `build` project it
 into two public forms through one explicit allowlist: the catalogue index v7
-and one entry detail v1 per entry. The
+and one entry detail v2 per entry. The
 [shell delivery contract](./mokly-shell-delivery.md) owns their fields and
 routes, and the [catalogue contract](./mokly-catalogue.md) owns the record
 types. The projection reads the validated catalogue model, the validated

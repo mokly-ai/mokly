@@ -32,35 +32,7 @@ pub(crate) struct Document {
 
 /// Parse exactly one YAML document without evaluating custom tags.
 pub(crate) fn parse(text: &str, path: &str, first_line: usize) -> Result<Document, Issue> {
-    let mut reader = Reader {
-        parser: Parser::new_from_str(text),
-        path,
-        first_line,
-        aliased: BTreeSet::new(),
-        anchors: BTreeMap::new(),
-    };
-    reader.aliased = match yaml_aliases::scan(text, MAX_ALIAS_NODES) {
-        Ok(aliased) => aliased,
-        Err(marker) => {
-            let message =
-                format!("YAML aliases exceed {MAX_ALIAS_NODES} expanded nodes; use fewer aliases");
-            return Err(reader.error(marker, message));
-        }
-    };
-    loop {
-        let (event, marker) = reader.next()?;
-        if !matches!(event, Event::StreamStart | Event::DocumentStart) {
-            let document = reader.node(event, marker)?;
-            loop {
-                let (event, marker) = reader.next()?;
-                match event {
-                    Event::StreamEnd => return Ok(document),
-                    Event::DocumentEnd => {}
-                    _ => return Err(reader.error(marker, "expected one YAML document")),
-                }
-            }
-        }
-    }
+    Reader::new(text, path, first_line)?.read()
 }
 
 struct Reader<'a> {
@@ -79,7 +51,47 @@ struct Anchor {
     height: usize,
 }
 
-impl Reader<'_> {
+impl<'a> Reader<'a> {
+    /// A reader for `text` after the alias scan, which fails a file whose
+    /// aliases expand past the budget.
+    fn new(text: &'a str, path: &'a str, first_line: usize) -> Result<Self, Issue> {
+        let mut reader = Self {
+            parser: Parser::new_from_str(text),
+            path,
+            first_line,
+            aliased: BTreeSet::new(),
+            anchors: BTreeMap::new(),
+        };
+        reader.aliased = match yaml_aliases::scan(text, MAX_ALIAS_NODES) {
+            Ok(aliased) => aliased,
+            Err(marker) => {
+                let message = format!(
+                    "YAML aliases exceed {MAX_ALIAS_NODES} expanded nodes; use fewer aliases"
+                );
+                return Err(reader.error(marker, message));
+            }
+        };
+        Ok(reader)
+    }
+
+    /// Read the stream's one document.
+    fn read(&mut self) -> Result<Document, Issue> {
+        loop {
+            let (event, marker) = self.next()?;
+            if !matches!(event, Event::StreamStart | Event::DocumentStart) {
+                let document = self.node(event, marker)?;
+                loop {
+                    let (event, marker) = self.next()?;
+                    match event {
+                        Event::StreamEnd => return Ok(document),
+                        Event::DocumentEnd => {}
+                        _ => return Err(self.error(marker, "expected one YAML document")),
+                    }
+                }
+            }
+        }
+    }
+
     fn next(&mut self) -> Result<(Event, Marker), Issue> {
         match self.parser.next_token() {
             Ok(event) => Ok(event),
@@ -136,15 +148,15 @@ impl Reader<'_> {
                         })?
                     };
                     let start = self.location(marker);
-                    if let Some(slot) = target(&frames, &mut positions) {
+                    let slot = target(&frames, &mut positions);
+                    if let Some(slot) = slot {
                         positions.set(slot, start.clone());
                     }
-                    if anchor != 0 {
-                        self.anchor(anchor, &value, Positions::at(start.clone()));
-                    }
+                    self.anchor(anchor, &value, &positions, slot, &start);
                     (value, start)
                 }
                 Event::Alias(anchor) => {
+                    self.within(frames.len(), marker)?;
                     let Some(node) = self.anchors.get(&anchor) else {
                         return Err(self.error(marker, "unknown or recursive YAML alias"));
                     };
@@ -176,13 +188,7 @@ impl Reader<'_> {
                         return Err(self.error(marker, "expected a YAML value"));
                     };
                     let value = frame.take();
-                    if frame.anchor != 0 {
-                        let local = match frame.slot {
-                            Some(slot) => positions.subtree(slot),
-                            None => Positions::at(frame.start.clone()),
-                        };
-                        self.anchor(frame.anchor, &value, local);
-                    }
+                    self.anchor(frame.anchor, &value, &positions, frame.slot, &frame.start);
                     (value, frame.start.clone())
                 }
                 _ => return Err(self.error(marker, "expected a YAML value")),
@@ -207,12 +213,24 @@ impl Reader<'_> {
         }
     }
 
-    /// Register an anchored node that an alias refers to, with its locations
-    /// relative to the node.
-    fn anchor(&mut self, anchor: usize, value: &Value, positions: Positions) {
+    /// Keep a copy of an anchored node that an alias refers to, with the
+    /// locations at and below its slot, relative to the node. No other anchor
+    /// is copied, so this is the only place that decides.
+    fn anchor(
+        &mut self,
+        anchor: usize,
+        value: &Value,
+        positions: &Positions,
+        slot: Option<usize>,
+        start: &SourceLocation,
+    ) {
         if !self.aliased.contains(&anchor) {
             return;
         }
+        let positions = match slot {
+            Some(slot) => positions.subtree(slot),
+            None => Positions::at(start.clone()),
+        };
         let height = height(value);
         let document = Document {
             value: copy(value),
@@ -250,6 +268,9 @@ fn scalar(text: &str) -> Option<Value> {
     }
 }
 
+#[cfg(test)]
+#[path = "_tests_/yaml_anchor_tests.rs"]
+mod yaml_anchor_tests;
 #[cfg(test)]
 #[path = "_tests_/yaml_depth_tests.rs"]
 mod yaml_depth_tests;

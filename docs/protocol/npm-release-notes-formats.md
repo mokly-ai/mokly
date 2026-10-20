@@ -90,7 +90,7 @@ Linux x64 and ARM64 with glibc 2.28 or newer, macOS 11.0 or newer on x64 and
 ARM64, and Windows x64 with MSVC. The binary uses the supported Node runtime's OS floor. Windows
 links its C runtime statically and needs no separate Visual C++ runtime.
 There is no JavaScript CLI fallback. Keep optional dependencies enabled during
-installation. Mokly supports Node `>=22.14.0 <24.14.0 || >=24.19.0`; the shim rejects
+installation. Mokly supports Node `>=22.15.0 <24.14.0 || >=24.19.0`; the shim rejects
 unsupported versions before binary lookup.
 
 HTML-only catalogues need no JavaScript sidecar. React and Storybook authoring,
@@ -189,7 +189,7 @@ instance and outer ancestors; each context keeps its side and variant address.
 ### Viewer And Wire Formats
 
 The Browse shell renders in the browser. Serve and static builds deliver the
-same shell stub, catalogue index v7, and entry detail v1. Review results use v8,
+same shell stub, catalogue index v7, and entry detail v2. Review results use v8,
 change snapshots use v4, and the live descriptor uses v3. Readers accept one
 version only. The [format inventory](./mokly-format-versions.md) owns all numbers.
 

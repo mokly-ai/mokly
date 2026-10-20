@@ -7,6 +7,7 @@ use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
 use crate::rename_output::Scoped;
+use crate::source_position::line_column;
 use crate::syntax;
 use crate::token_tree::Tokens;
 
@@ -139,15 +140,9 @@ impl Renamer<'_> {
         Ok(())
     }
 
+    /// The one-based line and column of a byte offset in the authored source.
     pub(crate) fn position(&self, offset: usize) -> (usize, usize) {
-        let prefix = &self.source[..offset.min(self.source.len())];
-        (
-            prefix.bytes().filter(|c| *c == b'\n').count() + 1,
-            prefix
-                .rsplit('\n')
-                .next()
-                .map_or(1, |line| line.chars().count() + 1),
-        )
+        line_column(self.source, offset)
     }
 
     pub(crate) fn error(&self, offset: usize, reason: &str, action: &str) -> CssError {

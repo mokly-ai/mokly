@@ -21,11 +21,16 @@ export function auditPublicPackageExports(repositoryRoot, git) {
   const findings = [];
   const baselines = [];
   let notedRemovals = 0;
-  for (const [packageRoot, packageConfig] of Object.entries(
+  for (const [componentRoot, packageConfig] of Object.entries(
     releaseConfig.packages ?? {},
   )) {
-    const releasedVersion = releaseManifest[packageRoot];
+    const releasedVersion = releaseManifest[componentRoot];
     if (releasedVersion === undefined || releasedVersion === "0.0.0") continue;
+    const packageRoot = publicPackageRoot(
+      repositoryRoot,
+      componentRoot,
+      packageConfig,
+    );
     const currentManifest = readCurrentJson(
       repositoryRoot,
       packagePath(packageRoot, "package.json"),
@@ -214,5 +219,27 @@ function releasedPackageRoot(git, tag, currentRoot, name) {
   });
   if (matches.length !== 1)
     throw new Error(`${name} has no unique package location at ${tag}`);
+  return matches[0];
+}
+
+/** A release component can own a public package beneath the private root. */
+function publicPackageRoot(repositoryRoot, componentRoot, config) {
+  const component = readCurrentJson(
+    repositoryRoot,
+    packagePath(componentRoot, "package.json"),
+  );
+  const name = config["package-name"] ?? component.name;
+  if (component.name === name) return componentRoot;
+  const workspace = readCurrentJson(repositoryRoot, "package.json");
+  const roots = Array.isArray(workspace.workspaces) ? workspace.workspaces : [];
+  const matches = roots.filter((root) => {
+    const manifest = readCurrentJson(
+      repositoryRoot,
+      packagePath(root, "package.json"),
+    );
+    return manifest.name === name && manifest.private !== true;
+  });
+  if (matches.length !== 1)
+    throw new Error(`${name} has no unique public workspace package`);
   return matches[0];
 }

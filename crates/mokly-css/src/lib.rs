@@ -20,10 +20,14 @@ mod rename;
 mod rename_animations;
 mod rename_output;
 mod rename_selectors;
+mod source_position;
 
 #[cfg(test)]
 #[path = "_tests_/compiler_tests.rs"]
 mod compiler_tests;
+#[cfg(test)]
+#[path = "_tests_/module_diagnostics_tests.rs"]
+mod module_diagnostics_tests;
 #[cfg(test)]
 #[path = "_tests_/modules_tests.rs"]
 mod modules_tests;
@@ -33,6 +37,9 @@ mod resolver_tests;
 #[cfg(test)]
 #[path = "_tests_/syntax_tests.rs"]
 mod syntax_tests;
+#[cfg(test)]
+#[path = "_tests_/wrapper_advice_tests.rs"]
+mod wrapper_advice_tests;
 #[cfg(test)]
 #[path = "_tests_/wrapper_table_tests.rs"]
 mod wrapper_table_tests;

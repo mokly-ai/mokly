@@ -10,12 +10,11 @@ import type { ShellCatalogueReadModel } from "../src/catalogue/scoped_types.js";
 import type {
   CataloguePage,
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
   ViewEvidence,
 } from "../src/catalogue/types.js";
 import type { EntryChangeReason } from "../src/review/types.js";
 import type { Catalogue } from "../src/shell/catalogue.js";
-import type { ShellContext } from "../src/shell/context.js";
 import { ShellMain } from "../src/shell/views.js";
 
 import {
@@ -105,7 +104,7 @@ export function publishedIndex(
 export function publishedDetails(
   evidence?: ViewEvidence,
   reasons?: EntryChangeReason[],
-): (readonly [DetailRequest, EntryDetailV1])[] {
+): (readonly [DetailRequest, EntryDetailV2])[] {
   const fixtures = rawDetailFixtures();
   const guide = fixtures.current["guide"];
   assert.ok(guide);
@@ -132,16 +131,13 @@ export function published(
 }
 
 /** Render the routed `guide` page through the shell's main region. */
-export function renderPage(
-  catalogue: Catalogue,
-  context: Partial<ShellContext> = {},
-): string {
+export function renderPage(catalogue: Catalogue): string {
   const entry = catalogue.byPath.get("guide");
   assert.ok(entry?.kind === "page");
   return renderToStaticMarkup(
     <ShellMain
       catalogue={catalogue}
-      context={{ base: BASE, ...context }}
+      context={{ base: BASE }}
       view={{ kind: "target", target: { entry, kind: "entry" } }}
     />,
   );

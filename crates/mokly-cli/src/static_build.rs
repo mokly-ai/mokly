@@ -131,6 +131,10 @@ impl StaticBuild for Builder {
             }),
             (Err(error), Ok(())) | (Ok(_), Err(error)) => Err(error),
         };
+        let _protection = self
+            .cancellation
+            .protect_output()
+            .ok_or(BuildError::Cancelled)?;
         match result {
             Ok((artifact, summary)) => {
                 static_result(

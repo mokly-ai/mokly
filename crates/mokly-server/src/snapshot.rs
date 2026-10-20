@@ -10,7 +10,7 @@ use mokly_model::canonical;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_model::namespace::viewer;
 use mokly_model::projection::{self, Publication, ViewKey};
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::EntryDetailV2;
 use mokly_model::public_detail::{LiveDescriptorV3, RenderCapability};
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::public_metadata::ChangesStatus;
@@ -38,7 +38,7 @@ pub struct Snapshot {
     /// Shared routes, assets, and backend for this generation.
     pub generation: Arc<Generation>,
     /// Validated payloads; their wire revision is supplied by this snapshot.
-    pub details: BTreeMap<String, Arc<EntryDetailV1>>,
+    pub details: BTreeMap<String, Arc<EntryDetailV2>>,
     /// Completed visual usage; a recorded route is never published twice.
     pub completed: BTreeMap<String, Completion>,
     /// Validity of live work admitted under this revision.
@@ -66,7 +66,7 @@ impl Snapshot {
     }
 
     /// Materialize one detail with this publication's revision for typed consumers.
-    pub fn detail(&self, path: &str) -> Option<EntryDetailV1> {
+    pub fn detail(&self, path: &str) -> Option<EntryDetailV2> {
         self.details.get(path).map(|detail| {
             let mut detail = detail.as_ref().clone();
             detail.revision = Some(self.index.revision);

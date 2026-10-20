@@ -154,7 +154,16 @@ export async function runTestboxSuite(args, dependencies) {
       MOKLY_VERIFICATION_REPORT: `.context/verification-reports/remote/${request.commandName}.json`,
     },
   });
-  return outcomeExitCode(outcome);
+  const code = outcomeExitCode(outcome);
+  if (
+    code === 0 &&
+    request.suite === "browser" &&
+    (!request.shard || request.shard.index === 1)
+  )
+    return outcomeExitCode(
+      await command("npm", ["run", "test:delivery:prepared"]),
+    );
+  return code;
 }
 
 async function requireSuccess(completion, step) {

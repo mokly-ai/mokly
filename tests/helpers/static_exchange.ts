@@ -67,6 +67,8 @@ export async function exchange(
   let identity = "";
   let base = "";
   let failure: unknown;
+  let completionCheck:
+    ((received: Map<string, Buffer>) => Promise<void>) | undefined;
   const server = http.createServer(async (request, response) => {
     const isBlob = request.url?.startsWith("/blobs/") ?? false;
     if (isBlob) {
@@ -188,6 +190,7 @@ export async function exchange(
         );
         received.set(".mokly-export-artifact", markerBytes);
         verifyInventory([...received]);
+        await completionCheck?.(received);
         completedInventories.push(received);
         complete++;
         const status = published.has(identity) ? 200 : 201;
@@ -217,6 +220,9 @@ export async function exchange(
     missingCounts,
     missingSets,
     completedInventories,
+    beforeComplete(check: (received: Map<string, Buffer>) => Promise<void>) {
+      completionCheck = check;
+    },
     get maximumBlobConcurrency() {
       return maxBlobs;
     },
