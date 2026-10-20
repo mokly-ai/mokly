@@ -207,7 +207,11 @@ shows the loading state, or the unavailable state with retry. A use case's
 stage, in `public_stage.tsx`, shows each step's desktop view in a browser
 frame, or, while `narrow_layout.ts` reports a window at most 760px wide, its
 mobile view in a phone frame, under the
-[device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome). The element
+[device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome).
+`layout_breakpoint.ts` holds that contract's layout breakpoint as one media
+query, narrower than 900px, which every shell and viewer rule and script
+reads, so the catalogue drawer, the inspector sheet and the embedded rail
+switch at the same width. The element
 generation of `frame_source_hook.ts` advances only when a frame's
 `documentKey` changes at the same source, so a publication reloads only the
 frames whose document changed. Saved component view records supplied by prop

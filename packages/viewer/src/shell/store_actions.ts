@@ -10,6 +10,7 @@ import {
   disclosureStorageKey,
   encodeDisclosureMap,
 } from "./disclosure_storage.js";
+import { NARROW_SHELL } from "./layout_breakpoint.js";
 import { navigationFiltering } from "./nav_model.js";
 import {
   folderRevealPath,
@@ -228,8 +229,7 @@ export function persistDisclosures(
 /** Whether the catalogue is a closed drawer at the current width. */
 function navigationDrawerShown(): boolean {
   return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(max-width: 56.25rem)").matches
+    typeof window !== "undefined" && window.matchMedia(NARROW_SHELL).matches
   );
 }
 
