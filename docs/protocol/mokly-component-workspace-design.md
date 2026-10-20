@@ -145,7 +145,7 @@ Its `design/components/states/shared-impact/style-changed` and `design/component
 siblings depict a changed Action and a screen styled outside it; each changed
 file lists its outcomes under that file.
 
-Use structured evidence: entry/variant state, a generic output-change reason,
+Use structured evidence: entry/variant state, one sentence per direct reason,
 the component-level changed-file list and style outcomes, selected-variant
 stylesheet exclusions, paired prop values, and links to changed components
 actually used by the screen. The [CSS evidence contract](./mokly-css-evidence-presentation.md#details-copy)
@@ -164,7 +164,13 @@ comparison, and under either filter. Each reason is one sentence after the
 branch-point sentence, shown once whatever supplies it. A `dependency` reason
 reads only through the changed-files list of the
 [CSS evidence contract](./mokly-css-evidence-presentation.md), and a pure move
-has no reason sentence.
+has no reason sentence. Only a record that Changes lists shows reasons. A
+reason that contradicts its record is dropped: `removed` on a current record,
+`added` on a record with a base side, `screen` outside a use case, and
+`implementation` outside a component parent. A viewer still loads such a
+detail, and a detail whose reasons disagree with its record's Changes
+membership; Details then show only the reasons that fit, so that a recoverable
+mismatch never hides the entry.
 
 | Reason           | Sentence                                                 |
 | ---------------- | -------------------------------------------------------- |
@@ -177,7 +183,10 @@ has no reason sentence.
 | `metadata`       | “Page details or saved examples changed.”                |
 
 The `implementation` sentence describes actual-instance impact. The
-component's own view states and comparison captions stay unchanged.
+component's own view states and comparison captions stay unchanged. The
+`design/components/states/shared-impact/style-changed` artboard depicts it: a
+markup change shows only where screens use Action, so Details read the
+sentence while the Default caption still names only the changed styles.
 
 ## Verification
 

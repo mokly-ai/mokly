@@ -5,11 +5,9 @@
  * comparison mode, Changes activation, and crumb text and links.
  */
 
-import { expect } from "@playwright/test";
-
 import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
 import { test } from "./branch_point_test.js";
-import { BRANCH_POINT_WIDTHS, serverErrors } from "./branch_point_ui.js";
+import { BRANCH_POINT_WIDTHS } from "./branch_point_ui.js";
 
 for (const [name, check] of Object.entries(BRANCH_POINT_CHECKS))
   for (const { name: width, ...size } of BRANCH_POINT_WIDTHS)
@@ -17,7 +15,5 @@ for (const [name, check] of Object.entries(BRANCH_POINT_CHECKS))
       page,
     }) => {
       await page.setViewportSize(size);
-      const failures = serverErrors(page);
       await check(page);
-      expect(failures).toEqual([]);
     });

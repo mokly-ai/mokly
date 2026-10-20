@@ -19,6 +19,7 @@ import type {
 } from "../shell/workspace_data.js";
 
 import { displayEntry } from "./projection.js";
+import { shownReasons } from "./public_reasons.js";
 import { publicParent, publicVariants } from "./public_variants.js";
 import {
   publishedChangedViewsBySelection,
@@ -62,7 +63,8 @@ function variantStatus(
 /**
  * The routed entry's workspace from the index and the routed entry's detail.
  * `base` is the index's branch name; it stays empty when the index names none.
- * The detail's direct reasons reach Details before any comparison loads.
+ * The detail's direct reasons that fit the record reach Details before any
+ * comparison loads.
  */
 export function publicWorkspace(
   catalogue: Catalogue,
@@ -125,9 +127,7 @@ export function publicWorkspace(
     source.views.some((view) => view.usage.status === "omitted"),
   );
   const entryStatus = publicEntryStatus(original);
-  // Reasons describe a Changes row; a record outside Changes shows none.
-  const listed =
-    original.changes.status === "ready" && original.changes.included;
+  const reasons = shownReasons(original, removed, held?.reasons);
   const variants = rowSources.map((source) =>
     workspaceRow(model, source, parentRemoved),
   );
@@ -179,7 +179,7 @@ export function publicWorkspace(
     ...(detail ? {} : { usageComplete: false }),
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
-    ...(listed && held?.reasons ? { reasons: held.reasons } : {}),
+    ...(reasons ? { reasons } : {}),
     ...(resourceEvidence.length ? { resourceEvidence } : {}),
   };
 }
