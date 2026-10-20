@@ -2621,6 +2621,48 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
     Windows executable suffixes. Selected Native bypasses this path.
     Separate branch before claiming Windows remote-executor support.
+  - [x] Fix CI release checks hub review finding 4 with option A: name read-only
+        release preparation as the npm and Rust audit owner in the three
+        affected verification documents. Publication uses the checked archives.
+        Split the long xtask README's remote reference into a linked page,
+        preserving its content and the existing heading anchors.
+  - [x] Fix CI release checks hub review finding 5 with option A: state that
+        the Rust audit's date and locked-version checks require a reviewed
+        script change even when the approved advisory ID is absent.
+  - [x] Fix CI release checks hub review finding 6 with option A: state the
+        Node floor and excluded Node 24 versions as current product facts.
+  - [x] Fix CI release checks hub review finding 7 with option B: run bootstrap
+        fixture Git commands with an empty global configuration and system
+        configuration disabled. Reuse the shared isolated Git environment.
+        Reproduce global commit signing, tag signing, and hooks before the fix.
+        Cover system hooks too. Evidence: `.context/ci-release-fixes/finding7-red.log`,
+        `finding7-red-repeat.log`, `finding7-red-system.log`, and `finding7-green.log` there.
+  - [x] Apply the authorized CI release checks hub hardening: disable credential
+        persistence in both native-build checkouts. Cover both checkout actions
+        in the existing native release workflow test. Preserve build behavior.
+        Evidence: `.context/ci-release-fixes/native-checkout-red.log` and
+        `.context/ci-release-fixes/native-checkout-green.log`.
+  - CI release checks hub review finding 1: a stale PR base can keep an old
+    release check green. Severity Medium, effort Small. Recommended: A, require
+    branches to be up to date before merge. The hub owns the user decision.
+  - CI release checks hub review finding 2: viewer source comparison misses
+    external build inputs and includes unpublished Markdown. Severity Medium,
+    effort Medium. Recommended: C, compare packed viewer bytes with the
+    published archive. The hub owns the user decision.
+  - CI release checks hub review finding 3: effective severity and target filters
+    can hide Rust advisories. Severity Low, effort Small. Recommended: A,
+    reject those filters. The hub owns the user decision.
+  - `.github/workflows/blacksmith-testbox.yml`: its 30-minute job limit stopped
+    a healthy Node 22 file-delivery run before report download. Separate branch.
+    The hub must decide the Testbox guard before any timeout change.
+    Evidence: `.context/ci-release-fixes/testbox-timeout-annotations.json` and
+    `.context/ci-release-fixes/remote-floor-final.log`.
+  - `tests/browser/large_watch.spec.ts`: `large watch delivers browser evidence
+for react` hit `Test timeout of 300000ms exceeded` during the Node 22
+    remote gate. The unchanged isolated Node 22 rerun passed. Suspected source:
+    real watcher readiness or runner contention, not proven. Separate branch.
+    Evidence: `.context/verification-logs/remote/20261020T153816Z-385781/browser-2-of-4.log`
+    and `.context/ci-release-fixes/watch-react-rerun.log`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
@@ -2647,30 +2689,55 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         No complete static-delivery, daily Rust audit, or native job sample is
         available. The hub owns hosted measurements after integration.
         Evidence and exact trees: `.context/ci-gates-hub-fixes/timings.md`.
-  - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
-        update, whichever comes first. CI gates hub review finding 9A tracks
-        the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
-        `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
-        exposure and the available fixes before retaining the exception.
-  - CI gates hub review finding 2: CLI-only releases can reuse stale viewer
-    source. Severity Medium, effort Medium. Recommended: B, reject an unchanged
-    viewer version on the release PR when its source differs from its tag.
-    The hub owns the user decision.
-  - CI gates hub review finding 3: viewer-only releases have no publish path.
-    Severity Medium, effort Medium. Recommended: B, reject that release PR
-    before tags exist. The hub owns the user decision with finding 2B.
-  - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
-    hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
-    The hub owns the user decision.
-  - Follow-up: isolate the release Rust audit from the privileged publish job.
-    Effort Medium. Covers CI gates hub review finding 1B. Previous example:
-    daily audit isolation in finding 1A. The hub owns the user decision.
-  - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
-    Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
-    the design evidence upload. The hub owns the user decision.
-  - Follow-up: enforce the Rust exception's date, locked version, and sole ID.
-    Effort Medium. Covers CI gates hub review finding 9B. Previous example:
-    the npm exception expiry and dependency-path checks. The hub owns the user decision.
+  - [x] User decision 79 (2026-10-20): apply option B for CI gates hub review
+        finding 9. Enforce the RUSTSEC-2026-0235 review conditions in the shared
+        Rust audit command. Fail after 2027-01-31 UTC, when locked `lightningcss`
+        changes from 1.0.0-alpha.72, or when another advisory is ignored.
+        Replace the open manual review task with tests for the date boundary,
+        dependency versions, effective ignore settings, and command failures.
+        The alternative was reminder-only tracking. Keep every other advisory
+        failing and retain informational warnings. Evidence:
+        `.context/ci-release-checks/decision79-green.log` and
+        `.context/ci-release-checks/decision79-smoke.log`.
+  - [x] User decision 77 (2026-10-20): apply option B for CI gates hub review
+        findings 2 and 3. Reject release PRs that keep a changed viewer's version
+        or release the viewer without the CLI. Compare reused viewer source
+        with its existing tag, excluding tests. Reject before tags exist instead
+        of rejecting publication, relying on commit discipline, or adding a
+        viewer-only publish path. Tests cover stale base changes and both valid
+        release forms. Evidence: `.context/ci-release-checks/decision77-red.log`
+        and `.context/ci-release-checks/decision77-green.log`.
+  - [x] User decision 78 (2026-10-20): apply option B for CI gates hub review
+        finding 8. Exclude all Node 23 releases from both engine ranges, the
+        lockfile, and the shim. Keep the 22.15.0 floor and existing Node 24
+        exclusions. Reject the unsupported line before native lookup instead
+        of excluding only early Node 23 versions or adding a sidecar failure.
+        Align live guides and package docs. Preserve the root README's setup
+        and code reference in a linked development guide to keep files short.
+        Evidence: `.context/ci-release-checks/decision78-red.log` and
+        `.context/ci-release-checks/decision78-green.log`.
+  - [x] User decision 81 (2026-10-20): apply option B for CI gates hub review
+        finding 1. Move the release Rust audit and all verification, packing,
+        and consumer smokes into read-only preparation. Publication requires
+        that job and rechecks its exact saved archives. Disable publication
+        dependency lifecycle scripts and checkout credential persistence.
+        Keep the npm environment and OIDC token only in publication. Use the
+        same resolved Node version in both jobs. This removes privileged build
+        work instead of leaving complete-gate fallback in the publish job.
+        Retain original-run retry selection and immutable archive checks.
+        Evidence: `.context/ci-release-checks/decision81-red.log` and
+        `.context/ci-release-checks/decision81-green.log`.
+  - [x] User decision 80 (2026-10-20): add no upload policy test for CI gates
+        hub review finding 5C. Keep the existing design upload overwrite fix
+        and the specific release workflow assertions. The alternative was a
+        new general policy check for every fixed-name upload. The user chose
+        the direct fixes without that additional gate.
+  - [x] Keep decision 81's existing shell and toolchain checks on the moved
+        preparation workflow. The complete gate exposed the shell test's old
+        workflow lookup. Preserve its tagged-commit assertion and include the
+        moved steps in the existing npm and Rust pin inventories.
+        Evidence: `.context/ci-release-checks/workflow-location-red.log` and
+        `.context/ci-release-checks/workflow-location-green.log`.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.
