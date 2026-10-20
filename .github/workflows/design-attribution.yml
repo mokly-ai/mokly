@@ -1,0 +1,58 @@
+name: Design Attribution Matrix
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+permissions:
+  contents: read
+concurrency:
+  group: design-attribution-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  design-attribution:
+    name: Design attribution matrix
+    runs-on: blacksmith-8vcpu-ubuntu-2404
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+    env:
+      CARGO_BUILD_JOBS: 4
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_INCREMENTAL: 0
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: rustup toolchain install
+      - name: Install dependencies
+        run: npm ci
+      - name: Build artifacts
+        run: npm run build
+      - name: Run design attribution matrix
+        run: |
+          mkdir -p .context/design-attribution
+          git write-tree > .context/design-attribution/tree.txt
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 90m \
+            cargo test -p mokly-cli --features design-matrix --test design_attribution_tests \
+            2>&1 | tee .context/design-attribution/matrix.log
+      - name: Preserve design attribution evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: design-attribution
+          path: .context/design-attribution/
+          include-hidden-files: true
+          if-no-files-found: warn

@@ -118,7 +118,7 @@ jobs to set up that npm before `npm ci`, and rejects pins older than npm
 11.11.0.
 
 Linux and Windows jobs across the CI, preview, release, and Dependency Audit
-workflows use Blacksmith's 2-vCPU tiers. macOS jobs use the provider's smallest
+workflows use Blacksmith's 2-vCPU tiers, except the design matrix below. macOS jobs use the provider's smallest
 available tier, which is 6 vCPUs. The publishing exception is any job that publishes
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
@@ -168,6 +168,16 @@ The [CI verification contract](./ci-verification.md) defines suite ownership,
 report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
+
+## Design Attribution Matrix
+
+`.github/workflows/design-attribution.yml` runs nightly and through manual
+`workflow_dispatch`. It runs the `design-matrix` Cargo target on
+`blacksmith-8vcpu-ubuntu-2404` after building the workspace. It has a 120-minute
+job timeout and a separate 90-minute test-process hang guard with a 30-second
+termination grace period. Both guards must allow at least three times typical
+duration. Each run saves its source tree and duration log as an artifact.
+This workflow is optional. `Required CI` does not depend on it.
 
 ## Testbox Workflow Target
 

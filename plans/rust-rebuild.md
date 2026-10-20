@@ -1420,10 +1420,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       stylesheet links, the exact per-entry rendered-resource and rule
       records, the exact changed-entry union, no affected consumers for
       unresolved shared rules, and the attribution acceptance matrix.
-      The matrix runs on demand until its CI job is decided.
+      The matrix runs in the separate optional nightly and manual workflow.
       Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-11.md`.
-  - [ ] Decide the CI home of the on-demand design matrix (review 8 finding
-        1B, user decision 50). Add no CI job or timeout change before that decision.
+  - [x] Decide the CI home of the on-demand design matrix: item 50 option B,
+        applied by default (user rule), 2026-10-20. Use a separate optional
+        nightly and manual workflow on eight CPUs. Give the job 120 minutes
+        and the test process a 90-minute hang guard. Preserve every matrix
+        assertion. Alternatives were A, further optimization with uncertain
+        results, and C, a smaller fixture with less coverage. The separate job
+        gives the full matrix continuous coverage without extending Required CI.
+        Evidence: `.context/ci-gates-round2/design-measure-2.log`.
 - [x] Apply engine review 8 fixes: gate the design matrix for on-demand runs;
       bound base capture to 256 MiB and retain cached head reads;
       preserve deep props and private trusted records; cover capture timings,
