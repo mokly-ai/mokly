@@ -2256,6 +2256,18 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         private-fixture delivery requirement in the protocol. Move the full
         spec list to the browser README, split its comparison reference into
         a linked page, and correct the runtime list's conjunction.
+  - [x] Record the available remote timings for CI gates hub review finding 4.
+        Two successful samples per runtime give these median command minutes
+        for Node 22.15.0 / 24.21.0: repository 13.43 / 11.46, viewer 6.64 /
+        5.71, browser shards 1 to 4 respectively 16.99 / 18.77, 14.33 / 15.33,
+        8.61 / 8.48, and 8.71 / 8.90. Shard 1 includes both delivery modes.
+        Combined delivery test times have medians of 7.45 / 8.15 minutes.
+        These proxies exclude Testbox preparation and are not hosted job times.
+        The repository proxy exceeds the 10-minute ceiling for its 30-minute
+        guard. The local design command took 13.85 minutes on eight CPUs.
+        No complete static-delivery, daily Rust audit, or native job sample is
+        available. The hub owns hosted measurements after integration.
+        Evidence and exact trees: `.context/ci-gates-hub-fixes/timings.md`.
   - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
         update, whichever comes first. CI gates hub review finding 9A tracks
         the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
