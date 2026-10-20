@@ -24,6 +24,7 @@ fn proof(stylesheet: &str, selector: &str, regions: &[(&str, bool)]) -> RuleObse
                     })
                     .collect(),
                 owner: EvidenceOwner::Entry,
+                input_owner_only: false,
             }],
         }],
     }

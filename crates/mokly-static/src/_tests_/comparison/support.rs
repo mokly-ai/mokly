@@ -16,7 +16,7 @@ use mokly_model::snapshot::{CatalogueChangeSnapshotV4, RemovedEntrySnapshot};
 use mokly_model::snapshot_records::{EntryRecord, RecordMetadata};
 use mokly_model::usage::CatalogueUsage;
 use serde_json::json;
-use unimock::{MockFn, Unimock, matching};
+use unimock::{Clause, MockFn, Unimock, matching};
 
 pub(super) fn catalogue(path: &str) -> PreparedCatalogue {
     let metadata = serde_json::from_value(json!({"path":path,"title":path,"description":"","tags":[],"relatedDocs":[],"isIndex":false,"source":{"path":"specs/page.page.html","line":1,"column":1},"rootIndex":0})).unwrap();
@@ -78,7 +78,12 @@ pub(super) fn artifact(document: bool) -> Arc<Artifact> {
 }
 
 pub(super) fn generation(path: &str, entry: usize, document: bool) -> Arc<dyn RenderGeneration> {
-    Arc::new(Unimock::new((
+    Arc::new(Unimock::new(generation_clauses(path, entry, document)))
+}
+
+/// Reuse the exact generation expectations when a projection also reads its fence.
+pub(super) fn generation_clauses(path: &str, entry: usize, document: bool) -> impl Clause {
+    (
         RenderGenerationMock::catalogue
             .each_call(matching!())
             .returns(catalogue(path)),
@@ -94,7 +99,7 @@ pub(super) fn generation(path: &str, entry: usize, document: bool) -> Arc<dyn Re
         RenderGenerationMock::public_files
             .each_call(matching!())
             .returns(BTreeSet::<String>::new()),
-    )))
+    )
 }
 
 pub(super) fn result() -> ComparisonResult {

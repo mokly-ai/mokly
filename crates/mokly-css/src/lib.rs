@@ -39,6 +39,7 @@ pub mod rule_collection;
 mod rule_syntax;
 pub mod rules;
 
+pub mod containment;
 pub mod match_tree;
 pub mod rule_matching;
 mod selector_element;

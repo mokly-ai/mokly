@@ -22,7 +22,7 @@ pub(crate) struct Affected {
 
 pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<Affected> {
     let mut output = Affected::default();
-    let references = References::new(result);
+    let references = References::new(result)?;
     let mut related_seen = BTreeSet::new();
     let mut links_seen = BTreeSet::new();
     for effect in &result.review.affected {
@@ -44,15 +44,12 @@ pub(crate) fn index(result: &ComparisonResult, context: &Context<'_>) -> Result<
                         .into(),
                 });
         }
-        let projected: Vec<_> = effect
-            .evidence
-            .iter()
-            .filter_map(|evidence| {
-                references
-                    .affected(effect, evidence)
-                    .map(|target| (evidence, target))
-            })
-            .collect();
+        let mut projected = Vec::new();
+        for evidence in &effect.evidence {
+            if let Some(target) = references.affected(effect, evidence)? {
+                projected.push((evidence, target));
+            }
+        }
         let after: BTreeSet<_> = projected
             .iter()
             .filter(|(evidence, _)| evidence.side == ReviewSide::After)
