@@ -2435,11 +2435,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         `expectCardPane` in `tests/browser/serve_comparison_ui.ts`, checks
         every Card pane on Serve by its heading and its side's `.accent`
         colour. Done by `f858cc02`.
-  - M10 Serve and moved rows review 9, finding 22 for the user: the Usage row
-    key tests miss the removal state and the list order. Severity Low,
-    effort Small. Recommended: A, add a case for a removed row alone and
-    beside its current row, and a case for a row with and without another
-    entry's row before it.
+  - [x] M10 Serve and moved rows review 9, finding 22, Severity Low, effort
+        Small: the Usage row key tests missed the removal state and the list
+        order. Decided A by the orchestrator on 2026-10-20: a removed row
+        keeps its key alone and beside the current row of its entry, and a
+        row keeps its key with and without another entry's row before it.
+        Done by `e1ff6c97`.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
