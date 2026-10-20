@@ -23,7 +23,9 @@ pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
 }
 
 /// The tokens in authored order, without local-name prefixes, scope wrappers,
-/// or compositions, so only module renames compare equal.
+/// or compositions, so only module renames compare equal. Whitespace and
+/// comments carry no CSS meaning and are left out: removing a composition
+/// keeps the comments before it.
 fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
     let tokens = Tokens::new(source);
     let mut output = Vec::new();
@@ -88,7 +90,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                 let node = &tokens.nodes[index];
                 let mut child = None;
                 match &node.token {
-                    Token::WhiteSpace(_) => {}
+                    Token::WhiteSpace(_) | Token::Comment(_) => {}
                     Token::Ident(value) | Token::IDHash(value) | Token::QuotedString(value) => {
                         let kind = match node.token {
                             Token::Ident(_) => "ident",

@@ -67,6 +67,26 @@ fn unsupported_modules_extensions_and_forward_compositions_fail() {
     assert!(!css.contains("composes"));
 }
 
+/// A comment before `composes` stays in the scoped text, and the
+/// declaration still composes.
+#[test]
+fn comments_before_composes_stay_as_authored() {
+    let path = "ui/compose.module.css";
+    let (a, c) = (scoped_name(path, "a"), scoped_name(path, "c"));
+    for (source, scoped) in [
+        (".a{}.c{/**/composes:a;color:red}", "{/**/color:red}"),
+        (
+            ".a{}.c{color:blue; /* why */ composes: a; color:red}",
+            "{color:blue; /* why */  color:red}",
+        ),
+        (".a{}.c{color:red;/**/composes:a}", "{color:red;/**/}"),
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        assert_eq!(css, format!(".{a}{{}}.{c}{scoped}"));
+        assert_eq!(exports["c"], format!("{c} {a}"));
+    }
+}
+
 #[test]
 fn scoping_preserves_comments_spacing_modern_syntax_and_animation_priority() {
     let source = "/* keep */\n.base{color:red}\n.card { composes: base base; opacity:.5; animation: pulse 2s linear !important; --value: 1.00; }\n@scope (.outer) to (:global(.stop)) { .inner { color:var(--value); } }\n:global .app :local .local { grid-area:main }\n@keyframes pulse { to { opacity:0 } }\n@keyframes \"quoted\" { to { opacity:0 } }\n.quoted {animation-name: \"quoted\" !important}\n";
