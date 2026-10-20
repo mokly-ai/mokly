@@ -14,9 +14,27 @@ use crate::cache_types::{Builder, StorageMock};
 use crate::commands::CommandsMock;
 use crate::dependencies::DependencyTiers;
 use crate::dependency_types::Request;
-use crate::error::Error;
+use crate::error::{Error, Result};
 use crate::inputs::Inputs;
-use crate::install::{Install, roots};
+use crate::install::Install;
+use crate::manager::{Manager, Root};
+use crate::manager_plan;
+
+fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<String>> {
+    Ok(manager_plan::roots(inputs, configured)?
+        .into_iter()
+        .map(|root| root.directory)
+        .collect())
+}
+
+fn npm(directory: &str) -> Root {
+    Root {
+        directory: directory.into(),
+        manager: Manager::Npm,
+        requested: None,
+        version: "11.0.0".into(),
+    }
+}
 
 fn inputs(paths: &[&str]) -> Inputs {
     Inputs {
@@ -89,7 +107,7 @@ fn every_install_uses_the_remaining_shared_allowance_and_whole_tree_size_bound()
     let builder: &dyn Builder = &Install {
         request: &request,
         owner: &owner,
-        roots: vec!["".into(), "frontend".into()],
+        roots: vec![npm(""), npm("frontend")],
         deadline: Duration::from_secs(100),
     };
     builder.build(Path::new("/install")).unwrap();
@@ -127,7 +145,7 @@ fn an_expired_shared_deadline_starts_no_next_package_manager() {
     let builder: &dyn Builder = &Install {
         request: &request,
         owner: &owner,
-        roots: vec!["frontend".into()],
+        roots: vec![npm("frontend")],
         deadline: Duration::from_secs(100),
     };
     assert!(matches!(

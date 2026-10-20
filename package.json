@@ -54,6 +54,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/semver": "^7.7.1",
+    "@yarnpkg/cli-dist": "4.18.1",
     "autoprefixer": "^10.6.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
@@ -63,6 +64,9 @@
     "lucide-react-native": "^0.577.0",
     "marked": "^18.1.0",
     "parse5": "^8.0.1",
+    "pnpm": "10.34.7",
+    "pnpm-modern": "npm:pnpm@11.20.0",
+    "pnpm-native": "npm:pnpm@12.14.0",
     "postcss": "^8.5.29",
     "postcss-value-parser": "^4.2.0",
     "prettier": "^3.9.9",
@@ -84,7 +88,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "wrangler": "4.151.0",
-    "yaml": "^2.9.1"
+    "yaml": "^2.9.1",
+    "yarn": "1.22.22"
   },
   "workspaces": [
     "packages/viewer",

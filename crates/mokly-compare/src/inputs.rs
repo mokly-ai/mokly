@@ -34,7 +34,7 @@ impl Inputs {
             .or_else(|| self.selected_lockfile(configured))
     }
 
-    /// Npm lockfile precedence. Other managers follow the fallback tier.
+    /// Lockfile precedence for warning locations.
     pub fn lockfile(&self) -> Option<RepoPath> {
         [
             "npm-shrinkwrap.json",
@@ -146,8 +146,21 @@ pub(crate) fn is_lock(path: &str) -> bool {
     )
 }
 
-pub(crate) fn selected(path: &str) -> bool {
-    is_lock(path) || path.rsplit('/').next() == Some("package.json")
+pub(crate) fn manager_lock(path: &str) -> bool {
+    matches!(
+        path.rsplit('/').next(),
+        Some("pnpm-lock.yaml" | "yarn.lock")
+    ) && !path.split('/').any(|part| part == "node_modules")
+}
+
+pub(crate) fn selected(path: &str, manager_config: bool) -> bool {
+    is_lock(path)
+        || path.rsplit('/').next() == Some("package.json")
+        || manager_config
+            && matches!(
+                path.rsplit('/').next(),
+                Some("pnpm-workspace.yaml" | ".yarnrc.yml" | ".yarnrc" | ".npmrc")
+            )
 }
 
 /// Dependency inventory read boundary over an immutable source side.
@@ -162,11 +175,14 @@ pub struct SourceInputs;
 
 impl InputReader for SourceInputs {
     fn read(&self, sources: &dyn Sources, limits: Limits) -> Result<Inputs> {
-        let entries: Vec<_> = sources
-            .list(&[None], limits)?
+        let entries = sources.list(&[None], limits)?;
+        let manager_config = entries
+            .iter()
+            .any(|entry| manager_lock(entry.path.as_str()));
+        let entries: Vec<_> = entries
             .into_iter()
             .filter(|entry| {
-                selected(entry.path.as_str())
+                selected(entry.path.as_str(), manager_config)
                     && !entry
                         .path
                         .as_str()

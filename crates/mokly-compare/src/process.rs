@@ -9,6 +9,7 @@ use mokly_platform::processes::{ProcessGroup, ProcessGroups};
 
 use crate::commands::{Child, Command, Output, Spawner};
 use crate::error::{Error, InternalError, IoResult, Result};
+use crate::manager_command;
 use crate::programs::command;
 
 const OUTPUT_LIMIT: usize = 1024 * 1024;
@@ -29,6 +30,7 @@ struct OwnedChild {
 impl Spawner for SystemSpawner {
     fn spawn(&self, request: &Command) -> Result<Box<dyn Child>> {
         let mut command = command(request)?;
+        manager_command::environment(request, &mut command);
         command
             .args(&request.args)
             .current_dir(&request.directory)

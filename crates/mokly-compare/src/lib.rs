@@ -23,6 +23,11 @@ pub mod dependency_types;
 mod durability;
 mod install;
 mod local_packages;
+mod manager;
+mod manager_command;
+mod manager_local;
+mod manager_plan;
+mod manager_yaml;
 mod manifest;
 mod programs;
 
@@ -126,6 +131,22 @@ pub mod projection_detail;
 pub mod projection_removed;
 
 mod git_asset_io;
+
+#[cfg(test)]
+#[path = "_tests_/manager_tests.rs"]
+mod manager_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_plan_tests.rs"]
+mod manager_plan_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_command_tests.rs"]
+mod manager_command_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_confinement_tests.rs"]
+mod manager_confinement_tests;
 
 mod capture_annotations;
 mod capture_usage;

@@ -51,6 +51,10 @@ fn inventory_reads_every_workspace_manifest_but_no_dependency_or_source_file() {
         "package.json",
         "packages/ui/package.json",
         "package-lock.json",
+        "pnpm-workspace.yaml",
+        ".yarnrc.yml",
+        ".yarnrc",
+        ".npmrc",
         "specs/file.ts",
         "node_modules/pkg/package.json",
     ]
@@ -66,7 +70,7 @@ fn inventory_reads_every_workspace_manifest_but_no_dependency_or_source_file() {
             .returns(Ok(entries.to_vec())),
         SourcesMock::read_many
             .next_call(matching!((paths, _) if paths.len() == 3))
-            .returns(Ok(vec![b"{}".to_vec(), b"{}".to_vec(), b"{}".to_vec()])),
+            .returns(Ok(vec![b"{}".to_vec(); 3])),
     ));
     let reader: &dyn InputReader = &SourceInputs;
     assert_eq!(

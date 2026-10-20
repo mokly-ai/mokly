@@ -58,10 +58,13 @@ compares clean object identities. It reuses base bytes for equal inputs. `Depend
 uses working third-party dependencies when both sets are equal. In every tier,
 the sidecar maps resolved repository-owned paths into that side's sources.
 Different inputs use
-npm's locked install at the root, configuration ancestors, and each explicit package
-root in the dependency cache. They share one deadline. Successful installs
-remove their private npm download cache before publication. The key includes the exact
-lockfiles, manifests, and installed npm version. Local file dependencies and workspaces also
+locked npm, pnpm 10 through 12, Yarn Classic 1, or Yarn Berry 4 node-modules installs at
+configuration and package-root ancestors in the dependency cache. They share one deadline. Successful installs
+remove their private download caches before publication. pnpm and Yarn run
+offline from local archives or offline data copied with the base sources.
+They use installed manager executables or cached Corepack shims and check
+exact `packageManager` pins. Yarn Plug'n'Play retains a specific fallback reason. The key includes the exact
+lockfiles, manifests, manager configurations, manager families, and actual versions. Local file dependencies and workspaces also
 include the immutable source identity. Unsupported managers and failed,
 expired, or oversized installs use the working installation with a typed
 `base-dependencies` warning. Cancellation propagates without a warning.
@@ -192,9 +195,11 @@ cargo clippy -p mokly-compare --all-targets -- -D warnings
 ```
 
 Unit tests use `unimock` for IO, processes, and clocks. Integration tests use
-isolated Git repositories, OS locks, and a local `file:` npm package. The
-fixture enables npm's offline mode and checks that lifecycle scripts did not
-run. It needs no registry.
+isolated Git repositories, OS locks, and local packages. The Node tests in
+`tests/static_base_managers.test.ts` run cold builds with pnpm and both Yarn
+families. Pinned test CLIs come from development dependencies. Local archives
+keep the builds offline. Tests cover script suppression, timing tiers,
+comparison output, cache reuse, executable selection, and fallback reasons.
 
 ### Key Code
 
@@ -208,10 +213,14 @@ run. It needs no registry.
   [OS locations](./src/locations.rs).
 - [Dependency inputs](./src/inputs.rs), [tiers](./src/dependencies.rs), and
   [command supervision](./src/commands.rs).
+- [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
+  [install commands](./src/manager_command.rs), and
+  [local path confinement](./src/manager_local.rs).
 
 ### Related Docs
 
-- [Base preparation](../../docs/protocol/mokly-base-preparation.md).
+- [Base preparation](../../docs/protocol/mokly-base-preparation.md) and
+  [dependency installation](../../docs/protocol/mokly-base-dependencies.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md#sides).
 - [Git runtime](../../docs/protocol/mokly-git.md).
 - [Rust architecture](../../docs/architecture/rust-core.md).

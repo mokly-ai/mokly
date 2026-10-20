@@ -10,7 +10,10 @@ use crate::commands::Command;
 use crate::error::{Error, Result};
 
 pub(crate) fn command(request: &Command) -> Result<process::Command> {
-    if request.program != "npm" {
+    if !["npm", "pnpm", "yarn", "corepack"]
+        .iter()
+        .any(|name| request.program == *name)
+    {
         return Ok(process::Command::new(&request.program));
     }
     let paths = env::var_os("PATH").unwrap_or_default();
@@ -23,7 +26,7 @@ pub(crate) fn command(request: &Command) -> Result<process::Command> {
     };
     #[cfg(unix)]
     for directory in &directories {
-        let candidate = directory.join("npm");
+        let candidate = directory.join(&request.program);
         if fs::metadata(&candidate)
             .is_ok_and(|metadata| metadata.is_file() && metadata.permissions().mode() & 0o111 != 0)
         {
@@ -34,7 +37,7 @@ pub(crate) fn command(request: &Command) -> Result<process::Command> {
     }
     #[cfg(windows)]
     {
-        let mut command = windows_npm(&directories)?;
+        let mut command = windows_manager(&directories, &request.program.to_string_lossy())?;
         command.env("PATH", path);
         Ok(command)
     }
@@ -43,7 +46,7 @@ pub(crate) fn command(request: &Command) -> Result<process::Command> {
 }
 
 #[cfg(windows)]
-fn windows_npm(directories: &[PathBuf]) -> Result<process::Command> {
+fn windows_manager(directories: &[PathBuf], manager: &str) -> Result<process::Command> {
     let extensions = env::var_os("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".into());
     for directory in directories {
         for extension in extensions
@@ -51,7 +54,7 @@ fn windows_npm(directories: &[PathBuf]) -> Result<process::Command> {
             .split(';')
             .filter(|extension| !extension.is_empty())
         {
-            let candidate = directory.join(format!("npm{extension}"));
+            let candidate = directory.join(format!("{manager}{extension}"));
             if !fs::metadata(&candidate).is_ok_and(|metadata| metadata.is_file()) {
                 continue;
             }
@@ -61,10 +64,30 @@ fn windows_npm(directories: &[PathBuf]) -> Result<process::Command> {
             if !extension.eq_ignore_ascii_case(".cmd") {
                 return Err(Error::UnsupportedManager);
             }
-            let cli = directory.join("node_modules/npm/bin/npm-cli.js");
-            if !cli.is_file() {
+            let candidates: &[&str] = match manager {
+                "npm" => &[
+                    "node_modules/npm/bin/npm-cli.js",
+                    "node_modules/corepack/dist/npm.js",
+                ],
+                "pnpm" => &[
+                    "node_modules/pnpm/bin/pnpm.cjs",
+                    "node_modules/pnpm/bin/pnpm.mjs",
+                    "node_modules/corepack/dist/pnpm.js",
+                ],
+                "yarn" => &[
+                    "node_modules/yarn/bin/yarn.js",
+                    "node_modules/@yarnpkg/cli-dist/bin/yarn.js",
+                    "node_modules/corepack/dist/yarn.js",
+                ],
+                _ => &["node_modules/corepack/dist/corepack.js"],
+            };
+            let Some(cli) = candidates
+                .iter()
+                .map(|path| directory.join(path))
+                .find(|path| path.is_file())
+            else {
                 return Err(Error::UnsupportedManager);
-            }
+            };
             let node = std::iter::once(directory.join("node.exe"))
                 .chain(directories.iter().map(|path| path.join("node.exe")))
                 .find(|path| path.is_file());

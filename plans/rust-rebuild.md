@@ -2068,9 +2068,13 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
 
 ## Milestone 13: Release packaging
 
-- [ ] Add pnpm and Yarn base dependency installation before the first release,
-      under F8 decision 10 option B. Keep the current npm-only limit documented
-      until that support is implemented and verified.
+- [x] Add pnpm and Yarn base dependency installation before the first release,
+      under F8 decision 10 option B. Support offline pnpm 10 through 12, Yarn Classic 1,
+      and Yarn Berry 4 with node modules. Keep Plug'n'Play on its typed fallback.
+      Match exact manager pins and preserve bounded caches and script suppression.
+      Design and verification: `.context/base-pnpm-yarn/`.
+      Implementation of default decision 10 B on 2026-10-20 replaces the
+      npm-only install limit for these supported manager families.
 
 - [x] Build and pack the viewer before the CLI authoring declarations and
       CLI `prepack`; verify this order in clean package consumers.

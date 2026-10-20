@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use mokly_git::identity::RepoPath;
 
 use crate::error::Result;
+use crate::manager_local;
 use crate::manifest::{self, Manifest};
 
 pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<String, Manifest>> {
@@ -32,6 +33,14 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
         }
         for workspace in manifest.workspaces() {
             manifest::target(&directory, workspace)?;
+        }
+        for patch in manifest.patches() {
+            manifest::target(&directory, patch)?;
+        }
+    }
+    for (path, bytes) in files {
+        if path.as_str().rsplit('/').next() == Some("pnpm-workspace.yaml") {
+            manager_local::validate(bytes, path.as_str())?;
         }
     }
     Ok(())

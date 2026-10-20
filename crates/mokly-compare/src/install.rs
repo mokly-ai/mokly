@@ -1,6 +1,6 @@
-//! Npm installation plans with one deadline for root and configured packages.
+//! Locked package-manager installations sharing one deadline and disk budget.
 
-use std::ffi::OsString;
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::time::Duration;
 
@@ -12,59 +12,28 @@ use crate::dependencies::DependencyTiers;
 use crate::dependency_types::Request;
 use crate::error::{Error, Result};
 use crate::inputs::Inputs;
-use crate::local_packages;
+use crate::manager::{Manager, Root};
+use crate::manager_command;
 
 pub(crate) struct Install<'a> {
     pub(crate) request: &'a Request,
     pub(crate) owner: &'a DependencyTiers,
-    pub(crate) roots: Vec<String>,
+    pub(crate) roots: Vec<Root>,
     pub(crate) deadline: Duration,
 }
 
-pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<String>> {
-    let manifests = local_packages::manifests(&inputs.files)?;
-    let mut roots = Vec::new();
-    for root in std::iter::once("").chain(configured.iter().map(String::as_str)) {
-        if roots.iter().any(|value| value == root) {
-            continue;
-        }
-        let prefix = if root.is_empty() {
-            String::new()
-        } else {
-            format!("{root}/")
-        };
-        let lock = ["npm-shrinkwrap.json", "package-lock.json"]
-            .iter()
-            .any(|name| {
-                inputs
-                    .files
-                    .keys()
-                    .any(|path| path.as_str() == format!("{prefix}{name}"))
-            });
-        if !lock {
-            continue;
-        }
-        if manifests
-            .get(root)
-            .and_then(|manifest| manifest.package_manager.as_ref())
-            .is_some_and(|manager| !manager.starts_with("npm@"))
-        {
-            return Err(Error::UnsupportedManager);
-        }
-        roots.push(root.to_owned());
-    }
-    if roots.is_empty() {
-        return Err(Error::UnsupportedManager);
-    }
-    Ok(roots)
-}
-
-pub(crate) fn key(inputs: &Inputs, version: &str, identity: &str, roots: &[String]) -> String {
+pub(crate) fn key(inputs: &Inputs, identity: &str, roots: &[Root]) -> String {
     let mut hash = Sha256::new();
-    hash.update(inputs.key(version, identity).as_bytes());
+    hash.update(inputs.key("manager-install-v2", identity).as_bytes());
     for root in roots {
-        hash.update((root.len() as u64).to_le_bytes());
-        hash.update(root.as_bytes());
+        for value in [&root.directory, root.manager.identity(), &root.version] {
+            hash.update((value.len() as u64).to_le_bytes());
+            hash.update(value.as_bytes());
+        }
+    }
+    if roots.iter().any(|root| root.manager != Manager::Npm) {
+        hash.update((identity.len() as u64).to_le_bytes());
+        hash.update(identity.as_bytes());
     }
     hash.finalize()
         .iter()
@@ -84,34 +53,32 @@ impl Builder for Install<'_> {
             if timeout.is_zero() {
                 return Err(Error::InstallTimeout);
             }
-            let directory = destination.join(root);
-            let mut args: Vec<OsString> = [
-                "ci",
-                "--ignore-scripts",
-                "--no-audit",
-                "--no-fund",
-                "--cache",
-            ]
-            .into_iter()
-            .map(Into::into)
-            .collect();
-            args.push(destination.join(".npm-cache").into_os_string());
-            args.extend([
-                OsString::from("--logs-dir"),
-                destination.join(".npm-cache/_logs").into_os_string(),
-                OsString::from("--prefix"),
-                directory.clone().into_os_string(),
-            ]);
             self.owner.commands.run(&Command {
-                program: "npm".into(),
-                args,
-                directory,
+                program: root.manager.program().into(),
+                args: manager_command::arguments(root, destination),
+                directory: destination.join(&root.directory),
                 timeout,
                 byte_limit: Some(self.owner.install_bytes),
                 size_root: Some(destination.to_owned()),
             })?;
         }
-        self.owner.storage.remove(&destination.join(".npm-cache"))
+        let mut caches = BTreeSet::new();
+        for root in &self.roots {
+            let directory = if root.manager == Manager::Npm {
+                destination.to_owned()
+            } else {
+                destination.join(&root.directory)
+            };
+            caches.extend(
+                manager_command::caches(root.manager)
+                    .iter()
+                    .map(|cache| directory.join(cache)),
+            );
+        }
+        for cache in caches {
+            self.owner.storage.remove(&cache)?;
+        }
+        Ok(())
     }
 }
 
