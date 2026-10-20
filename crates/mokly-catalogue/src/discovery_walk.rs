@@ -53,7 +53,14 @@ impl Walk<'_> {
                         .file_name()
                         .and_then(|name| name.to_str())
                         .unwrap_or("");
-                    if denied_directory(name) || self.output == Some(path.as_path()) {
+                    let physical = self
+                        .root
+                        .identity
+                        .join(path.strip_prefix(&self.root.directory).unwrap_or(&path));
+                    if denied_directory(name)
+                        || self.output == Some(path.as_path())
+                        || self.output == Some(physical.as_path())
+                    {
                         self.not_searched
                             .push(relative(&path, &self.config.repo_root));
                     } else {
