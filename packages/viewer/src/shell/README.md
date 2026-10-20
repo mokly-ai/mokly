@@ -4,8 +4,7 @@
 
 The React Browse shell plan records
 how Serve, export and the public viewer converged on this tree.
-Retaining the known branch name in the exported navigation fallback is
-implemented in M31.
+The exported navigation fallback retains the known branch name.
 The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
 keeps the sentence during loading; an index without a `base` omits it.
 

@@ -220,7 +220,13 @@ test("Side by side stays authoritative while switching sibling variants", async 
     props.getByRole("button", { name: "Switch to Current", exact: true }),
   ).toBeVisible();
   await expect(props.getByRole("textbox")).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Highlight components", exact: true }),
-  ).toBeDisabled();
+  const highlight = page.getByRole("button", {
+    name: "Highlight components",
+    exact: true,
+  });
+  await expect(highlight).toBeDisabled();
+  await expect(highlight).toHaveAttribute(
+    "title",
+    "A comparison is selected. Highlighting is available in Current.",
+  );
 });

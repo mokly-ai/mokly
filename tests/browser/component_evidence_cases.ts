@@ -151,7 +151,7 @@ export function registerComponentEvidence(
           ],
           [
             "design/components/states/shared-impact/affected-screen",
-            "Highlighting is unavailable in comparisons",
+            "A comparison is selected. Highlighting is available in Current.",
           ],
         ]) {
           await page.goto(componentDesignUrl(route!, viewport));
