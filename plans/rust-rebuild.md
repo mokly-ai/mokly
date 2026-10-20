@@ -1817,8 +1817,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         and final installation through the existing input-change outcome.
         Compare base source witnesses with pinned Git bytes, separate from head
         baselines. Custom loader text without raw provenance stays incomplete.
-  - [ ] Complete the remaining coverage: native/helper/worker reads, descriptors,
-        streams and ranges, older-runtime transitive ESM loading, private
+  - [ ] Complete the remaining coverage: native/helper/worker reads, preloaded
+        file providers, descriptors, streams and ranges, older-runtime transitive ESM loading, private
         resolution metadata, and read-time path identity. The full M14 item
         remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.

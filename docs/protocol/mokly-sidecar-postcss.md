@@ -5,21 +5,17 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Contexts
 
 `processCss` runs consumer PostCSS in an owned child process with `sourceRoot` as its working directory.
-The core uses a process-wide context sequence and selects `repositoryRoots` and `moduleResolution`.
+The core selects `repositoryRoots` and `moduleResolution` for each context.
 `sourcePath` is a logical repository or dependency path. The child resolves
 it against `sourceRoot` or the selected dependency root before setting PostCSS
-`from`. Request labels keep the logical path. Children are keyed by context and module. Each context has fresh local and
-package module state and fixed source and resolution inputs. `disposeContext`
+`from`. Request labels keep the logical path. Each context and module pair has
+isolated plugin state and fixed source and resolution inputs. `disposeContext`
 kills and reaps only that context's process; bundle creation and disposal do not reset it.
 CSS-only catalogues need no bundle. The pool tracks contexts per process and
 releases disposed contexts before that process takes more work. The result
 contains transformed text, resolved packages, and plugin dependencies for watching.
-The fragment key includes the class-map table digest. A changed map uses a
-new evaluation digest. The core retains the old generation until its final
-graph or request releases it. CSS text alone invalidates stylesheet nodes.
-The pool assigns each loaded lifetime an epoch. Every process reloads a stale
-epoch, then replays maps, describe, and bindings before a render.
-Mokly's own CSS work stays in Rust. Expected PostCSS errors carry a typed
+Class-map changes and restored JavaScript generations follow the
+[bundling contract](./mokly-sidecar.md#bundling). Expected PostCSS errors carry a typed
 `postcss` failure in the error envelope. Rust selects its exact code and text
 from [stylesheet diagnostics](./mokly-imported-styles-errors.md).
 
@@ -71,6 +67,8 @@ file observation and local compiler witnesses. Unobserved transitive ESM loads,
 private resolution metadata, and read-time path identity remain incomplete.
 Custom Node loaders can return transformed text. Without raw-byte provenance,
 that text cannot become a whole-file witness.
+Preloaded code can replace file APIs before observation starts. Such contexts
+keep late baselines for those APIs and compiler reads, even when they return buffers.
 The late baseline detects only edits after capture for an unobserved input.
 
 Decision 56 selects staged observation to preserve plugin compatibility.

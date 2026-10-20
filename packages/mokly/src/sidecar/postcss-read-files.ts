@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { types } from "node:util";
 
-import { observeBytes } from "./postcss-evidence.js";
+import { observeBytes, preloadedCode } from "./postcss-evidence.js";
 
 type ReadOptions = { raw: unknown; encoding?: BufferEncoding };
 
@@ -69,6 +69,7 @@ function deliver(
 
 /** Observe path-based whole-file APIs before delivery; descriptor offsets stay opaque. */
 export function observeFileReads(): void {
+  if (preloadedCode) return;
   const sync = fs.readFileSync;
   const callback = fs.readFile;
   const promise = promises.readFile;

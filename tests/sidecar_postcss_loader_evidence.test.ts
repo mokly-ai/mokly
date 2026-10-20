@@ -67,3 +67,67 @@ return result;
   );
   assert.equal(result.readEvidence.coverage, "incomplete");
 });
+
+for (const mode of ["module", "async module", "file"])
+  test(`a preloaded ${mode} read provider retains its output without a false raw witness`, async (context) => {
+    const { base } = await sidecarSources(context);
+    const config = path.join(base, "postcss.mjs");
+    const tokens = path.join(base, "tokens.txt");
+    const target = mode === "file" ? tokens : config;
+    await fs.writeFile(tokens, "red");
+    await fs.writeFile(
+      config,
+      `
+import fs from 'node:fs';
+export default {plugins:[{postcssPlugin:'overlay',Once(root,{result}){
+const value=${mode !== "file" ? "'red'" : `fs.readFileSync(${JSON.stringify(tokens)},'utf8')`};
+root.walkDecls('color',declaration=>{declaration.value=value});
+result.messages.push({type:'dependency',file:${JSON.stringify(tokens)}});
+}}]};`,
+    );
+    const preload = path.join(base, "preload.mjs");
+    await fs.writeFile(
+      preload,
+      `
+import fs from 'node:fs';
+import promises from 'node:fs/promises';
+import {syncBuiltinESMExports} from 'node:module';
+const sync=fs.readFileSync; const promise=promises.readFile;
+function adapt(file,value){
+if(String(file)!==${JSON.stringify(target)})return value;
+const text=value.toString().replaceAll('red','blue');
+return Buffer.isBuffer(value)?Buffer.from(text):text;
+}
+if(${mode !== "async module"})fs.readFileSync=function(file,...args){return adapt(file,sync(file,...args))};
+promises.readFile=async function(file,...args){return adapt(file,await promise(file,...args))};
+syncBuiltinESMExports();`,
+    );
+    const sidecar = startSidecar(context, undefined, {
+      ...process.env,
+      NODE_OPTIONS: [
+        process.env.NODE_OPTIONS,
+        `--import=${pathToFileURL(preload).href}`,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    });
+    await sidecar.call("hello");
+    const result = await sidecar.call<CssResult>(
+      "processCss",
+      cssParams({
+        sourceRoot: base,
+        repositoryRoots: [],
+        text: "a{color:black}",
+      }),
+    );
+    assert.match(result.text, /blue/);
+    assert.equal(result.readEvidence.coverage, "incomplete");
+    assert.equal(
+      result.readEvidence.reads.some((read) => read.path === target),
+      false,
+    );
+    assert.ok(result.readEvidence.modules.includes(config));
+    assert.ok(
+      result.dependencies.some((dependency) => dependency.path === tokens),
+    );
+  });

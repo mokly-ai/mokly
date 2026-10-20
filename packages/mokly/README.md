@@ -14,6 +14,8 @@ their dependency role in attribution.
 PostCSS children retain raw whole-file read witnesses beside dependency reports.
 Coverage remains incomplete for opaque readers. See the
 [PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
+Preloaded file providers can transform their buffers. Those contexts retain
+late baselines so transformed bytes cannot become false raw-file witnesses.
 
 ## Install And Run
 

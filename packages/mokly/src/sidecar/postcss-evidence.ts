@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import promises from "node:fs/promises";
 import nodeModule from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,8 +10,17 @@ import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
 const reads = new Map<string, Set<string>>();
 const modules = new Set<string>();
 const originalRead = fs.readFileSync;
+const originalPromiseRead = promises.readFile;
 const require = nodeModule.createRequire(import.meta.url);
 const initialModules = new Set(Object.keys(require.cache));
+
+/** Preloads can replace file APIs before this child can observe their raw inputs. */
+export const preloadedCode = [
+  ...process.execArgv,
+  process.env.NODE_OPTIONS ?? "",
+].some((value) =>
+  /--(?:import|loader|experimental-loader|require)|(?:^|[\s"'])-r/.test(value),
+);
 
 /** Only equal witnessed versions coalesce; a conflicting version remains evidence. */
 export function observeBytes(file: string, bytes: Uint8Array): void {
@@ -21,23 +31,37 @@ export function observeBytes(file: string, bytes: Uint8Array): void {
   versions.add(digest);
 }
 
-/** Supply the very buffer whose digest enters the ledger, before compilation. */
+/** Supply compiler bytes; only native file providers establish raw provenance. */
 export function moduleBytes(file: string): Buffer {
-  const bytes = originalRead(file);
+  const reader = fs.readFileSync;
+  return compilerBytes(file, reader.bind(fs)(file), reader === originalRead);
+}
+
+/** Local esbuild inputs keep the existing asynchronous provider and its behavior. */
+export async function moduleBytesAsync(file: string): Promise<Buffer> {
+  const reader = promises.readFile;
+  return compilerBytes(
+    file,
+    await reader.bind(promises)(file),
+    reader === originalPromiseRead,
+  );
+}
+
+function compilerBytes(
+  file: string,
+  bytes: Buffer,
+  nativeProvider: boolean,
+): Buffer {
   modules.add(file);
-  observeBytes(file, bytes);
+  if (!preloadedCode && nativeProvider && Buffer.isBuffer(bytes))
+    observeBytes(file, bytes);
   return bytes;
 }
 
 /** Keep native resolution, conditions, attributes, and cache identity unchanged. */
 export function observeModuleLoads(): void {
   if (typeof nodeModule.registerHooks !== "function") return;
-  let customized = [...process.execArgv, process.env.NODE_OPTIONS ?? ""].some(
-    (value) =>
-      /--(?:import|loader|experimental-loader|require)|(?:^|[\s"'])-r/.test(
-        value,
-      ),
-  );
+  let customized = preloadedCode;
   nodeModule.registerHooks({
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
