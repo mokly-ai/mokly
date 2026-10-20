@@ -1770,11 +1770,15 @@ Tags: ui
 
 Tags: mockup
 
-- [ ] User decision 82 B: depict the comparison band and its pane heading
+- [x] User decision 82 B: depict the comparison band and its pane heading
       on `design/components/states/shared-impact/affected-screen`, which
       Action's Affected screens open in Component with changed styles. Update
-      the design inventories and the matrix snapshots.
-- [ ] Run the mockup check and smoke-test the changed pages through Serve.
+      the design inventories and the matrix snapshots. The artboard opens in
+      Side by side; the inventories, link expectations, and matrix snapshots
+      needed no change, because the artboard keeps its path, its links, and
+      its library components.
+- [x] Run the mockup check and smoke-test the changed pages through Serve.
+      Evidence: `.context/defaults-viewer-82b/` (mockup check log and shots).
 
 ## Milestone 10.4: Affected-only comparisons in the viewer
 
@@ -2810,7 +2814,7 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        evidence item names, in place of the parent, and update the Status
        Lines rule. Option A documents that only the parent page explains the
        shared change.
-  - [ ] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
+  - [x] Hub review of `rebuild/defaults-viewer`, finding 5, raised on
         2026-10-20: no artboard shows the pane heading “Components this
         screen uses changed”. Severity Low. Milestone 10.3 closes it: the
         `design/components/states/shared-impact/affected-screen` artboard
