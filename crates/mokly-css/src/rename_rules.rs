@@ -35,24 +35,7 @@ impl Renamer<'_> {
     /// One top-level or grouping rule: rename its prelude and open its block.
     fn rule(&mut self, tokens: &Tokens<'_>, section: Section) -> Result<Option<Frame>> {
         let earlier = self.defined.clone();
-        let at = match section
-            .first(tokens)
-            .map(|index| &tokens.nodes[index].token)
-        {
-            Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-            _ => None,
-        };
-        let mut own = None;
-        if at
-            .as_deref()
-            .is_some_and(|name| name.ends_with("keyframes"))
-        {
-            self.keyframes(tokens, section.prelude)?;
-        } else if at.as_deref() == Some("scope") {
-            self.selector(tokens, section.prelude, true)?;
-        } else if at.is_none() {
-            own = self.selector(tokens, section.prelude, true)?;
-        }
+        let (at, own) = self.prelude(tokens, &section)?;
         let body = (!at.as_deref().is_some_and(grouping)).then_some(Body { own, earlier });
         Ok(section.body.map(|range| Frame { range, body }))
     }
@@ -65,9 +48,9 @@ impl Renamer<'_> {
         body: &Body,
         section: Section,
     ) -> Result<Option<Frame>> {
-        if let Some(range) = section.body {
+        if let Some(range) = section.body.clone() {
             let earlier = self.defined.clone();
-            let own = self.selector(tokens, section.prelude, true)?;
+            let (_, own) = self.prelude(tokens, &section)?;
             return Ok(Some(Frame {
                 range,
                 body: Some(Body { own, earlier }),
@@ -82,6 +65,37 @@ impl Renamer<'_> {
             &body.earlier,
         )?;
         Ok(None)
+    }
+
+    /// Rename the names in a block-opening prelude, at any nesting level:
+    /// keyframes names, `@scope` selectors, and style rule selectors. Other
+    /// at-rule preludes stay as authored. Returns the lowercase at-rule name and
+    /// the style rule's single local class.
+    fn prelude(
+        &mut self,
+        tokens: &Tokens<'_>,
+        section: &Section,
+    ) -> Result<(Option<String>, Option<String>)> {
+        let at = match section
+            .first(tokens)
+            .map(|index| &tokens.nodes[index].token)
+        {
+            Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
+            _ => None,
+        };
+        let prelude = section.prelude.clone();
+        let mut own = None;
+        if at
+            .as_deref()
+            .is_some_and(|name| name.ends_with("keyframes"))
+        {
+            self.keyframes(tokens, prelude)?;
+        } else if at.as_deref() == Some("scope") {
+            self.selector(tokens, prelude, true)?;
+        } else if at.is_none() {
+            own = self.selector(tokens, prelude, true)?;
+        }
+        Ok((at, own))
     }
 }
 

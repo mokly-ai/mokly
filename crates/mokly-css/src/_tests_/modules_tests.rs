@@ -168,3 +168,27 @@ fn animation_names_after_functions_keep_their_own_ranges() {
         .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
     assert_eq!(css, expected);
 }
+
+#[test]
+fn nested_at_rule_preludes_stay_as_authored() {
+    let path = "ui/nested.module.css";
+    let class = |local| format!(".{}{{", scoped_name(path, local));
+    for source in [
+        ".a{@layer base.theme{color:red}}",
+        ".a{@supports (color: color-mix(in srgb, #fff 50%, red)){color:red}}",
+        ".a{@container style(--c:#fff){color:red}}",
+        ".a{@foo .b{color:red}}",
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        assert_eq!(css, source.replace(".a{", &class("a")), "{source}");
+        assert_eq!(exports.len(), 1, "{source}");
+    }
+    let source = ".a{@scope (.b) to (.c){color:red}}";
+    let (css, exports) = scope(path, source).unwrap();
+    let expected = source
+        .replace(".a{", &class("a"))
+        .replace("(.b)", &format!("(.{})", scoped_name(path, "b")))
+        .replace("(.c)", &format!("(.{})", scoped_name(path, "c")));
+    assert_eq!(css, expected);
+    assert_eq!(exports.len(), 3);
+}
