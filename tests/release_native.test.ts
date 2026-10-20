@@ -71,7 +71,7 @@ test("the CLI archive requires its shim, sidecar, authoring, schema and packaged
   );
   validatePackageManifest(manifest, manifest.name);
   for (const mutate of [
-    { dependencies: { ...manifest.dependencies, "@mokly/viewer": "^0.5.0" } },
+    { dependencies: { ...manifest.dependencies, "@mokly/viewer": "^0.6.0" } },
     {
       optionalDependencies: {
         ...manifest.optionalDependencies,
