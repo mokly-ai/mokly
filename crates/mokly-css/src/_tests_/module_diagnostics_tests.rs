@@ -55,3 +55,25 @@ fn open_wrappers_fail_the_syntax_check() {
         );
     }
 }
+
+/// CSS breaks lines at a line feed, a carriage return, a CRLF pair, and a
+/// form feed, so diagnostics count lines the same way.
+#[test]
+fn diagnostics_count_every_css_line_break() {
+    for (name, newline) in [("LF", "\n"), ("CR", "\r"), ("CRLF", "\r\n"), ("FF", "\x0C")] {
+        let wrapper = format!(".a{{}}{newline}.b :global(){{}}");
+        let expected = format!("has no selector in {PATH}:2:4;");
+        assert!(
+            error(&wrapper).contains(&expected),
+            "{name}: {}",
+            error(&wrapper)
+        );
+        let syntax = format!(".a{{}}{newline}.b{{}}{newline}!x{{}}");
+        assert_eq!(
+            syntax_location(&syntax),
+            Some((3, 1)),
+            "{name}: {}",
+            error(&syntax)
+        );
+    }
+}

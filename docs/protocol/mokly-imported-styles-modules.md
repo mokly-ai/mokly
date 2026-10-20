@@ -19,6 +19,8 @@ through `cssModules` after `bundle` reports the graph and before `describe`
 evaluates the modules. Scoping runs after renderer
 pruning and after the consumer's PostCSS plugins, with no source map, so a
 `sourceMappingURL` comment never loads a map or reads a file. Diagnostic positions refer to the CSS that the scoper receives.
+Their lines break where CSS breaks them: at a line feed, a carriage return,
+a CRLF pair, or a form feed.
 
 ### Names
 

@@ -20,6 +20,7 @@ mod rename;
 mod rename_animations;
 mod rename_output;
 mod rename_selectors;
+mod source_position;
 
 #[cfg(test)]
 #[path = "_tests_/compiler_tests.rs"]
