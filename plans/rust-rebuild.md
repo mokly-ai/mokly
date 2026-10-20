@@ -2281,9 +2281,15 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         viewer-only publish path. Tests cover stale base changes and both valid
         release forms. Evidence: `.context/ci-release-checks/decision77-red.log`
         and `.context/ci-release-checks/decision77-green.log`.
-  - CI gates hub review finding 8: Node 23.0 to 23.4 lack PostCSS evidence
-    hooks. Severity Low, effort Small. Recommended: B, exclude Node 23.
-    The hub owns the user decision.
+  - [x] User decision 78 (2026-10-20): apply option B for CI gates hub review
+        finding 8. Exclude all Node 23 releases from both engine ranges, the
+        lockfile, and the shim. Keep the 22.15.0 floor and existing Node 24
+        exclusions. Reject the unsupported line before native lookup instead
+        of excluding only early Node 23 versions or adding a sidecar failure.
+        Align live guides and package docs. Preserve the root README's setup
+        and code reference in a linked development guide to keep files short.
+        Evidence: `.context/ci-release-checks/decision78-red.log` and
+        `.context/ci-release-checks/decision78-green.log`.
   - Follow-up: isolate the release Rust audit from the privileged publish job.
     Effort Medium. Covers CI gates hub review finding 1B. Previous example:
     daily audit isolation in finding 1A. The hub owns the user decision.

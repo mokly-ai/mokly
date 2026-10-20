@@ -26,9 +26,8 @@ screens may exist only under examples and test fixtures.
 dependencies and depends on the exact coordinated `@mokly/viewer` version. It
 declares `react` and `react-dom` `>=19.0.0` as peer dependencies, needed only
 when screens or components are written in React; an HTML-only catalogue runs
-without them and never starts the sidecar. The shim needs the Node.js range of the
-[CI workflow contract](./ci-workflow.md), 22.15 or newer except 24.14 through
-24.18, and rejects another version with an actionable error before it starts
+without them and never starts the sidecar. The shim requires a version in the
+[supported Node range](#node-support) and rejects another version with an actionable error before it starts
 the binary. It resolves the platform package for the current platform,
 requires its version to equal the CLI package version, and runs the binary
 with inherited standard streams; it never falls back to a JavaScript
@@ -37,6 +36,20 @@ implementation. The binary owns every command and every file write under the
 [render sidecar](./mokly-sidecar.md) only when a catalogue needs JavaScript.
 The [package boundary](../architecture/package-boundary.md) names what each
 package may depend on.
+
+## Node Support
+
+The supported range is `>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`.
+Node 23 is unsupported. The shim rejects it before package lookup or native
+execution, so accepted runtimes retain the PostCSS dependency evidence hooks.
+The floor remains 22.15.0 and the existing Node 24 exclusions remain in force.
+The [CI workflow contract](./ci-workflow.md#runtime-profiles) defines the tested representatives.
+
+Node 24.14.0 through 24.18.x can abort concurrent ESM-to-CommonJS loading before
+JavaScript can handle an error. The upstream
+[`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
+shipped in Node 24.19.0. The shim and sidecar run on the consumer's Node, so
+the shim rejects affected versions before it resolves the binary.
 
 ## Package Identity
 

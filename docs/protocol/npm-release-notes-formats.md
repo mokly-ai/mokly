@@ -90,7 +90,7 @@ Linux x64 and ARM64 with glibc 2.28 or newer, macOS 11.0 or newer on x64 and
 ARM64, and Windows x64 with MSVC. The binary uses the supported Node runtime's OS floor. Windows
 links its C runtime statically and needs no separate Visual C++ runtime.
 There is no JavaScript CLI fallback. Keep optional dependencies enabled during
-installation. Mokly supports Node `>=22.15.0 <24.14.0 || >=24.19.0`; the shim rejects
+installation. Mokly supports Node `>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`; the shim rejects
 unsupported versions before binary lookup.
 
 HTML-only catalogues need no JavaScript sidecar. React and Storybook authoring,
