@@ -25,6 +25,12 @@ pub(crate) fn apply(
     instance_proofs: &mut Vec<InstanceProof>,
 ) {
     view.document.evidence.rules = input.attributed.pages[input.index].clone();
+    view.rule_sources = input
+        .attributed
+        .own_page_sources
+        .get(&input.index)
+        .cloned()
+        .unwrap_or_default();
     instance_proofs.append(&mut view.proofs);
     instance_proofs.extend(view.owned.proofs(&input.attributed.own_pages));
     if let Some(component) = input.component
@@ -42,28 +48,30 @@ pub(crate) fn apply(
                     .insert((component.into(), resource.path.clone()));
             }
         }
-        for rule in &view.document.evidence.rules {
-            if rule.status != RuleStatus::Excluded
-                && matches!(&rule.owner, EvidenceOwner::Component { path } if path == component)
-            {
-                impact.insert(component.into());
-                own_impact
-                    .dependencies
-                    .insert((component.into(), rule.stylesheet.clone()));
-            }
+        for stylesheet in &view.rule_sources {
+            impact.insert(component.into());
+            own_impact
+                .dependencies
+                .insert((component.into(), stylesheet.clone()));
         }
     }
-    let direct =
-        input.attributed.component_pages.contains(&input.index)
-            || view.document.evidence.rules.iter().any(|rule| {
-                rule.status != RuleStatus::Excluded && owned(&rule.owner, input.component)
+    view.rule_sources.extend(
+        view.document
+            .evidence
+            .rules
+            .iter()
+            .filter(|rule| {
+                rule.status != RuleStatus::Excluded && rule.owner == EvidenceOwner::Entry
             })
-            || view
-                .document
-                .evidence
-                .resources
-                .iter()
-                .any(|resource| owned(&resource.owner, input.component));
+            .map(|rule| rule.stylesheet.clone()),
+    );
+    let direct = !view.rule_sources.is_empty()
+        || view
+            .document
+            .evidence
+            .resources
+            .iter()
+            .any(|resource| owned(&resource.owner, input.component));
     if direct
         && matches!(
             view.document.state,
@@ -78,3 +86,7 @@ fn owned(owner: &EvidenceOwner, component: Option<&str>) -> bool {
     owner == &EvidenceOwner::Entry
         || matches!(owner, EvidenceOwner::Component { path } if Some(path.as_str()) == component)
 }
+
+#[cfg(test)]
+#[path = "_tests_/own_rule_sources_tests.rs"]
+mod own_rule_sources_tests;

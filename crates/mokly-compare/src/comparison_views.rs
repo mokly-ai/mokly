@@ -39,6 +39,8 @@ pub(crate) struct PendingView {
     pub(crate) inputs: bool,
     pub(crate) structure: bool,
     pub(crate) root_changed: bool,
+    /// Direct CSS dependency sources proved by own-root matches or entry evidence.
+    pub(crate) rule_sources: BTreeSet<String>,
     pub(crate) proofs: Vec<InstanceProof>,
     pub(crate) owned: owned_styles::Changes,
 }
@@ -249,6 +251,7 @@ pub(crate) fn collect(
                 .is_some_and(|comparison| comparison.structure),
             proofs,
             owned,
+            rule_sources: BTreeSet::new(),
             // A view on one side proves a root change only for a one-sided
             // entry; an entry with both sides that gains or loses a view has
             // no paired canonical form for that view.

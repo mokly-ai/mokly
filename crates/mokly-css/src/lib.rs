@@ -51,6 +51,7 @@ mod selector_scope;
 
 pub mod attribution;
 mod attribution_membership;
+mod attribution_records;
 
 #[cfg(test)]
 #[path = "_tests_/rule_tests.rs"]

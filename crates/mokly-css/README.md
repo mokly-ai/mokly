@@ -83,6 +83,8 @@ component paths cannot make a receiving copy look like the supplying instance.
 own-page matches, and filters nested components before one record reduction.
 It consumes the observation vector and moves retained paths into the reducer.
 Owned head styles, ownerless head styles, and linked CSS share that reducer.
+Kept own-page source paths remain separate from published ownership records.
+Callers use those paths for direct preview states and dependency reasons.
 A source with no kept rule has one empty-selector `excluded` record.
 Unresolved proof takes precedence for the same selector and source.
 `inline_attribution` uses the linked observation boundary for ownerless head
@@ -145,6 +147,7 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 - [Rule collection](./src/rule_collection.rs), [diff](./src/rules.rs), and [matching](./src/rule_matching.rs).
 - [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs),
   [shared containment](./src/containment.rs), and [parsed cache](./src/parsed_cache.rs).
+- [Record reduction](./src/attribution_records.rs) publishes evidence for every CSS source.
 - [CSS Modules](./src/modules.rs) and [module checks](./src/module_checks.rs).
 - [CSS references](./src/syntax.rs), [paths](./src/paths.rs), and [errors](./src/error.rs).
 - [Token arena](./src/token_tree.rs) and [statement sections](./src/token_sections.rs).

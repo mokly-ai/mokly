@@ -3,15 +3,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 
-use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
+use mokly_model::evidence::{EvidenceOwner, RuleEvidence};
 use mokly_model::review_affected::ReviewSide;
-use mokly_model::review_order::rule_key;
 
 use crate::attribution_membership::Boundary;
 use crate::containment::ContainmentPath;
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
-use crate::{attribution_membership, observation};
+use crate::{attribution_membership, attribution_records, observation};
 
 /// Path-independent before and after tuples of one changed rule.
 pub type RuleIdentity = (Option<(Vec<String>, String)>, Option<(Vec<String>, String)>);
@@ -81,6 +80,8 @@ pub struct Attribution {
     pub changed_components: BTreeSet<String>,
     /// Page indices with a kept own-root match, used for variant reasons.
     pub component_pages: BTreeSet<usize>,
+    /// Sources with kept own-root matches, separate from nested-instance records.
+    pub own_page_sources: BTreeMap<usize, BTreeSet<String>>,
 }
 
 /// Retain only containment proof before releasing each view's parsed trees.
@@ -183,7 +184,7 @@ pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
     }
     let mut changed: BTreeMap<RuleIdentity, BTreeSet<String>> = BTreeMap::new();
     let mut changed_components = BTreeSet::new();
-    let mut component_pages = BTreeSet::new();
+    let mut own_page_sources = BTreeMap::<usize, BTreeSet<String>>::new();
     for (index, page) in pages.iter().enumerate() {
         let Some(component) = &page.component else {
             continue;
@@ -227,72 +228,19 @@ pub fn attribute(mut pages: Vec<PageObservation>) -> Attribution {
                     .entry(rule.identity.clone())
                     .or_default()
                     .insert(component.clone());
-                component_pages.insert(index);
+                own_page_sources
+                    .entry(index)
+                    .or_default()
+                    .insert(rule.stylesheet.clone());
             }
         }
     }
-    let output = pages
-        .iter()
-        .map(|page| {
-            let mut records = Vec::new();
-            let mut examined = BTreeSet::new();
-            for rule in &page.rules {
-                examined.insert(rule.stylesheet.clone());
-                for selector in &rule.selectors {
-                    if !selector.unresolved && selector.matches.is_empty() {
-                        continue;
-                    }
-                    let changed = changed.get(&rule.identity);
-                    let owners: BTreeSet<_> = if selector.unresolved {
-                        BTreeSet::from([None])
-                    } else {
-                        selector
-                            .matches
-                            .iter()
-                            .map(|matched| {
-                                attribution_membership::owner(
-                                    matched,
-                                    changed,
-                                    unfiltered.get(&rule.identity),
-                                )
-                            })
-                            .collect()
-                    };
-                    for owner in owners {
-                        records.push(RuleEvidence {
-                            stylesheet: rule.stylesheet.clone(),
-                            selector: selector.selector.clone(),
-                            status: if selector.unresolved {
-                                RuleStatus::Unresolved
-                            } else {
-                                RuleStatus::Matched
-                            },
-                            owner: owner.map_or(EvidenceOwner::Entry, |path| {
-                                EvidenceOwner::Component { path }
-                            }),
-                        });
-                    }
-                }
-            }
-            for stylesheet in examined {
-                if !records.iter().any(|record| record.stylesheet == stylesheet) {
-                    records.push(RuleEvidence {
-                        stylesheet,
-                        selector: String::new(),
-                        status: RuleStatus::Excluded,
-                        owner: EvidenceOwner::Entry,
-                    });
-                }
-            }
-            records.sort_by(|left, right| rule_key(left).cmp(&rule_key(right)));
-            records.dedup();
-            records
-        })
-        .collect();
+    let output = attribution_records::reduce(&pages, &changed, &unfiltered);
     Attribution {
         own_pages: unfiltered,
         pages: output,
         changed_components,
-        component_pages,
+        component_pages: own_page_sources.keys().copied().collect(),
+        own_page_sources,
     }
 }

@@ -140,6 +140,9 @@ Exact owned-instance proof uses the same unfiltered own-page sets after the
 catalogue pass, and retains only paired instances with unchanged caller inputs.
 Own render, resource, and rule impact share one unchanged-input check. Saved
 prop edits retain their view records without marking unchanged consumers affected.
+Own CSS states and dependency reasons use kept own-page source proof.
+Details can retain a nested component record without promoting its source to
+an own-page dependency reason.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds a bounded base capture over its pinned source, the
 original cached head generation, view states, reasons, ownership

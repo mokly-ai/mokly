@@ -435,6 +435,15 @@ readiness rather than blocking this acceptance round on further startup work.
   keeps the old rule and uses explicit item classes in the Stack fixture.
   A implements the requested example. No answer followed the question.
 
+- Defaults-engine round 4 focused re-review finding 3 B (2026-10-20): applied
+  by default (user rule). Carry kept own-page stylesheet paths through the
+  shared reducer and comparison. Use them for preview states, component
+  impact, and dependency reasons. Keep nested ownership records and exact
+  instance proof. Option A uses a page-level flag but leaves mixed-source
+  dependency errors. B is the complete fix within decisions 96 and 73.
+  The two-crate scope grades Large. No answer followed the choice. Items 97
+  and 98 remain pending.
+
 - Defaults-engine round 3 finding 3 A (2026-10-20, approved): move observations
   out of pending views and pass the vector into attribution by value. Merge
   rule observations in place without cloning their retained paths. Keep
@@ -2547,6 +2556,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         supplier component cannot remove an intermediate declared owner's
         rule. This completes decision 96's exact supplier protection.
         Evidence: `.context/defaults-engine-round4/repeated-cli-red.log`.
+  - [x] Defaults-engine round 4 focused re-review finding 3 B: separate kept
+        own-page CSS source proof from nested ownership records. Preview states
+        and dependency reasons use source proof; Details and exact instance
+        proof retain the nested record. Evidence:
+        `.context/defaults-engine-round4/provenance-cli-red.log` and
+        `.context/defaults-engine-round4/provenance-unit-red.log`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.
