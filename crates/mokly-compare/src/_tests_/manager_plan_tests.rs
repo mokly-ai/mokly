@@ -121,3 +121,40 @@ fn yarn_config_projection_accepts_yaml_spelling_without_expanding_nested_aliases
         manager_yaml::fields(b"nodeLinker: pnp\nnodeLinker: node-modules", ".yarnrc.yml").is_err()
     );
 }
+
+#[test]
+fn berry_checks_restricted_configuration_in_every_repository_ancestor() {
+    for ancestor in [
+        "plugins:\n  - path: ./plugin.cjs",
+        "networkSettings:\n  registry.example:\n    enableNetwork: true",
+    ] {
+        let base = inputs(&[
+            (".yarnrc.yml", ancestor),
+            ("app/package.json", r#"{"packageManager":"yarn@4.18.1"}"#),
+            ("app/yarn.lock", "__metadata:\n  version: 8"),
+            ("app/.yarnrc.yml", "nodeLinker: node-modules"),
+        ]);
+        assert!(matches!(
+            roots(&base, &["app".into()]),
+            Err(Error::InvalidInput { path }) if path == ".yarnrc.yml"
+        ));
+    }
+}
+
+#[test]
+fn berry_uses_the_nearest_linker_setting_from_its_configuration_chain() {
+    let mut base = inputs(&[
+        (".yarnrc.yml", "nodeLinker: node-modules"),
+        ("app/package.json", r#"{"packageManager":"yarn@4.18.1"}"#),
+        ("app/yarn.lock", "__metadata:\n  version: 8"),
+    ]);
+    assert_eq!(
+        roots(&base, &["app".into()]).unwrap()[0].manager,
+        Manager::YarnBerry
+    );
+    base.files.insert(
+        RepoPath::parse("app/.yarnrc.yml").unwrap(),
+        b"nodeLinker: pnp".to_vec(),
+    );
+    assert!(matches!(roots(&base, &["app".into()]), Err(Error::YarnPnp)));
+}

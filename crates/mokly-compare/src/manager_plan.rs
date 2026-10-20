@@ -114,21 +114,32 @@ fn yarn(inputs: &Inputs, root: &str) -> Result<Manager> {
     if !manager_yaml::fields(lock, &path(root, "yarn.lock"))?.contains_key("__metadata") {
         return Err(Error::UnsupportedManager);
     }
-    let Some(config) = file(inputs, root, ".yarnrc.yml") else {
-        return Err(Error::YarnPnp);
-    };
-    let config = manager_yaml::fields(config, &path(root, ".yarnrc.yml"))?;
-    match config.get("nodeLinker").and_then(Option::as_deref) {
+    match berry_linker(inputs, root)?.as_deref() {
         Some("node-modules") => {}
         None | Some("pnp") => return Err(Error::YarnPnp),
         _ => return Err(Error::UnsupportedManager),
     }
-    if config.contains_key("plugins") || config.contains_key("networkSettings") {
-        return Err(Error::InvalidInput {
-            path: path(root, ".yarnrc.yml"),
-        });
-    }
     Ok(Manager::YarnBerry)
+}
+
+fn berry_linker(inputs: &Inputs, root: &str) -> Result<Option<String>> {
+    let mut linker = None;
+    for directory in ancestor_roots::directories(root) {
+        let Some(bytes) = file(inputs, &directory, ".yarnrc.yml") else {
+            continue;
+        };
+        let path = path(&directory, ".yarnrc.yml");
+        let config = manager_yaml::fields(bytes, &path)?;
+        if config.contains_key("plugins") || config.contains_key("networkSettings") {
+            return Err(Error::InvalidInput { path });
+        }
+        if linker.is_none()
+            && let Some(value) = config.get("nodeLinker")
+        {
+            linker = Some(value.clone().ok_or(Error::InvalidInput { path })?);
+        }
+    }
+    Ok(linker)
 }
 
 fn file<'a>(inputs: &'a Inputs, root: &str, name: &str) -> Option<&'a [u8]> {
