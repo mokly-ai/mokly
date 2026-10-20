@@ -4,7 +4,7 @@ import type {
   Variant,
 } from "../../tests/fixtures/large/dimensions.js";
 
-import { scenarios } from "./benchmark.js";
+import { parseScenario, scenarios } from "./benchmark.js";
 import type { Scenario } from "./benchmark.js";
 import { DEFAULT_MEMORY_STOP_KIB } from "./memory.js";
 import type { ToolchainMode } from "./toolchain.js";
@@ -63,12 +63,12 @@ export function options(args: string[]) {
       (value === "workspace" || value === "install")
     )
       toolchain = value;
-    else if (
-      flag === "--scenario" &&
-      (value === "all" || scenarios.includes(value as Scenario))
-    )
-      selected = value === "all" ? scenarios : [value as Scenario];
-    else if (flag === "--sidecars") {
+    else if (flag === "--scenario") {
+      const scenario = parseScenario(value);
+      if (value === "all") selected = scenarios;
+      else if (scenario) selected = [scenario];
+      else throw new Error(`Unknown fixture option or value: ${flag} ${value}`);
+    } else if (flag === "--sidecars") {
       sidecars = Number(value);
       if (!Number.isSafeInteger(sidecars) || sidecars < 1)
         throw new Error("--sidecars needs a positive integer");

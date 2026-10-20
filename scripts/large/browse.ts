@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import type { BrowserContext } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
 
 import { availableReview, firstScreen } from "./changes.js";
 import { changesVisible, delivered, observeDelivery } from "./delivery.js";
@@ -12,6 +12,7 @@ export async function browse(
   url: string,
   fixture: PreparedFixture,
   beginning: number,
+  scope: "serve" | "startup" = "serve",
 ) {
   const page = await context.newPage();
   await observeDelivery(page);
@@ -37,11 +38,8 @@ export async function browse(
   ).toBeHidden();
   const usableMs = performance.now() - beginning;
   await page.getByRole("searchbox").fill("");
-  const current = await delivered(page);
-  await changesVisible(page, current.index);
-  const changesReadyMs = performance.now() - beginning;
-  const review = await availableReview(page, fixture, current);
-  const reviewAvailableMs = performance.now() - beginning;
+  const comparison =
+    scope === "serve" ? await reviewReadiness(page, fixture, beginning) : {};
   for (const viewport of ["desktop", "mobile"]) {
     await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
     for (const scheme of ["dark", "light"]) {
@@ -89,8 +87,19 @@ export async function browse(
     propsMs,
     cachedPreviewMs,
     bytes,
-    changesReadyMs,
-    reviewAvailableMs,
-    review,
+    ...comparison,
   };
+}
+
+async function reviewReadiness(
+  page: Page,
+  fixture: PreparedFixture,
+  beginning: number,
+) {
+  const current = await delivered(page);
+  await changesVisible(page, current.index);
+  const changesReadyMs = performance.now() - beginning;
+  const review = await availableReview(page, fixture, current);
+  const reviewAvailableMs = performance.now() - beginning;
+  return { changesReadyMs, reviewAvailableMs, review };
 }

@@ -11,8 +11,9 @@ import {
 } from "./destinations.js";
 
 /**
- * Changes stories caused only by one changed `.action` rule. In `styles` it
- * styles only Action's output; in `styles-outside` it also styles a link on
+ * Changes stories of one changed `.action` rule. In `styles` it styles only
+ * Action's output, beside a markup change that shows only where screens use
+ * Action and so adds no row; in `styles-outside` it also styles a link on
  * Welcome that is not part of Action.
  */
 export type StyleScenario = "styles" | "styles-outside";

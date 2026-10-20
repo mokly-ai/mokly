@@ -7,6 +7,7 @@ use std::sync::Arc;
 use sha2::{Digest, Sha256};
 
 use crate::error::Result;
+use crate::read_evidence::ReadBaseline;
 use crate::stream::{OpenedSource, SourceStream};
 
 /// An entry's kind before following any symbolic link.
@@ -46,6 +47,20 @@ pub struct Child {
 /// Missing and replaced paths project to `None`. Reads preserve their errors.
 #[cfg_attr(feature = "mock", unimock::unimock(api = SourceTreeMock))]
 pub trait SourceTree: Send + Sync {
+    /// Retain a consumer's baseline without rereading or upgrading its coverage.
+    /// Static admission observes it; ordinary source adapters need no ledger.
+    fn observe_input(&self, _path: &Path, _baseline: &ReadBaseline) -> Result<()> {
+        Ok(())
+    }
+    /// Forward a pinned source proof without reading a working-tree alias.
+    fn observe_pinned_input(
+        &self,
+        _path: &Path,
+        _baseline: &ReadBaseline,
+        _pinned_digest: &str,
+    ) -> Result<()> {
+        Ok(())
+    }
     /// Resolve a repository, root, or candidate identity once per pass.
     fn project(&self, path: &Path) -> Result<Option<Node>>;
     /// List direct children of a projected directory identity without following links.

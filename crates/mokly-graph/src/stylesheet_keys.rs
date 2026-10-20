@@ -29,6 +29,17 @@ pub(crate) fn input(config: &NodeKey, root: &StylesheetRoot, bundle: &Bundle) ->
                 .iter()
                 .map(|(path, hash)| format!("{path}:{hash}")),
         )
+        .chain(
+            bundle
+                .read_evidence
+                .inputs
+                .iter()
+                .flat_map(|(path, versions)| {
+                    versions
+                        .iter()
+                        .map(move |version| format!("{path}:{version:?}"))
+                }),
+        )
         .collect();
     let recipe = data_key(
         NodeKind::Stylesheet,

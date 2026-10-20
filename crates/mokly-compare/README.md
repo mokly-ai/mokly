@@ -94,8 +94,13 @@ Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
-Before each view is read and encoded, capture checks the generation's
-cancellation state and returns its error without processing a later view.
+Capture timings separate full validation, document composition, encoding,
+and closure collection. They contain no source data or error payloads.
+Capture schedules bounded batches on the generation's existing render workers.
+Each batch contains at most one transient input per worker. It releases each
+parsed input after encoding and retains results in authored route order.
+Before each view starts and before each encoding, capture checks cancellation.
+Queued cancelled inputs return the generation's error without starting work.
 Every generated route that fits retains its digest. Usage, links, resources,
 and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.

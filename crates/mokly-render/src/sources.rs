@@ -7,6 +7,7 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::ancestor_roots::dependency_directory;
 use mokly_source_interface::error::Result;
+use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
@@ -27,40 +28,9 @@ pub(crate) struct SideTree {
     pub(crate) repository_roots: Vec<PathBuf>,
 }
 
-/// Keep the extraction and dependency leases until the last graph reader closes.
-pub(crate) struct LeasedTree {
-    pub(crate) tree: Arc<dyn SourceTree>,
-    pub(crate) _base: Option<Arc<BaseSide>>,
-}
-
-impl SourceTree for LeasedTree {
-    fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
-        self.tree.prefetch(paths)
-    }
-    fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
-        self.tree.open_stream(path)
-    }
-    fn digest_unretained(&self, path: &Path) -> Result<String> {
-        self.tree.digest_unretained(path)
-    }
-    fn read_public(&self, path: &Path) -> mokly_source_interface::error::Result<Vec<u8>> {
-        self.tree.read_public(path)
-    }
-    fn digest(&self, path: &Path) -> mokly_source_interface::error::Result<String> {
-        self.tree.digest(path)
-    }
-    fn project(&self, path: &Path) -> Result<Option<Node>> {
-        self.tree.project(path)
-    }
-    fn children(&self, path: &Path) -> Result<Vec<Child>> {
-        self.tree.children(path)
-    }
-    fn read(&self, path: &Path) -> Result<Vec<u8>> {
-        self.tree.read(path)
-    }
-    fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
-        self.tree.read_shared(path)
-    }
+enum SourceOrigin {
+    Repository,
+    Dependency,
 }
 
 impl SideTree {
@@ -96,6 +66,9 @@ impl SideTree {
     }
 
     fn source(&self, path: &Path) -> Result<Option<(PathBuf, Node)>> {
+        if let Some(source) = source_paths::repository_input(&self.root, path) {
+            return Ok(self.sources.project(&source)?.map(|node| (source, node)));
+        }
         if self._base.is_none() {
             return Ok(None);
         }
@@ -129,19 +102,26 @@ impl SideTree {
             .find_map(|root| identity.strip_prefix(root).ok())
             .map(|relative| self.root.join(relative))
     }
-    fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf)> {
+    fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf, SourceOrigin)> {
+        if let Some(source) = source_paths::repository_input(&self.root, path) {
+            return Ok((self.sources.as_ref(), source, SourceOrigin::Repository));
+        }
         if let Some((source, _)) = self.source(path)? {
-            return Ok((self.sources.as_ref(), source));
+            return Ok((self.sources.as_ref(), source, SourceOrigin::Repository));
         }
         if let Some((_, physical, _)) = self.mapped(path) {
             if let Some(node) = self.dependencies.project(&physical)?
                 && let Some(source) = self.source_alias(&node.identity)
             {
-                return Ok((self.sources.as_ref(), source));
+                return Ok((self.sources.as_ref(), source, SourceOrigin::Repository));
             }
-            Ok((self.dependencies.as_ref(), physical))
+            Ok((
+                self.dependencies.as_ref(),
+                physical,
+                SourceOrigin::Dependency,
+            ))
         } else {
-            Ok((self.sources.as_ref(), path.into()))
+            Ok((self.sources.as_ref(), path.into(), SourceOrigin::Repository))
         }
     }
 
@@ -158,6 +138,21 @@ impl SideTree {
 }
 
 impl SourceTree for SideTree {
+    fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> Result<()> {
+        let (tree, physical, origin) = self.selected(path)?;
+        if let Some(base) = &self._base
+            && matches!(origin, SourceOrigin::Repository)
+            && let Ok(relative) = physical.strip_prefix(&self.root)
+        {
+            let digest = tree.digest(&physical)?;
+            return self.dependencies.observe_pinned_input(
+                &base.sources.directory.join(relative),
+                baseline,
+                &digest,
+            );
+        }
+        tree.observe_input(&physical, baseline)
+    }
     fn prefetch(&self, paths: &[PathBuf]) -> Result<()> {
         let mut sources = Vec::new();
         let mut dependencies = Vec::new();
@@ -185,33 +180,33 @@ impl SourceTree for SideTree {
         Ok(())
     }
     fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         let source = tree
             .project(&physical)?
             .map_or(physical, |node| node.identity);
         tree.open_stream(&source)
     }
     fn digest_unretained(&self, path: &Path) -> Result<String> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         let source = tree
             .project(&physical)?
             .map_or(physical, |node| node.identity);
         tree.digest_unretained(&source)
     }
     fn digest(&self, path: &Path) -> Result<String> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         let hash = tree.digest(&physical)?;
         self.record(path);
         Ok(hash)
     }
     fn read_public(&self, path: &Path) -> Result<Vec<u8>> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         let bytes = tree.read_public(&physical)?;
         self.record(path);
         Ok(bytes)
     }
     fn read_shared(&self, path: &Path) -> Result<Arc<[u8]>> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         let bytes = tree.read_shared(&physical)?;
         self.record(path);
         Ok(bytes)
@@ -253,11 +248,11 @@ impl SourceTree for SideTree {
     }
 
     fn children(&self, path: &Path) -> Result<Vec<Child>> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         tree.children(&physical)
     }
     fn read(&self, path: &Path) -> Result<Vec<u8>> {
-        let (tree, physical) = self.selected(path)?;
+        let (tree, physical, _) = self.selected(path)?;
         let bytes = tree.read(&physical)?;
         self.record(path);
         Ok(bytes)
@@ -280,3 +275,7 @@ pub(crate) fn reader(
         repository_roots: side.repository_roots.clone(),
     })
 }
+
+#[cfg(test)]
+#[path = "_tests_/source_evidence_tests.rs"]
+mod source_evidence_tests;

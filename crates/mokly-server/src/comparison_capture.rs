@@ -57,25 +57,25 @@ impl Capturer for SnapshotCapture {
                 return Err(ServerError::ChangesUnavailable);
             }
         } else {
-            let mut selected = find(&result.review.entries, path, true)
+            let (parent, selected) = find(&result.review.entries, path, true)
                 .or_else(|| find(&result.review.entries, path, false))
-                .filter(|entry| match entry.kind {
+                .filter(|(_, entry)| match entry.kind {
                     ReviewKind::Component => true,
                     ReviewKind::Screen => entry.after.is_some(),
                     ReviewKind::UseCase => false,
                 })
-                .ok_or(ServerError::ChangesUnavailable)?
-                .clone();
+                .ok_or(ServerError::ChangesUnavailable)?;
             selected_kind = Some(match selected.kind {
                 ReviewKind::Screen => EntryKind::Screen,
                 ReviewKind::Component => EntryKind::Component,
                 ReviewKind::UseCase => EntryKind::UseCase,
             });
-            selected.variants = None;
+            let mut projected = parent.clone();
+            projected.variants = (parent.path != selected.path).then(|| vec![selected.clone()]);
             let review = ReviewResultV8 {
                 schema_version: 8,
                 base_commit: result.review.base_commit.clone(),
-                entries: vec![selected],
+                entries: vec![projected],
                 affected: Vec::new(),
                 diagnostics: Vec::new(),
             };
@@ -146,15 +146,20 @@ impl Capturer for SnapshotCapture {
     }
 }
 
-fn find<'a>(entries: &'a [ReviewEntry], path: &str, current_only: bool) -> Option<&'a ReviewEntry> {
+/// Find the selection and retain its parent as the owner of variant evidence.
+fn find<'a>(
+    entries: &'a [ReviewEntry],
+    path: &str,
+    current_only: bool,
+) -> Option<(&'a ReviewEntry, &'a ReviewEntry)> {
     for entry in entries {
         if entry.path == path && (!current_only || entry.after.is_some()) {
-            return Some(entry);
+            return Some((entry, entry));
         }
         if let Some(variants) = &entry.variants
-            && let Some(entry) = find(variants, path, current_only)
+            && let Some((_, selected)) = find(variants, path, current_only)
         {
-            return Some(entry);
+            return Some((entry, selected));
         }
     }
     None
@@ -242,3 +247,7 @@ fn check(cancel: &dyn ChangeCancellation) -> Result<()> {
 #[cfg(test)]
 #[path = "_tests_/comparison_capture_tests.rs"]
 mod comparison_capture_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_variant_tests.rs"]
+mod comparison_variant_tests;

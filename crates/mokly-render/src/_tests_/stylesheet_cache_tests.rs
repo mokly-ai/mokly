@@ -11,6 +11,7 @@ use crate::stylesheet_cache::{CachedStylesheets, StylesheetCache};
 #[test]
 fn oversized_results_are_returned_but_recomputed_on_the_next_request() {
     let bundle = Bundle {
+        read_evidence: Default::default(),
         route: "styles/main.css".into(),
         css: "a {color:red}".into(),
         assets: BTreeMap::new(),

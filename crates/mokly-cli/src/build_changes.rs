@@ -1,14 +1,18 @@
 //! Check cancellation around the retained Changes result and its warning policy.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_compare::base_render::selected_base;
 use mokly_compare::comparison_types::ComparisonResult;
+use mokly_compare::error::Error;
+use mokly_graph::error::GraphError;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_static::changes::ChangeState;
+use mokly_static::error;
 
 use crate::build::{BuildChanges, BuildError, CatalogueBuild};
 use crate::changes_diagnostics;
@@ -36,6 +40,18 @@ impl CatalogueBuild {
                     BuildChanges::Ready(Arc::new(result))
                 }
                 Err(source) => {
+                    if self.inputs.is_some()
+                        && let Some(path) = changed_input(&source)
+                    {
+                        return Err(BuildError::Static {
+                            source: error::Error::InputsChanged { path: path.into() },
+                        });
+                    }
+                    if let Some(inputs) = &self.inputs
+                        && let Err(source) = inputs.verify()
+                    {
+                        return Err(BuildError::Static { source });
+                    }
                     warnings.extend(changes_diagnostics::warnings(&source));
                     if let Some(unavailable) = changes_diagnostics::unavailable(
                         &source,
@@ -55,6 +71,17 @@ impl CatalogueBuild {
         self.checkpoint()?;
         tracing::Span::current().record("status", "ok");
         Ok(changes)
+    }
+}
+
+fn changed_input(error: &Error) -> Option<&Path> {
+    match error {
+        Error::Base { source, .. } => changed_input(source),
+        Error::SourceFailure { source } => changed_input(source),
+        Error::Graph {
+            source: GraphError::InputsChanged { path },
+        } => Some(path),
+        _ => None,
     }
 }
 

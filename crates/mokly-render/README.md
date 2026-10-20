@@ -33,6 +33,8 @@ their detail separately from the module-and-export location, so Rust prints
 one location before the diagnostic code. PostCSS requests carry logical
 stylesheet paths; the worker resolves their physical input on the chosen side.
 Each PostCSS context uses an owned child process in that side's source root.
+Runtime allocates context ids from one process-wide sequence.
+Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
 directories before inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
@@ -59,16 +61,26 @@ Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
 The pool restores compatible code before evaluation-only bundles across slots
-and recycling. Metadata invalidation still recomputes class maps before reusing
+and recycling. It gives each loaded lifetime an epoch. A stale process replays
+maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
 identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
+PostCSS read evidence retains observed whole-file digests beside late baselines.
+Both cache layers replay the original evidence to static admission. Selected
+module inputs remain separate from plugin privacy and catalogue membership.
+Base witnesses compare with pinned Git bytes through the shared admission
+observer. They never enter the head path ledger.
+Conflicting versions cannot seed cross-generation stylesheet reuse.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet text rebuilds from that generation's captured parsed inputs.
 Opaque asset records contain metadata only. Delivery verifies a source stream
 against the generation's digest; assets never enter the stylesheet byte cache.
+Asset streams use the same selected dependency reader as CSS compilation,
+including configured package roots and historical installations. Authored
+public-resource reads retain their separate source confinement checks.
 Module stylesheet discovery uses an explicit stack and retains import order
 when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide
@@ -91,6 +103,8 @@ their dependency classification. Installation lookup metadata uses private
 names so tracked directories cannot hide installed package membership.
 Each sidecar worker keeps one source working directory. Head and base module
 evaluation and render callbacks use their own files through `process.cwd()`.
+Core fragment spans include JavaScript calls and their transport and queue
+waits. Sidecar render spans measure work inside each process.
 Both sides forward identical trusted style records into the composed tree
 and comparison.
 Both sides use the current package version and

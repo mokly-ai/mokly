@@ -36,9 +36,9 @@ export const styleChangedScreen = defineScreen({
   title: "Component with changed styles",
   colorSchemes: ["light"],
   description:
-    "A changed rule in Action's stylesheet styles only Action's own output, so Action and its saved variants are in Changes, and Welcome and Details appear under Affected screens without rows of their own.",
+    "A changed rule in Action's stylesheet styles only Action's own output, and a markup change shows only where Welcome and Details use Action. Action and its saved variants are in Changes, and Welcome and Details appear under Affected screens without rows of their own.",
   rationale:
-    "The rule matches Action on its own saved pages, so Action changes. On Welcome and Details it matches only inside Action, so those screens stay out of Changes. Details names the stylesheet once and, under it, the changed styles that apply to the component.",
+    "The rule matches Action on its own saved pages, so Action changes. On Welcome and Details it matches only inside Action, so those screens stay out of Changes. No saved variant shows the markup change, so Details says that the rendered content changed where Action is used, and the Default caption still names only the styles. Details then names the stylesheet once and, under it, the changed styles that apply to the component.",
   ...artboards({
     desktop: <StyleChangedDesktop />,
     mobile: <StyleChangedMobile />,

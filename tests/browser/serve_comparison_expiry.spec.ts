@@ -1,8 +1,12 @@
 /**
- * Expired generations in Serve. A generation expires after 60 idle seconds,
- * which a browser spec cannot wait for, so `page.route` answers the next
- * renewal with 404, the response of a collected generation. The shell must
- * then reacquire the comparison or preview before it shows the new view.
+ * Failed renewals in Serve. A selected generation expires after 60 idle
+ * seconds, which a browser spec cannot wait for, so `collectGeneration`
+ * emulates the collection: the next renewal answers 404 and the generation's
+ * files are gone. Serve keeps an advertised classification generation's
+ * JSON and recaptures its snapshots, so the removed-preview journeys use the
+ * same failed renewal only to exercise the shell's reacquire of the
+ * advertised URL. The shell must reacquire the comparison or preview before
+ * it shows the new view, and never request an old document address.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -15,25 +19,13 @@ import {
   PANE_SOURCE,
   selectedRequests,
 } from "./serve_comparison_ui.js";
+import { collectGeneration } from "./serve_generation_collection.js";
 import { responseFailure } from "./shell_error_allowances.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 const after = ".mb-pane--after iframe";
 const before = ".mb-pane--before iframe";
 const stage = "[data-mokly-preview]";
-
-/** Answer the next renewal of `review` with 404, as a collected generation does. */
-async function expireOnRenewal(page: Page, review: string): Promise<void> {
-  let expired = false;
-  await page.route(review, async (route) => {
-    if (route.request().method() !== "HEAD" || expired) {
-      await route.continue();
-      return;
-    }
-    expired = true;
-    await route.fulfill({ status: 404 });
-  });
-}
 
 /** Every snapshot response that failed while the spec ran. */
 function failedSnapshots(page: Page): string[] {
@@ -74,11 +66,14 @@ for (const change of ["theme", "viewport"] as const)
       "aria-busy",
       "true",
     );
-    const review = `${generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!)}review.json`;
+    const expired = generationOf(
+      (await page.locator(after).getAttribute(PANE_SOURCE))!,
+    );
+    const review = `${expired}review.json`;
     allowBrowserError(
       responseFailure(changes.url, new URL(review).pathname, 404),
     );
-    await expireOnRenewal(page, review);
+    const collection = await collectGeneration(page, review);
 
     if (change === "theme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
@@ -97,6 +92,13 @@ for (const change of ["theme", "viewport"] as const)
       "data-compare-mode",
       "difference",
     );
+    // The reacquired comparison is a new generation, and the shell asked the
+    // collected one for nothing after its renewal failed.
+    for (const pane of [before, after])
+      expect(
+        generationOf((await page.locator(pane).getAttribute(PANE_SOURCE))!),
+      ).not.toBe(expired);
+    expect(collection.refused()).toEqual([]);
     expect(requests).toHaveLength(2);
     expect(requests[1]!.searchParams.get("path")).toBe(changed);
     expect(requests[1]!.searchParams.has("refresh")).toBe(false);
@@ -108,33 +110,42 @@ test("snapshot recovery keeps the selected saved variant", async ({
   changes,
   allowBrowserError,
 }) => {
-  const variant = "branch/consumers/badge/default";
+  const variant = changes.paths.changedVariant;
   const requests = selectedRequests(page);
+  const failed = failedSnapshots(page);
   await page.goto(`/view/${variant}/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
-  await expect(page.frameLocator(after).locator(".branch-badge")).toHaveText(
-    "After Active",
+  await expect(page.frameLocator(after).locator("h2")).toHaveText(
+    "Featured After",
   );
-  const review = `${generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!)}review.json`;
+  const expired = generationOf(
+    (await page.locator(after).getAttribute(PANE_SOURCE))!,
+  );
+  const review = `${expired}review.json`;
   allowBrowserError(
     responseFailure(changes.url, new URL(review).pathname, 404),
   );
-  await expireOnRenewal(page, review);
+  const collection = await collectGeneration(page, review);
   await chooseViewport(page, "mobile");
   await expect(page.locator(after)).toHaveAttribute(
     PANE_SOURCE,
     /\.mobile\.html$/u,
   );
-  await expect(page.frameLocator(before).locator(".branch-badge")).toHaveText(
-    "Before Active",
+  await expect(page.frameLocator(before).locator("h2")).toHaveText(
+    "Featured Before",
   );
-  await expect(page.frameLocator(after).locator(".branch-badge")).toHaveText(
-    "After Active",
+  await expect(page.frameLocator(after).locator("h2")).toHaveText(
+    "Featured After",
   );
+  expect(
+    generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!),
+  ).not.toBe(expired);
+  expect(collection.refused()).toEqual([]);
   expect(requests).toHaveLength(2);
   expect(requests[1]!.searchParams.get("path")).toBe(variant);
   expect(requests[1]!.searchParams.size).toBe(1);
+  expect(failed).toEqual([]);
 });
 
 for (const change of ["scheme", "viewport"] as const)
@@ -160,12 +171,11 @@ for (const change of ["scheme", "viewport"] as const)
     await expect(desktop.contentFrame().locator("h1")).toHaveText(
       "Historical screen",
     );
-    const expired = (await desktop.getAttribute(PANE_SOURCE))!;
     const metadata: string[] = [];
     page.on("request", (request) => {
       if (request.url() === review) metadata.push(request.method());
     });
-    await expireOnRenewal(page, review);
+    const collection = await collectGeneration(page, review);
 
     if (change === "scheme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
@@ -180,7 +190,12 @@ for (const change of ["scheme", "viewport"] as const)
     await expect(renewed.contentFrame().locator("h1")).toHaveText(
       "Historical screen",
     );
-    await expect(renewed).not.toHaveAttribute(PANE_SOURCE, expired);
+    // The preview reacquired its advertised generation before it asked the
+    // generation for any document of the new view.
+    expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(
+      review.replace(/review\.json$/u, ""),
+    );
+    expect(collection.refused()).toEqual([]);
     expect(metadata).toEqual(["HEAD", "GET"]);
     expect(selections).toEqual([]);
     expect(failed).toEqual([]);

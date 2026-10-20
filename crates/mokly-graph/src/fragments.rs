@@ -1,14 +1,14 @@
 //! Memoized JavaScript fragment renders share the bounded artifact cache.
 
-use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use mokly_html::error::{HtmlError, Result};
 use mokly_html::fragment::{Fragment, FragmentRenderer, FragmentRequest, RenderKind};
 use mokly_model::material::props_key;
 
 use crate::cache::{Artifact, RenderCache};
-use crate::key::{NodeKey, NodeKind, key};
+use crate::key::{NodeKind, key};
+use crate::requests::{MemoryRequests, Requests};
 
 /// Adapter around one sidecar bundle generation; consume through `dyn FragmentRenderer`.
 pub struct MemoFragments {
@@ -18,7 +18,7 @@ pub struct MemoFragments {
     pub renderer: Arc<dyn FragmentRenderer>,
     /// Shared byte-bounded process cache.
     pub cache: Arc<dyn RenderCache>,
-    flights: Mutex<BTreeMap<NodeKey, Arc<Mutex<()>>>>,
+    flights: Arc<dyn Requests>,
 }
 
 impl MemoFragments {
@@ -32,7 +32,7 @@ impl MemoFragments {
             generation,
             renderer,
             cache,
-            flights: Mutex::new(BTreeMap::new()),
+            flights: Arc::new(MemoryRequests::default()),
         }
     }
 }
@@ -79,17 +79,8 @@ impl FragmentRenderer for MemoFragments {
                 ],
             )
         };
-        let flight = {
-            let mut flights = self
-                .flights
-                .lock()
-                .unwrap_or_else(|error| error.into_inner());
-            flights
-                .entry(key.clone())
-                .or_insert_with(|| Arc::new(Mutex::new(())))
-                .clone()
-        };
-        let result = {
+        let flight = self.flights.acquire(&key);
+        {
             let _guard = flight.lock().unwrap_or_else(|error| error.into_inner());
             if let Some(artifact) = self.cache.get(&key)
                 && let Some(fragment) = &artifact.fragment
@@ -112,14 +103,10 @@ impl FragmentRenderer for MemoFragments {
                     Err(source) => Err(source),
                 }
             }
-        };
-        let mut flights = self
-            .flights
-            .lock()
-            .unwrap_or_else(|error| error.into_inner());
-        if Arc::strong_count(&flight) == 2 {
-            flights.remove(&key);
         }
-        result
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/fragment_request_tests.rs"]
+mod fragment_request_tests;

@@ -5,6 +5,7 @@ import v8 from "node:v8";
 import { chromium } from "@playwright/test";
 import type { Browser } from "@playwright/test";
 
+import { acceptanceForFixture } from "./acceptance_build.js";
 import { browse } from "./browse.js";
 import { browserMeasurement } from "./browser_measurement.js";
 import { changes } from "./changes.js";
@@ -18,13 +19,18 @@ import { startupBudget } from "./startup_budget.js";
 import { watch } from "./watch.js";
 import type { WatchMeasurement } from "./watch.js";
 
-export type Scenario = "build" | "serve" | "changes" | "watch";
+export type Scenario = "build" | "serve" | "changes" | "watch" | "startup";
 export const scenarios: readonly Scenario[] = [
   "build",
   "serve",
   "changes",
   "watch",
 ];
+export function parseScenario(value: string): Scenario | undefined {
+  return value === "startup"
+    ? value
+    : scenarios.find((scenario) => scenario === value);
+}
 function comparisonArguments(baseline: string, enabled: boolean): string[] {
   return enabled ? ["--base", baseline] : ["--no-changes"];
 }
@@ -75,6 +81,11 @@ export async function benchmark(
   let active: Scenario | undefined;
   const completedEdits: WatchMeasurement[] = [];
   try {
+    const acceptanceBuild = selected.some(
+      (scenario) => scenario === "serve" || scenario === "startup",
+    )
+      ? await acceptanceForFixture(fixture)
+      : undefined;
     for (const scenario of selected) {
       active = scenario;
       process.stderr.write(`Benchmark ${scenario}: starting\n`);
@@ -160,18 +171,25 @@ export async function benchmark(
                 ? changes(context, match[1]!, fixture, beginning)
                 : scenario === "watch"
                   ? watch(context, match[1]!, fixture, completedEdits)
-                  : browse(context, match[1]!, fixture, beginning),
+                  : browse(
+                      context,
+                      match[1]!,
+                      fixture,
+                      beginning,
+                      scenario === "startup" ? "startup" : "serve",
+                    ),
             );
             const elapsedMs = performance.now() - beginning;
             const reason =
               "usableMs" in measured
-                ? startupBudget(measured.usableMs)
+                ? startupBudget(measured.usableMs, fixture.variant)
                 : undefined;
             results.push({
               scenario,
               state,
               status: reason ? "failed" : "measured",
               ...(reason ? { reason } : {}),
+              ...(acceptanceBuild ? { acceptanceBuild } : {}),
               readinessMs,
               ...measured,
               elapsedMs,

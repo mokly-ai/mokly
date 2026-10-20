@@ -3,6 +3,7 @@
 mod base_dependencies;
 mod changes_base;
 mod changes_runtime;
+mod changes_static;
 mod command_diagnostics;
 mod entry;
 mod entry_build;

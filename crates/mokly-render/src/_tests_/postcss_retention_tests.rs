@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mokly_model::material::digest;
+use mokly_sidecar::postcss_evidence::{Evidence, Read};
 use mokly_sidecar::results::{Css, Dependency, DependencyKind};
 use mokly_source_interface::tree::{Child, FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
@@ -110,6 +111,7 @@ fn postcss_cache_charges_results_and_scan_metadata_and_rejects_oversized_retenti
         "large".into(),
         CssRecord {
             result: Css {
+                read_evidence: Default::default(),
                 unmapped_dependency_directories: None,
                 text: "x".repeat(2048),
                 dependencies: Vec::new(),
@@ -122,6 +124,7 @@ fn postcss_cache_charges_results_and_scan_metadata_and_rejects_oversized_retenti
         "small".into(),
         CssRecord {
             result: Css {
+                read_evidence: Default::default(),
                 unmapped_dependency_directories: None,
                 text: "a{}".into(),
                 dependencies: Vec::new(),
@@ -143,9 +146,37 @@ fn unmapped_directory_metadata_is_included_in_the_cache_byte_bound() {
         "metadata".into(),
         CssRecord {
             result: Css {
+                read_evidence: Default::default(),
                 text: "a{}".into(),
                 dependencies: vec![],
                 unmapped_dependency_directories: Some(vec!["x".repeat(4096)]),
+            },
+            processed: None,
+        },
+    );
+    assert_eq!(cache.retained_bytes(), 0);
+}
+
+#[test]
+fn observed_read_metadata_is_charged_to_the_existing_cache_bound() {
+    let mut cache = CssCache {
+        limit: 1024,
+        ..Default::default()
+    };
+    cache.insert(
+        "witnesses".into(),
+        CssRecord {
+            result: Css {
+                read_evidence: Evidence {
+                    reads: vec![Read::WholeFile {
+                        path: "x".repeat(4096),
+                        digest: "a".repeat(64),
+                    }],
+                    ..Default::default()
+                },
+                text: "a{}".into(),
+                dependencies: vec![],
+                unmapped_dependency_directories: None,
             },
             processed: None,
         },

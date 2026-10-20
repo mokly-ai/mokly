@@ -55,13 +55,31 @@ keep their requested identities in the document key.
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
+Cross-view anchor checks retain successful destination renders in this same
+bounded cache. Repeated links reuse those documents. Each requested fragment
+is still checked in every destination view, including cache hits.
+Concurrent checks of one destination wait for its active render, then check
+the bounded cache again. Completed requests release their synchronization keys.
+Different targets and different generations keep independent requests.
+Anchor checks and JavaScript fragments use the same scoped request mechanism.
+Each generation and each fragment adapter owns an independent registry.
+The final active lease removes its entry even when an old mutex handle still lives.
+
+Comparison batches use the same render pool and sidecar count as validation.
+They return transient documents and closures in requested route order.
+The comparison caller limits each batch to the pool's existing worker count.
+Other generation adapters use sequential batches unless they forward scheduling
+and their cancellation checks together.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
 validation. Both sides require complete, valid closures. A missing referenced
 head resource is `build-invalid`. `resource_bytes` reads confined public routes
 without granting access to private sources or retaining assets in the private
 source snapshot. `resource_digest` hashes opaque resources through a bounded
-stream. Planning prefetches known resource paths for the whole generation and
+stream. Generated document resource reads use the same rendered bytes and
+digest as their views, including after cache eviction. Closure traversal still
+stops at declared documents, so embedded catalogue cycles terminate.
+Planning prefetches known resource paths for the whole generation and
 retains only digests and reference edges. Closure checks opaque resources by
 confined file identity; HTML and CSS inputs are read for their child references.
 Closure evidence retains exact logical instance and referring
@@ -80,6 +98,9 @@ same boundary through the comparison adapter. `mokly-render` supplies the
 JavaScript factories and selected base dependencies through that path.
 Serve must also apply the public policy's read-time confinement rules.
 
+Source snapshots forward external read evidence to static admission without
+replacing the witnessed bytes with a later snapshot hash. Stylesheet keys
+include these versions separately from plugin declaration digests.
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
 storage. `digest_unretained` memoizes an opaque input hash without retaining its payload.
 `SourceSnapshot::retained_bytes()` reports the retained private payload per path.

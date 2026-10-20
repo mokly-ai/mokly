@@ -50,6 +50,19 @@ fn failed_capture_never_records_ok_or_success_counts() {
         .iter()
         .filter(|record| record["stage"] == "review.capture-side")
         .collect();
+    let validation: Vec<_> = records
+        .iter()
+        .filter(|record| record["stage"] == "review.capture-validate")
+        .collect();
+    assert_eq!(validation.len(), 2);
+    assert_eq!(validation[1]["event"], "end");
+    assert_eq!(validation[1]["status"], "error");
+    assert_eq!(validation[0]["parentId"], captured[0]["id"]);
+    assert!(
+        !serde_json::to_string(&validation)
+            .unwrap()
+            .contains("private cancellation detail")
+    );
     assert_eq!(captured.len(), 2);
     assert_eq!(captured[0]["event"], "start");
     assert_eq!(captured[1]["event"], "end");

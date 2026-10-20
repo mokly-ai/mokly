@@ -4,7 +4,10 @@ use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::Bundle;
 
 pub(crate) fn bundle(value: &Bundle) -> usize {
-    let mut bytes = size_of::<Bundle>() + value.route.capacity() + value.css.capacity();
+    let mut bytes = size_of::<Bundle>()
+        + value.route.capacity()
+        + value.css.capacity()
+        + value.read_evidence.retained_bytes();
     for (path, source) in &value.inputs {
         bytes += size_of::<(String, Vec<u8>)>() + path.capacity() + source.capacity();
     }
