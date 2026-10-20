@@ -1005,12 +1005,16 @@ renders again.
         source.
   - [x] Port the review-base sentence while a detail loads, on the copied
         comparison output.
-  - [ ] Port the two remaining cases on `tests/browser/serve_comparison_test.ts`:
+  - [x] Port the two remaining cases on `tests/browser/serve_comparison_test.ts`:
         focus on an unchanged Usage link while a Changes completion is
         adopted, which needs a changed component with a consumer; and the
         design library component's Unmodified status after temporary edits
         and Reset, which needs an unchanged component with editable props in
-        the fixture's base commit.
+        the fixture's base commit. Done on 2026-10-20 by `c0c9f0ad`
+        (`serve_usage_focus.spec.ts`, Card and its consumer) and `cbb51db2`
+        (`serve_temporary_props_status.spec.ts`, Tag). The focus case found
+        that the completion replaced Used by rows whose comparison
+        eligibility changed. Fixed by `5d918352`.
   - [x] Publish no new revision for a render completion that changes no detail,
         while recording its route as completed. Restore one index read
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
@@ -1557,6 +1561,12 @@ Tags: ui
   - [x] Register the moved-entry viewer cases on the embedded viewer host
         through both frame adapters, over the branch copy. The case that
         follows the page address runs only on Serve and the branch copy.
+  - [x] Port the two Serve rows that the regenerated sweep left, given by the
+        orchestrator on 2026-10-20. `review.spec.ts:4 [live refresh]`: a
+        refresh after a failed comparison and its retry presents new
+        snapshots on Serve (`d7f4fb79`). `moved_viewer.spec.ts:5` needs no
+        new test: the old viewer host never registered the first-paint case,
+        and the case at that index already runs on the embedded viewer.
   - [x] When `rebuild/m10-d1-and-copies` merges, make its copied-output
         `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
         call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve
@@ -2123,6 +2133,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         `@scope` preludes; other at-rule preludes stay as authored, as
         css-loader does. Decision: nesting report item 13 option A, approved
         by the orchestrator on 2026-10-20.
+  - [x] Reject an empty `:global()` or `:local()` wrapper in a keyframes name
+        with the catalogued empty-wrapper message. Decision: nesting report
+        finding 15 option B, decided by the orchestrator as protocol alignment
+        on 2026-10-20.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
         (pending user decision).
@@ -2197,6 +2211,7 @@ Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
 Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
 Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
 Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
+Integration batch 11 decisions: `.context/integration-11-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -2449,11 +2464,18 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         panes prove each side again by their `.accent` colour (`06158d40`),
         and the plan dates decision 10 again after merge `8fa9f338` kept only
         the f5 line.
-  - M10 Serve and moved rows decision 21 for the user: one shared Card pane
-    check that proves each pane's side. Severity Low, effort Small. Covers
-    review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
-    d371e17c. Recommended: B, one helper in
-    `tests/browser/serve_comparison_ui.ts` for every Card pane check.
+  - [x] M10 Serve and moved rows decision 21, Severity Low, effort Small: one
+        shared Card pane check that proves each pane's side. Covers review 7
+        finding 19. Decided B by the orchestrator on 2026-10-20: one helper,
+        `expectCardPane` in `tests/browser/serve_comparison_ui.ts`, checks
+        every Card pane on Serve by its heading and its side's `.accent`
+        colour. Done by `f858cc02`.
+  - [x] M10 Serve and moved rows review 9, finding 22, Severity Low, effort
+        Small: the Usage row key tests missed the removal state and the list
+        order. Decided A by the orchestrator on 2026-10-20: a removed row
+        keeps its key alone and beside the current row of its entry, and a
+        row keeps its key with and without another entry's row before it.
+        Done by `e1ff6c97`.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2471,6 +2493,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
+    - `tests/browser/static_component_comparisons.spec.ts:32`,
+      `removed_previews_static.spec.ts:76`, and
+      `removed_previews_viewer.spec.ts:173`: they repeat the Card `.accent`
+      colours as literals instead of reading `accentColor`. Separate branch.
+    - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
+      temporary prop edit stays out of local storage. Separate branch.
+    - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
+      split rule, with no recorded exception. Separate branch.
+    - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
+      with no recorded exception. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:

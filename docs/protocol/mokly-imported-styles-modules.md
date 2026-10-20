@@ -36,14 +36,15 @@ bare forms. `@counter-style` names and list-style references,
 `view-transition-name`, custom properties and `var(--token)`, grid-area
 names, and container names stay global. An `@scope` prelude is localized
 like a selector, and its local names are exported and count for collisions.
-In a selector or an `@scope` prelude, at any nesting level, a `:global()` or
-`:local()` wrapper with no selector fails. The preludes of at-rules other
-than `@scope` and `@keyframes` are never scoped: they keep their text as
-authored, wrappers included, as css-loader's `postcss-modules-local-by-default`
-does. Rejecting empty wrappers in those preludes was not chosen, because
-css-loader builds such stylesheets. CSS whitespace means space, tab, line
-feed, carriage return, and form feed; another Unicode space is a name
-character, and an escape consumes the one whitespace character that ends it.
+In a selector, an `@scope` prelude, or a keyframes name, at any nesting
+level, a `:global()` or `:local()` wrapper with no selector fails. The
+preludes of at-rules other than `@scope` and `@keyframes` are never scoped:
+they keep their text as authored, wrappers included, as css-loader's
+`postcss-modules-local-by-default` does. Rejecting empty wrappers in those
+preludes was not chosen, because css-loader builds such stylesheets. CSS
+whitespace means space, tab, line feed, carriage return, and form feed;
+another Unicode space is a name character, and an escape consumes the one
+whitespace character that ends it.
 
 The scoper does not optimize, prefix, polyfill, or normalize declarations,
 selectors, comments, `@import`s, `url()`s, `image-set()` options, fallbacks,
