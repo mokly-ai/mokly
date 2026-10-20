@@ -76,7 +76,10 @@ validation. Both sides require complete, valid closures. A missing referenced
 head resource is `build-invalid`. `resource_bytes` reads confined public routes
 without granting access to private sources or retaining assets in the private
 source snapshot. `resource_digest` hashes opaque resources through a bounded
-stream. Planning prefetches known resource paths for the whole generation and
+stream. Generated document resource reads use the same rendered bytes and
+digest as their views, including after cache eviction. Closure traversal still
+stops at declared documents, so embedded catalogue cycles terminate.
+Planning prefetches known resource paths for the whole generation and
 retains only digests and reference edges. Closure checks opaque resources by
 confined file identity; HTML and CSS inputs are read for their child references.
 Closure evidence retains exact logical instance and referring

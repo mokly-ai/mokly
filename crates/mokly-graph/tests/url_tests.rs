@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::fs;
 
+use mokly_model::material::digest;
 use tempfile::TempDir;
 
 mod support;
@@ -55,5 +56,43 @@ fn query_and_fragment_colons_survive_rendering_and_the_public_closure() {
     assert_eq!(
         generation.closure("home/index.mobile.html").unwrap().files,
         BTreeSet::from(["assets/pixel.svg".into()])
+    );
+}
+
+#[test]
+fn embedded_catalogue_documents_have_the_same_bytes_and_digest_as_their_views() {
+    let root = TempDir::new().unwrap();
+    fs::create_dir(root.path().join("specs")).unwrap();
+    fs::write(root.path().join("mokly.config.json"), "{}").unwrap();
+    for (name, target) in [("host", "child"), ("child", "host")] {
+        fs::write(
+            root.path().join(format!("specs/{name}.screen.html")),
+            format!(
+                "---\ntitle: {name}\n---\n<h1>{name}</h1><iframe src=\"../{target}/index.mobile.html\"></iframe>"
+            ),
+        )
+        .unwrap();
+    }
+    let generation = support::prepare(root.path(), 0, 1).0.unwrap();
+    generation.render_all().unwrap();
+    for name in ["host", "child"] {
+        let route = format!("{name}/index.mobile.html");
+        let resource = format!("static/mokly-generated/{route}");
+        let document = generation.render(&route).unwrap();
+        assert_eq!(
+            generation.resource_bytes(&resource).unwrap(),
+            Some(document.bytes.clone())
+        );
+        assert_eq!(
+            generation.resource_digest(&resource).unwrap(),
+            Some(digest(&document.bytes))
+        );
+        assert!(generation.closure(&route).unwrap().files.is_empty());
+    }
+    assert!(
+        generation
+            .resource_bytes("static/mokly-generated/missing/index.mobile.html")
+            .unwrap()
+            .is_none()
     );
 }

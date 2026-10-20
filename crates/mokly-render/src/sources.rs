@@ -30,6 +30,8 @@ pub(crate) struct SideTree {
 /// Keep the extraction and dependency leases until the last graph reader closes.
 pub(crate) struct LeasedTree {
     pub(crate) tree: Arc<dyn SourceTree>,
+    /// Dependency mapping is restricted to already planned opaque asset streams.
+    pub(crate) assets: Arc<dyn SourceTree>,
     pub(crate) _base: Option<Arc<BaseSide>>,
 }
 
@@ -38,7 +40,7 @@ impl SourceTree for LeasedTree {
         self.tree.prefetch(paths)
     }
     fn open_stream(&self, path: &Path) -> Result<Box<dyn SourceStream>> {
-        self.tree.open_stream(path)
+        self.assets.open_stream(path)
     }
     fn digest_unretained(&self, path: &Path) -> Result<String> {
         self.tree.digest_unretained(path)

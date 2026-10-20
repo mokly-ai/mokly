@@ -69,6 +69,10 @@ configuration, authoring modules, generated output, or caches.
   such as `{a,b}`. Unsupported extglob matchers emit a `stylesheet-extglob`
   configuration warning that names the pattern and suggests brace alternatives.
   `--strict` fails on this warning under the normal build-warning policy.
+  Replace flat generated-filename matches with entry routes such as
+  `product/**/index.html`. Local stylesheet paths resolve from the JSON file.
+  Remove `.css: "text"` loader overrides. Import CSS normally so the core
+  delivers its stylesheet and referenced assets.
 - Do not commit generated output. `build` defaults to `mokly-static/`, which
   must be ignored by Git. Remove committed `mokly-generated/` output and
   `.mokly-cache`. Serve and comparisons render in memory. Base extraction and
@@ -108,16 +112,32 @@ contributes one component, with its stories as variants and their args as props.
 `argTypes` supplies control hints and does not define validation. `definePage`
 returns one complete synchronous document.
 
+Replace uses of a registration's `.entries` with its definition. Update code
+that indexes exported arrays or reads `id`, `navPath`, or `variantOf` from
+renderer input. Keep instance names separate from entry paths: `moklyInstance`
+uses lowercase kebab-case and cannot contain path separators.
+
 Renderer modules return a React node or `{ node, resources }`. Their input
 has `props` and an entry address with `kind`, `path`, and `title`. The core
 assembles the document and stylesheet links. Put theme attributes and `lang`
 on the renderer's wrapper element.
+Update CSS selectors that depend on consumer attributes on `html` or `body`.
+Pass caller-specific values, such as a palette, through declared component
+props. Each component render establishes its own providers; arbitrary caller
+React context does not cross that boundary.
 
 Prop schemas use the strict JSON Schema 2020-12 profile. Object schemas must
 be closed with `additionalProperties: false`. Defaults, references, and
 unsupported keywords fail. The schema can be inferred where the entry contract
 permits it. Non-data values are excluded with a warning. See
 [entry props](./mokly-entry-props.md).
+Supply valid parent props as well as variant props. Move saved React slot
+content into each variant's `slots` field. At registered instance boundaries,
+omit absent optional data keys instead of passing `undefined`, including
+inside nested objects. Keep generic input helpers aligned with the public
+schema-inference types and check them against the installed declarations.
+Keep catalogue fixture data in the consumer source tree instead of importing
+internal fixture files from the installed CLI package.
 
 Comparisons render both sides from sources with the installed Mokly version.
 A base whose sources fail current validation makes Changes unavailable with
@@ -150,6 +170,9 @@ Caller-owned component props remain material when the rendered HTML is equal.
 Review records keep every applicable reason, including both `inputs` and
 `material`. The view's `ignoredIds` lists every paired region used for
 equality, including equal regions in unchanged views.
+React-generated accessibility IDs can change after structural edits. Those
+attribute changes can supply actual-instance implementation evidence even
+when the component's saved views stay unchanged.
 
 CSS evidence names delivered resource routes. Unowned head-style edits use
 per-rule records at the containing public document route. A removed view keeps
@@ -198,5 +221,6 @@ views and Markdown documents give 5,850 documents across 1,620 routes. Generated
 output is ignored. One Markdown document per area exercises Markdown rendering
 in both colour schemes. The harness uses the Rust CLI and records build, Serve,
 Changes, and watch measurements. Workspace reuse and isolated installs are
-distinct modes. The opt-in benchmark enforces the approved startup budget of
-under 5000 ms. Automated correctness tests have no wall-clock assertions.
+distinct modes. The opt-in benchmark enforces the
+[approved release startup budgets](./mokly-timings.md#budgets).
+Automated correctness tests have no wall-clock assertions.

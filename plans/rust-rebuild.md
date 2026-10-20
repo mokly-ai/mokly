@@ -2006,6 +2006,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+  - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
+        source Changes, and watched screen, component, and stylesheet edits.
+        Keep the source repository unchanged.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-18.md`.
+  - [ ] Profile the memory guard stops in repeated Mokly Cloud comparisons.
+        Separate retained generation data from allocator residency before
+        changing cache limits or rendering behaviour.
+  - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -2085,6 +2093,7 @@ Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
 Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
 Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
+Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
