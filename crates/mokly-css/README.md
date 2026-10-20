@@ -87,7 +87,8 @@ recurses once per nesting level while it parses, prints, and drops a sheet.
 Compilation, bundling, CSS Modules scoping, and rule collection, which runs
 `lightningcss` before the rule walk, therefore stop at its limit. That limit
 depends on the nesting form and the build profile. Every measured form
-survives at least 64 levels on a 2 MiB worker stack.
+survives at least 32 levels on a 2 MiB worker stack, far more than authored
+stylesheets nest.
 
 ## Quick Start
 

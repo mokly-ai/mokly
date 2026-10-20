@@ -16,8 +16,9 @@ use depth_search::{Failure, Probe, search};
 const CHILD: &str = "depth_probe_child";
 /// The search stops at this depth when nothing overflows.
 const CAP: usize = 100_000;
-/// Every path survives this nesting, the depth limit of props and schemas.
-const SURVIVED: usize = 64;
+/// Validation accepts no deeper front matter: variant props sit three levels
+/// below the root and allow 64 more.
+const VALID: usize = 67;
 
 /// Count the sequences that the YAML parser opens before the stream ends.
 fn sequences(source: &str) -> usize {
@@ -102,7 +103,7 @@ fn rejected_front_matter_fields_reach_the_search_cap() {
 }
 
 #[test]
-fn deep_props_survive_authored_nesting() {
+fn deep_props_survive_every_valid_front_matter_depth() {
     let limit = search(CHILD, "front_matter_props", CAP);
-    assert!(limit.depth >= SURVIVED, "{limit:?}");
+    assert!(limit.depth >= VALID, "{limit:?}");
 }

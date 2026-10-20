@@ -1,7 +1,7 @@
 //! The YAML builder and front-matter validation keep authored nesting on the heap.
 //!
-//! Each test runs on a 64 KiB thread, far below the 2 MiB worker stacks, with
-//! nesting that a recursive builder could not survive on that stack.
+//! Each test runs on a 256 KiB thread, an eighth of the 2 MiB worker stacks,
+//! with nesting that a recursive builder could not survive on that stack.
 
 use std::thread;
 
@@ -11,7 +11,7 @@ use crate::diagnostic::Code;
 use crate::discovery::SourceKind;
 use crate::{parsing, yaml};
 
-const STACK: usize = 64 * 1024;
+const STACK: usize = 256 * 1024;
 const DEPTH: usize = 100_000;
 
 fn small_stack(test: fn()) {

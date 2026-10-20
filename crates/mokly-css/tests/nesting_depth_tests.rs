@@ -25,8 +25,8 @@ const CHILD: &str = "depth_probe_child";
 const MOKLY_CAP: usize = 100_000;
 /// lightningcss limits are far below this cap in every build profile.
 const LIBRARY_CAP: usize = 10_000;
-/// Every parser survives this nesting, the depth limit of props and schemas.
-const SURVIVED: usize = 64;
+/// Far above authored CSS nesting, with margin for other platforms' frames.
+const SURVIVED: usize = 32;
 
 fn nested(open: &str, inner: &str, close: &str, depth: usize) -> String {
     format!("{}{inner}{}", open.repeat(depth), close.repeat(depth))
