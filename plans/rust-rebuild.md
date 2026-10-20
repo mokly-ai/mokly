@@ -2109,9 +2109,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       route with the M14 Serve budgets. Account for GET and HEAD capture work,
       live response files after worker permits end, and OS temporary storage
       outside process RSS (M14 review 6, finding 5; accepted interim design A).
-- [ ] Measure Git opaque-asset digest commands and buffered delivery under
+- [x] Measure Git opaque-asset digest commands and buffered delivery under
       the M14 comparison workloads. Use the cost to decide on streamed blob
       copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
+  - [ ] R20-1: Decide on streamed Git blob copies and batched digests.
+        Severity Low, effort Large. Recommended: A, remove per-asset process
+        startup and the extra full-blob buffer. Preserve all existing bounds.
+        Option B retains the measured adapter. No option is applied.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.
