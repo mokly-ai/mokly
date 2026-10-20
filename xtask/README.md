@@ -46,6 +46,8 @@ internal binary and is not published to npm or crates.io.
 Every subprocess starts at the workspace root, even when xtask starts in a
 subdirectory. `npm run build` builds the host target too, with the shim, the
 sidecar, and the viewer.
+Remote program discovery uses the command runner's Node shim resolver. On
+Windows it also finds native programs whose names omit the `.exe` suffix.
 On Windows, both subprocess adapters select the `.cmd` shims for npm, npx,
 Corepack, pnpm, and Yarn. Other executable names and explicit paths stay intact.
 Arguments remain separate from the program name.

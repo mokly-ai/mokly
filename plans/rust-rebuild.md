@@ -2517,9 +2517,11 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Linux-only liveness and hand-built file URLs in affected test fixtures.
         Audit: `.context/f16/platform-audit.md`. The hub must rerun macOS and
         Windows native jobs on `rebuild/native-ci-fixes`.
-  - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
-    Windows executable suffixes. Selected Native bypasses this path.
-    Separate branch before claiming Windows remote-executor support.
+  - [x] F17: align remote executable discovery with the shared Node shim
+        resolver and Windows native `.exe` names. Keep explicit extensions
+        and Unix names. Evidence: `.context/f17/windows-red.log` and
+        `.context/f17/xtask.log`. The F16 dependency merge preserves both
+        branches without conflicts: `.context/f17/merge-decisions.md`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
