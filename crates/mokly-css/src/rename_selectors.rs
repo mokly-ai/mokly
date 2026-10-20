@@ -35,7 +35,7 @@ impl Renamer<'_> {
                 };
                 parent.atoms.push(wrapper.and(own));
                 if let Some(wrapper) = wrapper {
-                    self.unwrap(wrapper);
+                    self.remove_wrapper(wrapper);
                 }
                 continue;
             }
@@ -130,7 +130,7 @@ impl Renamer<'_> {
         while let Some(frame) = pending.last_mut() {
             if tokens.next_significant(&mut frame.range.clone()).is_none() {
                 if let Some(wrapper) = frame.wrapper {
-                    self.unwrap(wrapper);
+                    self.remove_wrapper(wrapper);
                 }
                 pending.pop();
                 continue;
@@ -169,7 +169,7 @@ impl Renamer<'_> {
                             wrapper: Some(wrapper),
                         });
                     } else {
-                        self.unwrap(wrapper);
+                        self.remove_wrapper(wrapper);
                     }
                 }
                 _ => {}
@@ -179,7 +179,7 @@ impl Renamer<'_> {
     }
 
     /// Remove a wrapper's opener and the byte before its block end.
-    fn unwrap(&mut self, (start, function_end, after): Wrapper) {
+    fn remove_wrapper(&mut self, (start, function_end, after): Wrapper) {
         self.edits.push((start, function_end, String::new()));
         self.edits.push((after - 1, after, String::new()));
     }
