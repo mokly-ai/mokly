@@ -16,7 +16,7 @@ export async function smokeBrowser(root, repositoryRoot) {
   );
   const details = JSON.parse(
     await fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/fixtures/entry-details-v1.json"),
+      path.join(repositoryRoot, "docs/protocol/fixtures/entry-details-v2.json"),
       "utf8",
     ),
   );

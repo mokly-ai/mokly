@@ -4,7 +4,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Shell Derivation
 
-The entry detail v1 of the [shell delivery contract](./mokly-shell-delivery.md)
+The entry detail v2 of the [shell delivery contract](./mokly-shell-delivery.md)
 carries one `resourceEvidence` record per view and per whole-document page,
 typed `ViewEvidence`: `rules`, the review v8 rule records with `stylesheet`,
 `selector`, `status`, and `owner`, and `resources`, the rendered-resource

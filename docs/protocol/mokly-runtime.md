@@ -14,7 +14,7 @@ use case files, Markdown documents, folder records, entry modules, and
 stories files under the configured roots, plus the configuration file, the
 renderer module, and the configured stylesheets. The catalogue model is built
 from them in memory on every start and after every watched change. The [catalogue index v7](./mokly-shell-delivery.md#catalogue-index)
-and the [entry detail v1](./mokly-shell-delivery.md#entry-detail) are the
+and the [entry detail v2](./mokly-shell-delivery.md#entry-detail) are the
 public form of the model.
 
 ## Discovery And Validation

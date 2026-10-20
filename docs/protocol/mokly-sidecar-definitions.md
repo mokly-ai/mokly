@@ -16,8 +16,8 @@ source path. The generated TypeScript modules under
 
 A definition's `propSchema` is authored JSON, including an invalid schema.
 The transport does not decode it into a validated profile type. The core
-passes it to `mokly-model`'s `PropValidator::compile` with the definition's
-module and export attribution. Unsupported keywords, wrong schema types, and
+validates it with the definition's module and export attribution.
+Unsupported keywords, wrong schema types, and
 missing component schemas therefore fail `component-schema`. They do not
 fail `sidecar-protocol`, and they do not replace a healthy sidecar.
 
@@ -59,6 +59,10 @@ the module and diagnostic text.
 Each record has typed entry metadata, controls, variants, and Storybook
 control hints. The transport has no catch-all metadata map. Imported
 entry references use `{ handle }`, distinct from authored path strings.
+Each definition carries candidate control keys in `controlOrder`, preserving
+declaration order independently of sorted JSON object keys. Explicit controls
+take precedence over schema property order, then first-seen own and variant
+prop keys. The core omits uneditable properties from the detail's order.
 Definitions and variants also carry optional `excludedProps` lists of non-data
 inference keys. The core emits their warnings after it derives each final
 entry path. Storybook excludes non-prop args before it collects these keys.
@@ -70,7 +74,7 @@ from these definitions and the HTML definitions.
 The component metadata includes its `element`, authored schema, own props,
 slots, control overrides, and saved variants. Screen variants carry their
 metadata overrides in authored order. Story control hints affect derived
-controls, never schema validation, under the
+controls and live validation bounds, without changing the prop schema, under the
 [Storybook rules](./mokly-sidecar.md#storybook).
 The component parent's `argTypes` carries the meta's hints. Each story carries
 its merged hints separately, so a story override does not replace the parent's

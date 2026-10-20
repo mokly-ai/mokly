@@ -16,13 +16,13 @@ import {
 import { complete, plan, upload } from "./helpers/receiver/upload.js";
 import { cleanupAll } from "./helpers/static_cleanup.js";
 import { exchange } from "./helpers/static_exchange.js";
-import { files } from "./helpers/static_faults.js";
 import {
   directory,
   publicationFixture,
   publish,
   removeOutput,
 } from "./helpers/static_publication.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 const exec = promisify(execFile);
 interface Case {
@@ -130,15 +130,15 @@ test(
     const server = await exchange();
     let output: string | undefined;
     try {
-      const result = await publish(root, server.endpoint, "plain", {
-        signal: context.signal,
-      }).result;
+      const result = await observeBuild(
+        server,
+        publish(root, server.endpoint, "plain", {
+          signal: context.signal,
+        }),
+      ).result;
       output = directory(result.stdout);
       assert.equal(result.code, 0, result.stderr);
-      const artifact = [...(await files(output))].map(
-        ([name, data]) =>
-          [name.split(path.sep).join("/"), data] as [string, Buffer],
-      );
+      const artifact = [...server.completedInventories[0]!];
       assert.ok(verifyInventory(artifact).length > 3);
       const metadata = artifact.find(
         ([name]) => name === "mokly-upload.json",

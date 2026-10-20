@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
+import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { build, git, json, write } from "./helpers/static_changes.js";
@@ -96,7 +96,7 @@ test(
       await git(root, "branch", "fixture-base");
       await write(root, "renderer.ts", renderer("blue"));
       const built = await build(root);
-      const detail = await json<EntryDetailV1>(
+      const detail = await json<EntryDetailV2>(
         built.output,
         "mokly-viewer/entries/home.json",
       );

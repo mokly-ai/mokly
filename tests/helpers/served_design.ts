@@ -7,7 +7,7 @@ import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_read
 import { readCatalogueIndex } from "../../packages/viewer/src/catalogue/index_reader.js";
 import type { CatalogueReadModel } from "../../packages/viewer/src/generated/catalogue/CatalogueReadModel.js";
 import type { ColorScheme } from "../../packages/viewer/src/generated/catalogue/ColorScheme.js";
-import type { EntryDetailV1 } from "../../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
+import type { EntryDetailV2 } from "../../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 import type { Viewport } from "../../packages/viewer/src/generated/catalogue/Viewport.js";
 import { spawnServe } from "../../scripts/verification/serve-process.mjs";
 
@@ -28,7 +28,7 @@ export interface ServedView {
 
 export interface ServedCatalogue {
   index: CatalogueReadModel;
-  details: ReadonlyMap<string, EntryDetailV1>;
+  details: ReadonlyMap<string, EntryDetailV2>;
   views: readonly ServedView[];
 }
 
@@ -143,7 +143,7 @@ async function loadCatalogue(
       await events.read();
     }
     assert.equal(index.changesStatus, "unavailable");
-    const details = new Map<string, EntryDetailV1>();
+    const details = new Map<string, EntryDetailV2>();
     let unsettled = visual.map(({ entry }) => entry.path);
     // Each publication can settle more usage, so recheck after every event.
     while (unsettled.length > 0) {

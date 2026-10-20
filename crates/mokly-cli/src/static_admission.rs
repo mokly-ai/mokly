@@ -54,6 +54,10 @@ impl Admission for OutputAdmission {
         };
         let mut boundary = Boundary::catalogue(&config, allowed.into());
         boundary.roots.extend(self.runtime_roots.clone());
+        let _protection = self
+            .cancellation
+            .protect_output()
+            .ok_or(BuildError::Cancelled)?;
         let transaction = match self.transactions.open(&directory, boundary) {
             Ok(transaction) => transaction,
             Err(source) => return Err(BuildError::Static { source }),

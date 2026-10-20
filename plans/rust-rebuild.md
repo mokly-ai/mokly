@@ -471,6 +471,52 @@ delete the dead shell path `ShellContext.componentChanges` in
 and the tests that reach their copy only through it. The live-path tests cover
 the same copy.
 
+**Decision defaults (2026-10-20):**
+
+- Item 4 A, applied by default (user rule): publish warnings are fatal only
+  with `--strict`. Reject always-fatal warnings so recoverable authoring
+  warnings do not block publication. Align the publish and exit-status guides.
+- Item 16 B, applied by default (user rule): unknown attributes on ignore
+  wrappers warn and are ignored. `--strict` turns the warning into a failure.
+  Reject unconditional failure and silent ignoring to catch spelling errors
+  while keeping recoverable input usable.
+- Item 8 A, applied by default (user rule): publish trusts bundled Mozilla
+  roots in addition to the operating system certificate store. Reject OS-only
+  trust so minimal containers can publish through public HTTPS endpoints.
+- Item 22 A and extended A, applied by default (user rule): keep bounds checks
+  on complete merged live props. Warn on saved props or story args outside
+  those bounds. Story hints affect controls and live validation, not schemas.
+  Reject override-only validation and fatal saved-value bounds checks.
+  Fail declared steps that are not schema multiples or are fractional for
+  integer props, so controls cannot offer values the schema rejects.
+- Item 6 C, applied by default (user rule): round unsafe integer props to the
+  nearest binary64 value with a warning before validation and rendering.
+  The core and viewer keep the same value. Reject unconditional failure and
+  silent rounding to keep recoverable input usable and the precision loss visible.
+- Item 9 A, applied by default (user rule): delete exactly the private build
+  snapshot after success, including an already-published response. Preserve
+  failed-upload snapshots and unrelated files. Cleanup failure warns without
+  changing the accepted publication. Reject retaining every successful snapshot
+  because it leaves unused output behind.
+- Item 30 A, applied by default (user rule): defer a forced second Ctrl+C
+  exit while output installation, restoration, or cleanup settles. Exit once
+  that operation finishes without another signal. Reject immediate exit in
+  these operations because it can strand the earlier site in a backup.
+- Item 23 B, applied by default (user rule): preserve control declaration
+  order in entry detail v2 and show that order in the viewer. Explicit controls
+  use their declaration order. Derived controls use schema property order or
+  first-seen inferred prop order. Reject key sorting because author order
+  communicates the intended editing sequence. Regenerate the shared types.
+
+**Open decision N1 (2026-10-20):** Item 6 settles prop values. Schema keyword
+integers outside the JavaScript safe range still retain exact core values,
+while a browser rounds them during JSON decoding. A live edit can pass the
+viewer and fail in the core. Severity Medium, effort Large for recommended B.
+Options: A keeps exact schema values and documents the limitation; B rounds
+schema integers with a warning; C rejects unsafe schema integers. Recommend B
+to keep core and viewer validation consistent while accepting recoverable input.
+Evidence: `.context/defaults-cli/schema-bounds-probe.log`.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -2499,6 +2545,20 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     concurrent tracing-subscriber capture; not proven. Separate branch.
     Evidence: `.context/ci-gates/repository-remainder.log` and
     `.context/ci-gates/sidecar-rerun.log`.
+  - [ ] N1: settle unsafe integer schema keyword precision. Severity Medium,
+        effort Large. Recommended B: round schema integers with a warning.
+  - Follow-up: filter ignore-wrapper attributes at both HTML parsing boundaries.
+    Effort Large. Covers defaults review finding 1. No previous examples found.
+    The focused repair applies item 16 B before link and slot consumers.
+    Evidence: `.context/defaults-cli/review-1.md`.
+  - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
+    Node 22.14 because `node:module` has no `registerHooks`. Separate Node-floor branch.
+  - Outside the scope: `tests/static_postcss_base_evidence.test.ts` reports
+    `0 != 1` on Node 22.14. Separate Node-floor branch.
+  - Outside the scope: `tests/serve_process.test.ts`, "the verification registry
+    names Serve's group until it drains", failed with
+    `Verification owner {id} has no parent`. The isolated rerun passed.
+    Suspected source: concurrent process-registry cleanup. Separate branch.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
@@ -2831,9 +2891,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
     HTML-only catalogues that import package CSS; retain working dependencies
     until the user decides.
-  - M8 core review 3, finding 2, and review 6, finding 7: settle saved-prop
-    control bounds and declared steps that conflict with schema multiples or
-    integer values. Keep the current validation until the user decides.
+  - [x] M8 core review 3, finding 2, and review 6, finding 7: settled on
+        2026-10-20 by item 22 A and extended A, applied by default (user rule).
+        Keep complete merged bounds checks, warn on saved values outside bounds,
+        and reject incompatible declared steps.
   - Milestone 9 part 1 review 1, finding 11: settled by F8 decision 10 A now,
     with pnpm and Yarn support under option B required before the first release.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
@@ -2845,16 +2906,22 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 12 static review 3, finding 4: settled on 2026-10-19 by decision
     2 = A. Packed-native inspection rejects `MOKLY_TEST_` for all five targets,
     including reused archives. The module-erasure test remains.
-  - Milestone 12 static review 2, finding 6: settle forced build exit during
-    install, rollback, and cleanup. Keep the current forced exit until decided.
-  - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
-    keep the OS trust store until the user decides.
-  - Milestone 12 publish review 1, finding 13: decide private-directory retention
-    after success; keep the existing retention until the user decides.
+  - [x] Milestone 12 static review 2, finding 6: settled on 2026-10-20 by
+        item 30 A, applied by default (user rule). Defer forced exit during
+        installation, rollback, and cleanup.
+  - [x] Milestone 12 publish review 1, finding 8: settled on 2026-10-20 by
+        item 8 A, applied by default (user rule). Trust Mozilla and OS roots.
+  - [x] Milestone 12 publish review 1, finding 13: settled on 2026-10-20 by
+        item 9 A, applied by default (user rule). Remove the successful private
+        snapshot and retain failed-upload output.
   - Milestone 5 review 1, finding 5: settled by F8 decision 14 A. Keep declared
     stylesheets bundled as delivery roots and align the pages.
-  - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
-  - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - [x] Milestone 5 review 2, finding 9: settled on 2026-10-20 by item 16 B,
+        applied by default (user rule). Warn on unknown ignore attributes and
+        fail only in strict mode.
+  - [x] Milestone 4 unsafe prop integers: settled on 2026-10-20 by item 6 C,
+        applied by default (user rule). Round to binary64 with a warning.
+        Schema keyword precision remains open as N1.
   - [x] Milestone 4 review 1, finding 10: bound YAML alias expansion at
         1,000,000 nodes per file with `html-front-matter`, before any copy.
         Decision: item 7 option A, applied by default (user rule), 2026-10-20.
@@ -2907,8 +2974,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        Recommended: B, also index each record by the variant whose views its
        evidence names. Option A documents that only the parent page explains
        the shared change.
-  - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
-    a user decision before Milestone 12.
+  - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
+        item 4 A, applied by default (user rule). Publish build warnings are
+        fatal only with `--strict`.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.

@@ -47,6 +47,7 @@ export function serialize(
     stylesheets: [],
     useCasePaths: [],
     steps: [],
+    controlOrder: [],
   };
   if (data.source) record.sourcePath = data.source;
   for (const key of metadataFields)
@@ -125,5 +126,26 @@ export function serialize(
       return output;
     },
   );
+  record.controlOrder = controlOrder(record);
   return record;
+}
+
+function controlOrder(record: Definition): string[] {
+  if (record.controls !== undefined) return Object.keys(record.controls);
+  const schema = record.propSchema;
+  if (schema && typeof schema === "object" && !Array.isArray(schema)) {
+    const properties = schema.properties;
+    if (
+      properties &&
+      typeof properties === "object" &&
+      !Array.isArray(properties)
+    )
+      return Object.keys(properties);
+  }
+  return [
+    ...new Set([
+      ...Object.keys(record.props),
+      ...record.variants.flatMap((variant) => Object.keys(variant.props)),
+    ]),
+  ];
 }

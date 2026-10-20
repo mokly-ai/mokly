@@ -10,7 +10,7 @@ fn all_three_boundaries_reject_versions_before_payloads() {
         if version != 7 {
             assert!(matches!(index(&text), Err(ReadError::Version { .. })));
         }
-        if version != 1 {
+        if version != 2 {
             assert!(matches!(detail(&text), Err(ReadError::Version { .. })));
         }
         if version != 3 {

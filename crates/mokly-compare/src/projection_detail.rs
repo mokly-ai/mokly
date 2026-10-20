@@ -3,13 +3,13 @@
 use std::collections::BTreeMap;
 
 use mokly_model::axes::EntryKind;
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::EntryDetailV2;
 use mokly_model::review_order;
 
 use crate::comparison_types::ComparisonResult;
 
 /// Copy included classification reasons in the review v8 shape and resource evidence.
-pub fn apply_evidence(details: &mut BTreeMap<String, EntryDetailV1>, result: &ComparisonResult) {
+pub fn apply_evidence(details: &mut BTreeMap<String, EntryDetailV2>, result: &ComparisonResult) {
     for entry in &result.entries {
         let Some(detail) = details
             .get_mut(&entry.path)

@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "../src/catalogue/types.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { routeFromUrl } from "../src/shell/routes.js";
@@ -27,7 +27,7 @@ export interface StandaloneMarkupOptions {
   /** The installed index; the protocol fixture by default. */
   index?: CatalogueReadModel;
   /** The held details; every fixture detail by default. */
-  details?: readonly (readonly [DetailRequest, EntryDetailV1])[];
+  details?: readonly (readonly [DetailRequest, EntryDetailV2])[];
   /** The shell route, such as `/view/screens/home/`; home by default. */
   path?: string;
   initialState?: ShellInitialState;

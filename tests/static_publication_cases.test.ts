@@ -81,7 +81,7 @@ test(
 );
 
 test(
-  "publish warnings name strict only when the user supplied it",
+  "publish warnings allow upload unless strict mode is requested",
   { timeout: 120_000 },
   async (context) => {
     const root = await publicationFixture();
@@ -93,19 +93,20 @@ test(
         "---\ntitle: Home\nprops: {label: Unused}\n---\n<p>Home</p>",
       );
       await commit(root);
-      for (const strict of [false, true]) {
+      for (const strict of [true, false]) {
         const result = await publish(root, server.endpoint, "plain", {
           args: strict ? ["--strict"] : [],
           signal: context.signal,
         }).result;
         outputs.push(directory(result.stdout));
-        assert.equal(result.code, 1);
+        assert.equal(result.code, strict ? 1 : 0, result.stderr);
         assert.equal(result.stderr.match(/\[mokly\/warning\]/g)?.length, 1);
         assert.equal(result.stderr.includes("with --strict"), strict);
-        if (!strict)
-          assert.match(result.stderr, /The catalogue has build warnings/);
+        assert.equal(server.completed, strict ? 0 : 1);
+        if (strict) assert.equal(server.bodies.length, 0);
+        else assert.match(result.stdout, /Published Mokly catalogue/);
       }
-      assert.equal(server.bodies.length, 0);
+      assert.equal(server.bodies.length, 1);
     } finally {
       await cleanupAll([
         () => server.close(),

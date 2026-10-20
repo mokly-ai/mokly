@@ -3,7 +3,7 @@
 /// Public catalogue index version.
 pub const CATALOGUE_INDEX: u32 = 7;
 /// Per-entry detail version.
-pub const ENTRY_DETAIL: u32 = 1;
+pub const ENTRY_DETAIL: u32 = 2;
 /// Material and resource review version.
 pub const REVIEW_RESULT: u32 = 8;
 /// Catalogue change snapshot version.

@@ -36,3 +36,15 @@ pub struct RegisteredElement {
 
 /// Shared HTML and JavaScript element namespace.
 pub type ElementRegistry = BTreeMap<String, RegisteredElement>;
+
+/// Whether an attribute belongs to an ignore wrapper; ordinary elements keep all attributes.
+pub fn ignore_attribute_allowed(element: &str, attribute: &str) -> bool {
+    match element {
+        "mokly-ignore" => matches!(
+            attribute,
+            "id" | "material-key" | "mokly-if" | "mokly-viewport"
+        ),
+        "mokly-ignore-scope" => matches!(attribute, "enabled" | "mokly-if" | "mokly-viewport"),
+        _ => true,
+    }
+}

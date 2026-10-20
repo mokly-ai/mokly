@@ -1,4 +1,4 @@
-//! Entry detail v1 and live descriptor v3 public contracts.
+//! Entry detail v2 and live descriptor v3 public contracts.
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -125,9 +125,9 @@ pub struct RelatedComponent {
 /// One public entry detail, current or historical.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct EntryDetailV1 {
-    /// Must equal 1; readers gate it first.
-    #[ts(type = "1")]
+pub struct EntryDetailV2 {
+    /// Must equal 2; readers gate it first.
+    #[ts(type = "2")]
     pub schema_version: u32,
     /// Catalogue identity equal to the installed index.
     pub identity: CatalogueIdentity,
@@ -151,6 +151,10 @@ pub struct EntryDetailV1 {
     pub reasons: Option<Vec<EntryChangeReason>>,
     /// Empty for pages, documents, and use cases.
     pub views: Vec<DetailView>,
+    /// Every editable key in declaration order; present only on screens and components.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub control_order: Option<Vec<String>>,
     /// Page evidence, present when ready.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

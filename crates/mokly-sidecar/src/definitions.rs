@@ -105,6 +105,9 @@ pub struct Definition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub controls: Option<BTreeMap<String, Control>>,
+    /// Candidate control keys in authored order, before the core omits uneditable props.
+    #[serde(default)]
+    pub control_order: Vec<String>,
     /// Storybook meta hints for the component parent's own controls.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

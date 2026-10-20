@@ -20,7 +20,7 @@ review v8 with the base commit, as the
 [format inventory](./mokly-format-versions.md) states. The
 [shell delivery contract](./mokly-shell-delivery.md) delivers the read model
 as the catalogue index v7, which carries no per-view usage or resource
-evidence, plus one entry detail v1 per entry. Removed page preview metadata
+evidence, plus one entry detail v2 per entry. Removed page preview metadata
 is v3. No entry carries a derived file name. Accepted move pairs carry
 `previousPath` in review records and in the read model.
 

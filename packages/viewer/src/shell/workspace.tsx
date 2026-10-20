@@ -64,7 +64,12 @@ export function ComponentWorkspace({
     ...(data.component ? { owner: data.component.path } : {}),
   });
   const comparing = comparison.mode !== "current";
-  const editTarget = controlTarget(entry, variant, data.removed);
+  const editTarget = controlTarget(
+    entry,
+    variant,
+    data.removed,
+    data.controlOrder,
+  );
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,

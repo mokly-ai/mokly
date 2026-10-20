@@ -53,6 +53,10 @@ version and has no JavaScript CLI fallback.
 
 ## Authoring
 
+Controls keep explicit declaration order. Derived controls follow schema order
+or first-seen prop order. The sidecar carries this order separately from sorted
+JSON object keys for the core and viewer.
+
 Export one definition from each export of a matched entry module.
 
 ```tsx

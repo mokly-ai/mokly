@@ -76,6 +76,7 @@ export async function describeStories(
       stylesheets: [],
       useCasePaths: [],
       steps: [],
+      controlOrder: [] as string[],
     };
     for (const [exportName, value] of orderedExports(
       generation.sources.get(file) ?? "",
@@ -123,6 +124,7 @@ export async function describeStories(
       ...Object.keys(parent.props),
       ...parent.variants.flatMap((variant) => Object.keys(variant.props)),
     ]);
+    parent.controlOrder = [...dataKeys];
     parent.argTypes = Object.fromEntries(
       Object.entries(meta.argTypes ?? {})
         .filter(([key]) => dataKeys.has(key))

@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use mokly_model::catalogue::SourceLocation;
 use serde::Deserialize;
 
+use crate::control_order;
 use crate::diagnostic::{Code, Issue};
 use crate::discovery::SourceKind;
 use crate::entry_fields;
@@ -28,12 +29,13 @@ pub(crate) fn parse(text: String, path: &str, kind: SourceKind) -> Result<Parsed
     };
     let mut value = Owned(copy(&document.value));
     let issues = entry_fields::validate(&mut value.0, &document, path, kind)?;
-    let input = match EntryInput::deserialize(&value.0) {
+    let mut input = match EntryInput::deserialize(&value.0) {
         Ok(input) => input,
         Err(error) => {
             return Err(Issue::new(Code::HtmlFrontMatter, error.to_string()).at(at(path, &text, 0)));
         }
     };
+    input.control_order = control_order::from_value(&value.0);
     validate_metadata(&input, &document, path)?;
     Ok(ParsedEntry {
         input,

@@ -124,7 +124,10 @@ shutdown guards.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
 count as one interruption. A later signal kills owned sidecars and exits
-immediately. The interval uses an injected monotonic clock. Each worker starts in
+immediately after any active output installation, restoration, or cleanup
+settles. The output guard and forced-exit admission share one lock, so a new
+write cannot start after a forced exit is pending. The interval uses an
+injected monotonic clock. Each worker starts in
 its request source root and uses the embedded npm version for hello and
 graph keys.
 Serve uses its own idempotent stop state. Signals and `q` cancel native work
@@ -202,10 +205,12 @@ keeps its pinned merge base, effective ref, and complete generation in that uplo
 Unavailable Changes publishes the valid current catalogue with no generation and
 null comparison metadata. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
-output stays in the private directory after an upload failure. The warning
-policy waits for a user decision. The isolated `warnings_are_fatal` function
-makes publish warnings fatal with either value of `--strict`. The command prints
-`with --strict` only when the user supplied that option.
+output stays in the private directory after an upload failure. Successful and
+already-published outcomes remove exactly that snapshot and its empty parent.
+Sibling files and symlink targets survive cleanup. A cleanup failure reports
+the retained path without changing the successful receipt. Publish warnings
+are fatal only with `--strict`. Without it, the command reports warnings and
+continues with output installation and upload.
 
 ## Quick Start
 

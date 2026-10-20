@@ -7,7 +7,7 @@ import type { ShellCatalogueReadModel } from "../../packages/viewer/dist/catalog
 import { shellCatalogueModel } from "../../packages/viewer/dist/catalogue/shell_model.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "../../packages/viewer/dist/catalogue/types.js";
 import { routeFromUrl } from "../../packages/viewer/dist/shell/routes.js";
 import { createInitialShellState } from "../../packages/viewer/dist/shell/store_initial.js";
@@ -31,11 +31,11 @@ function fixtureJson(name: string): unknown {
 }
 
 const index = readCatalogueIndex(fixtureJson("catalogue-v7.json"));
-const detailFixtures = fixtureJson("entry-details-v1.json") as {
+const detailFixtures = fixtureJson("entry-details-v2.json") as {
   current: Record<string, unknown>;
   removed: Record<string, unknown>;
 };
-const details: ReadonlyMap<string, EntryDetailV1> = new Map([
+const details: ReadonlyMap<string, EntryDetailV2> = new Map([
   ...Object.entries(detailFixtures.current).map(
     ([path, raw]) => [detailKey({ path }), readEntryDetail(raw)] as const,
   ),
@@ -55,7 +55,7 @@ export function indexModel(): CatalogueReadModel {
 
 /**
  * Return an isolated copy of the shell's working model: the index v7 fixture
- * with every validated entry detail v1 fixture held.
+ * with every validated entry detail v2 fixture held.
  */
 export function catalogueModel(): ShellCatalogueReadModel {
   return shellCatalogueModel(indexModel(), structuredClone(details));
