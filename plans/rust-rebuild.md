@@ -2242,6 +2242,21 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Fix CI release checks hub review finding 4 with option A: name read-only
+        release preparation as the npm and Rust audit owner in the three
+        affected verification documents. Publication uses the checked archives.
+        Split the long xtask README's remote reference into a linked page,
+        preserving its content and the existing heading anchors.
+  - CI release checks hub review finding 1: a stale PR base can keep an old
+    release check green. Severity Medium, effort Small. Recommended: A, require
+    branches to be up to date before merge. The hub owns the user decision.
+  - CI release checks hub review finding 2: viewer source comparison misses
+    external build inputs and includes unpublished Markdown. Severity Medium,
+    effort Medium. Recommended: C, compare packed viewer bytes with the
+    published archive. The hub owns the user decision.
+  - CI release checks hub review finding 3: effective severity and target filters
+    can hide Rust advisories. Severity Low, effort Small. Recommended: A,
+    reject those filters. The hub owns the user decision.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
