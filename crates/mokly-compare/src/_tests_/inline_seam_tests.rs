@@ -21,6 +21,7 @@ fn inline_rules_without_own_page_proof_keep_entry_records() {
             children: Vec::new(),
             text: true,
             regions: vec![Containment {
+                instance: None,
                 path: "card".into(),
                 root: false,
             }]
@@ -74,6 +75,7 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
             children: Vec::new(),
             text: true,
             regions: vec![Containment {
+                instance: None,
                 path: "card".into(),
                 root,
             }]
@@ -83,6 +85,7 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
                 Default::default()
             } else {
                 vec![Containment {
+                    instance: None,
                     path: "card".into(),
                     root,
                 }]

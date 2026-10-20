@@ -32,6 +32,7 @@ fn attribution_consumes_observations_without_cloning_their_ancestry() {
             children: Vec::new(),
             text: false,
             regions: ContainmentPath::default().with_region(Containment {
+                instance: None,
                 path: "card".into(),
                 root: true,
             }),

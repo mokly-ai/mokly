@@ -94,6 +94,10 @@ impl Context<'_> {
                             let containment = Containment {
                                 path: path.clone(),
                                 root: matches!(region.kind, RegionKind::Root { .. }),
+                                instance: match &region.kind {
+                                    RegionKind::Instance { key, .. } => Some(key.as_str().into()),
+                                    _ => None,
+                                },
                             };
                             regions = regions.with_region(containment.clone());
                             match &region.kind {
@@ -205,3 +209,7 @@ mod matching_tree_tests;
 #[cfg(test)]
 #[path = "_tests_/input_storage_tests.rs"]
 mod input_storage_tests;
+
+#[cfg(test)]
+#[path = "_tests_/supplier_identity_tests.rs"]
+mod supplier_identity_tests;

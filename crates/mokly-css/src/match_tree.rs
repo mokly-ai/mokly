@@ -1,6 +1,7 @@
 //! Minimal parsed-document arena for pure CSS matching and retained containment proof.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use mokly_model::evidence::EvidenceOwner;
 
@@ -13,6 +14,8 @@ pub struct Containment {
     pub path: String,
     /// True only for a component's own root region.
     pub root: bool,
+    /// Exact physical instance identity, shared with its supplier path; roots have none.
+    pub instance: Option<Arc<str>>,
 }
 
 /// One element after HTML5 tree building and ignored-region removal.

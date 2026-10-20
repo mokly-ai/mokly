@@ -76,6 +76,8 @@ regions innermost first and releases deep paths iteratively. Every source
 keeps physical containment. Owned proof also keeps the shared supplier path
 for its nested filter. Linked and ownerless proof retain no supplier path.
 Callers read `MatchProof::regions()` for physical ancestry; storage stays private.
+Physical and supplier links share exact instance identities, so repeated
+component paths cannot make a receiving copy look like the supplying instance.
 
 `attribution::attribute` joins equal rule observations, collects unfiltered
 own-page matches, and filters nested components before one record reduction.

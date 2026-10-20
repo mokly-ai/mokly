@@ -18,6 +18,7 @@ use super::ContainmentPath;
 
 fn region(path: &str) -> Containment {
     Containment {
+        instance: None,
         path: path.into(),
         root: false,
     }
@@ -81,6 +82,7 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
     let (linked, inline) = {
         let regions: ContainmentPath = [
             Containment {
+                instance: None,
                 path: "parent".into(),
                 root: true,
             },

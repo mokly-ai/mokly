@@ -20,6 +20,7 @@ fn page(
         items
             .iter()
             .map(|(path, root)| Containment {
+                instance: None,
                 path: (*path).into(),
                 root: *root,
             })

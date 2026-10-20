@@ -20,6 +20,7 @@ fn proof(stylesheet: &str, selector: &str, regions: &[(&str, bool)]) -> RuleObse
                 regions: regions
                     .iter()
                     .map(|(path, root)| Containment {
+                        instance: None,
                         path: (*path).into(),
                         root: *root,
                     })

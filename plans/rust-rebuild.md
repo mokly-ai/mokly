@@ -2542,6 +2542,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         cannot enable universal matching. This applies option A within the
         scoped-universal default. Evidence:
         `.context/defaults-engine-round4/arguments-cli-red.log`.
+  - [x] Defaults-engine round 4 repeated-receiver regression: retain exact
+        instance identity in shared containment links. A receiving copy of a
+        supplier component cannot remove an intermediate declared owner's
+        rule. This completes decision 96's exact supplier protection.
+        Evidence: `.context/defaults-engine-round4/repeated-cli-red.log`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.

@@ -38,10 +38,12 @@ fn detached_inline_and_linked_proof_expose_the_same_physical_regions() {
                     text: false,
                     regions: [
                         Containment {
+                            instance: None,
                             path: "supplier".into(),
                             root: true,
                         },
                         Containment {
+                            instance: None,
                             path: "receiver".into(),
                             root: false,
                         },
@@ -52,6 +54,7 @@ fn detached_inline_and_linked_proof_expose_the_same_physical_regions() {
                         .iter()
                         .rev()
                         .map(|path| Containment {
+                            instance: None,
                             path: (*path).into(),
                             root: *path == "supplier",
                         })
