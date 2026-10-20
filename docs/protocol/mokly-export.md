@@ -216,9 +216,8 @@ private directory outside the repository. No option names that output. The
 `Mokly publish build` line of the [terminal errors contract](./mokly-terminal-errors.md) reports the output path. The command then
 uploads the result under the [upload contract](./mokly-upload.md). It needs a
 clean checkout, fails on warnings only with `--strict` before it writes or uploads, and
-`publish --no-changes` builds current-only. A failed upload keeps the built
-directory in place. A successful upload removes only that private snapshot
-under the [upload cleanup rule](./mokly-upload.md#cli).
+`publish --no-changes` builds current-only. Private-directory retention and
+cleanup follow the [upload cleanup rule](./mokly-upload.md#cli).
 
 ## Output Safety
 

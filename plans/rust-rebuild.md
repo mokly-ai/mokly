@@ -502,6 +502,14 @@ the same copy.
   exit while output installation, restoration, or cleanup settles. Exit once
   that operation finishes without another signal. Reject immediate exit in
   these operations because it can strand the earlier site in a backup.
+- User decision 86 (2026-10-20): D. Successful and already-published outcomes
+  delete the whole private directory created by publish, including its site
+  and reservation locks. Use its allocated path held in memory and do not
+  follow symbolic links. Failed or cancelled uploads retain the whole directory.
+  Cleanup failure warns with that path and keeps publication successful.
+  This replaces item 9 A's snapshot-only cleanup, which retained lock directories.
+  Evidence: `.context/publish-cleanup/`.
+  Merge decisions: `.context/publish-cleanup/merge-decisions.md`.
 - Item 23 B, applied by default (user rule): preserve control declaration
   order in entry detail v2 and show that order in the viewer. Explicit controls
   use their declaration order. Derived controls use schema property order or
@@ -2595,8 +2603,13 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         is not selected because the scoped warning producer completes 6 C.
   - Item 87: the user still decides final warning text. Keep numeric warning
     text in one formatter so the later wording change needs one edit.
-  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
-  - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
+  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing
+    boundaries. Effort Large. Covers defaults review finding 1. No previous
+    examples found. The focused repair applies item 16 B before link and slot
+    consumers. Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
+        successful private publish directory, including reservation locks.
+        Evidence: `.context/publish-cleanup/`.
   - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
   - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on

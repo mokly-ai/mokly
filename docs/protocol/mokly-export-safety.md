@@ -53,7 +53,9 @@ the resolved output. Native real-path resolution and unmodified filename keys
 give case/symlink aliases the filesystem's own lock equivalence, without
 serializing genuinely distinct destinations. The internal namespace has a
 regular `.owner` containing `mokly-export-reservations-v1` plus a newline and
-stays after cleanup; never put authored files or output directories inside it.
+stays after `build` cleanup. Never put authored files or output directories inside it.
+After successful publication, `publish` removes its private directory as a
+unit, including this reservation namespace and its lock directory.
 Unowned namespaces and symlinked namespace/lock directories are rejected.
 The `.mokly-export-transaction` marker records `schemaVersion: 2` and the
 output basename; `stage/` and `backup/` live inside that reservation.

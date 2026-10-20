@@ -55,6 +55,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
         (Outcome::Published, false),
         (Outcome::AlreadyPublished, false),
         (Outcome::Published, true),
+        (Outcome::AlreadyPublished, true),
     ] {
         let snapshot: Arc<dyn OutputSnapshot> = Arc::new(Unimock::new(
             OutputSnapshotMock::capture
@@ -80,12 +81,12 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
                 .next_call(matching!(_))
                 .returns(Ok(PathBuf::from("/private/publish"))),
             BuildReporterMock::build_directory
-                .next_call(matching!(_))
+                .next_call(matching!((path) if *path == Path::new("/private/publish/site")))
                 .returns(()),
             StaticOutputMock::build
                 .next_call(matching!(_, _))
                 .answers_arc(Arc::new(move |_, request, _| {
-                    assert_eq!(request.directory, PathBuf::from("/private/publish"));
+                    assert_eq!(request.directory, PathBuf::from("/private/publish/site"));
                     assert_eq!(request.repository_root, PathBuf::from("/repo"));
                     assert_eq!(request.invocation_directory, PathBuf::from("/repo/tools"));
                     assert!(request.no_changes);
