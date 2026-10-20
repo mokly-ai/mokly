@@ -3,122 +3,83 @@
 use std::collections::BTreeSet;
 use std::ops::Range;
 
-use cssparser::Token;
-
 use crate::error::Result;
-use crate::rename::{Renamer, grouping};
+use crate::rename::Renamer;
 use crate::token_sections::{self, Grammar, Section};
 use crate::token_tree::Tokens;
 
 impl Renamer<'_> {
     /// Rename rule preludes and declarations; nested blocks use heap frames.
+    /// In a declaration block, a statement without a block is a declaration.
+    /// Every other statement renames its prelude and opens its block, with
+    /// the grammar that the section reader gives that block.
     pub(crate) fn rules(&mut self, tokens: &Tokens<'_>) -> Result<()> {
         let mut pending = vec![Frame {
             range: tokens.root(),
-            body: None,
+            grammar: Grammar::Rules,
+            body: Body::default(),
         }];
         while let Some(frame) = pending.last_mut() {
-            let grammar = frame.grammar();
-            let Some(section) = token_sections::next(tokens, &mut frame.range, grammar) else {
+            let Some(section) = token_sections::next(tokens, &mut frame.range, frame.grammar)
+            else {
                 pending.pop();
                 continue;
             };
-            let nested = match &frame.body {
-                Some(body) => self.statement(tokens, body, section)?,
-                None => self.rule(tokens, section)?,
-            };
-            pending.extend(nested);
+            if frame.grammar == Grammar::Declarations && section.block.is_none() {
+                self.declaration(
+                    section.text(tokens),
+                    section.start,
+                    section.end,
+                    section.semicolon,
+                    frame.body.own.as_deref(),
+                    &frame.body.earlier,
+                )?;
+                continue;
+            }
+            let earlier = self.defined.clone();
+            let own = self.prelude(tokens, &section)?;
+            if let Some(block) = section.block {
+                pending.push(Frame {
+                    range: block.range,
+                    grammar: block.grammar,
+                    body: Body { own, earlier },
+                });
+            }
         }
         Ok(())
     }
 
-    /// One top-level or grouping rule: rename its prelude and open its block.
-    fn rule(&mut self, tokens: &Tokens<'_>, section: Section) -> Result<Option<Frame>> {
-        let earlier = self.defined.clone();
-        let (at, own) = self.prelude(tokens, &section)?;
-        let body = (!at.as_deref().is_some_and(grouping)).then_some(Body { own, earlier });
-        Ok(section.body.map(|range| Frame { range, body }))
-    }
-
-    /// One statement in a declaration block: a nested rule or a declaration.
-    /// A custom property's `{}` values stay inside its declaration.
-    fn statement(
-        &mut self,
-        tokens: &Tokens<'_>,
-        body: &Body,
-        section: Section,
-    ) -> Result<Option<Frame>> {
-        if let Some(range) = section.body.clone() {
-            let earlier = self.defined.clone();
-            let (_, own) = self.prelude(tokens, &section)?;
-            return Ok(Some(Frame {
-                range,
-                body: Some(Body { own, earlier }),
-            }));
-        }
-        self.declaration(
-            section.text(tokens),
-            section.start,
-            section.end,
-            section.semicolon,
-            body.own.as_deref(),
-            &body.earlier,
-        )?;
-        Ok(None)
-    }
-
-    /// Rename the names in a block-opening prelude, at any nesting level:
+    /// Rename the names in a statement's prelude, at any nesting level:
     /// keyframes names, `@scope` selectors, and style rule selectors. Other
-    /// at-rule preludes stay as authored. Returns the lowercase at-rule name and
-    /// the style rule's single local class.
-    fn prelude(
-        &mut self,
-        tokens: &Tokens<'_>,
-        section: &Section,
-    ) -> Result<(Option<String>, Option<String>)> {
-        let at = match section
-            .first(tokens)
-            .map(|index| &tokens.nodes[index].token)
-        {
-            Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-            _ => None,
-        };
+    /// at-rule preludes stay as authored. Returns the style rule's single
+    /// local class.
+    fn prelude(&mut self, tokens: &Tokens<'_>, section: &Section) -> Result<Option<String>> {
         let prelude = section.prelude.clone();
-        let mut own = None;
-        if at
-            .as_deref()
-            .is_some_and(|name| name.ends_with("keyframes"))
-        {
-            self.keyframes(tokens, prelude)?;
-        } else if at.as_deref() == Some("scope") {
-            self.selector(tokens, prelude, true)?;
-        } else if at.is_none() {
-            own = self.selector(tokens, prelude, true)?;
+        match section.at_rule(tokens).as_deref() {
+            Some(name) if name.ends_with("keyframes") => {
+                self.keyframes(tokens, prelude)?;
+                Ok(None)
+            }
+            Some("scope") => {
+                self.selector(tokens, prelude, true)?;
+                Ok(None)
+            }
+            Some(_) => Ok(None),
+            None => self.selector(tokens, prelude, true),
         }
-        Ok((at, own))
     }
 }
 
-/// A block's remaining statements and the rule context that owns them.
+/// A block's remaining statements, their grammar, and the rule that owns them.
 struct Frame {
     range: Range<usize>,
-    /// `None` for the stylesheet and for grouping at-rule blocks outside
-    /// declaration blocks.
-    body: Option<Body>,
-}
-
-impl Frame {
-    /// Rule-context blocks hold declarations; the others hold rules.
-    fn grammar(&self) -> Grammar {
-        if self.body.is_some() {
-            Grammar::Declarations
-        } else {
-            Grammar::Rules
-        }
-    }
+    grammar: Grammar,
+    /// The owning rule context; declarations in this block compose against it.
+    body: Body,
 }
 
 /// The owning style rule's local class and the classes defined before it.
+#[derive(Default)]
 struct Body {
     own: Option<String>,
     earlier: BTreeSet<String>,

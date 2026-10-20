@@ -6,7 +6,6 @@ use cssparser::Token;
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
-use crate::rename::grouping;
 use crate::token_sections::{self, Grammar};
 use crate::token_tree::{Tokens, opening};
 
@@ -41,17 +40,13 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                 let first = tokens
                     .next_significant(&mut header)
                     .map(|index| &tokens.nodes[index].token);
-                let at = match first {
-                    Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-                    _ => None,
-                };
-                if let Some(body) = section.body {
+                let at = section.at_rule(&tokens);
+                if let Some(block) = section.block {
                     let names = at
                         .as_deref()
                         .is_none_or(|name| name.ends_with("keyframes") || name == "scope");
-                    let nested = grammar.nested(at.as_deref().is_some_and(grouping));
                     pending.push(Work::Emit("}"));
-                    pending.push(Work::Block(body, nested));
+                    pending.push(Work::Block(block.range, block.grammar));
                     pending.push(Work::Emit("{"));
                     pending.push(Work::Tokens(section.prelude, names));
                 } else {
