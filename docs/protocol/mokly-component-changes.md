@@ -27,14 +27,14 @@ owns the membership list. This page states how a component edit is attributed.
 | Other parent metadata changes                           | Parent and each variant whose metadata projection changes | Consumers only when their render or rendered resources change |
 | Temporary control edits in Serve                        | None                                                      | None                                                          |
 
-| CSS delivery path                   | Direct Changes entries                                                                           | Secondary impact                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| Styles a sidecar render returned    | Owners with matches kept by the shared nested test; entry-owned unresolved rules                 | Consumers of those components         |
-| Unowned head `<style>` elements     | The owner that the inline rule of [style ownership](./mokly-comparison.md#style-ownership) names | Consumers of a component owner        |
-| Configured stylesheet               | Components with kept own-page matches; entries with outside matches or unresolved rules          | Consumers of those changed components |
-| Component `stylesheets` declaration | The same rule; declaring the file grants no ownership                                            | The same affected-consumer rule       |
-| Import from a stylesheet            | The same rule, using the changed imported stylesheet                                             | The same affected-consumer rule       |
-| JavaScript import into a bundle     | The same rule, joining equal changed rules across bundles                                        | The same affected-consumer rule       |
+| CSS delivery path                   | Direct Changes entries                                                                                                        | Secondary impact                      |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Styles a sidecar render returned    | Owners with matches kept by the shared nested test; entry-owned unresolved rules                                              | Consumers of those components         |
+| Unowned head `<style>` elements     | Owners from supplier input ancestry and the shared nested test under [style ownership](./mokly-comparison.md#style-ownership) | Consumers of a component owner        |
+| Configured stylesheet               | Components with kept own-page matches; entries with outside matches or unresolved rules                                       | Consumers of those changed components |
+| Component `stylesheets` declaration | The same rule; declaring the file grants no ownership                                                                         | The same affected-consumer rule       |
+| Import from a stylesheet            | The same rule, using the changed imported stylesheet                                                                          | The same affected-consumer rule       |
+| JavaScript import into a bundle     | The same rule, joining equal changed rules across bundles                                                                     | The same affected-consumer rule       |
 
 The [CSS rule contract](./mokly-css-attribution-rules.md) defines containment,
 identity, and examples. A component row through a linked stylesheet requires

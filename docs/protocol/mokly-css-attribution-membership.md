@@ -59,8 +59,8 @@ analysis fills it.
   each such owner. Emit `{ kind: "entry" }` only for matches outside every
   changed component. A selector can have component and entry records on the
   same view. Unresolved rules, parse failures, and excluded records have
-  only the entry owner. Ownerless head rules use the same own-page proof,
-  with matches restricted to their input owner under
+  only the entry owner. Ownerless head rules use supplier input ancestry and
+  the shared own-page proof and nested test under
   [style ownership](./mokly-comparison.md#style-ownership).
 - Trusted sidecar rules join the same unfiltered own-page proof and nested
   test as linked CSS. Equal identities join across owner sets. A nested copy
