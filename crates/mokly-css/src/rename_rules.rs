@@ -41,13 +41,6 @@ impl Renamer<'_> {
             Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
             _ => None,
         };
-        if at.as_deref() == Some("value") {
-            return Err(self.error(
-                section.lead(tokens),
-                "CSS Modules @value is unsupported",
-                "use a CSS custom property or JavaScript constant",
-            ));
-        }
         let mut own = None;
         if at
             .as_deref()
