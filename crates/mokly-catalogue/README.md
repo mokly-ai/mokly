@@ -82,13 +82,16 @@ Static input membership uses each root's matcher and the directory-name policy.
 
 The YAML front-matter builder keeps one heap frame per open sequence or
 mapping. Source locations live in a tree of JSON-pointer segments, so memory
-grows with the node count, not with the square of the depth. Building,
-copying, validating, and releasing a front matter field that validation
-rejects uses no native stack per nesting level; a 100,000-level field uses an
-ordinary worker thread. Accepted `props`, `propSchema`, and `variants` values
-still recurse once per level in serde-derived deserialization and schema
-inference before the 64-level prop and schema bound applies. The YAML parser
-rejects flow nesting deeper than 255 levels with `html-front-matter`.
+grows with the node count, not with the square of the depth. The builder
+rejects a value more than 128 levels below the root, `yaml_limits::MAX_DEPTH`,
+with `html-front-matter` where the value starts. An alias counts at the depth
+of the deepest value in its copy. Deeper input stops at that level, so a
+100,000-level field uses an ordinary worker thread. Accepted `props`,
+`propSchema`, and `variants` values recurse once per level in serde-derived
+deserialization and schema inference before the 64-level prop and schema
+bound applies. At 128 levels, that recursion fits a 2 MiB worker stack. The
+YAML parser reads flow nesting ahead, so flow nesting deeper than 255 levels
+fails with the parser's own `html-front-matter` message.
 
 Private JavaScript generation metadata carries the sidecar module digest map.
 Static builds compare it with captured sources before document callbacks.
@@ -144,12 +147,13 @@ YAML that each path survives on a 2 MiB worker stack. Run it with
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
-- [YAML front matter](./src/yaml.rs) and its [source positions](./src/yaml_positions.rs).
+- [YAML front matter](./src/yaml.rs), its [limits](./src/yaml_limits.rs), and its [source positions](./src/yaml_positions.rs).
 
 ### Related Docs
 
 - [Root discovery](../../docs/protocol/mokly-root-discovery.md).
 - [Configuration](../../docs/protocol/mokly-configuration.md).
 - [HTML screens](../../docs/protocol/mokly-html-screens.md).
+- [Front matter YAML](../../docs/protocol/mokly-front-matter-yaml.md).
 - [Entry props](../../docs/protocol/mokly-entry-props.md).
 - [Catalogue model and public shapes](../../docs/protocol/mokly-catalogue.md).

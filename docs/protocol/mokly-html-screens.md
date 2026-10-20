@@ -21,11 +21,11 @@ slug. HTML and YAML sources are protected from public delivery, watched, and nev
 
 A screen, component, or page file starts with a front matter block: a first
 line of exactly `---`, YAML, and a closing line of exactly `---`, after an
-optional byte-order mark. LF and CRLF line endings are accepted. The YAML uses
-the 1.2 core schema: duplicate keys fail, custom tags fail, aliases are
-allowed, and `no` stays a string. A use case file is one YAML document with
-the same keys and no body. Front matter is required because `title` is
-required; a missing block fails with `html-front-matter`.
+optional byte-order mark. LF and CRLF line endings are accepted. The YAML
+follows the [front matter YAML rules](./mokly-front-matter-yaml.md). A use
+case file is one YAML document with the same keys and no body. Front matter
+is required because `title` is required; a missing block fails with
+`html-front-matter`.
 
 | Key            | Type             | Meaning                                                                                           |
 | -------------- | ---------------- | ------------------------------------------------------------------------------------------------- |

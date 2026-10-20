@@ -2,7 +2,8 @@
 //!
 //! The builder keeps one heap frame per open sequence or mapping, so authored
 //! nesting does not consume native stack. Each node's JSON pointer is built once
-//! from its parent's pointer.
+//! from its parent's pointer. A value deeper than [`MAX_DEPTH`] fails where it
+//! starts, so later recursive traversal of the decoded value stays bounded.
 
 use std::collections::BTreeMap;
 use std::str::Chars;
@@ -15,8 +16,9 @@ use yaml_rust2::scanner::{Marker, TScalarStyle};
 
 use crate::diagnostic::{Code, Issue};
 use crate::yaml_frame::{Frame, Rejected};
+use crate::yaml_limits::MAX_DEPTH;
 use crate::yaml_positions::{Positions, ROOT};
-use crate::yaml_value::{copy, discard};
+use crate::yaml_value::{copy, discard, height};
 
 /// A decoded authoring value and its JSON-pointer source locations.
 #[derive(Debug)]
@@ -54,7 +56,13 @@ struct Reader<'a> {
     path: &'a str,
     first_line: usize,
     /// Anchored nodes with locations relative to the node.
-    anchors: BTreeMap<usize, Document>,
+    anchors: BTreeMap<usize, Anchor>,
+}
+
+/// An anchored node and the number of levels below it.
+struct Anchor {
+    document: Document,
+    height: usize,
 }
 
 impl Reader<'_> {
@@ -75,6 +83,15 @@ impl Reader<'_> {
     fn error(&self, marker: Marker, message: impl Into<String>) -> Issue {
         Issue::new(Code::HtmlFrontMatter, message).at(self.location(marker))
     }
+    /// Fail when a value would sit more than [`MAX_DEPTH`] levels below the root.
+    fn within(&self, depth: usize, marker: Marker) -> Result<(), Issue> {
+        if depth > MAX_DEPTH {
+            let message =
+                format!("YAML value exceeds {MAX_DEPTH} nesting levels; reduce its nesting");
+            return Err(self.error(marker, message));
+        }
+        Ok(())
+    }
     fn tag(&self, tag: &Option<Tag>, marker: Marker) -> Result<(), Issue> {
         if tag
             .as_ref()
@@ -93,6 +110,7 @@ impl Reader<'_> {
             let sequence = matches!(event, Event::SequenceStart(..));
             let (value, start) = match event {
                 Event::Scalar(text, style, anchor, tag) => {
+                    self.within(frames.len(), marker)?;
                     self.tag(&tag, marker)?;
                     let quoted = style != TScalarStyle::Plain
                         || tag.as_ref().is_some_and(|tag| tag.suffix == "str");
@@ -116,6 +134,8 @@ impl Reader<'_> {
                     let Some(node) = self.anchors.get(&anchor) else {
                         return Err(self.error(marker, "unknown or recursive YAML alias"));
                     };
+                    self.within(frames.len() + node.height, marker)?;
+                    let node = &node.document;
                     let start = self.location(marker);
                     if let Some(slot) = target(&frames, &mut positions) {
                         positions.graft(slot, &node.positions, ROOT);
@@ -124,6 +144,7 @@ impl Reader<'_> {
                     (copy(&node.value), start)
                 }
                 Event::SequenceStart(anchor, tag) | Event::MappingStart(anchor, tag) => {
+                    self.within(frames.len(), marker)?;
                     self.tag(&tag, marker)?;
                     let start = self.location(marker);
                     let slot = target(&frames, &mut positions);
@@ -174,8 +195,12 @@ impl Reader<'_> {
 
     /// Register an anchored node with its locations relative to the node.
     fn anchor(&mut self, anchor: usize, value: &Value, positions: Positions) {
-        let value = copy(value);
-        self.anchors.insert(anchor, Document { value, positions });
+        let height = height(value);
+        let document = Document {
+            value: copy(value),
+            positions,
+        };
+        self.anchors.insert(anchor, Anchor { document, height });
     }
 }
 
