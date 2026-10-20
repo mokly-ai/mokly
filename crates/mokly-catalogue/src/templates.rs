@@ -42,10 +42,14 @@ pub(crate) fn validate(
         },
     };
     let mut document_tags = [0, 0, 0];
+    let mut warned_attributes = BTreeSet::new();
     for parsed in html_tokens::parse(&template.body) {
         match parsed.token {
             Token::StartTag(tag) => {
                 for attribute in parsed.ignored_attributes {
+                    if !warned_attributes.insert(attribute.clone()) {
+                        continue;
+                    }
                     checker.result.warnings.push(Warning {
                         code: "html-ignore-attribute",
                         subject: if slots.is_some() {
