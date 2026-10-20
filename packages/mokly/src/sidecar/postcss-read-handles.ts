@@ -17,6 +17,14 @@ export function handleDescriptor(value: unknown): number | undefined {
     : undefined;
 }
 
+/** Every public write boundary invalidates the same descriptor state. */
+export function mutateDescriptor(value: unknown, close = false): void {
+  const fd = typeof value === "number" ? value : handleDescriptor(value);
+  if (fd === undefined) return;
+  if (close) closed(fd);
+  else invalidate(fd);
+}
+
 /** FileHandle streams call the same read method, so their delivered ranges share this ledger. */
 export function observeHandle(handle: FileHandle): void {
   handles.set(handle, handle);
@@ -101,8 +109,7 @@ export function observeHandle(handle: FileHandle): void {
       configurable: true,
       writable: true,
       value: function (this: FileHandle, ...args: unknown[]) {
-        if (name === "close") closed(handle.fd);
-        else invalidate(this.fd);
+        mutateDescriptor(this, name === "close");
         return Reflect.apply(original, this, args);
       },
     });

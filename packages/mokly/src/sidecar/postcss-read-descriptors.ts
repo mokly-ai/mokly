@@ -8,11 +8,10 @@ import {
   vectorBytes,
   vectorInputs,
 } from "./postcss-read-arguments.js";
-import { observeHandle } from "./postcss-read-handles.js";
+import { mutateDescriptor, observeHandle } from "./postcss-read-handles.js";
 import { filename } from "./postcss-read-options.js";
 import {
   begin,
-  closed,
   finish,
   invalidate,
   markSyncReader,
@@ -164,11 +163,17 @@ export function observeDescriptors(): void {
     const original = fs[name];
     Object.defineProperty(fs, name, {
       value: function (...args: unknown[]) {
-        if (typeof args[0] === "number") {
-          if (name.startsWith("close")) closed(args[0]);
-          else invalidate(args[0]);
-        }
+        mutateDescriptor(args[0], name.startsWith("close"));
         return Reflect.apply(original, fs, args);
+      },
+    });
+  }
+  for (const name of ["writeFile", "appendFile"] as const) {
+    const original = promises[name];
+    Object.defineProperty(promises, name, {
+      value: function (...args: unknown[]) {
+        mutateDescriptor(args[0]);
+        return Reflect.apply(original, promises, args);
       },
     });
   }
