@@ -15,6 +15,7 @@ import { expect, type Page } from "@playwright/test";
 import { modeButton } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import {
+  expectCardPane,
   generationOf,
   loadComparison,
   PANE_SOURCE,
@@ -116,13 +117,12 @@ test("snapshot recovery keeps the selected saved variant", async ({
   allowBrowserError,
 }) => {
   const variant = changes.paths.changedVariant;
-  const label = (pane: string) => page.frameLocator(pane).locator("h2");
   const requests = selectedRequests(page);
   const failed = failedSnapshots(page);
   await page.goto(`/view/${variant}/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
-  await expect(label(after)).toHaveText("Featured After");
+  await expectCardPane(page, "after", "Featured After");
   const expired = generationOf(
     (await page.locator(after).getAttribute(PANE_SOURCE))!,
   );
@@ -136,8 +136,8 @@ test("snapshot recovery keeps the selected saved variant", async ({
     PANE_SOURCE,
     /\.mobile\.html$/u,
   );
-  await expect(label(before)).toHaveText("Featured Before");
-  await expect(label(after)).toHaveText("Featured After");
+  await expectCardPane(page, "before", "Featured Before");
+  await expectCardPane(page, "after", "Featured After");
   expect(
     generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!),
   ).not.toBe(expired);
