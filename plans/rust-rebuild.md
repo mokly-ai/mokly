@@ -2369,6 +2369,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         panes prove each side again by their `.accent` colour (`06158d40`),
         and the plan dates decision 10 again after merge `8fa9f338` kept only
         the f5 line.
+  - M10 Serve and moved rows decision 21 for the user: one shared Card pane
+    check that proves each pane's side. Severity Low, effort Small. Covers
+    review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
+    d371e17c. Recommended: B, one helper in
+    `tests/browser/serve_comparison_ui.ts` for every Card pane check.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
