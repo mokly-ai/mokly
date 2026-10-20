@@ -239,9 +239,14 @@ pub(crate) fn collect(
                 .as_ref()
                 .is_some_and(|comparison| comparison.structure),
             proofs,
+            // A view on one side proves a root change only for a one-sided
+            // entry; an entry with both sides that gains or loses a view has
+            // no paired canonical form for that view.
             root_changed: comparison
                 .as_ref()
-                .is_none_or(|comparison| comparison.root_changed),
+                .map_or(previous.is_none() || current.is_none(), |comparison| {
+                    comparison.root_changed
+                }),
         });
         {
             for (side, entry, document) in [

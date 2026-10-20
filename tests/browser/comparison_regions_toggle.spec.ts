@@ -15,10 +15,10 @@ import {
   wheelOver,
   wheelOverRegion,
 } from "./comparison_scroll.js";
+import { registerScrollTogetherMemory } from "./comparison_scroll_memory_cases.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton } from "./comparison_ui.js";
 
-const STORAGE_KEY = "mokly:comparison-scroll-together";
 const changed = comparisonPaths.changed;
 const panel = "#panel";
 
@@ -106,33 +106,7 @@ test("off keeps a stack's page together but frees its panels", async ({
   expect(requests).toEqual([]);
 });
 
-test("Scroll together is remembered across screens and reloads", async ({
-  page,
-}) => {
-  await openComparison(page, changed, "desktop", "Overlay");
-  await scrollTogether(page).click();
-  await expect(scrollTogether(page)).not.toBeChecked();
-  expect(
-    await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
-  ).toBe("off");
-
-  await openComparison(page, comparisonPaths.component, "desktop", "Overlay");
-  await expect(scrollTogether(page)).not.toBeChecked();
-
-  await page.reload();
-  await modeButton(page, "Side by side").click();
-  await expect(scrollTogether(page)).not.toBeChecked();
-  await scrollTogether(page).click();
-  await expect(scrollTogether(page)).toBeChecked();
-  expect(
-    await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY),
-  ).toBe("on");
-
-  await page.evaluate((key) => localStorage.setItem(key, "maybe"), STORAGE_KEY);
-  await page.reload();
-  await modeButton(page, "Overlay").click();
-  await expect(scrollTogether(page)).toBeChecked();
-});
+registerScrollTogetherMemory(test);
 
 test("a store that refuses the choice keeps it for the open document", async ({
   page,

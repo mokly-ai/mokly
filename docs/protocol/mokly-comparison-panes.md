@@ -162,16 +162,17 @@ each request to its immutable generation and configured sides.
 
 ## Acceptance
 
-Regressions prove the page items below in live Serve through the selected
-comparison path (`tests/browser/comparison_alignment.spec.ts` and
-`comparison_alignment_input.spec.ts`). Against a static build and an embedded
-viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
-stacked wheel alignment, frame attributes, inert links and anchors, and static
-Side by side mirroring; the pane failure path runs embedded. The region, key,
-anchor, and Scroll together items are proved by the seven
-`tests/browser/comparison_regions*.spec.ts` suites, which the scrolling,
-region pairing, and Scroll together contracts name case by case. Unit tests
-under `packages/viewer/tests/` cover the controllers.
+Regressions prove the page items below in a static build. Live Serve, through
+the selected comparison path, proves the wheel, Side by side, page key, anchor,
+shorter-document, inner-region, and frame-attribute items, and Try again and
+Refresh. Against a static build and an embedded viewer through both frame
+adapters, `comparison_alignment_hosts.spec.ts` proves stacked wheel alignment,
+frame attributes, inert links and anchors, and static Side by side mirroring;
+the pane failure path runs embedded. The region, key, anchor, and Scroll
+together items are proved by the seven
+`tests/browser/comparison_regions*.spec.ts` suites, which the scrolling, region
+pairing, and Scroll together contracts name case by case. Unit tests under
+`packages/viewer/tests/` cover the controllers.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer

@@ -1386,6 +1386,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         capture creation and preserve advertised historical generation URLs.
         Compile the on-demand matrix without executing it.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
+- [x] Keep a view that exists on one side out of implementation impact when
+      its entry has both sides; adding Dark to a light-only catalogue made
+      every build and Serve classification invalid.
 - [ ] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
@@ -1452,9 +1455,9 @@ Tags: ui
       comparison scroll regions, retained focus, and stylesheet Details.
   - [ ] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
-  - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
+  - [x] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
-  - [ ] Port the moved-entry cases with the shared moved fixtures in the
+  - [x] Port the moved-entry cases with the shared moved fixtures in the
         branch-point copy and `serve_comparison_test.ts`.
   - [x] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
@@ -1462,6 +1465,13 @@ Tags: ui
         adapters; `sweep-overrides-comparisons.json` and
         `sweep-overrides-comparisons-3.json` in
         `.context/rust-rebuild/delegation/m7/` name each row.
+  - [x] Register the moved-entry viewer cases on the embedded viewer host
+        through both frame adapters, over the branch copy. The case that
+        follows the page address runs only on Serve and the branch copy.
+  - [x] When `rebuild/m10-d1-and-copies` merges, make its copied-output
+        `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
+        call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve
+        instances use, so each check lives once.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -2186,6 +2196,55 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         Fixed by `7b4dd657`. Controlled cross-thread drops reproduce the error;
         original mocks stay on their owner thread through subscriber and pool
         completion. Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
+  - M10 Serve and moved rows decision 6, Severity High, effort Small: Serve
+    answers 503 to a selected comparison of a component variant whose
+    dependency evidence names a rule that its parent owns, for example
+    `components/card/featured`. Recommended A: the selected projection keeps
+    the parent record with only the selected variant. Until the user
+    decides, the Serve variant specs use the Badge family.
+  - M10 Serve and moved rows review 1, open findings for the user:
+    1. Expiry emulation cannot fail its snapshot checks. Severity Medium,
+       effort Small. Recommended: C, one shared helper fakes a complete
+       collection of the expired generation and its previews.
+    2. Renewal fence checks pass before the late response. Severity Medium,
+       effort Small. Recommended: B, the held renewal release waits until
+       the browser ends each held request.
+    3. Regression test proves one shape of the fix. Severity Low, effort
+       Small. Recommended: A, CLI tests for a lost Dark view, a variant that
+       gains Dark, and a removed component with a surviving consumer.
+    4. The copy drops the moved variant comparison. Severity Low, effort
+       Small. Recommended: A, register the moved variant comparison on the
+       branch copy too.
+  - M10 Serve and moved rows review 3, open finding 7 for the user (review 3
+    finding 1): the kept ports lack two steps of the dropped copies, the
+    parent activation while a search shows only the removed sibling, and the
+    removed page's Location row. Severity Low, effort Small. Recommended: B,
+    add both steps to the kept ports when the branches merge.
+  - M10 Serve and moved rows decision 10, Severity Low, effort Small: each
+    sweep override lists the old checks that its port does not prove, and a
+    dropped duplicate moves its extra checks into the kept port. Covers
+    review 3 findings 1 and 2 and review 4 finding 2; previous examples
+    0858e172, 4d6a21a4, and abf52983. Recommended A: add the rule to the sweep
+    procedure.
+  - M10 Serve and moved rows review 4, open finding 12 for the user: the
+    restored removed-variant journey also changes the parent entry, because
+    its private base gives `screens/plain` props. Severity Low, effort Small.
+    Recommended: B, drop the props and check that the parent row has no
+    changed mark.
+  - M10 Serve and moved rows review 4, open finding 13 for the user: the Serve
+    fixture's poll comment misstates the publication time. Severity Low,
+    effort Small. Recommended: A, drop the duration from the comment.
+  - Outside the scope of the M10 Serve and moved rows review:
+    - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
+      Verification paragraph asks for an advanced server clock, and Serve
+      has no test hook for it. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:115`: one shared set of
+      base commits must feed Rust and browser tests, but Rust reads
+      `tests/fixtures/branch_point_cases.json` and the browser writes its
+      own sources. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
+      must run through Serve, `build`, and the embedded viewer, but they run
+      only on the branch copy. Separate branch.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
