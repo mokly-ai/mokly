@@ -21,7 +21,7 @@ export async function verifyPackageVersions(root) {
     lock.version,
     lock.packages[""].version,
     lock.packages["packages/mokly"].version,
-    versions["packages/mokly"],
+    versions["."],
   ])
     assert.equal(value, cli.version, "CLI release versions must agree");
   for (const value of [

@@ -6,7 +6,8 @@ Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 ## Package Set
 
-One release publishes seven packages from one reviewed commit:
+A CLI release publishes its package and five native packages from one reviewed
+commit. It publishes a changed viewer or reuses the exact existing viewer pin:
 
 | Package                  | Content                                                                                                            |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -92,7 +93,7 @@ three times the job's typical duration, including setup and builds.
 
 The publish job downloads the five archives, verifies that each archive's
 version equals the CLI version and that its inventory holds exactly the binary
-for its target, packs the viewer and then the CLI from the release checkout,
+for its target, prepares the viewer and then packs the CLI from the release checkout,
 validates every packed manifest and inventory plus the runtime license closure,
 and smoke-tests clean consumers from those exact archives: the CLI with its
 host platform package runs `mokly --version`, `mokly build` of a minimal
@@ -101,6 +102,8 @@ viewer entry in a browser bundle; a NodeNext consumer type-checks the authoring
 API. The smokes install the archives, not the source tree or a workspace link,
 and read protocol documents from the installed package.
 
+A CLI-only release downloads its published viewer archive without rebuilding it.
+Its source identity is the earlier viewer tag. A new viewer uses the CLI commit.
 The first run saves the checked seven-package set for 90 days before any
 publication. A retry reuses those exact archives under the
 [retry contract](./npm-release-management.md#release-recovery). It never

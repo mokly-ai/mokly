@@ -1,14 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.6.0/schemas/config.json",
   "bootstrap-sha": "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
-  "plugins": [
-    {
-      "type": "node-workspace",
-      "updateAllPackages": true
-    }
-  ],
   "packages": {
-    "packages/mokly": {
+    ".": {
       "release-type": "node",
       "component": "mokly",
       "changelog-path": "/CHANGELOG.md",
@@ -18,7 +12,7 @@
       "extra-files": [
         {
           "type": "json",
-          "path": "/package.json",
+          "path": "/packages/mokly/package.json",
           "jsonpath": "$['version']"
         },
         {

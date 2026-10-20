@@ -1854,8 +1854,15 @@ Publication review and timing acceptance: `.context/rust-rebuild/delegation/m12-
         a scratch checkout and record the blocked steps.
   - [ ] Complete the seven-package pack, reuse, and smoke with all native
         archives from the hosted target builds.
-- [ ] Settle Release Please selection for core-only commits under the
-      Milestone 15 review decision.
+- [x] Settle Release Please selection for core-only commits: item 20 option C,
+      applied by default (user rule), 2026-10-20. Make the CLI the root `.`
+      component and remove the `node-workspace` plugin. Core-only changes
+      release the CLI and its five native packages. Reuse the pinned published
+      viewer archive and verify its earlier immutable source. A new viewer
+      releases with the CLI and updates its exact dependency. Alternatives were
+      B, require a CLI-directory edit for every core fix, and A, a custom runner.
+      The root component gives core fixes normal release selection without a
+      redundant viewer version. Evidence: `.context/ci-gates-round2/release-all.log`.
 - [x] Run the installed static output and Serve smoke after their integration.
   - [x] Run installed Serve with the tiny HTML catalogue.
   - [x] Run installed static output after Milestone 12 supplies the writer.

@@ -10,8 +10,8 @@ on:
         required: true
         type: string
       viewer_ref:
-        description: Immutable viewer-vX.Y.Z tag to verify and publish
-        required: true
+        description: New viewer-vX.Y.Z tag, empty to reuse the CLI pin
+        required: false
         type: string
       artifact_run_id:
         description: Original main-push run that holds the checked release archives
@@ -39,8 +39,8 @@ jobs:
       issues: write
       pull-requests: write
     outputs:
-      cli_release_created: ${{ steps.release.outputs['packages/mokly--release_created'] }}
-      cli_tag_name: ${{ steps.release.outputs['packages/mokly--tag_name'] }}
+      cli_release_created: ${{ steps.release.outputs.release_created }}
+      cli_tag_name: ${{ steps.release.outputs.tag_name }}
       viewer_release_created: ${{ steps.release.outputs['packages/viewer--release_created'] }}
       viewer_tag_name: ${{ steps.release.outputs['packages/viewer--tag_name'] }}
     steps:
@@ -279,12 +279,17 @@ jobs:
         id: viewer_registry
         run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/viewer/pack-report.json
       - name: Publish viewer with npm trusted publishing
-        if: steps.viewer_registry.outputs.published != 'true'
+        if: env.VIEWER_REF != '' && steps.viewer_registry.outputs.published != 'true'
         env:
           ARCHIVE_PATH: ${{ steps.package.outputs.viewer_archive_path }}
         run: npm publish "$ARCHIVE_PATH" --access public --ignore-scripts
       - name: Verify viewer registry package and provenance
-        run: node scripts/release/registry.mjs --mode verify --report .context/release-artifact/viewer/pack-report.json --dist-tag latest
+        run: |
+          if [ -n "$VIEWER_REF" ]; then
+            node scripts/release/registry.mjs --mode verify --report .context/release-artifact/viewer/pack-report.json --dist-tag latest
+          else
+            node scripts/release/registry.mjs --mode verify --report .context/release-artifact/viewer/pack-report.json
+          fi
       - name: Guard existing CLI version
         id: cli_registry
         run: node scripts/release/registry.mjs --mode guard --report .context/release-artifact/mokly/pack-report.json
