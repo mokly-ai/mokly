@@ -5,13 +5,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { types } from "node:util";
 
-import {
-  markFileReader,
-  observeBytes,
-  preloadedCode,
-} from "./postcss-evidence.js";
+import { markFileReader, observeBytes } from "./postcss-evidence.js";
 
 type ReadOptions = { raw: unknown; encoding?: BufferEncoding };
+let installed = false;
 
 /** Exotic options and handles keep native behaviour and incomplete coverage. */
 function options(value: unknown): ReadOptions | undefined {
@@ -74,7 +71,8 @@ function deliver(
 
 /** Observe path-based whole-file APIs before delivery; descriptor offsets stay opaque. */
 export function observeFileReads(): void {
-  if (preloadedCode) return;
+  if (installed) return;
+  installed = true;
   const sync = fs.readFileSync;
   const callback = fs.readFile;
   const promise = promises.readFile;

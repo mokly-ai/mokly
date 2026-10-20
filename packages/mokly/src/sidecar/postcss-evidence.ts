@@ -15,6 +15,13 @@ const require = nodeModule.createRequire(import.meta.url);
 const initialModules = new Set(Object.keys(require.cache));
 type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
+let earlyReaders = false;
+let moduleHooksInstalled = false;
+
+/** The first child preload obtains native readers before consumer replacement. */
+export function trustEarlyReaders(): void {
+  earlyReaders = true;
+}
 
 /** Preloads can replace file APIs before this child can observe their raw inputs. */
 export const preloadedCode = [
@@ -65,7 +72,10 @@ export function markFileReader(reader: FileReader): void {
 }
 
 function rawReader(reader: FileReader, original: FileReader): boolean {
-  return !preloadedCode && (reader === original || observedReaders.has(reader));
+  return (
+    (earlyReaders || !preloadedCode) &&
+    (reader === original || observedReaders.has(reader))
+  );
 }
 
 function compilerBytes(
@@ -74,15 +84,21 @@ function compilerBytes(
   nativeProvider: boolean,
 ): Buffer | string {
   modules.add(file);
-  if (!preloadedCode && nativeProvider && Buffer.isBuffer(bytes))
+  if (
+    (earlyReaders || !preloadedCode) &&
+    nativeProvider &&
+    Buffer.isBuffer(bytes)
+  )
     observeBytes(file, bytes);
   return bytes;
 }
 
 /** Keep native resolution, conditions, attributes, and cache identity unchanged. */
 export function observeModuleLoads(): void {
-  if (typeof nodeModule.registerHooks !== "function") return;
-  let customized = preloadedCode;
+  if (moduleHooksInstalled || typeof nodeModule.registerHooks !== "function")
+    return;
+  moduleHooksInstalled = true;
+  let customized = !earlyReaders && preloadedCode;
   nodeModule.registerHooks({
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
@@ -105,7 +121,7 @@ export function observeModuleLoads(): void {
       return result;
     },
   });
-  for (const name of ["register", "registerHooks"] as const) {
+  for (const name of ["register"] as const) {
     const original = nodeModule[name];
     Object.defineProperty(nodeModule, name, {
       value: function (...args: unknown[]): unknown {

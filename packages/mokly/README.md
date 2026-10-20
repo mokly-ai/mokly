@@ -14,8 +14,9 @@ their dependency role in attribution.
 PostCSS children retain raw whole-file read witnesses beside dependency reports.
 Coverage remains incomplete for opaque readers. See the
 [PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
-Preloaded file providers can transform their buffers. Those contexts retain
-late baselines so transformed bytes cannot become false raw-file witnesses.
+Observation starts before consumer preloads. File providers retain their
+transformed output and the raw witnesses of underlying observed reads.
+Providers that bypass observation retain late baselines.
 Local script loading preserves the provider's UTF-8 behavior. Native observation
 keeps the separate raw digest before text decoding.
 
@@ -178,6 +179,8 @@ package. Copied docs, the package changelog, and build output stay ignored.
 Key code: [authoring](./src/authoring/definitions.ts),
 [sidecar](./src/sidecar/session.ts), and the
 [Rust pool](../../crates/mokly-sidecar/README.md).
+The [PostCSS preload](./src/sidecar/postcss-preload.ts) installs observation
+before consumer preloads in each owned child.
 
 On POSIX, the shim forwards SIGINT, SIGTERM, and SIGHUP. On Windows, it keeps
 its SIGINT and SIGBREAK listeners alive while the binary receives the shared

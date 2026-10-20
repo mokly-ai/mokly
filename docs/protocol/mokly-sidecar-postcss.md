@@ -67,8 +67,10 @@ file observation and local compiler witnesses. Unobserved transitive ESM loads,
 private resolution metadata, and read-time path identity remain incomplete.
 Custom Node loaders can return transformed text. Without raw-byte provenance,
 that text cannot become a whole-file witness.
-Preloaded code can replace file APIs before observation starts. Such contexts
-keep late baselines for those APIs and compiler reads, even when they return buffers.
+Observation precedes consumer preloads. A provider that calls an observed file
+API retains the underlying raw witness, even when it transforms the result.
+Preserve the provider's encoding and transformed output. Generated provider
+bytes and providers that bypass observed APIs have no invented raw witness.
 The late baseline detects only edits after capture for an unobserved input.
 
 Decision 56 selects staged observation to preserve plugin compatibility.
