@@ -2182,44 +2182,35 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
         Fixed by `7b4dd657`. Controlled cross-thread drops reproduce the error;
         original mocks stay on their owner thread through subscriber and pool
         completion. Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
-  - M10 Serve and moved rows decision 6, Severity High, effort Small: Serve
-    answers 503 to a selected comparison of a component variant whose
-    dependency evidence names a rule that its parent owns, for example
-    `components/card/featured`. Recommended A: the selected projection keeps
-    the parent record with only the selected variant. Until the user
-    decides, the Serve variant specs use the Badge family.
-  - M10 Serve and moved rows review 1, open findings for the user:
-    1. Expiry emulation cannot fail its snapshot checks. Severity Medium,
-       effort Small. Recommended: C, one shared helper fakes a complete
-       collection of the expired generation and its previews.
-    2. Renewal fence checks pass before the late response. Severity Medium,
-       effort Small. Recommended: B, the held renewal release waits until
-       the browser ends each held request.
-    3. Regression test proves one shape of the fix. Severity Low, effort
-       Small. Recommended: A, CLI tests for a lost Dark view, a variant that
-       gains Dark, and a removed component with a surviving consumer.
-    4. The copy drops the moved variant comparison. Severity Low, effort
-       Small. Recommended: A, register the moved variant comparison on the
-       branch copy too.
-  - M10 Serve and moved rows review 3, open finding 7 for the user (review 3
-    finding 1): the kept ports lack two steps of the dropped copies, the
-    parent activation while a search shows only the removed sibling, and the
-    removed page's Location row. Severity Low, effort Small. Recommended: B,
-    add both steps to the kept ports when the branches merge.
-  - M10 Serve and moved rows decision 10, Severity Low, effort Small: each
-    sweep override lists the old checks that its port does not prove, and a
-    dropped duplicate moves its extra checks into the kept port. Covers
-    review 3 findings 1 and 2 and review 4 finding 2; previous examples
-    0858e172, 4d6a21a4, and abf52983. Recommended A: add the rule to the sweep
-    procedure.
-  - M10 Serve and moved rows review 4, open finding 12 for the user: the
-    restored removed-variant journey also changes the parent entry, because
-    its private base gives `screens/plain` props. Severity Low, effort Small.
-    Recommended: B, drop the props and check that the parent row has no
-    changed mark.
-  - M10 Serve and moved rows review 4, open finding 13 for the user: the Serve
-    fixture's poll comment misstates the publication time. Severity Low,
-    effort Small. Recommended: A, drop the duration from the comment.
+  - [ ] M10 Serve and moved rows decision 6, decided A by the orchestrator on
+        2026-10-20: Serve answered 503 to a selected comparison of a component
+        variant whose dependency evidence names a rule that its parent owns,
+        for example `components/card/featured`. The selected projection keeps
+        the parent record with only the selected variant. The follow-ups
+        workspace implements it. When it lands, switch the three Serve specs
+        that use the Badge family back to the Card family.
+  - [x] M10 Serve and moved rows review 1, findings 1 to 4, fixed on
+        2026-10-20 as the orchestrator asked:
+    1. Expiry emulation could not fail its snapshot checks. Fixed by
+       `7ec5673a` (C): one shared helper emulates a complete collection.
+    2. Renewal fence checks passed before the late response. Fixed by
+       `bbc763a8` (B): the held renewal release waits until the browser ends
+       each held request, and reports whether the page cancelled it.
+    3. The regression test proved one shape of the fix. Fixed by `ebe7dccc`
+       (A): CLI tests for a lost Dark view, a variant that gains Dark, and a
+       removed component with a surviving consumer.
+    4. The copy dropped the moved variant comparison. Fixed by `a230499c`
+       (A): the branch copy registers it too.
+  - [x] M10 Serve and moved rows review 3, finding 7: the kept ports lacked two
+        steps of the dropped copies. Fixed by `0a9a8be8` (B) on 2026-10-20.
+  - [x] M10 Serve and moved rows decision 10, decided A by the orchestrator on
+        2026-10-20: each sweep override lists the old checks that its port does
+        not prove, and a delegate that drops a duplicate moves those checks into
+        the kept port. The orchestrator adds the rule to every brief.
+  - [x] M10 Serve and moved rows review 4, findings 12 and 13, fixed on
+        2026-10-20: the restored removed-variant journey keeps its parent
+        unchanged (`bd05ab75`, B), and the poll comment names no duration
+        (`437154a8`, A).
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
