@@ -94,6 +94,9 @@ Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base through one ordered collector. Each base
 view supplies its validated document and closure without a second render.
+Base preparation passes that result through the explicit prepared-base
+comparison entry point. An uncaptured fallback also uses that entry point,
+so a summary that exceeds the capture bound does not start another pass.
 Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
 The validation timing includes streamed encoding. Document, closure, and

@@ -175,7 +175,7 @@ impl ChangesService for Changes {
             base_span.record("status", "ok");
             (before, failures)
         };
-        let result = self.comparison.compare(
+        let result = self.comparison.compare_prepared(
             &ComparisonRequest {
                 base_ref: base.into(),
                 base_commit: commit.to_string(),
