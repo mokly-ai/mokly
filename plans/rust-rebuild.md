@@ -2558,6 +2558,25 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Evidence: `.context/ci-shard-balance/webpki-advisory.md`,
       `webpki-dependents.log`, and `webpki-green.log`.
 
+- [x] CI round 5 measurement follow-up (2026-10-20): calibrate scheduling
+      costs with both the hosted per-test observations and remote run
+      `20261020T191118Z-972099` at `300c4dae`. Include each report's measured
+      fixture overhead in its cost allocation. The first placement passed
+      all 2,249 browser tests but missed the 15-percent duration target.
+      Its browser command minutes were 20.83, 16.43, 14.04, and 17.36 against
+      30-minute Testbox guards. Playwright minutes were 15.90, 13.15, 10.24,
+      and 13.88. Viewer passed in 9.75 command minutes. Independent delivery
+      passed both 645-case modes in 17.70 command minutes. Repository stopped
+      on the new Rust advisory after 6.60 minutes. These command observations
+      exclude preparation. The five-report aggregate passed and cleanup left
+      zero boxes, but the complete gate failed the repository command.
+      Updated assignments contain 445, 649, 641, and 514 tests under the same
+      703-test cap. Replaying their test costs gives a 10.9-percent spread for
+      the hosted sample and 9.1 percent for the remote sample. These estimates
+      require the final run and the hub's hosted measurement for confirmation.
+      Evidence: `.context/ci-shard-balance/remote-summary.json`,
+      `calibration-candidates.json`, and `calibrated-partition.json`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public

@@ -13,17 +13,23 @@ room under the existing test-count cap. An oversized spec still executes;
 the aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in milliseconds per test. The source is the per-test observations from
-hosted run `39455750846` at `b1f3c86ffdfa0e002b6a090863e4a91fc7e6da86`.
-For each `specFile`, sum `observedTests.durationMs`, divide by its observed
-test count, and round to three decimal places. Refresh the inputs from a
-complete, successful four-shard browser report set. Keep the source reports
-and the resulting measurements under `.context/`.
+inputs in estimated milliseconds per test. They combine the per-test
+observations from hosted run `39455750846` at `b1f3c86f` and remote run
+`20261020T191118Z-972099` at `300c4dae`. Both browser report sets passed.
+The remote complete gate failed its repository audit on a new advisory.
+
+For each sample and `specFile`, sum `observedTests.durationMs` and divide by
+its observed test count. Multiply by the shard report's `durationMs` divided
+by its total observed test duration. This distributes measured fixture and
+runner overhead across the spec costs. Average the available sample costs
+for each file and round to three decimal places. A file present in only one
+sample uses that sample. Refresh from complete, successful browser report
+sets and retain the source reports and calculations under `.context/`.
 
 The scheduler multiplies each weight by the current discovered test count.
 New specs use the median known per-test weight. Removed specs cannot enter
 the assignment because discovery owns membership. File names break ties in
-byte order. Scheduling weights are estimates, never elapsed-time assertions.
+stable string order. Scheduling weights are estimates, never elapsed-time assertions.
 
 The strict runner passes escaped exact file patterns to Playwright instead
 of its count-based `--shard` selection. The reporter must observe the same
