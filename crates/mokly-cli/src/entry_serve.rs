@@ -5,7 +5,6 @@ use std::io::IsTerminal;
 use std::process::ExitCode;
 use std::sync::{Arc, Mutex};
 
-use mokly_catalogue::config::relative;
 use mokly_cli::build_output;
 use mokly_cli::cancellation::{Cancellation, ServeCancellation};
 use mokly_cli::codes::Code;
@@ -191,6 +190,7 @@ pub(super) fn run(
                 redactor: redactor.clone(),
             })?;
             let snapshot = states.create(&prepared, 1, attempt.clone())?;
+            let (configuration, summary) = serve_preparation::summary(prepared);
             let base = snapshot.index.base.clone().unwrap_or_default();
             let delivery = serve_delivery::create(
                 snapshot,
@@ -211,7 +211,7 @@ pub(super) fn run(
             let layout = serve_output::ready(
                 style,
                 &url,
-                &relative(&prepared.config.file, &prepared.config.repo_root),
+                &configuration,
                 &base,
                 !options.no_watch,
                 interactive,
@@ -220,11 +220,11 @@ pub(super) fn run(
             if *receiver.borrow()
                 || !phase.serve(&|| {
                     terminal.stdout(&layout);
-                    attempt.finish(&prepared.summary.warnings, false, &|warnings| {
+                    attempt.finish(&summary.warnings, false, &|warnings| {
                         terminal.stderr(&build_output::warnings(style, warnings, &redactor));
                         terminal.stdout(&serve_output::catalogue(
                             style,
-                            &prepared.summary,
+                            &summary,
                             timing.elapsed(),
                         ));
                     });
