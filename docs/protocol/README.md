@@ -36,6 +36,7 @@ How a catalogue is written: paths and roots, entry modules, HTML screens and com
 - [Entry Props And Variants](./mokly-entry-props.md)
 - [Final Logical Link Validation](./mokly-link-validation.md)
 - [Folders](./mokly-folders.md)
+- [Front Matter YAML](./mokly-front-matter-yaml.md)
 - [HTML Components](./mokly-html-components.md)
 - [HTML Screens, Pages, And Use Cases](./mokly-html-screens.md)
 - [Imported CSS Configuration](./mokly-configuration-imported-styles.md)

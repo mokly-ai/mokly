@@ -33,6 +33,9 @@ mod resolver_tests;
 #[cfg(test)]
 #[path = "_tests_/syntax_tests.rs"]
 mod syntax_tests;
+#[cfg(test)]
+#[path = "_tests_/wrapper_table_tests.rs"]
+mod wrapper_table_tests;
 
 pub mod parsed_cache;
 pub mod rule_collection;

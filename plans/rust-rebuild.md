@@ -2151,7 +2151,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [x] Review the `plaintext` re-parse limit: closing tags can become text, so repeated parsing can change the tree (M5 review 2, finding 6).
 - [ ] Decide whether reconstructed `plaintext` text writes raw characters;
       keep its escaping rules until approved (M14 review 1a finding 1B).
-- [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
+- [x] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
   - [x] Make the YAML builder and Mokly's CSS scanners iterative, and keep YAML
@@ -2168,9 +2168,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         with the catalogued empty-wrapper message. Decision: nesting report
         finding 15 option B, decided by the orchestrator as protocol alignment
         on 2026-10-20.
-  - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
-        serde-derived prop and schema traversal, and schema inference
-        (pending user decision).
+  - [x] Give an empty wrapper in a keyframes name its own catalogued words,
+        which ask for the name. Decision: nesting report finding 18 option B,
+        approved by the orchestrator on 2026-10-20.
+  - [x] Reject a YAML front matter value more than 128 levels below the root
+        with `html-front-matter` before serde-derived traversal and schema
+        inference, and accept the `lightningcss` gap. Decision: item 36 option
+        B (nesting report decision 10 B), applied by default (user rule),
+        2026-10-20.
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
@@ -2592,7 +2597,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     stylesheets bundled as delivery roots and align the pages.
   - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
   - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
-  - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
+  - [x] Milestone 4 review 1, finding 10: bound YAML alias expansion at
+        1,000,000 nodes per file with `html-front-matter`, before any copy.
+        Decision: item 7 option A, applied by default (user rule), 2026-10-20.
   - Milestone 7 review 1, finding 12: settled by F8 decision 13 A. Delete the
     unused former catalogue fixtures and their `.prettierignore` entries.
   - Milestone 5: `{{ name }}` with inner spaces settled by Decision 39 on
