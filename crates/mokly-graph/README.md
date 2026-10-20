@@ -55,6 +55,21 @@ keep their requested identities in the document key.
 trees, and evidence. It evicts by access order. Oversized artifacts return
 to the caller without retention. Plans keep recipes rather than a complete
 set of parsed documents. Eviction changes work only.
+Cross-view anchor checks retain successful destination renders in this same
+bounded cache. Repeated links reuse those documents. Each requested fragment
+is still checked in every destination view, including cache hits.
+Concurrent checks of one destination wait for its active render, then check
+the bounded cache again. Completed requests release their synchronization keys.
+Different targets and different generations keep independent requests.
+Anchor checks and JavaScript fragments use the same scoped request mechanism.
+Each generation and each fragment adapter owns an independent registry.
+The final active lease removes its entry even when an old mutex handle still lives.
+
+Comparison batches use the same render pool and sidecar count as validation.
+They return transient documents and closures in requested route order.
+The comparison caller limits each batch to the pool's existing worker count.
+Other generation adapters use sequential batches unless they forward scheduling
+and their cancellation checks together.
 
 `RenderGeneration::comparison_document` composes the same tree before closure
 validation. Both sides require complete, valid closures. A missing referenced

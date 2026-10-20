@@ -12,6 +12,20 @@ use rayon::prelude::*;
 use crate::cache::Artifact;
 use crate::closure::Closure;
 use crate::error::{GraphError, InternalError, Result};
+use crate::types::ComparisonDocument;
+
+/// A transient comparison input collected on an existing render worker.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonWorkerMock))]
+pub trait ComparisonWorker: Send + Sync {
+    /// Compose and validate a document and its closure.
+    fn input(&self, route: &str) -> Result<ComparisonDocument>;
+}
+
+impl fmt::Debug for dyn ComparisonWorker + '_ {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("ComparisonWorker")
+    }
+}
 
 /// A document action scheduled on a standard worker thread.
 pub trait ArtifactWorker: Send + Sync {
@@ -57,6 +71,18 @@ impl fmt::Debug for dyn DocumentWorker + '_ {
 /// Worker scheduling is an injectable runtime boundary.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderWorkersMock))]
 pub trait RenderWorkers: Send + Sync {
+    /// Existing capacity for bounded comparison batches.
+    fn comparison_parallelism(&self) -> usize {
+        1
+    }
+    /// Retain input order and failures while collecting a bounded caller-owned batch.
+    fn comparison(
+        &self,
+        routes: &[String],
+        worker: &dyn ComparisonWorker,
+    ) -> Vec<Result<ComparisonDocument>> {
+        routes.iter().map(|route| worker.input(route)).collect()
+    }
     /// Whether the command has cancelled preparation and queued document work.
     fn cancelled(&self) -> bool {
         false
@@ -93,6 +119,22 @@ impl ThreadWorkers {
 }
 
 impl RenderWorkers for ThreadWorkers {
+    fn comparison_parallelism(&self) -> usize {
+        self.pool.current_num_threads()
+    }
+    fn comparison(
+        &self,
+        routes: &[String],
+        worker: &dyn ComparisonWorker,
+    ) -> Vec<Result<ComparisonDocument>> {
+        let parent = tracing::Span::current();
+        self.pool.install(|| {
+            routes
+                .par_iter()
+                .map(|route| parent.in_scope(|| worker.input(route)))
+                .collect()
+        })
+    }
     fn closure(&self, route: &str, worker: &dyn ArtifactWorker) -> Result<Closure> {
         let parent = tracing::Span::current();
         self.pool
@@ -127,3 +169,7 @@ pub(crate) fn check_cancelled(workers: &dyn RenderWorkers) -> Result<()> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_workers_tests.rs"]
+mod comparison_workers_tests;

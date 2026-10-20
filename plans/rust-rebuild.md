@@ -1896,6 +1896,32 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep the 256 MiB bound and every per-entry charge.
         Evidence: `.context/m14-measurements/capture-html/summary.json` and
         `.context/m14-measurements/capture-react/summary.json`.
+  - [x] Profile optimized capture throughput and remove repeated work without
+        changing the capture bound, entry charges, or preparation contracts.
+    - [x] Reuse anchor-check destination renders through the bounded cache.
+          Evidence: `.context/m14-capture/anchor-release-html/analysis.json`
+          and `.context/m14-capture/anchor-release-react/analysis.json`.
+    - [x] Measure sidecar waits and capture encoding, then use bounded capture
+          batches on the existing render workers without changing retention order.
+          Integration evidence: `.context/m14-capture/merge-resolution.md`.
+          Evidence: `.context/m14-capture/observations.json` and
+          `.context/m14-capture/parallel-release-react/analysis.json`.
+    - [x] Coalesce concurrent anchor-target renders and preserve cache bounds.
+          Evidence: `.context/m14-capture/coalesced-release-html/analysis.json`
+          and `.context/m14-capture/coalesced-release-react/analysis.json`.
+  - [x] Retire completed anchor and fragment requests through scoped leases.
+        Close capture-throughput review finding 1 with option B.
+        Evidence: `.context/m14-capture/review-clarification.md` and
+        `.context/m14-capture/review-f1-tests.log`.
+  - [x] Preserve capture timings through the shared stage-selection split.
+        Integration evidence: `.context/m14-capture/merge2-resolution.md`.
+  - [x] Skip already loaded sidecar replay inputs and share binding revisions.
+        Keep replay order, deadlines, updates, and recycling unchanged.
+        Evidence: `.context/m14-capture/replay-green.log` and
+        `.context/m14-capture/replay-release-react/analysis.json`.
+  - [ ] Decide whether to combine validation and capture through bounded ordered
+        collection. Severity Medium, effort Large. Recommended: B, share the
+        validated inputs. Decision: `.context/m14-capture/design-decision.md`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2011,6 +2037,7 @@ Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
 Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
+Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review

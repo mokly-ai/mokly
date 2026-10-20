@@ -106,11 +106,16 @@ impl Pool {
                     slot.maps.insert(maps.generation.clone());
                 }
                 (Call::Bindings(bindings), _) => {
+                    let shared = state
+                        .bindings
+                        .get(&bindings.generation)
+                        .filter(|retained| retained.as_ref() == bindings)
+                        .cloned()
+                        .unwrap_or_else(|| Arc::new(bindings.clone()));
                     state
                         .bindings
-                        .insert(bindings.generation.clone(), bindings.clone());
-                    slot.bindings
-                        .insert(bindings.generation.clone(), bindings.clone());
+                        .insert(bindings.generation.clone(), shared.clone());
+                    slot.bindings.insert(bindings.generation.clone(), shared);
                 }
                 (Call::ProcessCss(params), _) => {
                     state.contexts.insert(params.context.clone());

@@ -81,10 +81,10 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
         );
         state.bindings.insert(
             "g".into(),
-            Bindings {
+            Arc::new(Bindings {
                 generation: "g".into(),
                 entries: BTreeMap::new(),
-            },
+            }),
         );
         state.maps.insert(
             "g".into(),

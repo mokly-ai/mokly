@@ -59,7 +59,13 @@ pub(crate) fn capture_with_bound(
     } else {
         source
     };
-    let summary = source.render_all()?;
+    let summary = {
+        let span = tracing::info_span!("review.capture-validate", status = "error");
+        let _entered = span.enter();
+        let summary = source.render_all()?;
+        span.record("status", "ok");
+        summary
+    };
     let mut budget = Budget::new(bound);
     if !budget.retain(mem::size_of::<CapturedGeneration>() + capture_weight::summary(&summary)) {
         complete(0, summary.documents, 0, 0);
@@ -71,16 +77,24 @@ pub(crate) fn capture_with_bound(
         .map(EncodedResource::encoded_bytes)
         .sum::<usize>();
     let mut views = BTreeMap::new();
-    for route in source.plans().keys() {
-        source.check_cancelled()?;
-        let artifact = source.comparison_document(route)?;
-        let document = capture_error::graph(EncodedView::encode(&artifact))?;
-        let closure = source.closure(route)?;
-        let cost =
-            256 + route.len() + document.retained_bytes() + capture_weight::closure(&closure);
-        if budget.retain(cost) {
-            encoded_bytes += document.bytes();
-            views.insert(route.clone(), CapturedView { document, closure });
+    let parallelism = source.comparison_parallelism().max(1);
+    let mut routes = source.plans().keys();
+    loop {
+        let batch: Vec<_> = routes.by_ref().take(parallelism).cloned().collect();
+        if batch.is_empty() {
+            break;
+        }
+        let inputs = source.comparison_batch(&batch)?;
+        for (route, input) in batch.into_iter().zip(inputs) {
+            source.check_cancelled()?;
+            let document = capture_error::graph(EncodedView::encode(&input.artifact))?;
+            let closure = input.closure;
+            let cost =
+                256 + route.len() + document.retained_bytes() + capture_weight::closure(&closure);
+            if budget.retain(cost) {
+                encoded_bytes += document.bytes();
+                views.insert(route, CapturedView { document, closure });
+            }
         }
     }
     complete(
@@ -216,6 +230,10 @@ impl RenderGeneration for CapturedGeneration {
 #[cfg(test)]
 #[path = "_tests_/comparison_capture_tests.rs"]
 mod comparison_capture_tests;
+
+#[cfg(test)]
+#[path = "_tests_/capture_batch_tests.rs"]
+mod capture_batch_tests;
 
 #[cfg(test)]
 #[path = "_tests_/capture_cancellation_tests.rs"]

@@ -48,6 +48,24 @@ test(
         assert.equal("path" in record, false);
         assert.equal("props" in record, false);
       }
+      for (const [stage, count] of [
+        ["review.capture-validate", 1],
+        ["review.capture-document", 6],
+        ["review.capture-encode", 6],
+        ["review.capture-closure", 6],
+      ] as const) {
+        const ended = records.filter(
+          (record) => record.stage === stage && record.event === "end",
+        );
+        assert.equal(ended.length, count, stage);
+        for (const record of ended) {
+          assert.equal(record.status, "ok");
+          assert.equal(record.parentId, counts.id);
+          assert.equal(record.session, counts.session);
+          assert.equal("path" in record, false);
+          assert.equal("props" in record, false);
+        }
+      }
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
