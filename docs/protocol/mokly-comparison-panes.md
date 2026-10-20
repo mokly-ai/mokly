@@ -101,9 +101,15 @@ always match. With Scroll together on, their page offsets and paired inner
 regions mirror in both directions. With it off, each pane scrolls independently.
 Narrow layouts keep the existing single-column responsive rules.
 
-A pane whose document is missing, such as the current side of a removed
-component variant, keeps the existing explicit missing-pane message and the
-comparison falls back to Side by side.
+A pane whose document is missing keeps an explicit message under its Before
+or Current label, and the comparison falls back to Side by side. A missing
+Before side reads “This screen did not exist before.”, and a missing Current
+side, such as the current side of a removed component variant, reads “This
+screen has been removed.”. A component comparison says “variant” in place of
+“screen”: “This variant did not exist before.” and “This variant has been
+removed.”. The `missing-before` and `missing-current` variants of
+`design/library/preview/comparison-pane` and the removed Compact variant of
+the component explorer depict this copy.
 
 An app shell may keep a zero-range page while its panels scroll. Those inner
 regions pair and mirror by authored name, id, role and accessible name, or a

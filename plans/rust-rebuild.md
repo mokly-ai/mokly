@@ -1622,7 +1622,7 @@ Tags: mockup
 
 Tags: ui
 
-- [ ] Item 42 A: show the design catalogue's missing-pane copy.
+- [x] Item 42 A: show the design catalogue's missing-pane copy.
 - [ ] Item 38 C: apply the style-only heading rule of any rule status.
 - [ ] Item 32 A: explain affected-only entries in Details and their
       comparison pane heading; fix the records sentence.

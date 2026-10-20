@@ -376,7 +376,9 @@ section per viewport, sharing one last-scrolled version
 (`comparison_scroll_owner.ts`) between them, and chooses `comparison_stack.tsx`
 for Overlay and Difference (one chrome whose viewport holds the Before layer
 and the blended Current layer) or `comparison_side.tsx` for Side by side and
-for views missing a side. `comparison_chrome.tsx` picks the browser, phone or
+for views missing a side, whose message is the design copy that the
+[pane layout](../../../../docs/protocol/mokly-comparison-panes.md#layout)
+names. `comparison_chrome.tsx` picks the browser, phone or
 bordered component frame, `comparison_viewport.tsx` renders the shared
 viewport, its sticky device-sized box and range spacer, and
 `comparison_frame.tsx` reuses `preview_frame.tsx` and the read-only guard for
