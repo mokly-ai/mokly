@@ -2,9 +2,9 @@
  * React stylesheet Details and screen inspection on a small comparison copy,
  * under the CSS evidence presentation contract. `addReactEvidenceSources`
  * adds a React group to the default catalogue: one module whose imported
- * sheet changes a Button rule and Checkout's heading rule, a Badge whose only
- * change is a rule on the renderer's wrapper, and a Home screen with nested,
- * repeated and hidden Button instances.
+ * sheet changes a Button rule and Checkout's heading rule, a Badge and its
+ * consumer whose only change is a rule on the renderer's wrapper, and a Home
+ * screen with nested, repeated and hidden Button instances.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -33,11 +33,20 @@ const test = additionsCopyTest(
   addReactEvidenceSources,
 );
 
-/** The Usage panel lists no affected screens or components. */
-async function expectNoAffectedConsumers(page: Page): Promise<void> {
+/**
+ * The Usage panel lists `usedBy` as consumers, and none of them as affected:
+ * a wrapper rule on a consumer's own document is the consumer's own change.
+ */
+async function expectUsersNotAffected(
+  page: Page,
+  usedBy: readonly string[],
+): Promise<void> {
   await page.getByRole("tab", { name: "Usage", exact: true }).click();
   const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
   await expect(usage).toBeVisible();
+  await expect(
+    usage.locator('[data-usage-section="used-by"]').getByRole("link"),
+  ).toHaveText([...usedBy]);
   await expect(usage.locator('[data-usage-section="affected"]')).toHaveCount(0);
   await expect(usage).not.toContainText("Affected screens");
 }
@@ -72,7 +81,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
           .toEqual([[sheets.wrapper, [[SAVED_VIEW_LEAD, [".frame"]]]]]);
         await expect(evidence).not.toContainText(SHARED);
         await expect(evidence).not.toContainText(VARIANT_TERMINAL);
-        await expectNoAffectedConsumers(page);
+        await expectUsersNotAffected(page, ["Badged"]);
       }
     });
   });

@@ -14,6 +14,7 @@ export const reactEvidencePaths = {
   home: "react/home",
   badge: "react/badge",
   badgeVariant: "react/badge/default",
+  badged: "react/badged",
 } as const;
 
 /** The stylesheets as the shell names them. */
@@ -50,15 +51,20 @@ export const home = defineScreen({ ...metadata, path: "react/home", title: "Home
   render: () => <main><pane.Component><p>Screen content</p><button.Component label="Slot action" /></pane.Component><button.Component moklyInstance="footer" label="Finish" /><button.Component moklyInstance="hidden" label="Hidden" hidden /></main> });
 `;
 
-/** Badge lives in its own module, so the bundled sheet never reaches it. */
+/**
+ * Badge and its one consumer live in their own module, so the bundled sheet
+ * never reaches them.
+ */
 const badge = `import React from "react";
-import { defineComponent } from "@mokly/mokly";
-export const badge = defineComponent({ description: "A wrapped component", relatedDocs: [],
-  path: "react/badge", title: "Badge",
+import { defineComponent, defineScreen } from "@mokly/mokly";
+const metadata = { description: "A wrapped component", relatedDocs: [] };
+export const badge = defineComponent({ ...metadata, path: "react/badge", title: "Badge",
   propSchema: { type: "object", additionalProperties: false, properties: { label: { type: "string" } } },
   props: { label: "New" },
   render: (props) => <span className="badge">{props.label}</span>,
   variants: [{ slug: "default", title: "Default", props: { label: "Sale" } }] });
+export const badged = defineScreen({ ...metadata, path: "react/badged", title: "Badged", props: {},
+  render: () => <main><h1>Badged</h1><badge.Component label="Offer" /></main> });
 `;
 
 /** Every React render sits in a wrapper outside the component's own output. */
@@ -71,9 +77,9 @@ export default function render({ node }) {
 /**
  * A React group on the default catalogue. The module's imported sheet changes
  * a Button rule and Checkout's heading rule; a configured sheet that only
- * Badge's documents link changes the renderer wrapper's rule. Other React
- * documents link only an unchanged sheet. The repository's dependencies are
- * linked in and ignored by Git.
+ * the documents of Badge and its consumer link changes the renderer
+ * wrapper's rule. Other React documents link only an unchanged sheet. The
+ * repository's dependencies are linked in and ignored by Git.
  */
 export const addReactEvidenceSources: ComparisonAdditions = async (
   root,
@@ -90,7 +96,10 @@ export const addReactEvidenceSources: ComparisonAdditions = async (
   const config = JSON.parse(await fs.readFile(file, "utf8"));
   config.renderer = "renderer.tsx";
   config.stylesheets.unshift(
-    { match: "react/badge/**", stylesheets: ["wrapper.css"] },
+    {
+      match: "react/{badge/**,badged/index.html}",
+      stylesheets: ["wrapper.css"],
+    },
     { match: "react/**", stylesheets: ["plain.css"] },
   );
   await fs.writeFile(file, JSON.stringify(config));
