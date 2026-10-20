@@ -105,7 +105,7 @@ above is `components/action` under a root with the prefix `components`.
   so its rendered content and nested registered instances stay independently
   comparable. A component cannot absorb a screen's primary content by
   accepting it as a slot.
-- `stylesheets` declares public CSS under the
+- `stylesheets` declares local CSS delivery roots under the
   [stylesheet contract](./mokly-component-stylesheets.md).
 
 Data props are plain data. Adapters expose complex values such as callbacks or
