@@ -2215,8 +2215,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep unknown or overlapping sequential positions opaque. Verify ranges
         in one streamed pass per path and preserve them through both caches.
   - [ ] Complete the remaining coverage: native/helper/worker reads,
-        older-runtime transitive ESM loading, private
-        resolution metadata, and unavailable native identity. The full M14 item
+        private resolution metadata, unknown descriptor positions, opaque
+        providers and options, and unavailable native identity. The full M14 item
         remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
         Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
@@ -2224,6 +2224,19 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Detect equal-byte replacements and symlink retargets before callbacks
         and installation. Keep helper, worker, and native cursor changes opaque.
         Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence-2/`.
+  - [x] Verify native transitive ESM, CommonJS, JSON, dynamic imports, and
+        conditional import/require loading on Node 22.15.0 and 24.21.0.
+        The older-runtime ESM gap no longer applies after decision 60 C.
+  - [x] Retain known native resolution manifests as late inputs. Public hooks
+        do not expose the bytes used by private `exports` and `imports` reads.
+        Preserve native resolution and its cache. Do not manufacture read receipts.
+  - [ ] Closure decision M14-PC2, proposed 2026-10-20, remains pending.
+        A: change the parent acceptance to the observed-read guarantee and tick
+        that scope with the recorded incomplete coverage. Effort Small.
+        B: keep the full parent open until an approved confined-domain design
+        can cover opaque reads. Effort Large. Recommend B because native reads
+        can still produce CSS from bytes that differ from their late baseline.
+        Neither option is applied. The user reserved the parent checkbox.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the

@@ -1,6 +1,6 @@
 //! Read evidence uses selected side roots without extending plugin source protection.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use mokly_sidecar::methods::ModuleResolution;
@@ -116,5 +116,47 @@ fn module_witnesses_select_the_ancestor_installation_before_repository_relative_
     assert_eq!(
         result.inputs.keys().collect::<Vec<_>>(),
         vec!["node_modules/.mokly-roots/1/plugin/index.js"]
+    );
+}
+
+#[test]
+fn native_manifest_inventory_has_only_a_late_baseline_without_a_read_receipt() {
+    let side = SideInputs {
+        source_root: "/repo".into(),
+        repository_roots: vec!["/repo".into()],
+        dependency_roots: vec!["/repo/node_modules".into()],
+        dependency_aliases: BTreeMap::new(),
+        configuration_directory: String::new(),
+        module_resolution: ModuleResolution::default(),
+        context: "head".into(),
+    };
+    let tree = Unimock::new((
+        SourceTreeMock::project
+            .next_call(matching!(_))
+            .answers(&|_, path| {
+                Ok(Some(Node {
+                    identity: path.into(),
+                    lexical_kind: FileKind::File,
+                    kind: FileKind::File,
+                }))
+            }),
+        SourceTreeMock::digest
+            .next_call(matching!(_))
+            .returns(Ok("after-native-resolution".into())),
+    ));
+    let evidence = Evidence {
+        modules: vec!["/repo/node_modules/plugin/package.json".into()],
+        ..Default::default()
+    };
+    let inventory = Inventory {
+        inputs: BTreeMap::new(),
+        plugin_inputs: BTreeMap::new(),
+        directories: Vec::new(),
+    };
+    let result = collect(&tree, Path::new("/repo"), &side, &inventory, &evidence);
+    assert_eq!(result.coverage, ReadCoverage::Incomplete);
+    assert_eq!(
+        result.inputs["node_modules/plugin/package.json"],
+        BTreeSet::from([ReadBaseline::Late("after-native-resolution".into())])
     );
 }

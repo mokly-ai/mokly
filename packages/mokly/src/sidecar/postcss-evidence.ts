@@ -9,6 +9,8 @@ import type { PostcssEvidence } from "../generated/sidecar/PostcssEvidence.js";
 import type { PostcssFileIdentity } from "../generated/sidecar/PostcssFileIdentity.js";
 import type { PostcssRead } from "../generated/sidecar/PostcssRead.js";
 
+import { resolutionMetadata } from "./postcss-resolution-evidence.js";
+
 const reads = new Map<string, PostcssRead>();
 const ranges = new Map<string, PostcssRead>();
 const modules = new Set<string>();
@@ -135,6 +137,16 @@ export function observeModuleLoads(): void {
   moduleHooksInstalled = true;
   let customized = !earlyReaders && preloadedCode;
   nodeModule.registerHooks({
+    resolve(specifier, context, nextResolve) {
+      const result = nextResolve(specifier, context);
+      for (const file of resolutionMetadata(
+        specifier,
+        context.parentURL,
+        result.url,
+      ))
+        modules.add(file);
+      return result;
+    },
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
       if (!url.startsWith("file:")) return result;

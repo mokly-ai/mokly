@@ -186,6 +186,8 @@ file positions and reuse. FileHandle and Node stream reads share range evidence.
 The [file identity observer](./src/sidecar/postcss-file-identity.ts) binds
 witnesses to opened files. [Descriptor sharing](./src/sidecar/postcss-read-sharing.ts)
 keeps unobservable cursor changes opaque.
+The [resolution inventory](./src/sidecar/postcss-resolution-evidence.ts) retains
+known native manifest paths for late checks without inventing consumed bytes.
 
 On POSIX, the shim forwards SIGINT, SIGTERM, and SIGHUP. On Windows, it keeps
 its SIGINT and SIGBREAK listeners alive while the binary receives the shared

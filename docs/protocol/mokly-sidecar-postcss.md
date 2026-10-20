@@ -66,6 +66,8 @@ the existing 64 MiB PostCSS and stylesheet cache bounds and the frame bound.
 
 Native addons, helper processes, and uninstrumented workers remain compatible.
 Their reads can escape observation, even when they report a dependency correctly.
+This includes native scanners, memory maps, inherited or transferred handles,
+and asynchronous loader workers. Such reads retain their late opaque baseline.
 One JavaScript read does not prove that an opaque reader used the same bytes.
 No file, plugin, or context becomes complete because a witness exists.
 
@@ -77,15 +79,22 @@ without an observation. Such contexts retain late baselines for implicit reads.
 An explicit position can establish a later range after a cursor becomes unknown.
 FileHandle web streams retain raw witnesses without changing reader, cancellation,
 or buffer-transfer behavior. Custom streams retain witnesses only for underlying observed reads.
-Older Node runtimes without synchronous module customization retain ordinary
-file observation and local compiler witnesses. Unobserved transitive ESM loads,
-private resolution metadata, and unavailable native identities remain incomplete.
+Supported runtimes expose synchronous module customization. Ordinary transitive
+ESM, CommonJS, and JSON source reads retain witnesses on the supported Node floor.
+Node's private resolver reads and caches package manifests without exposing their
+consumed bytes. This includes `exports`, `imports`, and package-scope metadata.
+Known native manifest paths enter the late input inventory. A manifest path
+does not become a byte receipt. A second resolver call or content read cannot
+prove the version used by an earlier native resolution.
+Unavailable native identities and unobserved resolution metadata remain incomplete.
 Custom Node loaders can return transformed text. Without raw-byte provenance,
 that text cannot become a whole-file witness.
 Observation precedes consumer preloads. A provider that calls an observed file
 API retains the underlying raw witness, even when it transforms the result.
 Preserve the provider's encoding and transformed output. Generated provider
 bytes and providers that bypass observed APIs have no invented raw witness.
+Pre-existing or privately duplicated descriptors and caller-supplied asynchronous
+`readFile` buffers can bypass the observed boundaries. They retain native behavior.
 The late baseline detects only edits after capture for an unobserved input.
 
 Decision 56 selects staged observation to preserve plugin compatibility.
