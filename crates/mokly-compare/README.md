@@ -92,10 +92,13 @@ at an old path supplies no destination.
 `Engine` implements `dyn Comparison` over two `dyn RenderGeneration` handles.
 Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
-It validates and captures the base in one source-root pass. Private compressed
+It validates and captures the base through one ordered collector. Each base
+view supplies its validated document and closure without a second render.
+Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
-Capture timings separate full validation, document composition, encoding,
-and closure collection. They contain no source data or error payloads.
+The validation timing includes streamed encoding. Document, closure, and
+encoding spans retain their separate measurements under that validation span.
+They contain no source data or error payloads.
 Capture schedules bounded batches on the generation's existing render workers.
 Each batch contains at most one transient input per worker. It releases each
 parsed input after encoding and retains results in authored route order.
@@ -106,6 +109,10 @@ and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
 `DEFAULT_BASE_CAPTURE_BYTES` sets a 256 MiB retention budget. It charges encoded
 payloads, Rust metadata, closures, route keys, and conservative map overhead.
+The collector accounts for growing summary storage before retaining another
+input. Later candidates yield space to summary and generated-resource charges.
+Final retention uses the original charges in route order. A partial capture
+can use fallback sooner when final summary storage removes candidate space.
 Inputs that do not fit read from the pinned source. Head reads use the original
 bounded render cache and render again on the head root after eviction. Source
 switches stay constant while the base capture fits; fallback can add switches.

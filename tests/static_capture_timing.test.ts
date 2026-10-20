@@ -18,9 +18,25 @@ test(
         context.signal,
       );
       const records = timings(result.stderr);
-      const captured = records.filter(
+      const captures = records.filter(
         (record) => record.stage === "review.capture-side",
       );
+      assert.equal(captures.length, 6);
+      const captured = captures.slice(0, 3);
+      const reused = captures.slice(3);
+      assert.deepEqual(
+        reused.map((record) => record.event),
+        ["start", "counts", "end"],
+      );
+      assert.equal(reused[2]!.status, "ok");
+      for (const field of [
+        "views",
+        "uncapturedViews",
+        "retainedBytes",
+        "encodedBytes",
+      ] as const) {
+        assert.equal(reused[1]![field], captured[1]![field]);
+      }
       assert.deepEqual(
         captured.map((record) => record.event),
         ["start", "counts", "end"],
@@ -40,7 +56,12 @@ test(
       const parent = records.find(
         (record) => record.event === "start" && record.id === counts.parentId,
       );
-      assert.equal(parent!.stage, "review.compare-views");
+      assert.equal(parent!.stage, "review.base-tree");
+      const reuseParent = records.find(
+        (record) =>
+          record.event === "start" && record.id === reused[0]!.parentId,
+      );
+      assert.equal(reuseParent!.stage, "review.compare-views");
       for (const record of captured) {
         assert.equal(record.role, "core");
         assert.equal(record.session, parent!.session);
@@ -48,6 +69,12 @@ test(
         assert.equal("path" in record, false);
         assert.equal("props" in record, false);
       }
+      const validation = records.find(
+        (record) =>
+          record.stage === "review.capture-validate" &&
+          record.event === "start",
+      );
+      assert.ok(validation);
       for (const [stage, count] of [
         ["review.capture-validate", 1],
         ["review.capture-document", 6],
@@ -60,7 +87,10 @@ test(
         assert.equal(ended.length, count, stage);
         for (const record of ended) {
           assert.equal(record.status, "ok");
-          assert.equal(record.parentId, counts.id);
+          assert.equal(
+            record.parentId,
+            stage === "review.capture-validate" ? counts.id : validation.id,
+          );
           assert.equal(record.session, counts.session);
           assert.equal("path" in record, false);
           assert.equal("props" in record, false);

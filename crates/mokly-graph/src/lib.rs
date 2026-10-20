@@ -3,6 +3,7 @@
 
 pub mod cache;
 pub mod closure;
+pub mod collection;
 pub mod delivery_inputs;
 pub mod error;
 pub mod fragments;
@@ -72,3 +73,6 @@ mod cancellation_tests;
 mod reference_tests;
 
 pub mod asset_delivery;
+
+mod session_collection;
+mod validation_summary;

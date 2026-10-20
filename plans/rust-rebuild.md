@@ -1855,10 +1855,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 - [ ] Remove the duplicate base render between validation and capture: one
       bounded, ordered collector that keeps aggregate errors, warnings,
-      retention order, cancellation, fallback, and all charges (capture
-      decision 2, option B, deferred by the user's performance-later rule).
-      Measured on 2026-10-20: React capture 95 s, of which validation 27 s;
-      5,790 JavaScript renders in each pass.
+      retention order, cancellation, fallback, and all charges.
+      User decision 62 (2026-10-20): B now, in parallel.
+      This work does not delay the final pull request. If it is not ready and
+      clean, retain it as a post-merge follow-up.
 
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
@@ -2009,9 +2009,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep replay order, deadlines, updates, and recycling unchanged.
         Evidence: `.context/m14-capture/replay-green.log` and
         `.context/m14-capture/replay-release-react/analysis.json`.
-  - [ ] Decide whether to combine validation and capture through bounded ordered
-        collection. Severity Medium, effort Large. Recommended: B, share the
-        validated inputs. Decision: `.context/m14-capture/design-decision.md`.
+  - [x] Decide whether to combine validation and capture through bounded ordered
+        collection. User decision 62 (2026-10-20): B now, in parallel.
+        Share validated inputs while preserving diagnostics, cancellation,
+        fallback, retention order, and every memory charge and bound.
+        Decision: `.context/m14-capture/design-decision.md`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the

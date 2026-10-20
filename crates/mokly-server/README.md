@@ -98,7 +98,9 @@ Its `comparison_capture` method returns `None` so capture creation and smaller
 budgets cannot bypass these checks through the wrapped generation.
 Comparison batches use the wrapped generation's existing worker pool. Each
 worker applies this wrapper's document and resource checks before its input
-returns. Scheduling does not bypass the wrapper or add a second pool.
+returns. Validated collection checks the supplied document and closure before
+forwarding them to the encoder. It preserves these checks without requesting
+another document. Scheduling does not bypass the wrapper or add a second pool.
 
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after

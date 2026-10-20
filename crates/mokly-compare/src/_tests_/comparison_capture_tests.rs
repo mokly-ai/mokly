@@ -49,6 +49,20 @@ pub(super) fn source_calls(
         })
         .collect::<BTreeMap<_, _>>();
     (
+        RenderGenerationMock::collect_comparison
+            .each_call(matching!(_))
+            .answers(&|mock, collector| {
+                let summary = mock.render_all()?;
+                collector.summary(&summary);
+                let routes: Vec<_> = mock.plans().keys().cloned().collect();
+                for batch in routes.chunks(mock.comparison_parallelism().max(1)) {
+                    for (route, input) in batch.iter().zip(mock.comparison_batch(batch)?) {
+                        mock.check_cancelled()?;
+                        collector.collect(route, input)?;
+                    }
+                }
+                Ok(summary)
+            }),
         RenderGenerationMock::check_cancelled
             .each_call(matching!())
             .answers(&|_| Ok(())),
@@ -225,8 +239,8 @@ fn failed_source_validation_stops_capture_and_preserves_the_diagnostic() {
         RenderGenerationMock::comparison_capture
             .each_call(matching!())
             .returns(None),
-        RenderGenerationMock::render_all
-            .next_call(matching!())
+        RenderGenerationMock::collect_comparison
+            .next_call(matching!(_))
             .returns(Err(GraphError::Runtime {
                 source: RuntimeDiagnostic {
                     code: RuntimeCode::Cancelled,

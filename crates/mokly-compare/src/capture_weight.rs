@@ -27,6 +27,10 @@ impl Budget {
     pub(crate) fn new(bound: usize) -> Self {
         Self { retained: 0, bound }
     }
+    /// Unreserved capacity for lower-priority retained inputs.
+    pub(crate) fn remaining(&self) -> usize {
+        self.bound - self.retained
+    }
     /// Reserve the complete charge, or leave the total unchanged.
     pub(crate) fn retain(&mut self, bytes: usize) -> bool {
         if bytes > self.bound - self.retained {
