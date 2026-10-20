@@ -71,7 +71,7 @@ from its entry's path under the [artifact path contract](./mokly-artifact-paths.
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `index.html`, `view/<path>/index.html`, `404.html` | the shell stub, one file per shell route for every current and removed entry, identical bytes      |
 | `mokly-viewer/index.json`                          | the catalogue index v7 with `revision: 0`, the stamped `deploymentId`, and no `live` field         |
-| `mokly-viewer/entries/<entry path>.json`           | one entry detail v1 per current entry                                                              |
+| `mokly-viewer/entries/<entry path>.json`           | one entry detail v2 per current entry                                                              |
 | `static/mokly-generated/<route>`                   | every rendered view and document, with the instance and slot markers of the comparison contract    |
 | `static/<closure path>`                            | the authored resources the documents reference                                                     |
 | `mokly-viewer/diffs/generations/<generation>/**`   | one comparison generation: review v8, removed entries' details, snapshots, resources, and previews |

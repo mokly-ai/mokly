@@ -1,11 +1,43 @@
 //! A current detail is valid only within one exact index fence and view set.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV1};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
+use crate::read_contract::ContractViolation;
 use crate::readers;
+use crate::readers::ReadError;
 use crate::usage::CatalogueUsage;
 
 use super::validate;
+
+#[test]
+fn control_order_names_every_editable_prop_once() {
+    let index = readers::index(include_str!(
+        "../../../../docs/protocol/fixtures/catalogue-v7.json"
+    ))
+    .unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../docs/protocol/fixtures/entry-details-v2.json"
+    ))
+    .unwrap();
+    let mut detail =
+        readers::detail(&fixtures["current"]["components/action"].to_string()).unwrap();
+    validate(&detail, &index).unwrap();
+    for order in [
+        None,
+        Some(vec![]),
+        Some(vec!["missing".into()]),
+        Some(vec!["label".into(), "label".into()]),
+    ] {
+        detail.control_order = order;
+        assert!(matches!(
+            validate(&detail, &index),
+            Err(ReadError::Contract {
+                message: ContractViolation::ControlOrder,
+                ..
+            })
+        ));
+    }
+}
 
 #[test]
 fn identity_deployment_revision_kind_and_view_order_are_fenced() {
@@ -19,8 +51,9 @@ fn identity_deployment_revision_kind_and_view_order_are_fenced() {
         }
     }
     let screen = &index.screens[0];
-    let detail = EntryDetailV1 {
-        schema_version: 1,
+    let detail = EntryDetailV2 {
+        schema_version: 2,
+        control_order: Some(screen.visual.controls.keys().cloned().collect()),
         identity: index.identity.clone(),
         deployment_id: Some(index.deployment_id.clone()),
         revision: Some(index.revision),

@@ -27,6 +27,12 @@ shown but not editable. The read model carries the result as `controls`:
 The [generated control type](../../packages/viewer/src/generated/catalogue/ComponentControl.ts)
 defines its data shape.
 
+Controls keep their explicit declaration order. Derived controls follow schema
+property order. Inferred schemas use first-seen prop order: own props first,
+then variant props in variant order. Uneditable properties are omitted.
+Each visual entry's detail carries that order in `controlOrder`. Saved variants
+inherit it. The viewer follows the detail's order instead of sorting prop names.
+
 Text length is a non-negative integer of Unicode code points, as the schema's
 `maxLength` counts; the shell checks it itself and never uses the input's
 native `maxlength`, which counts UTF-16 code units, as the limit. Number bounds

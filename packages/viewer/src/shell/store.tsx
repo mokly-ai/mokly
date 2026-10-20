@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import type { DetailRequest } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV1 } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
 import type { MoklyVersionError } from "../catalogue/version_error.js";
 import type { FrameAdapter } from "../client/frame_adapter.js";
 import { DisplaySelection } from "../viewer/display_context.js";
@@ -46,7 +46,7 @@ interface ShellStoreProviderProps {
   /** The validated index the shell starts from. */
   index: CatalogueReadModel;
   /** Details already held, adopted under their fences before the first render. */
-  initialDetails?: readonly (readonly [DetailRequest, EntryDetailV1])[];
+  initialDetails?: readonly (readonly [DetailRequest, EntryDetailV2])[];
   initialState?: ShellInitialState;
   interactive: boolean;
   onVersionError?: (error: MoklyVersionError) => void;

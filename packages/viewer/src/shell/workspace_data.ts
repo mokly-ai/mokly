@@ -1,3 +1,4 @@
+import type { EntryDetailV2 } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 /** Serializable, source-derived state shared by every delivery's inspector. */
@@ -50,6 +51,7 @@ export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
 export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
+  controlOrder?: EntryDetailV2["controlOrder"];
   /** False when no detail carried the Usage lists of this entry. */
   usageComplete?: boolean;
   /** Selected views are waiting for the routed entry's detail. */

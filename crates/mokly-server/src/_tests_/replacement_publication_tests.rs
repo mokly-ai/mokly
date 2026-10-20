@@ -53,6 +53,7 @@ fn generation(title: &str) -> Arc<dyn RenderGeneration> {
                     metadata: metadata("home", "Home"),
                     content: EntryContent::Screen {
                         visual: VisualEntry {
+                            control_order: Vec::new(),
                             color_schemes: vec![ColorScheme::Light],
                             prop_schema: PropSchema {
                                 types: Some(Types::Single(JsonType::Object)),

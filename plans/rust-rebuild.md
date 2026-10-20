@@ -397,6 +397,20 @@ readiness rather than blocking this acceptance round on further startup work.
   exit while output installation, restoration, or cleanup settles. Exit once
   that operation finishes without another signal. Reject immediate exit in
   these operations because it can strand the earlier site in a backup.
+- Item 23 B, applied by default (user rule): preserve control declaration
+  order in entry detail v2 and show that order in the viewer. Explicit controls
+  use their declaration order. Derived controls use schema property order or
+  first-seen inferred prop order. Reject key sorting because author order
+  communicates the intended editing sequence. Regenerate the shared types.
+
+**Open decision N1 (2026-10-20):** Item 6 settles prop values. Schema keyword
+integers outside the JavaScript safe range still retain exact core values,
+while a browser rounds them during JSON decoding. A live edit can pass the
+viewer and fail in the core. Severity Medium, effort Large for recommended B.
+Options: A keeps exact schema values and documents the limitation; B rounds
+schema integers with a warning; C rejects unsafe schema integers. Recommend B
+to keep core and viewer validation consistent while accepting recoverable input.
+Evidence: `.context/defaults-cli/schema-bounds-probe.log`.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -2202,6 +2216,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [ ] N1: settle unsafe integer schema keyword precision. Severity Medium,
+        effort Large. Recommended B: round schema integers with a warning.
+  - Outside the scope: `tests/serve_process.test.ts`, "the verification registry
+    names Serve's group until it drains", failed with
+    `Verification owner {id} has no parent`. The isolated rerun passed.
+    Suspected source: concurrent process-registry cleanup. Separate branch.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.
@@ -2486,9 +2506,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 9 part 2 review 3, finding 2: settle dependency selection for
     HTML-only catalogues that import package CSS; retain working dependencies
     until the user decides.
-  - M8 core review 3, finding 2, and review 6, finding 7: settle saved-prop
-    control bounds and declared steps that conflict with schema multiples or
-    integer values. Keep the current validation until the user decides.
+  - [x] M8 core review 3, finding 2, and review 6, finding 7: settled on
+        2026-10-20 by item 22 A and extended A, applied by default (user rule).
+        Keep complete merged bounds checks, warn on saved values outside bounds,
+        and reject incompatible declared steps.
   - Milestone 9 part 1 review 1, finding 11: user decision pending on support
     for package managers other than npm; retain the npm-only fallback policy.
   - Milestone 9 part 1 review 1, finding 12: user decision pending on checkout
@@ -2496,16 +2517,22 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 12 static review 3, finding 4: the packed native binary scan for
     `MOKLY_TEST_` needs user approval for a new gate. The module-erasure test
     checks only compiler exclusion of the debug fault module.
-  - Milestone 12 static review 2, finding 6: settle forced build exit during
-    install, rollback, and cleanup. Keep the current forced exit until decided.
-  - Milestone 12 publish review 1, finding 8: decide the TLS trust-root policy;
-    keep the OS trust store until the user decides.
-  - Milestone 12 publish review 1, finding 13: decide private-directory retention
-    after success; keep the existing retention until the user decides.
+  - [x] Milestone 12 static review 2, finding 6: settled on 2026-10-20 by
+        item 30 A, applied by default (user rule). Defer forced exit during
+        installation, rollback, and cleanup.
+  - [x] Milestone 12 publish review 1, finding 8: settled on 2026-10-20 by
+        item 8 A, applied by default (user rule). Trust Mozilla and OS roots.
+  - [x] Milestone 12 publish review 1, finding 13: settled on 2026-10-20 by
+        item 9 A, applied by default (user rule). Remove the successful private
+        snapshot and retain failed-upload output.
   - Milestone 5 review 1, finding 5: decide the declared component stylesheet
     delivery model; keep the current bundled code and pages pending the user.
-  - Milestone 5 review 2, finding 9: decide unknown attributes on ignore wrappers; keep the current rejection pending the user.
-  - Milestone 4: decide how to handle prop numbers that cannot round-trip through JavaScript number spelling.
+  - [x] Milestone 5 review 2, finding 9: settled on 2026-10-20 by item 16 B,
+        applied by default (user rule). Warn on unknown ignore attributes and
+        fail only in strict mode.
+  - [x] Milestone 4 unsafe prop integers: settled on 2026-10-20 by item 6 C,
+        applied by default (user rule). Round to binary64 with a warning.
+        Schema keyword precision remains open as N1.
   - Milestone 4 review 1, finding 10: decide whether and how to bound YAML alias expansion.
   - Milestone 7 review 1, finding 12: decide whether to delete the
     former-format fixtures `docs/protocol/fixtures/catalogue-v4.json` to
@@ -2538,8 +2565,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        at `da23c1ce`: the stub declares the packaged Browse icon, so no
        `/favicon.ico` request fails, and the packed smoke has no icon
        allowance.
-  - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
-    a user decision before Milestone 12.
+  - [x] Milestone 3 Phase A review 1, finding 16: settled on 2026-10-20 by
+        item 4 A, applied by default (user rule). Publish build warnings are
+        fatal only with `--strict`.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.

@@ -4,23 +4,23 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Version Inventory
 
-| Boundary                                | Version                   | Reason and reader                                                                                                           |
-| --------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Public catalogue index                  | 7                         | The read model without per-view usage and resource evidence; screens carry props and controls; the index reader requires 7. |
-| Entry detail                            | 1                         | One entry's per-view usage, resource evidence, direct reasons, and workspace lists; the detail reader requires 1.           |
-| Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                     |
-| Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                       |
-| Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the render generation.           |
-| Inspector wire envelope                 | 2                         | Navigation carries `screenPath`; both peers require 2 before message fields.                                                |
-| Removed page/document preview metadata  | 3                         | `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                            |
-| Export ownership                        | 3                         | Exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                             |
-| Upload metadata                         | 2                         | Strict envelope and `mokly-viewer/` comparison namespace; Mokly Cloud implements it.                                        |
-| Plan response/exchange                  | 1                         | Content-delta fields, expiry and digest accounting; Mokly Cloud implements it.                                              |
-| Navigation disclosure storage           | `mokly:nav-disclosure:v4` | Path-keyed folder/variant storage.                                                                                          |
-| Export transaction marker               | 2                         | `{schemaVersion,output}` basename ownership shape; written by `build`.                                                      |
-| Verification process-owner records      | 1                         | PID/token/process-lifetime shape.                                                                                           |
-| Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                          |
-| Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                               |
+| Boundary                                | Version                   | Reason and reader                                                                                                                |
+| --------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Public catalogue index                  | 7                         | The read model without per-view usage and resource evidence; screens carry props and controls; the index reader requires 7.      |
+| Entry detail                            | 2                         | Per-view usage, resource evidence, direct reasons, workspace lists, and control declaration order; the detail reader requires 2. |
+| Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                          |
+| Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                            |
+| Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the render generation.                |
+| Inspector wire envelope                 | 2                         | Navigation carries `screenPath`; both peers require 2 before message fields.                                                     |
+| Removed page/document preview metadata  | 3                         | `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                                 |
+| Export ownership                        | 3                         | Exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                                  |
+| Upload metadata                         | 2                         | Strict envelope and `mokly-viewer/` comparison namespace; Mokly Cloud implements it.                                             |
+| Plan response/exchange                  | 1                         | Content-delta fields, expiry and digest accounting; Mokly Cloud implements it.                                                   |
+| Navigation disclosure storage           | `mokly:nav-disclosure:v4` | Path-keyed folder/variant storage.                                                                                               |
+| Export transaction marker               | 2                         | `{schemaVersion,output}` basename ownership shape; written by `build`.                                                           |
+| Verification process-owner records      | 1                         | PID/token/process-lifetime shape.                                                                                                |
+| Browser module inventory                | 1                         | Exact module-path inventory shape.                                                                                               |
+| Timing records and verification reports | 1                         | Timing/runner evidence shape.                                                                                                    |
 
 The catalogue model lives in memory and is never written; the index carries
 the deployment id, the revision, and the comparison URL; a page embeds no
@@ -66,7 +66,7 @@ cached.
 A receiver that does not support these versions answers HTTP 426, and the CLI
 sends no Blob or Complete request and does not downgrade. The ownership and upload readers check their own
 fields and namespace; catalogue and review readers independently
-enforce their payload versions. Mokly Cloud implements catalogue v7, review v8 and entry detail v1.
+enforce their payload versions. Mokly Cloud implements catalogue v7, review v8 and entry detail v2.
 
 ## Acceptance
 

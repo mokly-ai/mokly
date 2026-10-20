@@ -49,9 +49,12 @@ catalogue types to `packages/viewer/src/generated/catalogue/`, one declaration
 per file. `catalogue::CatalogueModel` is private in-memory state. `SourceLocation`
 coordinates are one-based; a zero line or column means the coordinate is
 unavailable. JavaScript diagnostics can use the module and export instead. The public
-roots are `CatalogueReadModel` v7, `EntryDetailV1`, and `LiveDescriptorV3`.
-Their readers gate the version before decoding payload fields. Index validation
-checks private fields, paths, variants, trees, schemas, tagged props, flow
+roots are `CatalogueReadModel` v7, `EntryDetailV2`, and `LiveDescriptorV3`.
+Their readers gate the version before decoding payload fields.
+Entry detail v2 carries `controlOrder` for screens and components. It lists every
+editable key once, in declaration order, independently of canonical object keys.
+Detail validation checks that list against the index's controls.
+Index validation checks private fields, paths, variants, trees, schemas, tagged props, flow
 membership, removed metadata, snapshot identities, and generation URLs.
 Ready component and view eligibility follows the same kind rules as the viewer,
 including removed component parents.

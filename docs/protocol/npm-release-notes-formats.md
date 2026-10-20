@@ -189,7 +189,7 @@ instance and outer ancestors; each context keeps its side and variant address.
 ### Viewer And Wire Formats
 
 The Browse shell renders in the browser. Serve and static builds deliver the
-same shell stub, catalogue index v7, and entry detail v1. Review results use v8,
+same shell stub, catalogue index v7, and entry detail v2. Review results use v8,
 change snapshots use v4, and the live descriptor uses v3. Readers accept one
 version only. The [format inventory](./mokly-format-versions.md) owns all numbers.
 

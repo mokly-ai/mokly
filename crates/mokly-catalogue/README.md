@@ -63,6 +63,8 @@ Saved props outside the effective control bounds produce `props-control-bounds`
 warnings. This includes merged variants and Storybook args after control hints.
 Live edits still validate the complete merged props against those bounds.
 Unsafe integer props round to binary64 before inference and validation.
+Preparation captures explicit control order, schema property order, or first-seen
+inferred prop order before it creates canonical lookup maps. Variants retain it.
 Each affected saved entry reports `props-unsafe-integer`, including nested values
 and complete merged variants. Strict builds fail on these warnings.
 Inference exclusions become warnings only after final path derivation. Runtime

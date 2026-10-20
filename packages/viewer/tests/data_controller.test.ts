@@ -101,7 +101,7 @@ test("a newer detail installs with the refetched index of its revision", async (
 test("a detail of a newer format reports a version error", async () => {
   const fixture = controllerFixture(indexFixture());
   fixture.navigate("/view/guide/");
-  const error = new MoklyVersionError("detail", 2, 1);
+  const error = new MoklyVersionError("detail", 3, 2);
   fixture.source.detail("guide").reject(error);
   await flush();
   assert.deepEqual(fixture.versionErrors, [error]);

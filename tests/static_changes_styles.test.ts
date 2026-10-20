@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
+import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { build, git, json, screen, write } from "./helpers/static_changes.js";
@@ -100,7 +100,7 @@ test(
         '<svg xmlns="http://www.w3.org/2000/svg"><title>After</title></svg>',
       );
       const built = await build(root);
-      const detail = await json<EntryDetailV1>(
+      const detail = await json<EntryDetailV2>(
         built.output,
         "mokly-viewer/entries/home.json",
       );
@@ -112,7 +112,7 @@ test(
         );
         assert.ok(view.resourceEvidence!.resources.length > 0);
       }
-      const excluded = await json<EntryDetailV1>(
+      const excluded = await json<EntryDetailV2>(
         built.output,
         "mokly-viewer/entries/empty.json",
       );

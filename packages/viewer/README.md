@@ -171,7 +171,7 @@ configuration.
 
 `MoklyViewer` reads two shapes of the
 [shell delivery contract](../../docs/protocol/mokly-shell-delivery.md): the
-catalogue index, read model v7, and one entry detail v1 per entry.
+catalogue index, read model v7, and one entry detail v2 per entry.
 
 | Prop     | Accepts                                                 | Rule                                                                                |
 | -------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -325,6 +325,10 @@ instance regions in the live page from them.
 
 ### Live controls
 
+Entry detail v2 supplies control declaration order. The Props tab follows it
+for editable fields and saved values. Saved props remain visible while the
+detail loads.
+
 Saved props must satisfy their schema. A saved value outside its narrower
 editing bounds remains visible. The build reports a warning, while live edits
 must satisfy the complete merged props and control bounds.
@@ -347,7 +351,7 @@ owns the boundary.
 | Prop                                 | Purpose                                                                                                            |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | `index`                              | The catalogue index v7 as an object, or its absolute HTTP(S) URL                                                   |
-| `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v1, its URL, or a promise of either    |
+| `detail`                             | Function from an entry path and an optional snapshot id to one entry detail v2, its URL, or a promise of either    |
 | `baseUrl`                            | Required origin root for an object `index`; invalid for a URL `index`                                              |
 | `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                               |
 | `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                       |

@@ -1,9 +1,11 @@
 //! Structural detail rules and canonical decoding of recorded input props.
 
+use std::collections::BTreeSet;
+
 use crate::axes::EntryKind;
 use crate::canonical::compare_utf16;
 use crate::paths::is_entry_path;
-use crate::public_detail::EntryDetailV1;
+use crate::public_detail::EntryDetailV2;
 use crate::public_validation::hash;
 use crate::read_contract::ContractViolation;
 use crate::readers::ReadError;
@@ -11,7 +13,7 @@ use crate::review_order::reason_key;
 use crate::usage::CatalogueUsage;
 use crate::wire_decode;
 
-pub(crate) fn validate(detail: &EntryDetailV1) -> Result<(), ReadError> {
+pub(crate) fn validate(detail: &EntryDetailV2) -> Result<(), ReadError> {
     let current = detail.deployment_id.is_some()
         && detail.revision.is_some()
         && detail.generation.is_none()
@@ -56,6 +58,14 @@ pub(crate) fn validate(detail: &EntryDetailV1) -> Result<(), ReadError> {
     let visual = matches!(detail.entry.kind, EntryKind::Screen | EntryKind::Component);
     if !visual && (!detail.views.is_empty() || detail.workspace.is_some()) {
         return Err(invalid(ContractViolation::DetailKind));
+    }
+    if visual != detail.control_order.is_some()
+        || detail
+            .control_order
+            .as_ref()
+            .is_some_and(|order| order.iter().collect::<BTreeSet<_>>().len() != order.len())
+    {
+        return Err(invalid(ContractViolation::ControlOrder));
     }
     if detail.entry.kind != EntryKind::Page && detail.resource_evidence.is_some() {
         return Err(invalid(ContractViolation::DetailEvidence));

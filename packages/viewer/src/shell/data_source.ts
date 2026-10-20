@@ -3,7 +3,7 @@
 import type { DetailRequest } from "../catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
   LiveDescriptorV3,
 } from "../catalogue/types.js";
 import type {
@@ -20,7 +20,7 @@ export interface ShellDataSource {
     request: DetailRequest,
     index: CatalogueReadModel,
     signal: AbortSignal,
-  ): Promise<EntryDetailV1>;
+  ): Promise<EntryDetailV2>;
   /**
    * Another deployment replaced the files or another server process answers.
    * The standalone shell performs a full page load; an embedded host is told

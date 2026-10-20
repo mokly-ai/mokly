@@ -161,6 +161,7 @@ export function publicWorkspace(
       rowSources,
     ),
     variants,
+    ...(held?.controlOrder ? { controlOrder: held.controlOrder } : {}),
     usedBy: (detail?.usedBy ?? []).map(shellUsageLink),
     affected: (detail?.affected ?? []).map(shellUsageLink),
     base,

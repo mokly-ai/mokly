@@ -60,6 +60,9 @@ pub struct EntryInput {
     pub steps: Vec<UseCaseStep>,
     /// Explicit controls replace the schema-derived controls.
     pub controls: Option<BTreeMap<String, ComponentControl>>,
+    /// Authored control order captured before canonical map conversion.
+    #[serde(skip)]
+    pub control_order: Vec<String>,
     /// Stories infer a component schema from their args.
     #[serde(skip)]
     pub infer_component_schema: bool,
