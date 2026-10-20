@@ -2973,14 +2973,14 @@ for react` hit `Test timeout of 300000ms exceeded` during the Node 22
       stage with retry after another deployment, which the viewer contract
       does not name. Severity Medium, effort Small. Recommended: A, state
       that behaviour in `mokly-viewer.md` and test it.
-    - Follow-up: a use-case route whose step detail fails while the use
-      case detail reports another deployment still shows the unavailable
-      stage before the page load. Severity Low (estimate), effort Small.
-      Recommended (estimate): keep the destination's loading stage until the
-      page load when any detail of the route reports another deployment, as
-      `89f8f6cd` does for a route with one detail. Covers F12 review
-      finding 2. Previous examples: F11 and `89f8f6cd` for a route with one
-      detail.
+    - Follow-up, user item 90: a use-case route whose step detail fails
+      while the use case detail reports another deployment still shows the
+      unavailable stage before the page load. Severity Low, effort Small.
+      Option A: after a deployment outcome, clear the route's failed marks
+      and ignore later failures for every source. Option B: do A only when
+      the source reloads the page. Option C: a separate "replaced" delivery
+      status, effort Large. Recommended: B. Covers F12 review finding 2.
+      Previous examples: F11 and `89f8f6cd` for a route with one detail.
   - [x] F13: keep concurrent sibling cleanup from invalidating ownership scans.
         Exclude sampled orphans only when their own records have disappeared.
         Keep persistent ownership failures and resource retention.
