@@ -3146,13 +3146,16 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         component line now follows the Status Lines rule (`69ffa907`), the
         catalogue column stays at 900px (`eeaea061`), and the dead workspace
         path for a catalogue without published records is gone (`37e596df`).
-  - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
-    user: `HistoricalManifest` has no user and no published export since
-    `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still
-    names it as a released type. Severity Low, effort Small. Recommended: B,
-    delete the alias and list `Manifest`, `ManifestV10`, and
-    `HistoricalManifest` with the names that `@mokly/viewer/data` stops
-    exporting. Option A keeps the alias and corrects only the release note.
+  - [x] Hub review of `rebuild/defaults-viewer`, finding 3 remainder:
+        `HistoricalManifest` had no user and no published export since
+        `05923728`, but line 12 of `docs/protocol/npm-release-notes.md`
+        still named it as a released type. User decision 91 (2026-10-20): B,
+        delete the alias and list `Manifest`, `ManifestV10`, and
+        `HistoricalManifest` with the names that `@mokly/viewer/data` stops
+        exporting. Done in F20 item 3, which also deletes the unused aliases
+        `HistoricalManifestPage` and `HistoricalManifestUseCase` and the
+        release note's advice to replace the removed manifest and review
+        types.
   - Outside the scope of the hub review of `rebuild/defaults-viewer`, found
     by its fix round: eleven shell and viewer modules, such as
     `packages/viewer/src/shell/stages.tsx:81`, keep fallbacks for a catalogue
