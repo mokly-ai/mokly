@@ -193,7 +193,7 @@ more than re-deriving the behaviour from the requirements.
 21. Client-rendered shell (2026-10-13): the Browse shell renders only in the
     browser. Serve and `build` deliver one identical stub page per shell
     route, the catalogue index v7 without per-view usage at
-    `mokly-viewer/index.json`, and one entry detail v1 per entry with its
+    `mokly-viewer/index.json`, and one entry detail v2 per entry with its
     usage, resource evidence, and workspace lists; Serve adds the live
     descriptor v3 at `mokly-viewer/live.json`. No process renders shell HTML,
     so the sidecar starts only for JavaScript rendering, and `renderShell`,
@@ -204,7 +204,9 @@ more than re-deriving the behaviour from the requirements.
     [shell delivery contract](../docs/protocol/mokly-shell-delivery.md) owns
     the routes; the example-export measurements behind the decision are in
     `.context/rust-rebuild/shell-delivery-measurements-2026-10-13.md`.
-    Amended on 2026-10-14 under Decision 27.
+    Amended on 2026-10-14 under Decision 27. Amended on 2026-10-20 under
+    decision default item 23 B: entry detail v2 replaces v1 and carries the
+    control declaration order.
 22. Prop schema details (2026-10-13): every object schema, the root included,
     carries `additionalProperties: false`, and a schema without it fails;
     inference reads the entry's own props and every variant's merged props,
@@ -2909,12 +2911,20 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `tests/browser/serve_comparison_ui.ts`: the header says that Serve
       captures each selected comparison on demand, but Serve returns a kept
       comparison when the same entry is selected again. Separate branch.
+      - [x] Follow-up F18 item 4: the header says that Serve reuses the
+            stored comparison for the same entry while it keeps it, and that
+            a refresh captures again.
     - `plans/rust-rebuild.md`: a live line cites
       `docs/protocol/mokly-component-controls.md:69`, but the tip moved the
       local storage rule to line 64. Separate branch.
+      - [x] Follow-up F18 item 4: the line cites the local storage rule, not
+            a line number.
     - `plans/rust-rebuild.md`: Decision 21 still names entry detail v1, but
       the tip moved the code and `docs/protocol/mokly-shell-delivery.md` to
       v2 without an amendment note. Separate branch.
+      - [x] Follow-up F18 item 4: Decision 21 names entry detail v2 and has a
+            dated amendment for decision default item 23 B. The checked TODOs
+            that name detail v1 stay as history.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate
@@ -2974,8 +2984,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
             `tests/helpers/comparison_catalogue.ts`, which also writes the
             colours into `theme.css`. With only the fixture's Before colour
             changed, they and the Serve Card panes still passed.
-    - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
-      temporary prop edit stays out of local storage. Separate branch.
+    - `docs/protocol/mokly-component-controls.md`: no test checks its rule
+      that temporary state never enters local storage. Separate branch.
       - [x] Follow-up F9b item 3: `serve_temporary_props_status.spec.ts`
             checks that a temporary edit leaves local storage unchanged and
             that a reload shows the saved props. A mutation that stores the

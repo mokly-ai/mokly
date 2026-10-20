@@ -1,8 +1,10 @@
 /**
  * Shared actions for viewer journeys on the private Serve comparison fixture.
- * Serve captures each selected comparison on demand, so an action waits for
- * its comparison request through the redirect before UI deadlines apply.
- * Holds and emulations use `page.route`; Serve itself has no test seam.
+ * Serve captures a selected comparison on demand. When the same entry is
+ * selected again, Serve reuses the stored comparison while it keeps it, and
+ * a refresh captures again. Either way, an action waits for its comparison
+ * request through the redirect before UI deadlines apply. Holds and
+ * emulations use `page.route`; Serve itself has no test seam.
  */
 
 import {
