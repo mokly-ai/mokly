@@ -1,12 +1,13 @@
 //! Independent token comparison admits only module names, scope wrappers, and compositions.
 
-use std::result;
+use std::ops::Range;
 
-use cssparser::{Delimiter, ParseError, Parser, ParserInput, Token};
+use cssparser::Token;
 use mokly_model::material::digest;
 
 use crate::error::{CssError, Result, TransformFailure};
-use crate::rename::grouping;
+use crate::token_sections::{self, Grammar};
+use crate::token_tree::{Tokens, opening};
 
 pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
     let prefix = format!("mokly_{}_", &digest(path.as_bytes())[..12]);
@@ -21,143 +22,132 @@ pub(crate) fn check(path: &str, source: &str, output: &str) -> Result<()> {
     })
 }
 
+/// The tokens in authored order, without local-name prefixes, scope wrappers,
+/// or compositions, so only module renames compare equal.
 fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
-    let mut input = ParserInput::new(source);
-    let mut parser = Parser::new(&mut input);
-    let mut result = Vec::new();
-    block(&mut parser, false, prefix, &mut result);
-    result
-}
-
-fn block(parser: &mut Parser<'_, '_>, declarations: bool, prefix: &str, output: &mut Vec<String>) {
-    while !parser.is_exhausted() {
-        let mut prelude = String::new();
-        let _: result::Result<_, ParseError<'_, ()>> = parser.parse_until_before(
-            Delimiter::CurlyBracketBlock | Delimiter::Semicolon,
-            |parser| {
-                let start = parser.position();
-                while parser.next().is_ok() {}
-                prelude = parser.slice_from(start).into();
-                Ok(())
-            },
-        );
-        let delimiter = parser.next().cloned();
-        let mut input = ParserInput::new(&prelude);
-        let mut header = Parser::new(&mut input);
-        let first = header.next().cloned();
-        let at = match &first {
-            Ok(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
-            _ => None,
-        };
-        if matches!(delimiter, Ok(Token::CurlyBracketBlock)) {
-            let names = at
-                .as_deref()
-                .is_none_or(|name| name.ends_with("keyframes") || name == "scope");
-            tokens(
-                &mut Parser::new(&mut ParserInput::new(&prelude)),
-                names,
-                prefix,
-                output,
-            );
-            output.push("{".into());
-            let nested_declarations = at.as_deref().is_none_or(|name| !grouping(name));
-            let _: result::Result<_, ParseError<'_, ()>> = parser.parse_nested_block(|nested| {
-                block(nested, nested_declarations, prefix, output);
-                Ok(())
-            });
-            output.push("}".into());
-        } else {
-            let property = if declarations && header.expect_colon().is_ok() {
-                match first {
-                    Ok(Token::Ident(name)) => Some(name.to_ascii_lowercase()),
-                    _ => None,
-                }
-            } else {
-                None
-            };
-            if property.as_deref() == Some("composes") {
-                continue;
-            }
-            let names = property.as_deref().is_some_and(|name| {
-                matches!(
-                    name,
-                    "animation" | "animation-name" | "-webkit-animation" | "-webkit-animation-name"
-                )
-            });
-            tokens(
-                &mut Parser::new(&mut ParserInput::new(&prelude)),
-                names,
-                prefix,
-                output,
-            );
-            if matches!(delimiter, Ok(Token::Semicolon)) {
-                output.push(";".into());
-            }
-        }
-    }
-}
-
-fn tokens(parser: &mut Parser<'_, '_>, names: bool, prefix: &str, output: &mut Vec<String>) {
-    while !parser.is_exhausted() {
-        let Ok(token) = parser.next_including_whitespace_and_comments().cloned() else {
-            break;
-        };
-        match token {
-            Token::WhiteSpace(_) => {}
-            Token::Ident(value) => output.push(format!(
-                "ident:{}",
-                if names {
-                    value.strip_prefix(prefix).unwrap_or(&value)
+    let tokens = Tokens::new(source);
+    let mut output = Vec::new();
+    let mut pending = vec![Work::Block(tokens.root(), Grammar::Rules)];
+    while let Some(work) = pending.pop() {
+        match work {
+            Work::Emit(text) => output.push(text.into()),
+            Work::Block(mut range, grammar) => {
+                let Some(section) = token_sections::next(&tokens, &mut range, grammar) else {
+                    continue;
+                };
+                pending.push(Work::Block(range, grammar));
+                let mut header = section.prelude.clone();
+                let first = tokens
+                    .next_significant(&mut header)
+                    .map(|index| &tokens.nodes[index].token);
+                let at = section.at_rule(&tokens);
+                if let Some(block) = section.block {
+                    let names = at
+                        .as_deref()
+                        .is_none_or(|name| name.ends_with("keyframes") || name == "scope");
+                    pending.push(Work::Emit("}"));
+                    pending.push(Work::Block(block.range, block.grammar));
+                    pending.push(Work::Emit("{"));
+                    pending.push(Work::Tokens(section.prelude, names));
                 } else {
-                    &value
-                }
-            )),
-            Token::IDHash(value) => output.push(format!(
-                "id:{}",
-                if names {
-                    value.strip_prefix(prefix).unwrap_or(&value)
-                } else {
-                    &value
-                }
-            )),
-            Token::QuotedString(value) => output.push(format!(
-                "string:{}",
-                if names {
-                    value.strip_prefix(prefix).unwrap_or(&value)
-                } else {
-                    &value
-                }
-            )),
-            Token::Colon if names => {
-                let state = parser.state();
-                match parser.next().cloned() {
-                    Ok(Token::Ident(name)) if matches!(name.as_ref(), "local" | "global") => {}
-                    Ok(Token::Function(name)) if matches!(name.as_ref(), "local" | "global") => {
-                        let _: result::Result<_, ParseError<'_, ()>> =
-                            parser.parse_nested_block(|nested| {
-                                tokens(nested, names, prefix, output);
-                                Ok(())
-                            });
+                    let colon = tokens
+                        .next_significant(&mut header)
+                        .is_some_and(|index| matches!(tokens.nodes[index].token, Token::Colon));
+                    let property = match first {
+                        Some(Token::Ident(name)) if grammar == Grammar::Declarations && colon => {
+                            Some(name.to_ascii_lowercase())
+                        }
+                        _ => None,
+                    };
+                    if property.as_deref() == Some("composes") {
+                        continue;
                     }
-                    _ => {
-                        parser.reset(&state);
-                        output.push(":".into());
-                    }
-                }
-            }
-            Token::Function(_)
-            | Token::ParenthesisBlock
-            | Token::SquareBracketBlock
-            | Token::CurlyBracketBlock => {
-                output.push(format!("{token:?}"));
-                let _: result::Result<_, ParseError<'_, ()>> =
-                    parser.parse_nested_block(|nested| {
-                        tokens(nested, names, prefix, output);
-                        Ok(())
+                    let names = property.as_deref().is_some_and(|name| {
+                        matches!(
+                            name,
+                            "animation"
+                                | "animation-name"
+                                | "-webkit-animation"
+                                | "-webkit-animation-name"
+                        )
                     });
-                output.push("end".into());
+                    if section.semicolon {
+                        pending.push(Work::Emit(";"));
+                    }
+                    pending.push(Work::Tokens(section.prelude, names));
+                }
             }
-            token => output.push(format!("{token:?}")),
+            Work::Tokens(mut range, names) => {
+                if tokens.next_significant(&mut range.clone()).is_none() {
+                    continue;
+                }
+                let Some(index) = tokens.next(&mut range) else {
+                    continue;
+                };
+                let node = &tokens.nodes[index];
+                let mut child = None;
+                match &node.token {
+                    Token::WhiteSpace(_) => {}
+                    Token::Ident(value) | Token::IDHash(value) | Token::QuotedString(value) => {
+                        let kind = match node.token {
+                            Token::Ident(_) => "ident",
+                            Token::IDHash(_) => "id",
+                            _ => "string",
+                        };
+                        let value = if names {
+                            value.strip_prefix(prefix).unwrap_or(value)
+                        } else {
+                            value
+                        };
+                        output.push(format!("{kind}:{value}"));
+                    }
+                    Token::Colon if names => {
+                        let mut lookahead = range.clone();
+                        match tokens
+                            .next_significant(&mut lookahead)
+                            .map(|index| (index, &tokens.nodes[index].token))
+                        {
+                            Some((_, Token::Ident(name)))
+                                if matches!(name.as_ref(), "local" | "global") =>
+                            {
+                                range = lookahead;
+                            }
+                            Some((index, Token::Function(name)))
+                                if matches!(name.as_ref(), "local" | "global") =>
+                            {
+                                range = lookahead;
+                                child = Some(tokens.children(index));
+                            }
+                            _ => output.push(":".into()),
+                        }
+                    }
+                    token => {
+                        output.push(format!("{token:?}"));
+                        if opening(token).is_some() {
+                            pending.push(Work::Tokens(range, names));
+                            pending.push(Work::Emit("end"));
+                            pending.push(Work::Tokens(tokens.children(index), names));
+                            continue;
+                        }
+                    }
+                }
+                pending.push(Work::Tokens(range, names));
+                if let Some(child) = child {
+                    pending.push(Work::Tokens(child, names));
+                }
+            }
         }
     }
+    output
+}
+
+/// Pending fingerprint work, popped in authored order.
+enum Work {
+    /// Statements of a block and their grammar. Declarations are fingerprinted
+    /// as such, so composition and animation names compare by local name.
+    Block(Range<usize>, Grammar),
+    /// Tokens of a range; true where local names lose the scope prefix.
+    Tokens(Range<usize>, bool),
+    /// A fixed marker, such as a block boundary.
+    Emit(&'static str),
 }

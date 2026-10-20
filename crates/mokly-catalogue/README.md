@@ -22,6 +22,9 @@ render graph crates.
 Warning identities keep route and named subjects distinct, including equal
 printed locations. Normalization sorts by printed location, message, code,
 and subject kind before removing exact duplicates.
+Unsupported extglob openings in stylesheet matchers produce one configuration
+warning per matcher. Brace alternatives and literal character classes stay
+warning-free. Preparation leaves the matcher's meaning unchanged.
 
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.
@@ -77,9 +80,15 @@ literal attribute coercion, rendered document safety, assets, and anchors.
 inputs in that precedence order, including physical aliases.
 Static input membership uses each root's matcher and the directory-name policy.
 
-YAML front-matter construction uses recursive input traversal before
-prop and schema depth validation. Pathological YAML nesting can exhaust the
-caller stack. The native HTML tree depth guarantee does not cover YAML input.
+The YAML front-matter builder keeps one heap frame per open sequence or
+mapping. Source locations live in a tree of JSON-pointer segments, so memory
+grows with the node count, not with the square of the depth. Building,
+copying, validating, and releasing a front matter field that validation
+rejects uses no native stack per nesting level; a 100,000-level field uses an
+ordinary worker thread. Accepted `props`, `propSchema`, and `variants` values
+still recurse once per level in serde-derived deserialization and schema
+inference before the 64-level prop and schema bound applies. The YAML parser
+rejects flow nesting deeper than 255 levels with `html-front-matter`.
 
 Private JavaScript generation metadata carries the sidecar module digest map.
 Static builds compare it with captured sources before document callbacks.
@@ -125,6 +134,9 @@ Unit tests use unimock at source and description boundaries. Behavior fixtures u
 isolated working trees for aliases and races. They assert paths, exact diagnostics,
 source locations, source protection, aliases, and filesystem races.
 Consumers enable the `mock` feature for the public unimock boundaries.
+`tests/nesting_depth_tests.rs` re-runs its own test binary to find the deepest
+YAML that each path survives on a 2 MiB worker stack. Run it with
+`--nocapture` to print the limits, and with `--release` for release builds.
 
 ### Key Code
 
@@ -132,6 +144,7 @@ Consumers enable the `mock` feature for the public unimock boundaries.
 - [Discovery](./src/discovery.rs) and [source protection](./src/protection.rs).
 - [Preparation](./src/preparation.rs) and [path identity](./src/identity.rs).
 - [HTML checks](./src/templates.rs) and [definition provider](./src/definition_provider.rs).
+- [YAML front matter](./src/yaml.rs) and its [source positions](./src/yaml_positions.rs).
 
 ### Related Docs
 

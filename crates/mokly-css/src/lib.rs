@@ -64,3 +64,12 @@ mod css_boundaries;
 mod selector_nesting;
 
 mod lookup_roots;
+
+mod rename_rules;
+mod rule_walk;
+mod token_sections;
+mod token_tree;
+
+#[cfg(test)]
+#[path = "_tests_/deep_scanner_tests.rs"]
+mod deep_scanner_tests;

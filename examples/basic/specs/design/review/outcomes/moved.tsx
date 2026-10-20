@@ -23,7 +23,7 @@ function MovedEvidence() {
 /**
  * Invoice moved under Account with edits. Changes keeps one row for it at its
  * new place, labelled Moved, and Overlay compares it with its previous version
- * in one frame; Details names the path it moved from.
+ * in one frame; Details name the path it moved from, then its reason.
  */
 function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
   const dark = useDarkPreview();
@@ -32,9 +32,9 @@ function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
       activeTitle="Invoice"
       crumbs={["Account", "Billing & Payments"]}
       design={DESTINATIONS.moved}
-      evidence={<MovedEvidence />}
       mode="overlay"
       path={ENTRY_PATHS.invoice}
+      reasons={["material"]}
       render={(previewViewport) => (
         <ComparisonStack
           after={<MiniInvoice compact={previewViewport === "mobile"} revised />}
@@ -47,6 +47,7 @@ function MovedOverlay({ viewport }: { viewport: CompareViewport }) {
           mode="overlay"
         />
       )}
+      source={<MovedEvidence />}
       state="changed"
       subject="invoice"
       title="Invoice"

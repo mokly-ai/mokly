@@ -19,6 +19,7 @@ pub mod identity;
 pub mod inspector;
 
 pub mod fingerprint;
+mod fingerprint_evidence;
 mod fingerprint_observation;
 mod fingerprint_walk;
 

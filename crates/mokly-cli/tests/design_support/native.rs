@@ -22,7 +22,8 @@ use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_model::material::catalogue_key;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_sidecar::workers::Diagnostics;
-use unimock::Unimock;
+use mokly_static::fingerprint::InputTreeMock;
+use unimock::{MockFn, Unimock, matching};
 
 use crate::{changes_runtime, render_runtime};
 
@@ -69,6 +70,11 @@ impl Session {
             inputs: None,
             changes: changes_runtime::service(
                 services.runtime.clone(),
+                Arc::new(Unimock::new(
+                    InputTreeMock::verify
+                        .each_call(matching!())
+                        .answers(&|_| Ok(())),
+                )),
                 cancellation.clone(),
                 changes_runtime::pin(
                     &config,

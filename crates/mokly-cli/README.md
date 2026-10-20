@@ -33,8 +33,10 @@ shutdown. A background pass fills usage after readiness and yields to foreground
 renders. A completed pass publishes complete consumer lists. Watched Serve attaches a native observer before module evaluation. It buffers
 startup edits and coalesces filesystem events by path. The same serialized
 queue handles these events and the rich-mode `r` shortcut. A new generation
-restarts the usage pass. Configuration changes attach a candidate observer
-before a second validation pass when roots change. Exact additions extend
+restarts the usage pass. The initial generation follows the same lease lifetime
+as later generations. Replacement releases it after active work finishes.
+Configuration changes attach a candidate observer before a second validation
+pass when roots change. Exact additions extend
 the active observer. Resource callbacks queue their inputs outside render
 tasks. A failed attempt accepts repair events from watched directories.
 `repoRoot` changes require a restart. Sidecar count and timeout are process
@@ -93,6 +95,7 @@ release events. `--debug-timings` emits structured stage spans and background
 counts without source text, props, or error payloads. Shared Changes timings
 include the numeric dependency tier, final comparison view counts, and
 changed-path collection. A failed phase keeps error status.
+Capture spans separate validation, composition, encoding, and closure work.
 
 Common options are `--config`, `--base`, `--sidecars`, and `--debug-timings`.
 The composition root constructs a
@@ -103,6 +106,9 @@ An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
 needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
+Static builds keep the input-change outcome when historical PostCSS evidence
+disagrees with its pinned Git source. They preserve the earlier output.
+They also check selected base package inputs before base document callbacks.
 Build and Serve share the same runtime composition. Each command owns one
 pool and cache across catalogue preparation, document rendering, and live
 prop previews. Serve checks the render token and installed revision before
@@ -266,6 +272,7 @@ retains the immediate-abort check and uses `taskkill /T /F` for cleanup.
 
 ### Key Code
 
+- [Static base admission](./src/changes_static.rs) checks input evidence before base document callbacks.
 - [Grammar](./src/grammar.rs) and [option validation](./src/options.rs).
 - [Output](./src/output.rs), [error copy](./src/errors.rs), and
   [redaction](./src/redaction.rs).

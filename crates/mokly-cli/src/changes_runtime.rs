@@ -27,12 +27,15 @@ use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::runtime::Runtime;
+use mokly_static::fingerprint::InputTree;
 
 use crate::base_dependencies::NativeDependencies;
 use crate::changes_base::NativeBase;
+use crate::changes_static::StaticBase;
 
 pub(super) fn service(
     runtime: Arc<Runtime>,
+    inputs: Arc<dyn InputTree>,
     cancellation: Arc<dyn Cancellation>,
     pinned: Option<Arc<PinnedBase>>,
     style: Style,
@@ -60,12 +63,15 @@ pub(super) fn service(
             limits: Limits::default(),
             batch_bytes: 48 * 1024 * 1024,
         }),
-        provider: Arc::new(NativeBase {
-            runtime,
-            cancellation,
-            dependencies: Arc::new(NativeDependencies {
-                cancellation: token,
-                reporter,
+        provider: Arc::new(StaticBase {
+            inputs,
+            inner: Arc::new(NativeBase {
+                runtime,
+                cancellation,
+                dependencies: Arc::new(NativeDependencies {
+                    cancellation: token,
+                    reporter,
+                }),
             }),
         }),
         comparison: Arc::new(Engine {

@@ -7,7 +7,7 @@ rust-version.workspace = true
 publish = false
 
 [features]
-mock = []
+mock = ["unimock/mock-core"]
 
 [dependencies]
 mokly-model = { workspace = true }
@@ -25,6 +25,7 @@ percent-encoding = "2.3.2"
 pulldown-cmark = "0.13.4"
 
 [dev-dependencies]
+unimock = { version = "0.6.8", features = ["mock-core"] }
 mokly-css = { workspace = true, features = ["mock"] }
 insta = "1.49.0"
 mokly-html = { workspace = true, features = ["mock"] }

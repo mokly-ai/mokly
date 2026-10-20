@@ -1,7 +1,7 @@
 //! Scoped names depend on paths while unrelated CSS identities stay global.
 
 use crate::module_integrity;
-use crate::modules::scope;
+use crate::modules::{scope, scoped_name};
 
 #[test]
 fn declaration_list_at_rules_keep_local_functions_and_identifiers() {
@@ -82,4 +82,140 @@ fn scoping_preserves_comments_spacing_modern_syntax_and_animation_priority() {
     assert!(exports.contains_key("local"));
     assert_eq!(exports["card"].split_ascii_whitespace().count(), 3);
     insta::assert_snapshot!("rename_only", css);
+}
+
+#[test]
+fn names_after_attribute_selectors_keep_their_own_source_ranges() {
+    let path = "ui/form.module.css";
+    let class = |local| scoped_name(path, local);
+    for (source, expected) in [
+        (".a[x]:global(.b){}", format!(".{}[x].b{{}}", class("a"))),
+        (
+            ".a[data-x]#main{}",
+            format!(".{}[data-x]#{}{{}}", class("a"), class("main")),
+        ),
+        (
+            "[type=text]:local(.field){}",
+            format!("[type=text].{}{{}}", class("field")),
+        ),
+    ] {
+        assert_eq!(scope(path, source).unwrap().0, expected, "{source}");
+    }
+    let error = scope(path, ".a[x]:export{}").unwrap_err();
+    assert!(
+        error.to_string().contains(&format!("{path}:1:6: :export")),
+        "{error}"
+    );
+}
+
+#[test]
+fn custom_property_values_keep_their_blocks_to_the_semicolon() {
+    let path = "ui/mixin.module.css";
+    let class = |local| format!(".{}{{", scoped_name(path, local));
+    let spin = scoped_name(path, "spin");
+    for (source, locals) in [
+        (".a{--m:{animation:spin};}@keyframes spin{to{opacity:0}}", 2),
+        (".a{--a:{x} --b:{.c{color:red}};}", 1),
+        (".b{color:red}.a{--mixin:{color:blue} composes: b;}", 2),
+        (".b{color:red}.a{--m:{composes:b};}", 2),
+        (".a{--x:{a} @value y;}", 1),
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        let expected = source
+            .replace(".a{", &class("a"))
+            .replace(".b{", &class("b"))
+            .replace("@keyframes spin", &format!("@keyframes {spin}"));
+        assert_eq!(css, expected, "{source}");
+        assert_eq!(exports.len(), locals, "{source}");
+        assert_eq!(exports["a"], scoped_name(path, "a"), "{source}");
+    }
+    let error = scope(path, ".a{--x:{a};@value y;}").unwrap_err();
+    assert!(
+        error.to_string().contains(&format!("{path}:1:12;")),
+        "{error}"
+    );
+}
+
+#[test]
+fn nested_group_rules_scope_animation_names_like_their_rule() {
+    let path = "ui/motion.module.css";
+    let source = "@keyframes spin{to{opacity:0}}.a{@media (min-width:1px){animation:spin 1s}}";
+    let (css, _) = scope(path, source).unwrap();
+    let spin = scoped_name(path, "spin");
+    let expected = source
+        .replace("spin", &spin)
+        .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
+    assert_eq!(css, expected);
+}
+
+#[test]
+fn value_rules_report_their_own_line_and_column() {
+    let source = ".a{}\n/* note */\n@value x: red;";
+    let error = scope("ui/theme.module.css", source).unwrap_err();
+    assert!(
+        error.to_string().contains("ui/theme.module.css:3:1;"),
+        "{error}"
+    );
+}
+
+#[test]
+fn animation_names_after_functions_keep_their_own_ranges() {
+    let path = "ui/motion.module.css";
+    let source = "@keyframes spin{to{opacity:0}}.a{animation:steps(4)spin 1s}";
+    let (css, _) = scope(path, source).unwrap();
+    let expected = source
+        .replace("spin", &scoped_name(path, "spin"))
+        .replace(".a{", &format!(".{}{{", scoped_name(path, "a")));
+    assert_eq!(css, expected);
+}
+
+#[test]
+fn nested_at_rule_preludes_stay_as_authored() {
+    let path = "ui/nested.module.css";
+    let class = |local| format!(".{}{{", scoped_name(path, local));
+    for source in [
+        ".a{@layer base.theme{color:red}}",
+        ".a{@supports (color: color-mix(in srgb, #fff 50%, red)){color:red}}",
+        ".a{@container style(--c:#fff){color:red}}",
+        ".a{@foo .b{color:red}}",
+    ] {
+        let (css, exports) = scope(path, source).unwrap();
+        assert_eq!(css, source.replace(".a{", &class("a")), "{source}");
+        assert_eq!(exports.len(), 1, "{source}");
+    }
+    let source = ".a{@scope (.b) to (.c){color:red}}";
+    let (css, exports) = scope(path, source).unwrap();
+    let expected = source
+        .replace(".a{", &class("a"))
+        .replace("(.b)", &format!("(.{})", scoped_name(path, "b")))
+        .replace("(.c)", &format!("(.{})", scoped_name(path, "c")));
+    assert_eq!(css, expected);
+    assert_eq!(exports.len(), 3);
+}
+
+#[test]
+fn wrapper_and_icss_checks_cover_selectors_and_scope_preludes() {
+    let path = "ui/preludes.module.css";
+    let class = format!(".{}{{", scoped_name(path, "a"));
+    for source in [
+        ".a{@supports selector(:global()){color:red}}",
+        "@supports selector(:global(.b)){.a{color:red}}",
+        ".a{@foo :export{color:red}}",
+        "@foo :import(x){.a{color:red}}",
+    ] {
+        let (css, _) = scope(path, source).unwrap();
+        assert_eq!(css, source.replace(".a{", &class), "{source}");
+    }
+    for (source, message) in [
+        (
+            ".a{@scope (:global()){color:red}}",
+            ":global() has no selector",
+        ),
+        (".a :local(){color:red}", ":local() has no selector"),
+        ("@scope (:export){.a{color:red}}", "authored ICSS rule"),
+        (".a{@scope (:import(x)){color:red}}", "authored ICSS rule"),
+    ] {
+        let error = scope(path, source).unwrap_err().to_string();
+        assert!(error.contains(message), "{source}: {error}");
+    }
 }

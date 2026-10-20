@@ -28,9 +28,13 @@ pub(crate) struct Fragments {
 }
 
 impl FragmentRenderer for Fragments {
+    #[tracing::instrument(name = "render.fragment", skip_all, fields(status = "error"))]
     fn render(&self, request: &FragmentRequest) -> mokly_html::error::Result<Fragment> {
         match self.render_fragment(request) {
-            Ok(fragment) => Ok(fragment),
+            Ok(fragment) => {
+                tracing::Span::current().record("status", "ok");
+                Ok(fragment)
+            }
             Err(source) => match source.diagnostic() {
                 Some(source) => Err(HtmlError::Runtime { source }),
                 None => Err(HtmlError::Internal(InternalError::Provider {

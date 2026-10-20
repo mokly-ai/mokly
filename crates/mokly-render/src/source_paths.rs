@@ -11,6 +11,21 @@ use mokly_source_interface::tree::{Node, SourceTree};
 /// Private compilation inputs address the installation, independent of source overlays.
 pub(crate) const INSTALLED_INPUT_PREFIX: &str = "node_modules/.mokly-roots/installed/";
 
+/// Private witness names keep repository aliases separate from selected package roots.
+pub(crate) const SOURCE_INPUT_PREFIX: &str = "node_modules/.mokly-roots/source/";
+
+/// Decode a private repository witness name before package-root selection.
+pub(crate) fn repository_input(root: &Path, path: &Path) -> Option<PathBuf> {
+    let relative = path
+        .strip_prefix(root)
+        .ok()?
+        .to_string_lossy()
+        .replace('\\', "/");
+    relative
+        .strip_prefix(SOURCE_INPUT_PREFIX)
+        .map(|name| root.join(name))
+}
+
 /// Find an inventoried source for a logical dependency without changing its classification.
 pub(crate) fn source_node(
     tree: &dyn SourceTree,

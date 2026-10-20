@@ -227,6 +227,13 @@ fn opaque_bodies_keep_selector_whitespace_and_css_boundary_tokens_are_ignored() 
     };
     assert_eq!(rules.len(), 1);
     assert_eq!(rules[0].selectors, [".a"]);
+    let source = "@media (min-width:1px){.a{color:red}}<!--.b{color:blue}-->";
+    let ParsedCss::Rules(rules) = collect(source.as_bytes()) else {
+        panic!()
+    };
+    assert_eq!(rules.len(), 2);
+    assert_eq!(rules[0].conditions[0].prelude, "(min-width:1px)");
+    assert_eq!(rules[1].selectors, [".b"]);
 }
 
 #[test]

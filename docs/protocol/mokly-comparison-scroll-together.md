@@ -82,8 +82,9 @@ default, the drawn states, keyboard focus, forced colours, the narrow layout,
 and the loading and failure states;
 `comparison_regions_toggle.spec.ts` proves the off behavior in Side by side,
 Overlay, and Difference, realignment to the version scrolled last, no pane
-reload, persistence across screens and reloads in Serve, invalid values, and a
-refused write; and `comparison_regions_hosts.spec.ts` proves persistence in a
+reload, persistence across screens and reloads, invalid values, and a refused
+write; the same persistence case also runs in live Serve; and
+`comparison_regions_hosts.spec.ts` proves persistence in a
 static build and a storage-free, mount-scoped choice in an embedded viewer
 through both frame adapters, across screens and source replacement. Unit
 tests under `packages/viewer/tests/` cover the preference stores, the toolbar

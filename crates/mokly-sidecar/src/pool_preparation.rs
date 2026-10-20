@@ -1,10 +1,14 @@
 //! Reload prerequisites independently of the requested render's deadline.
 
-use crate::compiled::RestoreGeneration;
+use std::sync::Arc;
+
+use crate::bindings::Bindings;
+use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
-use crate::methods::{Bundle, Call, Generation};
+use crate::methods::{Bundle, Call, CssModules, Generation};
 use crate::pool::Pool;
-use crate::pool_state::Slot;
+use crate::pool_state::{Slot, State};
+use crate::results::Module;
 use crate::wire::{MethodResult, Request};
 
 impl Pool {
@@ -31,15 +35,22 @@ impl Pool {
         description_needed: bool,
         bindings_needed: bool,
     ) -> Result<()> {
-        let (bundle, maps, bindings, epoch, compiled, modules) = {
+        let Preparation {
+            bundle,
+            maps,
+            bindings,
+            epoch,
+            compiled,
+            modules,
+        } = {
             let state = self.lock()?;
-            (
-                state.bundles.get(generation).cloned(),
-                state.maps.get(generation).cloned(),
-                state.bindings.get(generation).cloned(),
-                state.epochs.get(generation).copied().unwrap_or(0),
-                state.compiled.get(generation).cloned(),
-                state.modules.get(generation).cloned().unwrap_or_default(),
+            Preparation::snapshot(
+                &state,
+                slot,
+                generation,
+                maps_needed,
+                description_needed,
+                bindings_needed,
             )
         };
         if !slot.generations.contains_key(generation) {
@@ -84,10 +95,7 @@ impl Pool {
                 }
             }
         }
-        if maps_needed
-            && !slot.maps.contains(generation)
-            && let Some(maps) = maps
-        {
+        if let Some(maps) = maps {
             self.prerequisite(slot, Call::CssModules(maps))?;
             slot.maps.insert(generation.to_owned());
         }
@@ -100,12 +108,8 @@ impl Pool {
             )?;
             slot.described.insert(generation.to_owned());
         }
-        if description_needed
-            && bindings_needed
-            && let Some(bindings) = bindings
-            && slot.bindings.get(generation) != Some(&bindings)
-        {
-            self.prerequisite(slot, Call::Bindings(bindings.clone()))?;
+        if let Some(bindings) = bindings {
+            self.prerequisite(slot, Call::Bindings((*bindings).clone()))?;
             slot.bindings.insert(generation.to_owned(), bindings);
         }
         Ok(())
@@ -119,3 +123,61 @@ impl Pool {
         slot.worker.request(&Request { id: 1, call }, deadline)
     }
 }
+
+struct Preparation {
+    bundle: Option<Bundle>,
+    maps: Option<CssModules>,
+    bindings: Option<Arc<Bindings>>,
+    epoch: u64,
+    compiled: Option<Arc<CompiledGeneration>>,
+    modules: Vec<Module>,
+}
+
+impl Preparation {
+    fn snapshot(
+        state: &State,
+        slot: &Slot,
+        generation: &str,
+        maps_needed: bool,
+        description_needed: bool,
+        bindings_needed: bool,
+    ) -> Self {
+        let generation_needed = !slot.generations.contains_key(generation);
+        let bindings = if description_needed && bindings_needed {
+            state
+                .bindings
+                .get(generation)
+                .filter(|bindings| {
+                    !slot
+                        .bindings
+                        .get(generation)
+                        .is_some_and(|loaded| Arc::ptr_eq(loaded, bindings))
+                })
+                .cloned()
+        } else {
+            None
+        };
+        Self {
+            bundle: generation_needed
+                .then(|| state.bundles.get(generation).cloned())
+                .flatten(),
+            maps: (maps_needed && !slot.maps.contains(generation))
+                .then(|| state.maps.get(generation).cloned())
+                .flatten(),
+            bindings,
+            epoch: state.epochs.get(generation).copied().unwrap_or(0),
+            compiled: generation_needed
+                .then(|| state.compiled.get(generation).cloned())
+                .flatten(),
+            modules: if generation_needed {
+                state.modules.get(generation).cloned().unwrap_or_default()
+            } else {
+                Vec::new()
+            },
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/pool_preparation_tests.rs"]
+mod pool_preparation_tests;

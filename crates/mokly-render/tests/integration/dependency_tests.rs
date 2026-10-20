@@ -10,6 +10,7 @@ use mokly_catalogue::working_tree::WorkingTree;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_graph::cache::MemoryCache;
+use mokly_graph::error::GraphError;
 use mokly_graph::types::GraphFactory;
 use mokly_graph::workers::ThreadWorkers;
 use mokly_render::runtime::Runtime;
@@ -32,9 +33,10 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
     .unwrap();
     fs::write(
         package.join("skin.module.css"),
-        ".external { color: MOKLY_COLOR; }\n",
+        ".external { color: MOKLY_COLOR; background:url('./icon.svg'); }\n",
     )
     .unwrap();
+    fs::write(package.join("icon.svg"), b"<svg>base asset</svg>").unwrap();
     let expected_source = serde_json::to_string(&package.join("skin.module.css")).unwrap();
     consumer.replace(
         "postcss.mjs",
@@ -128,6 +130,16 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
             .clone(),
     )
     .unwrap();
+    let asset = "assets/node_modules/.mokly-roots/1/fixture-theme/icon.svg";
+    assert_eq!(
+        generation.resource(asset).unwrap().unwrap(),
+        b"<svg>base asset</svg>"
+    );
+    fs::write(package.join("icon.svg"), b"<svg>edited asset</svg>").unwrap();
+    assert!(matches!(
+        generation.resource(asset),
+        Err(GraphError::InputsChanged { .. })
+    ));
     let calls = consumer.pool.calls.lock().unwrap();
     let maps = calls
         .iter()
@@ -141,5 +153,59 @@ fn external_css_modules_use_the_selected_root_without_entering_catalogue_sources
         calls
             .iter()
             .any(|call| matches!(call, Call::ProcessCss(css) if css.source_path == logical))
+    );
+}
+
+#[test]
+fn head_assets_use_configured_package_roots_and_reject_changed_bytes() {
+    let consumer = Consumer::single();
+    let package = consumer.root().join("vendor/node_modules/fixture-theme");
+    fs::create_dir_all(&package).unwrap();
+    fs::write(consumer.root().join("vendor/package.json"), "{}").unwrap();
+    fs::write(
+        package.join("package.json"),
+        r#"{"name":"fixture-theme","version":"1.0.0"}"#,
+    )
+    .unwrap();
+    fs::write(
+        package.join("skin.css"),
+        ".chip { background: url('./icon.svg') }",
+    )
+    .unwrap();
+    fs::write(package.join("icon.svg"), b"<svg>head asset</svg>").unwrap();
+    consumer.replace(
+        "mokly.config.json",
+        "\"postcss\":",
+        "\"moduleResolution\": {\"packageRoots\":[\"vendor\"]}, \"postcss\":",
+    );
+    consumer.replace(
+        "library/chip.tsx",
+        "import styles from",
+        "import 'fixture-theme/skin.css';\nimport styles from",
+    );
+    let generation = consumer.generation(consumer.prepare().unwrap());
+    let route = generation
+        .resource_routes()
+        .into_iter()
+        .find(|route| route.starts_with("assets/") && route.ends_with("/fixture-theme/icon.svg"))
+        .unwrap();
+    assert_eq!(
+        generation.resource(&route).unwrap().unwrap(),
+        b"<svg>head asset</svg>"
+    );
+    assert!(
+        !generation
+            .contains_resource("vendor/node_modules/fixture-theme/icon.svg")
+            .unwrap()
+    );
+    fs::write(package.join("icon.svg"), b"<svg>new content</svg>").unwrap();
+    assert!(matches!(
+        generation.resource(&route),
+        Err(GraphError::InputsChanged { .. })
+    ));
+    let updated = consumer.generation(consumer.prepare().unwrap());
+    assert_eq!(
+        updated.resource(&route).unwrap().unwrap(),
+        b"<svg>new content</svg>"
     );
 }

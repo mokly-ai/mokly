@@ -26,6 +26,7 @@ mod markdown_links;
 mod markdown_sources;
 mod planning;
 mod rendering;
+mod requests;
 mod resource_digests;
 mod resource_edges;
 pub mod resource_inputs;

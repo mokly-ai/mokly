@@ -131,6 +131,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
     );
     {
         let mut state = pool.lock().unwrap();
+        let retained = Arc::new(bindings("old/card"));
         for mock in [first, second] {
             state.slots.push(Some(Slot {
                 source_root: "/repo".into(),
@@ -139,7 +140,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
                 generations: BTreeMap::from([("g".into(), 0)]),
                 maps: BTreeSet::from(["g".into()]),
                 described: BTreeSet::from(["g".into()]),
-                bindings: BTreeMap::from([("g".into(), bindings("old/card"))]),
+                bindings: BTreeMap::from([("g".into(), retained.clone())]),
                 contexts: BTreeSet::new(),
                 renders: 0,
                 requests: 1,
@@ -150,7 +151,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         state.epochs.insert("g".into(), 0);
         state.leases.insert("g".into(), BTreeSet::from([0]));
         state.maps.insert("g".into(), maps("old-control"));
-        state.bindings.insert("g".into(), bindings("old/card"));
+        state.bindings.insert("g".into(), retained);
     }
     pool
 }
@@ -198,6 +199,25 @@ fn an_updated_binding_table_is_replayed_on_the_second_process() {
         worker(&["bindings:new/card", "render"], 1),
     );
     pool.request(Call::Bindings(bindings("new/card"))).unwrap();
+    pool.lock().unwrap().available.push_front(1);
+    render(&pool);
+}
+
+#[test]
+fn equal_bindings_keep_the_shared_revision_on_both_workers() {
+    let pool = pair(
+        worker(&["bindings:old/card", "bindings:old/card"], 2),
+        worker(&["render"], 1),
+    );
+    let retained = pool.lock().unwrap().bindings["g"].clone();
+    for _ in 0..2 {
+        pool.request(Call::Bindings(bindings("old/card"))).unwrap();
+        let state = pool.lock().unwrap();
+        assert!(Arc::ptr_eq(&state.bindings["g"], &retained));
+        for slot in state.slots.iter().flatten() {
+            assert!(Arc::ptr_eq(&slot.bindings["g"], &retained));
+        }
+    }
     pool.lock().unwrap().available.push_front(1);
     render(&pool);
 }

@@ -8,6 +8,7 @@ import fs from "node:fs";
 import { test } from "node:test";
 
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
+import { reviewEntry } from "../src/review/entries.js";
 import { parseReviewResult } from "../src/review/result_validation.js";
 import type { ReviewEntry, ReviewResult } from "../src/review/types.js";
 
@@ -175,6 +176,26 @@ test("current variants come before base-only variants", () => {
   assert.throws(
     () => parseReviewResult(variants(["base", "current"])),
     /\[mokly\/review\]/,
+  );
+});
+
+test("a selected variant keeps parent-owned dependency evidence and remains findable", () => {
+  const selected = fixture((result) => {
+    const parent = card(result);
+    const variant = variantOf(parent, "card/featured", parent.reasons);
+    variant.state = parent.state;
+    variant.views = structuredClone(parent.views);
+    parent.variants = [variant];
+    result.entries = [parent];
+    result.affected = [];
+  });
+  const parsed = parseReviewResult(structuredClone(selected));
+  assert.deepEqual(parsed, selected);
+  const variant = reviewEntry(parsed, "component", "card/featured");
+  assert.deepEqual(variant, selected.entries[0]!.variants![0]);
+  assert.throws(
+    () => parseReviewResult({ ...selected, entries: [variant] }),
+    /a dependency reason needs its owned evidence/,
   );
 });
 

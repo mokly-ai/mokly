@@ -1,7 +1,5 @@
 //! Prepared controls carry numeric constraints to every public reader.
 
-use std::collections::BTreeMap;
-
 use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{CatalogueModel, EntryContent, SourceLocation};
 use mokly_model::projection::{self, Publication};
@@ -13,6 +11,7 @@ use crate::discovery::{SourceFile, SourceKind};
 use crate::input::ParsedEntry;
 use crate::prepare_entry;
 use crate::yaml::Document;
+use crate::yaml_positions::Positions;
 
 #[test]
 fn declared_numeric_controls_publish_effective_bounds_for_parents_and_variants() {
@@ -41,7 +40,7 @@ fn declared_numeric_controls_publish_effective_bounds_for_parents_and_variants()
         issues: vec![],
         document: Document {
             value,
-            positions: BTreeMap::new(),
+            positions: Positions::default(),
         },
         body: String::new(),
         body_offset: 0,

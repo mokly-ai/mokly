@@ -1,29 +1,25 @@
 //! Reject authored CSS Modules at-rules before rename-only scoping.
 
-use std::result;
-
-use cssparser::{Delimiter, ParseError, Parser, ParserInput, Token};
+use cssparser::{Parser, ParserInput};
 
 use crate::error::{CssError, Result, TransformFailure};
+use crate::token_sections::{self, Grammar};
+use crate::token_tree::Tokens;
 
+/// Reject `@value` at any rule level. Custom property values are not rules.
 pub(crate) fn check(path: &str, source: &str) -> Result<()> {
-    let mut input = ParserInput::new(source);
-    scan(path, &mut Parser::new(&mut input))
-}
-
-fn scan(path: &str, parser: &mut Parser<'_, '_>) -> Result<()> {
-    while !parser.is_exhausted() {
-        let location = parser.current_source_location();
-        let mut first = None;
-        let _: result::Result<_, ParseError<'_, ()>> = parser.parse_until_before(
-            Delimiter::CurlyBracketBlock | Delimiter::Semicolon,
-            |prelude| {
-                first = prelude.next().ok().cloned();
-                while prelude.next().is_ok() {}
-                Ok(())
-            },
-        );
-        if matches!(&first, Some(Token::AtKeyword(name)) if name.eq_ignore_ascii_case("value")) {
+    let tokens = Tokens::new(source);
+    let mut pending = vec![(tokens.root(), Grammar::Rules)];
+    while let Some((range, grammar)) = pending.last_mut() {
+        let Some(section) = token_sections::next(&tokens, range, *grammar) else {
+            pending.pop();
+            continue;
+        };
+        if section.at_rule(&tokens).as_deref() == Some("value") {
+            let mut input = ParserInput::new(&source[..section.lead(&tokens)]);
+            let mut parser = Parser::new(&mut input);
+            while parser.next_including_whitespace_and_comments().is_ok() {}
+            let location = parser.current_source_location();
             return Err(CssError::Transform {
                 kind: TransformFailure::Modules,
                 message: format!(
@@ -33,16 +29,10 @@ fn scan(path: &str, parser: &mut Parser<'_, '_>) -> Result<()> {
                 ),
             });
         }
-        if matches!(parser.next(), Ok(Token::CurlyBracketBlock)) {
-            if matches!(&first, Some(Token::Ident(name)) if name.starts_with("--")) {
-                continue;
-            }
-            let mut result = Ok(());
-            let _: result::Result<_, ParseError<'_, ()>> = parser.parse_nested_block(|nested| {
-                result = scan(path, nested);
-                Ok(())
-            });
-            result?;
+        if !section.custom_property(&tokens)
+            && let Some(block) = section.block
+        {
+            pending.push((block.range, block.grammar));
         }
     }
     Ok(())

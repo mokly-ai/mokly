@@ -64,7 +64,11 @@ the data it reads.
 native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
 carrying their entry-kind glyph, and a screen or component's variants as a
 container the row's chevron button discloses, because a row cannot be both a
-link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
+link and a `<summary>`. `nav_disclosure.ts` records interactive folder and
+section choices during summary activation, before queued toggle events.
+Search therefore receives the last choice as its pre-filter baseline.
+Non-interactive summaries retain native behavior.
+`nav_tree.ts` lists a folder's own document, page, or
 use case as the folder's first child row, labelled `Overview` when its title
 is the folder's title, and renders a folder whose own page is a screen or
 component as that entry's row, whose container holds the variants and then
@@ -252,9 +256,13 @@ styles. `workspace_stylesheet_list.tsx` renders each file once with its
 sentences and selector lists nested in its item, like the approved card.
 `evidence_details.tsx` holds the shared comparison heading and the files and
 exclusions block, so `workspace_evidence.tsx` and a page's Details render the
-same markup; `workspace_evidence.tsx` keeps ignored content and the status
-lines separate. The heading names the branch point only when its name is
-known; an empty or blank name leaves the heading alone. An index without a
+same markup. `workspace_evidence.tsx` follows the designs' order: the reason
+sentences right after the heading and a moved entry's earlier side, then the
+files and exclusions, the paired prop values, and the changed components. The
+ignored content, the shared-component sentence, the saved props block, which no
+design places, and the no-changes line follow, in that order. The heading names
+the branch point only when its name is known; an empty or blank name leaves the
+heading alone. An index without a
 `base` has no name, because `viewerContext` supplies an empty one, so its
 Details keep the rest of the evidence without that sentence. `workspace_data.ts`
 passes the shell's known name to `publicWorkspace`, so a workspace keeps the

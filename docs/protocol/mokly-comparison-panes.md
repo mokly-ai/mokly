@@ -162,21 +162,22 @@ each request to its immutable generation and configured sides.
 
 ## Acceptance
 
-Regressions prove the page items below in live Serve through the selected
-comparison path (`tests/browser/comparison_alignment.spec.ts` and
-`comparison_alignment_input.spec.ts`). Against a static build and an embedded
-viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
-stacked wheel alignment, frame attributes, inert links and anchors, and static
-Side by side mirroring; the pane failure path runs embedded. The region, key,
-anchor, and Scroll together items are proved by the seven
-`tests/browser/comparison_regions*.spec.ts` suites, which the scrolling,
-region pairing, and Scroll together contracts name case by case. Unit tests
-under `packages/viewer/tests/` cover the controllers.
+Browser regressions, listed in the
+[browser test guide](../../tests/browser/README.md#comparison-scrolling-suites),
+prove every item below in a static build. Live Serve, through the selected
+comparison path, proves the wheel, Side by side, page key, anchor,
+shorter-document, inner-region, and frame-attribute items, and Try again and
+Refresh. It also proves presentation and renewal after a watched edit. A static build and an embedded viewer through both frame adapters
+prove stack alignment, frame attributes, and inert links and anchors. The
+static build also proves Side by side mirroring. The static build and the
+cross-origin adapter prove the pane failure path. The scrolling, region
+pairing, and Scroll together contracts name their acceptance cases. Unit tests
+cover the controllers and the loader.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
   rectangles, for desktop, mobile, both viewports at once, and a component
-  comparison; the same spec failed before the implementation landed.
+  comparison.
 - With the default control on, scrolling one Side by side viewport moves the
   other to the same offset in both directions, and an anchor in either pane
   moves both.
@@ -203,8 +204,8 @@ under `packages/viewer/tests/` cover the controllers.
   generation; no pane loads a snapshot as its `src`.
 - A document or host that asks for smooth scrolling still moves with the
   shared offset at once, in a stack and in Side by side.
-- Links and forms inside a pane stay inert in Serve, a static build and an
-  embedded viewer, including while a slow resource holds back its load.
+- Links and forms inside a pane stay inert, including while a slow resource
+  holds back its load.
 - Ready waits for every selected document; a pane document that cannot be
   presented renders the failure copy, reaches an embedded host's error event,
   and recovers with Try again; Refresh presents the documents again; the

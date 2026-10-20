@@ -111,51 +111,8 @@ fresh bases; Serve can hold an accepted capture while building its replacement.
 
 ## Sidecar Spans
 
-The core selects sidecar timing through the optional `hello.params.timings`
-boolean. It defaults to `false`. No environment variable carries this choice.
-An enabled sidecar writes its timing records to stderr. If the preceding
-Node stderr write is a partial line, the sidecar inserts a newline before
-the timing record. The core passes forwarded lines through token redaction
-and terminal-control escaping. Real records contain no secrets or controls
-and retain their exact bytes; other stderr lines remain diagnostics. Timing
-records use the original stderr writer captured at startup, even if consumer
-code replaces `process.stderr.write`.
-
-A sidecar emits records with `role: "sidecar"` and its own `pid` and session
-for `sidecar.bundle`, `sidecar.describe`, `sidecar.render` (with `kind`:
-`screen`, `component`, `story`, or `page`), and `sidecar.process-css`, measured
-from request receipt to response write. The difference from the matching core
-`render.fragment` span includes transport and queue time.
-
-The core emits `sidecar.spawn` for process start through hello. Every later
-spawn in a pool slot is enclosed by `sidecar.recycle`. These spans measure the
-new process through hello, excluding the old stop and time between requests.
-They start with error status and record `ok` only after hello succeeds.
-
-`sidecar.stop` measures the old process's retirement. It includes the lifecycle
-operations that its cause requires: shutdown, grace, kill, reaping, and bounded
-stderr drainage where those operations apply. It adds no lifecycle operation,
-retry, deadline, or wait for the next request. A stop starts with error status;
-it records `ok` only if every attempted lifecycle operation succeeds. A failed
-operation keeps error status even if a later fallback kill succeeds.
-
-`sidecar.stop` and `sidecar.recycle` carry a `reason` string on start and end:
-
-| Reason        | Cause                                                              |
-| ------------- | ------------------------------------------------------------------ |
-| `recycle`     | The render-count or memory-pressure policy retires the worker.     |
-| `replacement` | A request or cleanup failure makes the worker unusable.            |
-| `retry`       | Process startup or hello fails before a usable worker is returned. |
-| `root-switch` | A request needs a different source root from a live worker.        |
-
-The stop belongs to the span that performs retirement. A failed hello's stop
-is a child of `sidecar.spawn`. Other stops use the active caller; without one,
-`parentId` is absent. A later replacement belongs to the later caller. No span
-or parent reference stays open between requests. The slot retains only its
-replacement reason; that reason describes retirement, not a promised retry.
-No stop is emitted when startup created no process. Command shutdown and
-cancellation are outside these replacement stages. The added stage and reason
-are diagnostic details within timing schema version 1.
+[Sidecar timing records](./mokly-sidecar-timings.md) define request spans,
+process startup and retirement, replacement reasons, and parent ownership.
 
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.
@@ -199,6 +156,11 @@ count held constant and other heavy work idle:
 4. Watch: an edit to one screen, one component, and one stylesheet, each
    measured from the file write to the frame reload in the browser.
 
+A focused `startup` selection measures the same cold/warm usable startup and
+checks previews, axes, live props, cached bytes, and pages with the real base.
+It finishes without waiting for Changes or review availability and reports
+neither value. `all` retains the four complete scenarios above.
+
 The benchmark launches the browser before timing a fresh Serve process,
 verifies viewport and scheme changes, a live prop edit, pages, and eventual
 Changes, and reports each measurement as JSON on stdout. It writes one progress
@@ -234,7 +196,9 @@ CI's small correctness fixtures have
 
 | Budget                             | Rule                                                                                                                           |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `usableMs`                         | under 5000 ms, cold and warm, on both fixture variants                                                                         |
+| `usableMs`                         | under 5000 ms for HTML and under 15000 ms for React, cold and warm, on the acceptance build                                    |
+| full isolated fixture setup        | under 60000 ms                                                                                                                 |
+| isolated setup-family peak RSS     | under 1.5 GiB, including the setup harness and its descendants                                                                 |
 | sidecar deadlines and recycling    | the values of the [sidecar contract](./mokly-sidecar.md#cancellation-and-timeouts)                                             |
 | base dependency preparation        | 120 seconds (120,000 ms) shared by version discovery and all selected installs; expiry uses the documented dependency fallback |
 | comparison cache namespace         | 2 GiB (2,147,483,648 bytes) per repository and namespace, separately for extraction and dependency installs                    |
@@ -243,7 +207,20 @@ CI's small correctness fixtures have
 | `changesReadyMs` and the CSS share | recorded per variant from scenarios 2 and 3                                                                                    |
 | watch edit-to-reload               | recorded per edit kind from scenario 4                                                                                         |
 
-Recording rules measure and report values. The runtime enforces the approved
-cache and dependency-preparation limits. The benchmark enforces numeric
-acceptance thresholds, including startup under 5000 ms. A startup observation
-at or above 5000 ms produces a failed result with its measured values and reason.
+Startup acceptance uses an optimized release native binary. The harness
+verifies that binary before timing and identifies its profile and digest in
+the results. Build preparation is outside the startup measurement.
+The React budget retains complete-catalogue readiness. Compilation redesign
+is deferred rather than changing readiness to partial navigation.
+
+Isolated setup includes catalogue generation, package archives, dependency
+installation, and Git setup. The product build is a prerequisite outside this
+measurement. Setup records keep elapsed time, sampled peak RSS, and failures.
+An observation at or above either setup budget fails isolated setup.
+
+This table holds the budgets with the values the user approved. A row whose
+value is a recording rule rather than a number is measured and reported, not
+enforced; a number enters the row when the user approves it. The runtime enforces cache and dependency-preparation limits. The benchmark
+enforces numeric acceptance thresholds and fails when one is exceeded. A startup observation
+at or above its variant's budget produces a failed result with its measured
+values and reason.

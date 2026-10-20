@@ -85,3 +85,62 @@ fn a_base_source_over_the_byte_limit_keeps_the_build_valid_and_names_the_path() 
     assert!(stderr.contains("67108864"), "{stderr}");
     assert!(!stderr.contains("git-failed"), "{stderr}");
 }
+
+#[test]
+fn adding_the_dark_scheme_lists_new_views_without_affected_consumers() {
+    let directory = base(&[
+        (
+            "specs/badge.component.html",
+            "---\ntitle: Badge\nelement: x-badge\npropSchema: {type: object, additionalProperties: false, properties: {label: {type: string}}}\nprops: {label: Badge}\n---\n<i>{{label}}</i>",
+        ),
+        (
+            "specs/home.screen.html",
+            "---\ntitle: Home\n---\n<main><x-badge label=\"New\"></x-badge></main>",
+        ),
+    ]);
+    write(
+        directory.path(),
+        "mokly.config.json",
+        r#"{"colorSchemes":["light","dark"],"review":{"base":"fixture-base"}}"#,
+    );
+    let output = run(directory.path(), &["build"]);
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let site = directory.path().join("mokly-static");
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(site.join("mokly-viewer/index.json")).unwrap()).unwrap();
+    let review: serde_json::Value = serde_json::from_slice(
+        &fs::read(site.join(index["comparisonUrl"].as_str().unwrap())).unwrap(),
+    )
+    .unwrap();
+    // A gained view has no base counterpart, so it proves no render impact.
+    assert_eq!(review["affected"], serde_json::json!([]));
+    for path in ["badge", "home"] {
+        let entry = review["entries"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["path"] == path)
+            .unwrap();
+        assert_eq!(entry["reasons"], serde_json::json!([{"kind": "metadata"}]));
+        let states: Vec<_> = entry["views"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|view| (view["colorScheme"].clone(), view["state"].clone()))
+            .collect();
+        assert_eq!(
+            states,
+            [
+                ("light".into(), "unchanged".into()),
+                ("dark".into(), "added".into()),
+                ("light".into(), "unchanged".into()),
+                ("dark".into(), "added".into()),
+            ]
+        );
+    }
+}

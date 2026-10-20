@@ -49,7 +49,15 @@ CSS inputs by their authored paths.
 `mokly_{first-12-SHA256-path-digits}_{local}`. The map is suitable for the
 sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
 retain their values. An independent token check rejects scoping that changes
-anything beyond local names and the module scope/composition syntax.
+anything beyond local names and the module scope/composition syntax. The
+renamer, the module check, and the token check share one statement grammar.
+In a style rule and the blocks nested in it, they read statements as
+`lightningcss` does: a custom property runs through its `{}` blocks to the
+next `;` and keeps its value as authored, and a rule nested in a declaration
+block is itself a declaration block. Declaration-only at-rules such as
+`@font-face` end a non-custom statement at its first `{}` block, as postcss
+does. A nested at-rule keeps its prelude as authored, except the keyframes
+name and an `@scope` selector.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration
@@ -73,12 +81,24 @@ Opaque assets use `Bundle.assets` records with logical paths, confined source
 identities, SHA-256 digests, and input aliases. `Bundle.inputs` retains parsed
 CSS only. The graph checks asset streams against these digests at delivery.
 
+`Bundle.read_evidence` retains distinct observed and late input versions.
+Combining stylesheets preserves both kinds without overwriting earlier witnesses.
 Plugin dependency inputs use digests, separate from parsed CSS bytes.
 They keep source protection and graph invalidation without retaining file bodies.
 
-CSS syntax scanners and the external `lightningcss` parser use recursive
-input traversal. Pathological CSS nesting can exhaust the caller stack.
-The native HTML tree depth guarantee does not cover these parsers.
+Mokly's CSS scanners read a flat token arena with matched block extents. URL
+references, HTML boundary stripping, CSS Modules renaming, and its token check
+keep nesting on the heap; a 100,000-level stylesheet uses an ordinary worker
+thread in each of them. The rule walk also keeps its frames on the heap, but
+each rule copies its inherited conditions, so its work grows with the square
+of the depth. Selector broadening and nesting substitution use cssparser 0.38,
+whose 75-level nested-block allowance bounds their recursion. `lightningcss`
+recurses once per nesting level while it parses, prints, and drops a sheet.
+Compilation and bundling stop at its limit. So do CSS Modules scoping, which
+parses the renamed sheet with `lightningcss`, and rule collection, which runs
+`lightningcss` before the rule walk. That limit depends on the nesting form
+and the build profile. Every measured form survives at least 32 levels on a
+2 MiB worker stack, far more than authored stylesheets nest.
 
 ## Quick Start
 
@@ -100,6 +120,9 @@ cargo clippy -p mokly-css --all-targets -- -D warnings
 
 Tests use unimock at source, resolver, and processor boundaries. Graph
 integration tests verify complete delivery with real authored fixtures.
+`tests/nesting_depth_tests.rs` re-runs its own test binary to find the deepest
+CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
+`--nocapture` to print the limits, and with `--release` for release builds.
 
 ### Key Code
 
@@ -108,6 +131,7 @@ integration tests verify complete delivery with real authored fixtures.
 - [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs), and [parsed cache](./src/parsed_cache.rs).
 - [CSS Modules](./src/modules.rs) and [module checks](./src/module_checks.rs).
 - [CSS references](./src/syntax.rs), [paths](./src/paths.rs), and [errors](./src/error.rs).
+- [Token arena](./src/token_tree.rs) and [statement sections](./src/token_sections.rs).
 - [Injected interfaces](./src/types.rs) and [resolver](./src/resolver.rs).
 
 ### Related Docs

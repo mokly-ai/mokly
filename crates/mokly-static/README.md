@@ -49,7 +49,12 @@ The snapshot keeps bytes only for actual parsing and delivery.
 Capture walks each configured root with its own discovery file patterns. It
 records matching regular files and folder records, then hashes those files and
 the configured inputs through `CapturedTree`. Inventoried sidecar modules retain the digests of the exact bundled bytes.
-Capture rejects a different digest before document callbacks. A missing module
+Capture rejects a different digest before document callbacks. PostCSS witnesses
+retain every observed whole-file version through cache reuse and worker replacement.
+The [evidence verifier](./src/fingerprint_evidence.rs) checks them before callbacks
+and at final verification. Pinned historical sources use their Git digests
+without reading head aliases. Late baselines remain explicit for opaque reads.
+Observation never makes PostCSS coverage complete. A missing module
 digest is an internal failure. Other inventoried
 sources and reached resources use that same digest path. Unreadable markers
 leave required-input diagnostics to catalogue discovery and validation. The final check compares root

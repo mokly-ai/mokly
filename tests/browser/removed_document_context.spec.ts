@@ -2,10 +2,10 @@
  * A removed document's baseline context on the copied comparison output,
  * under the removed previews and folder contracts, in a narrow and a wide
  * window. The removed Markdown document keeps its title and its base-side
- * folder label, shows its previous version without comparison controls, and
- * is a row only in Changes, outside any folder. A current document opens at
- * its fragment, keeps it after a reload, and its catalogue link navigates
- * the shell.
+ * folder label in the crumbs and in Details, shows its previous version
+ * without comparison controls, and is a row only in Changes, outside any
+ * folder. A current document opens at its fragment, keeps it after a reload,
+ * and its catalogue link navigates the shell.
  */
 
 import { expect } from "@playwright/test";
@@ -44,6 +44,12 @@ for (const width of [390, 1280])
       ).toContainText("Historical document");
       await expect(page.locator("[data-mokly-preview-retry]")).toHaveCount(0);
       await expect(page.locator(CONTROLS)).toHaveCount(0);
+      // Details name the base-side folder too.
+      await page.locator("[data-mokly-details] summary").click();
+      const location = page.locator(".mbk-meta-row", {
+        has: page.locator(".mbk-meta-k", { hasText: "Location" }),
+      });
+      await expect(location).toHaveText("LocationNotes");
 
       if (width < 700)
         await page

@@ -6,6 +6,7 @@ use crate::closure::GeneratedResources;
 use crate::error::{Result, invalid};
 use crate::public_denial::PublicDenial;
 use crate::session::Session;
+use crate::types::RenderGeneration;
 
 impl Session {
     pub(crate) fn digest_resource(&self, route: &str) -> Result<Option<String>> {
@@ -45,6 +46,9 @@ impl Session {
 
     pub(crate) fn read_resource(&self, route: &str) -> Result<Option<Vec<u8>>> {
         if let Some(generated) = route.strip_prefix("static/mokly-generated/") {
+            if self.state.plans.contains_key(generated) {
+                return Ok(Some(self.render(generated)?.bytes.clone()));
+            }
             return self.resource(generated);
         }
         let Some(path) = route.strip_prefix("static/") else {

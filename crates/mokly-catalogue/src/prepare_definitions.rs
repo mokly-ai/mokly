@@ -1,6 +1,6 @@
 //! Attach described JavaScript definitions to the shared preparation pass.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 use mokly_source_interface::tree::FileKind;
@@ -16,6 +16,7 @@ use crate::preparation::{Builder, PreparedCatalogue};
 use crate::prepare_entry;
 use crate::provided_entries;
 use crate::yaml::Document;
+use crate::yaml_positions::Positions;
 
 impl Builder {
     pub(crate) fn append_definitions(
@@ -113,7 +114,7 @@ impl Builder {
                     input: definition.input,
                     document: Document {
                         value: serde_json::Value::Null,
-                        positions: BTreeMap::new(),
+                        positions: Positions::default(),
                     },
                     body: String::new(),
                     body_offset: 0,

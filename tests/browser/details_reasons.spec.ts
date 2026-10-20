@@ -83,9 +83,9 @@ test("Current, a loaded comparison and Changes show the same facts once", async 
   const expected = {
     sentences: [
       BASE,
-      "Changed component: Card",
       MATERIAL,
       "Changes to these files may affect this screen:",
+      "Changed component: Card",
     ],
     files: [
       [CHANGED_CSS, [UNRESOLVED_LEAD, ":root"]],

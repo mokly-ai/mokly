@@ -9,6 +9,7 @@ import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.j
 
 import { test as browserTest } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
+import { readDisclosureStorage } from "./disclosure_storage.js";
 import { closeServe, replaceFile, settleLive } from "./live_shell_fixture.js";
 
 export const watchedScreen = (title: string, body = `<h1>${title}</h1>`) =>
@@ -95,12 +96,21 @@ export const folder = (page: Page, name: string) =>
     `[data-nav-section="specs"] [data-nav-folder="folder:fixture/${name}"]`,
   );
 
-/** Observe the controlled disclosure after the same click a reader makes. */
+/** Wait for the click's DOM state and its saved choice when storage is enabled. */
 export async function toggleFolder(group: Locator) {
   const open = (await group.getAttribute("open")) !== null;
+  const unfiltered = (await group.getAttribute("data-filter-open")) === null;
+  const key = await group.getAttribute("data-nav-disclosure");
+  if (!key) throw new Error("The watched folder has no disclosure key");
+  const saved = (value: boolean) =>
+    expect
+      .poll(() => readDisclosureStorage(group.page()))
+      .toMatchObject({ [key]: value });
+  if (unfiltered) await saved(open);
   await group.locator(":scope > summary").click();
   if (open) await expect(group).not.toHaveAttribute("open", "");
   else await expect(group).toHaveAttribute("open", "");
+  if (unfiltered) await saved(!open);
 }
 
 export function screenKeys(index: CatalogueReadModel, name: string) {

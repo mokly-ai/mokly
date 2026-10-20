@@ -6,9 +6,13 @@ use std::sync::Arc;
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::error::{GraphError, Result};
-use mokly_graph::workers::{ArtifactWorker, DocumentWorker, RenderWorkers, ValidatedView};
+use mokly_graph::types::ComparisonDocument;
+use mokly_graph::workers::{
+    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, ValidatedView,
+};
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
+use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
@@ -34,6 +38,23 @@ impl CancellableTree {
 }
 
 impl SourceTree for CancellableTree {
+    fn observe_input(
+        &self,
+        path: &Path,
+        baseline: &ReadBaseline,
+    ) -> mokly_source_interface::error::Result<()> {
+        self.check(path)?;
+        self.inner.observe_input(path, baseline)
+    }
+    fn observe_pinned_input(
+        &self,
+        path: &Path,
+        baseline: &ReadBaseline,
+        digest: &str,
+    ) -> mokly_source_interface::error::Result<()> {
+        self.check(path)?;
+        self.inner.observe_pinned_input(path, baseline, digest)
+    }
     fn prefetch(&self, paths: &[PathBuf]) -> mokly_source_interface::error::Result<()> {
         for path in paths {
             self.check(path)?;
@@ -102,6 +123,22 @@ fn check(cancellation: &dyn Cancellation) -> Result<()> {
 }
 
 impl RenderWorkers for CancellableWorkers {
+    fn comparison_parallelism(&self) -> usize {
+        self.inner.comparison_parallelism()
+    }
+    fn comparison(
+        &self,
+        routes: &[String],
+        worker: &dyn ComparisonWorker,
+    ) -> Vec<Result<ComparisonDocument>> {
+        self.inner.comparison(
+            routes,
+            &ComparisonJobs {
+                cancellation: self.cancellation.as_ref(),
+                inner: worker,
+            },
+        )
+    }
     fn cancelled(&self) -> bool {
         self.cancellation.requested()
     }
@@ -128,9 +165,25 @@ struct Jobs<'a> {
     cancellation: &'a dyn Cancellation,
     inner: &'a dyn DocumentWorker,
 }
+
+struct ComparisonJobs<'a> {
+    cancellation: &'a dyn Cancellation,
+    inner: &'a dyn ComparisonWorker,
+}
+
+impl ComparisonWorker for ComparisonJobs<'_> {
+    fn input(&self, route: &str) -> Result<ComparisonDocument> {
+        check(self.cancellation)?;
+        self.inner.input(route)
+    }
+}
 impl DocumentWorker for Jobs<'_> {
     fn validate(&self, route: &str) -> Result<ValidatedView> {
         check(self.cancellation)?;
         self.inner.validate(route)
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/comparison_cancellation_tests.rs"]
+mod comparison_cancellation_tests;

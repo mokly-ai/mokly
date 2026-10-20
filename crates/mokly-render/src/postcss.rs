@@ -21,7 +21,7 @@ use crate::error::{RenderError, Result};
 use crate::leases::ContextLease;
 use crate::postcss_cache::{CssCache, CssRecord};
 use crate::side::SideInputs;
-use crate::{postcss_inventory, postcss_nested};
+use crate::{postcss_inventory, postcss_nested, postcss_read_inventory};
 
 pub(crate) struct PostCss {
     pub(crate) usage: Arc<dyn DependencyUsage>,
@@ -96,7 +96,15 @@ impl PostCss {
         );
         cache.trim();
         let inventory = inventory?;
+        let read_evidence = postcss_read_inventory::collect(
+            self.tree.as_ref(),
+            &self.root,
+            &self.side,
+            &inventory,
+            &record.result.read_evidence,
+        );
         let processed = ProcessedCss {
+            read_evidence,
             text: record.result.text.clone(),
             inputs: inventory.inputs,
             plugin_inputs: inventory.plugin_inputs,

@@ -140,13 +140,21 @@ Changes; Serve's watcher ignores the same paths.
    an internal failure; a later source read cannot replace it. Compare captured digests with
    those baselines before document callbacks run. Keep the baseline for the
    final live recheck. Other reached inputs keep their first captured digest.
-   PostCSS plugin file dependencies outside the roots and bundle can receive
-   their first digest after the plugin reads them. This accepted late baseline
-   does not detect an edit between that read and capture. The live recheck
-   still applies after capture. Transitive PostCSS module inputs can also have
-   a late baseline. The PostCSS end state requires digests tied to the exact
-   bytes consumed by module evaluation and plugin file reads. A reported path
-   or a reread after the plugin finishes does not establish those bytes.
+   For inventoried PostCSS inputs, retain SHA-256 witnesses from the exact raw
+   buffers delivered by observed whole-file reads and module loading. Compare
+   every witnessed version before document callbacks and at final checks.
+   A conflicting version uses the existing `export-invalid` input-change outcome
+   and preserves owned output. Cache hits and worker replacement retain the
+   original witnesses. A later scan cannot replace them.
+   PostCSS evidence always carries incomplete coverage. Native addons, helper
+   processes, uninstrumented workers, descriptor and partial reads, and private
+   loader metadata can escape observation. Known unobserved inputs retain their
+   late baseline and the live recheck. That baseline does not detect an edit
+   between an opaque read and capture. One observed read never makes a path or
+   context complete. The [PostCSS evidence contract](./mokly-sidecar-postcss.md#read-evidence)
+   defines this stage's coverage. Staged observation preserves compatible plugins;
+   enforced immutable inputs are not required. The full consumed-byte guarantee
+   remains open.
    An unreadable input or directory has a fixed unreadable marker. Catalogue
    discovery and validation report required-input failures first. An unreadable
    excluded input does not fail the fingerprint check unless its marker changes.

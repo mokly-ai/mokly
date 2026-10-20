@@ -354,6 +354,18 @@ more than re-deriving the behaviour from the requirements.
     This aligns the round 15 specification with the producer and the viewer's
     direct-use flag. Decision: M9 review 10 finding 3A, approved in changes-12.
 
+**Decision 55 B (user, 2026-10-19):** Approve full isolated fixture setup below
+60,000 ms and setup-family RSS below 1.5 GiB, including the setup harness.
+Enforce these budgets after the isolated-install repair rather than retaining
+observation-only results. Full setup includes generation, packing, dependency
+installation, and Git setup. The product build is a separate prerequisite.
+
+**Decision 57 C (user, 2026-10-19):** Keep the current complete-catalogue
+startup design. Approve usable startup below 15,000 ms for the large React
+fixture, cold and warm, on the optimized release binary. HTML retains its
+5,000 ms budget. Defer compilation cache redesign, option A, and partial
+readiness rather than blocking this acceptance round on further startup work.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -633,6 +645,8 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       cover generated sidecar types and Native commands, align the Testbox
       docs, keep Required CI as an aggregator, and enforce Git's 64 MiB cap.
 - [x] Commit.
+
+Merge evidence: `.context/ci-gates-round2/merge-decisions.md`.
 
 Round 3 decision: Required CI only aggregates results and reports. Every job
 that runs checks, and the Testbox, builds the host native artifact.
@@ -978,6 +992,7 @@ renders again.
         (`toHaveLength(1)`) in the 409 spec of `shell_live_edits.spec.ts` and the
         exact revision in the first half of its adoption spec. Review 8 finding
         1, for the Serve owner. Implementation: `3961636d`.
+        The red run on the old code failed five of the six new Rust tests.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/round-12/browser-observations.json`.
 - [x] M8 browser follow-up: make unexpected console errors and `pageerror`
       failures automatic for every browser page, with explicit per-test
@@ -1274,6 +1289,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       is documented; a new rejection requires the user's decision.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+  - [x] Keep a selected variant nested under its component parent in review v8.
+        Retain only that variant and capture only its documents. This preserves
+        parent-owned dependency evidence instead of returning an invalid result.
+        Decision: F5 option A, approved by the orchestrator on 2026-10-20.
+        Evidence: `.context/f5/report.md`.
   - [x] Use the shared comparison projection for index, details, removed
         entries, workspaces, and generation routes in Serve.
         Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/merge-decisions.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-merge-decisions.md`.
@@ -1408,13 +1428,16 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         capture creation and preserve advertised historical generation URLs.
         Compile the on-demand matrix without executing it.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-14.md`.
-- [ ] Close the large-fixture Changes reference gap: the old captures have
+- [x] Keep a view that exists on one side out of implementation impact when
+      its entry has both sides; adding Dark to a light-only catalogue made
+      every build and Serve classification invalid.
+- [x] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
       prove large-scale Changes with the Rust implementation.
   - [x] Prove bounded full-comparison work at 128 and 512 component parents
         with variants, and shared before/after CSS parse reuse.
-  - [ ] Complete reviews, resource inventories, and closures for the two
+  - [x] Complete reviews, resource inventories, and closures for the two
         distinct large states: the unrelated-rule edit and the watch edits.
         Use one sidecar, a detached run, an external 60-minute guard, and the
         same 1.85 GB process-family PSS bound. The earlier external ten-minute
@@ -1426,6 +1449,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         field in both completed results before accepting the artifacts.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
+        Completed evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -1449,7 +1473,7 @@ Tags: ui
 - [ ] Run the viewer suite against Milestone 9 output.
   - [x] Run the comparison UI in Chrome against `mokly build --base` output
         and a removed-entry fixture, and fix the viewer defects that it finds.
-  - [ ] Settle how Details shows the review reasons, including
+  - [x] Settle how Details shows the review reasons, including
         `implementation`, before a comparison loads (report 18, decision D1).
     - [x] D1 spec correction, backend: carry `reasons` in the review v8 shape at the
           detail root for ready included current and removed entries, independent
@@ -1466,24 +1490,57 @@ Tags: ui
           including `implementation`, in `mokly-component-workspace-design.md`.
           Whether a reader also rejects a detail whose reasons disagree with
           its index record waits for the round's decision.
-    - [ ] Depict the reason sentences in the component explorer design, whose
-          Details still read "Rendered output changed" and depict no
-          `implementation` reason, after the round's design decision.
+    - [x] Keep Details graceful: the viewer rejects no detail whose reasons
+          disagree with its index record, so details written before reasons
+          keep loading, and drops a reason that contradicts its record
+          instead. Test every reason sentence and a removed snapshot.
+          Decisions 6 A, 1 B, and 2 A of the D1 round, approved by the
+          orchestrator on 2026-10-19.
+    - [x] Depict one sentence per reason with the protocol copy in the
+          component explorer and removed-screen designs. The `style-changed`
+          fixture of Action's parent carries the `implementation` reason,
+          because every other changed comparison fixture routes a variant.
+          Decision 4 A, approved by the orchestrator on 2026-10-19.
+    - Pages, documents, and use cases show no reason sentences until a
+      design exists. Decision 7 A, approved by the orchestrator on
+      2026-10-19.
+    - [x] Keep the viewer and the designs consistent: every Browse design of
+          a changed, added, or removed screen reads its reason sentences;
+          Details show the reasons first, in the designs' order; a `screen`
+          reason has no sentence; every pane frame attribute is checked in
+          each host; and the panes page states where its proofs run, with
+          Serve proving presentation and renewal only. Round 3 items of the
+          D1 delegate, given by the orchestrator on 2026-10-20.
+    - Batch 8 integration keeps the shared Serve alignment, input, and
+      Scroll together cases. The pane attribute checks also run on Serve.
+      The live coverage docs include these retained proofs.
+    - The browser test guide stays one page past 300 lines. Decision 2 A of
+      the D1 round 2 report, approved by the orchestrator on 2026-10-20.
 - [ ] Complete the M8 browser sweep's comparison UI cases against review v8
       and snapshot v4, including filter disclosure, Changed membership,
       comparison scroll regions, retained focus, and stylesheet Details.
   - [ ] Port the cases that the shared copied comparison output supports,
         with the fixture entries that they need.
-  - [ ] Port the cases that need Serve comparisons, after the M9 TODO for
+  - [x] Port the cases that need Serve comparisons, after the M9 TODO for
         background classification and on-demand comparisons in Serve.
-  - [ ] Port the moved-entry cases with the shared moved fixtures in the
+  - [x] Port the moved-entry cases with the shared moved fixtures in the
         branch-point copy and `serve_comparison_test.ts`.
   - [x] Port the two D1 cases, Details before a comparison loads and the
         `implementation` reason, after the backend and viewer D1 tasks.
+  - The M10 D1 delegate owns the branch-point comparison UI and the
+    light-only document rows. Decision 8 A, approved by the orchestrator on
+    2026-10-19.
   - [x] Port the cases that need an embedded viewer host through both frame
         adapters; `sweep-overrides-comparisons.json` and
         `sweep-overrides-comparisons-3.json` in
         `.context/rust-rebuild/delegation/m7/` name each row.
+  - [x] Register the moved-entry viewer cases on the embedded viewer host
+        through both frame adapters, over the branch copy. The case that
+        follows the page address runs only on Serve and the branch copy.
+  - [x] When `rebuild/m10-d1-and-copies` merges, make its copied-output
+        `light_only_document_band.spec.ts` and `imported_css_comparison.spec.ts`
+        call `light_only_band.ts` and `imported_css_panes.ts`, which the Serve
+        instances use, so each check lives once.
 - [x] Make the viewer follow the settled design copy and states of the design
       catalogue (version failure, controls copy and states, loading states).
       Source: the design entries `design/browse/loading/**` and
@@ -1532,6 +1589,13 @@ small comparison copies, the round 25 follow-ups with the component light-only
 note fix, the sweep inputs, and the merge decisions for the rebuild tip
 `ef7458f2` and the delivery fixtures `f4829d8d`:
 `.context/rust-rebuild/delegation/m10-d1/report-1.md`.
+The D1 round 2 decisions (1 B, 2 A, 3 B, 4 A, 5 A), the reason sentences in
+the designs, the comparison suites list in the browser test guide, and the
+merge of the rebuild tip `3d2d1535`:
+`.context/rust-rebuild/delegation/m10-d1/report-2.md`.
+The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
+2 at `659eb918` onto the rebuild tip `d857b6cf`:
+`.context/rust-rebuild/delegation/m10-d1/report-3.md`.
 
 - [ ] Commit.
 
@@ -1804,6 +1868,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [ ] Remove the duplicate base render between validation and capture: one
+      bounded, ordered collector that keeps aggregate errors, warnings,
+      retention order, cancellation, fallback, and all charges (capture
+      decision 2, option B, deferred by the user's performance-later rule).
+      Measured on 2026-10-20: React capture 95 s, of which validation 27 s;
+      5,790 JavaScript renders in each pass.
+
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -1850,15 +1921,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Design how to capture the bytes that module evaluation and plugins read,
       or supply immutable generation inputs. Paths and rereads after a plugin
       runs cannot establish the consumed bytes. Plugin file dependencies outside
-      roots and bundle modules retain an accepted late baseline until this work.
+      roots and bundle modules without witnesses retain an accepted late baseline.
   - [x] Compare read observers with immutable PostCSS inputs, including native
         plugins, child processes, descriptors, cost, and supported platforms.
-  - [ ] Decide M14-PC1: staged observed-read digests with explicit opaque gaps,
-        enforced immutable inputs, or continued deferral. No runtime change is
-        selected; the full consumed-byte requirement remains open.
+  - [x] Decision 56 A, approved 2026-10-19: add observed-read evidence in
+        stages and keep explicit incomplete coverage and late opaque baselines.
+        Preserve native plugin compatibility. Do not infer complete coverage
+        from one observed read. Alternatives were B, enforced immutable inputs,
+        and C, continued deferral. A improves common reads without new isolation
+        or platform requirements.
+  - [x] Record raw local compiler inputs, observable native module sources,
+        and path-based sync, callback, and promise whole-file reads. Retain
+        distinct witnesses through context reuse, result caches, stylesheet
+        caches, and worker replacement. Check them before document callbacks
+        and final installation through the existing input-change outcome.
+        Compare base source witnesses with pinned Git bytes, separate from head
+        baselines. Custom loader text without raw provenance stays incomplete.
+  - [ ] Complete the remaining coverage: native/helper/worker reads, preloaded
+        file providers, descriptors, streams and ranges, older-runtime transitive ESM loading, private
+        resolution metadata, and read-time path identity. The full M14 item
+        remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
-        Evidence: `.context/rust-rebuild/m14-postcss-digests/` and
-        `.context/rust-rebuild/delegation/m9-compare/report-16.md`.
+        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the
@@ -1873,10 +1957,19 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         peaks: 1,368,268/1,591,676 KiB; whole harness: 2,744,332/3,435,732 KiB.
         Same eight-CPU, 16.25 GiB machine and development build as the M9 repeat.
         Evidence: `.context/m14-measurements/large-react/.context/measurements.json`.
-  - [ ] Resolve the React large-fixture startup budget failure. `graph.prepare`
+  - [x] Resolve the React large-fixture startup budget failure. `graph.prepare`
         took 167.990/167.741 s in the cold/warm development-build observations.
         Profile preparation and repeat with the intended acceptance build profile.
-        Keep the approved usable startup budget below 5000 ms.
+        Apply decision 57 C: React usable startup stays below 15,000 ms on the
+        optimized release build; HTML stays below 5,000 ms.
+    - [x] Enforce variant-specific startup acceptance on a verified release
+          binary and repeat the large React startup measurement.
+          At `caf7b383`, the default React fixture passed at 8.564/8.533 s
+          cold/warm with two sidecars, default deadlines, and a 6 GiB RSS stop.
+          The focused startup selection checked real previews, search, axes,
+          props, cached bytes, and a page. The machine had eight CPUs and
+          16.25 GiB RAM. Evidence: `.context/m14-round3/measurements-summary.json`.
+          Merge preservation: `.context/m14-round3/merge-decisions.md`.
     - [x] Measure optimized startup and profile core, sidecar, and serial work.
           The release baseline at `9257b131` used the same fixture, two sidecars,
           default deadlines, and 6 GiB RSS stop. Cold/warm usable startup:
@@ -1890,10 +1983,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
           discovery took 2 ms. Compilation still took 7.491/7.019 s.
           Both browser checks passed; both startup budget checks failed.
           Evidence: `.context/m14-round2/final/`.
-    - [ ] Choose the remaining startup approach before changing readiness or
-          compilation boundaries. Keep the 5 s budget. Compare reusable
-          compilation units with staged navigation and selected-preview readiness.
-          A persistent cache alone cannot meet the first cold cache miss.
+    - [x] Settle the remaining startup approach with decision 57 C on
+          2026-10-19. Keep complete readiness and approve React startup below
+          15,000 ms on the release build. Defer compilation redesign to the
+          non-blocking follow-up.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
@@ -1912,6 +2005,32 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep the 256 MiB bound and every per-entry charge.
         Evidence: `.context/m14-measurements/capture-html/summary.json` and
         `.context/m14-measurements/capture-react/summary.json`.
+  - [x] Profile optimized capture throughput and remove repeated work without
+        changing the capture bound, entry charges, or preparation contracts.
+    - [x] Reuse anchor-check destination renders through the bounded cache.
+          Evidence: `.context/m14-capture/anchor-release-html/analysis.json`
+          and `.context/m14-capture/anchor-release-react/analysis.json`.
+    - [x] Measure sidecar waits and capture encoding, then use bounded capture
+          batches on the existing render workers without changing retention order.
+          Integration evidence: `.context/m14-capture/merge-resolution.md`.
+          Evidence: `.context/m14-capture/observations.json` and
+          `.context/m14-capture/parallel-release-react/analysis.json`.
+    - [x] Coalesce concurrent anchor-target renders and preserve cache bounds.
+          Evidence: `.context/m14-capture/coalesced-release-html/analysis.json`
+          and `.context/m14-capture/coalesced-release-react/analysis.json`.
+  - [x] Retire completed anchor and fragment requests through scoped leases.
+        Close capture-throughput review finding 1 with option B.
+        Evidence: `.context/m14-capture/review-clarification.md` and
+        `.context/m14-capture/review-f1-tests.log`.
+  - [x] Preserve capture timings through the shared stage-selection split.
+        Integration evidence: `.context/m14-capture/merge2-resolution.md`.
+  - [x] Skip already loaded sidecar replay inputs and share binding revisions.
+        Keep replay order, deadlines, updates, and recycling unchanged.
+        Evidence: `.context/m14-capture/replay-green.log` and
+        `.context/m14-capture/replay-release-react/analysis.json`.
+  - [ ] Decide whether to combine validation and capture through bounded ordered
+        collection. Severity Medium, effort Large. Recommended: B, share the
+        validated inputs. Decision: `.context/m14-capture/design-decision.md`.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -1921,7 +2040,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
   - [x] Measure isolated dependency installs and propose additional budgets;
-        retain the approved usable startup budget of under 5000 ms.
+        retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
         cold/warm npm caches, including package packing. `npm ci` took
         7.328/5.446 s. Full fixture setup, including catalogue generation and
@@ -1939,16 +2058,34 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Evidence: `.context/m14-measurements/install-cold-evidence/summary.json`.
     - [x] Repair single-host isolated setup and record three unmodified installs.
           Evidence: `.context/m14-installs/measurements.json` and `report.md` there.
-  - [ ] Decide proposed isolated-setup budgets after that repair: under 60,000 ms
-        cold and warm, and under 1.5 GiB process-family RSS including the setup
-        harness. Proposal dated 2026-10-19, not approved or enforced. Alternative:
-        retain observation-only results. Recommend the budgets after three
-        unmodified repetitions; these samples leave time and memory headroom.
-        Keep the approved usable startup budget below 5000 ms and leave the
-        separate base dependency preparation allowance unchanged.
+  - [x] Approve isolated-setup budgets after the repair, decision 55 B on
+        2026-10-19: under 60,000 ms and under 1.5 GiB setup-family RSS,
+        including the setup harness.
+    - [x] Enforce both isolated-setup budgets with synthetic boundary tests
+          and repeat one complete isolated install.
+          At `caf7b383`, full React fixture setup took 23.567 s with an empty
+          dedicated npm cache. Setup-family RSS peaked at 821,160 KiB across
+          472 samples at 50 ms intervals. Both budgets passed. Product release
+          preparation preceded measurement; installed binary verification passed.
+          Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+  - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
+        source Changes, and watched screen, component, and stylesheet edits.
+        Keep the source repository unchanged.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-18.md`.
+  - [x] Profile the memory guard stops in repeated Mokly Cloud comparisons.
+        Separate retained generation data from allocator residency before
+        changing cache limits or rendering behaviour.
+        Release the startup generation after its publication handoff. Verify
+        disposal while Serve stays open across two source replacements.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
+        Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m14-cloud-memory/merge-decisions.md`.
+  - [ ] Decide compiled-recipe retention between comparisons: R19-1, severity
+        Medium, effort Large. Recommended C: a byte-bounded cache with compiler
+        and resolution input revalidation. Agree its budget before implementation.
+  - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -1960,6 +2097,19 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Resolve authored-input recursion in YAML front matter (`mokly-catalogue`),
       CSS scanners (`mokly-css`), and `lightningcss`. The HTML tree guarantee
       excludes these paths. New input bounds or wider rewrites need a decision.
+  - [x] Make the YAML builder and Mokly's CSS scanners iterative, and keep YAML
+        source positions linear in the node count. Child-process depth searches
+        on 2 MiB stacks cover each parser and pipeline.
+        Evidence: `.context/m14-nesting/report.md`.
+  - [x] Keep CSS Modules name ranges after an attribute selector, so
+        `.a[x]:global(.b)` no longer fails the token check.
+  - [x] Limit the CSS Modules empty-wrapper and ICSS checks to selectors and
+        `@scope` preludes; other at-rule preludes stay as authored, as
+        css-loader does. Decision: nesting report item 13 option A, approved
+        by the orchestrator on 2026-10-20.
+  - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
+        serde-derived prop and schema traversal, and schema inference
+        (pending user decision).
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
@@ -2026,6 +2176,12 @@ Integration batch 2 decisions: `.context/integration-2-merge-decisions.md`.
 Integration batch 3 decisions: `.context/integration-3-merge-decisions.md`.
 Integration batch 4 decisions: `.context/integration-4-merge-decisions.md`.
 Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
+Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
+Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
+Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
+Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
+Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
+F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
 
@@ -2070,12 +2226,23 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
   - [x] Split core timing stage selection after integration batch 5 combines
         stop timing and startup stages. Retain every stage and the file cap.
         Evidence: `.context/integration-5/length-before.log` and `targeted.log`.
-  - `crates/mokly-compare/src/affected.rs`: grouping for Before evidence when
-    another entry kind reuses the donor path needs a requirement decision.
-    Separate branch.
-  - [ ] Decide whether extglob-shaped stylesheet matches need a warning
-        (M9 review 10 finding 5B, user item 54). Keep the migration release note;
-        add no diagnostic before approval.
+  - [x] F3 item 1: the orchestrator approved F2 decision B on 2026-10-19.
+        Use the resolved variant as the canonical affected consumer when its
+        original parent has no destination. Keep the original evidence paths.
+        Reject omission of valid variant evidence. Never link to a replacement
+        document or restore the suppressed parent. The lookup protocol defines
+        the fallback. Evidence: `.context/f3/item-1-red.log` and `item-1-green.log`.
+  - [x] F3 item 2: release the authorization snapshot before reading a render
+        request body. Take the validation snapshot after the body arrives.
+        Keep the revision fence. Held-body tests prove snapshot and base-capture
+        release through weak references without sleeps.
+        Evidence: `.context/f3/item-2-red-corrected.log` and `item-2-green.log`.
+  - [x] Decision 54A, approved on 2026-10-19: warn on extglob-shaped stylesheet
+        matchers and suggest brace alternatives. Keep globset matching and the
+        existing strict-warning policy. Reject silent omission of the diagnostic.
+        F4 defines `stylesheet-extglob`, tests all five openings and exact
+        terminal output, and verifies strict failure before output replacement.
+        Evidence: `.context/f4/`.
   - M9 reference replay verification: investigate the unchanged
     `html_preparation_failure_flushes_once_and_repair_prints_only_new_warnings`
     test's `warning.0 < failure` assertion failure. Its isolated rerun passed.
@@ -2211,6 +2378,96 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
         Fixed by `7b4dd657`. Controlled cross-thread drops reproduce the error;
         original mocks stay on their owner thread through subscriber and pool
         completion. Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
+  - [x] M10 Serve and moved rows decision 6, Severity High, effort Small:
+        apply F5 option A, approved on 2026-10-20. Selected variant comparisons
+        keep the parent with only the selected variant, preserving parent-owned
+        evidence instead of returning 503. The Card Featured browser case
+        verifies both panes. Evidence: `.context/f5/report.md`.
+  - [x] Switch the three Serve specs that used the Badge family back to the
+        Card family now that decision 6 has landed. Done by `1baf1aa8` on
+        2026-10-20.
+  - [x] Batch 8 restores the Card family in the selected comparison,
+        expiry, and renewal-pane journeys after the F5 integration.
+  - [x] M10 Serve and moved rows review 1, findings 1 to 4, fixed on
+        2026-10-20 as the orchestrator asked:
+    1. Expiry emulation could not fail its snapshot checks. Fixed by
+       `7ec5673a` (C): one shared helper emulates a complete collection.
+    2. Renewal fence checks passed before the late response. Fixed by
+       `bbc763a8` (B): the held renewal release waits until the browser ends
+       each held request, and reports whether the page cancelled it.
+    3. The regression test proved one shape of the fix. Fixed by `ebe7dccc`
+       (A): CLI tests for a lost Dark view, a variant that gains Dark, and a
+       removed component with a surviving consumer.
+    4. The copy dropped the moved variant comparison. Fixed by `a230499c`
+       (A): the branch copy registers it too.
+  - [x] M10 Serve and moved rows review 3, finding 7: the kept ports lacked two
+        steps of the dropped copies. Fixed by `0a9a8be8` (B) on 2026-10-20.
+  - [x] M10 Serve and moved rows decision 10, Severity Low, effort Small:
+        apply F5 item 2. Each sweep override lists the old checks that its port
+        does not prove, and a dropped duplicate moves its extra checks into
+        the kept port. The sweep procedure now states this rule. Covers
+        review 3 findings 1 and 2 and review 4 finding 2; previous examples
+        0858e172, 4d6a21a4, and abf52983. Evidence: `.context/f5/report.md`.
+  - M10 Serve and moved rows decision 10 was decided A by the orchestrator on
+    2026-10-20. The line above records how followups-f5 applied it.
+  - [x] M10 Serve and moved rows review 4, findings 12 and 13, fixed on
+        2026-10-20: the restored removed-variant journey keeps its parent
+        unchanged (`bd05ab75`, B), and the poll comment names no duration
+        (`437154a8`, A).
+  - [x] M10 Serve and moved rows reviews 5 and 6: comments and README text
+        that described a failed advertised renewal as Serve's collection, and
+        a README clause that gave the 404 rule a wrong scope. Fixed by
+        `814fc1b1` and `0571ba15`.
+  - [x] M10 Serve and moved rows review 5, finding 15: the emulated collection
+        of a selected generation started only at its renewal. Fixed by
+        `3f93a581` (B) on 2026-10-20: the generation is gone once the pane
+        documents have loaded. The rewrite also stops a refresh that already
+        asks for one from leaving a later plain request to be forced.
+  - [x] M10 Serve and moved rows review 6, finding 18: the helper names said
+        "collection". Renamed by `a58da357` on 2026-10-20, as the orchestrator
+        asked: `serve_generation_removal.ts`, `removeGeneration`, and
+        `RemovedGeneration`.
+  - [x] M10 Serve and moved rows review 7, on 2026-10-20: the Card parent
+        panes prove each side again by their `.accent` colour (`06158d40`),
+        and the plan dates decision 10 again after merge `8fa9f338` kept only
+        the f5 line.
+  - M10 Serve and moved rows decision 21 for the user: one shared Card pane
+    check that proves each pane's side. Severity Low, effort Small. Covers
+    review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
+    d371e17c. Recommended: B, one helper in
+    `tests/browser/serve_comparison_ui.ts` for every Card pane check.
+  - Outside the scope of the M10 Serve and moved rows review:
+    - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
+      Verification paragraph asks for an advanced server clock, and Serve
+      has no test hook for it. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:115`: one shared set of
+      base commits must feed Rust and browser tests, but Rust reads
+      `tests/fixtures/branch_point_cases.json` and the browser writes its
+      own sources. Separate branch.
+    - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
+      must run through Serve, `build`, and the embedded viewer, but they run
+      only on the branch copy. Separate branch.
+    - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
+      `branch/parent`, so no journey ports the old step that opened the
+      removed sibling through a container row. Separate branch.
+    - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
+      keys the shared case names, but no key equals a name in
+      `tests/fixtures/branch_point_cases.json`. Separate branch.
+  - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
+    "Back and Forward restore each route's stage scroll", expected 120 but
+    received 0, then passed all five isolated repeats. Suspected source:
+    scripted scroll races history persistence. Separate branch.
+    Evidence: `.context/integration-6/scroll-flake.md`.
+    - [x] Resolve in F6 by waiting for each scripted position in history state
+          before navigation. Retain every offset and route assertion.
+          Evidence: `.context/f6/report.md`.
+  - [x] Resolve F7's watched-update disclosure flake. Wait for unfiltered folder
+        clicks to save their choice before the next action. Keep all assertions
+        and the filter's pre-search baseline. Evidence: `.context/f7/report.md`.
+  - [x] Fix F7 review 1: record folder and section choices during activation,
+        so a delayed native toggle cannot put the close after search. Keep
+        native fallback behavior and a controlled mouse/keyboard regression.
+        Evidence: `.context/f7/post-push-review.md` and `.context/f7/report.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
@@ -2360,6 +2617,10 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Bring large React usable startup under 5,000 ms
+      (compilation cache redesign, decision 57 option A); measured 10.5 s
+      on the release build on 2026-10-19.
 
 - [ ] Replace the Intel macOS release runner before GitHub retires its Intel
       images, preserving native build and execution coverage.

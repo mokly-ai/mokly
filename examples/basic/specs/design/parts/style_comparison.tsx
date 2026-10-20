@@ -9,7 +9,8 @@ import type { ArtboardViewport } from "./shell.js";
 
 /**
  * A Welcome that a stylesheet edit keeps in Changes, opened in its loaded
- * side-by-side comparison, with the stylesheet evidence in Details.
+ * side-by-side comparison. Its only reason is the changed stylesheet, which
+ * Details read through the stylesheet evidence, with no reason sentence.
  */
 export function StyleComparison({
   design,
@@ -26,6 +27,7 @@ export function StyleComparison({
       evidence={evidence}
       path="example/screens/welcome"
       nav={<StyleReviewNav welcome={design} />}
+      reasons={["dependency"]}
       state="styles-changed"
       subject="welcome"
       title="Welcome"

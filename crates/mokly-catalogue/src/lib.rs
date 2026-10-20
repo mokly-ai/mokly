@@ -6,6 +6,7 @@ mod config_paths;
 mod config_postcss;
 pub mod config_types;
 pub mod config_validation;
+mod config_warnings;
 mod declared_controls;
 #[cfg(test)]
 #[path = "_tests_/declared_controls_tests.rs"]
@@ -46,5 +47,8 @@ mod variants;
 pub mod working_tree;
 mod working_tree_read;
 mod yaml;
+mod yaml_frame;
+mod yaml_positions;
+mod yaml_value;
 
 mod working_tree_stream;

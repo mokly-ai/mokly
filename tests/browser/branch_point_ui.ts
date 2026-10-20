@@ -124,16 +124,6 @@ export async function expectRouted(page: Page, entry: string): Promise<void> {
     .toBe(`/view/${entry}/`);
 }
 
-/** Record every server error a page meets, for a final assertion. */
-export function serverErrors(page: Page): string[] {
-  const failures: string[] = [];
-  page.on("response", (response) => {
-    if (response.status() >= 500)
-      failures.push(`${response.status()} ${response.url()}`);
-  });
-  return failures;
-}
-
 /** Open an entry and wait for its workspace head. */
 export async function openEntry(page: Page, entry: string): Promise<void> {
   await page.goto(`/view/${entry}/`);
