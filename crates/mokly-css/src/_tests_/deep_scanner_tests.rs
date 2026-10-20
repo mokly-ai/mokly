@@ -81,8 +81,7 @@ fn module_checks_find_a_deep_value_rule_after_custom_property_blocks() {
                 ..
             }
         ));
-        let location = format!("deep.css:1:{}", "@media all{".len() * DEPTH + 1);
-        assert!(error.to_string().contains(&location), "{error}");
+        assert!(error.to_string().contains("deep.css:2:1;"), "{error}");
     });
 }
 

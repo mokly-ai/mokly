@@ -25,6 +25,12 @@ impl Section {
     pub(crate) fn first(&self, tokens: &Tokens<'_>) -> Option<usize> {
         tokens.next_significant(&mut self.prelude.clone())
     }
+
+    /// The byte offset of the first significant token, where diagnostics point.
+    pub(crate) fn lead(&self, tokens: &Tokens<'_>) -> usize {
+        self.first(tokens)
+            .map_or(self.start, |index| tokens.nodes[index].start)
+    }
 }
 
 /// Take the next section from `range`; `None` when only trivia remains.

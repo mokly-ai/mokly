@@ -43,7 +43,7 @@ impl Renamer<'_> {
         };
         if at.as_deref() == Some("value") {
             return Err(self.error(
-                section.start,
+                section.lead(tokens),
                 "CSS Modules @value is unsupported",
                 "use a CSS custom property or JavaScript constant",
             ));

@@ -119,3 +119,13 @@ fn custom_property_block_values_never_start_a_composition() {
     assert_eq!(css, expected);
     assert_eq!(exports["a"], scoped_name(path, "a"));
 }
+
+#[test]
+fn value_rules_report_their_own_line_and_column() {
+    let source = ".a{}\n/* note */\n@value x: red;";
+    let error = scope("ui/theme.module.css", source).unwrap_err();
+    assert!(
+        error.to_string().contains("ui/theme.module.css:3:1;"),
+        "{error}"
+    );
+}

@@ -19,7 +19,7 @@ pub(crate) fn check(path: &str, source: &str) -> Result<()> {
             .first(&tokens)
             .map(|index| &tokens.nodes[index].token);
         if matches!(first, Some(Token::AtKeyword(name)) if name.eq_ignore_ascii_case("value")) {
-            let mut input = ParserInput::new(&source[..section.start]);
+            let mut input = ParserInput::new(&source[..section.lead(&tokens)]);
             let mut parser = Parser::new(&mut input);
             while parser.next_including_whitespace_and_comments().is_ok() {}
             let location = parser.current_source_location();
