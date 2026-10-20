@@ -1,6 +1,8 @@
-/** Rendered branch-point facts of the copied branch-point output. */
+/** Rendered branch-point facts that each branch-point host shares. */
 
 import { expect, type Locator, type Page } from "@playwright/test";
+
+import { expectHostPath, type EntryHost } from "./entry_hosts.js";
 
 /** The two widths each case renders at. */
 export const BRANCH_POINT_WIDTHS = [
@@ -114,18 +116,24 @@ export async function search(page: Page, query: string): Promise<void> {
   await page.locator("[data-mokly-search]").fill(query);
 }
 
-/** Wait until the head and the address name one entry. */
-export async function expectRouted(page: Page, entry: string): Promise<void> {
+/** Wait until the head and the host's page path name one entry. */
+export async function expectRouted(
+  page: Page,
+  host: EntryHost,
+  entry: string,
+): Promise<void> {
   await expect(
     page.locator(".mbk-screen-head [data-copy-path]"),
   ).toHaveAttribute("data-copy-path", entry);
-  await expect
-    .poll(() => decodeURIComponent(new URL(page.url()).pathname))
-    .toBe(`/view/${entry}/`);
+  await expectHostPath(page, host, entry);
 }
 
 /** Open an entry and wait for its workspace head. */
-export async function openEntry(page: Page, entry: string): Promise<void> {
-  await page.goto(`/view/${entry}/`);
+export async function openEntry(
+  page: Page,
+  host: EntryHost,
+  entry: string,
+): Promise<void> {
+  await host.open(page, entry);
   await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
 }

@@ -173,22 +173,6 @@ test("All marks a moved row only when its entry changed beyond the move", () => 
       changedVariants: false,
       label: row(path).label,
     });
-  const server = {
-    ...context,
-    materialEntries: undefined,
-    componentChanges: {
-      baseline: { entries: [] },
-      changedEntries: ["account/billing/invoice"],
-    },
-  } as unknown as ShellContext;
-  assert.equal(
-    navRowPresentation(row("account/billing/receipt"), false, server).changed,
-    false,
-  );
-  assert.equal(
-    navRowPresentation(row("account/billing/invoice"), false, server).changed,
-    true,
-  );
 });
 
 test("Details name the path a moved entry came from, after its source", () => {

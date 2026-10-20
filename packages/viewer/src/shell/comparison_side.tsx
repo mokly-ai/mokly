@@ -14,9 +14,10 @@ import type { EntryWording } from "./entry_wording.js";
 
 const labels = { after: "Current", before: "Before" } as const;
 
+/** The design catalogue's copy for a side without a document. */
 const missing = {
-  after: "This screen was removed on this branch.",
-  before: "This screen was added on this branch.",
+  after: "This screen has been removed.",
+  before: "This screen did not exist before.",
 } as const;
 
 /**

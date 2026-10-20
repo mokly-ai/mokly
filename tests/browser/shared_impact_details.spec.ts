@@ -8,13 +8,16 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import {
+  BASE,
+  COMPONENT_FILES_LEAD,
+  FILES_LEAD,
+  SCREEN_TERMINAL,
+  VARIANT_TERMINAL,
+  openEvidence,
+} from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseFilter, navRow } from "./comparison_ui.js";
-
-const BASE = "Compared with the branch point on fixture-base.";
-const FILES_LEAD = "Changes to these files may affect this screen:";
-const COMPONENT_FILES_LEAD =
-  "Changes to these files may affect this component:";
 
 /** Open an entry in All and return its comparison details. */
 async function detailsInAll(page: Page, entry: string): Promise<Locator> {
@@ -23,21 +26,14 @@ async function detailsInAll(page: Page, entry: string): Promise<Locator> {
     "aria-pressed",
     "true",
   );
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  const evidence = page.locator("[data-workspace-evidence]");
-  await expect(evidence).toBeVisible();
-  return evidence;
+  return openEvidence(page);
 }
 
 test("changed source paths alone add no screen evidence in All", async ({
   page,
 }) => {
   const evidence = await detailsInAll(page, comparisonPaths.plainScreen);
-  await expect(evidence.locator("p")).toHaveText([
-    BASE,
-    "No changes to this screen.",
-  ]);
+  await expect(evidence.locator("p")).toHaveText([BASE, SCREEN_TERMINAL]);
   await expect(evidence.getByText(FILES_LEAD, { exact: true })).toHaveCount(0);
   await expect(evidence.getByRole("listitem")).toHaveCount(0);
 });
@@ -48,10 +44,7 @@ test("a real unreferenced source edit adds no screen or component evidence in Al
   const screen = await detailsInAll(page, comparisonPaths.plainScreen);
   await expect(screen.getByRole("listitem")).toHaveCount(0);
   const component = await detailsInAll(page, comparisonPaths.plainComponent);
-  await expect(component.locator("p")).toHaveText([
-    BASE,
-    "No changes to this saved view.",
-  ]);
+  await expect(component.locator("p")).toHaveText([BASE, VARIANT_TERMINAL]);
   await expect(
     component.getByText(COMPONENT_FILES_LEAD, { exact: true }),
   ).toHaveCount(0);

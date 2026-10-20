@@ -12,6 +12,9 @@ Configured stylesheets, declared component stylesheets, renderer resource
 seeds, and the transitive link walk reuse that one instance. A new generation
 after a source, configuration, or resource change decides again; no
 filesystem decision outlives its generation.
+Stylesheet admission does not authorize source-file delivery. Configured and
+component-declared local CSS inputs become private sources; their generated
+bundles and assets follow [stylesheet delivery](./mokly-imported-styles.md).
 
 The policy rejects an unsafe or escaping path, a hidden path segment, a
 symbolic link at any path component, a non-regular file, a consumer

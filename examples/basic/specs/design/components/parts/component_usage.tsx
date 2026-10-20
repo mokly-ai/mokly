@@ -1,6 +1,7 @@
 import { MockLink } from "@mokly/mokly";
 
 import type { ComponentPageState } from "./component_details.js";
+import type { ComponentDesignDestination } from "./destinations.js";
 import { componentUses, usageViews } from "./fixtures.js";
 import { COMPONENT_ENTRY_BY_STATE, COMPONENTS } from "./metadata.js";
 
@@ -78,7 +79,14 @@ export function UsedBy({ state }: { state: ComponentPageState }) {
   );
 }
 
-export function AffectedScreens({ removed }: { removed: boolean }) {
+export function AffectedScreens({
+  removed,
+  welcome,
+}: {
+  removed: boolean;
+  /** Where Welcome's row opens when its story has an artboard for it. */
+  welcome?: ComponentDesignDestination | undefined;
+}) {
   const screens = componentUses.filter((use) => use.kind === "screen");
   return (
     <section className="ce-affected" aria-label="Affected screens">
@@ -93,7 +101,9 @@ export function AffectedScreens({ removed }: { removed: boolean }) {
       <ul className="ce-usage-list">
         {screens.map((use) => (
           <li key={use.title}>
-            <MockLink to={use.to}>
+            <MockLink
+              to={use.title === "Welcome" ? (welcome ?? use.to) : use.to}
+            >
               {use.title}
               <span aria-hidden="true">↗</span>
             </MockLink>

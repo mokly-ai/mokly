@@ -6,6 +6,7 @@ use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::review_order::rule_key;
 
+use crate::containment::ContainmentPath;
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
 
@@ -15,10 +16,22 @@ pub type RuleIdentity = (Option<(Vec<String>, String)>, Option<(Vec<String>, Str
 /// Proof retained after the parsed document is released.
 #[derive(Clone, Debug)]
 pub struct MatchProof {
-    /// Inclusive physical containment, from outermost to innermost.
-    pub regions: Vec<Containment>,
+    /// Shared physical containment, visited innermost first.
+    pub(crate) regions: ContainmentPath,
+    /// Restrict inline proof to the component that supplied the matched input.
+    pub(crate) input_owner_only: bool,
     /// Resolved input owner for the inline-style seam.
     pub owner: EvidenceOwner,
+}
+
+impl MatchProof {
+    /// Visit retained regions innermost first, restricted to the inline input owner.
+    pub fn regions(&self) -> impl Iterator<Item = &Containment> {
+        self.regions.iter().filter(|region| {
+            !self.input_owner_only
+                || matches!(&self.owner, EvidenceOwner::Component { path } if path == &region.path)
+        })
+    }
 }
 
 /// One selector outcome, detached from its document arena.
@@ -111,6 +124,7 @@ pub fn observe(
                                     let element = tree.elements.get(matched.element)?;
                                     Some(MatchProof {
                                         regions: element.regions.clone(),
+                                        input_owner_only: false,
                                         owner: element.owner.clone(),
                                     })
                                 })
@@ -138,8 +152,7 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                 .flat_map(|selector| &selector.matches)
                 .any(|matched| {
                     matched
-                        .regions
-                        .iter()
+                        .regions()
                         .any(|region| region.root && &region.path == component)
                 })
             {
@@ -165,10 +178,9 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                 .flat_map(|selector| &selector.matches)
                 .any(|matched| {
                     matched
-                        .regions
-                        .iter()
+                        .regions()
                         .any(|region| region.root && &region.path == component)
-                        && !matched.regions.iter().any(|region| {
+                        && !matched.regions().any(|region| {
                             !region.root
                                 && &region.path != component
                                 && unfiltered.is_some_and(|paths| paths.contains(&region.path))
@@ -203,9 +215,7 @@ pub fn attribute(pages: &[PageObservation]) -> Attribution {
                             .iter()
                             .map(|matched| {
                                 matched
-                                    .regions
-                                    .iter()
-                                    .rev()
+                                    .regions()
                                     .find(|region| {
                                         changed.is_some_and(|paths| paths.contains(&region.path))
                                     })

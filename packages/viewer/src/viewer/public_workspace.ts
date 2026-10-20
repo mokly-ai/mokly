@@ -10,6 +10,7 @@ import type {
 import type { UsageLink as DetailUsageLink } from "../catalogue/types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
+import { keepsComponentRecord } from "../review/shared_impact.js";
 import type { Catalogue } from "../shell/catalogue.js";
 import type {
   EntryStatus,
@@ -137,6 +138,11 @@ export function publicWorkspace(
       : undefined;
   const workspaceStatus = selectedVariant?.status ?? entryStatus;
   const resourceEvidence = publishedResourceEvidence(original.views);
+  const componentRecords = original.views.some(
+    (view) =>
+      view.resourceEvidence !== undefined &&
+      keepsComponentRecord(view.resourceEvidence),
+  );
   return {
     entry,
     ...(component ? { component } : {}),
@@ -180,7 +186,11 @@ export function publicWorkspace(
     ...(detail ? {} : { usageComplete: false }),
     ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
+    ...(original.changes.status === "ready"
+      ? { included: original.changes.included }
+      : {}),
     ...(reasons ? { reasons } : {}),
+    ...(componentRecords ? { componentRecords } : {}),
     ...(resourceEvidence.length ? { resourceEvidence } : {}),
   };
 }

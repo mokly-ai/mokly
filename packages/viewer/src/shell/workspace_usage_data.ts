@@ -1,10 +1,6 @@
 import { generatedViews, orderedInstances } from "../components/views.js";
-import type { ReviewResult } from "../review/types.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
-import { dedupeUsageLinks } from "./usage_links.js";
-import { shownComparisonEligible } from "./view_status.js";
 import {
   workspaceEntryTitle,
   type WorkspaceEvidenceEntry,
@@ -21,50 +17,6 @@ export interface UsageLink {
   direct: boolean;
   removed: boolean;
   comparisonEligible: boolean;
-}
-
-/**
- * Project review evidence into navigable affected-consumer links. Each
- * evidence keeps its side's original path, so it resolves on that side: a
- * before-side path reaches the moved or case-renamed current entry, else its
- * removed record. Evidence that resolves to nothing yields no link.
- */
-export function affectedUsageLinks(
-  catalogue: Catalogue,
-  result: ReviewResult | undefined,
-  componentId: string | undefined,
-): UsageLink[] {
-  const lookup = branchPoints(catalogue);
-  const links: UsageLink[] = (result?.affected ?? [])
-    .filter((item) => item.changedComponentId === componentId)
-    .flatMap((item) =>
-      item.evidence.flatMap((evidence) => {
-        const destination = lookup.resolve({
-          side: evidence.side,
-          kind: evidence.context.kind,
-          path: evidence.context.entry.path,
-        });
-        if (!destination) return [];
-        const removed = destination.source === "removed";
-        return [
-          {
-            entryId: destination.entry.path,
-            entryKind: evidence.context.kind,
-            title: workspaceEntryTitle(catalogue, destination.entry),
-            viewport: evidence.context.viewport,
-            colorScheme: evidence.context.colorScheme,
-            instanceKey: evidence.via.at(-1)!.instanceKey,
-            direct: evidence.via.length === 1,
-            removed,
-            comparisonEligible: shownComparisonEligible(
-              removed ? "Removed" : "Changed",
-              evidence.context.kind,
-            ),
-          },
-        ];
-      }),
-    );
-  return dedupeUsageLinks(links);
 }
 
 /** Project manifest instance evidence into direct component-usage links. */

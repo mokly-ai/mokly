@@ -17,11 +17,19 @@ use crate::error::Error;
 use crate::inventory::Inventory;
 use crate::transaction::CancellationMock;
 
-use super::support::{artifact, catalogue, generation, plans, result, result_with};
+use super::support::{
+    artifact, catalogue, generation, generation_clauses, plans, result, result_with,
+};
 
 #[test]
 fn a_small_generation_has_stable_files_and_no_public_private_snapshot() {
-    let result = result();
+    let after = Unimock::new((
+        generation_clauses("home", 0, true),
+        RenderGenerationMock::generation_key
+            .each_call(matching!())
+            .returns("after"),
+    ));
+    let result = result_with(generation("old", 0, true), Arc::new(after));
     let publication = projection_index::publication("mokly.config.json".into(), "base");
     let mut index = projection::index(&result.after.catalogue().model, &[], &publication).unwrap();
     let cancellation = Unimock::new(

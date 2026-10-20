@@ -118,7 +118,8 @@ A view state follows the [materiality](./mokly-comparison.md#materiality) and
 trees of both sides, the per-rule evidence with its owner, and the resource
 evidence. Component ownership controls direct reasons separately; it never
 invents an `ignored-only` state for a component-only edit. An affected-only
-screen or component can therefore have changed views without being included.
+screen or component therefore keeps `unchanged` views, which can carry
+component-owned records, and is not included; the `affected` records list it.
 A caller input change can have unchanged views when the render does not
 display that prop.
 

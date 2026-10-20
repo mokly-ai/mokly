@@ -2,9 +2,12 @@
 //!
 //! The builder keeps one heap frame per open sequence or mapping, so authored
 //! nesting does not consume native stack. Each node's JSON pointer is built once
-//! from its parent's pointer.
+//! from its parent's pointer. A value deeper than [`MAX_DEPTH`] fails where it
+//! starts, so later recursive traversal of the decoded value stays bounded.
+//! Before the build, the alias scan bounds the nodes that aliases expand to,
+//! and the builder keeps copies of only the anchors that an alias refers to.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::str::Chars;
 
 use mokly_model::catalogue::SourceLocation;
@@ -15,9 +18,11 @@ use yaml_rust2::parser::{Event, Parser, Tag};
 use yaml_rust2::scanner::{Marker, TScalarStyle};
 
 use crate::diagnostic::{Code, Issue};
+use crate::yaml_aliases;
 use crate::yaml_frame::{Frame, Rejected};
+use crate::yaml_limits::{MAX_ALIAS_NODES, MAX_DEPTH};
 use crate::yaml_positions::{Positions, ROOT};
-use crate::yaml_value::{copy, discard};
+use crate::yaml_value::{copy, discard, height};
 
 /// A decoded authoring value and its JSON-pointer source locations.
 #[derive(Debug)]
@@ -32,7 +37,16 @@ pub(crate) fn parse(text: &str, path: &str, first_line: usize) -> Result<Documen
         parser: Parser::new_from_str(text),
         path,
         first_line,
+        aliased: BTreeSet::new(),
         anchors: BTreeMap::new(),
+    };
+    reader.aliased = match yaml_aliases::scan(text, MAX_ALIAS_NODES) {
+        Ok(aliased) => aliased,
+        Err(marker) => {
+            let message =
+                format!("YAML aliases exceed {MAX_ALIAS_NODES} expanded nodes; use fewer aliases");
+            return Err(reader.error(marker, message));
+        }
     };
     loop {
         let (event, marker) = reader.next()?;
@@ -54,8 +68,16 @@ struct Reader<'a> {
     parser: Parser<Chars<'a>>,
     path: &'a str,
     first_line: usize,
+    /// The anchors that an alias refers to.
+    aliased: BTreeSet<usize>,
     /// Anchored nodes with locations relative to the node.
-    anchors: BTreeMap<usize, Document>,
+    anchors: BTreeMap<usize, Anchor>,
+}
+
+/// An anchored node and the number of levels below it.
+struct Anchor {
+    document: Document,
+    height: usize,
 }
 
 impl Reader<'_> {
@@ -76,6 +98,15 @@ impl Reader<'_> {
     fn error(&self, marker: Marker, message: impl Into<String>) -> Issue {
         Issue::new(Code::HtmlFrontMatter, message).at(self.location(marker))
     }
+    /// Fail when a value would sit more than [`MAX_DEPTH`] levels below the root.
+    fn within(&self, depth: usize, marker: Marker) -> Result<(), Issue> {
+        if depth > MAX_DEPTH {
+            let message =
+                format!("YAML value exceeds {MAX_DEPTH} nesting levels; reduce its nesting");
+            return Err(self.error(marker, message));
+        }
+        Ok(())
+    }
     fn tag(&self, tag: &Option<Tag>, marker: Marker) -> Result<(), Issue> {
         if tag
             .as_ref()
@@ -94,6 +125,7 @@ impl Reader<'_> {
             let sequence = matches!(event, Event::SequenceStart(..));
             let (value, start) = match event {
                 Event::Scalar(text, style, anchor, tag) => {
+                    self.within(frames.len(), marker)?;
                     self.tag(&tag, marker)?;
                     let quoted = style != TScalarStyle::Plain
                         || tag.as_ref().is_some_and(|tag| tag.suffix == "str");
@@ -117,6 +149,8 @@ impl Reader<'_> {
                     let Some(node) = self.anchors.get(&anchor) else {
                         return Err(self.error(marker, "unknown or recursive YAML alias"));
                     };
+                    self.within(frames.len() + node.height, marker)?;
+                    let node = &node.document;
                     let start = self.location(marker);
                     if let Some(slot) = target(&frames, &mut positions) {
                         positions.graft(slot, &node.positions, ROOT);
@@ -125,6 +159,7 @@ impl Reader<'_> {
                     (copy(&node.value), start)
                 }
                 Event::SequenceStart(anchor, tag) | Event::MappingStart(anchor, tag) => {
+                    self.within(frames.len(), marker)?;
                     self.tag(&tag, marker)?;
                     let start = self.location(marker);
                     let slot = target(&frames, &mut positions);
@@ -173,10 +208,18 @@ impl Reader<'_> {
         }
     }
 
-    /// Register an anchored node with its locations relative to the node.
+    /// Register an anchored node that an alias refers to, with its locations
+    /// relative to the node.
     fn anchor(&mut self, anchor: usize, value: &Value, positions: Positions) {
-        let value = copy(value);
-        self.anchors.insert(anchor, Document { value, positions });
+        if !self.aliased.contains(&anchor) {
+            return;
+        }
+        let height = height(value);
+        let document = Document {
+            value: copy(value),
+            positions,
+        };
+        self.anchors.insert(anchor, Anchor { document, height });
     }
 }
 

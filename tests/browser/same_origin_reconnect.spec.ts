@@ -49,7 +49,7 @@ for (const kind of ["current", "temporary"] as const) {
     });
 
     try {
-      const result = await page.evaluate(
+      const reconnect = await page.evaluateHandle(
         async ({ kind, path }) => {
           const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
             `${location.origin}/test-adapters.js`
@@ -71,28 +71,33 @@ for (const kind of ["current", "temporary"] as const) {
           const first = await adapter.mount(frame, view);
           const authenticated = frame.contentDocument;
           first.dispose();
-          await new Promise<void>((resolve) => {
-            const poll = setInterval(() => {
-              if (
-                frame.contentDocument !== authenticated &&
-                frame.contentDocument?.readyState === "interactive"
-              ) {
-                clearInterval(poll);
-                resolve();
-              }
-            }, 0);
-            frame.contentWindow!.location.replace(view.url.href);
-          });
-          const unowned = frame.contentDocument;
-          const mounted = await adapter.mount(frame, view);
-          const replaced = frame.contentDocument !== unowned;
-          mounted.dispose();
-          return replaced;
+          frame.contentWindow!.location.replace(view.url.href);
+          return { adapter, authenticated, frame, view };
         },
         { kind, path },
       );
-      expect(result).toBe(true);
-      expect(requests).toBe(3);
+      try {
+        await page.waitForFunction(
+          ({ authenticated, frame }) =>
+            frame.contentDocument !== authenticated &&
+            frame.contentDocument?.readyState === "interactive",
+          reconnect,
+          { timeout: 15_000 },
+        );
+        const result = await reconnect.evaluate(
+          async ({ adapter, frame, view }) => {
+            const unowned = frame.contentDocument;
+            const mounted = await adapter.mount(frame, view);
+            const replaced = frame.contentDocument !== unowned;
+            mounted.dispose();
+            return replaced;
+          },
+        );
+        expect(result).toBe(true);
+        expect(requests).toBe(3);
+      } finally {
+        await reconnect.dispose();
+      }
     } finally {
       release();
     }

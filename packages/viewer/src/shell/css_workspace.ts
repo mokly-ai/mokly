@@ -94,19 +94,20 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-highlight-layer { position: fixed; pointer-events: none; z-index: 4; overflow: hidden; }
 .mbk-highlight-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .mbk-highlight-label { position: absolute; pointer-events: auto; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 0; border-radius: 4px; background: var(--mbk-accent-deep); color: var(--_mokly-private-on-accent-deep); padding: 3px 7px; font: 11px var(--sans); cursor: pointer; }
-.mbk-control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
-.mbk-control-field { display: flex; flex-direction: column; gap: 6px; position: relative; min-width: 0; }
-.mbk-control-field > label:not(.mbk-control-set):not(.mbk-control-check), .mbk-control-name { font-size: 12px; font-weight: 600; }
-.mbk-control-optional { color: var(--chrome-muted); font-size: 11px; font-weight: 400; }
-.mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; padding: 8px 10px; font: inherit; color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; background: var(--chrome-surface); }
-.mbk-control-field input[type=checkbox] { align-self: start; accent-color: var(--mokly-accent); width: 16px; height: 16px; }
+.mbk-control-field { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: start; position: relative; min-width: 0; padding: 9px 0; border-top: 1px solid var(--chrome-border); }
+.mbk-control-label { padding-top: 8px; color: var(--chrome-ink-2); font-family: var(--mono); font-size: 11px; overflow-wrap: anywhere; }
+.mbk-control-optional { display: block; margin-top: 3px; color: var(--chrome-muted); font-family: var(--sans); font-size: 10px; font-weight: 400; }
+.mbk-control-value { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mbk-control-field input:not([type=checkbox]), .mbk-control-field select { min-width: 0; width: 100%; height: 32px; padding: 5px 8px; font: inherit; font-size: 12px; color: var(--chrome-ink); border: 1px solid var(--chrome-control-edge); border-radius: 5px; background: var(--chrome-surface); }
+.mbk-control-field input[type=checkbox] { margin: 0; accent-color: var(--mbk-accent-deep); width: 16px; height: 16px; }
+.mbk-control-value > input[type=checkbox] { margin: 8px 0; }
 .mbk-control-field [aria-invalid=true] { border-color: var(--mbk-danger-ink); }
 .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
 .mbk-control-field :disabled { opacity: .6; cursor: default; }
-.mbk-control-field small { color: var(--chrome-muted); }
-.mbk-control-set, .mbk-control-check { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.mbk-control-field small { color: var(--chrome-muted); font-size: 10px; }
+.mbk-control-set, .mbk-control-check { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 11px; }
 .mbk-control-unset { margin: 0; color: var(--chrome-muted); font-size: 11px; }
-.mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); }
+.mbk-control-field .mbk-control-error, .mbk-control-error { color: var(--mbk-danger-ink); font-size: 11px; }
 .mbk-component-controls { max-width: 680px; }
 .mbk-controls-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
 .mbk-inspector-content .mbk-controls-heading h3 { margin-bottom: 4px; }
@@ -123,6 +124,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-control-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .mbk-empty-copy { max-width: 310px; color: var(--chrome-ink-2); font-size: 12px; }
 @media (max-width: 56.25rem) {
+  .mbk-control-field { grid-template-columns: 100px minmax(0, 1fr); }
   /* Above the inspector sheet, which covers the bottom of the preview. */
   .mbk-edit-status { top: 8px; bottom: auto; width: max-content; margin: 0 auto; }
   .mbk-edit-status:not(:empty) { padding: 3px 9px; border-radius: 999px; background: var(--chrome-surface); box-shadow: var(--chrome-shadow-sheet); }

@@ -7,80 +7,27 @@
  * unchanged.
  */
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
+import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
+
+import {
+  EXAMINED_LEAD,
+  EXCLUDED_LEAD,
+  INSPECTOR_VIEWPORTS,
+  MATCHED_LEAD,
+  UNNAMED_LEAD,
+  UNRESOLVED_LEAD,
+  evidenceFiles,
+  evidenceSpacing,
+  openEvidence,
+} from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton } from "./comparison_ui.js";
 
-/** Inspector copy fixed by docs/protocol/mokly-css-evidence-shell.md. */
-const BASE = "Compared with the branch point on fixture-base.";
-/** The sentence of an unresolved change without selectors. */
-const UNNAMED_LEAD =
-  "This change can apply anywhere on the screen, so the screen stays in Changes.";
-const UNRESOLVED_LEAD =
-  "This change can apply anywhere on the screen, so the screen stays in Changes:";
-const MATCHED_LEAD = "Changed styles that apply to this screen:";
-const EXCLUDED_LEAD =
-  "This stylesheet changed, but none of the changed styles apply to this screen.";
-const EXAMINED_LEAD = "Examined and excluded:";
+/** Pane headings fixed by docs/protocol/mokly-css-evidence-shell.md. */
 const STYLE_HEADING = "Styles this screen uses changed";
 const UNCHANGED_HEADING = "No changes to this screen";
-const FADE = "static/mokly-generated/styles/fade.css";
-const INSPECTOR_VIEWPORTS = [
-  ["desktop", { width: 1440, height: 1000 }],
-  ["mobile", { width: 390, height: 844 }],
-] as const;
-
-/** Open the Details tab and return the comparison details it reveals. */
-async function openEvidence(page: Page): Promise<Locator> {
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  const evidence = page.locator("[data-workspace-evidence]");
-  await expect(evidence).toBeVisible();
-  await expect(evidence.locator("p").first()).toHaveText(BASE);
-  return evidence;
-}
-
-/** The changed-files list: each file with its nested leads and styles. */
-function evidenceFiles(scope: Locator) {
-  return scope.evaluate((panel) =>
-    [...(panel.querySelector(".mbk-evidence-files")?.children ?? [])].map(
-      (item) => {
-        const outcomes: [string, string[]][] = [];
-        for (const child of item.children)
-          if (child.tagName === "P")
-            outcomes.push([child.textContent?.trim() ?? "", []]);
-          else
-            outcomes
-              .at(-1)?.[1]
-              .push(
-                ...[...child.querySelectorAll("code")].map(
-                  (code) => code.textContent ?? "",
-                ),
-              );
-        return [item.firstChild?.textContent?.trim() ?? "", outcomes];
-      },
-    ),
-  );
-}
-
-/** The top margins of the first paragraph, list, and nested sentence. */
-function evidenceSpacing(evidence: Locator) {
-  return evidence.evaluate((panel) =>
-    Object.fromEntries(
-      Object.entries({
-        paragraph: "p",
-        list: "ul",
-        sentence: ".mbk-evidence-files > li > p",
-        styles: ".mbk-evidence-files > li > ul",
-      }).flatMap(([part, selector]) => {
-        const element = panel.querySelector(selector);
-        return element ? [[part, getComputedStyle(element).marginTop]] : [];
-      }),
-    ),
-  );
-}
 
 for (const [name, size] of INSPECTOR_VIEWPORTS)
   test.describe(`${name} screen evidence`, () => {
@@ -98,7 +45,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
       expect(await evidenceFiles(evidence)).toEqual([
-        [FADE, [[UNRESOLVED_LEAD, ["@keyframes fixture-fade"]]]],
+        [sheets.fade, [[UNRESOLVED_LEAD, ["@keyframes fixture-fade"]]]],
       ]);
       await expect(evidence.locator("code.mbk-code")).toHaveText([
         "@keyframes fixture-fade",

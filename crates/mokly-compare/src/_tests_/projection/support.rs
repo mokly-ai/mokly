@@ -260,3 +260,16 @@ pub(super) fn transferred_variant_result(remove_donor: bool) -> ComparisonResult
         },
     )
 }
+
+/// Supply the generation fence only to tests that project affected workspaces.
+pub(super) fn with_lookup(result: &mut ComparisonResult) {
+    let catalogue = result.after.catalogue().clone();
+    result.after = Arc::new(Unimock::new((
+        RenderGenerationMock::generation_key
+            .each_call(matching!())
+            .returns("projection-generation"),
+        RenderGenerationMock::catalogue
+            .each_call(matching!())
+            .returns(catalogue),
+    )));
+}
