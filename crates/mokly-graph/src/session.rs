@@ -4,7 +4,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_catalogue::diagnostic::normalize_warnings;
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_css::types::StylesheetBundler;
@@ -14,8 +13,9 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
 use crate::closure::{Closure, Walker};
+use crate::collection::ComparisonCollector;
 use crate::delivery_inputs::DeliveryInputs;
-use crate::error::{GraphError, Result};
+use crate::error::Result;
 use crate::graph::Graph;
 use crate::policy::PublicPolicy;
 use crate::reference_index::{MemoryReferenceIndex, ReferenceIndex};
@@ -25,8 +25,9 @@ use crate::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
     ResourcePlan, TemporaryDocument,
 };
+use crate::validation_summary::Summary;
 use crate::workers::{ComparisonWorker, RenderWorkers, check_cancelled};
-use crate::{route_inventory, styles, temporary, validation};
+use crate::{styles, temporary, validation};
 
 #[derive(Clone)]
 pub(crate) struct Session {
@@ -178,46 +179,14 @@ impl RenderGeneration for Session {
     fn render_all(&self) -> Result<RenderSummary> {
         let routes: Vec<_> = self.state.plans.keys().cloned().collect();
         let results = self.state.workers.run(&routes, self);
-        let mut summary = RenderSummary {
-            documents: routes.len(),
-            warnings: self.state.catalogue.warnings.clone(),
-            ..Default::default()
-        };
-        let mut failures = Vec::new();
-        let mut views = BTreeMap::new();
+        let mut summary = Summary::new(self);
         for result in results {
-            match result {
-                Ok(view) => {
-                    summary.closure.extend(view.closure.clone());
-                    summary.warnings.extend(view.warnings.clone());
-                    views.insert(view.route.clone(), view);
-                }
-                Err(source) => failures.push(source),
-            }
+            summary.record(result);
         }
-        if !failures.is_empty() {
-            return Err(GraphError::Attempt {
-                failures,
-                warnings: summary.warnings,
-            });
-        }
-        if let Err(source) = validation::completed(self, &views) {
-            return Err(GraphError::Attempt {
-                failures: vec![source],
-                warnings: summary.warnings,
-            });
-        }
-        let mut names = route_inventory::RouteInventory::default();
-        for path in &summary.closure {
-            if let Err(source) = names.insert(path, true) {
-                return Err(GraphError::Attempt {
-                    failures: vec![source],
-                    warnings: summary.warnings,
-                });
-            }
-        }
-        normalize_warnings(&mut summary.warnings);
-        Ok(summary)
+        summary.finish(self)
+    }
+    fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
+        self.collect_validated(collector)
     }
     fn stylesheet_directories(&self) -> &[DirectoryDependency] {
         &self.state.directories

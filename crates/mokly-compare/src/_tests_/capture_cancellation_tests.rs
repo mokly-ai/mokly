@@ -69,6 +69,18 @@ fn cancellation_between_views_returns_the_error_without_encoding_a_later_view() 
     let render_count = rendered.clone();
     let error = {
         let source = Arc::new(Unimock::new((
+            RenderGenerationMock::collect_comparison
+                .each_call(matching!(_))
+                .answers(&|mock, collector| {
+                    let summary = mock.render_all()?;
+                    collector.summary(&summary);
+                    for route in mock.plans().keys() {
+                        let input = mock.comparison_input(route)?;
+                        mock.check_cancelled()?;
+                        collector.collect(route, input)?;
+                    }
+                    Ok(summary)
+                }),
             RenderGenerationMock::comparison_capture
                 .each_call(matching!())
                 .returns(None),
@@ -78,9 +90,6 @@ fn cancellation_between_views_returns_the_error_without_encoding_a_later_view() 
                     documents: 2,
                     ..Default::default()
                 })),
-            RenderGenerationMock::resource_routes
-                .next_call(matching!())
-                .returns(vec![]),
             RenderGenerationMock::plans
                 .each_call(matching!())
                 .returns(plans),
