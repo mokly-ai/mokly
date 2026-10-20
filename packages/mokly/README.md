@@ -157,7 +157,8 @@ cargo test -p mokly-sidecar
 ```
 
 The package `prepack` builds the viewer before the authoring declarations.
-Release packing creates the viewer archive before the CLI archive.
+Release packing prepares the viewer archive before the CLI archive. It packs
+a new viewer release or downloads the exact published viewer for a CLI-only release.
 The package build emits ESM JavaScript and declarations, the sidecar entry and
 PostCSS child entry, the shim, and packaged Markdown. Each build clears stale package
 output and copied docs first. The package includes the complete guide and

@@ -2249,6 +2249,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Fix CI gates hub review finding 5 with option A: overwrite the fixed
         design-attribution evidence artifact on reruns. The wider upload-policy
         check remains a user decision.
+  - [x] Fix CI gates hub review finding 6 with option A: align release recovery
+        and packing descriptions with an optional new viewer tag and reuse of
+        the pinned published viewer archive.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.

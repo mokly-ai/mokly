@@ -68,7 +68,8 @@ Keep the workflow run and the protection read-backs. An interactive bootstrap
 publication has source, hash, and npm signature evidence, not OIDC provenance;
 trusted publications generate provenance automatically. Do not claim a
 signature check proves an attestation exists. A failed publish never changes a
-tag or rebuilds from a branch; retries accept only the existing immutable pair.
+tag or rebuilds from a branch. Retries use the existing immutable CLI tag and
+any newly released viewer tag. A CLI-only retry leaves `viewer_ref` empty.
 
 ## Related Docs
 

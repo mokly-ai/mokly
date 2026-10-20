@@ -3,7 +3,7 @@
 The [release workflow](../../.github/workflows/release.yml) runs on a push to
 `main` or a manual dispatch. Its publish job checks out a release tag, but GitHub
 environment rules evaluate the **workflow ref**, not that checkout. Permit only
-the `main` branch in environment `npm`; dispatch retries from `main` with the
+the `main` branch in environment `npm`; dispatch retries from `main` with
 an existing CLI tag as `publish_ref` and any new viewer tag as `viewer_ref`.
 A CLI-only retry leaves `viewer_ref` empty. Merging the combined
 Release Please PR authorizes its automatic npm publication. Starting a manual
