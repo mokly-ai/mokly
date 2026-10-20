@@ -89,10 +89,41 @@ fn unresolved_owned_rules_keep_the_conservative_entry_record() {
         result.snapshot.changed_entries,
         ["card", "card/other", "home"]
     );
+    assert!(result.review.affected.is_empty());
     for view in result.entries.iter().flat_map(|entry| &entry.documents) {
         assert_eq!(view.evidence.rules.len(), 1);
         assert_eq!(view.evidence.rules[0].selector, "body");
         assert_eq!(view.evidence.rules[0].status, RuleStatus::Unresolved);
         assert_eq!(view.evidence.rules[0].owner, EvidenceOwner::Entry);
+    }
+}
+
+#[test]
+fn matched_owned_rules_share_the_document_with_unused_ownerless_rules() {
+    let base = consumer("'red'");
+    let head = consumer("'blue'");
+    for (consumer, color) in [(&base, "red"), (&head, "blue")] {
+        fs::write(
+            consumer.root().join("owned/reference.page.html"),
+            format!("---\ntitle: Reference\n---\n<!doctype html><html><head><style>.unused{{color:{color}}}</style></head><body><ui-card label=\"Instance\"></ui-card></body></html>"),
+        ).unwrap();
+    }
+    let result = compare(&base, &head);
+    assert_eq!(result.snapshot.changed_entries, ["card", "card/other"]);
+    let page = result
+        .entries
+        .iter()
+        .find(|entry| entry.path == "reference")
+        .unwrap();
+    assert!(!page.included);
+    for view in &page.documents {
+        assert_eq!(view.evidence.rules.len(), 1);
+        assert_eq!(view.evidence.rules[0].status, RuleStatus::Matched);
+        assert_eq!(
+            view.evidence.rules[0].owner,
+            EvidenceOwner::Component {
+                path: "card".into()
+            }
+        );
     }
 }

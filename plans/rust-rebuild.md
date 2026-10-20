@@ -377,6 +377,9 @@ readiness rather than blocking this acceptance round on further startup work.
   A changed owned rule with no match on either side emits no record and
   changes no view. This keeps Details aligned with the rule contract.
   Alternative B retains the direct material path and changes the contract.
+  Verification follow-up: unresolved owned rules supply no instance proof;
+  the entry record does not invent an affected component without a match.
+  Merge owned and ownerless evidence before excluding a document route.
 - Orchestrator item 48 B (2026-10-20, applied by default (user rule)): matching
   trees deeper than 512 elements keep changed `:has()` selectors as unresolved
   evidence. A measured 288-byte recursive frame on a 2 MiB worker stack,

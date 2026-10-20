@@ -82,24 +82,14 @@ pub(crate) fn matched(
     owner: &str,
     indices: &[Index; 2],
 ) -> BTreeSet<String> {
-    let all = || {
-        let mut output = BTreeSet::new();
-        for index in indices {
-            let mut seen = BTreeSet::new();
-            for parent in &index.elements {
-                index.collect(*parent, owner, &mut seen, &mut output);
-            }
-        }
-        output
-    };
     let DocumentMatching::Resolved(rules) = matching else {
-        return all();
+        return BTreeSet::new();
     };
     let mut output = BTreeSet::new();
     let mut seen = [BTreeSet::new(), BTreeSet::new()];
     for selector in rules.iter().flat_map(|rule| &rule.selectors) {
         if selector.unresolved {
-            return all();
+            continue;
         }
         for element in &selector.elements {
             let side = if element.side == ReviewSide::Before {

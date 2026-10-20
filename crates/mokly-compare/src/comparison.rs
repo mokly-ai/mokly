@@ -1,5 +1,6 @@
 //! One catalogue-wide comparison engine for build, Serve, and static projection.
 
+use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use mokly_css::attribution::{self, PageObservation};
@@ -132,6 +133,17 @@ impl Engine {
                     .evidence
                     .rules
                     .extend(attributed.pages[index].clone());
+                let kept: BTreeSet<_> = view
+                    .document
+                    .evidence
+                    .rules
+                    .iter()
+                    .filter(|rule| rule.status != RuleStatus::Excluded)
+                    .map(|rule| rule.stylesheet.clone())
+                    .collect();
+                view.document.evidence.rules.retain(|rule| {
+                    rule.status != RuleStatus::Excluded || !kept.contains(&rule.stylesheet)
+                });
                 view.document
                     .evidence
                     .rules

@@ -107,6 +107,7 @@ nothing has one `excluded` record with an empty selector and the entry owner.
 An excluded record never makes a view material. The `stylesheet` address is
 the containing public document route. Equal rule identities join own-page
 proof across document routes; consumer routes add no reasons to a component.
+Omit an excluded document record when that route has any kept owned or ownerless rule.
 
 ## Resources
 
