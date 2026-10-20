@@ -26,8 +26,8 @@ fn failed_capture_never_records_ok_or_success_counts() {
             RenderGenerationMock::comparison_capture
                 .next_call(matching!())
                 .returns(None),
-            RenderGenerationMock::render_all
-                .next_call(matching!())
+            RenderGenerationMock::collect_comparison
+                .next_call(matching!(_))
                 .returns(Err(GraphError::Runtime {
                     source: RuntimeDiagnostic {
                         code: RuntimeCode::Cancelled,
@@ -125,15 +125,12 @@ fn empty_base_capture_emits_successful_zero_view_counts() {
             RenderGenerationMock::comparison_capture
                 .next_call(matching!())
                 .returns(None),
-            RenderGenerationMock::render_all
-                .next_call(matching!())
+            RenderGenerationMock::collect_comparison
+                .next_call(matching!(_))
                 .returns(Ok(RenderSummary::default())),
             RenderGenerationMock::resource_routes
                 .next_call(matching!())
                 .returns(vec![]),
-            RenderGenerationMock::plans
-                .next_call(matching!())
-                .returns(BTreeMap::new()),
         )));
         let after = Arc::new(Unimock::new(
             RenderGenerationMock::render_all

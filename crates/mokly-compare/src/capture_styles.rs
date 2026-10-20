@@ -73,6 +73,7 @@ impl EncodedResource {
 pub(crate) fn capture(
     source: &dyn RenderGeneration,
     budget: &mut Budget,
+    reclaim: &mut dyn FnMut(usize),
 ) -> mokly_graph::error::Result<BTreeMap<String, EncodedResource>> {
     let mut resources = BTreeMap::new();
     for route in source.resource_routes() {
@@ -86,6 +87,7 @@ pub(crate) fn capture(
                 }
             };
         if budget.retain(256 + route.capacity() + resource.retained_bytes()) {
+            reclaim(budget.remaining());
             resources.insert(route, resource);
         }
     }

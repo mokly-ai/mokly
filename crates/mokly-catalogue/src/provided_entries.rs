@@ -8,6 +8,7 @@ use mokly_model::prop_schema::Primitive;
 
 use crate::declared_controls;
 use crate::diagnostic::{Code, Issue, Warning, WarningSubject};
+use crate::numeric_warnings;
 use crate::preparation::PreparedCatalogue;
 use crate::render_sources::{EntryReference, ProvidedRendering, ResolvedDefinition};
 
@@ -81,6 +82,9 @@ pub(crate) fn attach(
                     .or_else(|| control.description.clone());
                 declared_controls::normalize(control);
             }
+            prepared
+                .warnings
+                .extend(numeric_warnings::for_story_hints(hints, entry));
         }
     }
     for excluded in &rendering.excluded_props {
