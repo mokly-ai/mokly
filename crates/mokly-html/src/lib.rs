@@ -53,6 +53,7 @@ mod regions;
 mod relative_links;
 mod slots;
 mod source_locations;
+mod text_mode;
 mod tree_debug;
 mod tree_equality;
 mod tree_traits;
@@ -67,6 +68,9 @@ mod control_tests;
 #[cfg(test)]
 #[path = "_tests_/control_tier_sweep_tests.rs"]
 mod control_tier_sweep_tests;
+#[cfg(test)]
+#[path = "_tests_/foreign_plaintext_tests.rs"]
+mod foreign_plaintext_tests;
 #[cfg(test)]
 #[path = "_tests_/fragment_tests.rs"]
 mod fragment_tests;

@@ -407,6 +407,13 @@ readiness rather than blocking this acceptance round on further startup work.
   characters and literal entity spellings. Repeated parsing and serialization
   remain stable. Alternative A preserves escaping but shows different text.
 
+- Defaults-engine hub review finding 2 B (2026-10-20, approved): share
+  plaintext activation between serialization and metadata repair. Follow
+  foreign-content and HTML integration-point parsing so escaped text stays
+  inert after an HTML component renders inside SVG or MathML. Option A
+  duplicates the rule. Option C also changes `noscript` characters and waits
+  for the user.
+
 **Comparison filter follow-up (2026-10-20):**
 
 - Orchestrator item 11 A is the selected default under the user rule.
@@ -2250,6 +2257,18 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Defaults-engine hub review 1, finding 1: owned nested filtering loses
+    parent edits. Severity High, effort Large. Recommended: C, share the
+    linked-CSS nested test and preserve slot-supplier ownership. User pending.
+  - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`
+    can expose markup in scripting-enabled browsers. Severity Medium, effort
+    Small. Recommended: C, escape raw closing tags. User pending.
+  - Defaults-engine hub review 1, finding 3: HTML dependency warnings scan
+    every manifest. Severity Medium, effort Small. Recommended: B, compare
+    identities only when head CSS uses a dependency directory. User pending.
+  - Defaults-engine hub review 1, finding 5: unused owned rules lack excluded
+    evidence. Severity Low, effort Small. Recommended: A, emit one excluded
+    document record when none applies. User pending.
   - [x] Fix integration batch 3 review finding 1: keep original ownership
         metadata separate from resolved Usage destinations. A transferred
         variant follows its own pair when its donor survives or is removed.

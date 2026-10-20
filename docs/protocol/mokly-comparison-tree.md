@@ -38,7 +38,9 @@ Remaining logical inputs and placements use that repaired ownership and their
 corresponding identity keys. If a re-owned instance key collides, that instance
 also loses its region; the repair remains a warning.
 
-`plaintext` consumes the rest of a document. Serialization omits its end tag
+An HTML `plaintext` start tag consumes the rest of a document. Foreign-content
+`plaintext` elements do not activate this mode. HTML integration points retain
+their HTML parsing rules. Serialization omits the HTML `plaintext` end tag
 and the end tags of ancestors entered before it. A parser repair pass turns
 formatting clones inside it and nodes moved after it into the literal payload
 that the browser receives. The repaired tree and its bytes stay stable on

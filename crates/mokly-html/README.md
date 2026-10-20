@@ -46,6 +46,9 @@ nodes become stable literal text. While plaintext mode is active, serialization
 omits private normalization attributes from cloned tags and private markers.
 It writes all text raw, including text inside formatting clones and later
 nodes, so authored ampersands, markup, and entity spellings stay literal.
+Serialization and metadata repair share the parser-context state. Foreign
+`plaintext` elements keep escaped text unless an HTML integration point or
+foreign-content repair puts the element in HTML parsing mode.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 Sidecar style elements carry typed owner annotations through HTML reparsing.
