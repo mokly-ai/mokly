@@ -2444,6 +2444,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `removed_previews_static.spec.ts:76`, and
       `removed_previews_viewer.spec.ts:173`: they repeat the Card `.accent`
       colours as literals instead of reading `accentColor`. Separate branch.
+      - [x] Follow-up F9b item 2: the three specs read `accentColor` from
+            `tests/helpers/comparison_catalogue.ts`, which also writes the
+            colours into `theme.css`. With only the fixture's Before colour
+            changed, they and the Serve Card panes still passed.
     - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
       temporary prop edit stays out of local storage. Separate branch.
     - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
