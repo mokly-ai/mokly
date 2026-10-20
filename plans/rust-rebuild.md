@@ -502,6 +502,14 @@ the same copy.
   exit while output installation, restoration, or cleanup settles. Exit once
   that operation finishes without another signal. Reject immediate exit in
   these operations because it can strand the earlier site in a backup.
+- User decision 86 (2026-10-20): D. Successful and already-published outcomes
+  delete the whole private directory created by publish, including its site
+  and reservation locks. Use its allocated path held in memory and do not
+  follow symbolic links. Failed or cancelled uploads retain the whole directory.
+  Cleanup failure warns with that path and keeps publication successful.
+  This replaces item 9 A's snapshot-only cleanup, which retained lock directories.
+  Evidence: `.context/publish-cleanup/`.
+  Merge decisions: `.context/publish-cleanup/merge-decisions.md`.
 - Item 23 B, applied by default (user rule): preserve control declaration
   order in entry detail v2 and show that order in the viewer. Explicit controls
   use their declaration order. Derived controls use schema property order or
@@ -2152,6 +2160,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Remove the duplicate base render between validation and capture through
+      one bounded, ordered collector. Keep aggregate errors, warnings,
+      retention order, cancellation, fallback, and every charge and bound.
+      User decision 62 (2026-10-20): B now, in parallel.
+      Move this item from the post-merge follow-up into Milestone 14.
+      Evidence: `.context/m14-collector/observations.json`,
+      `.context/m14-collector/example-parity.json`, and
+      `.context/m14-collector/final-verification.json`.
+      Integration: `.context/m14-collector/merge-resolution.md`.
+
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2310,6 +2328,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.
         User decision 62 (2026-10-20): A, keep the two passes now. B, one
         bounded, ordered collector, is a post-merge follow-up.
+        User decision 62 (2026-10-20): B now, in parallel. This later instruction
+        supersedes the deferral. The collector must not delay the final pull request.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2582,9 +2602,21 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     `.context/ci-gates/sidecar-rerun.log`.
   - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
         Round every authored number, including schema keywords, with warnings.
-  - CLI defaults fix1 review 3, finding 2: control-only unsafe numbers lack warnings. Severity Medium, effort Medium. Recommended A: agree field paths, messages, and duplicate rules, then warn on authored control numbers. Broader preparation tracking is option B, Large. Wait for the user.
-  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
-  - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
+  - [x] CLI defaults item 8, fix1 review 3 finding 2: covered by 6 C, confirmed
+        by the user on 2026-10-20. Apply option A: warn on unsafe numbers in
+        authored control metadata with the existing code, message form, JSON
+        pointer form, and duplicate rule. Strict mode treats them like the
+        other unsafe-integer warnings. Broader preparation tracking, option B,
+        is not selected because the scoped warning producer completes 6 C.
+  - Item 87: the user still decides final warning text. Keep numeric warning
+    text in one formatter so the later wording change needs one edit.
+  - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing
+    boundaries. Effort Large. Covers defaults review finding 1. No previous
+    examples found. The focused repair applies item 16 B before link and slot
+    consumers. Evidence: `.context/defaults-cli/review-1.md`.
+  - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
+        successful private publish directory, including reservation locks.
+        Evidence: `.context/publish-cleanup/`.
   - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
   - CLI defaults hub finding 6: Props fields reorder after detail loading. Severity Low, effort Small. Recommended A: wait for routed detail before showing fields. Wait for the user.
   - Outside the scope: `tests/sidecar_postcss_loader_evidence.test.ts` fails on
@@ -3228,13 +3260,6 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
 - [ ] Run the bookfolio catalogue through build, serve, Changes, and watch
       after the user supplies access. The user took it out of the rebuild
       scope on 2026-10-20.
-
-- [ ] Remove the duplicate base render between validation and capture: one
-      bounded, ordered collector that keeps aggregate errors, warnings,
-      retention order, cancellation, fallback, and all charges (capture
-      decision 2, option B; user decision 62, 2026-10-20). Measured on
-      2026-10-20: React capture 95 s, of which validation 27 s; 5,790
-      JavaScript renders in each pass.
 
 - [ ] Share one verified opaque-asset spool for each Serve generation and
       route, released with its generation, under the M14 Serve budgets (M14

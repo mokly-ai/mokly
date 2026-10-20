@@ -69,8 +69,8 @@ Mozilla roots. Minimal containers can publish without an OS CA package.
 The receiver keeps the first completed publication for a commit and config
 path. Success prints uploaded and unchanged counts, or says that this commit
 is already published. An accepted viewer URL appears on its own line.
-Success removes the private build snapshot. A cleanup warning names any
-snapshot that remains, while the publication stays successful.
+Success removes the whole private directory, including its output and locks. A cleanup warning names any
+private directory that remains, while the publication stays successful.
 
 ## Failures
 

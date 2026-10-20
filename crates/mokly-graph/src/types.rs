@@ -14,6 +14,7 @@ use mokly_model::data::Props;
 
 use crate::cache::Artifact;
 use crate::closure::{Closure, GeneratedResources};
+use crate::collection::ComparisonCollector;
 use crate::error::Result;
 use crate::key::NodeKey;
 use crate::resource_inputs::ResourceObserver;
@@ -152,6 +153,8 @@ pub trait RenderGeneration: GeneratedResources {
     fn closure(&self, route: &str) -> Result<Closure>;
     /// Render and validate every view across the worker pool.
     fn render_all(&self) -> Result<RenderSummary>;
+    /// Validate the generation and consume its comparison inputs in bounded route order.
+    fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary>;
     /// All generated stylesheet and asset routes of this generation.
     fn resource_routes(&self) -> Vec<String>;
     /// Consumer PostCSS directory watches, including empty matching sets.
