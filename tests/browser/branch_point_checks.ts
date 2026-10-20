@@ -104,9 +104,10 @@ async function removedSibling(
 }
 
 /**
- * A parent that keeps its own Changes row opens itself, also while a search
- * shows only its removed sibling; the search keeps the removed sibling's row
- * in its list, and that row opens the sibling with its text crumbs.
+ * A parent that keeps its own Changes row opens itself from the unfiltered
+ * list, and also while a search shows only its removed sibling; the search
+ * keeps the removed sibling's row in its list, and that row opens the
+ * sibling with its text crumbs. The helper clears any earlier search first.
  */
 async function activation(
   page: Page,
@@ -115,6 +116,7 @@ async function activation(
   removedCrumbs: readonly string[],
 ): Promise<void> {
   const { title, parent, removed } = family;
+  await search(page, "");
   await activateRow(page, parent);
   await expectRouted(page, host, parent);
   await search(page, "secondary");
