@@ -657,7 +657,16 @@ merges; the freeze applies to it from 2026-10-12.
   - [x] CI, verification, and release.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
-- [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
+  - [x] #135: closed unmerged by the user's decision on 2026-10-20, because
+        #168 replaced its behaviour.
+  - [x] #182: merged on 2026-10-20 as `b19d4433`. It released
+        `@mokly/mokly` 0.15.0 and `@mokly/viewer` 0.6.0.
+  - [x] #198: merged on 2026-10-20 as `d9f421d1` by the user's decision. CI
+        also runs on a manual dispatch for any branch.
+  - [ ] The test and CI housekeeping pull requests: the user decides each
+        open pull request.
+- [x] Tag the last TypeScript backend commit on `main` as `ts-backend-final`:
+      `b19d4433`, the 0.15.0 release, tagged on 2026-10-20.
 - [x] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
       captured scenario to the JSON table that the rebuild procedures define.
 - [x] Capture reference outputs with the old CLI under
@@ -2015,13 +2024,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
-- [ ] Remove the duplicate base render between validation and capture: one
-      bounded, ordered collector that keeps aggregate errors, warnings,
-      retention order, cancellation, fallback, and all charges (capture
-      decision 2, option B, deferred by the user's performance-later rule).
-      Measured on 2026-10-20: React capture 95 s, of which validation 27 s;
-      5,790 JavaScript renders in each pass.
-
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2171,9 +2173,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Keep replay order, deadlines, updates, and recycling unchanged.
         Evidence: `.context/m14-capture/replay-green.log` and
         `.context/m14-capture/replay-release-react/analysis.json`.
-  - [ ] Decide whether to combine validation and capture through bounded ordered
+  - [x] Decide whether to combine validation and capture through bounded ordered
         collection. Severity Medium, effort Large. Recommended: B, share the
         validated inputs. Decision: `.context/m14-capture/design-decision.md`.
+        User decision 62 (2026-10-20): A, keep the two passes now. B, one
+        bounded, ordered collector, is a post-merge follow-up.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
@@ -2211,9 +2215,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
           472 samples at 50 ms intervals. Both budgets passed. Product release
           preparation preceded measurement; installed binary verification passed.
           Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
-- [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
-      through build, serve, Changes, and watch; save the evidence
-      under `.context/rust-rebuild/`.
+- [ ] Run the fixture and the Mokly Cloud catalogue through build, serve,
+      Changes, and watch; save the evidence under `.context/rust-rebuild/`.
+      The bookfolio run is a post-merge follow-up (user, 2026-10-20).
   - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
         source Changes, and watched screen, component, and stylesheet edits.
         Keep the source repository unchanged.
@@ -2228,7 +2232,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Settle compiled-recipe retention under F8 decision 59 A. Keep the current
         lifetime and the recorded Cloud observations. Option C remains a
         post-merge follow-up with an explicit byte budget still to be agreed.
-  - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -2294,10 +2297,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       bytes at delivery and check them against the digest; one entry per asset
       path across roots; first audit and record the copies of each asset per
       build with the harness.
-- [ ] Decide on one shared verified opaque-asset spool per generation and
+- [x] Decide on one shared verified opaque-asset spool per generation and
       route with the M14 Serve budgets. Account for GET and HEAD capture work,
       live response files after worker permits end, and OS temporary storage
       outside process RSS (M14 review 6, finding 5; accepted interim design A).
+      User decision 61 (2026-10-20): A, keep one private capture for each
+      request. `mokly-imported-styles-assets.md` documents its bound. A
+      shared spool is a post-merge follow-up.
 - [ ] Measure Git opaque-asset digest commands and buffered delivery under
       the M14 comparison workloads. Use the cost to decide on streamed blob
       copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
@@ -2844,6 +2850,21 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       reuse, under F8 decision 59 option C. Revalidate compiler and resolution
       inputs, and agree the byte budget before implementation. The current
       recipe lifetime stays in force under option A until this work lands.
+
+- [ ] Run the bookfolio catalogue through build, serve, Changes, and watch
+      after the user supplies access. The user took it out of the rebuild
+      scope on 2026-10-20.
+
+- [ ] Remove the duplicate base render between validation and capture: one
+      bounded, ordered collector that keeps aggregate errors, warnings,
+      retention order, cancellation, fallback, and all charges (capture
+      decision 2, option B; user decision 62, 2026-10-20). Measured on
+      2026-10-20: React capture 95 s, of which validation 27 s; 5,790
+      JavaScript renders in each pass.
+
+- [ ] Share one verified opaque-asset spool for each Serve generation and
+      route, released with its generation, under the M14 Serve budgets (M14
+      review 6, finding 5, option B; user decision 61, 2026-10-20).
 
 - [ ] Bring large React usable startup under 5,000 ms
       (compilation cache redesign, decision 57 option A); measured 10.5 s
