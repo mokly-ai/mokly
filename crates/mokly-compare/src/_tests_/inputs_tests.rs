@@ -137,11 +137,29 @@ fn manifest_only_warning_names_the_first_selected_install_roots_lockfile() {
         base.differing_lockfile(&head, &["frontend".into()])
             .unwrap()
             .as_str(),
-        "frontend/package-lock.json"
+        "pnpm-lock.yaml"
     );
     base.files
         .remove(&RepoPath::parse("pnpm-lock.yaml").unwrap());
     head.files
         .remove(&RepoPath::parse("pnpm-lock.yaml").unwrap());
     assert!(base.differing_lockfile(&head, &[]).is_none());
+}
+
+#[test]
+fn manifest_only_warning_uses_the_declared_manager_in_a_mixed_lockfile_root() {
+    let mut base = inputs(b"stale npm lock", br#"{"packageManager":"pnpm@10.34.7"}"#);
+    base.files.insert(
+        RepoPath::parse("pnpm-lock.yaml").unwrap(),
+        b"pnpm lock".to_vec(),
+    );
+    let mut head = base.clone();
+    head.files.insert(
+        RepoPath::parse("package.json").unwrap(),
+        b"changed manifest".to_vec(),
+    );
+    assert_eq!(
+        base.differing_lockfile(&head, &[]).unwrap().as_str(),
+        "pnpm-lock.yaml"
+    );
 }

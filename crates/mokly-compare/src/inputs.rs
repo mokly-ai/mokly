@@ -8,6 +8,7 @@ use sha2::{Digest, Sha256};
 
 use crate::error::Result;
 use crate::local_packages;
+use crate::manager_plan;
 use crate::manifest::Manifest;
 use crate::sources::Sources;
 
@@ -54,28 +55,44 @@ impl Inputs {
     }
 
     fn selected_lockfile(&self, configured: &[String]) -> Option<RepoPath> {
-        [
-            &["npm-shrinkwrap.json", "package-lock.json"][..],
-            &["pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"][..],
-        ]
-        .into_iter()
-        .find_map(|names| {
-            std::iter::once("")
-                .chain(configured.iter().map(String::as_str))
-                .find_map(|root| {
-                    names.iter().find_map(|name| {
-                        let path = if root.is_empty() {
-                            (*name).to_owned()
-                        } else {
-                            format!("{root}/{name}")
-                        };
-                        self.files
-                            .keys()
-                            .find(|candidate| candidate.as_str() == path)
-                            .cloned()
-                    })
+        manager_plan::directories(configured)
+            .into_iter()
+            .find_map(|root| {
+                let prefix = if root.is_empty() {
+                    String::new()
+                } else {
+                    format!("{root}/")
+                };
+                let manifest = self
+                    .files
+                    .iter()
+                    .find(|(path, _)| path.as_str() == format!("{prefix}package.json"))
+                    .and_then(|(_, bytes)| serde_json::from_slice::<Manifest>(bytes).ok());
+                let manager = manifest
+                    .as_ref()
+                    .and_then(|manifest| manifest.package_manager.as_deref())
+                    .and_then(|manager| manager.split('@').next());
+                let names: &[&str] = match manager {
+                    Some("npm") => &["npm-shrinkwrap.json", "package-lock.json"],
+                    Some("pnpm") => &["pnpm-lock.yaml"],
+                    Some("yarn") => &["yarn.lock"],
+                    Some("bun") => &["bun.lock", "bun.lockb"],
+                    _ => &[
+                        "npm-shrinkwrap.json",
+                        "package-lock.json",
+                        "pnpm-lock.yaml",
+                        "yarn.lock",
+                        "bun.lock",
+                        "bun.lockb",
+                    ],
+                };
+                names.iter().find_map(|name| {
+                    self.files
+                        .keys()
+                        .find(|path| path.as_str() == format!("{prefix}{name}"))
+                        .cloned()
                 })
-        })
+            })
     }
 
     /// Whether this snapshot can be installed with npm's lockfile contract.

@@ -6,6 +6,7 @@ use std::sync::Arc;
 use yaml_rust2::parser::{Event, Parser};
 
 use crate::error::{Error, Result};
+use crate::local_specifications;
 use crate::manifest;
 
 #[derive(Clone, Default)]
@@ -15,15 +16,18 @@ struct Evidence {
 }
 
 impl Evidence {
-    fn scalar(parent: &str, value: &str) -> Self {
-        Self {
+    fn scalar(parent: &str, value: &str) -> Result<Self> {
+        let specification = match local_specifications::validate(value, parent, parent) {
+            Ok(()) => None,
+            Err(Error::LocalOutside { path }) => Some(Arc::from(path)),
+            Err(error) => return Err(error),
+        };
+        Ok(Self {
             path: manifest::target(parent, value.trim_start_matches('!'))
                 .err()
                 .map(|_| Arc::from(value.trim_start_matches('!'))),
-            specification: manifest::local(value)
-                .filter(|local| manifest::target(parent, local).is_err())
-                .map(Arc::from),
-        }
+            specification,
+        })
     }
 
     fn merge(&mut self, other: Self) {
@@ -90,7 +94,7 @@ pub(crate) fn validate(bytes: &[u8], path: &str) -> Result<()> {
                 frame.evidence
             }
             Event::Scalar(value, _, anchor, _) => {
-                let evidence = Evidence::scalar(parent, &value);
+                let evidence = Evidence::scalar(parent, &value)?;
                 if anchor != 0 {
                     anchors.insert(anchor, evidence.clone());
                 }

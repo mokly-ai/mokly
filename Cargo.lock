@@ -2137,6 +2137,7 @@ dependencies = [
  "mokly-platform",
  "mokly-sidecar",
  "mokly-source-interface",
+ "percent-encoding",
  "serde",
  "serde_json",
  "sha2",

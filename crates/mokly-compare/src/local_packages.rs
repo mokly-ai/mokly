@@ -4,7 +4,9 @@ use std::collections::BTreeMap;
 
 use mokly_git::identity::RepoPath;
 
+use crate::ancestor_roots;
 use crate::error::Result;
+use crate::local_specifications;
 use crate::manager_local;
 use crate::manifest::{self, Manifest};
 
@@ -26,10 +28,19 @@ pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<
 
 pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
     for (directory, manifest) in manifests(files)? {
+        let project = ancestor_roots::directories(&directory)
+            .into_iter()
+            .find(|root| {
+                let path = if root.is_empty() {
+                    "yarn.lock".to_owned()
+                } else {
+                    format!("{root}/yarn.lock")
+                };
+                files.keys().any(|candidate| candidate.as_str() == path)
+            })
+            .unwrap_or_else(|| directory.clone());
         for value in manifest.specifications() {
-            if let Some(local) = manifest::local(value) {
-                manifest::target(&directory, local)?;
-            }
+            local_specifications::validate(value, &directory, &project)?;
         }
         for workspace in manifest.workspaces() {
             manifest::target(&directory, workspace)?;

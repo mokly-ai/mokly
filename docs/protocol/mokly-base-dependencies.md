@@ -66,7 +66,9 @@ select local archives, patches, and workspace sources. Recognize
 `file:`, `link:`, Yarn `portal:` and patch paths, pnpm overrides and workspace
 paths, bare relative and absolute paths, home paths and local
 `.tgz`, `.tar.gz` and `.tar` specifications. Normalize relative paths from
-the declaring manifest. A local path outside the repository, including a home
+the declaring manifest. Yarn patch references validate each patch and its
+source. Their `~/` prefix is relative to the Yarn project, not the home
+directory. Built-in patches need no local path. A local path outside the repository, including a home
 or absolute path, uses a typed fallback reason when an install is needed.
 No install reads it.
 

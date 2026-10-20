@@ -55,7 +55,7 @@ impl Manifest {
             || self
                 .specifications()
                 .iter()
-                .any(|value| local(value).is_some())
+                .any(|value| value.starts_with("patch:") || local(value).is_some())
     }
 
     pub(crate) fn patches(&self) -> impl Iterator<Item = &str> {
@@ -110,10 +110,11 @@ pub(crate) fn local(value: &str) -> Option<&str> {
     if let Some(value) = value.strip_prefix("portal:") {
         return Some(value);
     }
-    if value.starts_with("patch:") {
-        let (_, patch) = value.split_once('#')?;
-        let patch = patch.split("::").next()?;
-        return (!patch.starts_with("~builtin<")).then_some(patch.trim_start_matches('~'));
+    if let Some(value) = value.strip_prefix("workspace:") {
+        return (value.starts_with(['.', '/', '\\'])
+            || value.starts_with("~/")
+            || value.as_bytes().get(1) == Some(&b':'))
+        .then_some(value);
     }
     if value.get(..5).is_some_and(|prefix| {
         prefix.eq_ignore_ascii_case("file:") || prefix.eq_ignore_ascii_case("link:")

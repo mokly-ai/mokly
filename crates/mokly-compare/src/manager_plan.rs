@@ -9,16 +9,8 @@ use crate::manager_yaml;
 
 pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>> {
     let manifests = local_packages::manifests(&inputs.files)?;
-    let mut candidates = vec![String::new()];
-    for configured in configured {
-        for directory in ancestor_roots::directories(configured) {
-            if !candidates.contains(&directory) {
-                candidates.push(directory);
-            }
-        }
-    }
     let mut roots = Vec::new();
-    for directory in candidates {
+    for directory in directories(configured) {
         if ![
             "npm-shrinkwrap.json",
             "package-lock.json",
@@ -95,6 +87,18 @@ pub(crate) fn roots(inputs: &Inputs, configured: &[String]) -> Result<Vec<Root>>
         return Err(Error::UnsupportedManager);
     }
     Ok(roots)
+}
+
+pub(crate) fn directories(configured: &[String]) -> Vec<String> {
+    let mut candidates = vec![String::new()];
+    for configured in configured {
+        for directory in ancestor_roots::directories(configured) {
+            if !candidates.contains(&directory) {
+                candidates.push(directory);
+            }
+        }
+    }
+    candidates
 }
 
 fn yarn(inputs: &Inputs, root: &str) -> Result<Manager> {

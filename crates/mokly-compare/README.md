@@ -225,7 +225,8 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [command supervision](./src/commands.rs).
 - [Manager plans](./src/manager_plan.rs), [versions](./src/manager.rs), and
   [install commands](./src/manager_command.rs), and
-  [local path confinement](./src/manager_local.rs).
+  [local path confinement](./src/manager_local.rs), and
+  [wrapped package specifications](./src/local_specifications.rs).
 
 ### Related Docs
 

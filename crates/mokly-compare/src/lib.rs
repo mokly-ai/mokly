@@ -23,6 +23,7 @@ pub mod dependency_types;
 mod durability;
 mod install;
 mod local_packages;
+mod local_specifications;
 mod manager;
 mod manager_command;
 mod manager_local;
