@@ -15,7 +15,7 @@
   },
   "packageManager": "npm@11.21.0",
   "engines": {
-    "node": ">=22.14.0 <24.14.0 || >=24.19.0"
+    "node": ">=22.15.0 <24.14.0 || >=24.19.0"
   },
   "scripts": {
     "build": "cargo xtask build-native && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",

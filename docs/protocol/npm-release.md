@@ -16,7 +16,7 @@ One release publishes seven packages from one reviewed commit:
 
 `packages/mokly/package.json` describes the public ESM package `@mokly/mokly`: managed
 version, MIT license, Mokly authorship, exact repository metadata, Node range
-`>=22.14.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
+`>=22.15.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
 its types, the configuration JSON Schema at `config.schema.json`, and the file
 allowlist. It lists the five platform packages as exact
 optional dependencies at its own version and `@mokly/viewer` as an exact

@@ -37,11 +37,11 @@ jobs:
             }}
         run: |
           if [ "$RELEASE_PULL_REQUEST" = "true" ]; then
-            echo 'node-matrix=["22.14.0","24"]' >> "$GITHUB_OUTPUT"
-            echo 'verification-runtimes=node-22.14.0,node-24' >> "$GITHUB_OUTPUT"
+            echo 'node-matrix=["22.15.0","24"]' >> "$GITHUB_OUTPUT"
+            echo 'verification-runtimes=node-22.15.0,node-24' >> "$GITHUB_OUTPUT"
           else
-            echo 'node-matrix=["22.14.0"]' >> "$GITHUB_OUTPUT"
-            echo 'verification-runtimes=node-22.14.0' >> "$GITHUB_OUTPUT"
+            echo 'node-matrix=["22.15.0"]' >> "$GITHUB_OUTPUT"
+            echo 'verification-runtimes=node-22.15.0' >> "$GITHUB_OUTPUT"
           fi
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
@@ -192,7 +192,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: 22.14.0
+          node-version: 22.15.0
           package-manager-cache: false
           cache: npm
           cache-dependency-path: package-lock.json

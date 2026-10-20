@@ -95,7 +95,7 @@ impl Aggregate for SystemScripts {
                 "--commit".into(),
                 head.into(),
                 "--runtimes".into(),
-                "node-22.14.0".into(),
+                "node-22.15.0".into(),
             ],
             Operation::Aggregate,
             &self.workspace,

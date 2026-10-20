@@ -43,10 +43,10 @@ directory from another job.
 
 For ordinary pull requests and pushes to `main`, the workflow fans out to:
 
-- one viewer job on Node 22.14.0;
-- four browser shards on Node 22.14.0; and
-- one static-delivery job on Node 22.14.0; and
-- native jobs on macOS and Windows at Node 22.14.0.
+- one viewer job on Node 22.15.0;
+- four browser shards on Node 22.15.0; and
+- one static-delivery job on Node 22.15.0; and
+- native jobs on macOS and Windows at Node 22.15.0.
 
 For a same-repository Release Please pull request, the viewer job and every
 browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
@@ -62,7 +62,7 @@ labels and report runtime identities stay `node-24`; reports record the exact
 installed version. The aggregate rejects mixed versions within a group. The
 setup action itself does not provide the installed version output.
 
-Node 22.14 is the ordinary functional runtime because it is the package's
+Node 22.15 is the ordinary functional runtime because it is the package's
 declared minimum. The Node 24 repository prerequisite runs on every event. A
 Node 24-only regression can therefore reach unreleased `main`, but the
 dual-runtime Release Please gate must catch it before versions, tags, or npm
@@ -70,14 +70,14 @@ artifacts can be published. Release Please normally updates its pull request
 after a releasable merge, keeping that feedback close to the originating change
 without paying for both functional profiles on every ordinary event.
 
-The supported range is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. Node 24.14.0
+The supported range is Node.js `>=22.15.0 <24.14.0` or `>=24.19.0`. Node 24.14.0
 through 24.18.x can abort concurrent ESM-to-CommonJS loading before JavaScript
 can handle an error. The upstream
 [`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
 shipped in Node 24.19.0. The shim and the sidecar run on the consumer's Node,
 so the shim rejects affected versions before it resolves the binary.
 
-Local verification uses the supported floor at 22.14.0 and Node 24.21.0. These
+Local verification uses the supported floor at 22.15.0 and Node 24.21.0. These
 are tested representatives rather than the bounds of the supported range. The
 repository's `.nvmrc` and the preview workflow are pinned to 24.21.0. CI
 resolves the latest Node 24 patch once per run, while publishing resolves its
@@ -180,7 +180,7 @@ use validation mode. The push run registers the workflow before merge.
 
 One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout. It has
 `contents: read` permission and no secrets. It checks out full history with
-`persist-credentials: false`. It prepares Node 22.14.0, npm 11.21.0, Rust
+`persist-credentials: false`. It prepares Node 22.15.0, npm 11.21.0, Rust
 1.95.0 from `rust-toolchain.toml`, and Chromium. It records the installed
 lockfile digest after `npm ci` and `cargo xtask build-native` both succeed.
 The native build precedes the lockfile stamp. It exposes the job environment

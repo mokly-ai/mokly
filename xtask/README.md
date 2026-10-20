@@ -78,7 +78,7 @@ repository. Every suite rejects skips and todos.
 integers with `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
 shard with another suite fails before any subprocess starts.
 
-Hosted CI runs the Viewer and Browser suites on Node 22.14.0, and also on
+Hosted CI runs the Viewer and Browser suites on Node 22.15.0, and also on
 Node 24 for a Release Please pull request, under the
 [runtime profiles](../docs/protocol/ci-workflow.md#runtime-profiles).
 `Required CI` validates the report aggregate under the
@@ -208,7 +208,7 @@ checkout. When a command ends, its worker downloads its report and cleans up
 its box at once. Only the viewer command and the four browser shards produce
 reports; the repository outcome is its exit code. After all commands end,
 xtask cleans up the remaining boxes, runs the local aggregate over the five
-reports with the base commit and `node-22.14.0`, computes the local
+reports with the base commit and `node-22.15.0`, computes the local
 fingerprint again, and removes the snapshot. A successful check needs six
 commands that exit 0, five downloads, a valid aggregate, and the same local
 fingerprint as before the run.

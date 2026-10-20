@@ -393,6 +393,15 @@ The user chose all six items instead of leaving the checks and bounds pending.
 The gates protect dependency security, generated contracts, release binaries,
 and portable output. The budget values document the existing bounds.
 
+**Node floor, item 60 option C: applied by default (user rule), 2026-10-20.**
+Raise the supported Node floor to 22.15.0. Keep the 24.x range unchanged.
+The PostCSS evidence hooks require `module.registerHooks`, available from
+22.15.0. Apply the floor to package engines, lockfile, shim, CI, Testbox,
+release and verification evidence, and guides. This keeps both evidence
+checks active on every supported runtime. Alternatives were A, skip the two
+checks below 22.15.0, and B, add a fallback without `registerHooks`.
+Evidence: `.context/ci-gates-round2/node-floor-2.log`.
+
 **Review decisions the user gave on 2026-10-12:** every live native engine
 reference is repointed now; head styles, owned and unowned, leave the canonical
 form; the behaviour-table script is written on this branch; the server
