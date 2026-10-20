@@ -2601,6 +2601,14 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        Recommended: B, also index each record by the variant whose views its
        evidence names. Option A documents that only the parent page explains
        the shared change.
+  - Hub review of `rebuild/defaults-viewer`, finding 5, raised on
+    2026-10-20: no artboard shows the pane heading “Components this screen
+    uses changed”. Severity Low. The shell shows it in a loaded comparison
+    of a screen in Changes, beside a changed view, on an unchanged view that
+    keeps a component-owned record or that the affected records name. Draw
+    that comparison when follow-up 1 above settles: one changed and one
+    affected view, with the inventories and the matrix snapshots. The new
+    mockup is Large.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
