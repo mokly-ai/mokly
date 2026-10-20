@@ -3,13 +3,22 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_cli::build::BuildError;
+use mokly_catalogue::config::relative;
+use mokly_cli::build::{BuildError, BuildSummary};
 use mokly_cli::grammar::Common;
 use mokly_cli::serve::{PreparedServe, ServePreparation};
 use mokly_server::error::{InternalError, Result, ServerError};
 
 use crate::serve_warnings::AttemptWarnings;
 use crate::serve_watch::WatchInputs;
+
+/// Consume preparation so startup keeps only terminal metadata after publication.
+pub(super) fn summary(prepared: PreparedServe) -> (String, BuildSummary) {
+    (
+        relative(&prepared.config.file, &prepared.config.repo_root),
+        prepared.summary,
+    )
+}
 
 pub(super) async fn initial(
     preparation: Arc<dyn ServePreparation>,
