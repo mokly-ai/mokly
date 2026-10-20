@@ -2478,9 +2478,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - [x] Outside-scope item: the CSS evidence pages let a page use
           component elements without usage records. Done by `65179c45`.
   - M10 D1 round 4 decision 11: two PostCSS evidence tests fail on the Node
-    22.14.0 viewer runner, which has no `module.registerHooks`. Settled by
-    user decision 60 C, which raises the floor to 22.15.0 on
-    `rebuild/ci-gates`.
+    22.14.0 viewer runner, which has no `module.registerHooks`. Item 60 C on
+    `rebuild/ci-gates` raises the floor to 22.15.0. That branch applied it by
+    default under the user rule. Until it merges here, these two tests are the
+    only accepted failures of this branch's viewer suite.
   - M10 D1 round 4 decision 13 for the user: write each sweep reason from a
     list of the old test's assertions, and check each port's title. Severity
     Low, effort Small. Covers findings 3 to 6 of review 1 and finding 10
