@@ -1280,7 +1280,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Record reused ready usage as completed, so a metadata-only rebuild
         publishes no extra usage revision.
         Serve lifecycle evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/independent-checks.md`.
-  - [ ] Measure interleaved head/base work in Serve background Changes and
+  - [x] Measure interleaved head/base work in Serve background Changes and
         reduce source-root replacements within the configured pool bound,
         including the one-worker case. Integrate shared-engine batching with
         Serve-only interleaving (review 6a finding 2, option C).
@@ -1314,12 +1314,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
             capture, so it only bounds the overlap window. Its maximum cannot
             be recovered from the saved phase maxima. The initial phase peaked
             at 1,603,197,952 bytes.
-      - [ ] Run the deferred default-count probe with a 4 GB allowance in a
+      - [x] Run the deferred default-count probe with a 4 GB allowance in a
             quiet machine window, with no other delegate running, alongside
             the M14 React Serve measurement. Decision C, approved by the
             orchestrator on 2026-10-19: the shared-machine 2 GB rule stays.
             Record the maximum from the new capture's start to the old
             snapshot's release.
+            Completed by the measurement workspace on 2026-10-19. Evidence:
+            `.context/m14-measurements/m9-default/summary.json`.
     - [x] Use an intentionally unresolved base for the shared browser example,
           with terminal quiescence and one Git diagnostic. Real Changes specs
           keep independent fixtures. Keep the 600-second guard and one sidecar.
