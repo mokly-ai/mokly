@@ -2298,6 +2298,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         the kept port. The sweep procedure now states this rule. Covers
         review 3 findings 1 and 2 and review 4 finding 2; previous examples
         0858e172, 4d6a21a4, and abf52983. Evidence: `.context/f5/report.md`.
+  - M10 Serve and moved rows decision 10 was decided A by the orchestrator on
+    2026-10-20. The line above records how followups-f5 applied it.
   - [x] M10 Serve and moved rows review 4, findings 12 and 13, fixed on
         2026-10-20: the restored removed-variant journey keeps its parent
         unchanged (`bd05ab75`, B), and the poll comment names no duration
@@ -2315,6 +2317,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         "collection". Renamed by `a58da357` on 2026-10-20, as the orchestrator
         asked: `serve_generation_removal.ts`, `removeGeneration`, and
         `RemovedGeneration`.
+  - [x] M10 Serve and moved rows review 7, on 2026-10-20: the Card parent
+        panes prove each side again by their `.accent` colour (`06158d40`),
+        and the plan dates decision 10 again after merge `8fa9f338` kept only
+        the f5 line.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
