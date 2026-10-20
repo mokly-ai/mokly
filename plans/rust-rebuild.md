@@ -2880,16 +2880,33 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         that scoping would change, or at the end of the stylesheet when
         scoping only adds tokens there.
   - `crates/mokly-css/src/rename_selectors.rs:99`: removing a bare `:global`
-    or `:local` before an at-keyword turns a rule into an at-rule, for
-    example `:global@media all{}` into `@media all{}`, and the token check
-    misses it where both blocks read alike. Found by the M14 nesting round 7
-    differential. Separate branch.
+    or `:local` can change a statement. Before an at-keyword, it turns a rule
+    into an at-rule, for example `:global@media all{}` into `@media all{}`.
+    Alone in a statement without a block, it empties the statement, so
+    `.p{:local}` builds as `.p{}`. The token check misses both where the two
+    readings agree. Found by the M14 nesting round 7 differential. Each fix
+    rejects stylesheets that build today, so it needs a user decision
+    (nesting report item 27). Separate branch.
+  - `crates/mokly-css/src/rename_selectors.rs:181`: removing a `:global()`
+    wrapper before an at-keyword, as in `:global(@media all){.a{}}`, also
+    turns a rule into an at-rule. Found by the M14 nesting round 7 review.
+    Separate branch.
   - `crates/mokly-css/src/module_checks.rs:30`: in a rule list, the module
     check skips the block of a statement that starts like a custom property,
     though the renamer and the token check read it as a rule. Reading it as
     a rule rejects an `@value` there, also in keyframes and `@document`
-    blocks that build today, so it needs a user decision. Found by the M14
-    nesting round 7 differential. Separate branch.
+    blocks that build today, so it needs a user decision (nesting report
+    item 28). Found by the M14 nesting round 7 differential. Separate
+    branch.
+  - Open from the M14 nesting round 7 review, report under
+    `.context/m14-nesting/r7/review-r7.md`:
+  - 24: HTML comment token hides a stylesheet at-rule. Severity Low, effort
+    Medium. Recommended: B, skip those tokens before a stylesheet statement,
+    as cssparser does. It rejects such an `@value`, so it needs a user
+    decision.
+  - 26: No test pins the token check position for tokens dropped at the
+    end. Severity Low, effort Small. Recommended: A, add the case `a{}b`
+    scoped to `a{}`.
 
 ## Post-merge follow-up (non-blocking)
 
