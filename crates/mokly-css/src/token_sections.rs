@@ -11,25 +11,22 @@ use crate::token_tree::Tokens;
 /// end a non-custom statement at its first `{}` block, as postcss does.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Grammar {
-    /// The stylesheet and grouping at-rules: a statement ends at its `{}`
-    /// block or at `;`.
+    /// The stylesheet, and grouping at-rule blocks outside declaration blocks:
+    /// a statement ends at its `{}` block or at `;`.
     Rules,
-    /// Style rules, declaration at-rules, and rules nested in them: a custom
-    /// property runs through its `{}` blocks to the next `;`. Every other
-    /// statement ends as in [`Grammar::Rules`].
+    /// Style rules, declaration at-rules, and every block nested in them: a
+    /// custom property runs through its `{}` blocks to the next `;`. Every
+    /// other statement ends as in [`Grammar::Rules`].
     Declarations,
 }
 
-impl Grammar {
-    /// The grammar of a block that a statement opens. `grouping` is true for
-    /// a grouping at-rule; inside declarations, every nested block declares.
-    pub(crate) fn nested(self, grouping: bool) -> Self {
-        if self == Self::Declarations || !grouping {
-            Self::Declarations
-        } else {
-            Self::Rules
-        }
-    }
+/// The `{}` block that ends a statement, and the grammar of its statements.
+#[derive(Clone, Debug)]
+pub(crate) struct Block {
+    /// The child tokens of the block.
+    pub(crate) range: Range<usize>,
+    /// The grammar of the statements inside the block.
+    pub(crate) grammar: Grammar,
 }
 
 /// One rule or declaration at a block's own level.
@@ -40,8 +37,8 @@ pub(crate) struct Section {
     pub(crate) start: usize,
     /// Byte offset of the `{` or `;`, or the end of the enclosing block.
     pub(crate) end: usize,
-    /// The child tokens of the `{}` block that ends the section.
-    pub(crate) body: Option<Range<usize>>,
+    /// The `{}` block that ends the section, with the grammar of its statements.
+    pub(crate) block: Option<Block>,
     /// True when a `;` ends the section.
     pub(crate) semicolon: bool,
 }
@@ -58,6 +55,11 @@ impl Section {
             .map_or(self.start, |index| tokens.nodes[index].start)
     }
 
+    /// The lowercase name of the at-rule that the statement starts with.
+    pub(crate) fn at_rule(&self, tokens: &Tokens<'_>) -> Option<String> {
+        at_rule(tokens, self.prelude.clone())
+    }
+
     /// True when the statement starts with a dashed ident and a colon.
     pub(crate) fn custom_property(&self, tokens: &Tokens<'_>) -> bool {
         custom_property(tokens, self.prelude.clone())
@@ -69,7 +71,8 @@ impl Section {
     }
 }
 
-/// Take the next section from `range`; `None` when only trivia remains.
+/// Take the next section of a block whose statements use `grammar`; `None`
+/// when only trivia remains.
 pub(crate) fn next(
     tokens: &Tokens<'_>,
     range: &mut Range<usize>,
@@ -84,11 +87,16 @@ pub(crate) fn next(
         let body = !custom && matches!(node.token, Token::CurlyBracketBlock);
         let semicolon = matches!(node.token, Token::Semicolon);
         if body || semicolon {
+            let prelude = begin..index;
+            let block = body.then(|| Block {
+                range: tokens.children(index),
+                grammar: nested(grammar, at_rule(tokens, prelude.clone()).as_deref()),
+            });
             return Some(Section {
-                prelude: begin..index,
+                prelude,
                 start,
                 end: node.start,
-                body: body.then(|| tokens.children(index)),
+                block,
                 semicolon,
             });
         }
@@ -97,9 +105,40 @@ pub(crate) fn next(
         prelude: begin..range.end,
         start,
         end: tokens.offset(range.end),
-        body: None,
+        block: None,
         semicolon: false,
     })
+}
+
+/// The grammar of a block that a statement opens. Inside declarations, every
+/// nested block declares. In rules, only a grouping at-rule holds rules.
+fn nested(grammar: Grammar, at_rule: Option<&str>) -> Grammar {
+    if grammar == Grammar::Rules && at_rule.is_some_and(grouping) {
+        Grammar::Rules
+    } else {
+        Grammar::Declarations
+    }
+}
+
+/// At-rules whose blocks hold rules: keyframes, conditional, layer, document,
+/// scope, and starting-style rules.
+fn grouping(name: &str) -> bool {
+    name.ends_with("keyframes")
+        || matches!(
+            name,
+            "media" | "supports" | "container" | "layer" | "document" | "scope" | "starting-style"
+        )
+}
+
+/// The lowercase at-keyword name when the range starts with an at-rule.
+fn at_rule(tokens: &Tokens<'_>, mut range: Range<usize>) -> Option<String> {
+    match tokens
+        .next_significant(&mut range)
+        .map(|index| &tokens.nodes[index].token)
+    {
+        Some(Token::AtKeyword(name)) => Some(name.to_ascii_lowercase()),
+        _ => None,
+    }
 }
 
 /// True when the statement starts with a dashed ident and a colon.

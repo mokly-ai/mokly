@@ -1410,13 +1410,13 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Keep a view that exists on one side out of implementation impact when
       its entry has both sides; adding Dark to a light-only catalogue made
       every build and Serve classification invalid.
-- [ ] Close the large-fixture Changes reference gap: the old captures have
+- [x] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
       prove large-scale Changes with the Rust implementation.
   - [x] Prove bounded full-comparison work at 128 and 512 component parents
         with variants, and shared before/after CSS parse reuse.
-  - [ ] Complete reviews, resource inventories, and closures for the two
+  - [x] Complete reviews, resource inventories, and closures for the two
         distinct large states: the unrelated-rule edit and the watch edits.
         Use one sidecar, a detached run, an external 60-minute guard, and the
         same 1.85 GB process-family PSS bound. The earlier external ten-minute
@@ -1428,6 +1428,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         field in both completed results before accepting the artifacts.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
+        Completed evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -2055,9 +2056,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         source Changes, and watched screen, component, and stylesheet edits.
         Keep the source repository unchanged.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-18.md`.
-  - [ ] Profile the memory guard stops in repeated Mokly Cloud comparisons.
+  - [x] Profile the memory guard stops in repeated Mokly Cloud comparisons.
         Separate retained generation data from allocator residency before
         changing cache limits or rendering behaviour.
+        Release the startup generation after its publication handoff. Verify
+        disposal while Serve stays open across two source replacements.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
+        Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m14-cloud-memory/merge-decisions.md`.
+  - [ ] Decide compiled-recipe retention between comparisons: R19-1, severity
+        Medium, effort Large. Recommended C: a byte-bounded cache with compiler
+        and resolution input revalidation. Agree its budget before implementation.
   - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
@@ -2076,6 +2084,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Evidence: `.context/m14-nesting/report.md`.
   - [x] Keep CSS Modules name ranges after an attribute selector, so
         `.a[x]:global(.b)` no longer fails the token check.
+  - [x] Limit the CSS Modules empty-wrapper and ICSS checks to selectors and
+        `@scope` preludes; other at-rule preludes stay as authored, as
+        css-loader does. Decision: nesting report item 13 option A, approved
+        by the orchestrator on 2026-10-20.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
         (pending user decision).
@@ -2149,6 +2161,7 @@ Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
 Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
 Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
 Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
+Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -2433,6 +2446,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - [x] Resolve in F6 by waiting for each scripted position in history state
           before navigation. Retain every offset and route assertion.
           Evidence: `.context/f6/report.md`.
+  - [x] Resolve F7's watched-update disclosure flake. Wait for unfiltered folder
+        clicks to save their choice before the next action. Keep all assertions
+        and the filter's pre-search baseline. Evidence: `.context/f7/report.md`.
+  - [x] Fix F7 review 1: record folder and section choices during activation,
+        so a delayed native toggle cannot put the close after search. Keep
+        native fallback behavior and a controlled mouse/keyboard regression.
+        Evidence: `.context/f7/post-push-review.md` and `.context/f7/report.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
