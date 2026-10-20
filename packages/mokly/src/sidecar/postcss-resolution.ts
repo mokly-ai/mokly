@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -9,6 +8,7 @@ import { detail } from "./errors.js";
 import { importerDirectory, resolveImport } from "./importer-resolution.js";
 import { ModulePaths } from "./module-paths.js";
 import type { ModuleSources } from "./module-paths.js";
+import { moduleBytes } from "./postcss-evidence.js";
 import { resolutionOptions } from "./resolution.js";
 
 let sources: ModulePaths;
@@ -149,7 +149,7 @@ function requireLocal(file: string): unknown {
   commonJs.set(file, module);
   dynamicFiles.add(file);
   try {
-    const code = transformSync(fs.readFileSync(file, "utf8"), {
+    const code = transformSync(moduleBytes(file).toString(), {
       loader: /\.[cm]?tsx?$/.test(file) ? "ts" : "js",
       format: "cjs",
       sourcefile: file,

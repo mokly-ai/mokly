@@ -8,10 +8,12 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_graph::source_snapshot::SourceSnapshot;
 use mokly_model::output::validation::digest;
 use mokly_source_interface::error;
+use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
 use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::error::{Error, InternalError, Result};
+use crate::fingerprint_evidence::Evidence;
 use crate::fingerprint_observation::Observation;
 use crate::fingerprint_walk::{self, Membership};
 use crate::input_selection::Selection;
@@ -34,6 +36,7 @@ pub trait InputTree: SourceTree {
 
 /// Generation source wrapper with immutable reads and a final live recheck.
 pub struct CapturedTree {
+    evidence: Evidence,
     snapshot: SourceSnapshot,
     live: Arc<dyn SourceTree>,
     reads: Mutex<BTreeMap<PathBuf, Observation<String>>>,
@@ -49,6 +52,7 @@ impl CapturedTree {
     /// Capture one build's inputs without retaining a second copy of their bytes.
     pub fn new(tree: Arc<dyn SourceTree>) -> Self {
         Self {
+            evidence: Evidence::default(),
             snapshot: SourceSnapshot::new(tree.clone()),
             live: tree,
             reads: Mutex::new(BTreeMap::new()),
@@ -58,6 +62,18 @@ impl CapturedTree {
     }
 }
 impl SourceTree for CapturedTree {
+    fn observe_pinned_input(
+        &self,
+        path: &Path,
+        baseline: &ReadBaseline,
+        digest: &str,
+    ) -> error::Result<()> {
+        self.evidence.record_pinned(path, baseline, digest)
+    }
+    fn observe_input(&self, path: &Path, baseline: &ReadBaseline) -> error::Result<()> {
+        self.evidence.record(path, baseline);
+        Ok(())
+    }
     fn prefetch(&self, paths: &[PathBuf]) -> error::Result<()> {
         self.snapshot.prefetch(paths)
     }
@@ -163,6 +179,7 @@ impl InputTree for CapturedTree {
         paths: &[String],
         module_digests: &BTreeMap<String, Option<String>>,
     ) -> Result<()> {
+        self.evidence.verify(self, self.live.as_ref())?;
         for path in paths {
             let absolute = root.join(path);
             if let Some(None) = module_digests.get(path) {
@@ -199,6 +216,7 @@ impl InputTree for CapturedTree {
     }
     #[tracing::instrument(name = "output.recheck", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn verify(&self) -> Result<()> {
+        self.evidence.verify(self, self.live.as_ref())?;
         let roots = self.roots.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(roots) = roots.as_ref() {
             roots.members.verify(&fingerprint_walk::capture(

@@ -1869,15 +1869,28 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       Design how to capture the bytes that module evaluation and plugins read,
       or supply immutable generation inputs. Paths and rereads after a plugin
       runs cannot establish the consumed bytes. Plugin file dependencies outside
-      roots and bundle modules retain an accepted late baseline until this work.
+      roots and bundle modules without witnesses retain an accepted late baseline.
   - [x] Compare read observers with immutable PostCSS inputs, including native
         plugins, child processes, descriptors, cost, and supported platforms.
-  - [ ] Decide M14-PC1: staged observed-read digests with explicit opaque gaps,
-        enforced immutable inputs, or continued deferral. No runtime change is
-        selected; the full consumed-byte requirement remains open.
+  - [x] Decision 56 A, approved 2026-10-19: add observed-read evidence in
+        stages and keep explicit incomplete coverage and late opaque baselines.
+        Preserve native plugin compatibility. Do not infer complete coverage
+        from one observed read. Alternatives were B, enforced immutable inputs,
+        and C, continued deferral. A improves common reads without new isolation
+        or platform requirements.
+  - [x] Record raw local compiler inputs, observable native module sources,
+        and path-based sync, callback, and promise whole-file reads. Retain
+        distinct witnesses through context reuse, result caches, stylesheet
+        caches, and worker replacement. Check them before document callbacks
+        and final installation through the existing input-change outcome.
+        Compare base source witnesses with pinned Git bytes, separate from head
+        baselines. Custom loader text without raw provenance stays incomplete.
+  - [ ] Complete the remaining coverage: native/helper/worker reads, preloaded
+        file providers, descriptors, streams and ranges, older-runtime transitive ESM loading, private
+        resolution metadata, and read-time path identity. The full M14 item
+        remains open. No path or context is labelled complete.
         Design: `.context/rust-rebuild/delegation/m9-compare/design-postcss-digests.md`.
-        Evidence: `.context/rust-rebuild/m14-postcss-digests/` and
-        `.context/rust-rebuild/delegation/m9-compare/report-16.md`.
+        Stage evidence: `.context/rust-rebuild/m14-postcss-read-evidence/`.
 
 - [ ] Port the large fixture generator with HTML and React variants and the
       four-scenario benchmark harness; record the time and memory budgets, the

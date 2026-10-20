@@ -98,6 +98,9 @@ same boundary through the comparison adapter. `mokly-render` supplies the
 JavaScript factories and selected base dependencies through that path.
 Serve must also apply the public policy's read-time confinement rules.
 
+Source snapshots forward external read evidence to static admission without
+replacing the witnessed bytes with a later snapshot hash. Stylesheet keys
+include these versions separately from plugin declaration digests.
 Source snapshots return `Arc<[u8]>` through `read_shared`. Cache hits share
 storage. `digest_unretained` memoizes an opaque input hash without retaining its payload.
 `SourceSnapshot::retained_bytes()` reports the retained private payload per path.

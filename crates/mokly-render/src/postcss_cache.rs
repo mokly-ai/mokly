@@ -84,29 +84,30 @@ impl CssCache {
 
 impl CssRecord {
     fn retained_bytes(&self) -> usize {
-        let result =
-            self.result
+        let result = self.result.read_evidence.retained_bytes()
+            + self
+                .result
                 .unmapped_dependency_directories
                 .as_ref()
                 .map_or(0, |directories| {
                     directories.capacity() * size_of::<String>()
                         + directories.iter().map(String::capacity).sum::<usize>()
                 })
-                + self.result.text.capacity()
-                + self.result.dependencies.capacity()
-                    * size_of::<mokly_sidecar::results::Dependency>()
-                + self
-                    .result
-                    .dependencies
-                    .iter()
-                    .map(|value| {
-                        value.path.capacity()
-                            + value.plugin.as_ref().map_or(0, String::capacity)
-                            + value.glob.as_ref().map_or(0, String::capacity)
-                    })
-                    .sum::<usize>();
+            + self.result.text.capacity()
+            + self.result.dependencies.capacity() * size_of::<mokly_sidecar::results::Dependency>()
+            + self
+                .result
+                .dependencies
+                .iter()
+                .map(|value| {
+                    value.path.capacity()
+                        + value.plugin.as_ref().map_or(0, String::capacity)
+                        + value.glob.as_ref().map_or(0, String::capacity)
+                })
+                .sum::<usize>();
         let processed = self.processed.as_ref().map_or(0, |value| {
-            value.text.capacity()
+            value.read_evidence.retained_bytes()
+                + value.text.capacity()
                 + value
                     .inputs
                     .iter()

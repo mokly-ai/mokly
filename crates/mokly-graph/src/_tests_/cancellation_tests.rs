@@ -135,6 +135,7 @@ fn preparation_stops_before_the_next_stylesheet_root() {
         StylesheetBundlerMock::bundle
             .next_call(matching!((root) if root.path == "a.css"))
             .returns(Ok(Bundle {
+                read_evidence: Default::default(),
                 route: "styles/a.css".into(),
                 css: "p {}".into(),
                 assets: Default::default(),

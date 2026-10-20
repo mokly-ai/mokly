@@ -1,13 +1,13 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { build, transform } from "esbuild";
+import { build } from "esbuild";
 
 import { detail } from "./errors.js";
 import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { moduleContext } from "./postcss-context.js";
+import { postcssSource } from "./postcss-source.js";
 import { resolutionOptions } from "./resolution.js";
 
 /** Repository presets are local modules; installed plugins remain native imports. */
@@ -65,34 +65,9 @@ export async function importPostcssModule(
               return { errors: [{ text: detail(error) }] };
             }
           });
-          builder.onLoad({ filter: /\.[cm]?[jt]sx?$/ }, async (args) => {
-            const extension = path.extname(args.path);
-            const output = await transform(
-              await fs.readFile(args.path, "utf8"),
-              {
-                loader: extension.includes("ts")
-                  ? "ts"
-                  : extension === ".jsx"
-                    ? "jsx"
-                    : "js",
-                define: {
-                  "import.meta.url": JSON.stringify(
-                    pathToFileURL(args.path).href,
-                  ),
-                  "import.meta.dirname": JSON.stringify(
-                    path.dirname(args.path),
-                  ),
-                  "import.meta.filename": JSON.stringify(args.path),
-                  __dirname: JSON.stringify(path.dirname(args.path)),
-                  __filename: JSON.stringify(args.path),
-                },
-              },
-            );
-            return {
-              contents: moduleContext(output.code, args.path),
-              loader: "js",
-            };
-          });
+          builder.onLoad({ filter: /.*/ }, (args) =>
+            postcssSource(args.path, paths.settings.loaders),
+          );
         },
       },
     ],

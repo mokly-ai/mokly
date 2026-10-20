@@ -33,6 +33,8 @@ their detail separately from the module-and-export location, so Rust prints
 one location before the diagnostic code. PostCSS requests carry logical
 stylesheet paths; the worker resolves their physical input on the chosen side.
 Each PostCSS context uses an owned child process in that side's source root.
+Runtime allocates context ids from one process-wide sequence.
+Mokly's own CSS transforms stay in the Rust core.
 Relative reads and automatic Tailwind scans therefore use the historical
 extraction for a base render. Its `NODE_PATH` contains the selected dependency
 directories before inherited values for package resolvers that read `NODE_PATH`. Disposal kills and reaps only that context.
@@ -59,10 +61,17 @@ Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
 The pool restores compatible code before evaluation-only bundles across slots
-and recycling. Metadata invalidation still recomputes class maps before reusing
+and recycling. It gives each loaded lifetime an epoch. A stale process replays
+maps, describe, and bindings before rendering. Metadata invalidation still recomputes class maps before reusing
 an equivalent generation.
 Stylesheet reuse checks source digests, opaque asset digests and resolved
 identities, plugin dependency digests, and directory-glob membership. Empty directory recipes observe later additions.
+PostCSS read evidence retains observed whole-file digests beside late baselines.
+Both cache layers replay the original evidence to static admission. Selected
+module inputs remain separate from plugin privacy and catalogue membership.
+Base witnesses compare with pinned Git bytes through the shared admission
+observer. They never enter the head path ledger.
+Conflicting versions cannot seed cross-generation stylesheet reuse.
 Shared and generation-local stylesheet result caches each have a 64 MiB bound.
 Their records share storage. Oversized results return without cache retention.
 Each graph factory captures source and dependency reads in a fresh snapshot.
