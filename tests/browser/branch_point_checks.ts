@@ -10,7 +10,6 @@ import { branchPointPaths as paths } from "../helpers/branch_point_sources.js";
 
 import {
   activateRow,
-  type BranchPointHost,
   compareSideBySide,
   expectHead,
   expectRouted,
@@ -21,6 +20,7 @@ import {
   search,
   variantBar,
 } from "./branch_point_ui.js";
+import type { EntryHost } from "./entry_hosts.js";
 
 const PROPS = ['{"label": "Continue"}', '{"label": "Submit"}'] as const;
 
@@ -77,7 +77,7 @@ interface Family {
  */
 async function removedSibling(
   page: Page,
-  host: BranchPointHost,
+  host: EntryHost,
   family: Family,
   removedCrumbs: readonly string[],
 ): Promise<void> {
@@ -107,7 +107,7 @@ async function removedSibling(
  */
 async function activation(
   page: Page,
-  host: BranchPointHost,
+  host: EntryHost,
   family: Family,
   removedCrumbs: readonly string[],
 ): Promise<void> {
@@ -123,10 +123,7 @@ async function activation(
   await expectRouted(page, host, parent);
 }
 
-async function movedConsumers(
-  page: Page,
-  host: BranchPointHost,
-): Promise<void> {
+async function movedConsumers(page: Page, host: EntryHost): Promise<void> {
   await openEntry(page, host, "branch/consumers/badge");
   await expectHead(page, "Badge", ["Branch [button]", "Consumers [button]"]);
   await inspectorTab(page, "Usage");
@@ -165,7 +162,7 @@ async function movedConsumers(
     ]);
 }
 
-async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
+async function movedParent(page: Page, host: EntryHost): Promise<void> {
   await openEntry(page, host, paths.movedChild);
   await expectHead(page, "Action", [
     "Branch [button]",
@@ -183,7 +180,7 @@ async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
   await activation(page, host, family, removedCrumbs);
 }
 
-async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
+async function movedVariant(page: Page, host: EntryHost): Promise<void> {
   await openEntry(page, host, "branch/variant/donor/spare");
   await expectHead(page, "Donor", ["Branch [button]", "Variant [button]"]);
   await expect
@@ -213,7 +210,7 @@ async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
   ).toHaveCount(1);
 }
 
-async function caseRenames(page: Page, host: BranchPointHost): Promise<void> {
+async function caseRenames(page: Page, host: EntryHost): Promise<void> {
   await openEntry(page, host, paths.caseVariant);
   await expectHead(page, "Case action", ["Branch [button]", "Case [button]"]);
   const family = {
@@ -227,7 +224,7 @@ async function caseRenames(page: Page, host: BranchPointHost): Promise<void> {
   await activation(page, host, family, removedCrumbs);
 }
 
-async function reusedParent(page: Page, host: BranchPointHost): Promise<void> {
+async function reusedParent(page: Page, host: EntryHost): Promise<void> {
   const removed = paths.reusedRemoved;
   await openEntry(page, host, removed);
   await expectHead(page, "default", [

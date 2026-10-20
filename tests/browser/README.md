@@ -181,7 +181,10 @@ Viewer journeys on this copy register shared case modules.
 `static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
 Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
 viewer over this copy through both frame adapters. Each host passes a
-`MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`MovedHost` from `moved_rows.ts`, which extends the `EntryHost` of
+`entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
+page path it shows for that entry. An embedded host keeps `/viewer.html`, so
+a link that leaves the viewer for the standalone shell fails the case.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 
@@ -190,8 +193,7 @@ desktop and mobile widths: `branch_point_comparison_ui.spec.ts` on this copy,
 `viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
 through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
-a `BranchPointHost` from `branch_point_ui.ts`, which says how the host opens
-an entry and whether its address follows the entry.
+an `EntryHost`.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.

@@ -2,22 +2,20 @@
  * The branch-point cases' rendered references in an embedded `MoklyViewer`
  * over the branch copy, through both frame adapters, at desktop and mobile
  * widths, under the branch-point lookup contract. The host page opens an
- * entry by query and owns its own address, so only the rendered head names
- * the entry that the viewer shows.
+ * entry by query and keeps its own address, so each navigation checks the
+ * rendered head and that the page path stays `/viewer.html`.
  */
 
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
 
 import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
 import { test as branchTest } from "./branch_point_test.js";
-import {
-  BRANCH_POINT_WIDTHS,
-  type BranchPointHost,
-} from "./branch_point_ui.js";
+import { BRANCH_POINT_WIDTHS } from "./branch_point_ui.js";
 import {
   comparisonViewerHost,
   type ComparisonViewerHost,
 } from "./comparison_viewer_host.js";
+import { embeddedHost } from "./entry_hosts.js";
 
 const test = branchTest.extend<object, { branchViewer: ComparisonViewerHost }>({
   branchViewer: [
@@ -40,11 +38,7 @@ const test = branchTest.extend<object, { branchViewer: ComparisonViewerHost }>({
 });
 
 for (const adapter of ["same-origin", "cross"] as const) {
-  const host: BranchPointHost = {
-    open: (page, entry) =>
-      page.goto(`/viewer.html?adapter=${adapter}&entry=${entry}`),
-    routes: false,
-  };
+  const host = embeddedHost(adapter);
   test.describe(`${adapter} adapter`, () => {
     for (const [name, check] of Object.entries(BRANCH_POINT_CHECKS))
       for (const { name: width, ...size } of BRANCH_POINT_WIDTHS)

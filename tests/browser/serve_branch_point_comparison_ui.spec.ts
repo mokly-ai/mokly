@@ -10,8 +10,9 @@ import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.j
 import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 
 import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
-import { BRANCH_POINT_WIDTHS, ROUTED_HOST } from "./branch_point_ui.js";
+import { BRANCH_POINT_WIDTHS } from "./branch_point_ui.js";
 import { test as base } from "./browser_test.js";
+import { routedHost } from "./entry_hosts.js";
 import { serveComparisonCatalogue } from "./serve_comparison_fixture.js";
 
 type Served = Awaited<ReturnType<typeof serveComparisonCatalogue>>;
@@ -41,5 +42,5 @@ for (const [name, check] of Object.entries(BRANCH_POINT_CHECKS))
       page,
     }) => {
       await page.setViewportSize(size);
-      await check(page, ROUTED_HOST);
+      await check(page, routedHost);
     });
