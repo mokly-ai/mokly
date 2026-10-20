@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import test from "node:test";
 
@@ -42,4 +43,27 @@ test("ambiguous sequential reads never guess offsets and descriptor reuse starts
     ),
   );
   assert.equal(result.coverage, "incomplete");
+});
+
+test("bigint sentinels advance the cursor and unproven positions invalidate it", () => {
+  const file = path.resolve("/inputs/positions.txt");
+  opened(51, file, () => undefined);
+  finish(begin(51, -1n), Buffer.from("a"));
+  finish(begin(51, null), Buffer.from("b"));
+  finish(begin(51, NaN), Buffer.from("c"));
+  finish(begin(51, null), Buffer.from("d"));
+  finish(begin(51, 5), Buffer.from("f"));
+  closed(51);
+  assert.deepEqual(
+    readEvidence([])
+      .reads.filter((read) => read.path === file)
+      .map((read) =>
+        read.kind === "byte-range" ? [read.offset, read.digest] : undefined,
+      ),
+    [
+      [0, createHash("sha256").update("a").digest("hex")],
+      [1, createHash("sha256").update("b").digest("hex")],
+      [5, createHash("sha256").update("f").digest("hex")],
+    ],
+  );
 });

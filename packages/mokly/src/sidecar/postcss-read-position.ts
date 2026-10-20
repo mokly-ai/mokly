@@ -84,15 +84,20 @@ export function begin(fd: number, position: unknown): Ticket | undefined {
   const descriptor = descriptors.get(fd);
   if (!descriptor) return;
   const sequential =
-    position === undefined || position === null || position === -1;
+    position === undefined ||
+    position === null ||
+    position === -1 ||
+    position === -1n;
   const explicit = typeof position === "bigint" ? Number(position) : position;
   if (
     !sequential &&
     (typeof explicit !== "number" ||
       !Number.isSafeInteger(explicit) ||
       explicit < 0)
-  )
+  ) {
+    invalidate(fd);
     return;
+  }
   if (sequential && [...descriptor.pending].some((ticket) => ticket.sequential))
     invalidate(fd);
   const ticket: Ticket = {

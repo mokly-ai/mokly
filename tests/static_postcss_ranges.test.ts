@@ -57,3 +57,48 @@ result.messages.push({type:'dependency',file:'tokens.txt'});
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+for (const [kind, operation] of [
+  ["bigint", "fs.readSync(fd,Buffer.alloc(1),0,1,-1n)"],
+  ["vector NaN", "fs.readvSync(fd,[Buffer.alloc(1)],NaN)"],
+] as const)
+  test(`static builds preserve valid ${kind} read positions`, async (context) => {
+    const root = await publicationFixture();
+    context.after(() => fs.rm(root, { recursive: true, force: true }));
+    await write(root, "tokens.txt", "abcdef");
+    await write(root, "theme.css", "a{color:black}");
+    await write(
+      root,
+      "mokly.config.json",
+      JSON.stringify({
+        postcss: "postcss.mjs",
+        stylesheets: [{ match: "**", stylesheets: ["theme.css"] }],
+      }),
+    );
+    await write(
+      root,
+      "postcss.mjs",
+      `import assert from 'node:assert/strict'; import fs from 'node:fs';
+export default {plugins:[{postcssPlugin:'positions',Once(root,{result}){
+const fd=fs.openSync('tokens.txt','r');
+assert.equal(${operation},1);
+const bytes=Buffer.alloc(1);fs.readSync(fd,bytes,0,1,null);fs.closeSync(fd);
+assert.equal(bytes.toString(),'b');
+root.walkDecls('color',decl=>decl.value=bytes.toString());
+result.messages.push({type:'dependency',file:'tokens.txt'});
+}}]};`,
+    );
+    const result = await command(
+      root,
+      "build",
+      ["--no-changes", "--out=.context/site"],
+      "plain",
+      {},
+      context.signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    assert.equal(
+      await fs.readFile(path.join(root, "tokens.txt"), "utf8"),
+      "abcdef",
+    );
+  });
