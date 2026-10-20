@@ -114,6 +114,33 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `comparisonViewerHost(source)` mounts another copy instead, such as the
 branch copy's `branchCopy.directory`.
 
+## Comparison scrolling suites
+
+These suites prove the comparison panes, scrolling, and region pairing
+contracts on the native comparison copy and in the embedded comparison viewer.
+
+| Suite                                | Cases                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `comparison_alignment.spec.ts`       | Overlay and Difference stacks scroll as one for desktop, mobile, both viewports, and a component; a shorter document stays aligned past its end; an inner region scrolls every version while the page stays                                                                                                            |
+| `comparison_alignment_input.spec.ts` | Side by side mirrors both ways; scroll keys, same-document anchors, and scrolls the viewer did not make move every version; links stay inert while a version loads; smooth-scroll CSS still moves at once                                                                                                              |
+| `comparison_alignment_pages.spec.ts` | A viewport-height hero cannot grow its comparison, fixed bars and sticky headers stay on the viewport edges, and an app shell page moves only its inner region in every version                                                                                                                                        |
+| `comparison_alignment_hosts.spec.ts` | In a static build, stacks align, Side by side mirrors, panes stay read-only, and a pane that cannot be presented fails and recovers with Try again; in an embedded viewer through both frame adapters, stacks align and panes stay read-only, and through the cross-origin adapter a failing pane reports and recovers |
+| `comparison_regions.spec.ts`         | Panels move together in Overlay, Difference, Side by side in both directions, and Both; a shorter panel stops at its end                                                                                                                                                                                               |
+| `comparison_regions_pairing.spec.ts` | A named horizontal timeline and the main and Projects panels move together in Overlay and Difference; each pairing rule pairs its panel; ambiguous, `off`, and new panels scroll alone; a component's scrolling list moves in every version                                                                            |
+| `comparison_regions_input.spec.ts`   | Every listed key after a pointer press, focus moving into a panel, a touch drag, a scroll the browser made in the lower version, and anchors through a panel and then the page                                                                                                                                         |
+| `comparison_regions_keys.spec.ts`    | Keys from focus, a key falling back to the page at a region's end, right-to-left arrows, and instant two-axis writes under smooth-scroll CSS                                                                                                                                                                           |
+| `removed_previews.spec.ts`           | Space scrolls a previous version while a link holds focus                                                                                                                                                                                                                                                              |
+
+The Scroll together contract names its own suites. In
+`packages/viewer/tests/`, `comparison_region_identity.test.ts` proves the
+name grammar, roles, accessible names, and fingerprints;
+`comparison_region_match.test.ts` proves every pairing rule in order,
+uniqueness counts, ineligible picks, and each row of the pairing table; and
+`comparison_region_mirror.test.ts` proves caching, reservations, the reverse
+pair, and matching afresh after a measurement. The scroll controller unit
+tests there prove measurement, key routing including right-to-left regions,
+anchors, echoes, and the page mirror.
+
 ## Branch-point delivery copy
 
 `branch_point_test.ts` supplies `test`, the worker fixture `branchCopy`, and

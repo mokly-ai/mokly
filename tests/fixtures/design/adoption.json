@@ -151,10 +151,11 @@
     {
       "family": "components",
       "component": "inspector/metadata-row",
-      "reason": "The empty, loading, and unavailable inspection states show no metadata.",
+      "reason": "The empty, loading, and unavailable inspection states show no metadata, and the removed consumer keeps only its Details panel, whose comparison details show a reason sentence and no metadata row.",
       "except": [
         "design/components/states/empty",
         "design/components/states/loading/inspection-loading",
+        "design/components/states/removed-consumer",
         "design/components/states/unavailable"
       ]
     },
