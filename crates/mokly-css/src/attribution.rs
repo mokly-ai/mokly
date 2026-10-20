@@ -23,6 +23,8 @@ pub type OwnPageMatches = BTreeMap<RuleIdentity, BTreeSet<String>>;
 pub struct MatchProof {
     /// Shared physical containment, visited innermost first.
     pub(crate) regions: ContainmentPath,
+    /// Supplier ancestry used only to protect a trusted owner's supplied content.
+    pub(crate) inputs: Option<ContainmentPath>,
     /// Resolved input owner for the inline-style seam.
     pub owner: EvidenceOwner,
     /// Explicit sidecar owner, independent of copies on other documents.
@@ -30,7 +32,7 @@ pub struct MatchProof {
 }
 
 impl MatchProof {
-    /// Visit allowed ancestry innermost first; head proof exposes supplier ancestry.
+    /// Visit physical ancestry innermost first for every CSS delivery source.
     pub fn regions(&self) -> impl Iterator<Item = &Containment> {
         self.regions.iter()
     }
@@ -87,15 +89,16 @@ pub fn observe(
     before: Option<&MatchTree>,
     after: Option<&MatchTree>,
 ) -> Vec<RuleObservation> {
-    observe_ancestry(stylesheet, matching, before, after, false)
+    observe_owned(stylesheet, matching, before, after, None)
 }
 
-pub(crate) fn observe_ancestry(
+/// Retain physical proof and the supplier chain needed by declared style owners.
+pub fn observe_owned(
     stylesheet: &str,
     matching: &DocumentMatching,
     before: Option<&MatchTree>,
     after: Option<&MatchTree>,
-    inputs: bool,
+    owner: Option<&str>,
 ) -> Vec<RuleObservation> {
     match matching {
         DocumentMatching::Unresolved(_) => vec![RuleObservation {
@@ -137,13 +140,10 @@ pub(crate) fn observe_ancestry(
                                     }?;
                                     let element = tree.elements.get(matched.element)?;
                                     Some(MatchProof {
-                                        regions: if inputs {
-                                            element.input_regions.clone()
-                                        } else {
-                                            element.regions.clone()
-                                        },
+                                        regions: element.regions.clone(),
+                                        inputs: owner.map(|_| element.input_regions.clone()),
                                         owner: element.owner.clone(),
-                                        trusted_owner: None,
+                                        trusted_owner: owner.map(str::to_owned),
                                     })
                                 })
                                 .collect(),

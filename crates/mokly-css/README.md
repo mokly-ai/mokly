@@ -72,10 +72,10 @@ eightfold safety factor. It leaves room for caller and selector frames.
 the HTML adapter omits ignored regions and inert template contents.
 `ContainmentPath` shares immutable parent links between elements, copied
 matching trees, embedded documents, and detached match proof. It visits
-regions innermost first and releases deep paths iteratively. Head proof
-selects the shared supplier path; linked proof retains only the physical path.
-Callers read `MatchProof::regions()` for the permitted ancestry. The stored
-path stays private, so a caller cannot read a receiver through a head proof.
+regions innermost first and releases deep paths iteratively. Every source
+keeps physical containment. Owned proof also keeps the shared supplier path
+for its nested filter. Linked and ownerless proof retain no supplier path.
+Callers read `MatchProof::regions()` for physical ancestry; storage stays private.
 
 `attribution::attribute` joins equal rule observations, collects unfiltered
 own-page matches, and filters nested components before one record reduction.
@@ -83,8 +83,10 @@ It consumes the observation vector and moves retained paths into the reducer.
 Owned head styles, ownerless head styles, and linked CSS share that reducer.
 A source with no kept rule has one empty-selector `excluded` record.
 Unresolved proof takes precedence for the same selector and source.
-`inline_attribution` retains supplier input ancestry for head rules. Explicit
-sidecar owners remain available for exact unchanged-input instance proof.
+`inline_attribution` uses the linked observation boundary for ownerless head
+rules. `observe_owned` retains the declared owner and supplier filter.
+Declared owners claim physical instances even when their own pages have no
+match. Ownerless rules require catalogue-wide own-page proof, as linked CSS does.
 `MemoryParsedCss` shares equal bytes across paths and sides; eviction changes
 work only. Evidence retains each source's public route.
 

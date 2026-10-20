@@ -116,12 +116,10 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
             assert_eq!(proof.regions().count(), 2);
         }
         assert_eq!(inline[0].selectors[0].matches.len(), 2);
-        assert!(
-            inline[0].selectors[0]
-                .matches
-                .iter()
-                .all(|proof| proof.regions().next().is_none())
-        );
+        for proof in &inline[0].selectors[0].matches {
+            assert!(ptr::eq(original, proof.regions().next().unwrap()));
+            assert_eq!(proof.regions().count(), 2);
+        }
         (linked, inline)
     };
     let page = |rules| PageObservation {
@@ -140,6 +138,14 @@ fn linked_and_inline_proof_share_storage_after_the_tree_is_released() {
             path: "parent".into()
         }
     );
-    assert!(inline.changed_components.is_empty());
-    assert_eq!(inline.pages[0][0].owner, EvidenceOwner::Entry);
+    assert_eq!(
+        inline.changed_components.into_iter().collect::<Vec<_>>(),
+        ["parent"]
+    );
+    assert_eq!(
+        inline.pages[0][0].owner,
+        EvidenceOwner::Component {
+            path: "parent".into()
+        }
+    );
 }

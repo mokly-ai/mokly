@@ -3,8 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 
-use mokly_css::attribution::{OwnPageMatches, RuleObservation};
-use mokly_css::inline_attribution;
+use mokly_css::attribution::{self, OwnPageMatches, RuleObservation};
 use mokly_css::match_tree::MatchTree;
 use mokly_css::rule_matching::{DocumentMatching, match_document};
 use mokly_css::rules::{ParsedCss, RuleDiff};
@@ -53,14 +52,7 @@ pub(crate) fn compare(
             continue;
         }
         let matching = match_document(&diff, trees[0], trees[1]);
-        let mut rules = inline_attribution::observe(route, &matching, trees[0], trees[1]);
-        for matched in rules
-            .iter_mut()
-            .flat_map(|rule| &mut rule.selectors)
-            .flat_map(|selector| &mut selector.matches)
-        {
-            matched.trusted_owner = Some(owner.clone());
-        }
+        let rules = attribution::observe_owned(route, &matching, trees[0], trees[1], Some(owner));
         changes.rules.extend(rules);
         changes.matching.push((owner.clone(), matching));
     }

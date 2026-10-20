@@ -190,10 +190,7 @@ fn forwarded_slots_keep_the_exact_supplier_through_a_repeated_component() {
             export const whole=defineScreen({title:'Whole',description:'',relatedDocs:[],render:()=> <parent.Component outer={true}/>});");
     }
     let result = compare(&base, &head);
-    assert_eq!(
-        result.snapshot.changed_entries,
-        ["child", "parent", "whole"]
-    );
+    assert_eq!(result.snapshot.changed_entries, ["child", "parent"]);
     let entry = |path: &str| {
         result
             .entries
@@ -222,12 +219,10 @@ fn forwarded_slots_keep_the_exact_supplier_through_a_repeated_component() {
         );
     }
     for view in &entry("whole").documents {
-        assert_eq!(view.state, ReviewState::Changed);
-        assert!(
-            view.evidence
-                .rules
-                .iter()
-                .any(|rule| rule.owner == EvidenceOwner::Entry)
-        );
+        assert_eq!(view.state, ReviewState::Unchanged);
+        assert!(view.evidence.rules.iter().all(|rule| rule.owner
+            == EvidenceOwner::Component {
+                path: "child".into()
+            }));
     }
 }

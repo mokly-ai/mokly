@@ -23,6 +23,10 @@ pub(crate) fn kept(
         !region.root
             && region.path != component
             && unfiltered.is_some_and(|paths| paths.contains(&region.path))
+            && matched
+                .inputs
+                .as_ref()
+                .is_none_or(|inputs| inputs.iter().any(|input| input == region))
     })
 }
 
@@ -31,18 +35,18 @@ pub(crate) fn owner(
     changed: Option<&BTreeSet<String>>,
     unfiltered: Option<&BTreeSet<String>>,
 ) -> Option<String> {
-    if let Some(region) = matched
-        .regions()
-        .find(|region| changed.is_some_and(|paths| paths.contains(&region.path)))
-    {
-        return Some(region.path.clone());
-    }
-    matched
+    let declared = matched
         .trusted_owner
         .as_ref()
         .filter(|owner| {
             matched.regions().any(|region| &region.path == *owner)
                 && kept(matched, owner, unfiltered)
         })
-        .cloned()
+        .cloned();
+    declared.or_else(|| {
+        matched
+            .regions()
+            .find(|region| changed.is_some_and(|paths| paths.contains(&region.path)))
+            .map(|region| region.path.clone())
+    })
 }

@@ -14,50 +14,65 @@ struct Instance {
     path: String,
     key: String,
     parent: Option<usize>,
+    input_parent: Option<usize>,
 }
 
 /// Elements share their enclosing instance chain through arena indices.
 #[derive(Default)]
 pub(crate) struct Index {
-    elements: Vec<Option<usize>>,
+    elements: Vec<(Option<usize>, Option<usize>)>,
     instances: Vec<Instance>,
 }
 
 pub(crate) fn index(nodes: &[Node], paths: &BTreeMap<String, String>) -> Index {
     let mut result = Index::default();
     let mut keys = BTreeMap::new();
-    let mut pending: Vec<_> = nodes.iter().rev().map(|node| (node, None)).collect();
-    while let Some((node, parent)) = pending.pop() {
+    let mut pending: Vec<_> = nodes.iter().rev().map(|node| (node, None, None)).collect();
+    while let Some((node, parent, input_parent)) = pending.pop() {
         match node {
             Node::Region { region, children } => {
                 if matches!(region.kind, RegionKind::Ignore { .. }) {
                     continue;
                 }
-                let parent = if let RegionKind::Instance { path, key, .. } = &region.kind {
-                    let index = result.instances.len();
-                    keys.insert(key.clone(), index);
-                    result.instances.push(Instance {
-                        path: mapped(path, paths),
-                        key: key.clone(),
-                        parent,
-                    });
-                    Some(index)
-                } else if let RegionKind::Slot { owner, .. } = &region.kind {
-                    match owner {
-                        ComponentInputOwner::Entry => None,
-                        ComponentInputOwner::Instance { instance_key } => {
-                            keys.get(instance_key).copied()
-                        }
-                    }
-                } else {
-                    parent
-                };
-                pending.extend(children.iter().rev().map(|node| (node, parent)));
+                let (parent, input_parent) =
+                    if let RegionKind::Instance { path, key, .. } = &region.kind {
+                        let index = result.instances.len();
+                        keys.insert(key.clone(), index);
+                        result.instances.push(Instance {
+                            path: mapped(path, paths),
+                            key: key.clone(),
+                            parent,
+                            input_parent,
+                        });
+                        (Some(index), Some(index))
+                    } else if let RegionKind::Slot { owner, .. } = &region.kind {
+                        let input_parent = match owner {
+                            ComponentInputOwner::Entry => None,
+                            ComponentInputOwner::Instance { instance_key } => {
+                                keys.get(instance_key).copied()
+                            }
+                        };
+                        (parent, input_parent)
+                    } else {
+                        (parent, input_parent)
+                    };
+                pending.extend(
+                    children
+                        .iter()
+                        .rev()
+                        .map(|node| (node, parent, input_parent)),
+                );
             }
             Node::Element(element) => {
-                result.elements.push(parent);
+                result.elements.push((parent, input_parent));
                 if element.name != "template" {
-                    pending.extend(element.children.iter().rev().map(|node| (node, parent)));
+                    pending.extend(
+                        element
+                            .children
+                            .iter()
+                            .rev()
+                            .map(|node| (node, parent, input_parent)),
+                    );
                 }
             }
             _ => {}
@@ -70,19 +85,24 @@ impl Index {
     fn collect(
         &self,
         mut parent: Option<usize>,
+        input: Option<usize>,
         owner: &str,
         own_pages: Option<&BTreeSet<String>>,
-        seen: &mut BTreeSet<usize>,
+        seen: &mut BTreeSet<(usize, Option<usize>)>,
         output: &mut BTreeSet<String>,
     ) {
+        let blocked = std::iter::successors(input, |index| self.instances[*index].input_parent)
+            .find(|index| {
+                let instance = &self.instances[*index];
+                instance.path != owner
+                    && own_pages.is_some_and(|pages| pages.contains(&instance.path))
+            });
         while let Some(index) = parent {
-            if !seen.insert(index) {
+            if !seen.insert((index, blocked)) {
                 break;
             }
             let instance = &self.instances[index];
-            if instance.path != owner
-                && own_pages.is_some_and(|pages| pages.contains(&instance.path))
-            {
+            if Some(index) == blocked {
                 break;
             }
             if instance.path == owner {
@@ -117,8 +137,15 @@ pub(crate) fn matched(
             }
             for element in &selector.elements {
                 let side = usize::from(element.side == ReviewSide::After);
-                if let Some(parent) = indices[side].elements.get(element.element) {
-                    indices[side].collect(*parent, owner, pages, &mut seen[side], &mut output);
+                if let Some((parent, input)) = indices[side].elements.get(element.element) {
+                    indices[side].collect(
+                        *parent,
+                        *input,
+                        owner,
+                        pages,
+                        &mut seen[side],
+                        &mut output,
+                    );
                 }
             }
         }

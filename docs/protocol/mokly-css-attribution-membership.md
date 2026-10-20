@@ -54,19 +54,23 @@ analysis fills it.
   parse failure, or an analysis failure, and `excluded` on the one record of
   a stylesheet whose changed rules all match nothing. For one selector of one
   rule on one view, `unresolved` takes precedence over `matched`.
-- Each linked-CSS match belongs to the innermost containing component
+- Each linked-CSS or ownerless head match belongs to the innermost physically containing component
   changed by that rule. Emit one `{ kind: "component", path }` record for
   each such owner. Emit `{ kind: "entry" }` only for matches outside every
   changed component. A selector can have component and entry records on the
   same view. Unresolved rules, parse failures, and excluded records have
-  only the entry owner. Ownerless head rules use supplier input ancestry and
-  the shared own-page proof and nested test under
+  only the entry owner. Both sources use the shared own-page proof and nested test under
   [style ownership](./mokly-comparison.md#style-ownership).
+  A receiver can claim supplied slot content when its own pages prove the
+  rule. Without that proof, the match falls back to the entry unless another
+  physically containing changed component claims it.
 - Trusted sidecar rules join the same unfiltered own-page proof and nested
   test as linked CSS. Equal identities join across owner sets. A nested copy
-  of the same component never takes its match. Supplied slots keep their
-  supplier's input ancestry. A kept exact-instance match can retain its
-  declared owner under [style ownership](./mokly-comparison.md#style-ownership).
+  of the same component never takes its match. Supplier input ancestry only
+  decides whether a nested component can take a declared supplier's rule.
+  A kept match inside the declared owner's physical region belongs to that
+  owner, including supplied content. Exact-instance proof does not require
+  own-page matches under [style ownership](./mokly-comparison.md#style-ownership).
   Owned, ownerless, and linked sources share the same excluded and unresolved
   record rules.
 - Records of equal rules in different stylesheets stay separate records,
@@ -117,8 +121,9 @@ changed-component set from the selected entry alone.
   `matched` or `unresolved` record on a view has no `excluded` record on that
   view.
 - A component owner names a registered component with a kept own-page match
-  for that rule identity, or a kept trusted exact-instance match. Inline slot
-  matches follow their input owner. The producer checks
+  for that rule identity, or a kept trusted exact-instance match. Physical
+  containment supplies the claim; supplier ancestry protects a supplier's own rule.
+  The producer checks
   each owner against that proof, never against the result's own rows.
 - An `unresolved` record is owned by the entry.
 - A record never carries a private source path or a match node.

@@ -1,4 +1,4 @@
-//! Public match proof exposes only the containment permitted by input ownership.
+//! Every CSS source exposes physical containment independently of input ownership.
 
 use std::collections::BTreeMap;
 
@@ -11,7 +11,7 @@ use mokly_css::rules::diff;
 use mokly_model::evidence::EvidenceOwner;
 
 #[test]
-fn detached_inline_proof_exposes_its_supplier_without_the_receiving_component() {
+fn detached_inline_and_linked_proof_expose_the_same_physical_regions() {
     for (owner, expected) in [
         (EvidenceOwner::Entry, Vec::new()),
         (
@@ -69,7 +69,7 @@ fn detached_inline_proof_exposes_its_supplier_without_the_receiving_component() 
                 inline_attribution::observe("page.html", &matching, Some(&tree), Some(&tree)),
             )
         };
-        for (rules, expected) in [(linked, vec!["receiver", "supplier"]), (inline, expected)] {
+        for rules in [linked, inline] {
             let matches = &rules[0].selectors[0].matches;
             assert_eq!(matches.len(), 2);
             for proof in matches {
@@ -78,7 +78,7 @@ fn detached_inline_proof_exposes_its_supplier_without_the_receiving_component() 
                         .regions()
                         .map(|region| region.path.as_str())
                         .collect::<Vec<_>>(),
-                    expected,
+                    ["receiver", "supplier"],
                 );
             }
         }

@@ -16,6 +16,7 @@ fn proof(stylesheet: &str, selector: &str, regions: &[(&str, bool)]) -> RuleObse
             selector: selector.into(),
             unresolved: false,
             matches: vec![MatchProof {
+                inputs: None,
                 regions: regions
                     .iter()
                     .map(|(path, root)| Containment {

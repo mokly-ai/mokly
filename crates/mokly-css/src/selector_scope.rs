@@ -25,6 +25,8 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
     };
     let mut colons = 0;
     let mut previous = None;
+    let mut universal = false;
+    let mut anchored = false;
     while let Ok(token) = parser.next_including_whitespace_and_comments().cloned() {
         if matches!(token, Token::Colon) {
             colons += 1;
@@ -35,6 +37,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
         }
         match token {
             Token::SquareBracketBlock => {
+                anchored |= colons == 0;
                 prefix(&mut scope.text, colons);
                 let start = parser.position();
                 let raw: result::Result<_, ParseError<()>> = parser.parse_nested_block(|nested| {
@@ -77,6 +80,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
                 previous = Some(')');
             }
             Token::Ident(name) => {
+                anchored |= colons == 0;
                 let name_lower = name.to_ascii_lowercase();
                 if (colons == 0
                     && previous != Some('.')
@@ -95,8 +99,15 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
                 previous = Some('i');
             }
             token => {
-                if matches!(token, Token::Delim('*')) {
-                    scope.unresolved = true;
+                match token {
+                    Token::Delim('*') => universal = true,
+                    Token::IDHash(_) => anchored |= colons == 0,
+                    Token::Comma => {
+                        scope.unresolved |= universal && !anchored;
+                        universal = false;
+                        anchored = false;
+                    }
+                    _ => {}
                 }
                 prefix(&mut scope.text, colons);
                 let _ = token.to_css(&mut scope.text);
@@ -110,6 +121,7 @@ fn walk(parser: &mut Parser<'_>) -> Scope {
         colons = 0;
     }
     prefix(&mut scope.text, colons);
+    scope.unresolved |= universal && !anchored;
     scope
 }
 

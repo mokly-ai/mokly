@@ -68,6 +68,14 @@ pub mod observation;
 #[path = "_tests_/attribution_tests.rs"]
 mod attribution_tests;
 
+#[cfg(test)]
+#[path = "_tests_/physical_ownership_tests.rs"]
+mod physical_ownership_tests;
+
+#[cfg(test)]
+#[path = "_tests_/scoped_universal_tests.rs"]
+mod scoped_universal_tests;
+
 mod compiler_assets;
 mod css_boundaries;
 mod selector_nesting;

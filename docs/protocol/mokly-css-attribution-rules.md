@@ -59,6 +59,10 @@ instance region of a different component Y whose own-page match set for this
 same rule is nonempty. Check every containing nested instance, at any depth,
 on the match's own side. A nested instance of X itself never takes a match
 from X; a different component nested within that instance can still take it.
+For a declared owner's rule, a nested component must also belong to the
+match's supplier input ancestry to take that match. This protects a supplier's
+own rule for content passed through a receiver. Linked and ownerless head
+rules use physical containment for both claims and own-page filtering.
 
 The test for Y uses its unfiltered own-page matches, not the matches Y keeps
 or whether Y is changed. It needs no traversal order, iteration, or fixed

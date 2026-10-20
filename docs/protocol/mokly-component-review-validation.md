@@ -23,7 +23,7 @@ For each entry, the classifier records the owner-attributed rule and resource
 records of its actual view comparisons. For CSS, it records the unfiltered
 and kept own-page match sets of every rule identity before any entry's
 evidence is decided. Nested filtering uses the unfiltered sets; a component
-owner requires kept matches on that component's or variant's own pages. The
+owner requires kept own-page matches or trusted exact-instance proof. The
 [ownership rule](./mokly-component-changes.md#rendered-resources-and-styles)
 excludes unrendered source paths and declared paths. Source validation accepts
 a `dependency` reason only when a view of that entry carries a rule or
@@ -33,8 +33,9 @@ recorded consumer-view proof at a paired instance with unchanged props and
 supplied slot content. That proof retains the exact instance, view, side,
 referring route, written URL, and resolved target. Inline rules use their
 containing public document route and recorded containment proof.
-An `implementation` reason requires the corresponding actual-instance render
-proof. These reasons never alter the component's own view states.
+An `implementation` reason requires actual-instance render proof or a trusted
+owned-rule match in a paired physical instance with unchanged caller inputs.
+These reasons never alter the component's own view states.
 Validation uses the recorded classifier evidence, never the
 result's own rows or a fresh path match. Source keys use kind and path,
 flattened variants included; a moved entry uses its current path.
@@ -56,8 +57,9 @@ affected-consumer evidence derived from that set and both sides' usage.
 Neither a subset nor the set of every changed component is sufficient:
 variant or control metadata edits can be direct changes without
 implementation impact, and a wrapper-only or unresolved entry reason has no
-component impact unless another rule proves a kept own-root match. The CSS
-impact set is never built from consumer-instance matches. An included variant with proven render, resource, or CSS impact permits its
+component impact unless another rule proves a kept component match. Linked
+and ownerless CSS require own-page proof; declared owners can use exact-instance
+proof, including supplied content. An included variant with proven render, resource, or CSS impact permits its
 parent identity in affected evidence without a parent Changes row. Every
 classification path performs this validation before it returns a result.
 
@@ -133,9 +135,9 @@ the base commit out. Cross-kind path reuse and moves follow the
 New and removed components and variants keep explicit missing sides. Usage is
 the union of both sides, so removing a component does not erase its former
 consumers. A component with no variant affected by a render edit can still be
-changed through an owned non-CSS resource or a proven render difference at a
-paired instance with unchanged inputs; this exception never supplies a
-stylesheet-rule component reason. For that instance, parent-owned child inputs
+changed through an owned resource, owned style rule, or proven render difference
+at a paired instance with unchanged inputs. This supplies no own-view reason
+without an own-view match. For render proof, parent-owned child inputs
 are kept and caller-owned slots excluded under the same ownership policy as
 the component's own pages. Metadata-only edits invent no affected consumers,
 and no variant is invented for every possible prop combination.

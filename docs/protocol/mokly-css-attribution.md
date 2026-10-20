@@ -47,7 +47,7 @@ file grants no ownership. No owner record controls eligibility or attribution.
 
 Head `<style>` elements are not stylesheets of this analysis. Styles a
 [sidecar](./mokly-sidecar.md#style-collection) render returned carry their
-owners, and unowned head styles follow the inline rule of
+owners, and unowned head styles follow the physical-containment rule of
 [style ownership](./mokly-comparison.md#style-ownership); both use the rule
 diff of this page and the per-rule records of the
 [membership contract](./mokly-css-attribution-membership.md). Resources that
@@ -77,8 +77,8 @@ excluded stylesheet. A view without either carries no record.
    that moves without changing its selectors, declarations, or conditions
    produces no rule.
 2. **Matchability.** Test each diffed rule's selectors against both sides'
-   composed documents, after ignored regions are removed, with the `selectors`
-   crate; ignored content supplies no match. A match on either side keeps the
+   composed documents after ignored regions are removed. Ignored content supplies
+   no match. A match on either side keeps the
    rule and keeps every matched element with its side, its selector, and the
    regions that contain it. Enclosing conditions are not evaluated: a
    rule inside `@media` or `@container` is tested exactly like a rule outside
@@ -166,7 +166,10 @@ exclusions beyond it.
 - A selector the matcher cannot parse.
 - Shadow-scoped selectors: `:host`, `:host()`, `:host-context()`, `::part()`,
   and `::slotted()`.
-- Universal, `:root`, `html`, and `body` selectors.
+- Universal selectors without a positive type, class, ID, or attribute
+  condition outside pseudo-class arguments in the same selector branch.
+  A scoped universal selector uses ordinary matching. `:root`, `html`, and
+  `body` selectors remain unresolved, including scoped combinations.
 - A rule inside a nesting parent whose combined selector cannot be resolved.
 - Any changed custom property declaration (`--*`), because inheritance can
   reach any descendant.

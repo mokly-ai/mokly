@@ -125,5 +125,5 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
     );
     assert_eq!(result.pages[1][0].owner, component);
     assert_eq!(result.pages[1][0].stylesheet, "consumer");
-    assert_eq!(result.pages[2][0].owner, EvidenceOwner::Entry);
+    assert_eq!(result.pages[2][0].owner, component);
 }

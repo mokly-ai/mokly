@@ -127,10 +127,14 @@ and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
 Owned rules enter the same catalogue-wide evidence reducer as linked and
 ownerless head CSS. Equal rule identities join across document routes and
-owner sets. The shared nested test keeps supplier input ancestry and
-self-nested copies. Each source uses matched, unresolved, or excluded records.
+owner sets. Physical containment claims matches for every CSS source. Owned
+rules use supplier ancestry only for nested filtering, preserving a supplier's
+own rule without preventing a receiver from styling supplied content.
+Self-nested copies keep their matches. Each source uses matched, unresolved,
+or excluded records.
 Physical and supplier ancestry use separate shared paths. Each instance key
-retains one supplier path, and linked proof retains only physical ancestry.
+retains one supplier path. Linked and ownerless proof retain only physical
+ancestry; owned proof also retains a shared supplier path.
 The engine transfers observations into catalogue attribution without cloning them.
 Exact owned-instance proof uses the same unfiltered own-page sets after the
 catalogue pass, and retains only paired instances with unchanged caller inputs.

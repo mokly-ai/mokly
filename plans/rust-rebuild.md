@@ -416,6 +416,25 @@ readiness rather than blocking this acceptance round on further startup work.
 
 **Comparison filter follow-up (2026-10-20):**
 
+- User decision 96 (2026-10-20): C. Use physical containment to claim matches
+  for owned CSS-in-JS, ownerless head styles, and linked CSS. Supplier input
+  ancestry only prevents a nested receiver from taking a supplier's own rule.
+  Declared owners claim supplied content inside their physical instance even
+  without own-page matches. Ownerless and linked rules require catalogue-wide
+  own-page proof; otherwise a match falls back to the entry. Keep decision 73's
+  supplier protection, decision 75's shared reducer, and the child-only goal
+  of decision 39. Alternatives A and B keep receiver-row errors or separate
+  models. C removes that delivery-path difference. Items 97 and 98 remain pending.
+
+- Round 4 scoped universal follow-up (2026-10-20): applied by default (user
+  rule). The exact decision 96 Stack selector contains universal terms, which
+  the former closed keep list always marked unresolved. Recommended option A
+  permits ordinary matching when a selector branch has a positive type, class,
+  ID, or attribute outside pseudo-class arguments. Bare universals and global
+  selectors stay unresolved. Apply this equally to all CSS sources. Option B
+  keeps the old rule and uses explicit item classes in the Stack fixture.
+  A implements the requested example. No answer followed the question.
+
 - Defaults-engine round 3 finding 3 A (2026-10-20, approved): move observations
   out of pending views and pass the vector into attribution by value. Merge
   rule observations in place without cloning their retained paths. Keep
@@ -2509,10 +2528,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Defaults-engine round 3 finding 1: receiver slot rules can give suppliers
-    direct rows. Severity High, effort Large. Recommended: B, let trusted
-    owners claim their physical instances while retaining supplier nesting
-    proof. User pending; keep the current slot policy.
+  - [x] Defaults-engine round 4: apply user decision 96 C for shared physical
+        CSS ownership, supplier protection, and exact receiver proof. Retain
+        the eight requested acceptance groups. Evidence:
+        `.context/defaults-engine-round4/`.
   - Defaults-engine round 3 finding 2 C: let the parser select the plaintext
     point. Severity Medium, effort Large. Recommended: C as the structural
     follow-up to findings 2 and 4, `8f3387f7`, and `b0842cad`. User pending.
