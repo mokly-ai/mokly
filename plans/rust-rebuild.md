@@ -2026,7 +2026,8 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 - [x] Remove the duplicate base render between validation and capture through
       one bounded, ordered collector. Keep aggregate errors, warnings,
-      retention order, cancellation, fallback, and every charge and bound.
+      cancellation, fallback, and every charge and bound. Trims preserve the
+      earlier kept routes; skipped or trimmed views use source fallback.
       User decision 62 (2026-10-20): B now, in parallel.
       Move this item from the post-merge follow-up into Milestone 14.
       Evidence: `.context/m14-collector/observations.json`,
@@ -2190,6 +2191,15 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         bounded, ordered collector, is a post-merge follow-up.
         User decision 62 (2026-10-20): B now, in parallel. This later instruction
         supersedes the deferral. The collector must not delay the final pull request.
+        Collector follow-up finding 2, option A (2026-10-20): record the
+        partial-capture rule that was applied as a default, not explicit approval.
+        Inputs arrive in route order. Trims remove the last kept routes first.
+        A skipped or trimmed view is not reconsidered and uses source fallback.
+        A later view can remain even when an earlier skipped view would fit
+        the final capacity. Exact old membership and strict route priority
+        are not preserved. Options B, stop retaining after the first skip or
+        trim, and C, restore the old rule with final-capacity rerenders, remain
+        for the user. No retention rule changes in this follow-up.
   - [x] Verify the comparison engine's tree walks after M9 integration.
         Cover recursive `owned_styles::visit`, `owned_style_instances::walk`,
         and `inline_styles::collect` in `mokly-compare`. Also remove the
