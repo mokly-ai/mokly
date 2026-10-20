@@ -38,6 +38,12 @@ export const comparisonPaths = {
 
 type Side = "Before" | "After";
 
+/** The `.accent` colour that `theme.css` gives each commit. */
+export const accentColor = {
+  Before: "rgb(180, 30, 30)",
+  After: "rgb(30, 60, 180)",
+} as const satisfies Record<Side, string>;
+
 /** Optional sources added before each commit, without changing the default copy. */
 export type ComparisonAdditions = (root: string, side: Side) => Promise<void>;
 
@@ -111,11 +117,7 @@ async function writeSide(root: string, side: Side): Promise<void> {
     "specs/screens/changed.screen.html",
     screen("Changed screen", content(side)),
   );
-  await write(
-    root,
-    "theme.css",
-    `.accent { color: ${before ? "rgb(180, 30, 30)" : "rgb(30, 60, 180)"}; }\n`,
-  );
+  await write(root, "theme.css", `.accent { color: ${accentColor[side]}; }\n`);
   // Only the custom property changes. The canvas rule is the same on both
   // sides, but only Before's markup matches it, so each version has its own
   // canvas colour.

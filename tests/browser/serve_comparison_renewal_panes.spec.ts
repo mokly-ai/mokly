@@ -9,6 +9,7 @@ import { expect } from "@playwright/test";
 import { modeButton, navRow } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import {
+  expectCardPane,
   generationOf,
   holdRenewal,
   loadComparison,
@@ -149,23 +150,18 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
   await page.goto(`/view/${changes.paths.changedVariant}/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
-  const label = page.frameLocator(after).locator("h2");
-  // Card's own label is the same on both sides; its .accent colour is not.
-  const accent = page.frameLocator(after).locator(".accent");
-  await expect(label).toHaveText("Featured After");
+  await expectCardPane(page, "after", "Featured After");
   const pending = await holdRenewal(page);
   try {
     await chooseViewport(page, "mobile");
     await pending.arrived;
     await chooseVariant(page, "Card");
-    await expect(label).toHaveText("Card content");
-    await expect(accent).toHaveCSS("color", "rgb(30, 60, 180)");
+    await expectCardPane(page, "after", "Card content");
     await pending.release();
     // Choosing the sibling cancelled the renewal before its response.
     expect(pending.outcomes()).toEqual(["cancelled"]);
     await expect(page).toHaveURL(new RegExp(`/view/${card}/$`, "u"));
-    await expect(label).toHaveText("Card content");
-    await expect(accent).toHaveCSS("color", "rgb(30, 60, 180)");
+    await expectCardPane(page, "after", "Card content");
   } finally {
     pending.unblock();
   }

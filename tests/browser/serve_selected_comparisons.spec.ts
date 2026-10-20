@@ -10,6 +10,7 @@ import { expect } from "@playwright/test";
 import { test } from "./serve_comparison_test.js";
 import {
   awaitSelectedComparison,
+  expectCardPane,
   expectPresentedPane,
   loadComparison,
   PANE_SOURCE,
@@ -73,14 +74,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await chooseVariant(page, "Featured");
   await expect(page).toHaveURL(new RegExp(`/view/${featured}/$`, "u"));
   await loadComparison(page, "Overlay");
-  for (const [pane, label, color] of [
-    ["before", "Featured Before", "rgb(180, 30, 30)"],
-    ["after", "Featured After", "rgb(30, 60, 180)"],
-  ] as const) {
-    const frame = page.frameLocator(`.mb-pane--${pane} iframe`);
-    await expect(frame.locator("h2")).toHaveText(label);
-    await expect(frame.locator(".accent")).toHaveCSS("color", color);
-  }
+  await expectCardPane(page, "before", "Featured Before");
+  await expectCardPane(page, "after", "Featured After");
   await loadComparison(page, "Refresh comparison");
   expect(requests).toHaveLength(2);
   for (const [index, request] of requests.entries()) {
@@ -92,15 +87,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await awaitSelectedComparison(page, () => chooseVariant(page, "Card"));
   await expect(page).toHaveURL(new RegExp(`/view/${card}/$`, "u"));
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
-  // Card's own label is the same on both sides; its .accent colour is not.
-  for (const [pane, color] of [
-    ["before", "rgb(180, 30, 30)"],
-    ["after", "rgb(30, 60, 180)"],
-  ] as const) {
-    const frame = page.frameLocator(`.mb-pane--${pane} iframe`);
-    await expect(frame.locator("h2")).toHaveText("Card content");
-    await expect(frame.locator(".accent")).toHaveCSS("color", color);
-  }
+  await expectCardPane(page, "before", "Card content");
+  await expectCardPane(page, "after", "Card content");
   expect(requests).toHaveLength(3);
   expect(requests.at(-1)!.searchParams.get("path")).toBe(card);
 });
