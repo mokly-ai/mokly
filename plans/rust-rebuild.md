@@ -2441,6 +2441,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Separate branch.
+      - [x] Follow-up F9b item 6: `branch_point_cases.ts` registers the five
+            cases at desktop and mobile widths on each host:
+            `branch_point_comparison_ui.spec.ts` on the branch copy,
+            `serve_branch_point.spec.ts` on Serve, and
+            `viewer_branch_point.spec.ts` in the embedded viewer through both
+            frame adapters. Serve waits for each on-demand comparison, and
+            the embedded viewer checks the selected entry without an address.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.

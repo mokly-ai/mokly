@@ -13,6 +13,7 @@ import {
 
 import {
   activateRow,
+  type BranchPointHost,
   compareSideBySide,
   expectHead,
   expectRouted,
@@ -79,6 +80,7 @@ interface Family {
  */
 async function removedSibling(
   page: Page,
+  host: BranchPointHost,
   family: Family,
   removedCrumbs: readonly string[],
 ): Promise<void> {
@@ -86,10 +88,10 @@ async function removedSibling(
   await expect
     .poll(() => variantBar(page))
     .toEqual(bar(title, parent, primary, removed, "primary"));
-  await compareSideBySide(page);
+  await compareSideBySide(page, host);
   await expectSavedProps(page, ...PROPS);
   await selectVariant(page, removed);
-  await expectRouted(page, removed);
+  await expectRouted(page, host, removed);
   await expect(page.locator("[data-diff-mode=side]")).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -108,23 +110,27 @@ async function removedSibling(
  */
 async function activation(
   page: Page,
+  host: BranchPointHost,
   family: Family,
   removedCrumbs: readonly string[],
 ): Promise<void> {
   const { title, parent, removed } = family;
   await activateRow(page, parent);
-  await expectRouted(page, parent);
+  await expectRouted(page, host, parent);
   await search(page, "secondary");
   await activateRow(page, removed);
-  await expectRouted(page, removed);
+  await expectRouted(page, host, removed);
   await expectHead(page, title, removedCrumbs);
   // Each activation starts on another route, so each one must navigate.
   await activateRow(page, parent);
-  await expectRouted(page, parent);
+  await expectRouted(page, host, parent);
 }
 
-async function movedConsumers(page: Page): Promise<void> {
-  await openEntry(page, "branch/consumers/badge");
+async function movedConsumers(
+  page: Page,
+  host: BranchPointHost,
+): Promise<void> {
+  await openEntry(page, host, "branch/consumers/badge");
   await expectHead(page, "Badge", ["Branch [button]", "Consumers [button]"]);
   await inspectorTab(page, "Usage");
   await expect(page.locator("[data-usage-section='used-by']")).toBeVisible();
@@ -148,7 +154,7 @@ async function movedConsumers(page: Page): Promise<void> {
     ["Receipt", `/view/${paths.movedScreen}/`, false],
   ]);
   await affected.nth(1).click();
-  await expectRouted(page, paths.movedConsumer);
+  await expectRouted(page, host, paths.movedConsumer);
   await expectHead(page, "Status", [
     "Branch [button]",
     "Consumers [button]",
@@ -162,8 +168,8 @@ async function movedConsumers(page: Page): Promise<void> {
     ]);
 }
 
-async function movedParent(page: Page): Promise<void> {
-  await openEntry(page, paths.movedChild);
+async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
+  await openEntry(page, host, paths.movedChild);
   // The folder above the moved parent has its own page, so its crumb links.
   await expectHead(page, "Action", [
     "Branch [button]",
@@ -177,20 +183,20 @@ async function movedParent(page: Page): Promise<void> {
     removed: paths.removedChild,
   };
   const removedCrumbs = ["Branch [text]", "Parent [text]"];
-  await removedSibling(page, family, removedCrumbs);
+  await removedSibling(page, host, family, removedCrumbs);
   // The folder's unchanged own page is a container row: it opens the first
   // changed entry it lists, and under a search the removed sibling.
   await activateRow(page, paths.parentFolder);
-  await expectRouted(page, paths.movedParent);
+  await expectRouted(page, host, paths.movedParent);
   await search(page, "secondary");
   await activateRow(page, paths.parentFolder);
-  await expectRouted(page, paths.removedChild);
+  await expectRouted(page, host, paths.removedChild);
   await expectHead(page, "Action", removedCrumbs);
-  await activation(page, family, removedCrumbs);
+  await activation(page, host, family, removedCrumbs);
 }
 
-async function movedVariant(page: Page): Promise<void> {
-  await openEntry(page, "branch/variant/donor/spare");
+async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
+  await openEntry(page, host, "branch/variant/donor/spare");
   await expectHead(page, "Donor", ["Branch [button]", "Variant [button]"]);
   await expect
     .poll(() => variantBar(page))
@@ -200,7 +206,7 @@ async function movedVariant(page: Page): Promise<void> {
     ]);
   // The unmodified receiver opens its first changed variant from Changes.
   await activateRow(page, "branch/variant/receiver");
-  await expectRouted(page, paths.movedVariant);
+  await expectRouted(page, host, paths.movedVariant);
   await expectHead(page, "Receiver", ["Branch [button]", "Variant [button]"]);
   await expect
     .poll(() => variantBar(page))
@@ -209,7 +215,7 @@ async function movedVariant(page: Page): Promise<void> {
       "default -> branch/variant/receiver/default",
       `primary -> ${paths.movedVariant} (current)`,
     ]);
-  await compareSideBySide(page);
+  await compareSideBySide(page, host);
   await expectSavedProps(page, ...PROPS);
   const nav = await openChanges(page);
   await expect(
@@ -219,8 +225,8 @@ async function movedVariant(page: Page): Promise<void> {
   ).toHaveCount(1);
 }
 
-async function caseRenames(page: Page): Promise<void> {
-  await openEntry(page, paths.caseVariant);
+async function caseRenames(page: Page, host: BranchPointHost): Promise<void> {
+  await openEntry(page, host, paths.caseVariant);
   await expectHead(page, "Case action", ["Branch [button]", "Case [button]"]);
   const family = {
     title: "Case action",
@@ -229,13 +235,13 @@ async function caseRenames(page: Page): Promise<void> {
     removed: paths.caseRemoved,
   };
   const removedCrumbs = ["Branch [text]", "Case [text]"];
-  await removedSibling(page, family, removedCrumbs);
-  await activation(page, family, removedCrumbs);
+  await removedSibling(page, host, family, removedCrumbs);
+  await activation(page, host, family, removedCrumbs);
 }
 
-async function reusedParent(page: Page): Promise<void> {
+async function reusedParent(page: Page, host: BranchPointHost): Promise<void> {
   const removed = paths.reusedRemoved;
-  await openEntry(page, removed);
+  await openEntry(page, host, removed);
   await expectHead(page, "default", [
     "Branch [text]",
     "Reused [text]",
@@ -252,7 +258,9 @@ async function reusedParent(page: Page): Promise<void> {
 }
 
 /** Every case's checks, keyed by its name in the shared case set. */
-const CHECKS: Readonly<Record<string, (page: Page) => Promise<void>>> = {
+const CHECKS: Readonly<
+  Record<string, (page: Page, host: BranchPointHost) => Promise<void>>
+> = {
   "moved-consumers": movedConsumers,
   "moved-parent": movedParent,
   "moved-variant": movedVariant,

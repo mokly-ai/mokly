@@ -180,6 +180,11 @@ Viewer journeys on this copy register shared case modules.
 Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
 viewer over this copy through both frame adapters. Each host passes a
 `MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`branch_point_cases.ts` registers the branch-point checks on the same three
+hosts: `branch_point_comparison_ui.spec.ts` on this copy,
+`serve_branch_point.spec.ts` on Serve, and `viewer_branch_point.spec.ts` in
+the embedded viewer. `branch_viewer_test.ts` serves that viewer to both
+embedded specs.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 

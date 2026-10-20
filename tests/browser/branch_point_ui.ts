@@ -1,6 +1,19 @@
-/** Rendered branch-point facts of the copied branch-point output. */
+/** Rendered branch-point facts on Serve, the branch copy, and the embedded viewer. */
 
 import { expect, type Locator, type Page } from "@playwright/test";
+
+import type { MovedHost } from "./moved_rows.js";
+import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+
+/**
+ * How one host runs the branch-point checks. The hosts of the moved cases
+ * fit: Serve and the branch copy route by address, the embedded viewer opens
+ * an entry by query, and only Serve captures comparisons on demand.
+ */
+export type BranchPointHost = Pick<
+  MovedHost,
+  "comparisons" | "open" | "routes"
+>;
 
 /** The two widths each case renders at. */
 export const BRANCH_POINT_WIDTHS = [
@@ -59,10 +72,18 @@ export async function inspectorTab(page: Page, name: string): Promise<void> {
   await expect(tab).toHaveAttribute("aria-selected", "true");
 }
 
-/** Switch the comparison band to Side by side. */
-export async function compareSideBySide(page: Page): Promise<void> {
+/**
+ * Switch the comparison band to Side by side. On Serve the click waits for
+ * the comparison that it requests, through its redirect.
+ */
+export async function compareSideBySide(
+  page: Page,
+  host: BranchPointHost,
+): Promise<void> {
   const side = page.locator("[data-diff-mode=side]");
-  await side.click();
+  if (host.comparisons === "on demand")
+    await awaitSelectedComparison(page, () => side.click());
+  else await side.click();
   await expect(side).toHaveAttribute("aria-pressed", "true");
 }
 
@@ -114,18 +135,27 @@ export async function search(page: Page, query: string): Promise<void> {
   await page.locator("[data-mokly-search]").fill(query);
 }
 
-/** Wait until the head and the address name one entry. */
-export async function expectRouted(page: Page, entry: string): Promise<void> {
+/** Wait until the head, and the address on a routing host, name one entry. */
+export async function expectRouted(
+  page: Page,
+  host: BranchPointHost,
+  entry: string,
+): Promise<void> {
   await expect(
     page.locator(".mbk-screen-head [data-copy-path]"),
   ).toHaveAttribute("data-copy-path", entry);
-  await expect
-    .poll(() => decodeURIComponent(new URL(page.url()).pathname))
-    .toBe(`/view/${entry}/`);
+  if (host.routes)
+    await expect
+      .poll(() => decodeURIComponent(new URL(page.url()).pathname))
+      .toBe(`/view/${entry}/`);
 }
 
-/** Open an entry and wait for its workspace head. */
-export async function openEntry(page: Page, entry: string): Promise<void> {
-  await page.goto(`/view/${entry}/`);
+/** Open an entry on `host` and wait for its workspace head. */
+export async function openEntry(
+  page: Page,
+  host: BranchPointHost,
+  entry: string,
+): Promise<void> {
+  await host.open(page, entry);
   await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
 }
