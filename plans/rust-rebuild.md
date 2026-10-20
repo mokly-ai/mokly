@@ -3212,6 +3212,27 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     `examples/basic/specs/design/components/parts/component_usage.tsx` lists
     only screens under "Affected screens", while the viewer lists screens and
     components under "Affected screens and components". Separate branch.
+  - [x] Hub review of `rebuild/defaults-viewer-82b`, fixed on 2026-10-21 in
+        `rebuild/defaults-viewer-82b-fix1`: finding 2, a Serve update
+        reopened Side by side (`5c761b5d`, B); finding 3, the affected
+        artboard kept highlighting on in Side by side (`1a5ac4df`, B);
+        finding 4, React hosts open Affected links in Current (`62136520`,
+        A); finding 5, a check that the band is absent could pass before the
+        routed detail arrived (`4670bced`, B); and finding 6, the shell
+        README cited a plan decision (`295b6253`, A). The orchestrator also
+        assigned two problems outside its scope: the design and the viewer
+        now say that a comparison is selected when highlighting is off, and
+        the shell README no longer cites "implemented in M31" (`8bf3cc4c`).
+  - Hub review of `rebuild/defaults-viewer-82b`, finding 1 for the user:
+    Affected links ask for refused comparisons. A consumer that Changes
+    lists as a pure move, a component variant consumer, and a consumer in
+    Changes whose linked view is Unmodified each open Current with no band,
+    against the intent rule of `docs/protocol/mokly-changes-controls.md`.
+    Severity Medium, effort Large. Recommended: C, every Affected
+    destination offers the band for the view that its link names, with
+    `relatedComponents` and detail eligibility keyed by the entry that each
+    evidence item names. If the user declines C, apply A: add the intent
+    only when the destination will show the band.
   - Hub review of `rebuild/defaults-viewer`, finding 3 remainder for the
     user: `HistoricalManifest` has no user and no published export since
     `05923728`, but line 12 of `docs/protocol/npm-release-notes.md` still
