@@ -110,15 +110,14 @@ test("snapshot recovery keeps the selected saved variant", async ({
   changes,
   allowBrowserError,
 }) => {
-  const variant = "branch/consumers/badge/default";
+  const variant = changes.paths.changedVariant;
+  const label = (pane: string) => page.frameLocator(pane).locator("h2");
   const requests = selectedRequests(page);
   const failed = failedSnapshots(page);
   await page.goto(`/view/${variant}/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
-  await expect(page.frameLocator(after).locator(".branch-badge")).toHaveText(
-    "After Active",
-  );
+  await expect(label(after)).toHaveText("Featured After");
   const expired = generationOf(
     (await page.locator(after).getAttribute(PANE_SOURCE))!,
   );
@@ -132,12 +131,8 @@ test("snapshot recovery keeps the selected saved variant", async ({
     PANE_SOURCE,
     /\.mobile\.html$/u,
   );
-  await expect(page.frameLocator(before).locator(".branch-badge")).toHaveText(
-    "Before Active",
-  );
-  await expect(page.frameLocator(after).locator(".branch-badge")).toHaveText(
-    "After Active",
-  );
+  await expect(label(before)).toHaveText("Featured Before");
+  await expect(label(after)).toHaveText("Featured After");
   expect(
     generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!),
   ).not.toBe(expired);

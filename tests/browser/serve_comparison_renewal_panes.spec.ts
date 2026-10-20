@@ -143,24 +143,25 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
 
 test("a pending renewal cannot restore a previously selected saved variant", async ({
   page,
+  changes,
 }) => {
-  const badge = "branch/consumers/badge";
-  await page.goto(`/view/${badge}/default/`);
+  const card = changes.paths.component;
+  await page.goto(`/view/${changes.paths.changedVariant}/`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
-  const label = page.frameLocator(after).locator(".branch-badge");
-  await expect(label).toHaveText("After Active");
+  const label = page.frameLocator(after).locator("h2");
+  await expect(label).toHaveText("Featured After");
   const pending = await holdRenewal(page);
   try {
     await chooseViewport(page, "mobile");
     await pending.arrived;
-    await chooseVariant(page, "Badge");
-    await expect(label).toHaveText("After Badge");
+    await chooseVariant(page, "Card");
+    await expect(label).toHaveText("Card content");
     await pending.release();
     // Choosing the sibling cancelled the renewal before its response.
     expect(pending.outcomes()).toEqual(["cancelled"]);
-    await expect(page).toHaveURL(new RegExp(`/view/${badge}/$`, "u"));
-    await expect(label).toHaveText("After Badge");
+    await expect(page).toHaveURL(new RegExp(`/view/${card}/$`, "u"));
+    await expect(label).toHaveText("Card content");
   } finally {
     pending.unblock();
   }
