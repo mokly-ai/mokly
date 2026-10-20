@@ -7,9 +7,7 @@ use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_compare::base_render::{BaseProvider, BaseRequest, HistoricalSources};
-use mokly_compare::sources::SourcesMock;
 use mokly_git::identity::ObjectId;
-use mokly_git::repository::RepositoryMock;
 use mokly_graph::error::GraphError;
 use mokly_model::runtime_diagnostic::RuntimeCode;
 use mokly_render::runtime::Runtime;
@@ -100,25 +98,11 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
     let generation = provider
         .prepare(&BaseRequest {
             working_config: &source.config,
-            repository: Arc::new(Unimock::new((
-                RepositoryMock::working_paths
-                    .next_call(matching!())
-                    .returns(Ok(vec![])),
-                RepositoryMock::working_hashes
-                    .next_call(matching!((paths, _) if paths.is_empty()))
-                    .returns(Ok(vec![])),
-            ))),
+            repository: Arc::new(Unimock::new(())),
             commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
             sources: HistoricalSources {
                 tree,
-                sources: Arc::new(Unimock::new((
-                    SourcesMock::list
-                        .next_call(matching!([None], _))
-                        .returns(Ok(vec![])),
-                    SourcesMock::read_many
-                        .next_call(matching!((paths, _) if paths.is_empty()))
-                        .returns(Ok(vec![])),
-                ))),
+                sources: Arc::new(Unimock::new(())),
                 failures: Arc::new(Unimock::new(())),
             },
         })

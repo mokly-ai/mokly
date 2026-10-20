@@ -407,6 +407,15 @@ readiness rather than blocking this acceptance round on further startup work.
   characters and literal entity spellings. Repeated parsing and serialization
   remain stable. Alternative A preserves escaping but shows different text.
 
+- User decision 74 (2026-10-20): C. Limit HTML dependency identity to the
+  manifests and lockfiles beside dependency directories used by the head,
+  and their repository ancestors. Read exact paths on both sides. With no
+  used directory, read no dependency inputs and emit no warning. Preserve
+  the warning text and strict failure. This replaces the repository-wide
+  scope of default 27 B. Option A retained that scope and its file limit.
+  Option B only skipped catalogues without package stylesheets.
+  Evidence: `.context/defaults-engine-deps/`.
+
 - Defaults-engine hub review finding 2 B (2026-10-20, approved): share
   plaintext activation between serialization and metadata repair. Follow
   foreign-content and HTML integration-point parsing so escaped text stays
@@ -2287,9 +2296,15 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`
     can expose markup in scripting-enabled browsers. Severity Medium, effort
     Small. Recommended: C, escape raw closing tags. User pending.
-  - Defaults-engine hub review 1, finding 3: HTML dependency warnings scan
-    every manifest. Severity Medium, effort Small. Recommended: B, compare
-    identities only when head CSS uses a dependency directory. User pending.
+  - [x] Defaults-engine hub review 1, finding 3: scope HTML dependency
+        warnings to exact governing paths. User decision 74 selected C.
+        Cover unrelated edits, strict lockfile warnings, exact Git commands,
+        and a base tree above the old listing limit.
+        Evidence: `.context/defaults-engine-deps/`.
+  - [x] Keep the virtual dependency parent for secondary package CSS roots
+        when the primary installation is absent. The decision 74 port found
+        this confinement failure and added a regression before the fix.
+        Evidence: `.context/defaults-engine-deps/virtual-parent-red.log`.
   - Defaults-engine hub review 1, finding 5: unused owned rules lack excluded
     evidence. Severity Low, effort Small. Recommended: A, emit one excluded
     document record when none applies. User pending.

@@ -144,12 +144,12 @@ One reporter guard covers both caches and reports the directory once per process
 
 ## Dependency Identity
 
-The base input set contains every tracked repository package manifest and
-lockfile from blobs, including workspace manifests. The working input set
-comes from `git ls-files -z --cached --others --exclude-standard`. It does
-not walk ignored trees, nested clones or submodules. Dependency trees under
-`node_modules` are excluded on both sides. There is no application-specific
-list of excluded build directories.
+For JavaScript, the base input set contains every tracked repository manifest and
+lockfile, including workspace manifests. The working input set comes from
+`git ls-files -z --cached --others --exclude-standard`. It does not walk ignored
+trees, nested clones or submodules. Both sides exclude `node_modules`. The
+[HTML dependency policy](./mokly-comparison.md#html-package-styles) uses exact governing paths.
+There is no application-specific list of excluded build directories.
 
 Each working input must be a confined regular file. Equal working and base
 bytes reuse the base identity without a Git process. Hash the remaining

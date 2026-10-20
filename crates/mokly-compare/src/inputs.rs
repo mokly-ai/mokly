@@ -1,11 +1,12 @@
-//! Dependency identity from every package manifest and package-manager lockfile.
+//! Dependency identities from package manifests and package-manager lockfiles.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_git::identity::{ObjectId, RepoPath};
-use mokly_git::tree::Limits;
+use mokly_git::tree::{Entry, Limits};
 use sha2::{Digest, Sha256};
 
+use crate::dependency_paths::LOCKFILES;
 use crate::error::Result;
 use crate::local_packages;
 use crate::manifest::Manifest;
@@ -14,7 +15,7 @@ use crate::sources::Sources;
 /// Exact dependency inputs from one side, keyed by preserved POSIX spelling.
 #[derive(Clone, Debug, Default)]
 pub struct Inputs {
-    /// All repository-owned package manifests and lockfiles.
+    /// Selected repository-owned package manifests and lockfiles.
     pub files: BTreeMap<RepoPath, Vec<u8>>,
     /// Git clean identities when the input reader can prove them.
     pub objects: BTreeMap<RepoPath, ObjectId>,
@@ -36,16 +37,7 @@ impl Inputs {
 
     /// Npm lockfile precedence. Other managers follow the fallback tier.
     pub fn lockfile(&self) -> Option<RepoPath> {
-        [
-            "npm-shrinkwrap.json",
-            "package-lock.json",
-            "pnpm-lock.yaml",
-            "yarn.lock",
-            "bun.lock",
-            "bun.lockb",
-        ]
-        .iter()
-        .find_map(|name| {
+        LOCKFILES.iter().find_map(|name| {
             self.files
                 .keys()
                 .find(|path| path.as_str().rsplit('/').next() == Some(*name))
@@ -133,17 +125,9 @@ fn frame(hash: &mut Sha256, bytes: &[u8]) {
 }
 
 pub(crate) fn is_lock(path: &str) -> bool {
-    matches!(
-        path.rsplit('/').next(),
-        Some(
-            "package-lock.json"
-                | "npm-shrinkwrap.json"
-                | "pnpm-lock.yaml"
-                | "yarn.lock"
-                | "bun.lock"
-                | "bun.lockb"
-        )
-    )
+    path.rsplit('/')
+        .next()
+        .is_some_and(|name| LOCKFILES.contains(&name))
 }
 
 pub(crate) fn selected(path: &str) -> bool {
@@ -153,8 +137,15 @@ pub(crate) fn selected(path: &str) -> bool {
 /// Dependency inventory read boundary over an immutable source side.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = InputReaderMock))]
 pub trait InputReader: Send + Sync {
-    /// Read exact dependency inputs with an aggregate byte bound.
+    /// Read all repository manifests and lockfiles with an aggregate byte bound.
     fn read(&self, sources: &dyn Sources, limits: Limits) -> Result<Inputs>;
+    /// Read only existing regular inputs at the supplied exact paths, without listing a tree.
+    fn read_paths(
+        &self,
+        sources: &dyn Sources,
+        paths: &[RepoPath],
+        limits: Limits,
+    ) -> Result<Inputs>;
 }
 
 /// Inventory reader for base blobs and future render-graph source adapters.
@@ -174,19 +165,42 @@ impl InputReader for SourceInputs {
                         .any(|part| part == "node_modules")
             })
             .collect();
-        let paths = entries
-            .iter()
-            .map(|entry| entry.path.clone())
-            .collect::<Vec<_>>();
-        let bytes = sources.read_many(&paths, limits)?;
-        let files = paths.into_iter().zip(bytes).collect();
-        let objects = entries
-            .into_iter()
-            .map(|entry| (entry.path, entry.object))
-            .collect();
-
-        Ok(Inputs { files, objects })
+        load(sources, entries, limits)
     }
+
+    fn read_paths(
+        &self,
+        sources: &dyn Sources,
+        paths: &[RepoPath],
+        limits: Limits,
+    ) -> Result<Inputs> {
+        if paths.is_empty() {
+            return Ok(Inputs::default());
+        }
+        sources.ensure(paths)?;
+        let index = sources.index()?;
+        let entries = paths
+            .iter()
+            .filter_map(|path| index.entries.get(path))
+            .filter(|entry| entry.mode.regular())
+            .cloned()
+            .collect();
+        load(sources, entries, limits)
+    }
+}
+
+fn load(sources: &dyn Sources, entries: Vec<Entry>, limits: Limits) -> Result<Inputs> {
+    let paths = entries
+        .iter()
+        .map(|entry| entry.path.clone())
+        .collect::<Vec<_>>();
+    let bytes = sources.read_many(&paths, limits)?;
+    let files = paths.into_iter().zip(bytes).collect();
+    let objects = entries
+        .into_iter()
+        .map(|entry| (entry.path, entry.object))
+        .collect();
+    Ok(Inputs { files, objects })
 }
 
 impl PartialEq for Inputs {

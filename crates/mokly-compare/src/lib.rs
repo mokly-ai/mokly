@@ -6,6 +6,7 @@ pub mod cache;
 pub mod cache_types;
 pub mod commands;
 pub mod dependencies;
+pub mod dependency_paths;
 pub mod error;
 pub mod extraction;
 pub mod git_tree;

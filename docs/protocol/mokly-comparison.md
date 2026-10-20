@@ -153,11 +153,17 @@ names, keyed by the commit, and the sidecar bundles from that directory.
 
 An HTML-only catalogue without a renderer or PostCSS uses working-tree
 dependencies for package stylesheets on both sides. It needs no extraction,
-Node process, or package installation. Compare dependency identities with Git.
-When they differ, emit a configuration-subject `base-dependencies` warning.
-Under `--strict`, that warning fails the build. Equal Git clean identities
-produce no warning. The warning makes a package-only upgrade visible even
-when both sides render the same installed CSS.
+Node process, or package installation. Compare Git clean identities only for
+manifests and lockfiles beside each `node_modules` directory used by the head,
+and its repository ancestors. Read exact paths on both sides without tree listing.
+Without a used dependency directory, read no dependency inputs and emit no warning.
+When these identities differ, emit a configuration-subject `base-dependencies`
+warning, including when both sides render the same installed CSS. Equal
+identities stay silent. Under `--strict`, the warning fails the build:
+
+```text
+Base dependencies differ. HTML comparison uses working-tree dependencies.
+```
 
 ### JavaScript Package Selection
 

@@ -7,6 +7,9 @@ use std::process::{Command, Output};
 use serde_json::Value;
 use tempfile::TempDir;
 
+#[path = "html_dependencies/scoped_tests.rs"]
+mod scoped_tests;
+
 fn write(root: &Path, path: &str, text: &str) {
     let path = root.join(path);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
