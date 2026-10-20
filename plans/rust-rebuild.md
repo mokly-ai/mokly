@@ -2245,6 +2245,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Separate branch.
+  - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
+    "Back and Forward restore each route's stage scroll", expected 120 but
+    received 0, then passed all five isolated repeats. Suspected source:
+    scripted scroll races history persistence. Separate branch.
+    Evidence: `.context/integration-6/scroll-flake.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
