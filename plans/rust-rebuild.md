@@ -2614,6 +2614,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         patch for RUSTSEC-2026-0382. Keep every other lockfile dependency
         unchanged. Evidence: `.context/f19/repository.log`,
         `.context/f19/rust-audit-fixed.log`, and `.context/f19/publish-tests.log`.
+  - [x] F19 review findings 1 and 2: count warning names once per shared body
+        across both wrapper kinds. Preserve wrapper source positions through
+        filtering, HTML table repair, and plaintext reparsing with opaque
+        source signatures. This completes the authorized parser relocation.
+        Evidence: `.context/f19/post-push-review.md` and the review regression logs.
+  - Follow-up: carry source identities through HTML5 token processing for all
+    elements instead of matching tag signatures. Effort Large. Covers F19
+    review finding 2, option B. Previous example: the existing source-location
+    queues. The scoped wrapper repair applies option A.
   - [x] CLI defaults hub finding 2: user decision 86 D removes the whole
         successful private publish directory, including reservation locks.
         Evidence: `.context/publish-cleanup/`.

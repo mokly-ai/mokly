@@ -58,6 +58,8 @@ their in-process mirror records.
 `serialize::html` writes instance and slot comments for the inspector.
 The HTML5 tree sink removes ordinary unknown ignore-wrapper attributes when
 it creates elements. Composition and slot routing never see those attributes.
+Wrapper source locations survive attribute filtering, HTML table repair, and
+plaintext reparsing. Diagnostic identities do not expose discarded values.
 Catalogue preparation reports `html-ignore-attribute` once per shared body
 and attribute. Their values are not evaluated. Strict builds fail on these
 warnings. Reserved navigation metadata and duplicate-navigation failures

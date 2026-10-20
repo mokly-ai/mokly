@@ -1,6 +1,9 @@
 //! Authored HTML token boundary with separate diagnostic metadata.
 
+use std::collections::BTreeMap;
+
 use html5gum::{DefaultEmitter, Token, Tokenizer};
+use mokly_model::material;
 
 use crate::template_types::ignore_attribute_allowed;
 
@@ -12,6 +15,8 @@ pub struct ParsedToken {
     pub ignored_attributes: Vec<String>,
     /// Whether the original tag supplied reserved navigation metadata.
     pub reserved_navigation: bool,
+    /// Opaque original wrapper identity for source matching, without discarded values.
+    pub source_signature: Option<String>,
 }
 
 /// Parse authored HTML while retaining token errors and original byte spans.
@@ -26,8 +31,18 @@ pub fn parse(source: &str) -> impl Iterator<Item = ParsedToken> + '_ {
                 Token::StartTag(tag) if tag.attributes.keys().any(|name| reserved_navigation_attribute(name))
             );
             let mut ignored_attributes = Vec::new();
+            let mut source_signature = None;
             if let Token::StartTag(tag) = &mut token {
                 let element = String::from_utf8_lossy(&tag.name);
+                source_signature = ignore_source_signature(
+                    &element,
+                    tag.attributes.iter().map(|(name, value)| {
+                        (
+                            String::from_utf8_lossy(name).into_owned(),
+                            String::from_utf8_lossy(&value.value).into_owned(),
+                        )
+                    }),
+                );
                 tag.attributes.retain(|name, _| {
                     let name = String::from_utf8_lossy(name);
                     if ignore_attribute_allowed(&element, &name) {
@@ -42,8 +57,23 @@ pub fn parse(source: &str) -> impl Iterator<Item = ParsedToken> + '_ {
                 token,
                 ignored_attributes,
                 reserved_navigation,
+                source_signature,
             }
         })
+}
+
+/// Match original wrappers across parser boundaries without exposing discarded attribute values.
+pub fn ignore_source_signature(
+    element: &str,
+    attributes: impl IntoIterator<Item = (String, String)>,
+) -> Option<String> {
+    if !matches!(element, "mokly-ignore" | "mokly-ignore-scope") {
+        return None;
+    }
+    let attributes: BTreeMap<_, _> = attributes.into_iter().collect();
+    Some(material::digest(
+        format!("{element}:{attributes:?}").as_bytes(),
+    ))
 }
 
 /// Navigation attributes that authored markup cannot supply, including future control fields.

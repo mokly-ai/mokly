@@ -10,6 +10,7 @@ use mokly_catalogue::html_tokens::reserved_navigation_attribute;
 use mokly_catalogue::template_types::ignore_attribute_allowed;
 
 use crate::html_arena::{Arena, Handle};
+use crate::source_locations;
 use crate::tree::{self, Element, Node};
 
 impl TreeSink for Arena {
@@ -31,16 +32,28 @@ impl TreeSink for Arena {
     }
 
     fn create_element(&self, name: QualName, attrs: Vec<Attribute>, flags: ElementFlags) -> Handle {
+        let attributes: Vec<_> = attrs.into_iter().map(attribute).collect();
+        let source = if self.locations.borrow().is_empty() {
+            None
+        } else {
+            source_locations::ignore_signature(name.local.as_ref(), &attributes).and_then(|key| {
+                self.locations
+                    .borrow_mut()
+                    .get_mut(&key)
+                    .and_then(|queue| queue.pop_front())
+            })
+        };
         let node = Node::Element(Element {
             style_owners: None,
-            origin: None,
+            origin: source
+                .as_ref()
+                .map(|source| format!("{}:{}:{}", source.path, source.line, source.column)),
             navigation: None,
-            source: None,
+            source,
             name: name.local.to_string(),
             namespace: name.ns.to_string(),
-            attributes: attrs
+            attributes: attributes
                 .into_iter()
-                .map(attribute)
                 .filter(|value| keep_attribute(name.local.as_ref(), value))
                 .collect(),
             children: Vec::new(),

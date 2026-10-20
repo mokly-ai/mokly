@@ -91,6 +91,59 @@ fn screen_component_and_page_locations_survive_attribute_removal() {
 }
 
 #[test]
+fn foster_parented_wrappers_keep_their_original_locations() {
+    check_repaired_locations(
+        "<table>\n<tr><td><mokly-ignore-scope enabled='invalid' extra='first'>First</mokly-ignore-scope></td></tr>\n<mokly-ignore-scope enabled='invalid' extra='second'>Second</mokly-ignore-scope>\n</table>",
+        &[("Second", 3, 1), ("First", 2, 9)],
+    );
+}
+
+#[test]
+fn select_wrappers_keep_their_original_locations() {
+    check_repaired_locations(
+        "<select><mokly-ignore-scope enabled='invalid' extra='first'>First</mokly-ignore-scope></select>\n<mokly-ignore-scope enabled='invalid' extra='second'>Second</mokly-ignore-scope>",
+        &[("First", 1, 9), ("Second", 2, 1)],
+    );
+}
+
+fn check_repaired_locations(body: &str, expected: &[(&str, usize, usize)]) {
+    for page in [false, true] {
+        for suffix in ["", "<plaintext>Raw text"] {
+            let body = if page {
+                format!("<!doctype html><html><head></head><body>\n{body}{suffix}</body></html>")
+            } else {
+                format!("{body}{suffix}")
+            };
+            let path = "specs/example.html";
+            let nodes = source_locations::template(&Template {
+                source_path: path.into(),
+                source: body.clone(),
+                body,
+                body_offset: 0,
+                page,
+            })
+            .unwrap();
+            let scopes: Vec<_> = tree::walk(&nodes)
+                .filter_map(|node| match node {
+                    Node::Element(element) if element.name == "mokly-ignore-scope" => Some(element),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(scopes.len(), expected.len());
+            for (scope, (text, line, column)) in scopes.iter().zip(expected) {
+                assert_eq!(scope.get("extra"), None);
+                assert_eq!(serialize::html(&scope.children), *text);
+                let location = scope.source.as_ref().unwrap();
+                let line = line + usize::from(page);
+                assert_eq!((location.line, location.column), (line, *column));
+                assert_eq!(location.path, path);
+                assert_eq!(scope.origin, Some(format!("{path}:{line}:{column}")));
+            }
+        }
+    }
+}
+
+#[test]
 fn reserved_navigation_fields_remain_visible_and_fail_as_before() {
     for (wrapper, required) in [
         ("mokly-ignore", "id='clock'"),

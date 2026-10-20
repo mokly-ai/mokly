@@ -100,6 +100,7 @@ They do not validate logical links or select component slots.
 The shared token boundary removes these attributes before validation, link
 checks, or source-location collection. It retains their names for warnings
 and preserves reserved-navigation evidence and duplicate-attribute errors.
+Opaque wrapper signatures retain source identity without exposing discarded values.
 Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried

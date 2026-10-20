@@ -7,8 +7,9 @@ use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::{ParseOpts, QualName, local_name, ns, parse_document, parse_fragment};
 
 use crate::html_arena::Arena;
-use crate::serialize;
+use crate::source_locations::Locations;
 use crate::tree::{self, Node};
+use crate::{serialize, source_locations};
 
 fn options() -> ParseOpts {
     ParseOpts {
@@ -22,26 +23,30 @@ fn options() -> ParseOpts {
 
 /// Parse a complete document, including implied wrappers.
 pub fn document(source: &str) -> Vec<Node> {
-    let nodes = raw_document(source);
-    if terminal_text(&nodes) {
-        raw_document(&serialize::html(&nodes))
-    } else {
-        nodes
-    }
+    located(source, true, Locations::new())
 }
 
 /// Parse a body-context fragment with the standard HTML5 algorithm.
 pub fn fragment(source: &str) -> Vec<Node> {
-    let nodes = raw_fragment(source);
+    located(source, false, Locations::new())
+}
+
+/// Bind wrapper source locations before tree repair can change their traversal order.
+pub(crate) fn located(source: &str, page: bool, locations: Locations) -> Vec<Node> {
+    let parser = if page { raw_document } else { raw_fragment };
+    let nodes = parser(source, locations);
     if terminal_text(&nodes) {
-        raw_fragment(&serialize::html(&nodes))
+        parser(
+            &serialize::html(&nodes),
+            source_locations::wrapper_locations(&nodes),
+        )
     } else {
         nodes
     }
 }
 
-fn raw_document(source: &str) -> Vec<Node> {
-    parse_document(Arena::default(), options()).one(source)
+fn raw_document(source: &str, locations: Locations) -> Vec<Node> {
+    parse_document(Arena::with_locations(locations), options()).one(source)
 }
 
 /// Plaintext consumes every later byte. One browser repair makes formatting
@@ -53,9 +58,9 @@ fn terminal_text(nodes: &[Node]) -> bool {
     })
 }
 
-fn raw_fragment(source: &str) -> Vec<Node> {
+fn raw_fragment(source: &str, locations: Locations) -> Vec<Node> {
     parse_fragment(
-        Arena::default(),
+        Arena::with_locations(locations),
         options(),
         QualName::new(None, ns!(html), local_name!("body")),
         Vec::new(),
