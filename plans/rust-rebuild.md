@@ -1592,6 +1592,8 @@ The D1 round 3 viewer consistency items, decision 2 A, and the merge of round
 The D1 round 4 rows, their fixture entries, the branch-point hosts, the
 example build measurement, and the sweep inputs:
 `.context/rust-rebuild/delegation/m10-d1/report-4.md`.
+The F10 follow-ups of round 4, the merge of the rebuild tip `453eef9b`,
+and the sweep renames: `.context/rust-rebuild/delegation/m10-d1/report-f10.md`.
 
 - [ ] Commit.
 
@@ -2458,37 +2460,31 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         checks that the current spec requires. Fixed by `303659e9`,
         `4ee66184` and `8409f7b3`. Findings 3 and 4 corrected sweep reasons
         in the round 4 report.
-  - M10 D1 round 4 review 1, open finding 2 for the user: the embedded
-    branch-point host checks only the head, so a click that leaves the
-    embedded viewer passes. Severity Low, effort Small. Recommended: C, give
-    each host an address check, also the moved-entry hosts.
-  - M10 D1 round 4 review 1, open finding 7 for the user: two stylesheet
-    Details specs keep their own inspector copy and readers. Severity Low,
-    effort Small. Recommended: A, import the shared copy and readers.
-  - M10 D1 round 4 review 1, open finding 8 for the user: three specs pin
-    the default copy's Changes count. Severity Low, effort Small.
-    Recommended: A, read the count from the index in the two UI specs.
-  - M10 D1 round 4 review 1, open finding 9 for the user: the new
-    `movedPage` key collides with the moved fixture's key in Serve's
-    `changes.paths`. Severity Low, effort Small. Recommended: A, rename it.
-  - M10 D1 round 4 review 2, open finding 10 for the user: the wrapper row's
-    title still says "no consumers". Severity Low, effort Small.
-    Recommended: A, say "no affected consumers" and record the rename.
-  - M10 D1 round 4 decision 11 for the user: two PostCSS evidence tests fail
-    on the Node 22.14.0 viewer runner, which has no `module.registerHooks`.
-    Severity High, effort Small. Recommended: A, raise the lowest supported
-    Node version to 22.15.0.
+  - [x] M10 D1 round 4 follow-ups in F10, given by the orchestrator on
+        2026-10-20, one commit each. Merge decisions:
+        `.context/f10/merge-decisions.md`.
+    - [x] Review 1 finding 2: each host names the page path that it shows
+          for an entry, also the moved-entry hosts. Fixed by `7ca03620` (C).
+    - [x] Review 1 finding 7: the Details specs share one copy and reader
+          module. Fixed by `7e27fefe` (B).
+    - [x] Review 1 finding 8: the UI specs read the Changes count from the
+          index. Fixed by `d85e581c` (A).
+    - [x] Review 1 finding 9: the default copy's key is `similarTextPage`.
+          Fixed by `7c761873` (A).
+    - [x] Review 2 finding 10: the wrapper row's title says "no affected
+          consumers". Fixed by `c7401d71` (A).
+    - [x] Follow-up of review 1 finding 5: `snapshotOf` checks the snapshot
+          id format. Done by `054e994d`.
+    - [x] Outside-scope item: the CSS evidence pages let a page use
+          component elements without usage records. Done by `65179c45`.
+  - M10 D1 round 4 decision 11: two PostCSS evidence tests fail on the Node
+    22.14.0 viewer runner, which has no `module.registerHooks`. Settled by
+    user decision 60 C, which raises the floor to 22.15.0 on
+    `rebuild/ci-gates`.
   - M10 D1 round 4 decision 13 for the user: write each sweep reason from a
     list of the old test's assertions, and check each port's title. Severity
     Low, effort Small. Covers findings 3 to 6 of review 1 and finding 10
     of review 2. Recommended: A, add the step to the gap sweep procedure.
-  - Follow-up: assert the snapshot id format in `snapshotOf` for every
-    caller. Effort Small. Covers review 1 finding 5. Previous examples: none
-    found.
-  - Outside the scope of the M10 D1 round 4 reviews:
-    `docs/protocol/mokly-css-evidence-presentation.md:188` says that a
-    whole-document page consumes no components, but `mokly-pages.md` lets a
-    page use component elements. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
