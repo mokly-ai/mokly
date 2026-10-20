@@ -54,7 +54,6 @@ impl StaticOutput for Output {
         let publication = PublicationInput {
             identity: request.publication.clone(),
             repository: request.repository_root.clone(),
-            warnings_are_fatal: request.warnings_are_fatal,
         };
         let built = static_runtime::run(
             &request.invocation_directory,

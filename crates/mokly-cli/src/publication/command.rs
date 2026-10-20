@@ -12,7 +12,7 @@ use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
 use mokly_publish::settings::Settings;
 
-use crate::publication::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
+use crate::publication::build::{BuildRequest, Directories, StaticOutput};
 use crate::publication::error::{Error, ExchangeResult, Result};
 use crate::publication::mapping::checkout_result;
 
@@ -114,7 +114,6 @@ impl Publish for Command {
             config: options.config.clone(),
             base: options.base.clone(),
             no_changes: options.no_changes,
-            warnings_are_fatal: warnings_are_fatal(options.strict),
             strict: options.strict,
             publication,
         };

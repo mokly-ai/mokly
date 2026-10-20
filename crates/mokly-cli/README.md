@@ -212,6 +212,7 @@ the retained path without changing the successful receipt. Rich output uses the
 shared warning glyph and prints that full path on its own recovery line. Publish warnings
 are fatal only with `--strict`. Without it, the command reports warnings and
 continues with output installation and upload.
+Build preparation owns the single strict-warning check for both commands.
 
 ## Quick Start
 
