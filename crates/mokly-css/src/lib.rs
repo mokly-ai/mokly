@@ -25,6 +25,9 @@ mod rename_selectors;
 #[path = "_tests_/compiler_tests.rs"]
 mod compiler_tests;
 #[cfg(test)]
+#[path = "_tests_/module_diagnostics_tests.rs"]
+mod module_diagnostics_tests;
+#[cfg(test)]
 #[path = "_tests_/modules_tests.rs"]
 mod modules_tests;
 #[cfg(test)]

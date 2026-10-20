@@ -42,9 +42,7 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                     .map(|index| &tokens.nodes[index].token);
                 let at = section.at_rule(&tokens);
                 if let Some(block) = section.block {
-                    let names = at
-                        .as_deref()
-                        .is_none_or(|name| name.ends_with("keyframes") || name == "scope");
+                    let names = renamed_prelude(at.as_deref());
                     pending.push(Work::Emit("}"));
                     pending.push(Work::Block(block.range, block.grammar));
                     pending.push(Work::Emit("{"));
@@ -62,15 +60,18 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
                     if property.as_deref() == Some("composes") {
                         continue;
                     }
-                    let names = property.as_deref().is_some_and(|name| {
-                        matches!(
-                            name,
-                            "animation"
-                                | "animation-name"
-                                | "-webkit-animation"
-                                | "-webkit-animation-name"
-                        )
-                    });
+                    let names = match grammar {
+                        Grammar::Rules => renamed_prelude(at.as_deref()),
+                        Grammar::Declarations => property.as_deref().is_some_and(|name| {
+                            matches!(
+                                name,
+                                "animation"
+                                    | "animation-name"
+                                    | "-webkit-animation"
+                                    | "-webkit-animation-name"
+                            )
+                        }),
+                    };
                     if section.semicolon {
                         pending.push(Work::Emit(";"));
                     }
@@ -139,6 +140,13 @@ fn fingerprint(source: &str, prefix: &str) -> Vec<String> {
         }
     }
     output
+}
+
+/// True where the renamer renames a prelude: a selector, a keyframes name, or
+/// an `@scope` prelude. A statement in a rule list follows this rule with or
+/// without a block, as the renamer reads both alike.
+fn renamed_prelude(at: Option<&str>) -> bool {
+    at.is_none_or(|name| name.ends_with("keyframes") || name == "scope")
 }
 
 /// Pending fingerprint work, popped in authored order.
