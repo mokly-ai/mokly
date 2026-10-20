@@ -84,8 +84,7 @@ export function workspaceData(
   context: ShellContext,
   entry: WorkspaceData["entry"],
 ): WorkspaceData {
-  const model = catalogue.publicModel;
-  if (!model) throw new Error("The catalogue has no published records.");
+  const model = catalogue.publicModel!;
   return publicWorkspace(
     catalogue,
     model,

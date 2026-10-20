@@ -94,7 +94,7 @@ export function useRemovedPreview({
 }): { retry(): void; state: RemovedPreviewState } {
   const environment = useComparisonEnvironment();
   const comparisonUrl =
-    useOptionalShellStore()?.catalogue.publicModel?.comparisonUrl;
+    useOptionalShellStore()?.catalogue.publicModel!.comparisonUrl;
   const key = previewKey(data);
   const selection = `${viewport}:${colorScheme}`;
   const [attempt, bumpAttempt] = useReducer((value: number) => value + 1, 0);

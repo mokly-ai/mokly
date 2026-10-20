@@ -34,12 +34,11 @@ export function withRoute(
   if (route.snapshot) selection.snapshotId = route.snapshot;
   else delete selection.snapshotId;
   if (route.viewport) selection.viewport = route.viewport;
-  if (catalogue.publicModel)
-    selection = revealSelection(
-      catalogue.publicModel,
-      folderTitleLookup(catalogue.hierarchy),
-      selection,
-    );
+  selection = revealSelection(
+    catalogue.publicModel!,
+    folderTitleLookup(catalogue.hierarchy),
+    selection,
+  );
   let next = withSelection(state, selection, false);
   if (route.view.kind === "target") {
     const path = disclosurePath(sections, route.view.target.entry.path);

@@ -484,8 +484,8 @@ See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
 
-Markdown documents use `DocumentStageFrame` and the plain manifest embed with
-scheme-specific routes. `previews.tsx` and `use_removed_preview.ts` select the
-historical document's scheme through the same page preview lifecycle. Documents
-have no viewport or usage axis; logical links in a document reach the parent
-shell through the frame adapter.
+Markdown documents use `DocumentStageFrame` with scheme-specific routes.
+`previews.tsx` and `use_removed_preview.ts` select the historical document's
+scheme through the same page preview lifecycle. Documents have no viewport or
+usage axis; logical links in a document reach the parent shell through the
+frame adapter.

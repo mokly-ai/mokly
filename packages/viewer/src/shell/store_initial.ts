@@ -83,8 +83,8 @@ export function viewRoute(
 ): ShellRoute {
   const snapshot =
     snapshotId ??
-    (catalogue.publicModel && view.kind === "target"
-      ? resolveCatalogueEntry(catalogue.publicModel, {
+    (view.kind === "target"
+      ? resolveCatalogueEntry(catalogue.publicModel!, {
           path: view.target.entry.path,
           kind: view.target.entry.kind,
         })?.snapshotId

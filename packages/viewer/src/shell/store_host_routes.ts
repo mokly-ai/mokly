@@ -111,11 +111,10 @@ export function announceNavigation(
   fragment: string | undefined,
   pending: PendingNavigation | undefined,
 ): void {
-  const model = catalogue.publicModel;
   const entry =
-    typeof selection.screenPath === "string" && model
+    typeof selection.screenPath === "string"
       ? resolveCatalogueSelection(
-          model,
+          catalogue.publicModel!,
           selection.screenPath,
           selection.snapshotId,
         )?.entry
