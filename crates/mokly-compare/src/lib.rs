@@ -25,8 +25,10 @@ mod install;
 mod local_packages;
 mod local_specifications;
 mod manager;
+mod manager_classic;
 mod manager_command;
 mod manager_local;
+mod manager_lockfiles;
 mod manager_plan;
 mod manager_yaml;
 mod manifest;
@@ -140,6 +142,10 @@ mod manager_tests;
 #[cfg(test)]
 #[path = "_tests_/manager_plan_tests.rs"]
 mod manager_plan_tests;
+
+#[cfg(test)]
+#[path = "_tests_/manager_lockfiles_tests.rs"]
+mod manager_lockfiles_tests;
 
 #[cfg(test)]
 #[path = "_tests_/manager_command_tests.rs"]

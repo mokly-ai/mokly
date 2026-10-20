@@ -227,6 +227,8 @@ comparison output, cache reuse, executable selection, and fallback reasons.
   [install commands](./src/manager_command.rs), and
   [local path confinement](./src/manager_local.rs), and
   [wrapped package specifications](./src/local_specifications.rs).
+- [Lockfile source confinement](./src/manager_lockfiles.rs) and
+  [Yarn Classic scalar inputs](./src/manager_classic.rs).
 
 ### Related Docs
 

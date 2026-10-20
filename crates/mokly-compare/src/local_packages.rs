@@ -8,6 +8,7 @@ use crate::ancestor_roots;
 use crate::error::Result;
 use crate::local_specifications;
 use crate::manager_local;
+use crate::manager_lockfiles;
 use crate::manifest::{self, Manifest};
 
 pub(crate) fn manifests(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<BTreeMap<String, Manifest>> {
@@ -50,8 +51,12 @@ pub(crate) fn validate(files: &BTreeMap<RepoPath, Vec<u8>>) -> Result<()> {
         }
     }
     for (path, bytes) in files {
-        if path.as_str().rsplit('/').next() == Some("pnpm-workspace.yaml") {
-            manager_local::validate(bytes, path.as_str())?;
+        match path.as_str().rsplit('/').next() {
+            Some("pnpm-workspace.yaml") => manager_local::validate(bytes, path.as_str())?,
+            Some("pnpm-lock.yaml" | "yarn.lock") => {
+                manager_lockfiles::validate(bytes, path.as_str())?
+            }
+            _ => {}
         }
     }
     Ok(())
