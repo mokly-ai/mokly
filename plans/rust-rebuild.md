@@ -2541,6 +2541,32 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Source reports, exact identities, calculations, and limitations:
       `.context/ci-shard-hosted/timings.md` and `replay.json`.
 
+- [ ] CI round 8, hosted shard balance investigation (2026-10-20): compare
+      hosted runs `39496386627` at `410bf844` and `39506719725` at `9fbb5c0d`.
+      Both runs cover 2,249 identical test IDs in 267 whole spec files. All
+      eight logs use one Playwright worker, so the makespan is a serial file
+      schedule plus setup and teardown. The step times in the first run are
+      11.850, 21.083, 19.433, and 18.100 minutes. The second run is 16.017,
+      11.733, 20.467, and 17.383 minutes. A timestamped completion-interval
+      model includes file-boundary work and a fixed global allowance, but its
+      held-out errors reach +43.271 percent. A test-duration model reaches
+      +49.846 percent on the second run's shard 2. The same files vary above
+      15 percent in 208 of 267 test-duration comparisons, with a 37.484
+      percent median spread. The identical global catalogue build ranges from
+      57.129 to 114.405 seconds in the second run. These data show variation
+      beyond the file assignment, but they do not isolate runner noise from
+      cache, fixture, and order effects. No weight or shard assignment change
+      is safe on these two samples. Keep four shards, whole files, every test,
+      the 1.25 count cap, runner sizes, and limits. Detailed evidence:
+      `.context/ci-shard-hosted-2/timings.md`, `analysis.json`, and
+      `intervals.json`.
+      Decision 1, Medium severity, Small effort: do not change the model or
+      assignment until the user chooses between three controlled repeats of
+      the same commit and assignment, using median shard times as the target
+      (A), or a dynamic whole-file queue across the four runners (B). A is
+      recommended because it is the smallest way to separate stable costs
+      from run variation. No option is applied.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
