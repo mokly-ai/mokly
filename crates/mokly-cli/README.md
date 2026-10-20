@@ -124,7 +124,10 @@ shutdown guards.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
 count as one interruption. A later signal kills owned sidecars and exits
-immediately. The interval uses an injected monotonic clock. Each worker starts in
+immediately after any active output installation, restoration, or cleanup
+settles. The output guard and forced-exit admission share one lock, so a new
+write cannot start after a forced exit is pending. The interval uses an
+injected monotonic clock. Each worker starts in
 its request source root and uses the embedded npm version for hello and
 graph keys.
 Serve uses its own idempotent stop state. Signals and `q` cancel native work

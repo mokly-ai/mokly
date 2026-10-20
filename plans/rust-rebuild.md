@@ -393,6 +393,10 @@ readiness rather than blocking this acceptance round on further startup work.
   failed-upload snapshots and unrelated files. Cleanup failure warns without
   changing the accepted publication. Reject retaining every successful snapshot
   because it leaves unused output behind.
+- Item 30 A, applied by default (user rule): defer a forced second Ctrl+C
+  exit while output installation, restoration, or cleanup settles. Exit once
+  that operation finishes without another signal. Reject immediate exit in
+  these operations because it can strand the earlier site in a backup.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
