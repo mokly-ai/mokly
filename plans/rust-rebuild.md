@@ -2887,10 +2887,24 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     moves. Severity Low, effort Small. Recommended: B, derive each moved
     pair's previous path and flag from the case's moves.
   - Outside the F15 review scope:
-    - `packages/viewer/src/viewer/styles.ts:26`: the compact search query
-      uses `35rem`, so a host page with another root font size leaves the
-      560px that `docs/protocol/mokly-viewer.md:302` requires. Separate
-      branch.
+    - `packages/viewer/src/viewer/styles.ts`: the `mokly-top-host` container
+      query of the compact search uses `35rem`, so a host page with another
+      root font size leaves the 560px compact search width that
+      `docs/protocol/mokly-viewer.md` requires. Separate branch.
+  - [x] F15 re-review, on 2026-10-20: finding 35, a live plan line that
+        cited a line of `styles.ts` that the merge shifted, is fixed by
+        option B. The line names the rule now. The full report is
+        `.context/m10/f15/review_2.md`.
+  - Outside the F15 re-review scope:
+    - `tests/browser/serve_comparison_ui.ts`: the header says that Serve
+      captures each selected comparison on demand, but Serve returns a kept
+      comparison when the same entry is selected again. Separate branch.
+    - `plans/rust-rebuild.md`: a live line cites
+      `docs/protocol/mokly-component-controls.md:69`, but the tip moved the
+      local storage rule to line 64. Separate branch.
+    - `plans/rust-rebuild.md`: Decision 21 still names entry detail v1, but
+      the tip moved the code and `docs/protocol/mokly-shell-delivery.md` to
+      v2 without an amendment note. Separate branch.
   - Outside the F9b re-review scope:
     - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
       hides the menu button and stays open after a row activation. Separate
