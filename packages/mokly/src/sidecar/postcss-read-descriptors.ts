@@ -20,6 +20,14 @@ import {
 
 let installed = false;
 
+/** Node's callback metadata preserves named results through util.promisify. */
+function preserveSymbols(original: object, wrapped: object): void {
+  for (const symbol of Object.getOwnPropertySymbols(original)) {
+    const descriptor = Object.getOwnPropertyDescriptor(original, symbol);
+    if (descriptor) Object.defineProperty(wrapped, symbol, descriptor);
+  }
+}
+
 export function observeDescriptors(): void {
   if (installed) return;
   installed = true;
@@ -97,6 +105,7 @@ export function observeDescriptors(): void {
         }
       },
     });
+    preserveSymbols(original, fs[name]);
   }
   for (const name of ["read", "readv"] as const) {
     const original = fs[name];
@@ -147,6 +156,7 @@ export function observeDescriptors(): void {
         }
       },
     });
+    preserveSymbols(original, fs[name]);
   }
   for (const name of [
     "write",
@@ -167,6 +177,7 @@ export function observeDescriptors(): void {
         return Reflect.apply(original, fs, args);
       },
     });
+    preserveSymbols(original, fs[name]);
   }
   for (const name of ["writeFile", "appendFile"] as const) {
     const original = promises[name];
