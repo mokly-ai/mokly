@@ -30,7 +30,9 @@
   control outweighs the other. Expanding fixes the frame to `inset: 2.5vh 2.5vw` at
   overlay z-index over a scrim (`rgba(20, 28, 22, 0.55)`), locks body scroll,
   and swaps the icon for its inward-arrow collapse counterpart; Escape or
-  clicking outside collapses it. Only one frame expands at a time.
+  clicking outside collapses it. Only one frame expands at a time. An
+  expanded frame that leaves the page, such as a use-case step that a narrow
+  shell shows in a phone frame, collapses, so no scrim stays.
 - **Use-case flow** — vertical numbered steps (32px accent number tiles)
   joined by a 2px connector line, each with title, description, a
   `This screen in the catalogue: <title> →` link, and one device frame

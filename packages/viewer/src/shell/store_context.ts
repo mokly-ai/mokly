@@ -23,6 +23,8 @@ export interface ShellStore {
   navigateFrame(href: string, navigation?: FrameNavigation): void;
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
+  /** Collapse the expanded frame only while it is still the frame `key`. */
+  releaseExpandedFrame(key: string): void;
   /**
    * Expand and focus one section's folder row without changing the content
    * area, clearing only the filters that would hide it.

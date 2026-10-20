@@ -85,6 +85,13 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       );
       if (!input.embedded) persist(widthStorageKey, String(width));
     },
+    releaseExpandedFrame(key) {
+      input.setState((current) =>
+        current.expandedFrame === key
+          ? { ...current, expandedFrame: undefined }
+          : current,
+      );
+    },
     revealFolder(section, path) {
       const reveal = folderRevealPath(input.sections, section, path);
       if (!reveal) return;
