@@ -2082,6 +2082,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         with the catalogued empty-wrapper message. Decision: nesting report
         finding 15 option B, decided by the orchestrator as protocol alignment
         on 2026-10-20.
+  - [x] Give an empty wrapper in a keyframes name its own catalogued words,
+        which ask for the name. Decision: nesting report finding 18 option B,
+        approved by the orchestrator on 2026-10-20.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
         (pending user decision).
