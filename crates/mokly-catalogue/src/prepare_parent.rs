@@ -5,9 +5,10 @@ use std::collections::BTreeSet;
 use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{SourceLocation, VisualEntry};
 use mokly_model::controls;
-use mokly_model::data::merge_props;
+use mokly_model::data::{merge_props, round_unsafe_integer};
 use mokly_model::inference::infer;
 use mokly_model::validation::PropValidator;
+use serde_json::Value;
 
 use crate::diagnostic::{Code, Issue};
 use crate::input::{ParsedEntry, VariantInput};
@@ -65,7 +66,7 @@ pub(crate) fn prepare(
             )
             .at(source.clone()));
         }
-        let schema = match &input.prop_schema {
+        let mut schema = match &input.prop_schema {
             Some(schema) => schema.clone(),
             None => match serde_json::to_value(&inferred) {
                 Ok(schema) => schema,
@@ -76,6 +77,7 @@ pub(crate) fn prepare(
                 }
             },
         };
+        normalize_numbers(&mut schema);
         let validator = props::compile(&schema, parsed, source)?;
         props::declarations(
             validator.schema(),
@@ -116,4 +118,18 @@ pub(crate) fn prepare(
         Err(issue) => parent.issues.push(issue),
     }
     parent
+}
+
+/// JSON transport can spell a binary64 number as a different exact integer.
+/// Normalize every schema source before the shared validator compares it with props.
+fn normalize_numbers(schema: &mut Value) {
+    let mut pending = vec![schema];
+    while let Some(value) = pending.pop() {
+        match value {
+            Value::Number(number) => *number = round_unsafe_integer(number.clone()),
+            Value::Array(values) => pending.extend(values.iter_mut()),
+            Value::Object(values) => pending.extend(values.values_mut()),
+            _ => {}
+        }
+    }
 }

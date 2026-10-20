@@ -75,3 +75,40 @@ title: Home
     },
   );
 }
+
+test(
+  "JavaScript schema numbers retain binary64 identity across JSON transport",
+  { timeout: 120_000 },
+  async (context) => {
+    const root = await consumer(context, {
+      "specs/number.mockup.ts": `import React from 'react';
+import {defineScreen} from '@mokly/mokly';
+const count=1000000000000000100;
+export default defineScreen({title:'Number',description:'',relatedDocs:[],
+  propSchema:{type:'object',additionalProperties:false,properties:{count:{const:count}}},
+  props:{count},render:({count})=>React.createElement('p',null,count)});`,
+    });
+    const result = await command(
+      root,
+      "build",
+      ["--no-changes"],
+      "plain",
+      {},
+      context.signal,
+    ).result;
+    assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stderr, /schema keyword "\/properties\/count\/const"/);
+    const index = readCatalogueIndex(
+      JSON.parse(
+        await fs.readFile(
+          path.join(root, "mokly-static/mokly-viewer/index.json"),
+          "utf8",
+        ),
+      ),
+    );
+    assert.equal(
+      decodeProps(index.screens[0]!.props).count,
+      1000000000000000100,
+    );
+  },
+);
