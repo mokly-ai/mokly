@@ -74,7 +74,7 @@ export class PostcssWorkers {
           npm_package_json: undefined,
           npm_config_local_prefix: undefined,
           NODE_OPTIONS: [
-            `--require=${JSON.stringify(fileURLToPath(new URL("./postcss-preload.js", import.meta.url)))}`,
+            `--require=${JSON.stringify(fileURLToPath(new URL("./postcss-preload.cjs", import.meta.url)))}`,
             process.env.NODE_OPTIONS,
           ]
             .filter(Boolean)

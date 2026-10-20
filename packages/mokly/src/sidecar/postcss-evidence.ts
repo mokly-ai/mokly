@@ -23,6 +23,28 @@ type FileReader = typeof fs.readFileSync | typeof promises.readFile;
 const observedReaders = new WeakSet<FileReader>();
 let earlyReaders = false;
 let moduleHooksInstalled = false;
+const observerKey = Symbol.for("mokly.postcss.readEvidence");
+type Observer = (loaded: Iterable<string>) => PostcssEvidence;
+
+function isObserver(value: unknown): value is Observer {
+  return typeof value === "function";
+}
+
+/** A CommonJS preload and the ESM worker share one installed observer. */
+export function preloadedObserver(): Observer | undefined {
+  const value: unknown = Reflect.get(globalThis, observerKey);
+  return isObserver(value) && value !== readEvidence ? value : undefined;
+}
+
+export function shareReadEvidence(): void {
+  Object.defineProperty(globalThis, observerKey, { value: readEvidence });
+}
+
+/** Async loaders cannot certify raw source or synchronously load an ESM preload. */
+export const asynchronousLoader = [
+  ...process.execArgv,
+  process.env.NODE_OPTIONS ?? "",
+].some((value) => /--(?:experimental-)?loader(?:=|\s|$)/.test(value));
 
 /** The first child preload obtains native readers before consumer replacement. */
 export function trustEarlyReaders(): void {
@@ -132,11 +154,15 @@ function compilerBytes(
 
 /** Keep native resolution, conditions, attributes, and cache identity unchanged. */
 export function observeModuleLoads(): void {
-  if (moduleHooksInstalled || typeof nodeModule.registerHooks !== "function")
+  if (
+    moduleHooksInstalled ||
+    asynchronousLoader ||
+    typeof nodeModule.registerHooks !== "function"
+  )
     return;
   moduleHooksInstalled = true;
   let customized = !earlyReaders && preloadedCode;
-  nodeModule.registerHooks({
+  const hooks = nodeModule.registerHooks({
     resolve(specifier, context, nextResolve) {
       const result = nextResolve(specifier, context);
       for (const file of resolutionMetadata(
@@ -173,6 +199,7 @@ export function observeModuleLoads(): void {
     Object.defineProperty(nodeModule, name, {
       value: function (...args: unknown[]): unknown {
         customized = true;
+        hooks.deregister();
         return Reflect.apply(original, nodeModule, args);
       },
     });
@@ -182,6 +209,8 @@ export function observeModuleLoads(): void {
 
 /** A context remains incomplete even when every listed path has an observed read. */
 export function readEvidence(loaded: Iterable<string>): PostcssEvidence {
+  const observer = preloadedObserver();
+  if (observer) return observer([...loaded, ...modules]);
   for (const file of loaded) modules.add(file);
   for (const file of Object.keys(require.cache))
     if (!initialModules.has(file)) modules.add(file);

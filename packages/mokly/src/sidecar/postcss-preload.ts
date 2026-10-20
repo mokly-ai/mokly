@@ -1,6 +1,11 @@
 import { fileURLToPath } from "node:url";
+import { isMainThread } from "node:worker_threads";
 
-import { observeModuleLoads, trustEarlyReaders } from "./postcss-evidence.js";
+import {
+  observeModuleLoads,
+  shareReadEvidence,
+  trustEarlyReaders,
+} from "./postcss-evidence.js";
 import { observeDescriptors } from "./postcss-read-descriptors.js";
 import { observeFileReads } from "./postcss-read-files.js";
 import { observeDescriptorSharing } from "./postcss-read-sharing.js";
@@ -12,8 +17,12 @@ if (inherited?.startsWith(option)) {
   if (remaining) process.env.NODE_OPTIONS = remaining;
   else delete process.env.NODE_OPTIONS;
 }
-trustEarlyReaders();
-observeFileReads();
-observeDescriptors();
-observeDescriptorSharing();
-observeModuleLoads();
+// Worker threads, including Node's async loader, retain opaque coverage.
+if (isMainThread) {
+  trustEarlyReaders();
+  observeFileReads();
+  observeDescriptors();
+  observeDescriptorSharing();
+  observeModuleLoads();
+  shareReadEvidence();
+}
