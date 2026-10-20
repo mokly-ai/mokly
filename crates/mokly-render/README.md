@@ -69,6 +69,9 @@ Each graph factory captures source and dependency reads in a fresh snapshot.
 Evicted stylesheet text rebuilds from that generation's captured parsed inputs.
 Opaque asset records contain metadata only. Delivery verifies a source stream
 against the generation's digest; assets never enter the stylesheet byte cache.
+Asset streams use the same selected dependency reader as CSS compilation,
+including configured package roots and historical installations. Authored
+public-resource reads retain their separate source confinement checks.
 Module stylesheet discovery uses an explicit stack and retains import order
 when it crosses shared dependencies or cycles.
 Definitions from the same module share one stylesheet root. A generation-wide

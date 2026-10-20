@@ -1922,6 +1922,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
+  - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
+        source Changes, and watched screen, component, and stylesheet edits.
+        Keep the source repository unchanged.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-18.md`.
+  - [ ] Profile the memory guard stops in repeated Mokly Cloud comparisons.
+        Separate retained generation data from allocator residency before
+        changing cache limits or rendering behaviour.
+  - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
