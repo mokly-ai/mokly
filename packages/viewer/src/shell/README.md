@@ -34,16 +34,12 @@ counterparts for workspace inputs, variants and nested component instances.
 `branchPoints(catalogue)` is its one construction point: it indexes a catalogue
 generation on first use and returns the same lookup for that catalogue object
 afterwards. `resolve` requires an explicit before/after side and kind.
-`counterpart(current, baseline?)` gives the original baseline identity, and
-`baselineEntry(current, baseline)` the inventory entry at that identity.
 `parent` gives an eligible parent of a resolved variant or a stored title
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
 that entry, in record order. `previousPath` gives only accepted move pairs.
-Results retain current entries or complete removed records. A caller may
-supply a baseline inventory per call; it adds same-path and case-only
-counterparts, while pairs alone prove moved counterparts. No shell module
-supplies one: the entry detail already carries the paired input changes. Usage
+Results retain current entries or complete removed records. The lookup pairs
+no counterparts: the entry detail already carries the paired input changes. Usage
 links, the variant bar, removed tree rows, workspace keys, breadcrumbs,
 details and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
