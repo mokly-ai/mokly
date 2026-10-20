@@ -2845,6 +2845,35 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         keeps its key alone and beside the current row of its entry, and a
         row keeps its key with and without another entry's row before it.
         Done by `e1ff6c97`.
+  - [x] M10 Serve and moved rows review 10, residual risk, follow-up F9b item
+        1, given by the orchestrator on 2026-10-20: the Usage row key tests
+        still accepted a key with the first link's instance key and a key
+        built from the title. Two cases reject them: a row keeps its key when
+        another instance of its entry comes first, and beside another entry
+        with the same title. A mutation run proves each case.
+  - [x] Follow-up F9b review, on 2026-10-20: finding 27 is fixed by
+        `3038f6de`. Findings 24 (`2a0df638`), 25 (`1b391e86`), and 26
+        (`0ef0e0a3`) are applied with reasons: they restore checks that this
+        branch dropped, or finish item 6. Finding 28 is corrected in the
+        round's sweep rows.
+  - F9b review finding 29 for the user: two test modules export
+    `branchPointCases` with different lists. Severity Low, effort Small.
+    Recommended: A, rename the delivery list to `branchPointDeliveryCases`.
+  - [x] F9b re-review, on 2026-10-20: finding 31, a stale comment in
+        `branch_point_cases_tests.rs`, is fixed by `aa296afc`.
+  - F9b re-review finding 30 for the user: the mobile embedded runs do not
+    assert a narrow viewer, so a wide viewer would pass them again. Severity
+    Low, effort Small. Recommended: B, a host marker that makes the search
+    helper expect the compact control or the field.
+  - Outside the F9b re-review scope:
+    - `packages/viewer/src/shell/top_bar.tsx:21`: the open compact search
+      hides the menu button and stays open after a row activation. Separate
+      branch.
+    - `docs/protocol/mokly-viewer.md:302`: no test checks that Close or
+      Escape restores the compact search control and its focus, or that host
+      slots stay mounted. Separate branch.
+    - Commits `2a0df638` and `0ef0e0a3` have titles of 56 and 51 characters,
+      past the 50-character limit. They are pushed, so they stay as they are.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2853,25 +2882,64 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       base commits must feed Rust and browser tests, but Rust reads
       `tests/fixtures/branch_point_cases.json` and the browser writes its
       own sources. Separate branch.
+      - [x] Follow-up F9b item 5: the JSON now holds the browser's five
+            namespaced cases with their pairs, removed titles, and affected
+            consumers. Rust runs each case in its own repository. The browser
+            helper writes every case into both commits, byte for byte as the
+            old generator did. The browser checks are keyed by the case
+            names, and both readers stop on a missing case. No behaviour or
+            protocol change was needed.
     - `docs/protocol/mokly-branch-point-lookup.md:129`: the five journeys
       must run through Serve, `build`, and the embedded viewer, but they run
       only on the branch copy. Done in round 4 of the D1 delegate.
+      - [x] Follow-up F9b item 6: `branch_point_cases.ts` registers the five
+            cases at desktop and mobile widths on each host:
+            `branch_point_comparison_ui.spec.ts` on the branch copy,
+            `serve_branch_point.spec.ts` on Serve, and
+            `viewer_branch_point.spec.ts` in the embedded viewer through both
+            frame adapters. Serve waits for each on-demand comparison, and
+            the embedded viewer checks the selected entry without an address.
     - `tests/helpers/branch_point_sources.ts`: no folder-own entry sits above
       `branch/parent`, so no journey ports the old step that opened the
       removed sibling through a container row. Separate branch.
+      - [x] Follow-up F9b item 4: the unchanged component index
+            `branch/parent` is the folder's own page. The moved parent check
+            now activates its container row, which opens the moved parent,
+            and under the search `secondary` opens the removed sibling.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
+      - [x] Follow-up F9b item 4: the comment now says that each key is the
+            case title that starts each test name.
     - `tests/browser/static_component_comparisons.spec.ts:32`,
       `removed_previews_static.spec.ts:76`, and
       `removed_previews_viewer.spec.ts:173`: they repeat the Card `.accent`
       colours as literals instead of reading `accentColor`. Separate branch.
+      - [x] Follow-up F9b item 2: the three specs read `accentColor` from
+            `tests/helpers/comparison_catalogue.ts`, which also writes the
+            colours into `theme.css`. With only the fixture's Before colour
+            changed, they and the Serve Card panes still passed.
     - `docs/protocol/mokly-component-controls.md:69`: no test checks that a
       temporary prop edit stays out of local storage. Separate branch.
+      - [x] Follow-up F9b item 3: `serve_temporary_props_status.spec.ts`
+            checks that a temporary edit leaves local storage unchanged and
+            that a reload shows the saved props. A mutation that stores the
+            draft fails it.
     - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
       split rule, with no recorded exception. Separate branch.
+      - Follow-up F9b item 7, decision 23 for the user: a split by subject
+        needs doc-only folders in the source tree or Markdown pages for
+        module mechanics, which belong in code comments. Severity Low,
+        effort Small. Recommended: A, keep one page, add a heading per
+        subject, and record the exception, as decision 2 A did for the
+        browser test guide.
     - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
       with no recorded exception. Separate branch.
+      - [x] Follow-up F9b item 7: the README keeps the overview, the quick
+            start, a guide list, the responsibilities, and development, in
+            285 lines. `docs/concepts`, `docs/api`, `docs/theming`, and
+            `docs/deployment` under `packages/viewer` hold the rest, each as
+            a `README.md` so that the Markdown link check reads it.
   - [x] M10 D1 round 4 review 1, findings 1, 5 and 6: three ports lacked old
         checks that the current spec requires. Fixed by `303659e9`,
         `4ee66184` and `8409f7b3`. Findings 3 and 4 corrected sweep reasons

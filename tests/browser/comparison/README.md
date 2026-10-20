@@ -150,8 +150,11 @@ before each of its two commits. The default catalogue has no extra entries.
 screen and component consumers, a moved parent with a removed sibling, a
 transferred variant, case-only renames, and a document that reuses a removed
 component's path. The moved consumers also retain distinct base and head SVG
-bytes. The case-only entries use no changed styles. Both hosts below use the
-same authored sources.
+bytes. The case-only entries use no changed styles. The moved parent's folder
+has its own page, an unchanged component index. Both hosts below use the
+same authored sources. The cases come from `tests/fixtures/branch_point_cases.json`,
+the shared set that `crates/mokly-compare/tests/branch_point_cases_tests.rs`
+also runs, each case in its own repository.
 
 `addComparisonFixtureSources` composes `addBranchPointSources` with
 `addMovedFixtureSources`. The second hook adds the `branch/moves/` entries:
@@ -167,6 +170,11 @@ viewer over this copy through both frame adapters. Each host passes a
 `entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
 page path it shows for that entry. An embedded host keeps `/viewer.html`, so
 a link that leaves the viewer for the standalone shell fails the case.
+`branch_point_cases.ts` registers the branch-point checks on the same three
+hosts: `branch_point_comparison_ui.spec.ts` on this copy,
+`serve_branch_point.spec.ts` on Serve, and `viewer_branch_point.spec.ts` in
+the embedded viewer. `branch_viewer_test.ts` serves that viewer to both
+embedded specs.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 
@@ -175,7 +183,8 @@ desktop and mobile widths: `branch_point_comparison_ui.spec.ts` on this copy,
 `viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
 through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
-an `EntryHost`.
+a `BranchPointHost`, which keeps the `EntryHost` path check and names
+when comparisons are captured.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
@@ -188,6 +197,7 @@ A pure move is included even when its kind is `unmodified`.
 | `consumers/archive/status`         | `consumers/status`               | changed      | yes      | Moved component consumer                         |
 | `consumers/archive/status/default` | `consumers/status/default`       | changed      | yes      | Moved saved consumer                             |
 | `consumers/archive/receipt`        | `consumers/receipt`              | changed      | yes      | Moved screen consumer                            |
+| `parent`                           | —                                | unmodified   | no       | The folder's own page, a component index         |
 | `parent/archive/action`            | `parent/action`                  | unmodified   | yes      | Moved parent with its own unchanged view         |
 | `parent/archive/action/primary`    | `parent/action/primary`          | changed      | yes      | Continue becomes Submit                          |
 | `parent/action/secondary`          | —                                | removed      | yes      | Former parent title Action                       |

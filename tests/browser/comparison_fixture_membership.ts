@@ -46,6 +46,7 @@ const branchStates = {
   "branch/consumers/archive/status": changed,
   "branch/consumers/archive/status/default": changed,
   "branch/consumers/archive/receipt": changed,
+  "branch/parent": stable,
   "branch/parent/archive/action": moved,
   "branch/parent/archive/action/primary": changed,
   "branch/variant/donor": stable,

@@ -64,6 +64,26 @@ test("a row keeps its key with and without another entry's row before it", () =>
   assert.equal(after[1]!.key, alone!.key);
 });
 
+test("a row keeps its key when another instance of its entry comes first", () => {
+  const [alone] = usageRows([link()]);
+  const [joined] = usageRows([link({ instanceKey: "b".repeat(64) }), link()]);
+  assert.equal(joined!.links.length, 2);
+  assert.equal(joined!.key, alone!.key);
+});
+
+test("a row keeps its key beside another entry with the same title", () => {
+  const [alone] = usageRows([link()]);
+  const after = usageRows([
+    link({ entryId: "screens/twin", title: "Consumer screen" }),
+    link(),
+  ]);
+  assert.deepEqual(
+    after.map((row) => row.links[0]!.entryId),
+    ["screens/twin", "screens/consumer"],
+  );
+  assert.equal(after[1]!.key, alone!.key);
+});
+
 test("rows that differ only in eligibility stay apart with distinct keys", () => {
   const rows = usageRows([
     link(),
