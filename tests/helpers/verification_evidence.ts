@@ -25,7 +25,7 @@ export interface VerificationReportFixture {
 }
 
 export function ciReports(
-  runtimes: readonly string[] = ["node-22.14.0", "node-24"],
+  runtimes: readonly string[] = ["node-22.15.0", "node-24"],
 ): VerificationReportFixture[] {
   return runtimes.flatMap((runtime): VerificationReportFixture[] => {
     const files = [
@@ -37,7 +37,7 @@ export function ciReports(
       suite: "viewer",
       commit: "a".repeat(40),
       runtime,
-      nodeVersion: runtime === "node-22.14.0" ? "22.14.0" : "24.21.0",
+      nodeVersion: runtime === "node-22.15.0" ? "22.15.0" : "24.21.0",
       shard: null,
       fullFiles: files,
       assignedFiles: files,

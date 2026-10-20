@@ -12,11 +12,13 @@ use mokly_source_interface::tree::SourceTree;
 use crate::config::relative;
 use crate::config_types::ResolvedConfig;
 use crate::config_warnings;
+use crate::control_warnings;
 use crate::definition_provider::DefinitionProvider;
 use crate::diagnostic::{Code, Issue, Warning, normalize_warnings};
 use crate::discovery::{Discovery, Inventory, SourceKind};
 use crate::error::{CatalogueError, Result};
 use crate::locations::at;
+use crate::numeric_warnings;
 use crate::prepare_sources::{append, canonical_order, duplicate_indices};
 use crate::render_sources::JavaScriptCatalogue;
 use crate::template_types::{ElementRegistry, Template};
@@ -214,6 +216,12 @@ impl Builder {
             &markdown_targets,
         ));
         prepared.warnings.extend(config_warnings::collect(config));
+        prepared
+            .warnings
+            .extend(control_warnings::collect(&prepared.model.entries));
+        prepared
+            .warnings
+            .extend(numeric_warnings::collect(&prepared.model.entries));
         normalize_warnings(&mut prepared.warnings);
         if !issues.is_empty() {
             return Err(CatalogueError::Invalid {

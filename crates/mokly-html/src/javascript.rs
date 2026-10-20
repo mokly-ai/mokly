@@ -5,10 +5,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 use std::sync::Arc;
 
+use mokly_catalogue::numeric_warnings;
 use mokly_catalogue::render_sources::RenderMethod;
 use mokly_model::axes::EntryKind;
 use mokly_model::catalogue::EntryContent;
 use mokly_model::material::digest;
+use mokly_model::wire_decode;
 
 use crate::composition::Engine;
 use crate::context::Context;
@@ -131,6 +133,10 @@ impl Engine<'_> {
             &context,
         )?;
         for instance in result.instances {
+            if let Ok(props) = wire_decode::decode(&instance.props) {
+                self.warnings
+                    .extend(numeric_warnings::for_entry(&props, self.request.entry));
+            }
             if let Some(existing) = self.instances.get(&instance.key) {
                 if !context.replay
                     || existing.props_key != instance.props_key

@@ -104,7 +104,7 @@ description?: string,
 $schema?: string, };
 
 export type CatalogueIndexVersion = 7;
-export type EntryDetailVersion = 1;
+export type EntryDetailVersion = 2;
 export type ReviewResultVersion = 8;
 export type ChangeSnapshotVersion = 4;
 export type LiveDescriptorVersion = 3;

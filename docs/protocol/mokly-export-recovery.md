@@ -157,10 +157,11 @@ only place where cancellation may be inferred from the command signal. It is
 safe because installation has not begun: no backup or reservation holds the
 earlier output, and the earlier output has not moved.
 
-From the moment a command installs its signal handlers until its work and
-cleanup finish, the process stays alive. Ctrl+C during sidecar or Git startup
-therefore still settles through Mokly's reporter and exits with status 1
-rather than ending the process with unsettled work.
+The first Ctrl+C during sidecar or Git startup settles through Mokly's reporter
+and exits with status 1. The [forced second interruption](./mokly-terminal-errors.md)
+waits while installation, restoration, or cleanup is active. The process stays
+alive until that operation settles, so a forced exit cannot interrupt a move
+or leave cleanup partly complete solely because of that interruption.
 
 Stage and reservation cleanup still run. If cleanup fails after a
 pre-installation cancellation, the combined recovery error is not a

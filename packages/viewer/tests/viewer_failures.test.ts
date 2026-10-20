@@ -40,7 +40,7 @@ test("another deployment reports once, and a newer format as a version error", (
   const replaced = new Error("another deployment answered");
   report(replaced, "catalogue");
   report(replaced, "catalogue");
-  report(new MoklyVersionError("detail", 2, 1), "catalogue");
+  report(new MoklyVersionError("detail", 3, 2), "catalogue");
   assert.equal(errors.length, 2);
   assert.deepEqual(errors[0], {
     code: "catalogue",
@@ -50,6 +50,6 @@ test("another deployment reports once, and a newer format as a version error", (
     code: "version",
     message: "This catalogue needs a compatible viewer",
     details:
-      "Unsupported Mokly detail version 2; this viewer supports version 1.",
+      "Unsupported Mokly detail version 3; this viewer supports version 2.",
   });
 });

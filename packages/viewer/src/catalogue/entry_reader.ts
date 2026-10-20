@@ -125,7 +125,7 @@ function visual(input: Record<string, unknown>) {
   return {
     colorSchemes: schemes(input.colorSchemes),
     propSchema,
-    props: wire(readEntryProps(input.props, propSchema, controls)),
+    props: wire(readEntryProps(input.props, propSchema)),
     controls,
     views: array(input.views).map(readView),
   };

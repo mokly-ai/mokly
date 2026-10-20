@@ -7,6 +7,8 @@ mod config_postcss;
 pub mod config_types;
 pub mod config_validation;
 mod config_warnings;
+mod control_order;
+mod control_warnings;
 mod declared_controls;
 #[cfg(test)]
 #[path = "_tests_/declared_controls_tests.rs"]
@@ -27,6 +29,7 @@ pub mod input;
 mod links;
 mod locations;
 mod moves;
+pub mod numeric_warnings;
 mod parsing;
 pub mod preparation;
 mod prepare_definitions;

@@ -5,6 +5,7 @@ export interface PackedRelease {
 }
 export function sourceIdentity(
   root: string,
+  ref?: string,
 ): Promise<{ sourceCommit: string; sourceTree: string }>;
 export function savePackage(
   packed: { archivePath: string; report: PackageReport },
@@ -14,12 +15,15 @@ export function inspectReleasePackage(
   root: string,
   directory: string,
   descriptor: { artifact: string; name: string; directory: string },
+  options?: { reuseViewer?: boolean },
 ): Promise<PackedRelease>;
 export function inspectReleaseSet(
   root: string,
   directory: string,
+  options?: { reuseViewer?: boolean },
 ): Promise<PackedRelease[]>;
 export function packReleaseSet(
   root: string,
   directory: string,
+  options?: { reuseViewer?: boolean },
 ): Promise<PackedRelease[]>;

@@ -8,11 +8,11 @@ import type { ViewEvidence } from "./ViewEvidence.js";
 import type { Workspace } from "./Workspace.js";
 
 // prettier-ignore
-export type EntryDetailV1 = {
+export type EntryDetailV2 = {
 /**
- * Must equal 1; readers gate it first.
+ * Must equal 2; readers gate it first.
  */
-schemaVersion: 1,
+schemaVersion: 2,
 /**
  * Catalogue identity equal to the installed index.
  */
@@ -41,6 +41,10 @@ reasons?: Array<EntryChangeReason>,
  * Empty for pages, documents, and use cases.
  */
 views: Array<DetailView>,
+/**
+ * Every editable key in declaration order; present only on screens and components.
+ */
+controlOrder?: Array<string>,
 /**
  * Page evidence, present when ready.
  */

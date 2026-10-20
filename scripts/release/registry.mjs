@@ -17,6 +17,9 @@ const published = await verifyRegistry({
   distTag: options.distTag,
   localReport,
   mode: options.mode,
+  ...(localReport.name === "@mokly/viewer" && process.env.VIEWER_REF === ""
+    ? { sourceRef: `viewer-v${localReport.version}` }
+    : {}),
   repositoryRoot,
 });
 writeWorkflowOutput("published", published ? "true" : "false");

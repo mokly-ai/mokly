@@ -1,8 +1,7 @@
 //! Reject authored CSS Modules at-rules before rename-only scoping.
 
-use cssparser::{Parser, ParserInput};
-
 use crate::error::{CssError, Result, TransformFailure};
+use crate::source_position::line_column;
 use crate::token_sections::{self, Grammar};
 use crate::token_tree::Tokens;
 
@@ -16,16 +15,11 @@ pub(crate) fn check(path: &str, source: &str) -> Result<()> {
             continue;
         };
         if section.at_rule(&tokens).as_deref() == Some("value") {
-            let mut input = ParserInput::new(&source[..section.lead(&tokens)]);
-            let mut parser = Parser::new(&mut input);
-            while parser.next_including_whitespace_and_comments().is_ok() {}
-            let location = parser.current_source_location();
+            let (line, column) = line_column(source, section.lead(&tokens));
             return Err(CssError::Transform {
                 kind: TransformFailure::Modules,
                 message: format!(
-                    "CSS Modules @value is unsupported in {path}:{}:{}; use a CSS custom property or JavaScript constant",
-                    location.line + 1,
-                    location.column
+                    "CSS Modules @value is unsupported in {path}:{line}:{column}; use a CSS custom property or JavaScript constant"
                 ),
             });
         }

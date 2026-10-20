@@ -121,6 +121,10 @@ fn prepare(
     } = match setup {
         Ok(value) => value,
         Err(primary) => {
+            let _protection = context
+                .cancellation
+                .protect_output()
+                .ok_or(BuildError::Cancelled)?;
             return match transaction.abandon() {
                 Ok(()) => Err(primary),
                 Err(cleanup) => Err(BuildError::Cleanup {

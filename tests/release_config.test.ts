@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { releasePackages } from "../scripts/release/targets.mjs";
 import { releaseUpdates } from "../scripts/release/version_updates.mjs";
 import { verifyPackageVersions } from "../scripts/release/versions.mjs";
 
@@ -12,7 +13,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const json = async (file: string) =>
   JSON.parse(await fs.readFile(path.join(repositoryRoot, file), "utf8"));
 
-test("the private workspace coordinates a CLI and viewer release with seven public packages", async () => {
+test("the private workspace releases the root CLI independently of the viewer", async () => {
   await verifyPackageVersions(repositoryRoot);
   const [manifest, config, versions] = await Promise.all([
     json("package.json"),
@@ -22,18 +23,16 @@ test("the private workspace coordinates a CLI and viewer release with seven publ
   for (const key of ["bin", "exports", "files", "publishConfig", "types"])
     assert.equal(manifest[key], undefined, key);
   assert.deepEqual(Object.keys(config.packages).sort(), [
-    "packages/mokly",
+    ".",
     "packages/viewer",
   ]);
   assert.deepEqual(
     Object.keys(versions).sort(),
     Object.keys(config.packages).sort(),
   );
-  assert.deepEqual(config.plugins, [
-    { type: "node-workspace", updateAllPackages: true },
-  ]);
+  assert.equal(config.plugins, undefined);
   for (const [key, component, prefix] of [
-    ["packages/mokly", "mokly", false],
+    [".", "mokly", false],
     ["packages/viewer", "viewer", true],
   ]) {
     const entry = config.packages[String(key)];
@@ -51,6 +50,7 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     "utf8",
   );
   for (const changed of [
+    ["crates/mokly-css/src/compiler.rs"],
     ["packages/mokly/src/index.ts"],
     ["packages/viewer/src/index.ts"],
     ["packages/mokly/src/index.ts", "packages/viewer/src/index.ts"],
@@ -61,7 +61,18 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     t.after(() => fs.rm(root, { recursive: true, force: true }));
     const updates = await releaseUpdates(repositoryRoot, changed);
     assert.ok(updates.has("packages/mokly/package.json"));
-    assert.ok(updates.has("packages/viewer/package.json"));
+    const viewerChanged = changed.includes("packages/viewer/src/index.ts");
+    assert.equal(updates.has("packages/viewer/package.json"), viewerChanged);
+    for (const file of [
+      "package.json",
+      "package-lock.json",
+      ".release-please-manifest.json",
+      ...releasePackages().map(({ directory }) => `${directory}/package.json`),
+    ]) {
+      const destination = path.join(root, file);
+      await fs.mkdir(path.dirname(destination), { recursive: true });
+      await fs.copyFile(path.join(repositoryRoot, file), destination);
+    }
     assert.ok(
       updates
         .get("CHANGELOG.md")
@@ -78,9 +89,9 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       cli.version,
       (await json("packages/mokly/package.json")).version,
     );
-    assert.notEqual(
-      viewer.version,
-      (await json("packages/viewer/package.json")).version,
+    assert.equal(
+      viewer.version !== (await json("packages/viewer/package.json")).version,
+      viewerChanged,
     );
     assert.match(cli.version, /^0\./);
     assert.match(viewer.version, /^0\./);

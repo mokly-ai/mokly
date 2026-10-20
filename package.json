@@ -15,12 +15,13 @@
   },
   "packageManager": "npm@11.21.0",
   "engines": {
-    "node": ">=22.14.0 <24.14.0 || >=24.19.0"
+    "node": ">=22.15.0 <24.14.0 || >=24.19.0"
   },
   "scripts": {
     "build": "cargo xtask build-native && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
+    "dependencies:check:rust": "cargo install cargo-audit --version 0.22.2 --locked && cargo audit --file Cargo.lock",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -34,7 +35,8 @@
     "fixture:large": "node --import tsx scripts/large/cli.ts generate",
     "benchmark:large": "node --import tsx scripts/large/cli.ts benchmark",
     "test:browser": "npm run -s build && node scripts/verification/browser-developer.mjs",
-    "test:browser:prepared": "node scripts/verification/run-browser.mjs"
+    "test:browser:prepared": "node scripts/verification/run-browser.mjs",
+    "test:delivery:prepared": "node scripts/verification/static-delivery.mjs"
   },
   "devDependencies": {
     "@emotion/cache": "^11.14.0",

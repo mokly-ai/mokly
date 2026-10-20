@@ -1,6 +1,6 @@
 //! Validation and encoding boundary for changed detail payloads.
 
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::EntryDetailV2;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::usage_schemas::UsageSchemas;
 
@@ -12,7 +12,7 @@ use crate::snapshot::encode;
 pub(crate) trait DetailEncoder: Send + Sync {
     fn encode(
         &self,
-        detail: &EntryDetailV1,
+        detail: &EntryDetailV2,
         index: &CatalogueReadModel,
         schemas: &mut UsageSchemas<'_>,
     ) -> Result<RevisionFile>;
@@ -23,7 +23,7 @@ impl DetailEncoder for ValidatedDetails {
     #[tracing::instrument(name = "detail.build", skip_all, err)]
     fn encode(
         &self,
-        detail: &EntryDetailV1,
+        detail: &EntryDetailV2,
         index: &CatalogueReadModel,
         schemas: &mut UsageSchemas<'_>,
     ) -> Result<RevisionFile> {

@@ -4,7 +4,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Shell Derivation
 
-The entry detail v1 of the [shell delivery contract](./mokly-shell-delivery.md)
+The entry detail v2 of the [shell delivery contract](./mokly-shell-delivery.md)
 carries one `resourceEvidence` record per view and per whole-document page,
 typed `ViewEvidence`: `rules`, the review v8 rule records with `stylesheet`,
 `selector`, `status`, and `owner`, and `resources`, the rendered-resource
@@ -45,6 +45,11 @@ excluded files, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
+Each viewport section of a loaded comparison has one stage heading: “Mobile”
+or “Desktop”, then “ · ” and the view's label, for example “Desktop · Screen
+changed”. A Light view that stands in for a Dark selection adds “ · Light
+only”.
+
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
 changed” when its state is `changed`, its review entry has a reason, every
 reason is a `dependency` reason, each named path has a rule of any status on
@@ -66,7 +71,15 @@ evidence item of the loaded review names it by side, entry path, viewport, and
 colour scheme, so a moved entry's before side matches its previous path. A
 selected comparison in Serve carries no `affected` records, so a component's
 markup change reaches the heading through usage there. Every other `unchanged`
-view keeps “No changes to this screen”.
+view keeps the ordinary label below.
+
+| View state     | Screen                          | Component                       |
+| -------------- | ------------------------------- | ------------------------------- |
+| `changed`      | “Screen changed”                | “Variant changed”               |
+| `unchanged`    | “No changes to this screen”     | “No changes to this variant”    |
+| `added`        | “New screen”                    | “New variant”                   |
+| `removed`      | “Screen removed”                | “Variant removed”               |
+| `ignored-only` | “Only excluded content changed” | “Only excluded content changed” |
 
 ## Details Copy
 

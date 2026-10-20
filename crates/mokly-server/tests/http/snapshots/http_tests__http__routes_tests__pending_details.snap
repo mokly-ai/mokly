@@ -1,10 +1,14 @@
 ---
 source: crates/mokly-server/tests/http/routes_tests.rs
-assertion_line: 106
 expression: "canonical::to_string(&details).unwrap()"
 ---
 {
   "components/button": {
+    "controlOrder": [
+      "label",
+      "count",
+      "disabled"
+    ],
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "entry": {
       "kind": "component",
@@ -15,7 +19,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": [
       {
         "colorScheme": "light",
@@ -48,6 +52,11 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "components/button/disabled": {
+    "controlOrder": [
+      "label",
+      "count",
+      "disabled"
+    ],
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "entry": {
       "kind": "component",
@@ -58,7 +67,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": [
       {
         "colorScheme": "light",
@@ -91,6 +100,10 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "components/card": {
+    "controlOrder": [
+      "title",
+      "ignored"
+    ],
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "entry": {
       "kind": "component",
@@ -101,7 +114,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": [
       {
         "colorScheme": "light",
@@ -144,10 +157,15 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": []
   },
   "home": {
+    "controlOrder": [
+      "label",
+      "visible",
+      "resource"
+    ],
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "entry": {
       "kind": "screen",
@@ -158,7 +176,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": [
       {
         "colorScheme": "light",
@@ -191,6 +209,11 @@ expression: "canonical::to_string(&details).unwrap()"
     ]
   },
   "home/hidden": {
+    "controlOrder": [
+      "label",
+      "visible",
+      "resource"
+    ],
     "deploymentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "entry": {
       "kind": "screen",
@@ -201,7 +224,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": [
       {
         "colorScheme": "light",
@@ -244,7 +267,7 @@ expression: "canonical::to_string(&details).unwrap()"
       "title": "Mokly"
     },
     "revision": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "views": []
   }
 }

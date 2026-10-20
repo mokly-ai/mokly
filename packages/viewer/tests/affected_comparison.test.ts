@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
-import type { EntryDetailV1 } from "../src/catalogue/types.js";
+import type { EntryDetailV2 } from "../src/catalogue/types.js";
 import type { UsageLink } from "../src/shell/workspace_data.js";
 import { selectedVariant } from "../src/shell/workspace_selection.js";
 import { usageHref } from "../src/shell/workspace_usage.js";
@@ -30,7 +30,7 @@ const COMPONENT = "components/action";
 const MOVED = "product/browse/details";
 
 /** The routed entry's workspace and shown decision, after one detail edit. */
-function shown(path: string, edit?: (detail: EntryDetailV1) => void) {
+function shown(path: string, edit?: (detail: EntryDetailV2) => void) {
   const fixtures = rawDetailFixtures();
   edit?.(fixtures.current[path]!);
   const model = shellModelFixture(
@@ -53,7 +53,7 @@ function shown(path: string, edit?: (detail: EntryDetailV1) => void) {
 }
 
 /** Changed Card affects the routed entry, which its detail can compare. */
-function affected(detail: EntryDetailV1) {
+function affected(detail: EntryDetailV2) {
   detail.workspace!.comparisonEligible = true;
   detail.workspace!.relatedComponents = [
     { path: "components/card", title: "Card" },
