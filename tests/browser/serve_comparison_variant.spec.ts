@@ -4,6 +4,7 @@ import { parseReviewResult } from "../../packages/viewer/src/review/result_valid
 
 import { showMode } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
+import { expectCardPane } from "./serve_comparison_ui.js";
 
 test("Serve opens Overlay for the Card variant with parent-owned stylesheet evidence", async ({
   page,
@@ -38,15 +39,15 @@ test("Serve opens Overlay for the Card variant with parent-owned stylesheet evid
     status: "matched",
     owner: { kind: "component", path: changes.paths.component },
   });
-  for (const [side, label, color] of [
-    ["Before", "Featured Before", "rgb(180, 30, 30)"],
-    ["Current", "Featured After", "rgb(30, 60, 180)"],
-  ] as const) {
-    const frame = page.frameLocator(
-      `iframe[title="${side} — desktop — light"]`,
+  for (const [pane, title] of [
+    ["before", "Before"],
+    ["after", "Current"],
+  ] as const)
+    await expect(page.locator(`.mb-pane--${pane} iframe`)).toHaveAttribute(
+      "title",
+      `${title} — desktop — light`,
     );
-    await expect(frame.locator("h2")).toHaveText(label);
-    await expect(frame.locator(".accent")).toHaveCSS("color", color);
-  }
+  await expectCardPane(page, "before", "Featured Before");
+  await expectCardPane(page, "after", "Featured After");
   await expect(page.locator("[data-comparison-failure]")).toHaveCount(0);
 });

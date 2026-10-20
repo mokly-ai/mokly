@@ -11,7 +11,7 @@ import { modeButton } from "./comparison_ui.js";
 import { showProps } from "./live_props.js";
 import { isRender, renderBody } from "./live_shell_fixture.js";
 import { test } from "./serve_comparison_test.js";
-import { loadComparison } from "./serve_comparison_ui.js";
+import { expectCardPane, loadComparison } from "./serve_comparison_ui.js";
 import { responseFailure } from "./shell_error_allowances.js";
 import { chooseViewport } from "./workspace_actions.js";
 
@@ -71,9 +71,7 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
     props.getByRole("button", { name: "Switch to Current", exact: true }),
   ).toBeVisible();
   await expect(props.getByRole("textbox")).toHaveCount(0);
-  await expect(
-    page.frameLocator(".mb-pane--after iframe").locator("h2"),
-  ).toHaveText("Card content");
+  await expectCardPane(page, "after", "Card content");
 
   await modeButton(page, "Current").click();
   await expect(label).toBeEditable();
