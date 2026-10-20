@@ -2070,6 +2070,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         `@scope` preludes; other at-rule preludes stay as authored, as
         css-loader does. Decision: nesting report item 13 option A, approved
         by the orchestrator on 2026-10-20.
+  - [x] Reject an empty `:global()` or `:local()` wrapper in a keyframes name
+        with the catalogued empty-wrapper message. Decision: nesting report
+        finding 15 option B, decided by the orchestrator as protocol alignment
+        on 2026-10-20.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
         (pending user decision).
