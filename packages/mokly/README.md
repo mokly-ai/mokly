@@ -127,6 +127,9 @@ export. Runtime style adapters capture the bundled consumer libraries in the
 same compilation. Subpath imports select their own package's registry, and
 wrappers preserve CommonJS default-import interop within the Mokly bundle:
 Node's rule for `.mjs` and `.mts`, the `__esModule` default otherwise.
+Bundle parsing ignores package `type` and tsconfig parse settings. Set
+`@jsxImportSource` in a module when it needs another JSX runtime; a tsconfig
+`jsxImportSource` does not apply. Source-side tsconfig paths still guide resolution.
 `describe` inventories every definition and Storybook story and reports
 generation warnings. `bindings` installs resolved paths and titles before a
 render. Render methods return HTML text, collected styles, resources, typed

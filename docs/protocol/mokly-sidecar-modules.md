@@ -93,6 +93,12 @@ They are compiler-input keys, not module or stylesheet names.
 
 ## Authoring And Evaluation
 
+Bundle parsing ignores each module's package `type` and `tsconfig.json` parse
+settings. A source `@jsxImportSource` pragma can select that module's JSX import
+source; a tsconfig `jsxImportSource` setting does not. Use the source pragma
+when a JSX library requires its own runtime. This parsing policy does not
+disable the source-side tsconfig path resolution described above.
+
 Repository-owned imports of `@mokly/mokly` receive the attributed authoring
 facade. Installed dependencies receive the unattributed API. Their JSX
 wrapper call sites omit optional catalogue source metadata. The virtual
