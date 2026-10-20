@@ -186,7 +186,7 @@ fn historical_variants_require_a_nonempty_parent_title() {
 }
 
 fn screen_detail() -> Value {
-    json!({"schemaVersion":1,"identity":{"id":"a".repeat(64),"title":"Mokly"},
+    json!({"schemaVersion":2,"controlOrder":[],"identity":{"id":"a".repeat(64),"title":"Mokly"},
         "deploymentId":"b".repeat(64),"revision":0,"entry":{"path":"home","kind":"screen"},
         "views":[{"viewport":"mobile","colorScheme":"light","usage":{"status":"ready","instances":[],"slots":[],"ranges":[]},
             "resourceEvidence":{"rules":[],"resources":[]}}],
@@ -204,6 +204,7 @@ fn detail_views_usage_evidence_and_workspace_round_trip() {
     page["entry"]["kind"] = json!("page");
     page["views"] = json!([]);
     page.as_object_mut().unwrap().remove("workspace");
+    page.as_object_mut().unwrap().remove("controlOrder");
     page["resourceEvidence"] = json!({"rules":[],"resources":[]});
     assert!(detail(&page.to_string()).is_ok());
     for kind in ["page", "document", "use-case"] {

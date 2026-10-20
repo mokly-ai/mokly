@@ -14,7 +14,7 @@ import {
   publicationFixture,
   removeOutput,
 } from "./helpers/static_publication.js";
-import { verifyReceived } from "./helpers/static_received.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 test(
   "publish with unavailable Changes uploads only current files and null comparison metadata",
@@ -33,19 +33,22 @@ test(
       await git(root, "add", "-A");
       await git(root, "commit", "-qm", "valid current config");
       for (const mode of ["rich", "plain"]) {
-        const result = await command(
-          root,
-          "publish",
-          [
-            "--config=historical.json",
-            "--strict",
-            "--repository=example.com/team/site",
-            `--endpoint=${server.endpoint}`,
-            "--token=private/a==",
-          ],
-          mode,
-          {},
-          context.signal,
+        const result = await observeBuild(
+          server,
+          command(
+            root,
+            "publish",
+            [
+              "--config=historical.json",
+              "--strict",
+              "--repository=example.com/team/site",
+              `--endpoint=${server.endpoint}`,
+              "--token=private/a==",
+            ],
+            mode,
+            {},
+            context.signal,
+          ),
         ).result;
         const output = directory(result.stdout);
         outputs.push(output);
@@ -53,7 +56,6 @@ test(
         assert.ok(result.stderr.includes(`base ${base}:`));
         assert.ok(!(result.stdout + result.stderr).includes("private/a=="));
         const received = server.completedInventories.at(-1)!;
-        await verifyReceived(received, output);
         const metadata = upload(received.get("mokly-upload.json")!);
         for (const field of ["baseRef", "baseSha", "comparisonPath"])
           assert.equal(metadata[field], null);

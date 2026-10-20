@@ -26,6 +26,7 @@ impl Engine<'_> {
         let mut supplied: BTreeMap<String, Vec<Node>> = BTreeMap::new();
         for mut node in nodes {
             let name = if let Node::Element(element) = &mut node {
+                ignore_checks::attributes(element);
                 element.take("slot").unwrap_or_else(|| "children".into())
             } else {
                 "children".into()

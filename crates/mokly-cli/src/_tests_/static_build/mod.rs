@@ -5,4 +5,5 @@ mod support;
 
 mod mocks;
 
+mod interrupt_tests;
 mod ready_tests;

@@ -118,6 +118,9 @@ export function registerComponentEvidence(
         await expect(evidence.getByRole("table")).toContainText("Continue");
         await expect(evidence.getByRole("table")).toContainText("Get started");
         await expect(
+          evidence.getByText("Changed component: Action", { exact: true }),
+        ).toHaveCount(1);
+        await expect(
           evidence.getByRole("link", { name: "Action" }),
         ).toHaveAttribute(
           "data-mokly-link",

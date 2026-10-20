@@ -7,7 +7,7 @@ use mokly_compare::{projection_index, projection_removed, projection_workspace};
 use mokly_model::canonical;
 use mokly_model::material::digest;
 use mokly_model::output::artifact::File;
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::EntryDetailV2;
 use mokly_model::public_index::CatalogueReadModel;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{readers, routes};
@@ -74,7 +74,7 @@ pub(crate) fn append(
 
 fn finalize(
     inventory: Inventory,
-    details: &mut BTreeMap<String, EntryDetailV1>,
+    details: &mut BTreeMap<String, EntryDetailV2>,
 ) -> Result<(String, Vec<File>)> {
     let mut files = inventory.into_files();
     let mut hashes: Vec<_> = files

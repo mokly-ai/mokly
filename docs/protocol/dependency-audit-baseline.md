@@ -195,8 +195,8 @@ The CI repository job passes `--dependency-audit "$DEPENDENCY_AUDIT"`:
 - Select `strict` for a same-repository Release Please pull request under
   the existing `release-please--` head-ref or `autorelease:` label detection.
 - Select `baseline` for all other pull requests, every push, and every manual
-  dispatch. A fork
-  cannot select strict mode through a matching branch name or label.
+  `workflow_dispatch`. A fork cannot select strict mode through a matching
+  branch name or label.
 
 Adding the `dependency-audit` label does not start CI. The label takes effect
 at the next `opened`, `synchronize`, or `reopened` pull request event. After

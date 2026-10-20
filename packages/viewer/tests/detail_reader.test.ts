@@ -48,7 +48,8 @@ test("the detail version gate runs before any other field is read", () => {
     undefined,
     null,
     [],
-    { schemaVersion: 2 },
+    { schemaVersion: 1 },
+    { schemaVersion: 3 },
     { schemaVersion: 0, entry: "not an entry" },
     { ...current("guide"), schemaVersion: "1" },
   ])
@@ -57,8 +58,20 @@ test("the detail version gate runs before any other field is read", () => {
       (error) =>
         error instanceof MoklyVersionError &&
         error.boundary === "detail" &&
-        error.supported === 1,
+        error.supported === 2,
     );
+});
+
+test("visual details require a unique control order and other kinds omit it", () => {
+  const missing = current("components/action");
+  delete missing.controlOrder;
+  rejects(missing, /control order/);
+  const duplicate = current("components/action");
+  duplicate.controlOrder = ["label", "label"];
+  rejects(duplicate, /control order repeats/);
+  const page = current("guide");
+  page.controlOrder = [];
+  rejects(page, /control order/);
 });
 
 test("a current detail has deployment and revision, a removed one generation and snapshot", () => {

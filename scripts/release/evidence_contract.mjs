@@ -3,7 +3,7 @@ export const REQUIRED_CI_JOB_NAME = "Required CI";
 export const VERIFICATION_ARTIFACT_PATTERN = /^verification-/;
 export const VERIFICATION_REPORT_COUNT = 10;
 export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
-  "node-22.14.0",
+  "node-22.15.0",
   "node-24",
 ]);
 

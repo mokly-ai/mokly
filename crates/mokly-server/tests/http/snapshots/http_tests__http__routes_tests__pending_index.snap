@@ -1,6 +1,5 @@
 ---
 source: crates/mokly-server/tests/http/routes_tests.rs
-assertion_line: 77
 expression: bytes
 ---
 {
@@ -106,7 +105,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "6f977f0d819c1fd99963ddbf67a11c6308c9557d513dfcecf75ce1032ba104b3",
+          "documentKey": "826923078c2226259f986dbe18bc1f4f4d39f5799c02422b9f34553b212f42c7",
           "viewport": "mobile"
         },
         {
@@ -114,7 +113,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "29d4741a5aef396e8d013f67c39a4d0a59aaadfa48eeb20252753acbace21044",
+          "documentKey": "1fd744d01447cc62ef161128fab73bc26a1077a60cdc9cdb3d3db6811ec908a2",
           "viewport": "mobile"
         },
         {
@@ -122,7 +121,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "7cdd08a90d677761c4094ffbdfaaba67ff3f95d839ce101d824041d71302d542",
+          "documentKey": "f8bb2e355e4a0dfa50160772d03b1750942063dc87097b0935e4274e3a8f0cb9",
           "viewport": "desktop"
         },
         {
@@ -130,7 +129,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "66bd8e40e97392a2a1fa5d46510af297e0b5f48375af0fccd47c8298a1a7bf20",
+          "documentKey": "38c3033c60a2c437f5098fbc8e932e80d774adad282732e70cd2aeaa473b408c",
           "viewport": "desktop"
         }
       ]
@@ -237,7 +236,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "9d0de258ecce8c02d39594f0fa699ba81ff860233d70c15c48c980978641ff9f",
+          "documentKey": "86ada231a0d5b2dd18b3e25d09f96efb0f19a15bdfadc5dceb779b7707d89c82",
           "viewport": "mobile"
         },
         {
@@ -245,7 +244,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "727a9be68b4f55e7faf4228a9258ab77c7ec953403760167e5bef8ec1a37dead",
+          "documentKey": "dee6e88df2b63d075102fac39b002fea2333f3280f4a9a11055447ca8a8d7b96",
           "viewport": "mobile"
         },
         {
@@ -253,7 +252,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "c618738553d8fb1cec2207cd4618320f3f0d1429028c35206a2b36122b1ccedc",
+          "documentKey": "ada7a30eecc82e7d2e63d54b1abf33a63813764b77c003d13ad2cd27883109fe",
           "viewport": "desktop"
         },
         {
@@ -261,7 +260,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "c1eb8f6a24eb38ee2bb7bd71ba2f9d273edac12c407ca449afc079f6c215421c",
+          "documentKey": "6e9d173ff50cfa173cba6771e718c9de1ebd44fbc3ae12d7d889a1f66a0669e7",
           "viewport": "desktop"
         }
       ]
@@ -330,7 +329,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "c1839c74d102540149289f5701de6cd1642a7d1effe535483887c1304bfedb8a",
+          "documentKey": "66711836c60847071f74aa9460349eedff68fc4bbf1b14c5c9c1b8a4ead20748",
           "viewport": "mobile"
         },
         {
@@ -338,7 +337,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "945cb3add90a6a38b9f39bc4ebbd3986824864c9a712b99ee10d3cd58305a536",
+          "documentKey": "b22e6b6b69e628f8ed1fec06f7df1ad3d25c4e3c68380e8e6510593a5714ae5b",
           "viewport": "mobile"
         },
         {
@@ -346,7 +345,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "24e65acaffb51fdac101a88b1c3f66a58d66dee96e0466b08683a9ef01829d48",
+          "documentKey": "ae9ecb65808e71f4453567074a0eef9314b885050034b6fe9664ae18af49a7dd",
           "viewport": "desktop"
         },
         {
@@ -354,7 +353,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "508f18fbfa6fd39cd25a40ab6a38f90bbd2f4681b07fe663b5450a8e593c9116",
+          "documentKey": "9948981a052134ea10a03e6d820b83756be67a81cc3496967d2cb5d1b25e6dfe",
           "viewport": "desktop"
         }
       ]
@@ -396,7 +395,7 @@ expression: bytes
     "title": "Mokly"
   },
   "live": {
-    "generation": "7d150d86d49b9de1de223b2237fc8737e135f51d0436efb4fd830b0e09ee90a0"
+    "generation": "f96fa1fb832cf7bf59fff63888a460823197fd11d1be5fbb5838c944781b2885"
   },
   "pages": [
     {
@@ -513,7 +512,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "ed844837bf958328e0849254a9c63929bc39e309bf913b83ac4889a2436a24c9",
+          "documentKey": "dfc017772d304c7e6b1765067c5dde436b6c6baed6b2c1947618bd540a559822",
           "viewport": "mobile"
         },
         {
@@ -521,7 +520,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "c5b9785fa1f4f35187abf504cb8ec562d1b7a2b658a90e776a902d585946ba7b",
+          "documentKey": "b026f9e263dca7a8f70e557937a187c9a93ca6b17c79081a2f81fecb8d163824",
           "viewport": "mobile"
         },
         {
@@ -529,7 +528,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "b9dc3e11db5c648290529a83790f2e21d40e3c4d37d561d4c24fdef569b0fbf4",
+          "documentKey": "2079e008a9cf2a57c2195a7fedd7d99f366d7eb9df067f40fc2dd429280a7e57",
           "viewport": "desktop"
         },
         {
@@ -537,7 +536,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "9fa139913dbcd495d8cb3f6d5b948556e16e410ac1780529c4d5c82975679894",
+          "documentKey": "2167df3d343f6796af000b55770e821c2167a2d096e4c71a8e7f6d2e712e713b",
           "viewport": "desktop"
         }
       ]
@@ -637,7 +636,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "e5de02600de19a9551f88c92fa170a2d585e0ec5c92f876c47fe37c0e493ac9b",
+          "documentKey": "a5e4ef91df75b77a05d75174ca4ef721c76f83fc3170533bb41aca3dfe46c36c",
           "viewport": "mobile"
         },
         {
@@ -645,7 +644,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "239664cc077d13271197658a115601de91a627001f02998f2a596915a797768e",
+          "documentKey": "d8fbbf1197c7dd1d531e6a7364d5b822966dc9e1aee10c3d0ba2c88b2bad4b57",
           "viewport": "mobile"
         },
         {
@@ -653,7 +652,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "5464049c8592a3ddac96b06d20617ae0104a4487881bb332c5419bcba9e5e7fc",
+          "documentKey": "fefef2ef13a887ecd520cbdb7a18650182ab7de4ecb47328aeeaaab5a78fe249",
           "viewport": "desktop"
         },
         {
@@ -661,7 +660,7 @@ expression: bytes
           "comparison": {
             "status": "pending"
           },
-          "documentKey": "7d6cc068a30b1d8a7a453a8e6c2c30e7bae35d4ce099a55d019ba612eb3a4ca0",
+          "documentKey": "b94fb7446509d64bb50396c6f3fe2bf6251d8471c5a256caa12ba53d0f85f97b",
           "viewport": "desktop"
         }
       ]

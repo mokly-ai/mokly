@@ -58,6 +58,15 @@ controls pass the Rust validator. Story control hints do not change schemas.
 Declared number controls carry their effective schema bounds and step into
 the read model. Authored bounds win; omitted values fall back to the schema,
 including an integer step of one when no multiple is declared.
+Declared steps must be schema multiples and integral for integer props.
+Saved props outside the effective control bounds produce `props-control-bounds`
+warnings. This includes merged variants and Storybook args after control hints.
+Live edits still validate the complete merged props against those bounds.
+Unsafe integer props round to binary64 before inference and validation.
+Preparation captures explicit control order, schema property order, or first-seen
+inferred prop order before it creates canonical lookup maps. Variants retain it.
+Each affected saved entry reports `props-unsafe-integer`, including nested values
+and complete merged variants. Strict builds fail on these warnings.
 Inference exclusions become warnings only after final path derivation. Runtime
 failures retain typed terminal categories across provider boundaries. JavaScript
 diagnostics retain module and export attribution without invented coordinates. `DeferredDefinitions`
@@ -74,7 +83,10 @@ are checked once, and their warnings name the parent. `Inventory::default()`
 provides an empty inventory for injected adapters and tests.
 
 HTML checks cover forbidden and unknown elements, reserved names, slots,
-component cycles, template references, and unused props. Composition owns
+component cycles, template references, and unused props. Unknown ignore-wrapper
+attributes warn once per shared body and attribute. Their values are ignored.
+They do not validate logical links or select component slots.
+Composition owns
 literal attribute coercion, rendered document safety, assets, and anchors.
 `SourcePolicy` classifies root matches, reserved basenames, and inventoried
 inputs in that precedence order, including physical aliases.

@@ -1,17 +1,66 @@
 //! Progress formatting uses captured durations and complete erase prefixes.
 
-use crate::terminal::TerminalMock;
+use std::path::Path;
+use std::sync::{Arc, Mutex, mpsc};
+use std::time::Duration;
+
+use mokly_cli::output::{Mode, Style};
+use mokly_cli::publication::command::BuildReporter;
 use mokly_cli::redaction::Redactor;
 use mokly_publish::accounting::{Progress, Receipt};
 use mokly_publish::completion::{Completion, Outcome};
 use mokly_publish::runtime::Reporter;
-use std::sync::{Arc, Mutex, mpsc};
-use std::time::Duration;
 use unimock::{MockFn, Unimock, matching};
 
-use mokly_cli::output::{Mode, Style};
+use crate::terminal::TerminalMock;
 
 use super::{duration, frame};
+
+#[test]
+fn retained_publication_warning_clears_active_progress_before_printing() {
+    let events = Arc::new(Mutex::new(Vec::new()));
+    let stdout = events.clone();
+    let stderr = events.clone();
+    let terminal = Arc::new(Unimock::new((
+        TerminalMock::stdout
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, text| {
+                stdout.lock().unwrap().push(("stdout", text.to_owned()));
+            })),
+        TerminalMock::stderr
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, text| {
+                stderr.lock().unwrap().push(("stderr", text.to_owned()));
+            })),
+    )));
+    let (stop, _) = mpsc::channel();
+    let output = super::Lines {
+        clock: Arc::new(Unimock::new(())),
+        cwd: "/repo".into(),
+        style: Style {
+            mode: Mode::Rich,
+            color: false,
+            ascii: true,
+            columns: 200,
+        },
+        redactor: Arc::new(Redactor::collect(&[], None)),
+        terminal,
+        state: Arc::new(Mutex::new(super::State {
+            label: Some("Uploading catalogue".into()),
+            ..Default::default()
+        })),
+        stop,
+        timer: Mutex::new(None),
+        animate: true,
+    };
+    output.retained_directory(Path::new("/private/site"));
+    let recorded = events.lock().unwrap().clone();
+    assert_eq!(recorded, vec![
+        ("stdout", "\r\x1b[2K".into()),
+        ("stderr", "[mokly/warning] Publication completed. The local build remains at /private/site. Remove it when you no longer need it.\n".into()),
+    ]);
+    assert!(output.state.lock().unwrap().label.is_none());
+}
 
 #[test]
 fn durations_round_milliseconds_and_keep_minutes_and_seconds() {

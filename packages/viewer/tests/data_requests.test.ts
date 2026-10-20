@@ -4,7 +4,7 @@ import { test } from "node:test";
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import {
@@ -36,7 +36,7 @@ function route(path: string): ShellRoute {
 /** A source that answers from scripts and records every request. */
 function scripted(
   indexes: readonly (CatalogueReadModel | Error)[],
-  detail: (request: DetailRequest) => EntryDetailV1 | Error,
+  detail: (request: DetailRequest) => EntryDetailV2 | Error,
 ) {
   const calls = { indexes: 0, details: [] as DetailRequest[] };
   const source: ShellDataSource = {
@@ -57,7 +57,7 @@ function scripted(
   return { source, calls };
 }
 
-function revised(path: string, revision: number): EntryDetailV1 {
+function revised(path: string, revision: number): EntryDetailV2 {
   return { ...detailFixture({ path }), revision };
 }
 
@@ -181,7 +181,7 @@ test("a rejected, failed or newer-format detail does not install", async () => {
     await loadFencedDetail(failed.source, indexFixture(), request, signal),
     { kind: "failed" },
   );
-  const version = new MoklyVersionError("detail", 2, 1);
+  const version = new MoklyVersionError("detail", 3, 2);
   const newer = scripted([indexFixture()], () => version);
   assert.deepEqual(
     await loadFencedDetail(newer.source, indexFixture(), request, signal),

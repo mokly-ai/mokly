@@ -8,7 +8,7 @@ use mokly_model::output::validation::RESPONSE_LIMIT;
 use reqwest::header::{
     ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE, HeaderValue, RETRY_AFTER,
 };
-use reqwest::{Client, Method, redirect, retry};
+use reqwest::{Certificate, Client, Method, redirect, retry};
 use thiserror::Error;
 use url::Url;
 
@@ -88,9 +88,17 @@ pub struct ReqwestHttp {
 }
 
 impl ReqwestHttp {
-    /// Construct once at the composition root with rustls certificate verification.
+    /// Verify TLS with both the operating system store and bundled Mozilla roots.
     pub fn new() -> std::result::Result<Self, TransportError> {
+        let roots = webpki_root_certs::TLS_SERVER_ROOT_CERTS
+            .iter()
+            .map(|certificate| Certificate::from_der(certificate.as_ref()))
+            .collect::<std::result::Result<Vec<_>, _>>();
+        let Ok(roots) = roots else {
+            return Err(TransportError::Failed);
+        };
         match Client::builder()
+            .tls_certs_merge(roots)
             .redirect(redirect::Policy::none())
             .retry(retry::never())
             .referer(false)

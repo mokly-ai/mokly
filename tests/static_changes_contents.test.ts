@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
+import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import { build, fixture, json } from "./helpers/static_changes.js";
@@ -77,7 +77,7 @@ test(
         output.get(`${prefix}/snapshots/after/logo.svg`)!.toString(),
         /After asset/u,
       );
-      const detail = await json<EntryDetailV1>(
+      const detail = await json<EntryDetailV2>(
         ready.output,
         "mokly-viewer/entries/home.json",
       );
@@ -98,7 +98,7 @@ test(
       );
       for (const removed of ready.index.removedEntries) {
         assert.ok(output.has(`view/${removed.entry.path}/index.html`));
-        const historical = await json<EntryDetailV1>(
+        const historical = await json<EntryDetailV2>(
           ready.output,
           `${prefix}/entries/${removed.entry.path}.json`,
         );

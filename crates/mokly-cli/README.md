@@ -124,7 +124,10 @@ shutdown guards.
 Cancellation stops source reads, graph planning, and queued native documents
 even with no sidecar. Signal copies within one second of the first signal
 count as one interruption. A later signal kills owned sidecars and exits
-immediately. The interval uses an injected monotonic clock. Each worker starts in
+immediately after any active output installation, restoration, or cleanup
+settles. The output guard and forced-exit admission share one lock, so a new
+write cannot start after a forced exit is pending. The interval uses an
+injected monotonic clock. Each worker starts in
 its request source root and uses the embedded npm version for hello and
 graph keys.
 Serve uses its own idempotent stop state. Signals and `q` cancel native work
@@ -202,10 +205,12 @@ keeps its pinned merge base, effective ref, and complete generation in that uplo
 Unavailable Changes publishes the valid current catalogue with no generation and
 null comparison metadata. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
-output stays in the private directory after an upload failure. The warning
-policy waits for a user decision. The isolated `warnings_are_fatal` function
-makes publish warnings fatal with either value of `--strict`. The command prints
-`with --strict` only when the user supplied that option.
+output stays in the private directory after an upload failure. Successful and
+already-published outcomes remove exactly that snapshot and its empty parent.
+Sibling files and symlink targets survive cleanup. A cleanup failure reports
+the retained path without changing the successful receipt. Publish warnings
+are fatal only with `--strict`. Without it, the command reports warnings and
+continues with output installation and upload.
 
 ## Quick Start
 
@@ -226,8 +231,10 @@ rule and resource records, changed entries, and affected consumers. Independent
 head edits reuse the pinned base generation. Four distinct CSS delivery rules
 share one registered base and one head. Excluded, unresolved, and matched
 shared rules use separate selectors in one head, with exact per-rule evidence.
-The matrix runs only on demand with the `design-matrix` feature. The default
-workspace tests and verification gate exclude this target.
+The matrix runs with the `design-matrix` feature. A separate optional workflow
+runs it nightly and on manual dispatch. The default workspace tests and required
+verification gate exclude this target. Its runner and hang guards follow the
+[CI workflow contract](../../docs/protocol/ci-workflow.md#design-attribution-matrix).
 
 The design behaviour target checks parents' own-props views, stacked frames,
 captions tied to recorded changes, and the Checklist's Changes in the default

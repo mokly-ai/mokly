@@ -56,6 +56,6 @@ fn type_generation_and_versions_are_stable() {
             versions::CHANGE_SNAPSHOT,
             versions::LIVE_DESCRIPTOR
         ],
-        [7, 1, 8, 4, 3]
+        [7, 2, 8, 4, 3]
     );
 }

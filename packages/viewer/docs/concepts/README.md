@@ -8,7 +8,7 @@ This page belongs to the [`@mokly/viewer` README](../../README.md). It explains 
 
 `MoklyViewer` reads two shapes of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md): the
-catalogue index, read model v7, and one entry detail v1 per entry.
+catalogue index, read model v7, and one entry detail v2 per entry.
 
 | Prop     | Accepts                                                 | Rule                                                                                |
 | -------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -161,6 +161,14 @@ markers of every region the core composed. The published inspector resolves
 instance regions in the live page from them.
 
 ## Live controls
+
+Entry detail v2 supplies control declaration order. The Props tab follows it
+for editable fields and saved values. Saved props remain visible while the
+detail loads.
+
+Saved props must satisfy their schema. A saved value outside its narrower
+editing bounds remains visible. The build reports a warning, while live edits
+must satisfy the complete merged props and control bounds.
 
 Every screen and component is a render over props, and the Props tab of the
 inspector derives its controls from the entry's prop schema. In `mokly serve`,

@@ -1,15 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { folderTitleLookup } from "../src/registry/folder_titles.js";
 import { analyzeHierarchy } from "../src/registry/hierarchy.js";
-import type {
-  ManifestEntry,
-  ManifestFolder,
-  ManifestScreen,
-} from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
+import type { ManifestEntry, ManifestFolder } from "../src/registry/types.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
 import type { ShellContext } from "../src/shell/context.js";
 import {
@@ -24,10 +18,15 @@ import {
   type NavSectionNode,
 } from "../src/shell/nav_tree.js";
 import type { ShellRoute } from "../src/shell/routes.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
+import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
 
 import { shellModelFixture } from "./catalogue_v7_fixture.js";
+import {
+  publishedScreen,
+  publishedScreensModel,
+  removedScreenVariant,
+} from "./published_screens_fixture.js";
 
 const context: ShellContext = {
   base: "main",
@@ -131,48 +130,44 @@ test("search matches a folder's resolved title and shows every row below it", ()
   );
 });
 
-type Screen = ManifestScreen;
-
-function screen(path: string, title: string, variantOf?: string): Screen {
-  return {
-    colorSchemes: ["light"],
-    description: title,
-    kind: "screen",
-    path,
-    relatedDocs: [],
-    sourcePath: `specs/${path}.mockup.tsx`,
-    tags: [],
-    title,
-    useCasePaths: [],
-    ...(variantOf ? { variantOf } : {}),
-  };
-}
-
 test("Changes activation searches a removed variant as its row does", () => {
-  const parent = screen("start/welcome", "Welcome");
-  const current = screen("start/welcome/empty", "Empty", parent.path);
-  const removed = screen("start/welcome/old", "Old", parent.path);
-  const catalogue = createCatalogue(
-    currentManifest({
-      entries: [parent, current],
-      folders: [record("start", { title: "Launchpad" })],
-      generatedBy: "mokly",
-      schemaVersion: 10,
-      sourceFiles: [],
-    }),
-    [
+  const parent = { path: "start/welcome", title: "Welcome" };
+  const removed = "start/welcome/old";
+  const model = publishedScreensModel({
+    screens: [
+      publishedScreen(parent.path, parent.title),
+      publishedScreen(
+        "start/welcome/empty",
+        "Empty",
+        "unmodified",
+        parent.path,
+      ),
+    ],
+    removedEntries: [
+      removedScreenVariant(removed, "Old", parent, ["Launchpad"]),
+    ],
+    tree: [
       {
-        entry: removed,
-        folderTitles: ["Launchpad"],
-        parentTitle: parent.title,
+        kind: "folder",
+        path: "start",
+        title: "Launchpad",
+        children: [
+          {
+            kind: "entry",
+            path: parent.path,
+            children: [{ kind: "entry", path: "start/welcome/empty" }],
+          },
+        ],
       },
     ],
-  );
-  const changed = { ...context, changedEntries: [removed.path] };
-  const row = rows(catalogueNavSections(catalogue)).get(removed.path);
+  });
+  const catalogue = viewerCatalogue(model);
+  const row = rows(catalogueNavSections(catalogue)).get(removed);
   assert.equal(row?.removedVariant, true);
+  const entry = catalogue.byPath.get(parent.path);
+  assert.ok(entry);
   const route: ShellRoute = {
-    view: { kind: "target", target: { kind: "entry", entry: parent } },
+    view: { kind: "target", target: { kind: "entry", entry } },
   };
   for (const [search, opens] of [
     ["removed", false],
@@ -180,11 +175,13 @@ test("Changes activation searches a removed variant as its row does", () => {
     ["launchpad", true],
   ] as const) {
     const selection = { ...defaultSelection, view: "changes" as const, search };
+    const changed = viewerContext(model, selection);
+    assert.deepEqual(changed.changedEntries, [removed]);
     assert.equal(navLeafVisible(row!, selection, changed), opens, search);
     const activated = changesActivation(catalogue, changed, selection, route);
     assert.equal(
       activated.view.kind === "target" &&
-        activated.view.target.entry.path === removed.path,
+        activated.view.target.entry.path === removed,
       opens,
       search,
     );

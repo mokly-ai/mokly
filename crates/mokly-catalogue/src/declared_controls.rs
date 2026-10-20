@@ -4,10 +4,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use mokly_model::catalogue::SourceLocation;
 use mokly_model::controls::{ComponentControl, ControlInput};
-use mokly_model::data::Props;
+use mokly_model::data::{DataValue, Props};
 use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::prop_schema::{JsonType, PropSchema, Types};
-use mokly_model::validation::PropValidator;
+use mokly_model::validation::{PropValidator, accepts};
 use serde_json::Number;
 
 use crate::diagnostic::{Code, Issue};
@@ -100,6 +100,14 @@ pub(crate) fn validate(
                         value
                             .as_f64()
                             .is_none_or(|number| number <= 0.0 || number.is_sign_negative())
+                            || !accepts(
+                                &PropSchema {
+                                    types: property.types.clone(),
+                                    multiple_of: property.multiple_of.clone(),
+                                    ..Default::default()
+                                },
+                                &DataValue::Number(value.clone()),
+                            )
                     })
                 {
                     return Err(failure());
@@ -165,15 +173,7 @@ pub(crate) fn validate(
             Ok(raw) => raw,
             Err(_) => return Err(failure()),
         };
-        let validator = match PropValidator::compile(&raw, &context) {
-            Ok(validator) => validator,
-            Err(_) => return Err(failure()),
-        };
-        let raw = match serde_json::to_value(props) {
-            Ok(raw) => raw,
-            Err(_) => return Err(failure()),
-        };
-        if validator.validate(&raw, &context).is_err() {
+        if PropValidator::compile(&raw, &context).is_err() {
             return Err(failure());
         }
     }

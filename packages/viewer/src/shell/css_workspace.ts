@@ -1,4 +1,7 @@
 /** Bounded preview/inspector panes and grouped, aligned view controls. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const SHELL_WORKSPACE_CSS = `
 .mbk-workspace {
   display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden;
@@ -123,7 +126,7 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-controls-restored:empty { margin: 0; }
 .mbk-control-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .mbk-empty-copy { max-width: 310px; color: var(--chrome-ink-2); font-size: 12px; }
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-control-field { grid-template-columns: 100px minmax(0, 1fr); }
   /* Above the inspector sheet, which covers the bottom of the preview. */
   .mbk-edit-status { top: 8px; bottom: auto; width: max-content; margin: 0 auto; }

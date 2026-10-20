@@ -6,7 +6,7 @@ import {
   fenceDetail,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
-import type { CatalogueReadModel, EntryDetailV1 } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
 import type { ShellDataSource } from "./data_source.js";
@@ -57,7 +57,7 @@ export function routeDetailRequests(
 
 /** The outcome of loading one detail against the installed index. */
 export type DetailOutcome =
-  | { kind: "accepted"; detail: EntryDetailV1; index: CatalogueReadModel }
+  | { kind: "accepted"; detail: EntryDetailV2; index: CatalogueReadModel }
   | { kind: "deployment" }
   | { kind: "version"; error: MoklyVersionError }
   | { kind: "failed" };
@@ -98,7 +98,7 @@ export type RefreshOutcome =
   | {
       kind: "accepted";
       index: CatalogueReadModel;
-      details: readonly (readonly [DetailRequest, EntryDetailV1])[];
+      details: readonly (readonly [DetailRequest, EntryDetailV2])[];
     }
   | { kind: "deployment" }
   | { kind: "version"; error: MoklyVersionError }
@@ -163,7 +163,7 @@ export function routeKey(route: ShellRoute): string {
 
 /** Whether every request of a route has an accepted detail. */
 export function routeReady(
-  held: ReadonlyMap<string, EntryDetailV1>,
+  held: ReadonlyMap<string, EntryDetailV2>,
   requests: readonly DetailRequest[],
 ): boolean {
   return requests.every((request) => held.has(detailKey(request)));

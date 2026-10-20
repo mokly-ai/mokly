@@ -5,8 +5,9 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Workflow Boundary
 
 `.github/workflows/ci.yml` runs on pull requests, pushes to `main`, and manual
-dispatch for any branch. It has read-only repository contents permission and
-cancels superseded workflow runs.
+`workflow_dispatch` for any branch. A manual run uses the selected branch's
+workflow file, which must include that trigger. The workflow has read-only
+repository contents permission and cancels superseded runs.
 The repository job is every verification job's shared prerequisite and runs the
 audit-first repository suite. The
 [baseline audit contract](./dependency-audit-baseline.md) sets
@@ -24,6 +25,8 @@ audit and the strict release audit own new advisories on `main`.
 `main` and supports manual dispatch. Its write permissions, JSON report, token,
 branch, and create, refresh, and close behavior follow the
 [dependency update pull request contract](./dependency-audit-update-pr.md).
+It also runs the Rust advisory audit, even when the npm audit or its update
+automation fails. That audit reports Rust findings without changing a branch.
 
 The repository job's full-history checkout uses `fetch-depth: 0`. It must fetch
 release tags for the public-package-export ratchet, plus `origin/main` and
@@ -41,14 +44,15 @@ directory from another job.
 
 ## Runtime Profiles
 
-For ordinary pull requests and pushes to `main`, the workflow fans out to:
+For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
-- one viewer job on Node 22.14.0;
-- four browser shards on Node 22.14.0; and
-- native jobs on macOS and Windows at Node 22.14.0.
+- one viewer job on Node 22.15.0;
+- four browser shards on Node 22.15.0;
+- one static-delivery job on Node 22.15.0; and
+- native jobs on macOS and Windows at Node 22.15.0.
 
 For a same-repository Release Please pull request, the viewer job and every
-browser shard also run on Node 24. A release pull request selects this profile
+browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
 only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
@@ -61,7 +65,7 @@ labels and report runtime identities stay `node-24`; reports record the exact
 installed version. The aggregate rejects mixed versions within a group. The
 setup action itself does not provide the installed version output.
 
-Node 22.14 is the ordinary functional runtime because it is the package's
+Node 22.15 is the ordinary functional runtime because it is the package's
 declared minimum. The Node 24 repository prerequisite runs on every event. A
 Node 24-only regression can therefore reach unreleased `main`, but the
 dual-runtime Release Please gate must catch it before versions, tags, or npm
@@ -69,14 +73,14 @@ artifacts can be published. Release Please normally updates its pull request
 after a releasable merge, keeping that feedback close to the originating change
 without paying for both functional profiles on every ordinary event.
 
-The supported range is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. Node 24.14.0
+The supported range is Node.js `>=22.15.0 <24.14.0` or `>=24.19.0`. Node 24.14.0
 through 24.18.x can abort concurrent ESM-to-CommonJS loading before JavaScript
 can handle an error. The upstream
 [`cjs_lexer::Parse` empty-`MaybeLocal` fix](https://github.com/nodejs/node/pull/63885)
 shipped in Node 24.19.0. The shim and the sidecar run on the consumer's Node,
 so the shim rejects affected versions before it resolves the binary.
 
-Local verification uses the supported floor at 22.14.0 and Node 24.21.0. These
+Local verification uses the supported floor at 22.15.0 and Node 24.21.0. These
 are tested representatives rather than the bounds of the supported range. The
 repository's `.nvmrc` and the preview workflow are pinned to 24.21.0. CI
 resolves the latest Node 24 patch once per run, while publishing resolves its
@@ -117,7 +121,7 @@ jobs to set up that npm before `npm ci`, and rejects pins older than npm
 11.11.0.
 
 Linux and Windows jobs across the CI, preview, release, and Dependency Audit
-workflows use Blacksmith's 2-vCPU tiers. macOS jobs use the provider's smallest
+workflows use Blacksmith's 2-vCPU tiers, except the design matrix below. macOS jobs use the provider's smallest
 available tier, which is 6 vCPUs. The publishing exception is any job that publishes
 to npm with trusted publishing, the release `publish` job: it runs on
 GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm creates
@@ -127,7 +131,11 @@ A second, narrow exception permits only the release matrix's `darwin-x64`
 build on GitHub-hosted `macos-26-intel`, with `actions/checkout`. Blacksmith's
 macOS hosts are ARM64. This row keeps native Intel build and execution coverage;
 it has no npm publishing permission. Every other native release row follows
-the Blacksmith size rule. Every job in `ci.yml` has a 30-minute execution timeout.
+the Blacksmith size rule. Browser shards, static-delivery jobs, and native jobs have a 60-minute
+execution timeout. The other CI jobs keep a 30-minute timeout. These limits
+are hang guards, not speed requirements. Each limit must allow at least three
+times the job's typical duration, including setup and builds. The longer
+limits preserve the four browser shards without reducing test coverage.
 
 Action revisions are immutable commit hashes with reviewed version comments,
 runtime versions are explicit, and fork pull requests receive no release
@@ -140,6 +148,12 @@ unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile emitted by the repository job: five
 viewer and browser reports for ordinary events and ten for a Release Please
 pull request.
+
+Static delivery is also required. It builds the example with Changes disabled
+and checks portable design journeys through static HTTP and `file://`.
+Both modes require every assigned test to pass once. Empty discovery, skips,
+duplicate results, missing results, and reporter errors fail the job.
+Its reports stay separate from the five- or ten-report suite aggregate.
 
 Required CI is a report aggregator. It checks out the validator and installs
 Node. It needs no npm dependencies or Rust build.
@@ -158,6 +172,16 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+## Design Attribution Matrix
+
+`.github/workflows/design-attribution.yml` runs nightly and through manual
+`workflow_dispatch`. It runs the `design-matrix` Cargo target on
+`blacksmith-8vcpu-ubuntu-2404` after building the workspace. It has a 120-minute
+job timeout and a separate 90-minute test-process hang guard with a 30-second
+termination grace period. Both guards must allow at least three times typical
+duration. Each run saves its source tree and duration log as an artifact.
+This workflow is optional. `Required CI` does not depend on it.
+
 ## Testbox Workflow Target
 
 The [remote verification contract](./remote-verification.md) defines
@@ -169,7 +193,7 @@ use validation mode. The push run registers the workflow before merge.
 
 One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout. It has
 `contents: read` permission and no secrets. It checks out full history with
-`persist-credentials: false`. It prepares Node 22.14.0, npm 11.21.0, Rust
+`persist-credentials: false`. It prepares Node 22.15.0, npm 11.21.0, Rust
 1.95.0 from `rust-toolchain.toml`, and Chromium. It records the installed
 lockfile digest after `npm ci` and `cargo xtask build-native` both succeed.
 The native build precedes the lockfile stamp. It exposes the job environment

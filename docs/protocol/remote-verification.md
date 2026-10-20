@@ -133,7 +133,7 @@ Run probes and suite commands from the snapshot under the
    shared SSH connection, cancel the known GitHub run, then apply status and
    stop rules. Do not wait for another command.
 6. After all commands end, clean up boxes that are not yet stopped.
-7. Run the local report aggregate with the base commit and `node-22.14.0`.
+7. Run the local report aggregate with the base commit and `node-22.15.0`.
 8. Compute the local fingerprint again. Fail if the source tree changed.
 9. Remove the snapshot and temporary index under the
    [snapshot cleanup contract](./remote-verification-base.md#snapshot-cleanup).

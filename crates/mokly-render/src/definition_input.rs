@@ -146,6 +146,7 @@ pub(crate) fn entry(
             None => None,
         },
         infer_component_schema: story,
+        control_order: definition.control_order.clone(),
     };
     Ok(ProvidedDefinition {
         exporting_file: exporting_file.into(),

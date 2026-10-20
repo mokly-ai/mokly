@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
+import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 import type { ReviewResultV8 } from "../packages/viewer/src/generated/catalogue/ReviewResultV8.js";
 
 import {
@@ -35,7 +35,7 @@ test(
       ];
       const removed = ready.index.removedEntries.map((record) => record.entry);
       for (const entry of current) {
-        const detail = await json<EntryDetailV1>(
+        const detail = await json<EntryDetailV2>(
           ready.output,
           `mokly-viewer/entries/${entry.path}.json`,
         );
@@ -83,7 +83,7 @@ test(
       for (const entry of current)
         assert.equal(
           Object.hasOwn(
-            await json<EntryDetailV1>(
+            await json<EntryDetailV2>(
               unavailable.output,
               `mokly-viewer/entries/${entry.path}.json`,
             ),
@@ -104,7 +104,7 @@ test(
       for (const entry of current)
         assert.equal(
           Object.hasOwn(
-            await json<EntryDetailV1>(
+            await json<EntryDetailV2>(
               disabled.output,
               `mokly-viewer/entries/${entry.path}.json`,
             ),

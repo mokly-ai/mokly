@@ -4,13 +4,13 @@ use std::collections::BTreeMap;
 
 use mokly_compare::comparison_types::ComparisonResult;
 use mokly_compare::{projection_detail, projection_workspace};
-use mokly_model::public_detail::EntryDetailV1;
+use mokly_model::public_detail::EntryDetailV2;
 
 use crate::comparison_files::compare;
 use crate::error::Result;
 
 pub(crate) fn current(
-    details: &mut BTreeMap<String, EntryDetailV1>,
+    details: &mut BTreeMap<String, EntryDetailV2>,
     result: &ComparisonResult,
 ) -> Result<()> {
     projection_detail::apply_evidence(details, result);

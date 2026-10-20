@@ -10,6 +10,7 @@ import {
   savePackage,
   sourceIdentity,
 } from "../scripts/release/package_set.mjs";
+import { inspectPackedManifest } from "../scripts/release/packed_manifest.mjs";
 import { NATIVE_TARGETS } from "../scripts/release/targets.mjs";
 
 import { bootstrapFixture } from "./helpers/bootstrap_fixture.js";
@@ -86,4 +87,42 @@ test("native dependency inspection accepts system TLS and rejects crypto shared 
     "libaws_lc.so",
   ])
     assert.throws(() => assertNoCryptoLibrary(output), /crypto shared library/);
+});
+
+test("every packed native target rejects test hooks in its executable bytes", async (t) => {
+  const fixture = await bootstrapFixture(t);
+  for (const target of NATIVE_TARGETS) {
+    const directory = path.join(fixture.root, target.directory);
+    await fs.cp(path.join(repositoryRoot, target.directory), directory, {
+      recursive: true,
+      filter: (source) => path.basename(source) !== "bin",
+    });
+    await fs.mkdir(path.join(directory, "bin"));
+    const binary = path.join(directory, "bin", target.executable);
+    const pack = () =>
+      createPackageArchive(
+        directory,
+        path.join(fixture.destination, target.target),
+        target.name,
+      );
+    const clean = Buffer.concat([
+      Buffer.alloc(65_530, 0xff),
+      Buffer.from("MOKLY_VERSION\0"),
+    ]);
+    await fs.writeFile(binary, clean);
+    const accepted = await pack();
+    await inspectPackedManifest(accepted.archivePath, accepted.report);
+
+    await fs.writeFile(
+      binary,
+      Buffer.concat([clean, Buffer.from("MOKLY_TEST_FAULT\0")]),
+    );
+    const rejected = await pack();
+    // The gate must inspect the archive even if the source binary is clean.
+    await fs.writeFile(binary, clean);
+    await assert.rejects(
+      inspectPackedManifest(rejected.archivePath, rejected.report),
+      /packed native binary contains MOKLY_TEST_/,
+    );
+  }
 });

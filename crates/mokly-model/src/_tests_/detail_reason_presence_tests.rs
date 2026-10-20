@@ -1,7 +1,7 @@
 //! Current details follow their own index record's ready and included membership.
 
 use crate::axes::EntryKind;
-use crate::public_detail::{DetailEntry, DetailView, EntryDetailV1};
+use crate::public_detail::{DetailEntry, DetailView, EntryDetailV2};
 use crate::public_index::CatalogueReadModel;
 use crate::public_metadata::{CatalogueChanges, ChangeKind, ComparisonSelection};
 use crate::read_contract::ContractViolation;
@@ -10,7 +10,7 @@ use crate::usage::CatalogueUsage;
 
 use super::validate;
 
-fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV1) {
+fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, EntryDetailV2) {
     let mut index = readers::index(include_str!(
         "../../../../docs/protocol/fixtures/catalogue-v7.json"
     ))
@@ -33,6 +33,9 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
     };
     entry.changes = changes;
     let path = entry.path.clone();
+    let control_order = visual
+        .as_ref()
+        .map(|visual| visual.controls.keys().cloned().collect());
     let views = visual.map_or_else(Vec::new, |visual| {
         visual
             .views
@@ -48,8 +51,9 @@ fn fixture(kind: EntryKind, changes: CatalogueChanges) -> (CatalogueReadModel, E
             })
             .collect()
     });
-    let detail = EntryDetailV1 {
-        schema_version: 1,
+    let detail = EntryDetailV2 {
+        schema_version: 2,
+        control_order,
         identity,
         deployment_id: Some(deployment_id),
         revision: Some(revision),
