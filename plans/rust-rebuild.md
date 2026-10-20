@@ -1842,6 +1842,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [ ] Remove the duplicate base render between validation and capture: one
+      bounded, ordered collector that keeps aggregate errors, warnings,
+      retention order, cancellation, fallback, and all charges (capture
+      decision 2, option B, deferred by the user's performance-later rule).
+      Measured on 2026-10-20: React capture 95 s, of which validation 27 s;
+      5,790 JavaScript renders in each pass.
+
 - [x] Apply M12 review 9 findings 1, 3, and 4: retain the original timing
       writer, clarify drain and recycle scope, and distinguish the exit and
       drain receivers in the mocked shutdown test.
@@ -2131,6 +2138,7 @@ Integration batch 5 decisions: `.context/integration-5-merge-decisions.md`.
 Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
 Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
 Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
+Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -2387,6 +2395,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     received 0, then passed all five isolated repeats. Suspected source:
     scripted scroll races history persistence. Separate branch.
     Evidence: `.context/integration-6/scroll-flake.md`.
+    - [x] Resolve in F6 by waiting for each scripted position in history state
+          before navigation. Retain every offset and route assertion.
+          Evidence: `.context/f6/report.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.
