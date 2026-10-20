@@ -19,7 +19,10 @@ stylesheet delivery. It writes no files.
 `Graph` implements `dyn RenderGraph`. `DeliveryInputs` supplies module CSS
 roots, the bundle generation, component stylesheet lists, and exporting
 modules from the sidecar adapter. Its `prepare` method reads stylesheet
-inputs and computes document plans. It checks worker cancellation before each
+inputs and computes document plans. Completed JavaScript, stylesheet, PostCSS,
+and asset inputs populate the prepared catalogue's dependency-directory set.
+Cached bundles supply the same set. Old cache-validation reads and filename
+suffixes cannot add or hide dependency usage. It checks worker cancellation before each
 entry and stylesheet root. Config-relative stylesheet paths normalize dot
 segments inside `repoRoot`. A prepared generation exposes the same worker
 cancellation through `check_cancelled` for callers that process views in a loop.

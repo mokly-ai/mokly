@@ -90,6 +90,7 @@ fn generation(title: &str) -> Arc<dyn RenderGeneration> {
         elements: BTreeMap::new(),
         deferred_modules: Vec::new(),
         javascript: Default::default(),
+        dependency_directories: Default::default(),
         warnings: Vec::new(),
     };
     let plans = [Viewport::Mobile, Viewport::Desktop]

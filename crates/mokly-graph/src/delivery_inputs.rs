@@ -12,6 +12,8 @@ use crate::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 pub struct DeliveryInputs {
     /// Lazy resource dependencies shared by related graph generations.
     pub resources: Arc<dyn ResourceInputs>,
+    /// Authored dependency directories mapped to the bundle's logical root prefixes.
+    pub dependency_aliases: BTreeMap<String, String>,
     /// Sidecar bundle generation used by the fragment provider, when JavaScript renders.
     pub fragment_generation: Option<String>,
     /// Renderer and entry-module CSS roots from the module graph.
@@ -26,6 +28,7 @@ impl Default for DeliveryInputs {
     fn default() -> Self {
         Self {
             resources: Arc::new(MemoryResourceInputs::default()),
+            dependency_aliases: BTreeMap::new(),
             fragment_generation: None,
             stylesheet_roots: Vec::new(),
             component_stylesheets: BTreeMap::new(),

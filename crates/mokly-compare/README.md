@@ -44,7 +44,8 @@ sides. The CLI compares dependency identities through Git and emits
 head's used dependency directories and their repository ancestors. The
 `read_paths` methods on `InputReader` and `WorkingInputs` read only those
 paths. They preserve Git clean identities without repository inventories.
-An HTML comparison with no used dependency directory reads no dependency inputs.
+An HTML comparison uses its head generation's completed dependency inventory.
+With no used dependency directory, it reads no dependency inputs.
 
 `SystemLocations` hashes the canonical repository path under the operating
 system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency

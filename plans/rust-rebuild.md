@@ -2305,6 +2305,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         when the primary installation is absent. The decision 74 port found
         this confinement failure and added a regression before the fix.
         Evidence: `.context/defaults-engine-deps/virtual-parent-red.log`.
+  - [x] Fix decision 74 review findings 1 and 2 within option C: bind HTML
+        dependency warnings to the current generation's completed bundle
+        inputs. Retired Serve imports and failed cache candidates contribute
+        no usage. Extensionless stylesheets and cached bundles retain usage.
+        Evidence: `.context/defaults-engine-deps/review-red.log` and
+        `.context/defaults-engine-deps/serve-observed-red.log`.
   - Defaults-engine hub review 1, finding 5: unused owned rules lack excluded
     evidence. Severity Low, effort Small. Recommended: A, emit one excluded
     document record when none applies. User pending.

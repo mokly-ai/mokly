@@ -13,6 +13,28 @@ mod large;
 const WARNING: &str = "Base dependencies differ. HTML comparison uses working-tree dependencies.";
 
 #[test]
+fn extensionless_package_stylesheets_keep_the_dependency_warning_and_strict_exit() {
+    let root = fixture();
+    fs::rename(
+        root.path().join("node_modules/theme/theme.css"),
+        root.path().join("node_modules/theme/theme"),
+    )
+    .unwrap();
+    write(root.path(), "style.css", "@import 'theme/theme';");
+    git(root.path(), &["add", "style.css"]);
+    git(root.path(), &["commit", "-qm", "extensionless stylesheet"]);
+    git(root.path(), &["branch", "-f", "fixture-base"]);
+    write(
+        root.path(),
+        "package-lock.json",
+        "{\"lockfileVersion\":3,\"name\":\"changed\"}",
+    );
+    let result = build(root.path(), true);
+    assert_eq!(result.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&result.stderr).contains(WARNING));
+}
+
+#[test]
 fn a_catalogue_without_dependency_usage_ignores_manifest_and_lockfile_edits() {
     let root = fixture();
     write(root.path(), "style.css", ".theme{color:blue}");

@@ -69,6 +69,8 @@ impl BaseSourceFactory for GitSourceFactory {
 
 /// Base render inputs. A sidecar provider can acquire extraction and dependency leases here.
 pub struct BaseRequest<'a> {
+    /// Current generation whose completed inputs govern historical dependency warnings.
+    pub head: &'a dyn RenderGeneration,
     /// Current configuration locates the same config file in the historical tree.
     pub working_config: &'a ResolvedConfig,
     /// Validated repository, shared with source and dependency preparation.
@@ -136,6 +138,7 @@ impl ChangesService for Changes {
                     .create(repository.clone(), commit.clone(), &config.repo_root)?;
             let failures = sources.failures.clone();
             let prepared = self.provider.prepare(&BaseRequest {
+                head: head.as_ref(),
                 working_config: config,
                 repository,
                 commit: commit.clone(),

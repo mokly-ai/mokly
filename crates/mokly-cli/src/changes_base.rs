@@ -79,7 +79,13 @@ impl BaseProvider for NativeBase {
             html_dependencies(
                 request,
                 &config,
-                &self.runtime.dependency_usage.directories(),
+                &request
+                    .head
+                    .catalogue()
+                    .dependency_directories
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<_>>(),
             )?
         };
         if self.cancellation.requested() {

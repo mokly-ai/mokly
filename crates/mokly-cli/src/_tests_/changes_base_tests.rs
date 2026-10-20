@@ -99,6 +99,7 @@ fn native_base_uses_the_head_pool_and_the_leased_base_source_root() {
         authored_inputs: Vec::new(),
     };
     let result = base.prepare(&BaseRequest {
+        head: &Unimock::new(()),
         working_config: &config,
         repository: Arc::new(Unimock::new(())),
         commit: ObjectId::parse(&"a".repeat(40)).unwrap(),
