@@ -2338,6 +2338,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         keep the parent with only the selected variant, preserving parent-owned
         evidence instead of returning 503. The Card Featured browser case
         verifies both panes. Evidence: `.context/f5/report.md`.
+  - [x] Switch the three Serve specs that used the Badge family back to the
+        Card family now that decision 6 has landed. Done by `1baf1aa8` on
+        2026-10-20.
   - [x] Batch 8 restores the Card family in the selected comparison,
         expiry, and renewal-pane journeys after the F5 integration.
   - [x] M10 Serve and moved rows review 1, findings 1 to 4, fixed on
@@ -2360,6 +2363,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         the kept port. The sweep procedure now states this rule. Covers
         review 3 findings 1 and 2 and review 4 finding 2; previous examples
         0858e172, 4d6a21a4, and abf52983. Evidence: `.context/f5/report.md`.
+  - M10 Serve and moved rows decision 10 was decided A by the orchestrator on
+    2026-10-20. The line above records how followups-f5 applied it.
   - [x] M10 Serve and moved rows review 4, findings 12 and 13, fixed on
         2026-10-20: the restored removed-variant journey keeps its parent
         unchanged (`bd05ab75`, B), and the poll comment names no duration
@@ -2368,16 +2373,24 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         that described a failed advertised renewal as Serve's collection, and
         a README clause that gave the 404 rule a wrong scope. Fixed by
         `814fc1b1` and `0571ba15`.
-  - M10 Serve and moved rows review 5, open finding 15 for the user: the
-    emulated collection of a selected generation starts only at its renewal,
-    so a pane document request before the renewal still reaches the old
-    generation. Severity Low, effort Small. Recommended: B, collect a selected
-    generation at once and arm the helper after every pane document loaded.
-  - M10 Serve and moved rows review 6, open finding 18 for the user: the
-    helper module, function, and interface still say "collection", although
-    the removed-preview journeys use them only to fail a renewal. Severity
-    Low, effort Small. Recommended: A, keep the names; option C, one helper
-    per generation kind, fits the change for finding 15.
+  - [x] M10 Serve and moved rows review 5, finding 15: the emulated collection
+        of a selected generation started only at its renewal. Fixed by
+        `3f93a581` (B) on 2026-10-20: the generation is gone once the pane
+        documents have loaded. The rewrite also stops a refresh that already
+        asks for one from leaving a later plain request to be forced.
+  - [x] M10 Serve and moved rows review 6, finding 18: the helper names said
+        "collection". Renamed by `a58da357` on 2026-10-20, as the orchestrator
+        asked: `serve_generation_removal.ts`, `removeGeneration`, and
+        `RemovedGeneration`.
+  - [x] M10 Serve and moved rows review 7, on 2026-10-20: the Card parent
+        panes prove each side again by their `.accent` colour (`06158d40`),
+        and the plan dates decision 10 again after merge `8fa9f338` kept only
+        the f5 line.
+  - M10 Serve and moved rows decision 21 for the user: one shared Card pane
+    check that proves each pane's side. Severity Low, effort Small. Covers
+    review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
+    d371e17c. Recommended: B, one helper in
+    `tests/browser/serve_comparison_ui.ts` for every Card pane check.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2395,10 +2408,6 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
-    - `tests/browser/serve_generation_collection.ts:63-80`: when the first
-      stable-endpoint request after the failed renewal already asks for a
-      refresh, the next plain request also becomes a refresh. No journey does
-      this. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
