@@ -7,7 +7,7 @@ import {
 } from "../catalogue/detail_fences.js";
 import type { HeldDetails } from "../catalogue/shell_model.js";
 import { shellCatalogueModel } from "../catalogue/shell_model.js";
-import type { CatalogueReadModel, EntryDetailV1 } from "../catalogue/types.js";
+import type { CatalogueReadModel, EntryDetailV2 } from "../catalogue/types.js";
 import { viewerCatalogue } from "../viewer/projection.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -43,9 +43,9 @@ export function dataSnapshot(
 /** The first snapshot: an index and the given details its fences accept. */
 export function initialSnapshot(
   index: CatalogueReadModel,
-  details: readonly (readonly [DetailRequest, EntryDetailV1])[] = [],
+  details: readonly (readonly [DetailRequest, EntryDetailV2])[] = [],
 ): ShellDataSnapshot {
-  const held = new Map<string, EntryDetailV1>();
+  const held = new Map<string, EntryDetailV2>();
   for (const [request, detail] of details)
     if (fenceDetail(index, request, detail).kind === "accepted")
       held.set(detailKey(request), detail);
@@ -55,7 +55,7 @@ export function initialSnapshot(
 /** Add accepted details to an unchanged index. */
 export function withDetails(
   snapshot: ShellDataSnapshot,
-  accepted: readonly (readonly [DetailRequest, EntryDetailV1])[],
+  accepted: readonly (readonly [DetailRequest, EntryDetailV2])[],
 ): ShellDataSnapshot {
   const details = new Map(snapshot.details);
   for (const [request, detail] of accepted)
@@ -71,9 +71,9 @@ export function withDetails(
 export function withIndex(
   snapshot: ShellDataSnapshot,
   index: CatalogueReadModel,
-  accepted: readonly (readonly [DetailRequest, EntryDetailV1])[],
+  accepted: readonly (readonly [DetailRequest, EntryDetailV2])[],
 ): ShellDataSnapshot {
-  const details = new Map<string, EntryDetailV1>();
+  const details = new Map<string, EntryDetailV2>();
   for (const [key, detail] of snapshot.details)
     if (
       detail.revision === undefined

@@ -165,8 +165,14 @@ function captureCommand(
 ) {
   let stdout = "";
   let stderr = "";
+  let directoryReady!: (directory: string) => void;
+  const buildDirectory = new Promise<string>((resolve) => {
+    directoryReady = resolve;
+  });
   child.stdout.on("data", (chunk) => {
     stdout += String(chunk);
+    const match = /^Mokly publish build: ([^\r\n]+)\r?$/m.exec(stdout);
+    if (match && stdout.includes(`${match[0]}\n`)) directoryReady(match[1]!);
   });
   child.stderr.on("data", (chunk) => {
     stderr += String(chunk);
@@ -186,7 +192,7 @@ function captureCommand(
   };
   signal?.addEventListener("abort", stop, { once: true });
   child.once("close", () => signal?.removeEventListener("abort", stop));
-  return { child, result };
+  return { child, result, buildDirectory };
 }
 
 export function directory(stdout: string): string {

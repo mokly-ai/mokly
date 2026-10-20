@@ -7,7 +7,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 A comparison generation is an immutable set of files under
 `mokly-viewer/diffs/generations/<generation>/`: `review.json`, the
 [review result v8](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
-`entries/<entry path>.json`, the entry detail v1 of each removed entry under
+`entries/<entry path>.json`, the entry detail v2 of each removed entry under
 the [shell delivery contract](./mokly-shell-delivery.md#entry-detail); the
 removed previews of the [removed previews contract](./mokly-removed-previews.md);
 and the before and after snapshots with their transitive resources at the
@@ -78,6 +78,10 @@ selected comparison contract. A content change or a Changes status move
 invalidates pending captures and discards the cached selection. Superseded
 snapshots stay available briefly for in-flight requests. Shutdown stops
 admission and drains active generation work before the server exits.
+
+Complete base validation and capture must use the same rendered input for each
+view. Capture must preserve validation failures and warning order, including
+when another view fails later. A failed validation publishes no partial capture.
 
 Base capture checks cancellation before each view read and encode, including
 cache hits, and returns the generation's cancellation error. Replacing an

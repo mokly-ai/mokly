@@ -15,6 +15,7 @@ const resultVariables = [
   "VIEWER_RESULT",
   "BROWSER_RESULT",
   "NATIVE_RESULT",
+  "STATIC_DELIVERY_RESULT",
 ] as const;
 
 interface WorkflowStep {

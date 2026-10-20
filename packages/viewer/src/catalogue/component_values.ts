@@ -1,9 +1,6 @@
 import { decodeProps, encodeProps } from "../components/codec.js";
 import type { ComponentControl } from "../components/control_types.js";
-import {
-  validateControlledValues,
-  validateControls,
-} from "../components/controls.js";
+import { validateControls } from "../components/controls.js";
 import { invalidData, plainKeys, record } from "../components/data.js";
 import type {
   ComponentInputOwner,
@@ -88,12 +85,10 @@ export function readControls(
 export function readEntryProps(
   value: unknown,
   schema: PropSchema,
-  controls: Readonly<Record<string, ComponentControl>>,
   context = "$catalogue",
 ): ComponentWireProps {
   const props = readProps(value);
-  const decoded = validateProps(schema, decodeProps(props), context);
-  validateControlledValues(controls, decoded, context);
+  validateProps(schema, decodeProps(props), context);
   return props;
 }
 

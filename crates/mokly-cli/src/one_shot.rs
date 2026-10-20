@@ -23,6 +23,7 @@ use mokly_publish::runtime::Reporter;
 use mokly_sidecar::process_clock::SystemClock;
 use mokly_sidecar::workers::Clock;
 
+use crate::phase_format;
 use crate::phase_format::{duration, frame};
 use crate::terminal::Terminal;
 
@@ -145,16 +146,8 @@ impl Lines {
         }
     }
     fn success(&self, text: &str) {
-        let glyph = if self.style.ascii { "+" } else { "✔" };
-        let glyph = if self.style.color {
-            format!("\x1b[32m{glyph}\x1b[0m")
-        } else {
-            glyph.into()
-        };
-        self.terminal.stdout(&format!(
-            "{}\n",
-            bounded(&format!("  {glyph} {text}"), self.style.columns)
-        ));
+        self.terminal
+            .stdout(&phase_format::success(&self.style, text));
     }
 }
 impl Phases for Lines {
@@ -246,6 +239,13 @@ impl Phases for Lines {
     }
 }
 impl BuildReporter for Lines {
+    fn retained_directory(&self, directory: &Path) {
+        self.clear();
+        let path = recovery_output::path(directory, &self.cwd, &self.redactor);
+        self.terminal
+            .stderr(&recovery_output::retained_publication(&self.style, &path));
+    }
+
     fn build_directory(&self, directory: &Path) {
         self.terminal.stdout(&format!(
             "Mokly publish build: {}\n",

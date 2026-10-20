@@ -47,7 +47,7 @@ its own Changes.
 
 A complete comparison is one generation: `review.json`, the review result v8
 of the [comparison contract](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
-the entry detail v1 of every removed entry; and the snapshots of both sides
+the entry detail v2 of every removed entry; and the snapshots of both sides
 with their transitive resources. No HTML report, no summary file, and no
 navigation payload is written; the terminal reports the counts and the
 diagnostics. The [catalogue change contract](./mokly-catalogue-changes.md#changes-count)

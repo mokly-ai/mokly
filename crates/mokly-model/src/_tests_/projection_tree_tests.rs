@@ -84,6 +84,7 @@ fn an_index_screen_owns_variants_then_members_and_keeps_hidden_metadata() {
     panel.metadata.is_index = true;
     panel.content = EntryContent::Screen {
         visual: VisualEntry {
+            control_order: Vec::new(),
             color_schemes: vec![],
             prop_schema: Default::default(),
             props: Default::default(),

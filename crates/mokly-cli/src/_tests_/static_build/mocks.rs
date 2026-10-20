@@ -12,16 +12,24 @@ use mokly_static::transaction::TransactionMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildChanges, BuildError, BuildServiceMock, BuildSummary, PreparedBuild};
-use crate::cancellation::CancellationMock;
+use crate::cancellation::{Cancellation, CancellationMock};
 use crate::static_build::{Builder, DrainMock, PhasesMock, TimestampMock};
 
 use super::support::{Case, artifact, catalogue, config, record, step, warning};
 
 pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Builder, Unimock) {
+    mocks_with_cancellation(case, events, None)
+}
+
+pub(super) fn mocks_with_cancellation(
+    case: Case,
+    events: Arc<Mutex<Vec<&'static str>>>,
+    supplied: Option<Arc<dyn Cancellation>>,
+) -> (Builder, Unimock) {
     let renders = case.fail != "fingerprint";
     let protects = !matches!(case.fail, "fingerprint" | "render");
     let warned = protects && case.fail != "protect";
-    let assembles = warned && !case.warnings;
+    let assembles = warned;
     let stages = assembles && case.fail != "assemble";
     let verifies = stages && case.fail != "stage";
     let finished = verifies && case.fail != "verify";
@@ -160,10 +168,10 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
             PhasesMock::warnings.some_call(matching!(_)).returns(()),
         ))
     };
-    let cancellation = {
+    let cancellation = supplied.unwrap_or_else(|| {
         let drained = events.clone();
         let queried = events.clone();
-        Unimock::new((
+        Arc::new(Unimock::new((
             CancellationMock::drain
                 .some_call(matching!())
                 .answers_arc(Arc::new(move |_| {
@@ -175,8 +183,8 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
                     record(&queried, "cancelled");
                     case.cancelled
                 })),
-        ))
-    };
+        )))
+    });
     let timestamp = if !case.publication || !assembles {
         Unimock::new(())
     } else {
@@ -194,7 +202,7 @@ pub(super) fn mocks(case: Case, events: Arc<Mutex<Vec<&'static str>>>) -> (Build
         render: Arc::new(render),
         assembler: Arc::new(assembler),
         inputs: Arc::new(inputs),
-        cancellation: Arc::new(cancellation),
+        cancellation,
         drain: Arc::new(drain),
         timestamp: Arc::new(timestamp),
         phases: Arc::new(phases),

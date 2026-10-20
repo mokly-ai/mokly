@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-use mokly_cli::cancellation::{BuildCancellation, Cancellation, ServeCancellation};
+use mokly_cli::cancellation::{
+    BuildCancellation, Cancellation, OutputProtection, ServeCancellation,
+};
 use mokly_graph::error::{InternalError, Result};
 use mokly_publish::runtime::CommandCancellation;
 use mokly_sidecar::pool::SidecarPool;
@@ -52,6 +54,12 @@ impl Cancellation for Observed {
         self.publication.token.cancel();
         self.inner.interrupt()
     }
+    fn protect_output(&self) -> Option<Box<dyn OutputProtection>> {
+        self.inner.protect_output()
+    }
+    fn wait_for_forced_exit(&self) -> bool {
+        self.inner.wait_for_forced_exit()
+    }
 }
 
 impl Interrupts {
@@ -79,7 +87,7 @@ impl Interrupts {
         let owned = pool.clone();
         let stopping = AtomicBool::new(false);
         let consume = move || {
-            if state.interrupt() {
+            if state.interrupt() || state.wait_for_forced_exit() {
                 if let Some(pool) = owned
                     .lock()
                     .unwrap_or_else(|error| error.into_inner())

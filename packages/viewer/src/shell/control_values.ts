@@ -1,5 +1,6 @@
 /** Pure draft and validation rules of the Props controls. */
 
+import type { EntryDetailV2 } from "../catalogue/types.js";
 import { decodeProps } from "../components/codec.js";
 import type { ComponentControl } from "../components/control_types.js";
 import { validateControlledValues } from "../components/controls.js";
@@ -32,6 +33,7 @@ export interface ControlTarget {
   propSchema: PropSchema;
   props: ComponentWireProps;
   controls: Readonly<Record<string, ComponentControl>>;
+  controlOrder?: Readonly<NonNullable<EntryDetailV2["controlOrder"]>>;
   suppliedSlots: readonly string[];
   removed: boolean;
 }
@@ -54,12 +56,12 @@ export interface ValidatedControlDraft {
   overrides?: Readonly<Record<string, ComponentOverride>>;
 }
 
-/** Controls in a stable order by prop name. */
+/** Controls in the declaration order supplied by the entry detail. */
 export function controlEntries(
-  target: Pick<ControlTarget, "controls">,
+  target: Pick<ControlTarget, "controls" | "controlOrder">,
 ): (readonly [string, ComponentControl])[] {
-  return Object.entries(target.controls).sort(([left], [right]) =>
-    left < right ? -1 : left > right ? 1 : 0,
+  return (target.controlOrder ?? Object.keys(target.controls)).map(
+    (key) => [key, target.controls[key]!] as const,
   );
 }
 
@@ -197,6 +199,7 @@ export function controlTarget(
   entry: ManifestEntry,
   row: { value: ManifestComponent; removed: boolean } | undefined,
   removed: boolean,
+  controlOrder?: ControlTarget["controlOrder"],
 ): ControlTarget | undefined {
   if (entry.kind === "component")
     return row
@@ -207,6 +210,7 @@ export function controlTarget(
           propSchema: row.value.propSchema,
           props: row.value.props,
           controls: row.value.controls,
+          ...(controlOrder ? { controlOrder } : {}),
           suppliedSlots: row.value.suppliedSlots,
           removed: row.removed,
         }
@@ -219,6 +223,7 @@ export function controlTarget(
     propSchema: entry.propSchema,
     props: entry.props ?? {},
     controls: entry.controls ?? {},
+    ...(controlOrder ? { controlOrder } : {}),
     suppliedSlots: [],
     removed,
   };

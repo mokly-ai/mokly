@@ -9,7 +9,7 @@ use mokly_model::axes::{ColorScheme, EntryKind, Viewport};
 use mokly_model::catalogue::{CatalogueModel, EntryContent, ModelEntry, VisualEntry};
 use mokly_model::evidence::ViewEvidence;
 use mokly_model::projection;
-use mokly_model::public_detail::{EntryDetailV1, Workspace};
+use mokly_model::public_detail::{EntryDetailV2, Workspace};
 use mokly_model::review::{ReviewResultV8, ReviewState};
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
@@ -20,6 +20,7 @@ use crate::{projection_index, snapshots};
 
 pub(super) fn entry(path: &str, kind: EntryKind, parent: Option<&str>) -> ModelEntry {
     let visual = VisualEntry {
+        control_order: Vec::new(),
         color_schemes: vec![ColorScheme::Light],
         prop_schema: serde_json::from_value(
             json!({"type":"object","additionalProperties":false,"properties":{}}),
@@ -181,7 +182,7 @@ fn finish_result(
     }
 }
 
-pub(super) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV1> {
+pub(super) fn details(model: &CatalogueModel) -> BTreeMap<String, EntryDetailV2> {
     let state = projection_index::publication("mokly.config.json".into(), "base");
     let index = projection::index(model, &[], &state).unwrap();
     let mut details = projection::pending_details(model, &index, &[]);

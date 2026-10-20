@@ -36,6 +36,15 @@ pub struct Engine {
 
 impl Comparison for Engine {
     #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty))]
+    fn compare_prepared(
+        &self,
+        request: &ComparisonRequest,
+        before: Arc<dyn RenderGeneration>,
+        after: Arc<dyn RenderGeneration>,
+    ) -> Result<ComparisonResult> {
+        self.compare_captured(request, before, after)
+    }
+    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty))]
     fn compare(
         &self,
         request: &ComparisonRequest,
@@ -248,3 +257,7 @@ impl Engine {
         })
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/prepared_base_tests.rs"]
+mod prepared_base_tests;

@@ -5,13 +5,13 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 
 use crate::projection_usage;
-use crate::public_detail::EntryDetailV1;
+use crate::public_detail::EntryDetailV2;
 use crate::readers;
 use crate::usage::{CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord};
 
 #[derive(Deserialize)]
 struct Fixtures {
-    current: BTreeMap<String, EntryDetailV1>,
+    current: BTreeMap<String, EntryDetailV2>,
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn variant_slot_self_use_is_retained_and_its_child_is_transitive() {
     ))
     .unwrap();
     let mut details: Fixtures = serde_json::from_str(include_str!(
-        "../../../../docs/protocol/fixtures/entry-details-v1.json"
+        "../../../../docs/protocol/fixtures/entry-details-v2.json"
     ))
     .unwrap();
     let variant = details

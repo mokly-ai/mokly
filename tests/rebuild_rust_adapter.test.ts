@@ -47,7 +47,7 @@ function capture(): RustScenario {
     },
     details: [
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         entry: { kind: "page", path: "guide" },
         resourceEvidence: {
           rules: [
@@ -180,7 +180,7 @@ test("Rust adapter rejects each unsupported boundary before adapting fields", ()
   assert.throws(
     () =>
       adaptRustScenario({
-        details: [{ schemaVersion: 2 }],
+        details: [{ schemaVersion: 3 }],
       } as unknown as RustScenario),
     /Unsupported entry detail/,
   );

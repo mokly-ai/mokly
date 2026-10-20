@@ -12,7 +12,7 @@ use mokly_publish::identity::ActionsContext;
 use mokly_publish::runtime::Cancellation;
 use mokly_publish::settings::Settings;
 
-use crate::publication::build::{BuildRequest, Directories, StaticOutput, warnings_are_fatal};
+use crate::publication::build::{BuildRequest, Directories, StaticOutput};
 use crate::publication::error::{Error, ExchangeResult, Result};
 use crate::publication::mapping::checkout_result;
 
@@ -33,7 +33,7 @@ pub struct Options {
     pub base: Option<String>,
     /// Skip all comparison work and history lookup.
     pub no_changes: bool,
-    /// Keep the grammar while the warning policy decision remains open.
+    /// Fail on build warnings before output installation or upload.
     pub strict: bool,
     /// Pinned operation-owned paths excluded from status, never names guessed from Git output.
     pub owned_paths: Vec<PathBuf>,
@@ -44,6 +44,8 @@ pub struct Options {
 pub trait BuildReporter: Send + Sync {
     /// Report the private build directory exactly once, before calling the builder.
     fn build_directory(&self, directory: &std::path::Path);
+    /// Warn with the allocated private root when cleanup fails after publication.
+    fn retained_directory(&self, directory: &std::path::Path);
 }
 
 /// End-to-end publication command boundary.
@@ -103,7 +105,8 @@ impl Publish for Command {
             ),
             cancellation,
         )?;
-        let directory = self.directories.create(&initial.root)?;
+        let private_directory = self.directories.create(&initial.root)?;
+        let directory = private_directory.join("site");
         self.reporter.build_directory(&directory);
         let request = BuildRequest {
             invocation_directory: options.directory.clone(),
@@ -112,7 +115,6 @@ impl Publish for Command {
             config: options.config.clone(),
             base: options.base.clone(),
             no_changes: options.no_changes,
-            warnings_are_fatal: warnings_are_fatal(options.strict),
             strict: options.strict,
             publication,
         };
@@ -150,10 +152,15 @@ impl Publish for Command {
                 source: error::Error::InvalidBundle,
             });
         }
-        self.exchange
+        let receipt = self
+            .exchange
             .publish(prepared, settings, cancellation)
             .await
-            .publication()
+            .publication()?;
+        if self.directories.remove(&private_directory).is_err() {
+            self.reporter.retained_directory(&private_directory);
+        }
+        Ok(receipt)
     }
 }
 

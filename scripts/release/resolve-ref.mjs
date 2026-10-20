@@ -20,6 +20,6 @@ writeWorkflowOutput("viewer_ref", refs?.viewer ?? "");
 writeWorkflowOutput("verification", verification);
 process.stdout.write(
   refs
-    ? `Selected immutable releases ${refs.cli} and ${refs.viewer} with ${verification} verification.\n`
+    ? `Selected ${refs.cli} with ${refs.viewer || "the published viewer pin"} and ${verification} verification.\n`
     : "No release artifact selected.\n",
 );

@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
 import { buildStaticCatalogue } from "../helpers/build_site.js";
@@ -11,6 +11,27 @@ import { serveStaticFiles } from "../helpers/static_server.js";
 import { hasMarker, markPage } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { staticRequests } from "./static_delivery_assertions.js";
+
+/** Where the outgoing document records an unavailable stage. */
+const UNAVAILABLE_SEEN = "mokly-test-unavailable-seen";
+
+/**
+ * Record in session storage, which survives the full page load, whether the
+ * outgoing document ever shows a stage that could not be shown.
+ */
+async function recordUnavailableStage(page: Page): Promise<void> {
+  await page.evaluate((key) => {
+    new MutationObserver(() => {
+      for (const alert of document.querySelectorAll('[role="alert"]'))
+        if (alert.textContent?.includes("could not be shown"))
+          sessionStorage.setItem(key, alert.textContent);
+    }).observe(document.documentElement, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+  }, UNAVAILABLE_SEEN);
+}
 
 let root: string;
 let site: string;
@@ -75,6 +96,7 @@ test("a copied catalogue reloads on another deployment without comparison change
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(2);
   await markPage(page);
+  await recordUnavailableStage(page);
   site = next;
   // The detail response can trigger a reload after the click has finished.
   // Observe the replacement document before reading its title or marker.
@@ -83,6 +105,10 @@ test("a copied catalogue reloads on another deployment without comparison change
   await reloaded;
   await expect(page.locator("#mb-main h2")).toHaveText("New details");
   expect(await hasMarker(page)).toBe(false);
+  // The outgoing document kept its loading stage until the full page load.
+  expect(
+    await page.evaluate((key) => sessionStorage.getItem(key), UNAVAILABLE_SEEN),
+  ).toBeNull();
   await expect(
     page.frameLocator(".mbk-frame-mobile iframe").locator("main"),
   ).toHaveText("New deployment detail");

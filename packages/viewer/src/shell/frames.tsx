@@ -3,7 +3,7 @@
 // and a browser window with traffic lights, a monospace address pill carrying
 // a copy icon, and the expand-to-overlay toggle handled by the Browse client.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { CollapseIcon, CopyIcon, ExpandIcon } from "./icons.js";
@@ -32,10 +32,18 @@ export function BrowserFrame(props: {
   frameKey?: string;
 }) {
   const store = useOptionalShellStore();
+  const latestStore = useRef(store);
+  latestStore.current = store;
+  const { frameKey } = props;
   const [copied, setCopied] = useState(false);
   const expanded =
-    props.frameKey !== undefined &&
-    store?.state.expandedFrame === props.frameKey;
+    frameKey !== undefined && store?.state.expandedFrame === frameKey;
+  // A frame that unmounts while expanded, such as a use-case step that a
+  // narrow window replaces with a phone, leaves no page scrim behind.
+  useEffect(() => {
+    if (frameKey === undefined) return;
+    return () => latestStore.current?.releaseExpandedFrame(frameKey);
+  }, [frameKey]);
   useEffect(() => {
     if (!copied) return;
     const timer = window.setTimeout(() => setCopied(false), 1400);
@@ -70,7 +78,7 @@ export function BrowserFrame(props: {
             }
             className="browser-expand"
             onClick={() =>
-              store?.setExpandedFrame(expanded ? undefined : props.frameKey)
+              store?.setExpandedFrame(expanded ? undefined : frameKey)
             }
             title={
               expanded ? "Collapse viewport" : "Expand to a wider viewport"

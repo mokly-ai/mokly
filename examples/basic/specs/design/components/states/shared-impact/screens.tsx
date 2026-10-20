@@ -60,7 +60,7 @@ export const styleOutsideScreen = defineScreen({
   description:
     "The rule that changes Action also styles Welcome's own Not now link, which is not part of Action, so Welcome has its own Changes row beside Action.",
   rationale:
-    "Details names the stylesheet once and, under it, only the styles that also apply outside the changed components. Changed components used here links to Action's own page.",
+    "Details names the stylesheet once and, under it, only the styles that also apply outside the changed components. The Changed component line links to Action's own page.",
   ...artboards({
     desktop: <StyleOutsideDesktop />,
     mobile: <StyleOutsideMobile />,

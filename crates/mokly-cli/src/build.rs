@@ -81,11 +81,6 @@ pub enum BuildError {
         /// Exact retained operation path.
         path: PathBuf,
     },
-    /// The selected publication policy refuses warnings without an explicit --strict.
-    #[error(
-        "[mokly-cli/build] The catalogue has build warnings. Fix the reported warnings and retry."
-    )]
-    Warnings,
     /// The matching viewer package is unavailable.
     #[error("[mokly-cli/build] Build or reinstall the matching @mokly/viewer package.")]
     Viewer,

@@ -1,4 +1,7 @@
 /** Package-owned shell styling; concatenation preserves delivered bytes. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const CSS_VIEWS_RESPONSIVE = `.mbk-frame-scheme-note {
   display: none;
   font-weight: 500;
@@ -139,7 +142,7 @@ button.mbk-empty-link {
   border-radius: 0 0 36px 36px;
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-topbar > [data-mokly-schemeswitch] {
     display: none;
   }

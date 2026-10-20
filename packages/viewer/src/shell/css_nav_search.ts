@@ -1,4 +1,7 @@
 /** Package-owned shell styling; concatenation preserves delivered bytes. */
+
+import { NARROW_SHELL } from "./layout_breakpoint.js";
+
 export const CSS_NAV_SEARCH = `
 .mbk-nav-row.active,
 .mbk-nav-row[aria-current="page"] {
@@ -120,7 +123,7 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   background: var(--mbk-status-changed-ink);
 }
 
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-menu {
     display: inline-flex;
   }
@@ -231,7 +234,7 @@ details.mbk-nav-group > summary::-webkit-details-marker {
 
 /* Below the breakpoint the label collapses to its glyph, so search and the
    menu keep their room while the control stays reachable. */
-@media (max-width: 56.25rem) {
+@media ${NARROW_SHELL} {
   .mbk-appearance {
     padding: 0 7px;
   }

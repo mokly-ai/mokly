@@ -131,18 +131,21 @@ fn unsafe_url_schemes_name_the_attribute_url_and_source_once() {
 
 #[test]
 fn invalid_ignore_ids_and_unknown_wrapper_attributes_have_exact_diagnostics() {
-    for (body, detail) in [
+    for (body, detail, warning) in [
         (
             "<mokly-ignore id=\"Hero Banner!\">Text</mokly-ignore>",
             "invalid ignore id \"Hero Banner!\"; use lowercase kebab-case",
+            false,
         ),
         (
             "<mokly-ignore id=\"hero\" class=\"x\">Text</mokly-ignore>",
             "unknown attribute class on <mokly-ignore>",
+            true,
         ),
         (
             "<mokly-ignore-scope enabled=\"true\" class=\"x\">Text</mokly-ignore-scope>",
             "unknown attribute class on <mokly-ignore-scope>",
+            true,
         ),
     ] {
         let root = fixture();
@@ -151,12 +154,22 @@ fn invalid_ignore_ids_and_unknown_wrapper_attributes_have_exact_diagnostics() {
             "specs/a.screen.html",
             &format!("---\ntitle: A\n---\n{body}"),
         );
-        fails(
-            root.path(),
-            &format!(
-                "[mokly/build-invalid] specs/a.screen.html:4:1: [mokly/html-element] {detail}\n"
-            ),
-        );
+        if warning {
+            let output = run(root.path());
+            assert_eq!(output.status.code(), Some(0));
+            assert!(String::from_utf8_lossy(&output.stdout).contains("Built Mokly"));
+            assert_eq!(
+                String::from_utf8(output.stderr).unwrap(),
+                format!("[mokly/warning] entry \"a\": {detail} is ignored\n")
+            );
+        } else {
+            fails(
+                root.path(),
+                &format!(
+                    "[mokly/build-invalid] specs/a.screen.html:4:1: [mokly/html-element] {detail}\n"
+                ),
+            );
+        }
     }
 }
 

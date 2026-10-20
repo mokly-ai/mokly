@@ -64,6 +64,19 @@ fn scalar_coercion_covers_primitives_choices_unions_and_invalid_literals() {
 }
 
 #[test]
+fn numeric_choices_return_binary64_values() {
+    for schema in [
+        json!({"enum":[9007199254740993_u64]}),
+        json!({"const":9007199254740993_u64}),
+        json!({"oneOf":[{"const":9007199254740993_u64}]}),
+    ] {
+        let schema: PropSchema = serde_json::from_value(schema).unwrap();
+        let value = coerce(&schema, "9007199254740992").unwrap();
+        assert_eq!(serde_json::to_string(&value).unwrap(), "9007199254740992.0");
+    }
+}
+
+#[test]
 fn substitutions_read_only_declared_scalars_and_leave_open_braces_literal() {
     let schema: PropSchema = serde_json::from_value(json!({"type":"object","properties":{"label":{"type":"string"},"optional":{"type":"string"},"badge":{"type":"object","properties":{"count":{"type":"integer"}}}}})).unwrap();
     let props: Props =

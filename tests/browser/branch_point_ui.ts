@@ -1,8 +1,17 @@
-/** Rendered branch-point facts that each branch-point host shares. */
+/** Rendered branch-point facts on Serve, the branch copy, and the embedded viewer. */
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { expectHostPath, type EntryHost } from "./entry_hosts.js";
+import { expectHostPath } from "./entry_hosts.js";
+import type { MovedHost } from "./moved_rows.js";
+import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+
+/**
+ * How one host runs the branch-point checks. The hosts of the moved cases
+ * fit: Serve and the branch copy route by address, the embedded viewer opens
+ * an entry by query, and only Serve captures comparisons on demand.
+ */
+export type BranchPointHost = Pick<MovedHost, "comparisons" | "open" | "path">;
 
 /** The two widths each case renders at. */
 export const BRANCH_POINT_WIDTHS = [
@@ -61,10 +70,18 @@ export async function inspectorTab(page: Page, name: string): Promise<void> {
   await expect(tab).toHaveAttribute("aria-selected", "true");
 }
 
-/** Switch the comparison band to Side by side. */
-export async function compareSideBySide(page: Page): Promise<void> {
+/**
+ * Switch the comparison band to Side by side. On Serve the click waits for
+ * the comparison that it requests, through its redirect.
+ */
+export async function compareSideBySide(
+  page: Page,
+  host: BranchPointHost,
+): Promise<void> {
   const side = page.locator("[data-diff-mode=side]");
-  await side.click();
+  if (host.comparisons === "on demand")
+    await awaitSelectedComparison(page, () => side.click());
+  else await side.click();
   await expect(side).toHaveAttribute("aria-pressed", "true");
 }
 
@@ -110,16 +127,25 @@ export async function activateRow(page: Page, entryId: string): Promise<void> {
   await nav.locator(`a[data-nav-row][data-entry-id="${entryId}"]`).click();
 }
 
-/** Search the catalogue; Changes keeps only the rows the query matches. */
+/**
+ * Search the catalogue; Changes keeps only the rows the query matches. A
+ * narrow viewer shows a compact control: its button opens the field, and
+ * closing it again keeps the query and shows the navigation menu.
+ */
 export async function search(page: Page, query: string): Promise<void> {
   await openChanges(page);
-  await page.locator("[data-mokly-search]").fill(query);
+  const field = page.locator("[data-mokly-search]");
+  const compact = page.getByRole("button", { name: "Search catalogue" });
+  const opened = !(await field.isVisible()) && (await compact.isVisible());
+  if (opened) await compact.click();
+  await field.fill(query);
+  if (opened) await page.getByRole("button", { name: "Close search" }).click();
 }
 
 /** Wait until the head and the host's page path name one entry. */
 export async function expectRouted(
   page: Page,
-  host: EntryHost,
+  host: BranchPointHost,
   entry: string,
 ): Promise<void> {
   await expect(
@@ -128,10 +154,10 @@ export async function expectRouted(
   await expectHostPath(page, host, entry);
 }
 
-/** Open an entry and wait for its workspace head. */
+/** Open an entry on `host` and wait for its workspace head. */
 export async function openEntry(
   page: Page,
-  host: EntryHost,
+  host: BranchPointHost,
   entry: string,
 ): Promise<void> {
   await host.open(page, entry);

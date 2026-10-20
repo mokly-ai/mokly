@@ -69,6 +69,28 @@ TypeScript props type of `render(props, context)` from an `as const` schema; a
 
 ## Schema Inference
 
+Every authored number, including props and schema keywords, uses its nearest
+binary64 value before inference, schema validation, rendering, and keys.
+Integers outside `[-9007199254740991, 9007199254740991]` emit a warning.
+Ties round to the even binary64 value. Nested objects and arrays follow the same
+rule. Each affected saved entry or component invocation emits a
+`props-unsafe-integer` warning with the property path. `--strict` makes it fatal.
+The core and viewer use that same rounded value. Safe integers and negative zero
+keep their values. Rounding with a warning keeps recoverable inputs usable and
+visible, instead of rejecting them or rounding silently.
+Each unsafe schema keyword emits `props-unsafe-integer` once for its parent
+entry, with a JSON pointer relative to `propSchema`. Its message is
+`schema keyword <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`.
+Numeric `enum`, `const`, and `oneOf` choices use the rounded value for HTML
+choice matching and for the resulting prop.
+Unsafe numbers in authored control bounds, lengths, and choices also emit
+`props-unsafe-integer`. Explicit declarations name the parent entry; applied
+Storybook hints name their entry. Paths are JSON pointers relative to `controls`.
+The message follows the same form: `control <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`.
+Schema-derived limits keep their schema warnings. Equal code, subject, and
+message records merge under the [warning contract](./mokly-build-warnings.md#record).
+`--strict` treats control warnings like the other unsafe-integer warnings.
+
 When an entry declares no `propSchema`, the schema is inferred, in the
 profile, from the entry's own props and every variant's merged props. Each key
 seen is a property. At the top level the keys of the entry's own props are

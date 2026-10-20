@@ -126,7 +126,6 @@ pub fn failure_diagnostics(style: &Style, failure: &BuildError, redactor: &Redac
             redactor,
         ),
         BuildError::Interrupted { .. } => style.error(Code::BuildInvalid, "build cancelled", redactor),
-        BuildError::Warnings => style.error(Code::BuildInvalid, "The catalogue has build warnings. Fix the reported warnings and retry.", redactor),
         BuildError::Shutdown { primary, shutdown } => {
             let code = if pre_installation::cancelled(primary) { Code::BuildInvalid } else { match primary.category() {
                 Category::BuildInvalid => Code::BuildInvalid,

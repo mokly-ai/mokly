@@ -7,7 +7,7 @@ import {
   validateShardReports,
 } from "./report-validation.mjs";
 
-const RUNTIME_PROFILES = [["node-22.14.0"], ["node-22.14.0", "node-24"]];
+const RUNTIME_PROFILES = [["node-22.15.0"], ["node-22.15.0", "node-24"]];
 export function validateCiReports(reports, commit, runtimes) {
   if (!/^[a-f0-9]{40}$/.test(commit))
     throw new Error("expected commit must be a full lowercase Git SHA");
@@ -61,7 +61,7 @@ function validateRuntimeProfile(runtimes) {
     );
   if (!supported)
     throw new Error(
-      "unsupported CI runtime profile; expected node-22.14.0 or node-22.14.0,node-24",
+      "unsupported CI runtime profile; expected node-22.15.0 or node-22.15.0,node-24",
     );
 }
 

@@ -53,7 +53,7 @@ export const REQUIRED_CI_JOB_NAME: string;
 export const VERIFICATION_ARTIFACT_PATTERN: RegExp;
 export const VERIFICATION_REPORT_COUNT: number;
 export const RELEASE_VERIFICATION_RUNTIMES: readonly [
-  "node-22.14.0",
+  "node-22.15.0",
   "node-24",
 ];
 

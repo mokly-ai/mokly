@@ -1,9 +1,9 @@
 //! Clean-checkout and build boundaries must complete before any receiver request.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::publication::error::Error;
+use crate::publication::error::{DirectoryFailure, Error};
 use mokly_publish::accounting::Receipt;
 use mokly_publish::checkout::{CheckoutMock, Inspection};
 use mokly_publish::completion::{Completion, Outcome};
@@ -13,7 +13,7 @@ use mokly_publish::identity::ActionsContext;
 use mokly_publish::snapshot::{Finalized, OutputSnapshot, OutputSnapshotMock};
 use unimock::{MockFn, Unimock, matching};
 
-use crate::publication::build::{DirectoriesMock, StaticOutputMock, warnings_are_fatal};
+use crate::publication::build::{DirectoriesMock, StaticOutputMock};
 use crate::publication::command::{BuildReporterMock, Command, Options, Publish};
 
 use super::support::{active, artifact, publication, settings};
@@ -51,60 +51,87 @@ pub(super) fn command(mock: Arc<Unimock>) -> Command {
 
 #[tokio::test]
 async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the_snapshot() {
-    let snapshot: Arc<dyn OutputSnapshot> = Arc::new(Unimock::new(
-        OutputSnapshotMock::capture
-            .next_call(matching!())
-            .returns(Ok(Finalized::new(artifact(false)).unwrap())),
-    ));
-    let expected = Receipt {
-        completion: Completion {
-            outcome: Outcome::Published,
-            viewer_url: None,
-        },
-        uploaded: 6,
-        unchanged: 0,
-    };
-    let mock = Arc::new(Unimock::new((
-        CheckoutMock::inspect
-            .next_call(matching!(_, _, _))
-            .returns(Ok(inspection())),
-        CheckoutMock::publication
-            .next_call(matching!(_, _, _, _, _))
-            .returns(Ok(publication())),
-        DirectoriesMock::create
-            .next_call(matching!(_))
-            .returns(Ok(PathBuf::from("/private/publish"))),
-        BuildReporterMock::build_directory
-            .next_call(matching!(_))
-            .returns(()),
-        StaticOutputMock::build
-            .next_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, request, _| {
-                assert_eq!(request.directory, PathBuf::from("/private/publish"));
-                assert_eq!(request.repository_root, PathBuf::from("/repo"));
-                assert_eq!(request.invocation_directory, PathBuf::from("/repo/tools"));
-                assert!(request.no_changes);
-                assert!(request.warnings_are_fatal);
-                assert!(request.base.is_none());
-                Ok(snapshot.clone())
-            })),
-        CheckoutMock::inspect
-            .next_call(matching!(_, _, _))
-            .returns(Ok(inspection())),
-        ExchangeMock::publish
-            .next_call(matching!(_, _, _))
-            .returns(Ok(expected.clone())),
-    )));
-    let command: &dyn Publish = &command(mock);
-    assert_eq!(
-        command
-            .run(&options(), &settings(8), &active())
-            .await
-            .unwrap(),
-        expected
-    );
-    assert!(warnings_are_fatal(false));
-    assert!(warnings_are_fatal(true));
+    for (outcome, cleanup_failed) in [
+        (Outcome::Published, false),
+        (Outcome::AlreadyPublished, false),
+        (Outcome::Published, true),
+        (Outcome::AlreadyPublished, true),
+    ] {
+        let snapshot: Arc<dyn OutputSnapshot> = Arc::new(Unimock::new(
+            OutputSnapshotMock::capture
+                .next_call(matching!())
+                .returns(Ok(Finalized::new(artifact(false)).unwrap())),
+        ));
+        let expected = Receipt {
+            completion: Completion {
+                outcome,
+                viewer_url: None,
+            },
+            uploaded: 6,
+            unchanged: 0,
+        };
+        let scenario = (
+            CheckoutMock::inspect
+                .next_call(matching!(_, _, _))
+                .returns(Ok(inspection())),
+            CheckoutMock::publication
+                .next_call(matching!(_, _, _, _, _))
+                .returns(Ok(publication())),
+            DirectoriesMock::create
+                .next_call(matching!(_))
+                .returns(Ok(PathBuf::from("/private/publish"))),
+            BuildReporterMock::build_directory
+                .next_call(matching!((path) if *path == Path::new("/private/publish/site")))
+                .returns(()),
+            StaticOutputMock::build
+                .next_call(matching!(_, _))
+                .answers_arc(Arc::new(move |_, request, _| {
+                    assert_eq!(request.directory, PathBuf::from("/private/publish/site"));
+                    assert_eq!(request.repository_root, PathBuf::from("/repo"));
+                    assert_eq!(request.invocation_directory, PathBuf::from("/repo/tools"));
+                    assert!(request.no_changes);
+                    assert!(!request.strict);
+                    assert!(request.base.is_none());
+                    Ok(snapshot.clone())
+                })),
+            CheckoutMock::inspect
+                .next_call(matching!(_, _, _))
+                .returns(Ok(inspection())),
+            ExchangeMock::publish
+                .next_call(matching!(_, _, _))
+                .returns(Ok(expected.clone())),
+            DirectoriesMock::remove
+                .next_call(matching!((path) if *path == Path::new("/private/publish")))
+                .returns(if cleanup_failed {
+                    Err(Error::Directory {
+                        temporary_root: "/private/publish".into(),
+                        reason: DirectoryFailure::Unavailable {
+                            source: std::io::ErrorKind::PermissionDenied.into(),
+                        },
+                    })
+                } else {
+                    Ok(())
+                }),
+        );
+        let mock = Arc::new(if cleanup_failed {
+            Unimock::new((
+                scenario,
+                BuildReporterMock::retained_directory
+                    .next_call(matching!((path) if *path == Path::new("/private/publish")))
+                    .returns(()),
+            ))
+        } else {
+            Unimock::new(scenario)
+        });
+        let command: &dyn Publish = &command(mock);
+        assert_eq!(
+            command
+                .run(&options(), &settings(8), &active())
+                .await
+                .unwrap(),
+            expected
+        );
+    }
 }
 
 #[tokio::test]
@@ -129,7 +156,6 @@ async fn a_dirty_checkout_stops_before_build_or_network() {
 #[tokio::test]
 async fn a_build_failure_keeps_its_own_error_and_stops_before_recheck_or_network() {
     for error in [
-        Error::BuildWarnings,
         Error::Exchange {
             source: error::Error::Cancelled,
         },

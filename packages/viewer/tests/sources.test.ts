@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { EntryDetailV1 } from "../src/catalogue/types.js";
+import type { EntryDetailV2 } from "../src/catalogue/types.js";
 import { MoklyVersionError } from "../src/catalogue/version_error.js";
 import { embeddedDataSource } from "../src/viewer/index_source.js";
 import {
@@ -166,7 +166,7 @@ test("a detail URL resolves on the artifact origin only", async () => {
   );
   await assert.rejects(
     loadDetailResult(
-      { ...body!, schemaVersion: 2 } as unknown as EntryDetailV1,
+      { ...body!, schemaVersion: 3 } as unknown as EntryDetailV2,
       root,
       signal,
     ),

@@ -2,13 +2,14 @@
  * Temporary props in Serve under the component controls contract: a
  * component that is unchanged against the base commit stays Unmodified while
  * a temporary edit shows, after Reset, and on an unchanged saved variant. The
- * edit reaches no URL, Changes count, source, Git status, or publication.
+ * edit reaches no URL, Changes count, local storage, source, Git status, or
+ * publication, and a reload shows the saved props.
  */
 
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { git } from "../helpers/static_changes.js";
 
@@ -70,3 +71,43 @@ for (const viewport of ["desktop", "mobile"] as const)
     expect(await git(changes.root, "status", "--porcelain")).toBe(tree);
     expect((await changes.index()).revision).toBe(revision);
   });
+
+/** Every local storage entry of the page, by key. */
+function storedEntries(page: Page): Promise<Record<string, string | null>> {
+  return page.evaluate(() =>
+    Object.fromEntries(
+      Array.from({ length: localStorage.length }, (_, index) => {
+        const key = localStorage.key(index)!;
+        return [key, localStorage.getItem(key)];
+      }),
+    ),
+  );
+}
+
+test("a temporary prop edit stays out of local storage, and a reload shows the saved props", async ({
+  page,
+  changes,
+}) => {
+  await page.goto(`/view/${changes.paths.quietParent}/?viewport=desktop`);
+  const label = (await showProps(page)).getByRole("textbox", {
+    name: "label",
+  });
+  const tag = page
+    .frameLocator('[data-workspace-frame="desktop"]')
+    .locator(".tag");
+  await expect(label).toBeEditable();
+  const stored = await storedEntries(page);
+
+  await label.fill("Temporary tag");
+  await expect(tag).toHaveText("Temporary tag");
+  expect(await storedEntries(page)).toEqual(stored);
+
+  await page.reload();
+  await expect(tag).toHaveText("Tag content");
+  await expect(
+    (await showProps(page)).getByRole("textbox", { name: "label" }),
+  ).toHaveValue("Tag content");
+  expect(JSON.stringify(await storedEntries(page))).not.toContain(
+    "Temporary tag",
+  );
+});

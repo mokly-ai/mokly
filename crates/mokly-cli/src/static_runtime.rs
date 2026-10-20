@@ -45,7 +45,6 @@ pub(super) struct Context {
 pub(super) struct PublicationInput {
     pub(super) identity: Publication,
     pub(super) repository: PathBuf,
-    pub(super) warnings_are_fatal: bool,
 }
 
 pub(super) fn run(
@@ -121,6 +120,10 @@ fn prepare(
     } = match setup {
         Ok(value) => value,
         Err(primary) => {
+            let _protection = context
+                .cancellation
+                .protect_output()
+                .ok_or(BuildError::Cancelled)?;
             return match transaction.abandon() {
                 Ok(()) => Err(primary),
                 Err(cleanup) => Err(BuildError::Cleanup {
@@ -183,9 +186,6 @@ fn prepare(
                 viewer,
                 repository,
                 publication: metadata,
-                warnings_are_fatal: publication
-                    .as_ref()
-                    .is_some_and(|input| input.warnings_are_fatal),
             },
             transaction,
         )

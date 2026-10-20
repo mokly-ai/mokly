@@ -2,7 +2,7 @@
 
 use std::iter;
 
-use mokly_model::data::{DataValue, Props, number_text};
+use mokly_model::data::{DataValue, Props, number_text, round_unsafe_integer};
 use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::prop_schema::{JsonType, Primitive, PropSchema, Types};
 use mokly_model::validation::{PropValidator, accepts};
@@ -72,7 +72,7 @@ fn scalar(kind: &JsonType, text: &str) -> Option<DataValue> {
             {
                 return None;
             }
-            Some(DataValue::Number(value))
+            Some(DataValue::Number(round_unsafe_integer(value)))
         }
         _ => None,
     }
@@ -83,7 +83,7 @@ fn choice<'a>(choices: impl Iterator<Item = &'a Primitive>, text: &str) -> Optio
         let value = match primitive {
             Primitive::Null => DataValue::Null,
             Primitive::String(value) => DataValue::String(value.clone()),
-            Primitive::Number(value) => DataValue::Number(value.clone()),
+            Primitive::Number(value) => DataValue::Number(round_unsafe_integer(value.clone())),
             Primitive::Boolean(value) => DataValue::Boolean(*value),
         };
         (display(&value) == text).then_some(value)

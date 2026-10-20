@@ -26,8 +26,6 @@ pub struct BuildRequest {
     pub no_changes: bool,
     /// The user explicitly requested --strict.
     pub strict: bool,
-    /// Effective policy, resolved by warnings_are_fatal.
-    pub warnings_are_fatal: bool,
     /// Inspected revision and repository metadata used for envelope finalization.
     pub publication: Publication,
 }
@@ -43,14 +41,16 @@ pub trait StaticOutput: Send + Sync {
     ) -> Result<Arc<dyn OutputSnapshot>>;
 }
 
-/// Private build directory allocation, never tied to automatic upload cleanup.
+/// Private build allocation and cleanup after a confirmed publication.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = DirectoriesMock))]
 pub trait Directories: Send + Sync {
-    /// Reserve a private parent outside the repository and return its absent site child.
+    /// Create and return the exact private root outside the repository.
     fn create(&self, repository_root: &Path) -> Result<PathBuf>;
+    /// Remove the stored private root as a unit without following symbolic links.
+    fn remove(&self, directory: &Path) -> Result<()>;
 }
 
-/// Host directory allocator. The output survives both command success and failure.
+/// Host directory allocator. Failed publications retain their output for recovery.
 pub struct SystemDirectories;
 
 impl Directories for SystemDirectories {
@@ -88,14 +88,15 @@ impl Directories for SystemDirectories {
             });
         }
         let _retained = directory.keep();
-        Ok(real.join("site"))
+        Ok(real)
     }
-}
 
-/// One policy switch for the pending publish warning decision.
-/// The specified policy makes all publish warnings fatal, with or without --strict.
-pub fn warnings_are_fatal(_strict: bool) -> bool {
-    true
+    fn remove(&self, directory: &Path) -> Result<()> {
+        if let Err(source) = std::fs::remove_dir_all(directory) {
+            return Err(directory_error(directory.into(), source));
+        }
+        Ok(())
+    }
 }
 
 fn directory_error(temporary_root: PathBuf, source: std::io::Error) -> Error {

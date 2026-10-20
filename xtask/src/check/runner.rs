@@ -78,6 +78,7 @@ impl CheckRunner for DefaultCheckRunner {
         for suite in VerificationSuite::LOCAL {
             if suite == VerificationSuite::Browser {
                 self.run_command(browser_test_command(None))?;
+                self.run_command(CommandSpec::new("npm").args(["run", "test:delivery:prepared"]))?;
             } else {
                 self.run_suite(suite, None, request.dependency_audit)?;
             }

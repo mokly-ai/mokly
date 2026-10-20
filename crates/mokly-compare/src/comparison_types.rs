@@ -109,6 +109,15 @@ impl fmt::Debug for ComparisonResult {
 /// One catalogue-wide policy serves every command and comparison route.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ComparisonMock))]
 pub trait Comparison: Send + Sync {
+    /// Classify a base whose complete validation and bounded capture already finished.
+    /// The base can be the original source when its validation summary did not fit.
+    fn compare_prepared(
+        &self,
+        request: &ComparisonRequest,
+        before: Arc<dyn RenderGeneration>,
+        after: Arc<dyn RenderGeneration>,
+    ) -> Result<ComparisonResult>;
+
     /// Render through the supplied generations, classify, and validate complete evidence.
     fn compare(
         &self,

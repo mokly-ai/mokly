@@ -35,19 +35,9 @@ pub enum WireError {
     },
 }
 
-/// Plain-data rule violated by a tagged value.
-#[derive(Clone, Debug, Eq, PartialEq, Error)]
-pub enum DataViolation {
-    /// Nested data exceeds the profile's depth.
-    #[error("exceeds 64 nesting levels")]
-    Depth,
-    /// Data exceeds the profile's traversal budget.
-    #[error("exceeds 10000 visited nodes")]
-    Nodes,
-    /// An object declares a forbidden property name.
-    #[error("reserved property name")]
-    ReservedKey,
-}
+/// Plain-data rule violated by a tagged value, with the messages of the
+/// plain-data limits.
+pub use crate::limits::DataViolation;
 
 /// Decode wire props, enforcing canonical number and object spellings.
 pub fn decode(props: &ComponentWireProps) -> Result<Props, WireError> {

@@ -55,7 +55,18 @@ uses normal discovery. Comparisons are included by default: `--base` overrides
 `review.base` (default `origin/main`). `--no-changes` skips base lookup and
 comparison generation, including removed entries and comparison assets and
 controls. It rejects an explicit `--base`. Both modes build and validate the
-catalogue, and a build warning fails the command before any upload.
+catalogue. Build warnings fail the command before output installation or upload
+only with `--strict`. Without it, warnings print and publication continues.
+Strict mode is opt-in so recoverable authoring warnings do not block publication.
+
+After a successful publication or an already-published response, delete exactly
+the private directory created by this publication, including its site and
+reservation directory. Use the allocated path retained by the command, never
+a path reconstructed from output or environment data. Do not follow symbolic
+links. A failed or cancelled upload retains the whole private directory.
+If removal fails, warn with the private directory path and keep publication
+successful. The receiver has already accepted it. Removing only the snapshot
+would leave the reservation directory behind.
 
 Publish requires a Git checkout with a commit even without comparisons, to
 identify the uploaded revision. With comparisons enabled, the base side renders

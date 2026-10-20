@@ -47,6 +47,10 @@ element?: string,
  */
 controls?: { [key in string]: Control },
 /**
+ * Candidate control keys in authored order, before the core omits uneditable props.
+ */
+controlOrder: Array<string>,
+/**
  * Storybook meta hints for the component parent's own controls.
  */
 argTypes?: { [key in string]: StoryHints },

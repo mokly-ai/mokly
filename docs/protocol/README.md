@@ -16,7 +16,7 @@ and moves are paired with their previous path.
 For duplicate CSS, configured-link placement or overlap, and stylesheet owners,
 continue with safe, unambiguous output and warn when an authored input is
 discarded. Confinement and source protection still apply. `build --strict` and
-`publish` fail before writes or uploads when a warning exists; Serve refuses
+`publish --strict` fail before writes or uploads when a warning exists; Serve refuses
 strict mode.
 
 ## Supported Formats
@@ -203,6 +203,7 @@ The repository gate, remote verification, dependency audits, test rules, and the
 - [Dependency Update Pull Request](./dependency-audit-update-pr.md)
 - [Deterministic Test Repository Inputs](./ci-test-repository-inputs.md)
 - [Developer Test Commands](./developer-test-commands.md)
+- [Developer browser commands](./developer-browser-commands.md) — browser selection and static delivery.
 - [Packed Consumer Smoke](./packed-consumer-smoke.md)
 - [GitHub Publishing Protections](./npm-github-protections.md)
 - [Historical npm Upgrade Notes](./npm-release-history.md)

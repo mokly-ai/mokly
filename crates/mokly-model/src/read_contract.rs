@@ -140,6 +140,9 @@ pub enum ContractViolation {
     /// Views and workspace belong only to visual entries.
     #[error("views and workspace belong only to visual entries")]
     DetailKind,
+    /// Detail control order must list every editable property exactly once.
+    #[error("detail control order must list every editable property exactly once")]
+    ControlOrder,
     /// Root resource evidence belongs only to pages.
     #[error("root resource evidence belongs only to pages")]
     DetailEvidence,

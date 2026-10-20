@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import { runCommand } from "./command.mjs";
 import { remoteTagCommit, validateTagVersion } from "./context.mjs";
 
-/** Both protected tags identify the clean release tree. */
+/** Verify the CLI tag and either a new viewer tag or its earlier pinned tag. */
 export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
   const viewer = JSON.parse(
     await fs.readFile(`${repositoryRoot}/packages/viewer/package.json`, "utf8"),
@@ -13,6 +13,8 @@ export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
     await fs.readFile(`${repositoryRoot}/packages/mokly/package.json`, "utf8"),
   );
   validateTagVersion(cliRef, cli.version);
+  const newViewer = Boolean(viewerRef);
+  viewerRef ||= `viewer-v${viewer.version}`;
   validateTagVersion(viewerRef, viewer.version, "viewer-");
   const git = async (...args) =>
     (await runCommand("git", args, { cwd: repositoryRoot })).stdout.trim();
@@ -25,11 +27,15 @@ export async function verifyReleaseRefs(repositoryRoot, cliRef, viewerRef) {
       `refs/tags/${ref}`,
       `refs/tags/${ref}^{}`,
     );
-    if (head !== local || head !== remoteTagCommit(remote, ref))
+    if (
+      local !== remoteTagCommit(remote, ref) ||
+      ((ref === cliRef || newViewer) && head !== local)
+    )
       throw new Error(
         `${ref}, the local checkout, and origin do not identify one commit`,
       );
   }
+  if (!newViewer) await git("merge-base", "--is-ancestor", viewerRef, head);
   assert.equal(
     await git(
       "status",

@@ -15,13 +15,13 @@ import type {
   CatalogueRecord,
   CatalogueScreen,
   CatalogueView,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "./types.js";
 
 const OMITTED: ShellCatalogueUsage = { status: "omitted" };
 
 /** Held details by `detailKey`; each one already passed its fence. */
-export type HeldDetails = ReadonlyMap<string, EntryDetailV1>;
+export type HeldDetails = ReadonlyMap<string, EntryDetailV2>;
 
 /** Every view without a held detail carries `omitted` usage. */
 export function shellCatalogueModel(
@@ -62,7 +62,7 @@ export function shellCatalogueModel(
 
 function projectEntry(
   entry: CatalogueRecord,
-  detail: EntryDetailV1 | undefined,
+  detail: EntryDetailV2 | undefined,
 ): ShellCatalogueRoutedEntry {
   if (entry.kind === "screen" || entry.kind === "component")
     return projectVisual(entry, detail);
@@ -73,19 +73,19 @@ function projectEntry(
 
 function projectVisual(
   entry: CatalogueScreen,
-  detail: EntryDetailV1 | undefined,
+  detail: EntryDetailV2 | undefined,
 ): ShellCatalogueScreen;
 function projectVisual(
   entry: CatalogueComponent,
-  detail: EntryDetailV1 | undefined,
+  detail: EntryDetailV2 | undefined,
 ): ShellCatalogueComponent;
 function projectVisual(
   entry: CatalogueScreen | CatalogueComponent,
-  detail: EntryDetailV1 | undefined,
+  detail: EntryDetailV2 | undefined,
 ): ShellCatalogueScreen | ShellCatalogueComponent;
 function projectVisual(
   entry: CatalogueScreen | CatalogueComponent,
-  detail: EntryDetailV1 | undefined,
+  detail: EntryDetailV2 | undefined,
 ): ShellCatalogueScreen | ShellCatalogueComponent {
   return {
     ...entry,
@@ -95,7 +95,7 @@ function projectVisual(
 
 function projectView(
   view: CatalogueView,
-  detail: EntryDetailV1 | undefined,
+  detail: EntryDetailV2 | undefined,
 ): ShellCatalogueView {
   const held = detail?.views.find(
     (candidate) =>

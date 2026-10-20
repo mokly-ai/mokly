@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { detailKey, fenceDetail } from "../src/catalogue/detail_fences.js";
 import { readEntryDetail } from "../src/catalogue/detail_reader.js";
-import type { EntryDetailV1 } from "../src/catalogue/types.js";
+import type { EntryDetailV2 } from "../src/catalogue/types.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v7_fixture.js";
 
@@ -15,8 +15,8 @@ const REMOVED_PAGE =
 
 function current(
   path: string,
-  edit?: (detail: EntryDetailV1) => void,
-): EntryDetailV1 {
+  edit?: (detail: EntryDetailV2) => void,
+): EntryDetailV2 {
   const detail = rawDetailFixtures().current[path]!;
   edit?.(detail);
   return readEntryDetail(detail);
@@ -24,12 +24,24 @@ function current(
 
 function removed(
   snapshotId: string,
-  edit?: (detail: EntryDetailV1) => void,
-): EntryDetailV1 {
+  edit?: (detail: EntryDetailV2) => void,
+): EntryDetailV2 {
   const detail = rawDetailFixtures().removed[snapshotId]!;
   edit?.(detail);
   return readEntryDetail(detail);
 }
+
+test("control order names exactly the index's editable props", () => {
+  const index = indexFixture();
+  const path = "components/action";
+  for (const order of [[], ["missing"]]) {
+    const detail = current(path, (detail) => {
+      detail.controlOrder = order;
+    });
+    assert.equal(fenceDetail(index, { path }, detail).kind, "rejected");
+  }
+  assert.equal(fenceDetail(index, { path }, current(path)).kind, "accepted");
+});
 
 test("the fixture index accepts every fixture detail", () => {
   const index = indexFixture();

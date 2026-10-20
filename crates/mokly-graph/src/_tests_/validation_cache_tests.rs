@@ -121,7 +121,7 @@ pub(super) fn probe(retain: bool, missing_dark_mobile: bool) -> Probe {
                 entry(
                     "target",
                     json!({"kind":"screen","useCasePaths":[],"visual":{
-                        "colorSchemes":["light","dark"],"props":{},"controls":{},
+                        "colorSchemes":["light","dark"],"props":{},"controls":{},"controlOrder":[],
                         "propSchema":{"type":"object","properties":{}}
                     }}),
                 ),

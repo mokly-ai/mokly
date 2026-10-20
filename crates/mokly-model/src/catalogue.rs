@@ -76,6 +76,8 @@ pub struct VisualEntry {
     pub props: Props,
     /// Controls derived or declared for editing.
     pub controls: BTreeMap<String, ComponentControl>,
+    /// Editable keys in authored declaration order.
+    pub control_order: Vec<String>,
 }
 
 /// One ordered screen reference.
