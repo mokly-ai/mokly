@@ -2476,8 +2476,19 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
             draft fails it.
     - `packages/viewer/src/shell/README.md`: 451 lines, past the 300-line
       split rule, with no recorded exception. Separate branch.
+      - Follow-up F9b item 7, decision 23 for the user: a split by subject
+        needs doc-only folders in the source tree or Markdown pages for
+        module mechanics, which belong in code comments. Severity Low,
+        effort Small. Recommended: A, keep one page, add a heading per
+        subject, and record the exception, as decision 2 A did for the
+        browser test guide.
     - `packages/viewer/README.md`: 625 lines, past the 300-line split rule,
       with no recorded exception. Separate branch.
+      - [x] Follow-up F9b item 7: the README keeps the overview, the quick
+            start, a guide list, the responsibilities, and development, in
+            285 lines. `docs/concepts`, `docs/api`, `docs/theming`, and
+            `docs/deployment` under `packages/viewer` hold the rest, each as
+            a `README.md` so that the Markdown link check reads it.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
