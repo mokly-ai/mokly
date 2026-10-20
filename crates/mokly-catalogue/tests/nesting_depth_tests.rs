@@ -8,6 +8,7 @@ use mokly_catalogue::error::CatalogueError;
 use tempfile::TempDir;
 use yaml_rust2::parser::{Event, Parser};
 
+#[path = "../../mokly-css/tests/depth_search/mod.rs"]
 mod depth_search;
 mod support;
 
