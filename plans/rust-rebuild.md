@@ -2242,6 +2242,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
+        audit into an independent read-only job. Keep write credentials in the
+        npm update job and disable credential persistence in the Rust checkout.
+        Evidence: `.context/ci-gates-hub-fixes/f1-green.log`.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.
