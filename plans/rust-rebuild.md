@@ -2537,6 +2537,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         Linux-only liveness and hand-built file URLs in affected test fixtures.
         Audit: `.context/f16/platform-audit.md`. The hub must rerun macOS and
         Windows native jobs on `rebuild/native-ci-fixes`.
+  - [x] Native CI round 2: preserve configuration and output aliases, reject
+        rooted authored paths on Windows, and use native path keys in test
+        doubles. Keep output and source case aliases private. Keep watch hashes
+        portable. Resolve physical paths in temporary-root fixtures.
+        Audit and merge decisions: `.context/native-ci-fixes-2/platform-audit.md`
+        and `.context/native-ci-fixes-2/merge-decisions.md`.
+        The hub must dispatch hosted macOS and Windows Native jobs on
+        `rebuild/native-ci-fixes-2`; Linux checks cannot prove those adapters.
   - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
     Windows executable suffixes. Selected Native bypasses this path.
     Separate branch before claiming Windows remote-executor support.
