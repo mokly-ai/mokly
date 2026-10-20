@@ -83,6 +83,13 @@ entry, with a JSON pointer relative to `propSchema`. Its message is
 `schema keyword <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`.
 Numeric `enum`, `const`, and `oneOf` choices use the rounded value for HTML
 choice matching and for the resulting prop.
+Unsafe numbers in authored control bounds, lengths, and choices also emit
+`props-unsafe-integer`. Explicit declarations name the parent entry; applied
+Storybook hints name their entry. Paths are JSON pointers relative to `controls`.
+The message follows the same form: `control <JSON-quoted-pointer> is outside the JavaScript safe integer range and uses the nearest binary64 value`.
+Schema-derived limits keep their schema warnings. Equal code, subject, and
+message records merge under the [warning contract](./mokly-build-warnings.md#record).
+`--strict` treats control warnings like the other unsafe-integer warnings.
 
 When an entry declares no `propSchema`, the schema is inferred, in the
 profile, from the entry's own props and every variant's merged props. Each key

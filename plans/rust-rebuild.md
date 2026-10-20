@@ -2587,7 +2587,14 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
     `.context/ci-gates/sidecar-rerun.log`.
   - [x] N1: closed by the user's 2026-10-20 clarification of decision 6 C.
         Round every authored number, including schema keywords, with warnings.
-  - CLI defaults fix1 review 3, finding 2: control-only unsafe numbers lack warnings. Severity Medium, effort Medium. Recommended A: agree field paths, messages, and duplicate rules, then warn on authored control numbers. Broader preparation tracking is option B, Large. Wait for the user.
+  - [x] CLI defaults item 8, fix1 review 3 finding 2: covered by 6 C, confirmed
+        by the user on 2026-10-20. Apply option A: warn on unsafe numbers in
+        authored control metadata with the existing code, message form, JSON
+        pointer form, and duplicate rule. Strict mode treats them like the
+        other unsafe-integer warnings. Broader preparation tracking, option B,
+        is not selected because the scoped warning producer completes 6 C.
+  - Item 87: the user still decides final warning text. Keep numeric warning
+    text in one formatter so the later wording change needs one edit.
   - Follow-up: filter ordinary ignore-wrapper attributes at both HTML parsing boundaries. Effort Large. Covers defaults review finding 1. No previous examples found. Evidence: `.context/defaults-cli/review-1.md`.
   - CLI defaults hub finding 2: successful publish retains the private parent. Severity Low, effort Small. Recommended B: remove only the owned empty reservation namespace and parent. Wait for the user.
   - CLI defaults hub finding 5: invocation warnings lack component identity. Severity Low, effort Medium. Recommended B: identify the component and instance, then define exact messages. Wait for the user.
