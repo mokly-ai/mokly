@@ -102,7 +102,8 @@ impl Renamer<'_> {
 /// A block's remaining statements and the rule context that owns them.
 struct Frame {
     range: Range<usize>,
-    /// `None` for the stylesheet and grouping at-rule blocks.
+    /// `None` for the stylesheet and for grouping at-rule blocks outside
+    /// declaration blocks.
     body: Option<Body>,
 }
 

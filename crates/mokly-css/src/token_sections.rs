@@ -6,7 +6,9 @@ use cssparser::Token;
 
 use crate::token_tree::Tokens;
 
-/// How the statements of one block end, as lightningcss reads them.
+/// How the statements of one block end. Style rules and the blocks nested in
+/// them follow lightningcss. Declaration-only at-rules such as `@font-face`
+/// end a non-custom statement at its first `{}` block, as postcss does.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Grammar {
     /// The stylesheet and grouping at-rules: a statement ends at its `{}`
