@@ -9,10 +9,9 @@
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
 import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 
-import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
-import { BRANCH_POINT_WIDTHS } from "./branch_point_ui.js";
+import { registerBranchPointCases } from "./branch_point_cases.js";
 import { test as base } from "./browser_test.js";
-import { routedHost } from "./entry_hosts.js";
+import { serveMovedHost } from "./moved_rows.js";
 import { serveComparisonCatalogue } from "./serve_comparison_fixture.js";
 
 type Served = Awaited<ReturnType<typeof serveComparisonCatalogue>>;
@@ -36,11 +35,4 @@ const test = base.extend<object, { servedBranch: Served }>({
   },
 });
 
-for (const [name, check] of Object.entries(BRANCH_POINT_CHECKS))
-  for (const { name: width, ...size } of BRANCH_POINT_WIDTHS)
-    test(`${name} renders its branch-point references at ${width} width`, async ({
-      page,
-    }) => {
-      await page.setViewportSize(size);
-      await check(page, routedHost);
-    });
+registerBranchPointCases(test, serveMovedHost);

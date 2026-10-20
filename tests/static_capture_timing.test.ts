@@ -40,7 +40,7 @@ test(
       const parent = records.find(
         (record) => record.event === "start" && record.id === counts.parentId,
       );
-      assert.equal(parent!.stage, "review.compare-views");
+      assert.equal(parent!.stage, "review.base-tree");
       for (const record of captured) {
         assert.equal(record.role, "core");
         assert.equal(record.session, parent!.session);
@@ -48,6 +48,12 @@ test(
         assert.equal("path" in record, false);
         assert.equal("props" in record, false);
       }
+      const validation = records.find(
+        (record) =>
+          record.stage === "review.capture-validate" &&
+          record.event === "start",
+      );
+      assert.ok(validation);
       for (const [stage, count] of [
         ["review.capture-validate", 1],
         ["review.capture-document", 6],
@@ -60,7 +66,10 @@ test(
         assert.equal(ended.length, count, stage);
         for (const record of ended) {
           assert.equal(record.status, "ok");
-          assert.equal(record.parentId, counts.id);
+          assert.equal(
+            record.parentId,
+            stage === "review.capture-validate" ? counts.id : validation.id,
+          );
           assert.equal(record.session, counts.session);
           assert.equal("path" in record, false);
           assert.equal("props" in record, false);

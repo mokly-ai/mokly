@@ -8,9 +8,8 @@
 
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";
 
-import { BRANCH_POINT_CHECKS } from "./branch_point_checks.js";
+import { registerBranchPointCases } from "./branch_point_cases.js";
 import { test as branchTest } from "./branch_point_test.js";
-import { BRANCH_POINT_WIDTHS } from "./branch_point_ui.js";
 import {
   comparisonViewerHost,
   type ComparisonViewerHost,
@@ -38,15 +37,8 @@ const test = branchTest.extend<object, { branchViewer: ComparisonViewerHost }>({
 });
 
 for (const adapter of ["same-origin", "cross"] as const) {
-  const host = embeddedHost(adapter);
+  const host = { ...embeddedHost(adapter), comparisons: "published" as const };
   test.describe(`${adapter} adapter`, () => {
-    for (const [name, check] of Object.entries(BRANCH_POINT_CHECKS))
-      for (const { name: width, ...size } of BRANCH_POINT_WIDTHS)
-        test(`${name} renders its branch-point references at ${width} width`, async ({
-          page,
-        }) => {
-          await page.setViewportSize(size);
-          await check(page, host);
-        });
+    registerBranchPointCases(test, host);
   });
 }

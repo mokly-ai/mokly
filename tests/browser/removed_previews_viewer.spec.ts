@@ -10,6 +10,8 @@
 
 import { expect, type Page, type Request } from "@playwright/test";
 
+import { accentColor } from "../helpers/comparison_catalogue.js";
+
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -179,7 +181,7 @@ test("an embedded host CSP permits historical resources", async ({ page }) => {
   // The Before theme stylesheet colours the card that the screen used.
   await expect(screen.locator(".accent")).toHaveCSS(
     "color",
-    "rgb(180, 30, 30)",
+    accentColor.Before,
   );
   const violations = await Promise.all(
     page

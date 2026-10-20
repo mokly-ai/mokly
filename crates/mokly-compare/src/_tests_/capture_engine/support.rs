@@ -237,6 +237,21 @@ pub(super) fn generation(
     let routes = RenderGenerationMock::resource_routes
         .each_call(matching!())
         .returns(routes);
+    let collection = RenderGenerationMock::collect_comparison
+        .each_call(matching!(_))
+        .answers(&|mock, collector| {
+            let summary = mock.render_all()?;
+            collector.summary(&summary);
+            for route in mock.plans().keys() {
+                let input = mock.comparison_input(route)?;
+                mock.check_cancelled()?;
+                collector.collect(route, input)?;
+            }
+            Ok(summary)
+        });
+    let cancellation = RenderGenerationMock::check_cancelled
+        .each_call(matching!())
+        .answers(&|_| Ok(()));
     if side == "head" {
         Arc::new(Unimock::new((common, render, read)))
     } else if capture {
@@ -245,11 +260,16 @@ pub(super) fn generation(
             routes,
             generated,
             capture_info,
-            RenderGenerationMock::check_cancelled
-                .each_call(matching!())
-                .answers(&|_| Ok(())),
+            cancellation,
+            collection,
         )))
     } else {
-        Arc::new(Unimock::new((common, read, capture_info)))
+        Arc::new(Unimock::new((
+            common,
+            read,
+            capture_info,
+            cancellation,
+            collection,
+        )))
     }
 }

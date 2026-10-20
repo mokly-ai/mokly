@@ -1,4 +1,4 @@
-//! Ready Changes follows its warnings before the publication warning gate.
+//! Accepted warnings and ready Changes precede normal output installation.
 
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -8,7 +8,7 @@ use mokly_model::review::ReviewResultV8;
 use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 use unimock::Unimock;
 
-use crate::build::{BuildChanges, BuildError};
+use crate::build::BuildChanges;
 use crate::static_build::{Request, StaticBuild};
 
 use super::mocks::mocks;
@@ -44,7 +44,7 @@ pub(super) fn changes() -> BuildChanges {
 }
 
 #[test]
-fn warnings_precede_ready_changes_and_fatal_warnings_prevent_staging() {
+fn accepted_warnings_precede_ready_changes_and_output_installation() {
     let events = Arc::new(Mutex::new(Vec::new()));
     let (builder, mut transaction) = mocks(
         Case {
@@ -65,17 +65,16 @@ fn warnings_precede_ready_changes_and_fatal_warnings_prevent_staging() {
             viewer: vec![],
             repository: Path::new("/repo"),
             publication: None,
-            warnings_are_fatal: true,
         },
         &mut transaction,
     );
-    assert!(matches!(result, Err(BuildError::Warnings)));
+    assert!(result.is_ok(), "{result:?}");
     let events = events.lock().unwrap();
     let warnings = events
         .iter()
         .position(|event| *event == "warnings")
         .unwrap();
     assert_eq!(events[warnings + 1], "changes");
-    assert!(events.contains(&"abandon"));
-    assert!(!events.contains(&"stage") && !events.contains(&"install"));
+    assert!(!events.contains(&"abandon"));
+    assert!(events.contains(&"stage") && events.contains(&"install"));
 }

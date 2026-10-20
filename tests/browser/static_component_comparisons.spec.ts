@@ -1,5 +1,7 @@
 import { expect } from "@playwright/test";
 
+import { accentColor } from "../helpers/comparison_catalogue.js";
+
 import { comparisonPaths, test } from "./comparison_test.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 import { chooseScheme } from "./workspace_actions.js";
@@ -29,8 +31,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
           panes.locator("iframe[data-mokly-comparison-frame]"),
         ).toHaveCount(2);
         for (const [title, color, side] of [
-          ["Before", "rgb(180, 30, 30)", "before"],
-          ["Current", "rgb(30, 60, 180)", "after"],
+          ["Before", accentColor.Before, "before"],
+          ["Current", accentColor.After, "after"],
         ] as const) {
           const frame = panes.locator(
             `iframe[title="${title} — ${viewport} — ${scheme}"]`,

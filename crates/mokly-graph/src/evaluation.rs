@@ -6,8 +6,9 @@ use crate::asset_delivery::AssetRead;
 use crate::cache::Artifact;
 use crate::closure::{ClosureBuilder, GeneratedResources};
 use crate::error::{GraphError, Result, invalid};
-use crate::references;
 use crate::session::Session;
+use crate::session_collection;
+use crate::types::ComparisonDocument;
 use crate::workers::{DocumentWorker, ValidatedView};
 
 impl GeneratedResources for Session {
@@ -52,32 +53,54 @@ impl GeneratedResources for Session {
 
 impl DocumentWorker for Session {
     fn validate(&self, route: &str) -> Result<ValidatedView> {
-        let artifact = self.raw(route)?;
+        session_collection::view(route, &self.validation_input(route, false)?)
+    }
+}
+
+impl Session {
+    pub(crate) fn validation_input(
+        &self,
+        route: &str,
+        capture: bool,
+    ) -> Result<ComparisonDocument> {
+        let artifact = {
+            let span =
+                capture.then(|| tracing::info_span!("review.capture-document", status = "error"));
+            let _scope = span.as_ref().map(tracing::Span::enter);
+            let artifact = self.raw(route)?;
+            if let Some(span) = &span {
+                span.record("status", "ok");
+            }
+            artifact
+        };
         let document = artifact
             .document
             .as_ref()
             .ok_or_else(|| invalid(route, "document has no composed tree"))?;
-        let closure = match self
-            .walker()
-            .collect(route, &document.tree, &document.resources)
-        {
-            Ok(closure) => closure,
-            Err(source) => {
-                return Err(GraphError::Attempt {
-                    failures: vec![source],
-                    warnings: document.warnings.clone(),
-                });
+        let closure = {
+            let span =
+                capture.then(|| tracing::info_span!("review.capture-closure", status = "error"));
+            let _scope = span.as_ref().map(tracing::Span::enter);
+            let closure = match self
+                .walker()
+                .collect(route, &document.tree, &document.resources)
+            {
+                Ok(closure) => closure,
+                Err(source) => {
+                    return Err(GraphError::Attempt {
+                        failures: vec![source],
+                        warnings: document.warnings.clone(),
+                    });
+                }
+            };
+            if let Some(span) = &span {
+                span.record("status", "ok");
             }
+            closure
         };
         self.state
             .cache
             .insert(self.state.plans[route].key.clone(), artifact.clone());
-        Ok(ValidatedView {
-            route: route.into(),
-            anchors: references::anchors(&document.tree),
-            links: document.links.clone(),
-            closure: closure.files,
-            warnings: document.warnings.clone(),
-        })
+        Ok(ComparisonDocument { artifact, closure })
     }
 }

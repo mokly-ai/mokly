@@ -10,6 +10,8 @@
 
 import { expect, type Page } from "@playwright/test";
 
+import { accentColor } from "../helpers/comparison_catalogue.js";
+
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -75,7 +77,7 @@ for (const width of [390, 1280])
       await openRemoved(page, index, comparisonPaths.removedLightOnly);
       await expect(
         screenFrame(page, "desktop").locator("article.accent"),
-      ).toHaveCSS("color", "rgb(180, 30, 30)");
+      ).toHaveCSS("color", accentColor.Before);
     });
 
     test("a removed screen shows its previous frames", async ({

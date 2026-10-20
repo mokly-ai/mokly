@@ -24,7 +24,6 @@ fn success_drains_after_staging_and_rechecks_then_installs_once() {
                 viewer: vec![],
                 repository: Path::new("/repo"),
                 publication: None,
-                warnings_are_fatal: false,
             },
             &mut transaction,
         )
@@ -77,7 +76,6 @@ fn each_preinstall_failure_drains_then_abandons_and_never_installs() {
                         viewer: vec![],
                         repository: Path::new("/repo"),
                         publication: None,
-                        warnings_are_fatal: false
                     },
                     &mut transaction
                 )
@@ -166,13 +164,6 @@ fn cancellation_stop_failures_and_cleanup_failures_keep_their_typed_causes() {
             },
             "install",
         ),
-        (
-            Case {
-                warnings: true,
-                ..Default::default()
-            },
-            "warnings",
-        ),
     ] {
         let events = Arc::new(Mutex::new(Vec::new()));
         let (builder, mut transaction) = mocks(case, events.clone());
@@ -187,7 +178,6 @@ fn cancellation_stop_failures_and_cleanup_failures_keep_their_typed_causes() {
                     viewer: vec![],
                     repository: Path::new("/repo"),
                     publication: None,
-                    warnings_are_fatal: case.warnings,
                 },
                 &mut transaction,
             )
@@ -205,7 +195,6 @@ fn cancellation_stop_failures_and_cleanup_failures_keep_their_typed_causes() {
                 "cleanup"
             }
             BuildError::Viewer => "stop",
-            BuildError::Warnings => "warnings",
             BuildError::Static { .. } => {
                 if case.final_fingerprint_fails || case.input_changes {
                     "recheck"
@@ -219,9 +208,6 @@ fn cancellation_stop_failures_and_cleanup_failures_keep_their_typed_causes() {
         let events = events.lock().unwrap();
         assert_eq!(events.iter().filter(|event| **event == "stop").count(), 1);
         assert_eq!(events.contains(&"abandon"), expected != "install");
-        if expected == "warnings" {
-            assert!(!events.contains(&"assemble"));
-        }
     }
 }
 
@@ -257,7 +243,6 @@ fn publication_reads_its_timestamp_only_when_finalizing_the_metadata() {
                 viewer: vec![],
                 repository: Path::new("/repo"),
                 publication: Some(publication),
-                warnings_are_fatal: true,
             },
             &mut transaction,
         )

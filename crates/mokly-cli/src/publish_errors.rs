@@ -105,10 +105,6 @@ pub fn command(error: &error::Error, style: &Style, redactor: &Redactor, cwd: &P
         } => {
             return uncommitted(paths, *during_build, build_directories, style, redactor);
         }
-        error::Error::BuildWarnings => (
-            Code::BuildInvalid,
-            "The catalogue has build warnings. Fix the reported warnings and retry.",
-        ),
         error::Error::Directory { temporary_root, .. } => {
             let (_, headline, hint) = Code::PublishDirectory.presentation();
             return style.error(

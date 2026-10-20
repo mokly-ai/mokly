@@ -71,8 +71,6 @@ pub struct Request<'a> {
     pub repository: &'a Path,
     /// Publication metadata context, excluding browser identity.
     pub publication: Option<Publication>,
-    /// Publication warnings are fatal according to the isolated policy.
-    pub warnings_are_fatal: bool,
 }
 
 /// Wall clock read only at publication metadata finalization.
@@ -176,9 +174,6 @@ impl Builder {
         self.phases.warnings(&rendered.summary.warnings);
         if !matches!(rendered.summary.changes, BuildChanges::Disabled) {
             self.phases.changes(&rendered.summary.changes);
-        }
-        if request.warnings_are_fatal && !rendered.summary.warnings.is_empty() {
-            return Err(BuildError::Warnings);
         }
         self.phases.start(Phase::Writing);
         let publication = request

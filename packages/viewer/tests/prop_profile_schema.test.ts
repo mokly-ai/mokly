@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { validateControls } from "../src/components/controls.js";
 import { validatePropSchema } from "../src/components/profile_schema.js";
 
 const root = (properties: Record<string, unknown>, extra = {}) => ({
@@ -21,6 +22,36 @@ function rejected(schema: unknown, reason: RegExp): void {
     JSON.stringify(schema),
   );
 }
+
+test("schema and control lengths accept normalized unsafe integers", () => {
+  const maximum = 1000000000000000100;
+  const schema = root({
+    text: { type: "string", maxLength: maximum },
+    list: { type: "array", maxItems: maximum },
+  });
+  validatePropSchema(schema);
+  assert.doesNotThrow(() =>
+    validateControls(schema, {
+      text: { kind: "text", maxLength: maximum },
+    }),
+  );
+});
+
+test("control length validation still rejects fractional and negative counts", () => {
+  const schema = root({ text: { type: "string" } });
+  validatePropSchema(schema);
+  for (const maxLength of [-1, 0.5, Infinity]) {
+    assert.throws(
+      () =>
+        validateControls(schema, {
+          text: { kind: "text", maxLength },
+        }),
+      Number.isFinite(maxLength)
+        ? /expected a nonnegative integer/
+        : /unsupported data value/,
+    );
+  }
+});
 
 test("the profile accepts every keyword within its rule", () => {
   accepted({ type: "object", additionalProperties: false });
