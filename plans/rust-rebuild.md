@@ -433,6 +433,15 @@ readiness rather than blocking this acceptance round on further startup work.
   Recommend A: it handles the named line-ending and LFS cases with a clear
   offline guarantee. The new unavailable-resource case needs approval before
   implementation. Keep raw-blob behaviour until this decision is settled.
+  Hub review finding 6 A (2026-10-20, approved): dependency identity already
+  runs configured Git clean filters for changed manifests and lockfiles via
+  `git hash-object --stdin-paths`. The JavaScript base path uses
+  `SystemWorkingInputs`; the HTML-only path now calls it from
+  `NativeBase::prepare` through `html_dependencies`. Git configuration defines
+  executable filter programs; repository attributes can select those configured
+  filters. Clean filters can reach the network too. Both options must cover
+  dependency identity as well as base-resource checkout conversion. This
+  clarification changes no filter execution and does not settle decision 11.1.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
