@@ -354,6 +354,18 @@ more than re-deriving the behaviour from the requirements.
     This aligns the round 15 specification with the producer and the viewer's
     direct-use flag. Decision: M9 review 10 finding 3A, approved in changes-12.
 
+**Decision 55 B (user, 2026-10-19):** Approve full isolated fixture setup below
+60,000 ms and setup-family RSS below 1.5 GiB, including the setup harness.
+Enforce these budgets after the isolated-install repair rather than retaining
+observation-only results. Full setup includes generation, packing, dependency
+installation, and Git setup. The product build is a separate prerequisite.
+
+**Decision 57 C (user, 2026-10-19):** Keep the current complete-catalogue
+startup design. Approve usable startup below 15,000 ms for the large React
+fixture, cold and warm, on the optimized release binary. HTML retains its
+5,000 ms budget. Defer compilation cache redesign, option A, and partial
+readiness rather than blocking this acceptance round on further startup work.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1857,10 +1869,19 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         peaks: 1,368,268/1,591,676 KiB; whole harness: 2,744,332/3,435,732 KiB.
         Same eight-CPU, 16.25 GiB machine and development build as the M9 repeat.
         Evidence: `.context/m14-measurements/large-react/.context/measurements.json`.
-  - [ ] Resolve the React large-fixture startup budget failure. `graph.prepare`
+  - [x] Resolve the React large-fixture startup budget failure. `graph.prepare`
         took 167.990/167.741 s in the cold/warm development-build observations.
         Profile preparation and repeat with the intended acceptance build profile.
-        Keep the approved usable startup budget below 5000 ms.
+        Apply decision 57 C: React usable startup stays below 15,000 ms on the
+        optimized release build; HTML stays below 5,000 ms.
+    - [x] Enforce variant-specific startup acceptance on a verified release
+          binary and repeat the large React startup measurement.
+          At `caf7b383`, the default React fixture passed at 8.564/8.533 s
+          cold/warm with two sidecars, default deadlines, and a 6 GiB RSS stop.
+          The focused startup selection checked real previews, search, axes,
+          props, cached bytes, and a page. The machine had eight CPUs and
+          16.25 GiB RAM. Evidence: `.context/m14-round3/measurements-summary.json`.
+          Merge preservation: `.context/m14-round3/merge-decisions.md`.
     - [x] Measure optimized startup and profile core, sidecar, and serial work.
           The release baseline at `9257b131` used the same fixture, two sidecars,
           default deadlines, and 6 GiB RSS stop. Cold/warm usable startup:
@@ -1874,10 +1895,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
           discovery took 2 ms. Compilation still took 7.491/7.019 s.
           Both browser checks passed; both startup budget checks failed.
           Evidence: `.context/m14-round2/final/`.
-    - [ ] Choose the remaining startup approach before changing readiness or
-          compilation boundaries. Keep the 5 s budget. Compare reusable
-          compilation units with staged navigation and selected-preview readiness.
-          A persistent cache alone cannot meet the first cold cache miss.
+    - [x] Settle the remaining startup approach with decision 57 C on
+          2026-10-19. Keep complete readiness and approve React startup below
+          15,000 ms on the release build. Defer compilation redesign to the
+          non-blocking follow-up.
   - [x] Connect Changes and watch to their delivered browser events.
         Evidence: `.context/m14-harness/browser-focused.log` and
         `.context/m14-harness/watch-smoke/.context/measurements.json`.
@@ -1931,7 +1952,7 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         tree level. A depth bound or an explicit-stack matcher needs the user's
         decision before implementation (M14 review 5, finding 1).
   - [x] Measure isolated dependency installs and propose additional budgets;
-        retain the approved usable startup budget of under 5000 ms.
+        retain the approved variant-specific usable startup budgets.
         At `0cda750a`, isolated dependency preparation took 28.076/20.160 s with
         cold/warm npm caches, including package packing. `npm ci` took
         7.328/5.446 s. Full fixture setup, including catalogue generation and
@@ -1949,13 +1970,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Evidence: `.context/m14-measurements/install-cold-evidence/summary.json`.
     - [x] Repair single-host isolated setup and record three unmodified installs.
           Evidence: `.context/m14-installs/measurements.json` and `report.md` there.
-  - [ ] Decide proposed isolated-setup budgets after that repair: under 60,000 ms
-        cold and warm, and under 1.5 GiB process-family RSS including the setup
-        harness. Proposal dated 2026-10-19, not approved or enforced. Alternative:
-        retain observation-only results. Recommend the budgets after three
-        unmodified repetitions; these samples leave time and memory headroom.
-        Keep the approved usable startup budget below 5000 ms and leave the
-        separate base dependency preparation allowance unchanged.
+  - [x] Approve isolated-setup budgets after the repair, decision 55 B on
+        2026-10-19: under 60,000 ms and under 1.5 GiB setup-family RSS,
+        including the setup harness.
+    - [x] Enforce both isolated-setup budgets with synthetic boundary tests
+          and repeat one complete isolated install.
+          At `caf7b383`, full React fixture setup took 23.567 s with an empty
+          dedicated npm cache. Setup-family RSS peaked at 821,160 KiB across
+          472 samples at 50 ms intervals. Both budgets passed. Product release
+          preparation preceded measurement; installed binary verification passed.
+          Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
@@ -2426,6 +2450,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Bring large React usable startup under 5,000 ms
+      (compilation cache redesign, decision 57 option A); measured 10.5 s
+      on the release build on 2026-10-19.
 
 - [ ] Replace the Intel macOS release runner before GitHub retires its Intel
       images, preserving native build and execution coverage.

@@ -327,6 +327,9 @@ watched publication and disclosure cases.
 small HTML and React inputs. They verify native base preparation, delivered
 Changes, event identity, visible reloads, and restoration of edited sources.
 They use the suite browser and assert outcomes without timing budgets.
+`large_startup` checks real preview and prop behavior while Changes is
+unavailable. The focused probe completes; the full Serve probe reports the
+unavailable comparison. The test applies no elapsed-time budget.
 `large_watch_failure` holds restoration pending after the owned server exits.
 It requires the harness to close its context and finish restoration before return.
 

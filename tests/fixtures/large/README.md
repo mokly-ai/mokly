@@ -32,10 +32,20 @@ and runs an isolated install. Only the host native package needs a built binary.
 Other native archives carry their available metadata and remain optional.
 Their platform selectors prevent installation on the host. Local overrides
 keep all five targets in the consumer lockfile without registry publication.
-Its setup time is separate from the benchmark.
+Full isolated setup must finish below 60000 ms and stay below 1.5 GiB sampled
+RSS for the setup harness and its descendants. Both limits are exclusive.
+Setup includes generation, package archives, npm, and Git. Product builds
+finish before the setup clock and RSS sampler start. Workspace reuse has no
+isolated-setup budget. Setup writes its result and samples to `.context/setup.json`,
+also when installation or a budget fails. A budget failure exits unsuccessfully
+after preserving the complete fixture record. Setup time is separate from Serve.
 
 The four scenarios are `build`, `serve`, `changes`, and `watch`. Use `all` to
 select all four. Serve checks navigation search, real previews, both axes, live props, and a page.
+Use `--scenario startup` for focused cold/warm startup acceptance. It keeps
+those browser checks and the real base, but does not wait for Changes or review
+availability. Its result omits those measurements. `all` keeps the four complete
+scenarios; `serve` includes delivered Changes and available review.
 Cold and warm runs each use a new Serve process and browser context.
 Both keep the native comparison caches. Cold means application-cold, not an
 empty disk cache. Serve prepares the pinned fixture base through M9: HTML
@@ -64,7 +74,13 @@ It samples aggregate RSS. `--memory-stop-kib` defaults to 1750000; use 0 to
 disable it. React Serve needs a larger stop on a machine with more memory.
 Do not raise the stop on a shared machine without sufficient capacity.
 A safety stop records failure and keeps completed measurements and diagnostics.
-The opt-in benchmark fails if usable startup is at or above 5000 ms.
+Startup acceptance uses an optimized release native binary. Before a Serve
+benchmark, workspace mode builds that binary and installs it in the host
+native package. Isolated generation builds it before packing, outside setup
+timing. An installed fixture verifies its recorded binary digest before Serve.
+Each startup result records the release profile, target, source, and digest.
+The opt-in benchmark fails at or above 5000 ms for HTML or 15000 ms for React,
+for both cold and warm startup.
 
 Sidecar deadlines use their normal contract unless `--sidecar-timeout-ms` is
 set. Reports record this override, `MOKLY_SIDECAR_TIMEOUT_MS`, `NODE_OPTIONS`,
