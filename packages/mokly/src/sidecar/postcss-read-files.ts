@@ -36,8 +36,9 @@ function options(value: unknown): ReadOptions | undefined {
     (typeof encoding !== "string" || !Buffer.isEncoding(encoding))
   )
     return undefined;
+  fields.encoding = { ...fields.encoding, value: null };
   return {
-    raw: { ...value, encoding: null },
+    raw: Object.create(Object.getPrototypeOf(value), fields),
     ...(typeof encoding === "string" && Buffer.isEncoding(encoding)
       ? { encoding }
       : {}),

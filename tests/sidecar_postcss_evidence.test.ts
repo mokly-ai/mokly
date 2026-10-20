@@ -112,3 +112,58 @@ for(const file of ['opaque.txt','partial.txt','both.txt']) result.messages.push(
     digest("first"),
   ]);
 });
+
+test("PostCSS preserves non-enumerable read flags, signals, and encodings", async (context) => {
+  const { base } = await sidecarSources(context);
+  const raw = Buffer.from([0xff]);
+  for (const file of ["accepted.bin", "rejected.bin"])
+    await fs.writeFile(path.join(base, file), raw);
+  await fs.writeFile(
+    path.join(base, "postcss.mjs"),
+    `
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {readFile} from 'node:fs/promises';
+const readers={
+  sync:(file,options)=>fs.readFileSync(file,options),
+  callback:(file,options)=>new Promise((resolve,reject)=>fs.readFile(file,options,(error,bytes)=>error?reject(error):resolve(bytes))),
+  promise:readFile,
+};
+export default {plugins:[{postcssPlugin:'options',async Once(root){
+for(const prototype of [Object.prototype,null]) {
+  const options=fields=>Object.preventExtensions(Object.create(prototype,Object.fromEntries(
+    Object.entries(fields).map(([name,value])=>[name,{value}])
+  )));
+  for(const [name,read] of Object.entries(readers)) {
+    const invalid=options({encoding:'utf8',flag:'invalid'});
+    await assert.rejects(async()=>read('rejected.bin',invalid),{code:'ERR_INVALID_ARG_VALUE'});
+    assert.equal(invalid.flag,'invalid');
+    assert.equal(invalid.encoding,'utf8');
+    if(name!=='sync') {
+      const aborted=options({encoding:'utf8',signal:AbortSignal.abort()});
+      await assert.rejects(async()=>read('rejected.bin',aborted),{code:'ABORT_ERR'});
+      assert.equal(aborted.signal.aborted,true);
+    }
+    const accepted=options({encoding:'latin1',flag:'r'});
+    const descriptors=Object.getOwnPropertyDescriptors(accepted);
+    assert.equal(await read('accepted.bin',accepted),'ÿ');
+    assert.deepEqual(Object.getOwnPropertyDescriptors(accepted),descriptors);
+    assert.equal(Object.getPrototypeOf(accepted),prototype);
+  }
+}
+root.append({prop:'options',value:'preserved'});
+}}]};`,
+  );
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({ sourceRoot: base, repositoryRoots: [], text: "a{}" }),
+  );
+  assert.match(result.text, /options: preserved/u);
+  assert.equal(result.readEvidence.coverage, "incomplete");
+  assert.deepEqual(versions(result, path.join(base, "rejected.bin")), []);
+  assert.deepEqual(versions(result, path.join(base, "accepted.bin")), [
+    digest(raw),
+  ]);
+});
