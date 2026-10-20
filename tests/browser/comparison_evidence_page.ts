@@ -12,8 +12,13 @@ export const OUTSIDE_LEAD =
   "These changed styles also apply outside the changed components on this screen:";
 export const UNRESOLVED_LEAD =
   "This change can apply anywhere on the screen, so the screen stays in Changes:";
+/** The sentence of an unresolved change without selectors. */
+export const UNNAMED_LEAD =
+  "This change can apply anywhere on the screen, so the screen stays in Changes.";
 export const EXCLUDED_LEAD =
   "This stylesheet changed, but none of the changed styles apply to this screen.";
+export const VARIANT_EXCLUDED_LEAD =
+  "This stylesheet changed, but none of the changed styles apply to this variant.";
 export const EXAMINED_LEAD = "Examined and excluded:";
 export const SCREEN_TERMINAL = "No changes to this screen.";
 export const COMPONENT_FILES_LEAD =
@@ -103,8 +108,9 @@ export function evidenceFiles(scope: Locator): Promise<EvidenceFile[]> {
 }
 
 /**
- * The card's spacing: the first file's nested sentence and style list, and
- * the first paragraph after a list. An absent part reads as an empty string.
+ * The card's spacing: its first paragraph and list, the first file's nested
+ * sentence and style list, and the first paragraph after a list. An absent
+ * part reads as an empty string.
  */
 export function evidenceSpacing(scope: Locator) {
   return scope.evaluate((panel) => {
@@ -113,6 +119,8 @@ export function evidenceSpacing(scope: Locator) {
       return element ? getComputedStyle(element).marginTop : "";
     };
     return {
+      paragraph: margin("p"),
+      list: margin("ul"),
       sentence: margin(".mbk-evidence-files > li > p"),
       styles: margin(".mbk-evidence-files > li > ul"),
       afterList: margin("ul + p"),

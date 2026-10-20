@@ -5,14 +5,19 @@
  * its stylesheets once with the page copy, repeats the design's outcomes and
  * spacing, keeps its last style reachable on a short screen, and keeps the
  * same facts across navigation. The unchanged notes page lists its examined
- * stylesheet and ends with its terminal line.
+ * stylesheet and ends with its terminal line. The unchanged catalog page,
+ * whose only changed style reaches it through a Card instance, shows that
+ * style and links no changed component, because a page has no usage records.
  */
 
 import path from "node:path";
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { pageStylesheets } from "../helpers/comparison_evidence_groups.js";
+import {
+  configuredStylesheets,
+  pageStylesheets,
+} from "../helpers/comparison_evidence_groups.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import {
@@ -25,19 +30,26 @@ import {
   PAGE_OUTSIDE_LEAD,
   PAGE_TERMINAL,
   PAGE_UNRESOLVED_LEAD,
+  SHARED,
   evidenceFiles,
   evidenceSpacing,
   openPageEvidence,
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { chooseFilter, navRow } from "./comparison_ui.js";
+import {
+  changesPaths,
+  chooseFilter,
+  comparisonIndex,
+  navRow,
+} from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
 
 const HANDBOOK = comparisonPaths.changedPage;
 const NOTES = comparisonPaths.unchangedPage;
+const CATALOG = comparisonPaths.componentPage;
 const HANDBOOK_FILES: EvidenceFile[] = [
   [pageStylesheets.actions, [[PAGE_OUTSIDE_LEAD, [".action"]]]],
   [
@@ -109,7 +121,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(PAGE_FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      expect(await evidenceSpacing(evidence)).toEqual({
+      expect(await evidenceSpacing(evidence)).toMatchObject({
         sentence: "8px",
         styles: "8px",
         afterList: "14px",
@@ -144,7 +156,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       expect(approved.map(([, outcomes]) => outcomes)).toEqual(
         HANDBOOK_FILES.map(([, outcomes]) => outcomes),
       );
-      expect(await evidenceSpacing(card)).toEqual(spacing);
+      expect(await evidenceSpacing(card)).toMatchObject({
+        sentence: spacing.sentence,
+        styles: spacing.styles,
+        afterList: spacing.afterList,
+      });
       await expect(
         page.locator(".mbk-screen-head .ce-change-status"),
       ).toHaveText("Changed");
@@ -165,6 +181,34 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ]);
       await expect(evidence.locator("li")).toHaveText([pageStylesheets.notes]);
       await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
+    });
+
+    test("a page that uses a changed component shows its styles and links no component", async ({
+      page,
+    }) => {
+      await page.goto(`/view/${CATALOG}/`);
+      await expect(headStatus(page)).toHaveText("Unmodified");
+      const evidence = await openPageEvidence(page);
+      await expect
+        .poll(() => evidenceFiles(evidence))
+        .toEqual([
+          [configuredStylesheets.theme, [[PAGE_MATCHED_LEAD, [".accent"]]]],
+        ]);
+      await expect(evidence.locator(":scope > p")).toHaveText([
+        BASE,
+        PAGE_FILES_LEAD,
+        PAGE_TERMINAL,
+      ]);
+      await expect(evidence).not.toContainText(/Changed component/u);
+      await expect(evidence).not.toContainText(SHARED);
+      // Card's Usage lists its consumers, and a page is none of them.
+      await page.goto(`/view/${comparisonPaths.component}/`);
+      await page.getByRole("tab", { name: "Usage", exact: true }).click();
+      const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+      await expect(
+        usage.locator('[data-usage-section="used-by"]').getByRole("link"),
+      ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
+      await expect(usage).not.toContainText("Catalog");
     });
   });
 }
@@ -191,12 +235,16 @@ test.describe("whole-page evidence across navigation", () => {
 
   test("Changes lists the document and its Details keep the same facts", async ({
     page,
+    request,
+    baseURL,
   }) => {
+    const included = changesPaths(await comparisonIndex(request, baseURL));
+    expect(included).toContain(HANDBOOK);
     await openHandbook(page);
     await chooseFilter(page, "changed");
     await expect(
       page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
-    ).toHaveText("29");
+    ).toHaveText(String(included.length));
     await expect(navRow(page, HANDBOOK)).toBeVisible();
     await expect(navRow(page, NOTES)).toBeHidden();
     expect(await evidenceFiles(page.locator("[data-page-evidence]"))).toEqual(

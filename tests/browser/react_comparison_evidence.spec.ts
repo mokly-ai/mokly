@@ -67,7 +67,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(evidence).not.toContainText("react/rule.css");
     });
 
-    test("a wrapper-only saved view row names its own styles and no consumers", async ({
+    test("a wrapper-only saved view row names its own styles and no affected consumers", async ({
       page,
     }) => {
       for (const route of [paths.badgeVariant, paths.badge]) {

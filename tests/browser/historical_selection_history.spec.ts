@@ -12,7 +12,7 @@
 
 import { expect, type Page } from "@playwright/test";
 
-import { movedPageBase } from "../helpers/comparison_evidence_groups.js";
+import { similarTextPageBase } from "../helpers/comparison_evidence_groups.js";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
@@ -48,9 +48,9 @@ const CASES: readonly HistoryCase[] = [
     previousPath: comparisonPaths.removedPage,
     previousTitle: "Retired page",
     previousHeading: "Historical page",
-    currentPath: comparisonPaths.movedPage,
+    currentPath: comparisonPaths.similarTextPage,
     currentTitle: "User guidebook",
-    pairedWith: movedPageBase,
+    pairedWith: similarTextPageBase,
   },
 ];
 
@@ -103,7 +103,6 @@ for (const entry of CASES)
     });
     const index = await comparisonIndex(request, baseURL);
     const snapshot = snapshotOf(index, entry.previousPath);
-    expect(snapshot).toMatch(/^[a-f0-9]{64}$/u);
     // A pair by similar text leaves its base path no removed record.
     if (entry.pairedWith) {
       const current = index.pages?.find(

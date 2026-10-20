@@ -13,6 +13,7 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
+import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import {
@@ -39,18 +40,15 @@ import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
 
-const THEME = "static/mokly-generated/styles/theme.css";
-const CARD_CSS = "static/mokly-generated/styles/card.css";
-const CHANGED_CSS = "static/mokly-generated/styles/changed.css";
 const CARD_FILES: EvidenceFile[] = [
   [
-    CARD_CSS,
+    sheets.card,
     [
       [COMPONENT_LEAD, [".accent"]],
       [SAVED_VIEW_UNRESOLVED_LEAD, [":root"]],
     ],
   ],
-  [THEME, [[COMPONENT_LEAD, [".accent"]]]],
+  [sheets.theme, [[COMPONENT_LEAD, [".accent"]]]],
 ];
 /** The design branch point, which names the example's own base. */
 const DESIGN_BASE = "Compared with the branch point on origin/main.";
@@ -89,7 +87,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ).toBeVisible();
       await expect
         .poll(() => evidenceFiles(evidence))
-        .toEqual([[THEME, [[COMPONENT_LEAD, [".accent"]]]]]);
+        .toEqual([[sheets.theme, [[COMPONENT_LEAD, [".accent"]]]]]);
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
@@ -125,8 +123,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([
-          [CHANGED_CSS, [[UNRESOLVED_LEAD, [":root"]]]],
-          [THEME, [[OUTSIDE_LEAD, [".accent"]]]],
+          [sheets.changed, [[UNRESOLVED_LEAD, [":root"]]]],
+          [sheets.theme, [[OUTSIDE_LEAD, [".accent"]]]],
         ]);
       const served = await evidenceSpacing(evidence);
       await page.goto(
@@ -156,7 +154,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       const evidence = await openEvidence(page);
       await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
       await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
-      await expect(evidence.locator("li")).toHaveText([THEME]);
+      await expect(evidence.locator("li")).toHaveText([sheets.theme]);
       await expect(page.locator("[data-current-screen]")).toBeVisible();
       await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
       await expect(

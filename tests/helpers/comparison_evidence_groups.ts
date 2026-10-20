@@ -4,8 +4,10 @@
  * evidence specs: a changed handbook page whose stylesheets change, with an
  * Action instance that the shared sheet also styles on Action's own
  * documents; an unchanged notes page whose stylesheet change matches nothing
- * on it; a page that moves to a new path with similar text; a Toolbar that
- * consumes Card; and a stylesheet that only Card's own documents link.
+ * on it; a page that moves to a new path with similar text; an unchanged
+ * page whose only changed style reaches it through a Card instance; a
+ * Toolbar that consumes Card; and a stylesheet that only Card's own
+ * documents link.
  */
 
 import fs from "node:fs/promises";
@@ -19,19 +21,30 @@ type Side = "Before" | "After";
 export const evidencePaths = {
   changedPage: "pages/handbook",
   unchangedPage: "pages/notes",
-  movedPage: "pages/guidebook",
+  similarTextPage: "pages/guidebook",
+  componentPage: "pages/catalog",
   pageComponent: "components/action",
   consumingComponent: "components/toolbar",
 } as const;
 
 /** The moved page's path at the fixture base; it has no removed record. */
-export const movedPageBase = "pages/manual";
+export const similarTextPageBase = "pages/manual";
 
 /** The evidence groups' stylesheet rules, before the catch-all rule. */
 export const evidenceStylesheets = [
   { match: "components/action/**", stylesheets: ["theme.css", "actions.css"] },
   { match: "components/card/**", stylesheets: ["theme.css", "card.css"] },
 ];
+
+/** The default copy's configured stylesheets, as the shell names them. */
+export const configuredStylesheets = {
+  theme: "static/mokly-generated/styles/theme.css",
+  changed: "static/mokly-generated/styles/changed.css",
+  dusk: "static/mokly-generated/styles/dusk.css",
+  card: "static/mokly-generated/styles/card.css",
+  fade: "static/mokly-generated/styles/fade.css",
+  compact: "static/mokly-generated/styles/compact.css",
+} as const;
 
 /** The stylesheets that the pages link, as the shell names them. */
 export const pageStylesheets = {
@@ -84,6 +97,16 @@ export async function writeEvidenceGroups(
       '<article><h1>Getting started</h1><h2>Next steps</h2><p><span class="action">Open</span></p></article><ui-action label="Continue"></ui-action>',
     ),
   );
+  // The catalog page uses Card; only Card's own element matches the theme.
+  await write(
+    root,
+    "specs/pages/catalog.page.html",
+    page(
+      "Catalog",
+      ["../../styles/theme.css"],
+      '<main><h1>Catalog</h1><ui-card label="Catalog card"></ui-card></main>',
+    ),
+  );
   // The notes sheet changes a rule that matches nothing on its page.
   await write(root, "styles/notes.css", `.missing { color: ${tone(side)}; }\n`);
   await write(
@@ -111,14 +134,14 @@ export async function writeEvidenceGroups(
   if (side === "Before")
     await write(
       root,
-      `specs/${movedPageBase}.page.html`,
+      `specs/${similarTextPageBase}.page.html`,
       manual("User manual"),
     );
   else {
-    await fs.rm(path.join(root, `specs/${movedPageBase}.page.html`));
+    await fs.rm(path.join(root, `specs/${similarTextPageBase}.page.html`));
     await write(
       root,
-      `specs/${evidencePaths.movedPage}.page.html`,
+      `specs/${evidencePaths.similarTextPage}.page.html`,
       manual("User guidebook"),
     );
   }

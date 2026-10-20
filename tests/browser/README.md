@@ -78,7 +78,8 @@ copied output; the source repository and first output are removed.
 | `taskListVariant`      | `components/tasks/list`: a changed variant of that parent                                                                                                                                                                                                                                                                                              |
 | `changedPage`          | `pages/handbook`: a changed page with an Action instance and its own `.action` element; it links `actions.css`, whose `.action` rule also changes `components/action`, and its own `styles/handbook.css` with a heading rule and an unresolved `:root` rule                                                                                            |
 | `unchangedPage`        | `pages/notes`: an unmodified page whose own `styles/notes.css` changes a rule that matches nothing on it                                                                                                                                                                                                                                               |
-| `movedPage`            | `pages/guidebook`: a changed page that pairs with `pages/manual` by similar text, so `pages/manual` has no removed record                                                                                                                                                                                                                              |
+| `similarTextPage`      | `pages/guidebook`: a changed page that pairs with `pages/manual` by similar text, so `pages/manual` has no removed record                                                                                                                                                                                                                              |
+| `componentPage`        | `pages/catalog`: an unmodified page whose only changed style, `.accent`, reaches it through a `ui-card` instance; a page has no usage records, so Card does not list it                                                                                                                                                                                |
 | `pageComponent`        | `components/action`: changed through `actions.css`, which its own documents also link                                                                                                                                                                                                                                                                  |
 | `consumingComponent`   | `components/toolbar`: consumes `ui-card`, so it is an affected consumer outside Changes                                                                                                                                                                                                                                                                |
 | `component`            | `components/card`: changes through `theme.css` and its own `card.css`, which also changes an unresolved `:root` rule; Usage lists both consumer screens, Toolbar, and the removed `screens/former` as affected                                                                                                                                         |
@@ -96,6 +97,11 @@ copied output; the source repository and first output are removed.
 
 The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
+`comparison_evidence_page.ts` holds the Details copy and readers that the
+stylesheet Details specs share. Its readers require one Comparison details
+heading and exactly one changed-files list. `configuredStylesheets` and
+`pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
+stylesheets as the shell shows them.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
 panes contract requires, on the copied output and in an embedded viewer
 through both frame adapters.
@@ -181,7 +187,10 @@ Viewer journeys on this copy register shared case modules.
 `static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
 Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
 viewer over this copy through both frame adapters. Each host passes a
-`MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`MovedHost` from `moved_rows.ts`, which extends the `EntryHost` of
+`entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
+page path it shows for that entry. An embedded host keeps `/viewer.html`, so
+a link that leaves the viewer for the standalone shell fails the case.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
 
@@ -190,8 +199,7 @@ desktop and mobile widths: `branch_point_comparison_ui.spec.ts` on this copy,
 `viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
 through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
-a `BranchPointHost` from `branch_point_ui.ts`, which says how the host opens
-an entry and whether its address follows the entry.
+an `EntryHost`.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
