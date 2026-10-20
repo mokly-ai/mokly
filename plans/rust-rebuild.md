@@ -2534,6 +2534,12 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         watch test and record the limit. It replaces F17 decision 1 B. F20
         item 1 reverts the split from `a1c8259c`, keeps the 300-second guard,
         and records the accepted exception in `docs/protocol/ci-test-timing.md`.
+  - [x] User decision 67 (2026-10-20): A, delete the unused test helpers
+        `tests/helpers/watched_events.ts`, `watched_catalogue.ts`,
+        `operation_counts.ts`, and `operation_count_cases.ts` with their own
+        five tests, and remove the operation counting helper section of
+        `docs/protocol/ci-test-timing.md`. Done in F20 item 2. Search record:
+        `.context/m10/f20/item2-searches.txt`.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
