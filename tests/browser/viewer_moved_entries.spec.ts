@@ -41,5 +41,5 @@ for (const adapter of ["same-origin", "cross"] as const)
     const host = embeddedMovedHost(adapter);
     registerMovedRowCases(test, host);
     registerMovedComponentCases(test, host);
-    registerMovedComparisonCases(test, host, true);
+    registerMovedComparisonCases(test, host);
   });

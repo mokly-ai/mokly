@@ -50,13 +50,12 @@ async function sideBySide(page: Page, host: MovedHost): Promise<void> {
 }
 
 /**
- * Register the moved screen comparison on `host`, which `test` serves.
- * `variant` adds the moved component variant's comparison.
+ * Register the moved screen and moved component variant comparisons on
+ * `host`, which `test` serves.
  */
 export function registerMovedComparisonCases(
   test: typeof baseTest,
   host: MovedHost,
-  variant: boolean,
 ): void {
   test("a moved screen compares with the version at its previous path in every mode", async ({
     page,
@@ -98,17 +97,16 @@ export function registerMovedComparisonCases(
     );
   });
 
-  if (variant)
-    test("a moved component variant compares with its version at the previous path", async ({
+  test("a moved component variant compares with its version at the previous path", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await host.open(page, moves.nestedMovedVariant);
+    await sideBySide(page, host);
+    await expectBothSides(
       page,
-    }) => {
-      await page.setViewportSize({ width: 1280, height: 900 });
-      await host.open(page, moves.nestedMovedVariant);
-      await sideBySide(page, host);
-      await expectBothSides(
-        page,
-        [`${PREVIOUS}/action/iconic`, moves.nestedMovedVariant],
-        [/>arrow</u, />chevron</u],
-      );
-    });
+      [`${PREVIOUS}/action/iconic`, moves.nestedMovedVariant],
+      [/>arrow</u, />chevron</u],
+    );
+  });
 }
