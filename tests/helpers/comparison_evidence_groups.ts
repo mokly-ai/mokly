@@ -4,8 +4,10 @@
  * evidence specs: a changed handbook page whose stylesheets change, with an
  * Action instance that the shared sheet also styles on Action's own
  * documents; an unchanged notes page whose stylesheet change matches nothing
- * on it; a page that moves to a new path with similar text; a Toolbar that
- * consumes Card; and a stylesheet that only Card's own documents link.
+ * on it; a page that moves to a new path with similar text; an unchanged
+ * page whose only changed style reaches it through a Card instance; a
+ * Toolbar that consumes Card; and a stylesheet that only Card's own
+ * documents link.
  */
 
 import fs from "node:fs/promises";
@@ -20,6 +22,7 @@ export const evidencePaths = {
   changedPage: "pages/handbook",
   unchangedPage: "pages/notes",
   similarTextPage: "pages/guidebook",
+  componentPage: "pages/catalog",
   pageComponent: "components/action",
   consumingComponent: "components/toolbar",
 } as const;
@@ -92,6 +95,16 @@ export async function writeEvidenceGroups(
       "Getting started",
       ["../../styles/actions.css", "../../../styles/handbook.css"],
       '<article><h1>Getting started</h1><h2>Next steps</h2><p><span class="action">Open</span></p></article><ui-action label="Continue"></ui-action>',
+    ),
+  );
+  // The catalog page uses Card; only Card's own element matches the theme.
+  await write(
+    root,
+    "specs/pages/catalog.page.html",
+    page(
+      "Catalog",
+      ["../../styles/theme.css"],
+      '<main><h1>Catalog</h1><ui-card label="Catalog card"></ui-card></main>',
     ),
   );
   // The notes sheet changes a rule that matches nothing on its page.

@@ -34,6 +34,7 @@ const defaultStates = {
   [paths.changedPage]: changed,
   [paths.unchangedPage]: stable,
   [paths.similarTextPage]: changed,
+  [paths.componentPage]: stable,
   [paths.pageComponent]: changed,
   [paths.consumingComponent]: stable,
 };
