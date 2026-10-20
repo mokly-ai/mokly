@@ -39,8 +39,23 @@ interface ExcludedStylesFixture {
   excludedStylesheets: readonly string[];
 }
 
+/**
+ * An entry that changed components affect, with no Changes row of its own: it
+ * has no reasons, its views stay unchanged, and they keep the component-owned
+ * style records that Details read as files.
+ */
+interface AffectedFixture {
+  status: "unmodified";
+  affected: true;
+  stylesheets: readonly StylesheetEvidence[];
+  changedComponents: readonly {
+    title: string;
+    to: ComponentDesignDestination;
+  }[];
+}
+
 export type ComparisonFixture =
-  ChangedComparisonFixture | ExcludedStylesFixture;
+  ChangedComparisonFixture | ExcludedStylesFixture | AffectedFixture;
 
 /** Paired synthetic values also supply the current screen and its Props panel. */
 export const footerLabelChange = {
@@ -107,7 +122,7 @@ const componentComparisons: Partial<
 };
 
 const screenComparisons: Partial<
-  Record<ScreenPageState, ChangedComparisonFixture>
+  Record<ScreenPageState, ChangedComparisonFixture | AffectedFixture>
 > = {
   /** A caller-owned prop changes the instance's props digest, so it is material. */
   "direct-change": {
@@ -119,6 +134,23 @@ const screenComparisons: Partial<
     ],
   },
   "removed-consumer": { status: "removed", reasons: ["removed"] },
+  /** Welcome under Action's styles story: Action owns every changed match. */
+  "affected-screen": {
+    status: "unmodified",
+    affected: true,
+    stylesheets: [
+      {
+        path: ACTION_STYLES,
+        outcomes: [{ lead: SCREEN_STYLE_COPY.matched, selectors: [".action"] }],
+      },
+    ],
+    changedComponents: [
+      {
+        title: "Action",
+        to: "design/components/states/shared-impact/style-changed",
+      },
+    ],
+  },
   "style-outside": {
     status: "changed",
     reasons: ["dependency"],

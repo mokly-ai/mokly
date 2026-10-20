@@ -14,6 +14,14 @@ export const SCREEN_STYLE_COPY = {
     "This stylesheet changed, but none of the changed styles apply to this screen.",
   noChanges: "No changes to this screen.",
   stylesChanged: "Styles this screen uses changed",
+  /**
+   * The comparison pane heading of an unchanged view that changed components
+   * affect. The viewer follows it; no artboard draws that comparison yet.
+   */
+  componentsChanged: "Components this screen uses changed",
+  /** Details of an entry that only changed components affect end with it. */
+  sharedImpact:
+    "Shared component changes affect this preview. This page has no independent entry in Changes.",
 } as const;
 
 /** The same evidence recast for a component and its saved variants. */
@@ -23,6 +31,7 @@ export const COMPONENT_STYLE_COPY = {
   excluded:
     "This stylesheet changed, but none of the changed styles apply to this variant.",
   stylesChanged: "Styles this variant uses changed",
+  componentsChanged: "Components this variant uses changed",
 } as const;
 
 /**

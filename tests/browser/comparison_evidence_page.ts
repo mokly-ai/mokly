@@ -21,6 +21,8 @@ export const VARIANT_EXCLUDED_LEAD =
   "This stylesheet changed, but none of the changed styles apply to this variant.";
 export const EXAMINED_LEAD = "Examined and excluded:";
 export const SCREEN_TERMINAL = "No changes to this screen.";
+export const SHARED_IMPACT =
+  "Shared component changes affect this preview. This page has no independent entry in Changes.";
 export const COMPONENT_FILES_LEAD =
   "Changes to these files may affect this component:";
 export const COMPONENT_LEAD = "Changed styles that apply to this component:";

@@ -14,6 +14,7 @@ import {
   OUTSIDE_LEAD,
   SAVED_VIEW_UNRESOLVED_LEAD,
   SCREEN_TERMINAL,
+  SHARED_IMPACT,
   UNRESOLVED_LEAD,
   VARIANT_EXCLUDED_LEAD,
   VARIANT_TERMINAL,
@@ -153,7 +154,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(navRow(page, comparisonPaths.unchanged)).toBeHidden();
     });
 
-    test("an affected-only screen keeps its full styles without a row of its own", async ({
+    test("an affected-only screen keeps its full styles and explains the shared change", async ({
       page,
       request,
       baseURL,
@@ -170,9 +171,12 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toBeVisible();
+      // The shared-component sentence closes Details in place of the
+      // no-changes line, because Card changes how the screen renders.
+      await expect(evidence.locator("p").last()).toHaveText(SHARED_IMPACT);
       await expect(
         evidence.getByText(SCREEN_TERMINAL, { exact: true }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(
         page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
       ).toHaveText(String(included.length));

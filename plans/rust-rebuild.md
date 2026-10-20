@@ -434,6 +434,43 @@ follow-up list, not the architecture decisions above.
   `resolveLinkPath`, and `effectiveColorSchemes`. This record authorizes those
   completed removals and makes no additional code change.
 
+**Decision log items applied by default (user rule), 2026-10-20:** the user
+did not answer these items of the orchestrator's decision log, so the named
+option applies under the user's rule. Milestones 10.1 and 10.2 apply them.
+
+- Item 17 A: accept the settled controls copy and states of the design
+  catalogue, and adopt the controls mockup's rows with a label column in the
+  viewer now. This approves the presentation change of the Milestone 10 copy
+  work and the field layout.
+- Item 24 A: below 760px, each use-case step shows its mobile view in a phone
+  frame, as the use-case mockup does; the viewer and the
+  [device chrome contract](../docs/protocol/mokly-shell-device-chrome.md)
+  follow.
+- Item 25 B: the component design and the mockups adopt the viewer's fixed
+  1024px desktop canvas, so a component's desktop view has one layout width
+  in every window.
+- Item 32 A: Details explain a screen or component that only changed
+  components affect when the review lists it in `affected` or a shown view
+  keeps a component-owned record, in place of the no-changes line; the records
+  page states that such an entry keeps `unchanged` views; the pane heading of
+  such a view reads “Components this screen uses changed” (“variant” for a
+  component); the design state comes first.
+- Item 35 A: the `implementation` reason reads “Rendered content changed where
+  this component is used.”, and the design catalogue depicts it.
+- Item 38 C: a view reads the style-only heading when the entry has a reason,
+  every reason is a `dependency`, each named path has a rule of any status on
+  the view, and at least one named path has a `matched` or `unresolved` rule
+  on the view.
+- Item 42 A: comparisons adopt the design catalogue's missing-pane copy, and
+  the [pane contract](../docs/protocol/mokly-comparison-panes.md#layout)
+  names it.
+
+**Decision log item 34 A (approved by the user, decision 34 A, 2026-10-20):**
+delete the dead shell path `ShellContext.componentChanges` in
+`packages/viewer/src/shell`, which only the deleted TypeScript backend set,
+and the tests that reach their copy only through it. The live-path tests cover
+the same copy.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -519,7 +556,8 @@ through Decision 27.
   trait seams, `dyn` dispatch,
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
-**Non-goals of this plan:** changing the viewer's presentation;
+**Non-goals of this plan:** changing the viewer's presentation beyond the
+design defaults of decision log items 17, 24, and 32;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -1669,6 +1707,41 @@ and the sweep renames: `.context/rust-rebuild/delegation/m10-d1/report-f10.md`.
 
 - [ ] Commit.
 
+## Milestone 10.1: Decision defaults in the designs
+
+Tags: mockup
+
+- [x] Item 32 A: depict an unchanged screen that a changed component affects,
+      reached from that component's Affected screens, with its Details
+      explanation: `design/components/states/shared-impact/affected-screen`.
+      The shell offers no comparison for such a screen, so no artboard draws
+      its pane heading; the open decision on affected-only comparisons under
+      the final review TODO owns that depiction.
+- [x] Item 25 B: draw the desktop component canvas at the fixed 1024px layout
+      width, and state it in the component design.
+- [x] Item 35 A: confirm that the design catalogue depicts the
+      `implementation` sentence. Already done:
+      `design/components/states/shared-impact/style-changed` reads it, and
+      the component workspace design and the viewer use the same sentence.
+- [x] Run the mockup check and smoke-test the changed pages through Serve.
+      Evidence: `.context/defaults-viewer/` (mockup check logs and shots).
+
+## Milestone 10.2: Decision defaults in the viewer
+
+Tags: ui
+
+- [x] Item 42 A: show the design catalogue's missing-pane copy.
+- [x] Item 38 C: apply the style-only heading rule of any rule status.
+- [x] Item 32 A: explain affected-only entries in Details and their
+      comparison pane heading; fix the records sentence.
+- [x] Item 24 A: show each use-case step's mobile view in a phone frame below
+      760px.
+- [x] Item 17 A: lay out the prop controls as rows with a label column. The
+      settled copy and states were already in the viewer.
+- [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
+      move the copy checks that reached Details through it to live inputs.
+- [ ] Pass the complete gate on the final commit, push the branch, and report.
+
 ## Milestone 11: Watch and incremental rendering
 
 - [x] Reuse unchanged encoded details across watched generation rebuilds
@@ -2655,8 +2728,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Milestone 5: settled on 2026-10-15; the example drops its `watch.rules`
     reload rule, which had no effect.
   - Milestone 8 example port review 1: the Milestone 10 TODO that makes the
-    viewer follow the settled design copy changes the viewer's presentation,
-    a non-goal of this plan; it needs the user's approval.
+    viewer follow the settled design copy changes the viewer's presentation.
+    Settled on 2026-10-20 by decision log item 17 A, applied by default (user
+    rule): the copy, the states, and the mockup's field rows are approved.
   - Milestone 8 example port review 1, finding 6: settled by F8 decision 18 B.
     Keep the documented own-entry view without caller slot content.
   - Milestone 8 example port review 2, finding 9: settled on 2026-10-16. The
@@ -2664,16 +2738,37 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     gone, and its retry link opens the exact paragraph.
   - Example visual check (report 6), open findings for the user:
     1. Use-case steps ignore the mobile layout. Severity Medium, effort
-       Medium. Recommended: A, the shell shows each step's mobile view in a
+       Medium. Settled on 2026-10-20 by decision log item 24 A, applied by
+       default (user rule): the shell shows each step's mobile view in a
        phone frame below 760px, as the use-case mockup does, and
        `mokly-shell-device-chrome.md` follows.
     2. Desktop component canvas width differs. Severity Low, effort Small.
-       Recommended: B, the component design and the mockups adopt the shell's
+       Settled on 2026-10-20 by decision log item 25 B, applied by default
+       (user rule): the component design and the mockups adopt the shell's
        fixed 1024px desktop canvas.
     3. The shell stub declares no icon. Severity Low, effort Small. Settled
        at `da23c1ce`: the stub declares the packaged Browse icon, so no
        `/favicon.ico` request fails, and the packed smoke has no icon
        allowance.
+  - Decision log item 32 follow-ups for the user, raised on 2026-10-20:
+    1. A screen or component that only changed components affect offers no
+       comparison in the shell. Severity Medium, effort Medium. Its entry
+       detail marks it comparison-eligible and the static build writes both
+       snapshots, but the shell hides the band because its own views are
+       unchanged. `mokly-component-changes.md` says an Affected screens link
+       opens the comparison; `mokly-component-workspace-design.md` says
+       Unmodified omits the band. Recommended: B, offer the comparison for
+       such an entry, open it from Affected screens, and depict its pane
+       heading. Option A keeps the band hidden and corrects the first
+       sentence.
+    2. A variant of an affected component names no changed components.
+       Severity Medium, effort Small. The affected records name the parent
+       as the consumer, so `projection_affected.rs` gives `relatedComponents`
+       to the parent's detail only. A variant page without a loaded review
+       then reads "No changes to this saved view." while its preview changed.
+       Recommended: B, also index each record by the variant whose views its
+       evidence names. Option A documents that only the parent page explains
+       the shared change.
   - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
     a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are

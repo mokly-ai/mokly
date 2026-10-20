@@ -19,7 +19,7 @@ import {
   UsageDeliveryState,
   UsedBy,
 } from "./component_usage.js";
-import { CONTROLS_PAGES } from "./destinations.js";
+import { CONTROLS_PAGES, INSPECTION_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
 import {
@@ -203,7 +203,14 @@ export function ComponentDetails({
             <>
               <UsedBy state={state} />
               {changed ? (
-                <AffectedScreens removed={state === "removed"} />
+                <AffectedScreens
+                  removed={state === "removed"}
+                  welcome={
+                    state === "style-changed"
+                      ? INSPECTION_PAGES["affected-screen"]
+                      : undefined
+                  }
+                />
               ) : null}
             </>
           ),

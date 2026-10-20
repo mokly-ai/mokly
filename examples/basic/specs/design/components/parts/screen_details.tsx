@@ -102,7 +102,7 @@ export function ScreenDetails({
       ? "closed"
       : props === undefined && (noInstances || state === "highlight")
         ? "components"
-        : state === "style-outside"
+        : state === "style-outside" || state === "affected-screen"
           ? "info"
           : "props";
   return (

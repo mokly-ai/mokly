@@ -50,6 +50,7 @@ mobile component and desktop component; none is a user-flow page.
 
 | `design/components/states/shared-impact/style-changed` | Action changed by its own styles, with affected consumers |
 | `design/components/states/shared-impact/style-outside` | Welcome row for a style outside changed Action |
+| `design/components/states/shared-impact/affected-screen` | Unmodified Welcome that changed Action affects |
 
 | `design/components/states/loading/usage-loading` | Component Usage waiting for private entry evidence |
 | `design/components/states/loading/inspection-loading` | Screen inspection waiting for displayed-view usage |
@@ -59,7 +60,7 @@ The Loading and recovery folder sits below Empty and change states and contains
 exactly these three states. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
 `<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
-membership is the entry's folder. All forty-eight component
+membership is the entry's folder. All forty-nine component
 screens and their two variants opt into light documents, as the shell mockups do. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top

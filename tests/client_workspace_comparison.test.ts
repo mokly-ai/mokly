@@ -104,14 +104,14 @@ test("a private source path never reaches Details as evidence", () => {
 test("workspace evidence keeps excluded stylesheets separate", () => {
   const data = workspace();
   data.status = "Unmodified";
-  const excluded: Partial<ReviewView> = {
-    state: "unchanged",
-    rules: [rule(UNUSED, "", "excluded")],
-  };
-  data.comparison = review("home", [], excluded, [
-    "mobile",
-    "desktop",
-  ]).entries[0]!;
+  data.resourceEvidence = (["mobile", "desktop"] as const).map((viewport) => ({
+    viewport,
+    colorScheme: "light",
+    ...viewEvidenceReasons({
+      rules: [rule(UNUSED, "", "excluded")],
+      resources: [],
+    }),
+  }));
   const loaded = parseReviewResult(
     review("home", [], { state: "unchanged" }, ["mobile", "desktop"]),
   );
