@@ -216,7 +216,9 @@ impl SourceTree for SideTree {
             node.identity = path.into();
             return Ok(Some(node));
         }
-        if path == self.root.join("node_modules/.mokly-roots") {
+        if path == self.root.join("node_modules/.mokly-roots")
+            || path == self.root.join("node_modules") && self.dependency_roots.len() > 1
+        {
             return Ok(Some(Node {
                 identity: path.into(),
                 lexical_kind: mokly_source_interface::tree::FileKind::Directory,
