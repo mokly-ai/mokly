@@ -2886,9 +2886,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         the document path, and the spec checks the index for each case that
         has one. A mutation that points the fact at a component fails both
         reused-parent tests.
-  - F15 review finding 34 for the user: the delivery pairs repeat the shared
-    moves. Severity Low, effort Small. Recommended: B, derive each moved
-    pair's previous path and flag from the case's moves.
+  - [x] F15 review finding 34: the delivery pairs repeated the shared moves.
+        Applied B as follow-up F18 item 2, as the orchestrator directed on
+        2026-10-20. Each moved pair takes its base path and its moved flag
+        from the case's moves, and only the case-only renames write a base
+        path. A mutation of one shared move fails both moved-consumers tests.
   - Outside the F15 review scope:
     - `packages/viewer/src/viewer/styles.ts`: the `mokly-top-host` container
       query of the compact search uses `35rem`, so a host page with another
