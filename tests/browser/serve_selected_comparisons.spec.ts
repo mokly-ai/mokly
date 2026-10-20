@@ -1,7 +1,8 @@
 /**
  * Selected live comparisons in Serve: a diff mode requests only the shown
- * entry's comparison, a refresh keeps that scope, and a sibling variant keeps
- * the mode while it requests its own result.
+ * entry's comparison, a refresh keeps that scope, and moving from a saved
+ * variant to its parent keeps the mode while the parent requests its own
+ * result.
  */
 
 import { expect } from "@playwright/test";
@@ -91,9 +92,15 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await awaitSelectedComparison(page, () => chooseVariant(page, "Card"));
   await expect(page).toHaveURL(new RegExp(`/view/${card}/$`, "u"));
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
-  await expect(
-    page.frameLocator(".mb-pane--after iframe").locator("h2"),
-  ).toHaveText("Card content");
+  // Card's own label is the same on both sides; its .accent colour is not.
+  for (const [pane, color] of [
+    ["before", "rgb(180, 30, 30)"],
+    ["after", "rgb(30, 60, 180)"],
+  ] as const) {
+    const frame = page.frameLocator(`.mb-pane--${pane} iframe`);
+    await expect(frame.locator("h2")).toHaveText("Card content");
+    await expect(frame.locator(".accent")).toHaveCSS("color", color);
+  }
   expect(requests).toHaveLength(3);
   expect(requests.at(-1)!.searchParams.get("path")).toBe(card);
 });

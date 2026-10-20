@@ -150,6 +150,8 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   const label = page.frameLocator(after).locator("h2");
+  // Card's own label is the same on both sides; its .accent colour is not.
+  const accent = page.frameLocator(after).locator(".accent");
   await expect(label).toHaveText("Featured After");
   const pending = await holdRenewal(page);
   try {
@@ -157,11 +159,13 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     await pending.arrived;
     await chooseVariant(page, "Card");
     await expect(label).toHaveText("Card content");
+    await expect(accent).toHaveCSS("color", "rgb(30, 60, 180)");
     await pending.release();
     // Choosing the sibling cancelled the renewal before its response.
     expect(pending.outcomes()).toEqual(["cancelled"]);
     await expect(page).toHaveURL(new RegExp(`/view/${card}/$`, "u"));
     await expect(label).toHaveText("Card content");
+    await expect(accent).toHaveCSS("color", "rgb(30, 60, 180)");
   } finally {
     pending.unblock();
   }
