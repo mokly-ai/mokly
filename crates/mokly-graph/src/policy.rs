@@ -9,11 +9,11 @@ use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::protection::{ProtectedBy, SourcePolicy};
 use mokly_css::dependencies::PluginInput;
-use mokly_model::namespace;
 use mokly_source_interface::tree::{FileKind, SourceTree};
 
 use crate::error::{Result, invalid};
 use crate::public_denial::PublicDenial;
+use crate::public_locations;
 
 /// Accepted authored closure member; membership grants no read-time exception.
 #[derive(Clone, Debug)]
@@ -167,32 +167,9 @@ impl FilePolicy {
     }
 
     fn decide(&self, path: &str, input_root: bool) -> result::Result<PublicFile, PublicDenial> {
-        if path.starts_with('/')
-            || path.contains(['\\', ':', '\0'])
-            || path.split('/').any(|part| matches!(part, "" | "." | ".."))
-        {
-            return Err(PublicDenial::Unsafe);
-        }
-        if path.split('/').any(|part| part.starts_with('.')) {
-            return Err(PublicDenial::Hidden);
-        }
-        if path
-            .split('/')
-            .next()
-            .is_some_and(|first| first.eq_ignore_ascii_case(namespace::GENERATED_DIRECTORY))
-        {
-            return Err(PublicDenial::Generated);
-        }
-        if path.split('/').any(|part| part == "node_modules") {
-            return Err(PublicDenial::Dependency);
-        }
         let absolute = self.repo_root.join(path);
-        if self
-            .private
-            .iter()
-            .any(|private| absolute.starts_with(private))
-        {
-            return Err(PublicDenial::Private);
+        if let Some(reason) = public_locations::denial(path, &absolute, &self.private) {
+            return Err(reason);
         }
         let initial = self.sources.denial(path, None);
         let cause = if matches!(initial, Some(ProtectedBy::RootMatch { .. })) {
@@ -238,17 +215,13 @@ impl FilePolicy {
             if !node.identity.starts_with(&self.repo_root) {
                 return Err(PublicDenial::Escape);
             }
-            if self
-                .private
-                .iter()
-                .any(|private| node.identity.starts_with(private))
+            let physical = relative(&node.identity, &self.repo_root);
+            if let Some(reason) = public_locations::denial(&physical, &node.identity, &self.private)
             {
-                return Err(PublicDenial::Private);
+                return Err(reason);
             }
             if node.kind == FileKind::File
-                && let Some(cause) = self
-                    .sources
-                    .denial(path, Some(&relative(&node.identity, &self.repo_root)))
+                && let Some(cause) = self.sources.denial(path, Some(&physical))
                 && !(input_root && cause == ProtectedBy::ListedInput)
             {
                 return Err(self.source_reason(path, cause));

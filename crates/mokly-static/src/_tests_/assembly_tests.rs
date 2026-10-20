@@ -18,6 +18,7 @@ use mokly_model::catalogue::{
 use mokly_model::output::ownership::Ownership;
 use mokly_model::readers;
 use mokly_model::usage::CatalogueUsage;
+use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::assembly::{Assembler, Assembly, CatalogueAssembler};
@@ -155,11 +156,19 @@ fn graph_with_key(key: &str) -> Unimock {
     ))
 }
 
+fn source_tree() -> Unimock {
+    Unimock::new(
+        SourceTreeMock::project
+            .next_call(matching!((path) if *path == Path::new("/repo/site")))
+            .returns(Ok(None)),
+    )
+}
+
 #[test]
 fn builds_complete_current_bytes_from_a_mocked_generation_without_disk_access() {
     let graph = graph_with_key(&"a".repeat(64));
     let assembler: &dyn Assembler = &CatalogueAssembler {
-        tree: Arc::new(Unimock::new(())),
+        tree: Arc::new(source_tree()),
     };
     let cancellation = Unimock::new(
         CancellationMock::requested
@@ -235,7 +244,7 @@ fn rejects_empty_and_inconsistent_generations_without_panics_or_side_effects() {
 fn malformed_published_index_preserves_the_reader_diagnostic() {
     let graph = graph_with_key("bad");
     let assembler: &dyn Assembler = &CatalogueAssembler {
-        tree: Arc::new(Unimock::new(())),
+        tree: Arc::new(source_tree()),
     };
     let cancellation = Unimock::new(
         CancellationMock::requested

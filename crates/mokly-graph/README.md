@@ -172,6 +172,7 @@ imports and assets, portable links, repeated slots, and cache eviction.
 - [Generation interface](./src/types.rs), [session](./src/session.rs), and [workers](./src/workers.rs).
 - [Node keys](./src/key.rs), [cache](./src/cache.rs), and [memory accounting](./src/weight.rs).
 - [Public policy](./src/policy.rs), [closure](./src/closure.rs), and [Markdown links](./src/markdown_links.rs).
+- [Protected locations](./src/public_locations.rs) classify requested and physical paths with the same rules.
 
 ### Related Docs
 

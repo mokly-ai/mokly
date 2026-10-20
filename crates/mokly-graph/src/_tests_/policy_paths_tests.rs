@@ -71,6 +71,7 @@ fn case_aliases_of_private_source_files_keep_their_classification() {
             PublicDenial::Listed,
         ),
         ("PRIVATE.SOURCE.TS", vec![], PublicDenial::Reserved),
+        ("NODE_MODULES/private.txt", vec![], PublicDenial::Dependency),
         ("SPECS/HOME.SCREEN.HTML", vec![], PublicDenial::RootMatch),
     ] {
         let tree = Arc::new(Unimock::new(
