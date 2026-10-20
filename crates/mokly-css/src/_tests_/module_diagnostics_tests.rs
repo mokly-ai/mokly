@@ -36,3 +36,22 @@ fn statements_without_a_block_in_a_rule_list_fail_the_syntax_check() {
         format!("@layer base;.{}{{color:red}}", scoped_name(PATH, "a"))
     );
 }
+
+/// A wrapper still open at the end of input stays as authored, so the syntax
+/// check reports the unfinished stylesheet.
+#[test]
+fn open_wrappers_fail_the_syntax_check() {
+    for source in [
+        ".a :global(.b",
+        ".a :local(.b",
+        "@keyframes :local(spin",
+        "@keyframes :global(spin",
+        ".a :global(\n.q { color: red }\n",
+    ] {
+        assert!(
+            syntax_location(source).is_some(),
+            "{source:?}: {}",
+            error(source)
+        );
+    }
+}

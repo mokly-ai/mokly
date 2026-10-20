@@ -7,10 +7,7 @@ use cssparser::Token;
 use crate::error;
 use crate::error::Result;
 use crate::rename::Renamer;
-use crate::token_tree::Tokens;
-
-/// A `:local(` or `:global(` colon start, function-token end, and block end.
-type Wrapper = (usize, usize, usize);
+use crate::token_tree::{Node, Tokens};
 
 impl Renamer<'_> {
     /// Rename local classes and IDs; return the selector's single local class.
@@ -93,7 +90,7 @@ impl Renamer<'_> {
                                 ));
                             }
                             frame.range = lookahead;
-                            let wrapper = (node.start, after.end, after.after);
+                            let wrapper = Wrapper::new(node, after);
                             pending.push(Selector::new(child, *name == "local", Some(wrapper)));
                         }
                         Token::Ident(name) if *name == "global" || *name == "local" => {
@@ -166,7 +163,7 @@ impl Renamer<'_> {
                         return Err(self.empty_wrapper(node.start, name, Wrapped::KeyframesName));
                     }
                     frame.local = false;
-                    let wrapper = (node.start, function.end, function.after);
+                    let wrapper = Wrapper::new(node, function);
                     if *name == "local" {
                         pending.push(Keyframes {
                             range: child,
@@ -183,10 +180,15 @@ impl Renamer<'_> {
         Ok(())
     }
 
-    /// Remove a wrapper's opener and the byte before its block end.
-    fn remove_wrapper(&mut self, (start, function_end, after): Wrapper) {
-        self.edits.push((start, function_end, String::new()));
-        self.edits.push((after - 1, after, String::new()));
+    /// Remove a closed wrapper's opener and closer. A wrapper still open at
+    /// the end of input stays as authored, so the syntax check reports it:
+    /// removing its opener would move the text after it out of the wrapper.
+    fn remove_wrapper(&mut self, wrapper: Wrapper) {
+        if let Some(close) = wrapper.close {
+            self.edits
+                .push((wrapper.start, wrapper.function_end, String::new()));
+            self.edits.push((close, close + 1, String::new()));
+        }
     }
 
     /// The catalogued failure for a `:global()` or `:local()` with no content.
@@ -214,6 +216,25 @@ impl Renamer<'_> {
                 "CSS Modules authored ICSS rule is unsupported in {}:{line}:{column}: {selector}; use local class exports or ordinary CSS",
                 self.path
             ),
+        }
+    }
+}
+
+/// A `:local(` or `:global(` wrapper: its colon, the end of its function
+/// token, and its closing parenthesis while it has one.
+#[derive(Clone, Copy)]
+struct Wrapper {
+    start: usize,
+    function_end: usize,
+    close: Option<usize>,
+}
+
+impl Wrapper {
+    fn new(colon: &Node<'_>, function: &Node<'_>) -> Self {
+        Self {
+            start: colon.start,
+            function_end: function.end,
+            close: (function.after > function.body_end).then_some(function.body_end),
         }
     }
 }
