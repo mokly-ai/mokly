@@ -8,8 +8,10 @@ use mokly_catalogue::error::CatalogueError;
 use mokly_catalogue::preparation::CatalogueBuilderMock;
 use mokly_compare::base_render::{ChangesService, ChangesServiceMock};
 use mokly_compare::error::Error;
+use mokly_graph::error::GraphError;
 use mokly_graph::types::{GraphFactoryMock, RenderGenerationMock, RenderGraphMock, RenderSummary};
 use mokly_sidecar::workers::ClockMock;
+use mokly_static::fingerprint::InputTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::build::{BuildError, BuildService, CatalogueBuild};
@@ -87,4 +89,42 @@ fn an_interrupt_before_or_during_classification_cannot_publish_changes() {
             Err(BuildError::Cancelled)
         ));
     }
+}
+
+#[test]
+fn a_base_input_rejection_survives_a_later_clean_verification() {
+    let path = Path::new("/selected/node_modules/plugin/helper.mjs");
+    let service = CatalogueBuild {
+        inputs: Some(Arc::new(Unimock::new(
+            InputTreeMock::verify
+                .each_call(matching!())
+                .answers(&|_| Ok(())),
+        ))),
+        cancellation: Arc::new(BuildCancellation::new(Arc::new(Unimock::new(())))),
+        changes: Arc::new(Unimock::new(
+            ChangesServiceMock::classify
+                .next_call(matching!(_, _, _))
+                .returns(Err(Error::Base {
+                    commit: "a".repeat(40),
+                    source: Box::new(Error::Graph {
+                        source: GraphError::InputsChanged { path: path.into() },
+                    }),
+                })),
+        )),
+        graphs: Arc::new(Unimock::new(())),
+        config: Arc::new(Unimock::new(())),
+        catalogue: Arc::new(Unimock::new(())),
+    };
+    let mut options = options();
+    options.no_changes = false;
+    let result = service.classify_changes(
+        &config(),
+        &options,
+        Arc::new(Unimock::new(())),
+        &mut Vec::new(),
+    );
+    service.inputs.as_ref().unwrap().verify().unwrap();
+    assert!(matches!(result, Err(BuildError::Static {
+        source: mokly_static::error::Error::InputsChanged { path: changed },
+    }) if changed == path));
 }

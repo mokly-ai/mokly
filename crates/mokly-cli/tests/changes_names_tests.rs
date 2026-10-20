@@ -18,8 +18,9 @@ use mokly_cli::output::{Mode, Style};
 use mokly_cli::redaction::Redactor;
 use mokly_cli::static_build::{Phase, Phases};
 use mokly_sidecar::workers::Diagnostics;
+use mokly_static::fingerprint::InputTreeMock;
 use tempfile::TempDir;
-use unimock::Unimock;
+use unimock::{MockFn, Unimock, matching};
 
 #[path = "../src/base_dependencies.rs"]
 mod base_dependencies;
@@ -27,6 +28,8 @@ mod base_dependencies;
 mod changes_base;
 #[path = "../src/changes_runtime.rs"]
 mod changes_runtime;
+#[path = "../src/changes_static.rs"]
+mod changes_static;
 #[path = "../src/render_runtime.rs"]
 mod render_runtime;
 #[path = "../src/terminal.rs"]
@@ -136,6 +139,11 @@ fn inspect(root: &Path) {
         inputs: None,
         changes: changes_runtime::service(
             services.runtime.clone(),
+            Arc::new(Unimock::new(
+                InputTreeMock::verify
+                    .each_call(matching!())
+                    .answers(&|_| Ok(())),
+            )),
             cancellation.clone(),
             changes_runtime::pin(
                 &config,

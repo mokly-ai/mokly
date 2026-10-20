@@ -12,6 +12,8 @@ mod base_dependencies;
 mod changes_base;
 #[path = "../src/changes_runtime.rs"]
 mod changes_runtime;
+#[path = "../src/changes_static.rs"]
+mod changes_static;
 #[expect(dead_code, reason = "the fixture uses only Git helpers")]
 mod changes_support;
 mod design_support;
