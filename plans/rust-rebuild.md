@@ -2417,6 +2417,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         keeps its key alone and beside the current row of its entry, and a
         row keeps its key with and without another entry's row before it.
         Done by `e1ff6c97`.
+  - [x] M10 Serve and moved rows review 10, residual risk, follow-up F9b item
+        1, given by the orchestrator on 2026-10-20: the Usage row key tests
+        still accepted a key with the first link's instance key and a key
+        built from the title. Two cases reject them: a row keeps its key when
+        another instance of its entry comes first, and beside another entry
+        with the same title. A mutation run proves each case.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
