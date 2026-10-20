@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { comparisonPaths as paths } from "../helpers/comparison_catalogue.js";
+import { similarTextPageBase } from "../helpers/comparison_evidence_groups.js";
 import {
   movedFixturePairs,
   movedFixturePaths as moves,
@@ -30,6 +31,12 @@ const defaultStates = {
   [paths.quietParent]: stable,
   [paths.quietSibling]: stable,
   [paths.quietVariant]: changed,
+  [paths.changedPage]: changed,
+  [paths.unchangedPage]: stable,
+  [paths.similarTextPage]: changed,
+  [paths.componentPage]: stable,
+  [paths.pageComponent]: changed,
+  [paths.consumingComponent]: stable,
 };
 
 /** All current paths supplied by the two additive source hooks. */
@@ -73,6 +80,8 @@ const branchPairs = [
   ["branch/parent/archive/action/primary", "branch/parent/action/primary"],
   ["branch/variant/receiver/primary", "branch/variant/donor/primary"],
   ...movedFixturePairs,
+  // The default copy's page pairs with its base path by similar text.
+  [paths.similarTextPage, similarTextPageBase],
 ];
 const removedPaths = [
   paths.removedScreen,

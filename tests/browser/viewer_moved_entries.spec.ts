@@ -1,7 +1,8 @@
 /**
  * The moved-entry cases in an embedded `MoklyViewer` over the branch copy,
- * through both frame adapters. The host page opens an entry by query, so
- * the case that follows the page address runs only on the routing hosts.
+ * through both frame adapters. The host page opens an entry by query and
+ * keeps its own address, so a case that navigates checks that the page path
+ * stays `/viewer.html`.
  */
 
 import { ownBrowserCleanup } from "../../packages/viewer/tests/browser_cleanup.js";

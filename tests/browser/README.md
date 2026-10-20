@@ -76,7 +76,13 @@ copied output; the source repository and first output are removed.
 | `regionsPage`          | `screens/regions-page`: a scrolling page with a focusable code panel, a right-to-left strip, and a two-axis grid                                                                                                                                                                                                                                       |
 | `taskList`             | `components/tasks`: an unmodified parent whose list scrolls inside its box                                                                                                                                                                                                                                                                             |
 | `taskListVariant`      | `components/tasks/list`: a changed variant of that parent                                                                                                                                                                                                                                                                                              |
-| `component`            | `components/card`: CSS change; Usage lists both consumer screens and the removed `screens/former` as affected                                                                                                                                                                                                                                          |
+| `changedPage`          | `pages/handbook`: a changed page with an Action instance and its own `.action` element; it links `actions.css`, whose `.action` rule also changes `components/action`, and its own `styles/handbook.css` with a heading rule and an unresolved `:root` rule                                                                                            |
+| `unchangedPage`        | `pages/notes`: an unmodified page whose own `styles/notes.css` changes a rule that matches nothing on it                                                                                                                                                                                                                                               |
+| `similarTextPage`      | `pages/guidebook`: a changed page that pairs with `pages/manual` by similar text, so `pages/manual` has no removed record                                                                                                                                                                                                                              |
+| `componentPage`        | `pages/catalog`: an unmodified page whose only changed style, `.accent`, reaches it through a `ui-card` instance; a page has no usage records, so Card does not list it                                                                                                                                                                                |
+| `pageComponent`        | `components/action`: changed through `actions.css`, which its own documents also link                                                                                                                                                                                                                                                                  |
+| `consumingComponent`   | `components/toolbar`: consumes `ui-card`, so it is an affected consumer outside Changes                                                                                                                                                                                                                                                                |
+| `component`            | `components/card`: changes through `theme.css` and its own `card.css`, which also changes an unresolved `:root` rule; Usage lists both consumer screens, Toolbar, and the removed `screens/former` as affected                                                                                                                                         |
 | `changedVariant`       | `components/card/featured`: a surviving variant whose props changed                                                                                                                                                                                                                                                                                    |
 | `addedVariant`         | `components/card/fresh`: a variant added by the second commit                                                                                                                                                                                                                                                                                          |
 | `quietParent`          | `components/tag`: an unmodified parent; every tag view is taller than its frame                                                                                                                                                                                                                                                                        |
@@ -91,6 +97,11 @@ copied output; the source repository and first output are removed.
 
 The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
+`comparison_evidence_page.ts` holds the Details copy and readers that the
+stylesheet Details specs share. Its readers require one Comparison details
+heading and exactly one changed-files list. `configuredStylesheets` and
+`pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
+stylesheets as the shell shows them.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
 panes contract requires, on the copied output and in an embedded viewer
 through both frame adapters.
@@ -176,9 +187,19 @@ Viewer journeys on this copy register shared case modules.
 `static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
 Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
 viewer over this copy through both frame adapters. Each host passes a
-`MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`MovedHost` from `moved_rows.ts`, which extends the `EntryHost` of
+`entry_hosts.ts`. An `EntryHost` says how the host opens an entry and which
+page path it shows for that entry. An embedded host keeps `/viewer.html`, so
+a link that leaves the viewer for the standalone shell fails the case.
 `static_development_mount.spec.ts` serves the `development_shell.ts` bundle
 with React's development build.
+
+`BRANCH_POINT_CHECKS` in `branch_point_checks.ts` runs on three hosts at
+desktop and mobile widths: `branch_point_comparison_ui.spec.ts` on this copy,
+`viewer_branch_point_comparison_ui.spec.ts` in an embedded viewer over it
+through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
+on one Serve per worker over the shared Serve comparison fixture. Each passes
+an `EntryHost`.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
@@ -229,12 +250,13 @@ given). Its `baseURL` serves that copy, and the worker fixture
 A copy built with base `HEAD` and no hook publishes ready Changes with no
 change.
 
-| Hook                         | Entries and evidence                                                                                                                                           |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected                               |
-| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                                                |
-| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                                                   |
-| `addImportedCssSources`      | `imported/home`: a JavaScript screen whose CSS Module colour changes and loads a PNG through `url()`; links the repository's `node_modules`, which Git ignores |
+| Hook                         | Entries and evidence                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addImplementationSources`   | `impact/chip`: own views unchanged, included with the `implementation` reason; `impact/board` sets `urgent` and is only affected                                                                                                                                                                                                          |
+| `addLightOnlyCurrentSources` | Light and Dark at the base, Light only now; `schemes/payment-terms` exists on both sides with a light page only                                                                                                                                                                                                                           |
+| `addLightOnlyBaseSources`    | Light only at the base, Light and Dark now; `schemes/old-terms` is a removed document with a light page only                                                                                                                                                                                                                              |
+| `addImportedCssSources`      | `imported/home`: a JavaScript screen whose CSS Module colour changes and loads a PNG through `url()`; links the repository's `node_modules`, which Git ignores                                                                                                                                                                            |
+| `addReactEvidenceSources`    | `react/*`: one React module whose imported sheet changes a Button rule and Checkout's heading rule; a Badge and its consumer Badged in their own module, whose only change is a rule on the renderer's wrapper; a Home screen with nested, repeated and hidden Button instances; links the repository's `node_modules`, which Git ignores |
 
 ## Shared Serve comparison fixture
 

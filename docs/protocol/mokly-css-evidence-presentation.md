@@ -185,8 +185,11 @@ unmodified. Each changed component that the entry consumes is linked as
 preview. This page has no independent entry in Changes.” appears only when the
 entry has no Changes row of its own, consumes at least one changed component,
 and a selected view changed. A saved view whose rules are all owned by the entry
-therefore never says it. A whole-document page consumes no components, so its
-Details never link a changed component or say that sentence.
+therefore never says it. A whole-document page may use component elements
+under the [pages contract](./mokly-pages.md#authoring), but only screens and
+components have [usage records](./mokly-component-usage-records.md#validation).
+A page is therefore no consumer: its Details never link a changed component
+or say that sentence, and no component's Usage lists it.
 
 A current whole-document page shows Added, Changed or Unmodified beside its
 title once its Changes are ready, from the catalogue change kind: Added when
