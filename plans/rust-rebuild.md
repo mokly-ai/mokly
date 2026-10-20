@@ -1124,8 +1124,10 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Index `Lookup` and build the projection's references on it, so one
+- [x] Index `Lookup` and build the projection's references on it, so one
       branch-point lookup serves every shell.
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/example-lookup-parity.json`
+      and `branch-point-browser.log` there.
 - [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
 - [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
