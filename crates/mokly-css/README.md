@@ -65,6 +65,10 @@ edits. `rule_matching::match_document` uses Servo `selectors` against both
 available document arenas. It keeps every matching element until attribution.
 `MatchTree` preserves parsed element relationships and component containment;
 the HTML adapter omits ignored regions and inert template contents.
+`ContainmentPath` shares immutable parent links between elements, copied
+matching trees, embedded documents, and detached match proof. It visits
+regions innermost first and releases deep paths iteratively. Inline proof
+filters by input owner without copying the physical ancestry.
 
 `attribution::attribute` first collects unfiltered own-page matches. It then
 filters nested component matches and produces per-view owner records. A sheet
@@ -128,7 +132,8 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 
 - [Compiler](./src/compiler.rs) and [delivery](./src/delivery.rs).
 - [Rule collection](./src/rule_collection.rs), [diff](./src/rules.rs), and [matching](./src/rule_matching.rs).
-- [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs), and [parsed cache](./src/parsed_cache.rs).
+- [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs),
+  [shared containment](./src/containment.rs), and [parsed cache](./src/parsed_cache.rs).
 - [CSS Modules](./src/modules.rs) and [module checks](./src/module_checks.rs).
 - [CSS references](./src/syntax.rs), [paths](./src/paths.rs), and [errors](./src/error.rs).
 - [Token arena](./src/token_tree.rs) and [statement sections](./src/token_sections.rs).

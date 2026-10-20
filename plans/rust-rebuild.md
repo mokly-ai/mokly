@@ -1128,8 +1128,11 @@ At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Index `Lookup` and build the projection's references on it, so one
+- [x] Index `Lookup` and build the projection's references on it, so one
       branch-point lookup serves every shell.
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/example-lookup-parity.json`
+      and `branch-point-browser.log` there.
+      Restart integration decisions: `.context/rust-rebuild/m9-lookup-and-matching/restart-merge/merge-decisions.md`.
 - [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
 - [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
@@ -1284,7 +1287,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
   - [x] Record reused ready usage as completed, so a metadata-only rebuild
         publishes no extra usage revision.
         Serve lifecycle evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/independent-checks.md`.
-  - [ ] Measure interleaved head/base work in Serve background Changes and
+  - [x] Measure interleaved head/base work in Serve background Changes and
         reduce source-root replacements within the configured pool bound,
         including the one-worker case. Integrate shared-engine batching with
         Serve-only interleaving (review 6a finding 2, option C).
@@ -1318,12 +1321,14 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
             capture, so it only bounds the overlap window. Its maximum cannot
             be recovered from the saved phase maxima. The initial phase peaked
             at 1,603,197,952 bytes.
-      - [ ] Run the deferred default-count probe with a 4 GB allowance in a
+      - [x] Run the deferred default-count probe with a 4 GB allowance in a
             quiet machine window, with no other delegate running, alongside
             the M14 React Serve measurement. Decision C, approved by the
             orchestrator on 2026-10-19: the shared-machine 2 GB rule stays.
             Record the maximum from the new capture's start to the old
             snapshot's release.
+            Completed by the measurement workspace on 2026-10-19. Evidence:
+            `.context/m14-measurements/m9-default/summary.json`.
     - [x] Use an intentionally unresolved base for the shared browser example,
           with terminal quiescence and one Git diagnostic. Real Changes specs
           keep independent fixtures. Keep the 600-second guard and one sidecar.
@@ -2117,9 +2122,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [x] Review opaque CSS asset retention before a redesign or larger probes.
         Private source snapshots pin these bytes without a byte bound. Preserve
         generation consistency when choosing how to limit retained data.
-- [ ] Review the CSS matching tree's per-element containment-list copies.
+- [x] Review the CSS matching tree's per-element containment-list copies.
       Retention grows with element count times nesting depth. Decide on shared
       containment storage with the CSS attribution work (M14 review 5, finding 2).
+      Shared parent links preserve attribution and remove the copies.
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/containment.md`.
 - [x] Make opaque CSS assets digest-only inputs: store the route, path, and
       digest instead of the bytes; use the digest in the cache keys; stream the
       bytes at delivery and check them against the digest; one entry per asset
@@ -2129,9 +2136,14 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
       route with the M14 Serve budgets. Account for GET and HEAD capture work,
       live response files after worker permits end, and OS temporary storage
       outside process RSS (M14 review 6, finding 5; accepted interim design A).
-- [ ] Measure Git opaque-asset digest commands and buffered delivery under
+- [x] Measure Git opaque-asset digest commands and buffered delivery under
       the M14 comparison workloads. Use the cost to decide on streamed blob
       copies and batched digests; keep the 64 MiB Git bound (review 6, finding 8B).
+      Evidence: `.context/rust-rebuild/m9-lookup-and-matching/git-assets.md`.
+  - [ ] R20-1: Decide on streamed Git blob copies and batched digests.
+        Severity Low, effort Large. Recommended: A, remove per-asset process
+        startup and the extra full-blob buffer. Preserve all existing bounds.
+        Option B retains the measured adapter. No option is applied.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
 - [ ] Commit.

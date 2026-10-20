@@ -1,16 +1,15 @@
 //! Resolve affected Usage destinations from their actual side and entry context.
 
-use std::collections::BTreeMap;
-
 use mokly_model::axes::EntryKind;
-use mokly_model::catalogue::{CatalogueModel, EntryMetadata};
+use mokly_model::catalogue::EntryMetadata;
 use mokly_model::review_affected::{
     AffectedConsumer, AffectedUsageEvidence, ConsumerKind, ReviewSide,
 };
 
+use crate::comparison_error::CompareResult;
 use crate::comparison_types::ComparisonResult;
-
-type Key = (EntryKind, String);
+use crate::error::Result;
+use crate::lookup::{Destination, Lookup};
 
 /// One current or retained historical destination.
 #[derive(Clone, Copy)]
@@ -29,52 +28,23 @@ struct ResolvedReference<'a> {
 
 /// Side-specific reference indexes for one borrowed comparison generation.
 pub(crate) struct References<'a> {
-    before: BTreeMap<Key, LinkTarget<'a>>,
-    current: BTreeMap<Key, LinkTarget<'a>>,
-    paired: BTreeMap<Key, LinkTarget<'a>>,
-    removed: BTreeMap<Key, LinkTarget<'a>>,
+    lookup: Lookup<'a>,
+    generation: &'a str,
 }
 
 impl<'a> References<'a> {
-    /// Index accepted pairs, current identities, and only the retained removals.
-    pub(crate) fn new(result: &'a ComparisonResult) -> Self {
-        let before = &result.before.catalogue().model;
-        let after = &result.after.catalogue().model;
-        let base = entries(before);
-        let current = entries(after);
-        let paired = result
-            .pairing
-            .entries
-            .iter()
-            .filter_map(|pair| {
-                let left = before.entries.get(pair.before?)?;
-                let right = after.entries.get(pair.after?)?;
-                Some((
-                    key(left.content.kind(), &left.metadata.path),
-                    LinkTarget {
-                        metadata: &right.metadata,
-                        removed: false,
-                    },
-                ))
-            })
-            .collect();
-        let removed = result
-            .snapshot
-            .removed_entries
-            .iter()
-            .filter_map(|record| {
-                let key = key(record.entry.kind(), &record.entry.metadata().path);
-                let mut target = *base.get(&key)?;
-                target.removed = true;
-                Some((key, target))
-            })
-            .collect();
-        Self {
-            before: base,
-            current,
-            paired,
-            removed,
-        }
+    /// Borrow the one branch-point lookup for this projection batch.
+    pub(crate) fn new(result: &'a ComparisonResult) -> Result<Self> {
+        let generation = result.after.generation_key();
+        let lookup = Lookup::new(
+            generation,
+            &result.after.catalogue().model,
+            Some(&result.before.catalogue().model),
+            &result.snapshot.removed_entries,
+            &result.pairing.moves,
+        )
+        .compare()?;
+        Ok(Self { lookup, generation })
     }
 
     /// Keep canonical impact grouping, but link an owning variant to its own entry.
@@ -82,20 +52,25 @@ impl<'a> References<'a> {
         &self,
         effect: &AffectedConsumer,
         evidence: &AffectedUsageEvidence,
-    ) -> Option<LinkTarget<'a>> {
+    ) -> Result<Option<LinkTarget<'a>>> {
         let kind = match effect.consumer.kind {
             ConsumerKind::Screen => EntryKind::Screen,
             ConsumerKind::Component => EntryKind::Component,
         };
-        let consumer = self.destination(ReviewSide::Before, kind, &effect.consumer.path)?;
+        let Some(consumer) = self.destination(ReviewSide::Before, kind, &effect.consumer.path)?
+        else {
+            return Ok(None);
+        };
         if kind != EntryKind::Component || evidence.context.kind != ConsumerKind::Component {
-            return Some(consumer);
+            return Ok(Some(consumer));
         }
-        let entry = self.reference(evidence.side, kind, &evidence.context.entry.path)?;
+        let Some(entry) = self.reference(evidence.side, kind, &evidence.context.entry.path)? else {
+            return Ok(None);
+        };
         let owner = match &entry.original.variant_of {
             None => Some(entry.destination),
             Some(parent) => self
-                .destination(evidence.side, kind, parent)
+                .destination(evidence.side, kind, parent)?
                 .filter(|parent| parent.metadata.variant_of.is_none()),
         };
         if owner.is_some_and(|owner| {
@@ -104,9 +79,9 @@ impl<'a> References<'a> {
                 .path
                 .eq_ignore_ascii_case(&consumer.metadata.path)
         }) {
-            Some(entry.destination)
+            Ok(Some(entry.destination))
         } else {
-            Some(consumer)
+            Ok(Some(consumer))
         }
     }
 
@@ -116,48 +91,51 @@ impl<'a> References<'a> {
         side: ReviewSide,
         kind: EntryKind,
         path: &str,
-    ) -> Option<ResolvedReference<'a>> {
-        let originals = match side {
-            ReviewSide::Before => &self.before,
-            ReviewSide::After => &self.current,
+    ) -> Result<Option<ResolvedReference<'a>>> {
+        let Some(entry) = self
+            .lookup
+            .entry(self.generation, side, kind, path)
+            .compare()?
+        else {
+            return Ok(None);
         };
-        Some(ResolvedReference {
-            original: originals.get(&key(kind, path))?.metadata,
-            destination: self.destination(side, kind, path)?,
-        })
+        Ok(self
+            .destination(side, kind, path)?
+            .map(|destination| ResolvedReference {
+                original: &entry.metadata,
+                destination,
+            }))
     }
 
-    /// Before references prefer accepted pairs, then current identities and removals.
-    fn destination(&self, side: ReviewSide, kind: EntryKind, path: &str) -> Option<LinkTarget<'a>> {
-        let key = key(kind, path);
-        match side {
-            ReviewSide::After => self.current.get(&key),
-            ReviewSide::Before => self
-                .paired
-                .get(&key)
-                .or_else(|| self.current.get(&key))
-                .or_else(|| self.removed.get(&key)),
-        }
-        .copied()
-    }
-}
-
-fn entries(model: &CatalogueModel) -> BTreeMap<Key, LinkTarget<'_>> {
-    model
-        .entries
-        .iter()
-        .map(|entry| {
-            (
-                key(entry.content.kind(), &entry.metadata.path),
-                LinkTarget {
+    fn destination(
+        &self,
+        side: ReviewSide,
+        kind: EntryKind,
+        path: &str,
+    ) -> Result<Option<LinkTarget<'a>>> {
+        let destination = self
+            .lookup
+            .reference(self.generation, side, kind, path)
+            .compare()?;
+        Ok(match destination {
+            Some(Destination::Current(entry)) => Some(LinkTarget {
+                metadata: &entry.metadata,
+                removed: false,
+            }),
+            Some(Destination::Removed(record)) => self
+                .lookup
+                .entry(
+                    self.generation,
+                    ReviewSide::Before,
+                    kind,
+                    &record.entry.metadata().path,
+                )
+                .compare()?
+                .map(|entry| LinkTarget {
                     metadata: &entry.metadata,
-                    removed: false,
-                },
-            )
+                    removed: true,
+                }),
+            None => None,
         })
-        .collect()
-}
-
-fn key(kind: EntryKind, path: &str) -> Key {
-    (kind, path.to_ascii_lowercase())
+    }
 }

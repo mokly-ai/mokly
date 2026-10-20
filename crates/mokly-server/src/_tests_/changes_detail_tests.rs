@@ -37,11 +37,14 @@ async fn delivered(snapshot: &Snapshot) -> Value {
 async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
     let (mut catalogue, _) = historical_inputs();
     catalogue.model = publication_support::empty_model();
-    let graph = Unimock::new(
+    let graph = Unimock::new((
+        RenderGenerationMock::generation_key
+            .each_call(matching!())
+            .returns("after"),
         RenderGenerationMock::catalogue
             .each_call(matching!())
             .returns(catalogue),
-    );
+    ));
     let mut comparison = accepted(Arc::new(graph.clone()), Arc::new(graph.clone()));
     let result = &mut Arc::get_mut(&mut comparison).unwrap().result;
     result.entries.truncate(1);
