@@ -2510,6 +2510,15 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - [x] F16: repair hosted native verification startup. Use portable terminal
+        pointers, resolve Windows Node shims at both xtask process boundaries,
+        and bypass the checkout cache on non-Linux native runners. Replace
+        Linux-only liveness and hand-built file URLs in affected test fixtures.
+        Audit: `.context/f16/platform-audit.md`. The hub must rerun macOS and
+        Windows native jobs on `rebuild/native-ci-fixes`.
+  - `xtask/src/remote/runtime.rs`: remote executable discovery does not expand
+    Windows executable suffixes. Selected Native bypasses this path.
+    Separate branch before claiming Windows remote-executor support.
   - [x] Fix CI gates hub review finding 1 with option A: move the daily Rust
         audit into an independent read-only job. Keep write credentials in the
         npm update job and disable credential persistence in the Rust checkout.
