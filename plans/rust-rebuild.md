@@ -3283,6 +3283,15 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
   - 26: No test pins the token check position for tokens dropped at the
     end. Severity Low, effort Small. Recommended: A, add the case `a{}b`
     scoped to `a{}`.
+  - Open from the M14 nesting round 7 re-review, report under
+    `.context/m14-nesting/r7/review-r7b.md`:
+  - `crates/mokly-css/src/_tests_/token_sections_tests.rs:26`: the
+    classification test doc says that only a declarations block makes a
+    statement without a block into text, but the test also expects text in
+    a style block. Separate branch.
+  - `crates/mokly-css/src/_tests_/wrapper_table_tests.rs:61`: the
+    `STYLE_RULE` doc does not say that an at-rule without a block under an
+    unknown keyframes name is text in a style rule's block. Separate branch.
 
 ## Post-merge follow-up (non-blocking)
 
