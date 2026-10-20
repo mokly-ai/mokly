@@ -1815,6 +1815,8 @@ example build measurement, and the sweep inputs:
 `.context/rust-rebuild/delegation/m10-d1/report-4.md`.
 The F10 follow-ups of round 4, the merge of the rebuild tip `453eef9b`,
 and the sweep renames: `.context/rust-rebuild/delegation/m10-d1/report-f10.md`.
+The F12 follow-ups, the merges of F10 and F11, and the deployment switch
+fix: `.context/rust-rebuild/delegation/m10-d1/report-f12.md`.
 
 - [ ] Commit.
 
@@ -2633,6 +2635,25 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         initial previews and the replacement document load before checking its
         title and marker. Keep every assertion and the atomic publication fixture.
         Evidence: `.context/f11/reproduction.md`.
+  - [x] F12: follow-ups of F10 and F11, given by the orchestrator on
+        2026-10-20, one commit each. F12 merges F10 and F11 first, because
+        both wait in batch 13. Merge decisions: `.context/f12/merge-decisions.md`.
+    - [x] `viewer_details.spec.ts` imports the shared Details copy, paths,
+          viewports and readers, with the heading and list checks.
+    - [x] `mokly-css-evidence-presentation.md` names the stage labels of each
+          view state, as the viewer shows them.
+    - [x] In the standalone shell, a detail of another deployment keeps the
+          destination's loading stage until the full page load. The F11
+          deployment case now fails if the outgoing document shows the
+          unavailable stage. An embedded host behaves as before.
+    - F12 decision 1 for the user: an embedded host shows the unavailable
+      stage with retry after another deployment, which the viewer contract
+      does not name. Severity Medium, effort Small. Recommended: A, state
+      that behaviour in `mokly-viewer.md` and test it.
+    - Follow-up: a use-case route whose step detail fails while the use
+      case detail reports another deployment still shows the unavailable
+      stage before the page load. Effort Small. Covers F12 review finding 2.
+      Previous examples: F11 and `89f8f6cd` for a route with one detail.
   - M12 review 8 verification: investigate the unrelated
     `events_send_the_current_identity_at_once_and_shutdown_closes_the_stream`
     port-rebind assertion failure. The isolated rerun passed. Suspected source:

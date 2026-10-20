@@ -72,7 +72,10 @@ The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
 switch filters and modes, and measure pane, viewport, and region offsets.
 `comparison_evidence_page.ts` holds the Details copy and readers that the
 stylesheet Details specs share. Its readers require one Comparison details
-heading and exactly one changed-files list. `configuredStylesheets` and
+heading and exactly one changed-files list. `openEvidence` also requires the
+branch-point sentence, or its absence when a spec passes `null` for an index
+without a base. `expectExcludedOnly` checks Details that hold one examined
+list and no changed-files list. `configuredStylesheets` and
 `pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
 stylesheets as the shell shows them.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
