@@ -57,7 +57,7 @@ fn retained_publication_warning_clears_active_progress_before_printing() {
     let recorded = events.lock().unwrap().clone();
     assert_eq!(recorded, vec![
         ("stdout", "\r\x1b[2K".into()),
-        ("stderr", "[mokly/warning] Publication completed. The local build remains at /private/site. Remove it when you no longer need it.\n".into()),
+        ("stderr", "  ! Publication completed. The local build remains. Remove it when you no longer need it.\n  Recovery path: /private/site\n".into()),
     ]);
     assert!(output.state.lock().unwrap().label.is_none());
 }

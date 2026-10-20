@@ -5,6 +5,7 @@ use std::path::Path;
 use mokly_static::error::Error;
 
 use crate::build::BuildError;
+use crate::output::{Mode, Style, warning_line};
 use crate::redaction::Redactor;
 use crate::static_errors::{detail, display_path, without_prefixes};
 
@@ -17,6 +18,21 @@ pub fn path(path: &Path, cwd: &Path, redactor: &Redactor) -> String {
         relative
     };
     redactor.safe(&display_path(relative))
+}
+
+/// Keep a successful publication's retained snapshot path complete in either mode.
+pub fn retained_publication(style: &Style, path: &str) -> String {
+    if style.mode == Mode::Plain {
+        return format!(
+            "[mokly/warning] Publication completed. The local build remains at {path}. Remove it when you no longer need it.\n"
+        );
+    }
+    let warning = warning_line(
+        style,
+        "Publication completed. The local build remains. Remove it when you no longer need it.",
+        false,
+    );
+    format!("{warning}  Recovery path: {path}\n")
 }
 
 /// Format unique recovery paths from a build failure without width truncation.

@@ -242,7 +242,8 @@ impl BuildReporter for Lines {
     fn retained_directory(&self, directory: &Path) {
         self.clear();
         let path = recovery_output::path(directory, &self.cwd, &self.redactor);
-        self.terminal.stderr(&format!("[mokly/warning] Publication completed. The local build remains at {path}. Remove it when you no longer need it.\n"));
+        self.terminal
+            .stderr(&recovery_output::retained_publication(&self.style, &path));
     }
 
     fn build_directory(&self, directory: &Path) {
