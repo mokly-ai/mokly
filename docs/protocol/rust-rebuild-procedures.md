@@ -56,5 +56,9 @@ old test names, not a port.
    `.context/rust-rebuild/sweeps/<milestone>.md` and name that file in one
    line under the milestone in the plan.
 
+Each sweep override lists the old checks that its port does not prove.
+If a delegate drops a duplicate row, the delegate moves those checks into
+the kept port.
+
 Accepted differences are listed in the breaking-change release note. A
 regression blocks the milestone.

@@ -1264,6 +1264,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       is documented; a new rejection requires the user's decision.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+  - [x] Keep a selected variant nested under its component parent in review v8.
+        Retain only that variant and capture only its documents. This preserves
+        parent-owned dependency evidence instead of returning an invalid result.
+        Decision: F5 option A, approved by the orchestrator on 2026-10-20.
+        Evidence: `.context/f5/report.md`.
   - [x] Use the shared comparison projection for index, details, removed
         entries, workspaces, and generation routes in Serve.
         Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/merge-decisions.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-merge-decisions.md`.
@@ -2265,12 +2270,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         Fixed by `7b4dd657`. Controlled cross-thread drops reproduce the error;
         original mocks stay on their owner thread through subscriber and pool
         completion. Evidence: `.context/rust-rebuild/delegation/m8-callback-fixes/report-1.md`.
-  - M10 Serve and moved rows decision 6, Severity High, effort Small: Serve
-    answers 503 to a selected comparison of a component variant whose
-    dependency evidence names a rule that its parent owns, for example
-    `components/card/featured`. Recommended A: the selected projection keeps
-    the parent record with only the selected variant. Until the user
-    decides, the Serve variant specs use the Badge family.
+  - [x] M10 Serve and moved rows decision 6, Severity High, effort Small:
+        apply F5 option A, approved on 2026-10-20. Selected variant comparisons
+        keep the parent with only the selected variant, preserving parent-owned
+        evidence instead of returning 503. The Card Featured browser case
+        verifies both panes. Evidence: `.context/f5/report.md`.
   - M10 Serve and moved rows review 1, open findings for the user:
     1. Expiry emulation cannot fail its snapshot checks. Severity Medium,
        effort Small. Recommended: C, one shared helper fakes a complete
@@ -2289,12 +2293,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     parent activation while a search shows only the removed sibling, and the
     removed page's Location row. Severity Low, effort Small. Recommended: B,
     add both steps to the kept ports when the branches merge.
-  - M10 Serve and moved rows decision 10, Severity Low, effort Small: each
-    sweep override lists the old checks that its port does not prove, and a
-    dropped duplicate moves its extra checks into the kept port. Covers
-    review 3 findings 1 and 2 and review 4 finding 2; previous examples
-    0858e172, 4d6a21a4, and abf52983. Recommended A: add the rule to the sweep
-    procedure.
+  - [x] M10 Serve and moved rows decision 10, Severity Low, effort Small:
+        apply F5 item 2. Each sweep override lists the old checks that its port
+        does not prove, and a dropped duplicate moves its extra checks into
+        the kept port. The sweep procedure now states this rule. Covers
+        review 3 findings 1 and 2 and review 4 finding 2; previous examples
+        0858e172, 4d6a21a4, and abf52983. Evidence: `.context/f5/report.md`.
   - M10 Serve and moved rows review 4, open finding 12 for the user: the
     restored removed-variant journey also changes the parent entry, because
     its private base gives `screens/plain` props. Severity Low, effort Small.

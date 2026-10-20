@@ -336,6 +336,9 @@ because `test.use` reads a function value as a fixture.
 | `plainChip`            | `viewer/chip/plain`: unmodified component variant                     |
 | `nightChip`            | `viewer/chip/night`: only its Dark views change, through a dark sheet |
 
+`serve_comparison_variant.spec.ts` opens Overlay for the Card family's
+Featured variant and checks its parent-owned stylesheet evidence and both panes.
+
 Branch-point copy setup and Serve comparison setup use the isolated
 180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.
 
