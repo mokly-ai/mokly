@@ -99,7 +99,9 @@ pub(crate) fn annotate(nodes: Vec<Node>, repair: &mut Repair) -> Vec<Node> {
             let result = match frame.finish {
                 Finish::Root => return frame.output,
                 Finish::Element(mut node, token) => {
-                    mode.leave(token);
+                    if let Node::Element(element) = node.as_ref() {
+                        mode.leave(token, &element.name);
+                    }
                     if let Some(children) = node.children_mut() {
                         *children = frame.output;
                     }

@@ -169,3 +169,39 @@ fn foreign_plaintext_does_not_stop_metadata_annotation() {
     assert_eq!(repair.elements.len(), 3);
     assert!(serialize::html(&marked).contains("&lt;img src=x&gt;"));
 }
+
+#[test]
+fn foreign_end_tags_after_breakout_close_the_remaining_matching_ancestor() {
+    for point in ["desc", "foreignObject", "title"] {
+        let mut nodes = parse::fragment(&format!(
+            "<svg><svg><{point}><svg></svg></{point}></svg></svg>"
+        ));
+        let middle = &mut nodes[0].children_mut().unwrap()[0];
+        let integration = &mut middle.children_mut().unwrap()[0];
+        let children = integration.children_mut().unwrap();
+        children[0]
+            .children_mut()
+            .unwrap()
+            .push(element("br", &[], vec![]));
+        children.push(element(
+            "plaintext",
+            &[],
+            vec![Node::Text("<b>Literal text</b>".into())],
+        ));
+        for annotated in [false, true] {
+            let nodes = if annotated {
+                annotate(nodes.clone(), &mut Repair::default())
+            } else {
+                nodes.clone()
+            };
+            let html = serialize::html(&nodes);
+            let parsed = parse::document(&html);
+            assert!(
+                !walk(&parsed)
+                    .any(|node| matches!(node, Node::Element(element) if element.name == "b")),
+                "{point}, annotated={annotated}: {html}"
+            );
+            assert!(html.contains("&lt;b&gt;Literal text&lt;/b&gt;"), "{html}");
+        }
+    }
+}

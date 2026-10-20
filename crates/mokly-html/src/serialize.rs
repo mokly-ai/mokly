@@ -24,7 +24,7 @@ pub fn html(nodes: &[Node]) -> String {
         let (node, raw) = match step {
             Step::Node(node, raw) => (node, raw),
             Step::ElementEnd(name, entered_plaintext, token) => {
-                mode.leave(token);
+                mode.leave(token, name);
                 if mode.plaintext() == entered_plaintext {
                     output.push_str(&format!("</{name}>"));
                 }
@@ -58,7 +58,7 @@ pub fn html(nodes: &[Node]) -> String {
                 if !(element.is_html() && void(&element.name)) {
                     pending.push(Step::ElementEnd(&element.name, plaintext, token));
                 } else {
-                    mode.leave(token);
+                    mode.leave(token, &element.name);
                 }
                 let raw = element.is_html()
                     && raw_text(&element.name)
