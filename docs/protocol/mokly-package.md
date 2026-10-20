@@ -42,7 +42,7 @@ package may depend on.
 The supported range is `>=22.15.0 <23.0.0 || >=24.0.0 <24.14.0 || >=24.19.0`.
 Node 23 is unsupported. The shim rejects it before package lookup or native
 execution, so accepted runtimes retain the PostCSS dependency evidence hooks.
-The floor remains 22.15.0 and the existing Node 24 exclusions remain in force.
+The floor is 22.15.0. Node 24.14.0 through 24.18.x are also unsupported.
 The [CI workflow contract](./ci-workflow.md#runtime-profiles) defines the tested representatives.
 
 Node 24.14.0 through 24.18.x can abort concurrent ESM-to-CommonJS loading before

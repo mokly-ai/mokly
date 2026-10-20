@@ -2250,6 +2250,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - [x] Fix CI release checks hub review finding 5 with option A: state that
         the Rust audit's date and locked-version checks require a reviewed
         script change even when the approved advisory ID is absent.
+  - [x] Fix CI release checks hub review finding 6 with option A: state the
+        Node floor and excluded Node 24 versions as current product facts.
   - CI release checks hub review finding 1: a stale PR base can keep an old
     release check green. Severity Medium, effort Small. Recommended: A, require
     branches to be up to date before merge. The hub owns the user decision.
