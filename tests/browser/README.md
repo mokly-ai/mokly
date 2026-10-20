@@ -264,6 +264,9 @@ for live selected comparisons, and add `&refresh=1` for an explicit refresh.
 The test fixture closes automatically. It permits watched edits and base-ref
 moves without sharing writable state with another test.
 
+`serve_comparison_variant.spec.ts` opens Overlay for the Card family's
+Featured variant and checks its parent-owned stylesheet evidence and both panes.
+
 Branch-point copy setup and Serve comparison setup use the isolated
 180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.
 

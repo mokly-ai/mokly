@@ -87,8 +87,10 @@ wake blocked admission without changing the process pool's size or deadlines.
 
 `MemoryComparisons` implements `dyn Comparisons`. Classification generations
 start with review v8 and removed details. Selected captures project that review
-onto one screen or component entry and copy only its view closures. Historical
-routes capture the removed entry from the same pinned base. Captures preserve
+onto one screen or component entry and copy only its view closures. A variant
+selection retains its component parent in review JSON for evidence ownership.
+It captures only the selected variant's documents. Historical routes capture
+the removed entry from the same pinned base. Captures preserve
 original document bytes. `FrozenResources` retains document and resource hashes.
 It rejects changed public bytes or an inconsistent document after cache eviction
 before a capture can install a mixed generation.
@@ -198,6 +200,8 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 - [Request validation](./src/render_request.rs) and [preview memory](./src/preview.rs).
 - [Background Changes](./src/changes_background.rs), [comparison generations](./src/comparison_store.rs),
   and [foreground request leases](./src/foreground.rs).
+- [Selected capture](./src/comparison_capture.rs) retains variant evidence owners
+  and copies only the selected entry's documents.
 - [Viewer inventory](./src/assets.rs) and [shell stub](../mokly-model/src/shell.rs).
 
 ### Related Docs

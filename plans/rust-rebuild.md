@@ -1251,6 +1251,11 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       is documented; a new rejection requires the user's decision.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
+  - [x] Keep a selected variant nested under its component parent in review v8.
+        Retain only that variant and capture only its documents. This preserves
+        parent-owned dependency evidence instead of returning an invalid result.
+        Decision: F5 option A, approved by the orchestrator on 2026-10-20.
+        Evidence: `.context/f5/report.md`.
   - [x] Use the shared comparison projection for index, details, removed
         entries, workspaces, and generation routes in Serve.
         Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/merge-decisions.md` and `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m11/serve-changes/engine-merge-decisions.md`.
