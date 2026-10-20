@@ -103,6 +103,7 @@ for (const entry of CASES)
     });
     const index = await comparisonIndex(request, baseURL);
     const snapshot = snapshotOf(index, entry.previousPath);
+    expect(snapshot).toMatch(/^[a-f0-9]{64}$/u);
     // A pair by similar text leaves its base path no removed record.
     if (entry.pairedWith) {
       const current = index.pages?.find(
