@@ -28,6 +28,7 @@ pub mod input;
 mod links;
 mod locations;
 mod moves;
+pub mod numeric_warnings;
 mod parsing;
 pub mod preparation;
 mod prepare_definitions;

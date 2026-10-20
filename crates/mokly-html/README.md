@@ -19,6 +19,10 @@ and the JavaScript fragment boundary. `mokly-catalogue` prepares definitions.
 `HtmlComposer` implements `dyn Composer` over a prepared catalogue and an
 injected `dyn FragmentRenderer`. Screen and component bodies use one render
 path and the [shared template grammar](../../docs/protocol/mokly-html-screens.md#screen-body).
+Literal integer component attributes use the same binary64 rounding and
+`props-unsafe-integer` warnings as saved props.
+Authenticated JavaScript component instances report the same warning for
+unsafe integer props, including nested React invocations.
 Named slots retain their supplier's props and owner. A repeated slot
 has one logical input and multiple physical ranges. A component's own page
 has the root range `r-0` and no root marker.

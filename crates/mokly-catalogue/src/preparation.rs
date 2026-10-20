@@ -18,6 +18,7 @@ use crate::diagnostic::{Code, Issue, Warning, normalize_warnings};
 use crate::discovery::{Discovery, Inventory, SourceKind};
 use crate::error::{CatalogueError, Result};
 use crate::locations::at;
+use crate::numeric_warnings;
 use crate::prepare_sources::{append, canonical_order, duplicate_indices};
 use crate::render_sources::JavaScriptCatalogue;
 use crate::template_types::{ElementRegistry, Template};
@@ -218,6 +219,9 @@ impl Builder {
         prepared
             .warnings
             .extend(control_warnings::collect(&prepared.model.entries));
+        prepared
+            .warnings
+            .extend(numeric_warnings::collect(&prepared.model.entries));
         normalize_warnings(&mut prepared.warnings);
         if !issues.is_empty() {
             return Err(CatalogueError::Invalid {

@@ -384,6 +384,10 @@ readiness rather than blocking this acceptance round on further startup work.
   Reject override-only validation and fatal saved-value bounds checks.
   Fail declared steps that are not schema multiples or are fractional for
   integer props, so controls cannot offer values the schema rejects.
+- Item 6 C, applied by default (user rule): round unsafe integer props to the
+  nearest binary64 value with a warning before validation and rendering.
+  The core and viewer keep the same value. Reject unconditional failure and
+  silent rounding to keep recoverable input usable and the precision loss visible.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 

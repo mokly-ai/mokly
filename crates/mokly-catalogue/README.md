@@ -62,6 +62,9 @@ Declared steps must be schema multiples and integral for integer props.
 Saved props outside the effective control bounds produce `props-control-bounds`
 warnings. This includes merged variants and Storybook args after control hints.
 Live edits still validate the complete merged props against those bounds.
+Unsafe integer props round to binary64 before inference and validation.
+Each affected saved entry reports `props-unsafe-integer`, including nested values
+and complete merged variants. Strict builds fail on these warnings.
 Inference exclusions become warnings only after final path derivation. Runtime
 failures retain typed terminal categories across provider boundaries. JavaScript
 diagnostics retain module and export attribution without invented coordinates. `DeferredDefinitions`

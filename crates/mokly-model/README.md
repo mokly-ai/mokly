@@ -102,6 +102,10 @@ including comparison generation, snapshot-side, and removed-preview paths.
 `inference::infer` builds closed schemas from own and merged variant props.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`
 encode and decode tagged public props, including negative zero. Derived controls
+use the same binary64 values as the core. Plain prop decoding rounds integers
+outside JavaScript's safe integer range before validation and inference.
+Catalogue and invocation boundaries report `props-unsafe-integer` warnings.
+Derived controls
 follow schema choices, labels, bounds, and zero-based number steps.
 `controls::with_bounds` supplies the narrowed schema for temporary prop checks.
 `runtime_diagnostic` carries expected runtime categories across adapters.
