@@ -16,6 +16,8 @@ Coverage remains incomplete for opaque readers. See the
 [PostCSS evidence contract](../../docs/protocol/mokly-sidecar-postcss.md).
 Preloaded file providers can transform their buffers. Those contexts retain
 late baselines so transformed bytes cannot become false raw-file witnesses.
+Local script loading preserves the provider's UTF-8 behavior. Native observation
+keeps the separate raw digest before text decoding.
 
 ## Install And Run
 

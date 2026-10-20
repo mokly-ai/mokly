@@ -149,7 +149,7 @@ function requireLocal(file: string): unknown {
   commonJs.set(file, module);
   dynamicFiles.add(file);
   try {
-    const code = transformSync(moduleBytes(file), {
+    const code = transformSync(moduleBytes(file).toString(), {
       loader: /\.[cm]?tsx?$/.test(file) ? "ts" : "js",
       format: "cjs",
       sourcefile: file,

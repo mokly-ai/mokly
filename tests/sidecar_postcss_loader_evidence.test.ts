@@ -68,7 +68,7 @@ return result;
   assert.equal(result.readEvidence.coverage, "incomplete");
 });
 
-for (const mode of ["module", "async module", "file"])
+for (const mode of ["module", "async module", "encoded module", "file"])
   test(`a preloaded ${mode} read provider retains its output without a false raw witness`, async (context) => {
     const { base } = await sidecarSources(context);
     const config = path.join(base, "postcss.mjs");
@@ -93,13 +93,14 @@ import fs from 'node:fs';
 import promises from 'node:fs/promises';
 import {syncBuiltinESMExports} from 'node:module';
 const sync=fs.readFileSync; const promise=promises.readFile;
-function adapt(file,value){
+function adapt(file,value,encoding){
+if(${mode === "encoded module"} && encoding!=='utf8')return value;
 if(String(file)!==${JSON.stringify(target)})return value;
 const text=value.toString().replaceAll('red','blue');
 return Buffer.isBuffer(value)?Buffer.from(text):text;
 }
-if(${mode !== "async module"})fs.readFileSync=function(file,...args){return adapt(file,sync(file,...args))};
-promises.readFile=async function(file,...args){return adapt(file,await promise(file,...args))};
+if(${mode !== "async module"})fs.readFileSync=function(file,...args){return adapt(file,sync(file,...args),args[0])};
+promises.readFile=async function(file,...args){return adapt(file,await promise(file,...args),args[0])};
 syncBuiltinESMExports();`,
     );
     const sidecar = startSidecar(context, undefined, {

@@ -5,7 +5,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { types } from "node:util";
 
-import { observeBytes, preloadedCode } from "./postcss-evidence.js";
+import {
+  markFileReader,
+  observeBytes,
+  preloadedCode,
+} from "./postcss-evidence.js";
 
 type ReadOptions = { raw: unknown; encoding?: BufferEncoding };
 
@@ -113,5 +117,7 @@ export function observeFileReads(): void {
       return deliver(file, bytes, selected.encoding);
     },
   });
+  markFileReader(fs.readFileSync);
+  markFileReader(promises.readFile);
   syncBuiltinESMExports();
 }

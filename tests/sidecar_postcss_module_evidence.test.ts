@@ -52,7 +52,14 @@ export default ()=>({postcssPlugin:'package',Once(root){root.append({prop:'nativ
   );
   await write("local.json", '\ufeff{"value":"local"}');
   await write("label.txt", Buffer.from([0xef, 0xbb, 0xbf, 0x41, 0xff]));
-  await write("helper.ts", "export const value: string = 'typescript';");
+  await write(
+    "helper.ts",
+    Buffer.concat([
+      Buffer.from("//"),
+      Buffer.from([0xff]),
+      Buffer.from("\nexport const value: string = 'typescript';"),
+    ]),
+  );
   await write(
     "postcss.mjs",
     `

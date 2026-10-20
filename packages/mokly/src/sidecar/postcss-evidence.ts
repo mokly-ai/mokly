@@ -13,6 +13,8 @@ const originalRead = fs.readFileSync;
 const originalPromiseRead = promises.readFile;
 const require = nodeModule.createRequire(import.meta.url);
 const initialModules = new Set(Object.keys(require.cache));
+type FileReader = typeof fs.readFileSync | typeof promises.readFile;
+const observedReaders = new WeakSet<FileReader>();
 
 /** Preloads can replace file APIs before this child can observe their raw inputs. */
 export const preloadedCode = [
@@ -32,26 +34,45 @@ export function observeBytes(file: string, bytes: Uint8Array): void {
 }
 
 /** Supply compiler bytes; only native file providers establish raw provenance. */
-export function moduleBytes(file: string): Buffer {
+export function moduleBytes(file: string): Buffer | string {
   const reader = fs.readFileSync;
-  return compilerBytes(file, reader.bind(fs)(file), reader === originalRead);
+  const invoke = reader.bind(fs);
+  const bytes = rawReader(reader, originalRead)
+    ? invoke(file)
+    : invoke(file, "utf8");
+  return compilerBytes(file, bytes, reader === originalRead);
 }
 
-/** Local esbuild inputs keep the existing asynchronous provider and its behavior. */
-export async function moduleBytesAsync(file: string): Promise<Buffer> {
-  const reader = promises.readFile;
+/** Script inputs preserve async provider behavior; default assets use physical reads. */
+export async function moduleBytesAsync(
+  file: string,
+  physicalFile = false,
+): Promise<Buffer | string> {
+  const reader = physicalFile ? originalPromiseRead : promises.readFile;
+  const invoke = reader.bind(promises);
   return compilerBytes(
     file,
-    await reader.bind(promises)(file),
+    await (rawReader(reader, originalPromiseRead)
+      ? invoke(file)
+      : invoke(file, "utf8")),
     reader === originalPromiseRead,
   );
 }
 
+/** Only Mokly's own wrappers can certify the raw read below a text conversion. */
+export function markFileReader(reader: FileReader): void {
+  observedReaders.add(reader);
+}
+
+function rawReader(reader: FileReader, original: FileReader): boolean {
+  return !preloadedCode && (reader === original || observedReaders.has(reader));
+}
+
 function compilerBytes(
   file: string,
-  bytes: Buffer,
+  bytes: Buffer | string,
   nativeProvider: boolean,
-): Buffer {
+): Buffer | string {
   modules.add(file);
   if (!preloadedCode && nativeProvider && Buffer.isBuffer(bytes))
     observeBytes(file, bytes);
