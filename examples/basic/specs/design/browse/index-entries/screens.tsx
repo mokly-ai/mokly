@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { defineScreen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
@@ -10,6 +12,7 @@ import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import { MiniProfile, MiniSecurity } from "../../parts/mini_account.js";
 import { NavTree } from "../../parts/nav.js";
 import { NAV_TREE_PROFILE_OPEN } from "../../parts/nav_data.js";
+import { ReasonSentences } from "../../parts/reason_sentences.js";
 import {
   ScreenHead,
   Shell,
@@ -33,18 +36,28 @@ const SECURITY_VIEWS: readonly ChangedView[] = [
 
 type ProfileSubject = "profile" | "profileSecurity";
 
-/** The selected Profile or Security screen in both previews, Details closed. */
+/**
+ * The selected Profile or Security screen in both previews, Details closed. A
+ * changed screen's Details add its comparison details.
+ */
 function ProfileWorkspace({
+  comparisonEvidence,
   subject,
   viewport,
 }: {
+  comparisonEvidence?: ReactNode;
   subject: ProfileSubject;
   viewport: ArtboardViewport;
 }) {
   return (
     <PreviewWorkspace
       viewport={viewport}
-      inspector={<DetailsPanel subject={subject} />}
+      inspector={
+        <DetailsPanel
+          comparisonEvidence={comparisonEvidence}
+          subject={subject}
+        />
+      }
       render={(previewViewport) => {
         const compact = previewViewport === "mobile";
         const content =
@@ -201,7 +214,11 @@ function MemberChanges({ viewport }: { viewport: ArtboardViewport }) {
         status="changed"
         title="Security"
       />
-      <ProfileWorkspace subject="profileSecurity" viewport={viewport} />
+      <ProfileWorkspace
+        comparisonEvidence={<ReasonSentences reasons={["material"]} />}
+        subject="profileSecurity"
+        viewport={viewport}
+      />
     </Shell>
   );
 }
