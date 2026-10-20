@@ -1,7 +1,7 @@
 /**
- * The rendered UI each branch-point case shows in the copied branch-point
- * output: affected destinations, saved props, removed rows, kept comparison
- * mode, Changes activation, and crumbs.
+ * The rendered UI each branch-point case shows on Serve, in the branch copy,
+ * and in the embedded viewer: affected destinations, saved props, removed
+ * rows, kept comparison mode, Changes activation, and crumbs.
  */
 
 import { expect, type Page } from "@playwright/test";
