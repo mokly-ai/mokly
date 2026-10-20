@@ -2206,6 +2206,11 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
 
 ## Milestone 14: Large-project acceptance
 
+- [x] Patch the newly reported RUSTSEC-2026-0382 certificate distrust defect
+      with locked `rustls-webpki` 0.103.16. Keep all other dependency edges.
+      Evidence: `.context/integration-17/security-audit.log` and
+      `.context/integration-17/security-publish-tests.log`.
+
 - [x] Remove the duplicate base render between validation and capture through
       one bounded, ordered collector. Keep aggregate errors, warnings,
       cancellation, fallback, and every charge and bound. Trims preserve the
