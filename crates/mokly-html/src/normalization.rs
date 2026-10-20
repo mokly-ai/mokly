@@ -85,8 +85,12 @@ fn reparse(
     let marked = normalization_annotate::annotate(nodes, &mut repair);
     let serialized = serialize::document(&marked, false);
     let mut parsed = parse::document(&serialized.html);
-    if let Some(id) = &serialized.plaintext
-        && !confirmed_plaintext(&parsed, id)
+    if let Some(start) = &serialized.plaintext
+        && (!confirmed_plaintext(&parsed, &start.id)
+            || !confirmed_plaintext(
+                &parse::document(&serialized.html[..start.prefix_end]),
+                &start.id,
+            ))
     {
         parsed = parse::document(&serialize::document(&marked, true).html);
     }

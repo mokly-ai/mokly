@@ -52,7 +52,9 @@ foreign-content repair puts the element in HTML parsing mode.
 End tags close the surviving matching parser ancestor after foreign-content
 repair. This keeps later text in the correct mode when a nested tag was popped.
 Normalization checks the predicted plaintext start against its reparsed repair
-identity. If the parser did not create an HTML `plaintext` element there, it
+identity in both the full document and the prefix through that start tag.
+Later literal text cannot provide a replacement identity. If the parser did
+not create an HTML `plaintext` element at the predicted point, normalization
 retries with every text node escaped before restoring metadata.
 Every raw-text tag uses the namespace returned by the parser-context helper.
 An HTML tag grafted into foreign content therefore keeps its text escaped.

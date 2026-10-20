@@ -2524,6 +2524,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         observations, share raw-text context and containment paths, and align
         the two supplier-ancestry passages. Evidence:
         `.context/defaults-engine-round3/`.
+  - [x] Defaults-engine round 3 post-push review finding 1: require the
+        predicted plaintext identity in the parsed prefix through its start
+        tag, as well as the complete result. Later literal text cannot replace
+        an ignored start. This strengthens approved finding 2 B and leaves
+        parser-selected text modes pending. Evidence:
+        `.context/defaults-engine-round3/plaintext-identity-red.log` and
+        `.context/defaults-engine-round3/plaintext-identity-green.log`.
   - [x] Defaults-engine hub review 1, finding 1: apply user decision 73 C
         through catalogue-wide rule proof and supplier input ancestry.
   - Defaults-engine hub review 1, finding 2 C: plaintext inside `noscript`

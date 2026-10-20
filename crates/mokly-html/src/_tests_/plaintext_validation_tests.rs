@@ -66,3 +66,26 @@ fn ignored_nested_form_does_not_activate_raw_text_under_math_text() {
     nodes.push(element("p", &[], vec![Node::Text("<b>literal</b>".into())]));
     assert_literal(nodes);
 }
+
+#[test]
+fn later_literal_text_cannot_replace_the_predicted_plaintext_identity() {
+    let nodes = vec![element(
+        "style",
+        &[],
+        vec![element(
+            "plaintext",
+            &[],
+            vec![Node::Text(
+                "</style><b>literal</b><plaintext data-mokly-normalize=\"1\">tail".into(),
+            )],
+        )],
+    )];
+    let parsed = repaired(nodes);
+    assert!(
+        !walk(&parsed).any(|node| matches!(node, Node::Element(element) if element.name == "b")),
+        "{}",
+        serialize::html(&parsed)
+    );
+    let html = serialize::html(&parsed);
+    assert!(html.contains("&lt;b&gt;literal&lt;/b&gt;"), "{html}");
+}

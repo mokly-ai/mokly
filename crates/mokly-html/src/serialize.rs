@@ -20,7 +20,15 @@ pub(crate) struct Serialized {
     /// Bytes for the next parser pass.
     pub(crate) html: String,
     /// Repair identity of the element that activated predicted plaintext mode.
-    pub(crate) plaintext: Option<String>,
+    pub(crate) plaintext: Option<PlaintextStart>,
+}
+
+/// Predicted activation point, before any subsequent raw text is written.
+pub(crate) struct PlaintextStart {
+    /// Private repair identity attached to the predicted element.
+    pub(crate) id: String,
+    /// Byte offset immediately after its serialized start tag.
+    pub(crate) prefix_end: usize,
 }
 
 /// Escape every text node on a conservative retry, including normally raw text.
@@ -70,7 +78,10 @@ pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
                 start(element, &mut output, plaintext);
                 let token = mode.enter(element);
                 if !plaintext && mode.plaintext() {
-                    plaintext_start = Some(element.get(ATTRIBUTE).unwrap_or_default().into());
+                    plaintext_start = Some(PlaintextStart {
+                        id: element.get(ATTRIBUTE).unwrap_or_default().into(),
+                        prefix_end: output.len(),
+                    });
                 }
                 if !(element.is_html() && void(&element.name)) {
                     pending.push(Step::ElementEnd(&element.name, plaintext, token));
