@@ -62,8 +62,8 @@ impl FilePolicy {
             Ok(policy) => policy,
             Err(source) => return Err(invalid("configuration", source.to_string())),
         };
-        let mut private = Vec::new();
-        if let Some(output) = output.filter(|output| output.starts_with(&config.repo_root)) {
+        let mut private = Vec::<PathBuf>::new();
+        if let Some(output) = output {
             private.push(output.into());
         }
         if let Some(roots) = config
@@ -79,6 +79,13 @@ impl FilePolicy {
                 }
             }
         }
+        let identities: Vec<_> = private
+            .iter()
+            .filter_map(|path| tree.project(path).ok().flatten())
+            .map(|node| node.identity)
+            .filter(|path| path != &config.repo_root)
+            .collect();
+        private.extend(identities);
         Ok(Self {
             tree,
             repo_root: config.repo_root.clone(),
@@ -230,6 +237,13 @@ impl FilePolicy {
             if !node.identity.starts_with(&self.repo_root) {
                 return Err(PublicDenial::Escape);
             }
+            if self
+                .private
+                .iter()
+                .any(|private| node.identity.starts_with(private))
+            {
+                return Err(PublicDenial::Private);
+            }
             final_kind = node.kind;
         }
         if final_kind != FileKind::File {
@@ -257,3 +271,7 @@ impl PublicPolicy for FilePolicy {
             .clone()
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/policy_paths_tests.rs"]
+mod policy_paths_tests;

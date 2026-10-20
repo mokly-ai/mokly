@@ -92,6 +92,8 @@ Tests exercise capture reuse; production callers supply fresh base generations.
 
 `FilePolicy` caches accepted and rejected authored-path decisions for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
+Private output and package directories keep their physical identities.
+Repository aliases and case aliases do not make their files public.
 It stops at declared catalogue documents. The working-tree adapter implements
 `mokly-source-interface::tree::SourceTree`. Historical rendering supplies the
 same boundary through the comparison adapter. `mokly-render` supplies the
