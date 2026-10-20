@@ -111,6 +111,35 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `view`, `viewport`, `base=none` (an index without `base`), and
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
+`comparisonViewerHost(source)` mounts another copy instead, such as the
+branch copy's `branchCopy.directory`.
+
+## Comparison scrolling suites
+
+These suites prove the comparison panes, scrolling, and region pairing
+contracts on the native comparison copy and in the embedded comparison viewer.
+
+| Suite                                | Cases                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `comparison_alignment.spec.ts`       | Overlay and Difference stacks scroll as one for desktop, mobile, both viewports, and a component; a shorter document stays aligned past its end; an inner region scrolls every version while the page stays                                                                                                            |
+| `comparison_alignment_input.spec.ts` | Side by side mirrors both ways; scroll keys, same-document anchors, and scrolls the viewer did not make move every version; links stay inert while a version loads; smooth-scroll CSS still moves at once                                                                                                              |
+| `comparison_alignment_pages.spec.ts` | A viewport-height hero cannot grow its comparison, fixed bars and sticky headers stay on the viewport edges, and an app shell page moves only its inner region in every version                                                                                                                                        |
+| `comparison_alignment_hosts.spec.ts` | In a static build, stacks align, Side by side mirrors, panes stay read-only, and a pane that cannot be presented fails and recovers with Try again; in an embedded viewer through both frame adapters, stacks align and panes stay read-only, and through the cross-origin adapter a failing pane reports and recovers |
+| `comparison_regions.spec.ts`         | Panels move together in Overlay, Difference, Side by side in both directions, and Both; a shorter panel stops at its end                                                                                                                                                                                               |
+| `comparison_regions_pairing.spec.ts` | A named horizontal timeline and the main and Projects panels move together in Overlay and Difference; each pairing rule pairs its panel; ambiguous, `off`, and new panels scroll alone; a component's scrolling list moves in every version                                                                            |
+| `comparison_regions_input.spec.ts`   | Every listed key after a pointer press, focus moving into a panel, a touch drag, a scroll the browser made in the lower version, and anchors through a panel and then the page                                                                                                                                         |
+| `comparison_regions_keys.spec.ts`    | Keys from focus, a key falling back to the page at a region's end, right-to-left arrows, and instant two-axis writes under smooth-scroll CSS                                                                                                                                                                           |
+| `removed_previews.spec.ts`           | Space scrolls a previous version while a link holds focus                                                                                                                                                                                                                                                              |
+
+The Scroll together contract names its own suites. In
+`packages/viewer/tests/`, `comparison_region_identity.test.ts` proves the
+name grammar, roles, accessible names, and fingerprints;
+`comparison_region_match.test.ts` proves every pairing rule in order,
+uniqueness counts, ineligible picks, and each row of the pairing table; and
+`comparison_region_mirror.test.ts` proves caching, reservations, the reverse
+pair, and matching afresh after a measurement. The scroll controller unit
+tests there prove measurement, key routing including right-to-left regions,
+anchors, echoes, and the page mirror.
 
 ## Branch-point delivery copy
 
@@ -133,6 +162,14 @@ same authored sources.
 a pure-moved screen, a moved component with distinct variant states and
 nested slot inputs, a moved screen with a removed variant, and a moved page.
 The branch copy and Serve use this composition. The default copy uses no hook.
+
+Viewer journeys on this copy register shared case modules.
+`static_moved_entries.spec.ts` uses the `moved_*_cases.ts` modules that
+Serve also runs. `viewer_moved_entries.spec.ts` runs them in an embedded
+viewer over this copy through both frame adapters. Each host passes a
+`MovedHost` from `moved_rows.ts`, which says how the host opens an entry.
+`static_development_mount.spec.ts` serves the `development_shell.ts` bundle
+with React's development build.
 
 The table pins every branch entry at the original fixture base. Both path
 columns are relative to `branch/`. Each row has Changes status `ready`.
@@ -264,6 +301,44 @@ for live selected comparisons, and add `&refresh=1` for an explicit refresh.
 The test fixture closes automatically. It permits watched edits and base-ref
 moves without sharing writable state with another test.
 
+### Viewer journeys on Serve
+
+`serve_comparison_ui.ts` holds the shared viewer actions. Its waits follow a
+selected comparison request through the redirect to its generation before UI
+deadlines apply. It also records requests to the stable endpoint and holds
+the HEAD renewal of a selected generation. `serve_changes_emulation.ts`
+rewrites the index body into a pending, preparing, or unavailable Changes
+state, the shape Serve writes before classification completes. Each step
+still arrives as a real watched publication, and Serve keeps no test seam.
+Specs that run the same comparison checks on the copied output and on Serve
+register them from a `*_cases.ts` module. The copied output registers the
+alignment, input, and Scroll together memory cases in
+`comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
+`comparison_regions_toggle.spec.ts`. Serve registers them in
+`serve_comparison_alignment.spec.ts`,
+`serve_comparison_alignment_input.spec.ts`, and
+`serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
+through its own setup are helpers instead. `light_only_band.ts` checks the
+Light only band. `imported_css_panes.ts` checks the panes of the screen that
+`tests/helpers/imported_css_sources.ts` adds. `serve_light_only_band.spec.ts`
+drops Dark through a watched configuration edit.
+
+A spec adds its own sources to both commits with
+`test.use({ comparisonSources: { add: hook } })`. The hook runs after the
+shared hooks; the option is unset by default. The object wrapper is needed
+because `test.use` reads a function value as a fixture.
+`tests/helpers/viewer_state_sources.ts` supplies `addViewerStateSources` and
+`viewerStatePaths` for the one shape that the default catalogue lacks:
+
+| `viewerStatePaths` key | Entry and evidence                                                    |
+| ---------------------- | --------------------------------------------------------------------- |
+| `chip`                 | `viewer/chip`: unmodified component parent                            |
+| `plainChip`            | `viewer/chip/plain`: unmodified component variant                     |
+| `nightChip`            | `viewer/chip/night`: only its Dark views change, through a dark sheet |
+
+`serve_comparison_variant.spec.ts` opens Overlay for the Card family's
+Featured variant and checks its parent-owned stylesheet evidence and both panes.
+
 Branch-point copy setup and Serve comparison setup use the isolated
 180,000 ms fixture budget. Test bodies keep the normal 60,000 ms timeout.
 
@@ -282,6 +357,9 @@ watched publication and disclosure cases.
 small HTML and React inputs. They verify native base preparation, delivered
 Changes, event identity, visible reloads, and restoration of edited sources.
 They use the suite browser and assert outcomes without timing budgets.
+`large_startup` checks real preview and prop behavior while Changes is
+unavailable. The focused probe completes; the full Serve probe reports the
+unavailable comparison. The test applies no elapsed-time budget.
 `large_watch_failure` holds restoration pending after the owned server exits.
 It requires the harness to close its context and finish restoration before return.
 

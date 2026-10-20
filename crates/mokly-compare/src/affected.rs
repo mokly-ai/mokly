@@ -125,6 +125,22 @@ pub(crate) fn collect(
                 lookups += 1;
                 let Some(path) = destinations
                     .get(&(view.side, kind, path.to_ascii_lowercase()))
+                    .or_else(|| {
+                        if start == 0
+                            && view.component
+                            && context_entry
+                                .is_some_and(|entry| entry.metadata.variant_of.is_some())
+                        {
+                            lookups += 1;
+                            destinations.get(&(
+                                view.side,
+                                kind,
+                                view.entry.path.to_ascii_lowercase(),
+                            ))
+                        } else {
+                            None
+                        }
+                    })
                     .cloned()
                 else {
                     continue;

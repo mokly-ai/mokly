@@ -119,12 +119,12 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
     let Some(path) = security::decode(request.uri().path()) else {
         return response::missing();
     };
-    let snapshot = app.publications.current();
     if path == viewer("components/render") {
         if request.method() != Method::POST {
             return response::method("POST");
         }
-        if !security::authorized(request.headers(), &snapshot.render_token) {
+        let render_token = app.publications.current().render_token.clone();
+        if !security::authorized(request.headers(), &render_token) {
             return response::error(
                 StatusCode::FORBIDDEN,
                 "forbidden",
@@ -156,6 +156,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             Ok(request) => request,
             Err(_) => return response::reject(Rejection::InvalidInput),
         };
+        let snapshot = app.publications.current();
         let validated = match render_request::validate(&request, &snapshot.index) {
             Ok(validated) => validated,
             Err(rejection) => return response::reject(rejection),
@@ -189,6 +190,7 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
             Err(rejection) => response::reject(rejection),
         };
     }
+    let snapshot = app.publications.current();
     if request.method() != Method::GET && request.method() != Method::HEAD {
         return response::method("GET, HEAD");
     }

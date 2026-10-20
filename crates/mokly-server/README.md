@@ -53,8 +53,8 @@ between documents and waits while foreground requests need the worker pool.
 Document responses queue completion notices without waiting for publication.
 One application-owned task coalesces notices and skips recorded routes and
 routes with no detail views. A completed background
-pass publishes its changed evidence in one batch. Equal completions only record
-the route as completed. They keep the revision and live render validity and send
+pass publishes its changed evidence in one batch. Completions that change no detail
+only record the route. They keep the revision and live render validity and send
 no event. A replacement starts a new pass. With `--no-watch`, Serve computes it
 once. Old backends cannot publish into a replacement.
 Workspace lists stay absent until all consumer usage is proven. One unavailable
@@ -87,13 +87,18 @@ wake blocked admission without changing the process pool's size or deadlines.
 
 `MemoryComparisons` implements `dyn Comparisons`. Classification generations
 start with review v8 and removed details. Selected captures project that review
-onto one screen or component entry and copy only its view closures. Historical
-routes capture the removed entry from the same pinned base. Captures preserve
+onto one screen or component entry and copy only its view closures. A variant
+selection retains its component parent in review JSON for evidence ownership.
+It captures only the selected variant's documents. Historical routes capture
+the removed entry from the same pinned base. Captures preserve
 original document bytes. `FrozenResources` retains document and resource hashes.
 It rejects changed public bytes or an inconsistent document after cache eviction
 before a capture can install a mixed generation.
 Its `comparison_capture` method returns `None` so capture creation and smaller
 budgets cannot bypass these checks through the wrapped generation.
+Comparison batches use the wrapped generation's existing worker pool. Each
+worker applies this wrapper's document and resource checks before its input
+returns. Scheduling does not bypass the wrapper or add a second pool.
 
 Identical pending selections coalesce. Different captures serialize. Admission
 allows 32 pending captures and a ten-second deadline. Generations expire after
@@ -151,7 +156,10 @@ Every response uses `no-store` and `nosniff`. No route adds a CORS header.
 
 Temporary renders validate the installed revision, view, controls, and complete
 props. They use the graph's shared prop render path outside the HTTP event
-loop. The CLI supplies the shared JavaScript runtime, so React entries use
+loop. Body reads keep only the authorization token. Validation and render
+admission take the current snapshot after the body arrives. A stalled body
+cannot retain a replaced snapshot or its comparison capture.
+The CLI supplies the shared JavaScript runtime, so React entries use
 the same pool, cache, renderer, PostCSS, and fragment keys as their saved
 views. The HTTP token and revision checks apply before that render path.
 `MemoryPreviews` holds at most 16 bundles and 32 MiB for five minutes.
@@ -198,6 +206,8 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 - [Request validation](./src/render_request.rs) and [preview memory](./src/preview.rs).
 - [Background Changes](./src/changes_background.rs), [comparison generations](./src/comparison_store.rs),
   and [foreground request leases](./src/foreground.rs).
+- [Selected capture](./src/comparison_capture.rs) retains variant evidence owners
+  and copies only the selected entry's documents.
 - [Viewer inventory](./src/assets.rs) and [shell stub](../mokly-model/src/shell.rs).
 
 ### Related Docs

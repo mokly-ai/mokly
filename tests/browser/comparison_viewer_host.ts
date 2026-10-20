@@ -1,13 +1,14 @@
 /**
- * An embedded `MoklyViewer` over the shared copied comparison output, through
- * both frame adapters. The helper copies the output into its own directory,
+ * An embedded `MoklyViewer` over a copied comparison output, through both
+ * frame adapters; the shared output by default, or another copy such as the
+ * branch copy. The helper copies the output into its own directory,
  * adds the host page of `comparison_viewer_entry.tsx`, and serves that
  * directory on three origins: the artifact origin, the host origin, and the
  * host origin behind a strict Content Security Policy.
  * `viewer.html?adapter=same-origin` mounts the viewer over the host origin's
  * own copy with `sameOriginAdapter()`; `viewer.html?adapter=cross` mounts it
  * over the artifact origin with `postMessageAdapter({ frameOrigin })`. The
- * shared copy's bytes stay unchanged.
+ * source copy's bytes stay unchanged.
  */
 
 import fs from "node:fs/promises";
@@ -34,8 +35,10 @@ export interface ComparisonViewerHost {
   close(): Promise<void>;
 }
 
-/** Copy the shared output, add the host page, and serve it three times. */
-export async function comparisonViewerHost(): Promise<ComparisonViewerHost> {
+/** Copy `source`, add the host page, and serve it three times. */
+export async function comparisonViewerHost(
+  source: string = copiedComparisonDirectory(),
+): Promise<ComparisonViewerHost> {
   const root = await fs.mkdtemp(
     path.join(
       process.env["MOKLY_VERIFICATION_RESOURCE_ROOT"] ??
@@ -49,7 +52,7 @@ export async function comparisonViewerHost(): Promise<ComparisonViewerHost> {
     await fs.rm(root, { recursive: true, force: true });
   };
   try {
-    await fs.cp(copiedComparisonDirectory(), root, { recursive: true });
+    await fs.cp(source, root, { recursive: true });
     await build({
       entryPoints: [
         path.join(repositoryRoot, "tests/browser/comparison_viewer_entry.tsx"),

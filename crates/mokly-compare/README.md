@@ -94,8 +94,13 @@ Its timing spans count final view states and measure changed-path collection,
 deduplication, and sorting without recording source data.
 It validates and captures the base in one source-root pass. Private compressed
 inputs preserve exact document bytes, generated CSS, and trusted annotations.
-Before each view is read and encoded, capture checks the generation's
-cancellation state and returns its error without processing a later view.
+Capture timings separate full validation, document composition, encoding,
+and closure collection. They contain no source data or error payloads.
+Capture schedules bounded batches on the generation's existing render workers.
+Each batch contains at most one transient input per worker. It releases each
+parsed input after encoding and retains results in authored route order.
+Before each view starts and before each encoding, capture checks cancellation.
+Queued cancelled inputs return the generation's error without starting work.
 Every generated route that fits retains its digest. Usage, links, resources,
 and component metadata stay Rust values, so valid deep props need no recursive
 JSON decode.
@@ -128,6 +133,9 @@ working files are streamed without retaining their bytes. Remaining source
 budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
 pinned base generation. `Lookup` resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
+Affected usage groups a variant under its own resolved destination when its
+original parent has none. Evidence keeps the original side's paths, and no
+group links to a different-kind replacement at the parent's path.
 Metadata comparison keeps schema, controls, and declared slots on the parent.
 Variants compare their own metadata, props, and supplied slots independently.
 

@@ -7,7 +7,32 @@ use mokly_model::catalogue::EntryContent;
 
 use crate::error::{Result, invalid};
 use crate::session::Session;
+use crate::types::DocumentPlan;
 use crate::{references, workers};
+
+fn validate_target(
+    session: &Session,
+    plan: &DocumentPlan,
+    reference: &Reference,
+    fragment: &str,
+) -> Result<()> {
+    let artifact = session.raw(&plan.route)?;
+    if !artifact
+        .document
+        .as_ref()
+        .is_some_and(|document| references::anchors(&document.tree).contains(fragment))
+    {
+        return Err(invalid(
+            &reference.source_route,
+            format!(
+                "{}: logical fragment {fragment:?} is missing from {}",
+                reference.source_route, plan.route
+            ),
+        ));
+    }
+    session.state.cache.insert(plan.key.clone(), artifact);
+    Ok(())
+}
 
 pub(crate) fn links(session: &Session, links: &[Reference]) -> Result<()> {
     for reference in links {
@@ -35,20 +60,9 @@ pub(crate) fn links(session: &Session, links: &[Reference]) -> Result<()> {
                 .path
                 == path
         }) {
-            let artifact = session.raw(&plan.route)?;
-            if !artifact
-                .document
-                .as_ref()
-                .is_some_and(|document| references::anchors(&document.tree).contains(fragment))
-            {
-                return Err(invalid(
-                    &reference.source_route,
-                    format!(
-                        "{}: logical fragment {fragment:?} is missing from {}",
-                        reference.source_route, plan.route
-                    ),
-                ));
-            }
+            let shared = session.state.anchor_flights.acquire(&plan.key);
+            let _guard = shared.lock().unwrap_or_else(|error| error.into_inner());
+            validate_target(session, plan, reference, fragment)?;
         }
     }
     Ok(())
@@ -103,3 +117,11 @@ pub(crate) fn completed(
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "_tests_/validation_cache_tests.rs"]
+mod validation_cache_tests;
+
+#[cfg(test)]
+#[path = "_tests_/validation_flight_tests.rs"]
+mod validation_flight_tests;

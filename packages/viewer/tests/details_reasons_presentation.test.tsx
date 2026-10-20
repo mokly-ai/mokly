@@ -1,7 +1,8 @@
 /**
  * Details show an entry's direct reasons from its detail before a comparison
  * loads, and Current, a loaded comparison, and a later publication keep each
- * fact once (decision D1 of the shell delivery contract).
+ * fact once (decision D1 of the shell delivery contract). Each reason reads as
+ * its sentence in the component workspace design's table.
  */
 
 import assert from "node:assert/strict";
@@ -12,7 +13,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import { parseReviewResult } from "../src/review/result_validation.js";
-import type { ReviewResult } from "../src/review/types.js";
+import type { EntryChangeReason, ReviewResult } from "../src/review/types.js";
+import { catalogueSelectionEntry } from "../src/shell/catalogue.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 import { mergeWorkspaceEvidence } from "../src/shell/workspace_evidence_merge.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
@@ -31,6 +33,24 @@ const ACTION = "components/action";
 const MATERIAL = "<p>Rendered content changed.</p>";
 const IMPLEMENTATION =
   "<p>Rendered content changed where this component is used.</p>";
+const BRANCH_POINT = "<p>Compared with the branch point on main.</p>";
+const RETIRED_PATH = "product/browse/home/retired";
+const RETIRED =
+  "9222f823b4a0d8a23e201436f42c7d624b675f318bc496b635d18fb9f5a4806e";
+
+/** The sentence table of mokly-component-workspace-design.md. */
+const SENTENCES: readonly (readonly [EntryChangeReason, string])[] = [
+  [{ kind: "added" }, "Added to this branch."],
+  [{ kind: "removed" }, "Removed on this branch."],
+  [{ kind: "material" }, "Rendered content changed."],
+  [
+    { kind: "implementation" },
+    "Rendered content changed where this component is used.",
+  ],
+  [{ kind: "inputs" }, "Supplied props or slots changed."],
+  [{ kind: "structure" }, "Component instances changed."],
+  [{ kind: "metadata" }, "Page details or saved examples changed."],
+];
 
 /** The routed workspace of one path over edited fixtures. */
 function workspace(
@@ -99,6 +119,36 @@ test("Details show the detail's reasons before a comparison loads", () => {
     /^<section class="mbk-comparison-evidence" data-workspace-evidence=""><h3>Comparison details<\/h3><p>Compared with the branch point on main\.<\/p><p>Rendered content changed\.<\/p>/,
   );
   assert.equal(count(markup, MATERIAL), 1);
+});
+
+test("each reason reads as its one sentence after the branch point", () => {
+  const data = workspace(HOME);
+  for (const [reason, sentence] of SENTENCES) {
+    const markup = renderToStaticMarkup(
+      <WorkspaceEvidence data={{ ...data, reasons: [reason] }} />,
+    );
+    assert.ok(markup.includes(`${BRANCH_POINT}<p>${sentence}</p>`), sentence);
+    for (const [, other] of SENTENCES)
+      assert.equal(
+        count(markup, `<p>${other}</p>`),
+        other === sentence ? 1 : 0,
+        `${reason.kind}: ${other}`,
+      );
+  }
+});
+
+test("a removed snapshot's Details read its removed reason once", () => {
+  const model = shellModelFixture();
+  const catalogue = viewerCatalogue(model);
+  const entry = catalogueSelectionEntry(catalogue, RETIRED_PATH, RETIRED);
+  assert.ok(entry?.kind === "screen");
+  const data = publicWorkspace(catalogue, model, entry, true, RETIRED, "main");
+  assert.equal(data.removed, true);
+  assert.equal(data.status, "Removed");
+  assert.deepEqual(data.reasons, [{ kind: "removed" }]);
+  const markup = renderToStaticMarkup(<WorkspaceEvidence data={data} />);
+  assert.ok(markup.includes(`${BRANCH_POINT}<p>Removed on this branch.</p>`));
+  assert.equal(count(markup, "Removed on this branch."), 1);
 });
 
 test("a loaded comparison and Current keep each reason once", () => {

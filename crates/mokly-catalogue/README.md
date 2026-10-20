@@ -22,6 +22,9 @@ render graph crates.
 Warning identities keep route and named subjects distinct, including equal
 printed locations. Normalization sorts by printed location, message, code,
 and subject kind before removing exact duplicates.
+Unsupported extglob openings in stylesheet matchers produce one configuration
+warning per matcher. Brace alternatives and literal character classes stay
+warning-free. Preparation leaves the matcher's meaning unchanged.
 
 `Loader` implements `ConfigLoader`. It searches upward or loads an explicit
 JSON file. The editor schema ships in `@mokly/mokly/config.schema.json`.

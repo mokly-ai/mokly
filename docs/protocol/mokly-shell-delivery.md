@@ -198,10 +198,10 @@ The shell keeps the index and details for the page's lifetime.
 
 ## Updates In Serve
 
-Serve publishes one state per completed action: a rebuild after a source
-change, a Changes completion or status move, a bundle change, or a completed
-on-demand render, and may combine several completions into one publication. A GET of the index
-or a detail starts no render and no Git command, and a failed candidate
+Serve publishes one revision for a completion that changes the index or a
+detail. This includes rebuilds, Changes status updates, bundle changes, and
+on-demand renders. Serve may combine completions into one publication.
+An index or detail GET starts no render or Git command. A failed candidate
 leaves the last published state in place.
 Each publication replaces the index and the details in one step and raises
 `revision` by one. The event stream writes one message per publication whose

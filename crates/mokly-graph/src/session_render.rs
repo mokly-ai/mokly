@@ -8,7 +8,8 @@ use crate::cache::Artifact;
 use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
 use crate::error::{GraphError, Result, invalid};
 use crate::session::Session;
-use crate::workers::ArtifactWorker;
+use crate::types::{ComparisonDocument, RenderGeneration};
+use crate::workers::{ArtifactWorker, ComparisonWorker};
 use crate::{document_composition, resource_digests, validation};
 
 impl Session {
@@ -52,6 +53,12 @@ impl Session {
                 source: Box::new(source),
             }),
         }
+    }
+}
+
+impl ComparisonWorker for Session {
+    fn input(&self, route: &str) -> Result<ComparisonDocument> {
+        self.comparison_input(route)
     }
 }
 

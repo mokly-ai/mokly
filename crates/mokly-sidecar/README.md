@@ -129,6 +129,8 @@ cargo xtask generate-types
 Unit tests use `unimock` at process, pipe, clock, and reporter boundaries.
 They verify frame limits, hello, correlation, deadlines, retry, recycling,
 FIFO order, concurrency bounds, queue cancellation, and UTF-8 diagnostic lines.
+Replay tests keep complete inputs for fresh workers, omit already loaded
+inputs, and preserve binding updates across workers.
 The shutdown unit tests control exit and drain independently through `WaitMock`.
 Command stderr tests acknowledge all forwarded bytes before shutdown and check
 bounded pieces and process reaping. Direct sidecar tests check graceful exit
@@ -146,6 +148,8 @@ The `mock` feature exposes the public trait mocks to other crates.
 - [Framing](./src/codec.rs) and [ordered client](./src/client.rs).
 - [Pool](./src/pool.rs), [options](./src/pool_options.rs), and
   [process factory](./src/process_factory.rs).
+- [Preparation](./src/pool_preparation.rs) copies missing replay inputs and
+  shares immutable binding revisions between the pool and its loaded workers.
 
 ### Related Docs
 

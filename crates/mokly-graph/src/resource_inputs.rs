@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::sync::Mutex;
 
 /// Cross-generation dependencies keyed by a document's source recipe.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ResourceInputsMock))]
 pub trait ResourceInputs: Debug + Send + Sync {
     /// Lease a recipe while one graph uses it.
     fn retain(&self, recipe: &str);

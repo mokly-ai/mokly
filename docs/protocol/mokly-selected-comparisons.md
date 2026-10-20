@@ -73,11 +73,13 @@ The result is the review result v8 projected onto the selected entry: its
 sides, `previousPath`, view states, ignored regions, rule and resource
 evidence with owners, and direct reasons, under the
 [comparison records](./mokly-component-comparison-records.md). A component
-parent's response carries its own views; a variant's response carries the
-variant's. Catalogue-wide affected-consumer evidence stays in the entry
-detail's workspace; the selected response omits cross-entry records and the
-diagnostics. The response passes the v8 validator. A missing entry fails
-without inventing records.
+parent's response carries its own views and no variants. A variant's response
+retains its component parent with only the selected variant in `variants`.
+The parent record supplies the variant's evidence ownership. The generation
+captures only the variant's documents. Catalogue-wide affected-consumer
+evidence stays in the entry detail's workspace; the selected response omits
+affected records and diagnostics. The response passes the v8 validator. A
+missing entry fails without inventing records.
 
 ## Capture and lifetime
 
@@ -133,9 +135,10 @@ renews or reacquires it before new panes load.
 ## Verification
 
 Regressions must prove that a selection renders and reads only the chosen
-entry's views and resources, includes only that entry, and keeps both sides'
-bytes. Cover screen-only and component catalogues, removed and added sides,
-schemes and viewports, asset isolation, input mutation, malformed requests,
+entry's views and resources and keeps both sides' bytes. A variant result
+retains its parent record for evidence ownership. Cover screen-only and
+component catalogues, removed and added sides, schemes and viewports,
+asset isolation, input mutation, malformed requests,
 coalescing, refresh, invalidation, cancellation, shutdown, and retry. Advance
 the server clock to prove that idle screen and component comparisons recover
 after generation collection, without failed pane requests. Cover HEAD
