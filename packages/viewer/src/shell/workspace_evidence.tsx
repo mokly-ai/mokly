@@ -96,16 +96,6 @@ export function WorkspaceEvidence({
           {ignored.length ? (
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
-          {evidence.comparison &&
-          data.comparison &&
-          !data.change &&
-          data.relatedComponents.length > 0 &&
-          evidence.views.some((view) => view.state === "changed") ? (
-            <p>
-              Shared component changes affect this preview. This page has no
-              independent entry in Changes.
-            </p>
-          ) : null}
           {variant?.before &&
           variant.after &&
           JSON.stringify(variant.before.props) !==

@@ -40,11 +40,11 @@ afterwards. `resolve` requires an explicit before/after side and kind.
 without a link, and `parentOf` locates a current entry or removed record first.
 `removedVariants(parent)` lists the removed variants whose parent resolves to
 that entry, in record order. `previousPath` gives only accepted move pairs.
-Results retain current entries or complete removed records. The baseline
-inventory is supplied per call from `componentChanges.baseline`; it adds
-same-path and case-only counterparts, while pairs alone prove moved
-counterparts, so the embedded viewer never needs one. Usage links, the variant
-bar, supplied-input pairing, removed tree rows, workspace keys, breadcrumbs,
+Results retain current entries or complete removed records. A caller may
+supply a baseline inventory per call; it adds same-path and case-only
+counterparts, while pairs alone prove moved counterparts. No shell module
+supplies one: the entry detail already carries the paired input changes. Usage
+links, the variant bar, removed tree rows, workspace keys, breadcrumbs,
 details and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
 fails when a shell or viewer module outside the lookup reads `previousPaths`,
@@ -140,12 +140,12 @@ including Dark-to-Light fallback, and carries the matching status, comparison
 eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
 uses that effective scheme while retaining the requested scheme as the control
 state, so navigation and controlled-host updates cannot leave stale indicators.
-`workspace_views_data.ts` derives the changed views themselves, preferring a
-ready comparison result and falling back to the lightweight screen-view
-evidence a screen-only catalogue records. Workspace data keys those lists by
-component variant path or screen path, so every reader must
-select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
-the dot and clips its wording.
+`../viewer/public_workspace_views.ts` derives the changed views themselves from
+the published catalogue's ready per-view comparisons. Workspace data keys
+those lists by component variant path or screen path, and
+`workspace_views_data.ts` reads the list of the shown selection, so every
+reader selects the evidence that belongs to the preview;
+`css_workspace_marks.ts` draws the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
@@ -235,12 +235,14 @@ validated query/parser/resolver carries it through the first render,
 controlled hosts and history. Headings, crumbs, Details and previous-preview lookup consume
 the resolved removed record and route.
 
-`workspace_data.ts` describes shell data, while `workspace_usage_data.ts`
-projects use and affected-consumer links. Its `entry` is always the exact routed
-screen, component parent, or component variant; component routes retain their
-parent schema separately for controls. The lists of a screen or component
+`workspace_data.ts` describes shell data. Its `entry` is always the exact
+routed screen, component parent, or component variant; component routes retain
+their parent schema separately for controls. The lists of a screen or component
 come from its entry detail's `workspace`, and every value is projected only
-from validated index and detail records. `comparison_views.tsx` renders
+from validated index and detail records. A catalogue without published records
+knows only the context's Changes lists, so its workspace carries statuses and
+the Used by links that `workspace_usage_data.ts` projects from manifest usage,
+and no comparison evidence. `comparison_views.tsx` renders
 React-owned frame chrome around the snapshots from validated comparison
 metadata.
 

@@ -396,6 +396,12 @@ option applies under the user's rule. Milestones 10.1 and 10.2 apply them.
   the [pane contract](../docs/protocol/mokly-comparison-panes.md#layout)
   names it.
 
+**Decision log item 34 A (approved by the user, decision 34 A, 2026-10-20):**
+delete the dead shell path `ShellContext.componentChanges` in
+`packages/viewer/src/shell`, which only the deleted TypeScript backend set,
+and the tests that reach their copy only through it. The live-path tests cover
+the same copy.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
@@ -1632,6 +1638,8 @@ Tags: ui
 - [ ] Item 24 A: show each use-case step's mobile view in a phone frame below
       760px.
 - [ ] Item 17 A: lay out the prop controls as rows with a label column.
+- [x] Decision 34 A: delete the dead `ShellContext.componentChanges` path and
+      move the copy checks that reached Details through it to live inputs.
 - [ ] Pass the complete gate on the final commit, push the branch, and report.
 
 ## Milestone 11: Watch and incremental rendering

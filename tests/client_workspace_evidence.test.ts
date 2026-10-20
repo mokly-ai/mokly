@@ -5,8 +5,10 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { RuleEvidence } from "../packages/viewer/dist/catalogue/types.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type {
   ReviewEntry,
+  ReviewResult,
   ReviewView,
 } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
@@ -63,23 +65,25 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
       view("desktop", "unchanged", [record(TOKENS, "", "excluded")]),
     ],
   );
-  const markup = renderEvidence({
-    base: "main",
-    status: "Changed",
-    change: home,
-    comparison: home,
-    components: [],
-    comparisonEligible: true,
-    comparisons: true,
-    entry: { path: "home", kind: "screen", route: "home/index.html" },
-    inputChanges: [],
-    relatedComponents: [],
-    usedBy: [],
-    affected: [],
-    removed: false,
-    variants: [],
-    views: [],
-  } as unknown as WorkspaceData);
+  const markup = renderEvidence(
+    {
+      base: "main",
+      status: "Changed",
+      components: [],
+      comparisonEligible: true,
+      comparisons: true,
+      entry: { path: "home", kind: "screen", route: "home/index.html" },
+      inputChanges: [],
+      relatedComponents: [],
+      usedBy: [],
+      affected: [],
+      removed: false,
+      variants: [],
+      views: [],
+    } as unknown as WorkspaceData,
+    undefined,
+    loaded(home),
+  );
 
   assert.equal(
     markup,
@@ -267,8 +271,6 @@ function renderKindEvidence(
     {
       base: "origin/main",
       status: "Changed",
-      change: comparison,
-      comparison,
       ...(kind === "component" ? { component: { path, title, kind } } : {}),
       components: [],
       comparisonEligible: true,
@@ -283,14 +285,31 @@ function renderKindEvidence(
       views: [],
     } as unknown as WorkspaceData,
     kind === "component" ? "action/default" : undefined,
+    loaded(comparison),
   );
 }
 
-function renderEvidence(data: WorkspaceData, variantPath?: string): string {
+/** A loaded comparison that holds one entry record. */
+function loaded(entry: ReviewEntry): ReviewResult {
+  return parseReviewResult({
+    schemaVersion: 8,
+    baseCommit: "a".repeat(40),
+    entries: [entry],
+    affected: [],
+    diagnostics: [],
+  });
+}
+
+function renderEvidence(
+  data: WorkspaceData,
+  variantPath?: string,
+  comparison?: ReviewResult,
+): string {
   return renderToStaticMarkup(
     createElement(WorkspaceEvidence, {
       data,
       ...(variantPath ? { variantPath } : {}),
+      ...(comparison ? { loaded: comparison } : {}),
     }),
   );
 }

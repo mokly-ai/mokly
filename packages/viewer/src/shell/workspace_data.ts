@@ -1,3 +1,4 @@
+import type { InputChange } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 /** Serializable, source-derived state shared by every delivery's inspector. */
@@ -5,46 +6,27 @@ import {
   generatedViews,
   type GeneratedComponentView,
 } from "../components/views.js";
-import { reviewEntry } from "../review/entries.js";
 import type {
   EntryChangeReason,
-  ReviewEntry,
   ViewResourceEvidence,
 } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { branchPoints } from "./catalogue_branch_point.js";
 import { materialChangedEntries, type ShellContext } from "./context.js";
 import {
   shownComparisonEligible,
   type EntryStatus,
   type ViewStatesBySelection,
 } from "./view_status.js";
-import {
-  componentReview,
-  workspaceComponent,
-  type WorkspaceEntry,
-} from "./workspace_entry.js";
-import {
-  inputChanges as entryInputChanges,
-  type InputChange,
-} from "./workspace_input_changes.js";
-import {
-  affectedUsageLinks,
-  usedByUsageLinks,
-  type UsageLink,
-} from "./workspace_usage_data.js";
+import { workspaceComponent, type WorkspaceEntry } from "./workspace_entry.js";
+import { usedByUsageLinks, type UsageLink } from "./workspace_usage_data.js";
 import {
   standaloneWorkspaceVariant,
   workspaceVariants,
   type WorkspaceVariant,
 } from "./workspace_variants.js";
-import {
-  changedViewsBySelection,
-  type ChangedViewsBySelection,
-  viewStatesBySelection,
-} from "./workspace_views_data.js";
+import type { ChangedViewsBySelection } from "./workspace_views_data.js";
 
 export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
@@ -74,15 +56,11 @@ export interface WorkspaceData {
   usedBy: readonly UsageLink[];
   affected: readonly UsageLink[];
   status?: EntryStatus;
-  /** The routed entry's review record while Changes lists it. */
-  change?: ReviewEntry;
   /**
    * The routed entry's direct reasons from its detail, while Changes is
    * ready and includes it; a pure move has none.
    */
   reasons?: readonly EntryChangeReason[];
-  /** The screen's review record, or the component parent with its variants. */
-  comparison?: ReviewEntry;
   resourceEvidence?: readonly ViewResourceEvidence[];
   base: string;
   comparisons: boolean;
@@ -92,7 +70,12 @@ export interface WorkspaceData {
   inputChanges: readonly InputChange[];
 }
 
-/** Entry state and actual saved views stay independent of Changes membership. */
+/**
+ * Entry state and actual saved views stay independent of Changes membership.
+ * A published catalogue supplies every comparison fact. A catalogue without
+ * published records knows only the context's Changes lists, so its workspace
+ * carries statuses and no comparison evidence.
+ */
 export function workspaceData(
   catalogue: Catalogue,
   context: ShellContext,
@@ -107,59 +90,28 @@ export function workspaceData(
       context.snapshotId,
       context.base,
     );
-  const snapshot = context.componentChanges;
-  const result = snapshot?.result;
   const component = workspaceComponent(catalogue, entry);
   const orphanVariant =
     entry.kind === "component" &&
     isManifestComponentVariant(entry) &&
     component === undefined;
-  const componentComparison =
-    entry.kind === "component"
-      ? componentReview(result, component, entry)
-      : undefined;
-  const componentId = component?.path ?? componentComparison?.path;
   const evidenceEntry = component ?? entry;
-  const resourceEvidence = snapshot?.screenEvidence?.find(
-    (screen) => screen.path === entry.path,
-  )?.views;
-  const baseline =
-    snapshot &&
-    branchPoints(catalogue).baselineEntry(
-      evidenceEntry,
-      snapshot.baseline.entries,
-    );
   const removed = !catalogue.manifest.entries.some(
     (candidate) => candidate.path === entry.path,
   );
-  const record = reviewEntry(result, entry.kind, entry.path);
-  const change = record?.included ? record : undefined;
-  /** A pure move is in Changes without changing, so it is not material. */
   const materialChanges = materialChangedEntries(context);
-  const pureMove =
-    change?.previousPath !== undefined && change.reasons.length === 0;
-  const comparison =
-    entry.kind === "component"
-      ? componentComparison
-      : reviewEntry(result, "screen", entry.path);
-  const known = snapshot !== undefined || context.changedEntries !== undefined;
+  const known = context.changedEntries !== undefined;
   const entryStatus: EntryStatus | undefined = !known
     ? undefined
     : removed
       ? "Removed"
-      : snapshot && !baseline
-        ? "Added"
-        : (change && !pureMove) ||
-            (entry.kind === "screen" && comparison?.state === "changed") ||
-            (!pureMove && materialChanges?.includes(entry.path))
-          ? "Changed"
-          : "Unmodified";
+      : materialChanges?.includes(entry.path)
+        ? "Changed"
+        : "Unmodified";
   const variantSet = component
     ? workspaceVariants(
         catalogue,
         component,
-        snapshot,
-        componentComparison,
         known,
         !catalogue.manifest.entries.some(
           (candidate) => candidate.path === component.path,
@@ -170,39 +122,18 @@ export function workspaceData(
     : orphanVariant
       ? standaloneWorkspaceVariant(
           entry,
-          snapshot,
-          componentComparison,
           known,
           removed,
           entryStatus,
           context.snapshotId,
         )
-      : { baseline: [], current: [], rows: [] };
-  const currentVariants = variantSet.current;
-  const baselineVariants = variantSet.baseline;
+      : { current: [], rows: [] };
   const variants = variantSet.rows;
   const selectedVariant =
     entry.kind === "component" && isManifestComponentVariant(entry)
       ? variants.find((variant) => variant.value.path === entry.path)
       : undefined;
   const status = selectedVariant?.status ?? entryStatus;
-  const inputChanges = entryInputChanges(
-    catalogue,
-    evidenceEntry,
-    baseline,
-    snapshot?.baseline.entries ?? [],
-    currentVariants,
-    baselineVariants,
-  );
-  const relatedIds = new Set(
-    result?.affected
-      .filter((item) =>
-        item.consumer.kind === "screen"
-          ? item.consumer.path === entry.path
-          : item.consumer.path === componentId,
-      )
-      .map((item) => item.changedComponentId),
-  );
   return {
     ...(catalogue.manifest.schemaVersion === "live-index-2"
       ? {
@@ -217,17 +148,8 @@ export function workspaceData(
       selectedVariant?.comparisonEligible ??
       shownComparisonEligible(status, entry.kind),
     base: context.base,
-    inputChanges,
-    relatedComponents: (result?.entries ?? [])
-      .filter((item) => {
-        const routed = catalogue.byPath.get(item.path);
-        return (
-          item.kind === "component" &&
-          relatedIds.has(item.path) &&
-          routed?.kind === "component"
-        );
-      })
-      .map(({ path, title }) => ({ path, title })),
+    inputChanges: [],
+    relatedComponents: [],
     components: [...catalogue.manifest.entries, ...catalogue.removedComponents]
       .filter(
         (item): item is ManifestComponent =>
@@ -235,26 +157,14 @@ export function workspaceData(
       )
       .map(({ path, title }) => ({ path, title })),
     views: component
-      ? currentVariants.flatMap((variant) => generatedViews(variant))
+      ? variantSet.current.flatMap((variant) => generatedViews(variant))
       : generatedViews(entry),
-    changedViews: changedViewsBySelection(
-      evidenceEntry,
-      context,
-      comparison,
-      variants.map(({ value }) => value.path),
-    ),
-    viewStates: viewStatesBySelection(
-      evidenceEntry,
-      context,
-      comparison,
-      variants.map(({ value }) => value.path),
-    ),
+    changedViews:
+      evidenceEntry.kind === "screen" ? { [evidenceEntry.path]: [] } : {},
+    viewStates: {},
     variants,
     usedBy: usedByUsageLinks(catalogue, evidenceEntry),
-    affected: affectedUsageLinks(catalogue, result, componentId),
+    affected: [],
     ...(status ? { status } : {}),
-    ...(change ? { change } : {}),
-    ...(comparison ? { comparison } : {}),
-    ...(resourceEvidence ? { resourceEvidence } : {}),
   };
 }

@@ -19,7 +19,10 @@ import type { WorkspaceData } from "./workspace_data.js";
 
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
-  /** The screen's record, or the component parent that groups its variants. */
+  /**
+   * The loaded comparison's record of the screen, or of the component parent
+   * that groups its variants; absent until a comparison loads.
+   */
   comparison: ReviewEntry | undefined;
   /** Parent id of a component workspace, whose own rules keep its sentence. */
   componentId: string | undefined;
@@ -46,19 +49,15 @@ export function workspaceComparisonEvidence(
     data.entry.kind === "component" || data.entry.kind === "screen"
       ? reviewEntry(loaded, data.entry.kind, data.entry.path)
       : undefined;
-  const views = [
-    ...comparisonViews(data.comparison, variantPath),
-    ...comparisonViews(selected, variantPath),
-  ];
+  const views = comparisonViews(selected, variantPath);
   const resources = data.resourceEvidence ?? [];
   const viewEvidence = views.map(viewReasons);
   return {
-    comparison: data.comparison ?? selected,
+    comparison: selected,
     componentId: data.component?.path,
     views,
     resourceViews: [...resources, ...viewEvidence],
     reasons: mergeReasons([
-      ...(data.change?.reasons ?? []),
       ...(data.reasons ?? []),
       ...(routed?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
