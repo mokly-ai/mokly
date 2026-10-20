@@ -92,10 +92,9 @@ impl Directories for SystemDirectories {
     }
 }
 
-/// One policy switch for the pending publish warning decision.
-/// The specified policy makes all publish warnings fatal, with or without --strict.
-pub fn warnings_are_fatal(_strict: bool) -> bool {
-    true
+/// Publish warnings become fatal only when the caller requests strict mode.
+pub fn warnings_are_fatal(strict: bool) -> bool {
+    strict
 }
 
 fn directory_error(temporary_root: PathBuf, source: std::io::Error) -> Error {

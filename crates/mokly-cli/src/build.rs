@@ -81,7 +81,7 @@ pub enum BuildError {
         /// Exact retained operation path.
         path: PathBuf,
     },
-    /// The selected publication policy refuses warnings without an explicit --strict.
+    /// The selected publication policy refuses warnings in strict mode.
     #[error(
         "[mokly-cli/build] The catalogue has build warnings. Fix the reported warnings and retry."
     )]

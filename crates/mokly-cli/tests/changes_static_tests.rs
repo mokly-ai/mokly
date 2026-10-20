@@ -79,10 +79,13 @@ fn base_dependency_warnings_gate_strict_static_builds_and_publish_after_comparis
         "---\ntitle: Home\n---\n<p>After</p>",
     );
     commit(root.path());
-    for verb in ["build", "publish"] {
+    for (verb, strict) in [("build", true), ("publish", true), ("publish", false)] {
         let mut args = vec![verb, "--base", "base-point"];
+        if strict {
+            args.push("--strict");
+        }
         if verb == "build" {
-            args.extend(["--strict", "--out", ".context/strict"]);
+            args.extend(["--out", ".context/strict"]);
         } else {
             args.extend([
                 "--repository",
@@ -103,16 +106,16 @@ fn base_dependency_warnings_gate_strict_static_builds_and_publish_after_comparis
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(stderr.contains("base dependencies"), "{verb}: {stderr}");
         assert!(
-            stderr.contains(if verb == "build" {
+            stderr.contains(if strict {
                 "1 build warning with --strict"
             } else {
-                "catalogue has build warnings"
+                "[mokly/upload-failed]"
             }),
             "{verb}: {stderr}"
         );
         assert!(!stderr.contains("upload-transport"), "{stderr}");
         assert!(String::from_utf8_lossy(&output.stdout).contains("Comparing with base-point"));
-        if verb == "publish" {
+        if verb == "publish" && !strict {
             assert!(String::from_utf8_lossy(&output.stdout).contains("Changes ready · 1 change"));
         }
         assert!(!root.path().join(".context/strict/index.html").exists());

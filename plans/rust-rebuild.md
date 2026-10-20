@@ -366,6 +366,12 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**Decision defaults (2026-10-20):**
+
+- Item 4 A, applied by default (user rule): publish warnings are fatal only
+  with `--strict`. Reject always-fatal warnings so recoverable authoring
+  warnings do not block publication. Align the publish and exit-status guides.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in

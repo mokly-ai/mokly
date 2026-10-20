@@ -84,7 +84,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
                 assert_eq!(request.repository_root, PathBuf::from("/repo"));
                 assert_eq!(request.invocation_directory, PathBuf::from("/repo/tools"));
                 assert!(request.no_changes);
-                assert!(request.warnings_are_fatal);
+                assert!(!request.warnings_are_fatal);
                 assert!(request.base.is_none());
                 Ok(snapshot.clone())
             })),
@@ -103,7 +103,7 @@ async fn command_reports_the_directory_once_then_builds_rechecks_and_uploads_the
             .unwrap(),
         expected
     );
-    assert!(warnings_are_fatal(false));
+    assert!(!warnings_are_fatal(false));
     assert!(warnings_are_fatal(true));
 }
 

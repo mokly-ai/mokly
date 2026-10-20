@@ -33,7 +33,7 @@ pub struct Options {
     pub base: Option<String>,
     /// Skip all comparison work and history lookup.
     pub no_changes: bool,
-    /// Keep the grammar while the warning policy decision remains open.
+    /// Fail on build warnings before output installation or upload.
     pub strict: bool,
     /// Pinned operation-owned paths excluded from status, never names guessed from Git output.
     pub owned_paths: Vec<PathBuf>,

@@ -36,8 +36,8 @@ npx mokly build --no-changes
   [output safety contract](./mokly-export-safety.md); `--out` on `serve` fails.
 - `--strict` fails the build on warnings as well as on errors. Without it,
   [build warnings](./mokly-build-warnings.md) print once each on standard
-  error and change neither the output nor the exit status. `publish` fails on
-  warnings like `build --strict`.
+  error and change neither the output nor the exit status. `publish` follows
+  the same opt-in strict policy.
 - `--config <path>` uses the
   [configuration discovery](./mokly-configuration.md#configuration-discovery) rules.
 - `--base <ref>` overrides `review.base`; omission uses that setting, whose
@@ -215,7 +215,7 @@ before it reaches the terminal.
 private directory outside the repository. No option names that output. The
 `Mokly publish build` line of the [terminal errors contract](./mokly-terminal-errors.md) reports the output path. The command then
 uploads the result under the [upload contract](./mokly-upload.md). It needs a
-clean checkout, fails on warnings before it writes or uploads, and
+clean checkout, fails on warnings only with `--strict` before it writes or uploads, and
 `publish --no-changes` builds current-only. A failed upload keeps the built
 directory in place.
 

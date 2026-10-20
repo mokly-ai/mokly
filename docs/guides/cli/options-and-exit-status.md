@@ -46,9 +46,9 @@ Unknown, repeated, misplaced, and empty options fail before command work.
 Success exits `0`. A failure exits `1`. Closing Serve normally also exits `0`.
 Cancelling a build or publish exits `1`.
 
-Build warnings print on standard error. `build --strict` and publish fail on
-warnings before output installation or upload. A non-strict build can succeed
-with warnings.
+Build warnings print on standard error. `build --strict` and `publish --strict`
+fail on warnings before output installation or upload. Without `--strict`, both
+commands can succeed with warnings.
 
 ## Error categories
 

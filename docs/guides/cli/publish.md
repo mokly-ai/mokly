@@ -19,18 +19,18 @@ is the receiver's Plan URL. For Mokly Cloud it is
 
 ## Options
 
-| Option                           | Meaning                                                             |
-| -------------------------------- | ------------------------------------------------------------------- |
-| `--config {path}`                | Load a JSON configuration file.                                     |
-| `--endpoint {url}`               | Override `MOKLY_ENDPOINT`.                                          |
-| `--token {token}`                | Override `MOKLY_TOKEN`. Prefer the environment for secrets.         |
-| `--repository {host/owner/name}` | Override repository identity detection.                             |
-| `--base {ref}`                   | Override `review.base`, whose default is `origin/main`.             |
-| `--no-changes`                   | Publish current content without base history or comparisons.        |
-| `--upload-concurrency {count}`   | Send 1 to 32 missing blobs at once. The default is 8.               |
-| `--strict`                       | Require a warning-free build. Publish requires this in either mode. |
-| `--sidecars {count}`             | Set the positive JavaScript worker count.                           |
-| `--debug-timings`                | Select plain output and report timing records.                      |
+| Option                           | Meaning                                                      |
+| -------------------------------- | ------------------------------------------------------------ |
+| `--config {path}`                | Load a JSON configuration file.                              |
+| `--endpoint {url}`               | Override `MOKLY_ENDPOINT`.                                   |
+| `--token {token}`                | Override `MOKLY_TOKEN`. Prefer the environment for secrets.  |
+| `--repository {host/owner/name}` | Override repository identity detection.                      |
+| `--base {ref}`                   | Override `review.base`, whose default is `origin/main`.      |
+| `--no-changes`                   | Publish current content without base history or comparisons. |
+| `--upload-concurrency {count}`   | Send 1 to 32 missing blobs at once. The default is 8.        |
+| `--strict`                       | Fail on build warnings before output installation or upload. |
+| `--sidecars {count}`             | Set the positive JavaScript worker count.                    |
+| `--debug-timings`                | Select plain output and report timing records.               |
 
 Value options also accept `--name=value`. Use `--token=-TOKEN` for a token
 that starts with a hyphen. `--base` conflicts with `--no-changes`.
@@ -69,7 +69,8 @@ is already published. An accepted viewer URL appears on its own line.
 
 ## Failures
 
-A warning or build error stops publication before upload. A failed upload
+A build error stops publication before upload. Warnings stop publication only
+with `--strict`. A failed upload
 keeps the complete local build at the printed directory. Cancellation exits
 `1` and reports that publication was cancelled. A recovery failure keeps its
 own error category and names the directory that needs recovery.

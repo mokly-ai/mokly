@@ -202,10 +202,9 @@ keeps its pinned merge base, effective ref, and complete generation in that uplo
 Unavailable Changes publishes the valid current catalogue with no generation and
 null comparison metadata. Checkout failures list at most 20
 unique sorted paths and their recovery hint in both output modes. Completed
-output stays in the private directory after an upload failure. The warning
-policy waits for a user decision. The isolated `warnings_are_fatal` function
-makes publish warnings fatal with either value of `--strict`. The command prints
-`with --strict` only when the user supplied that option.
+output stays in the private directory after an upload failure. Publish warnings
+are fatal only with `--strict`. Without it, the command reports warnings and
+continues with output installation and upload.
 
 ## Quick Start
 
