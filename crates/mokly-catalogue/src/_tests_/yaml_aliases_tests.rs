@@ -64,22 +64,72 @@ fn only_anchors_that_an_alias_refers_to_are_named() {
     assert_eq!(scan(text, 4).unwrap(), BTreeSet::from([2]));
 }
 
+const TOO_DEEP: &str = "YAML value exceeds 128 nesting levels; reduce its nesting";
+
+/// The scan steps aside at a parser error, at a value or an alias copy deeper
+/// than the limit, and at the end of the first document, so the builder
+/// reports those failures where they start.
 #[test]
-fn the_scan_leaves_earlier_failures_to_the_builder() {
-    let deep = format!(
-        "deep: {}x{}\n",
-        "[".repeat(MAX_DEPTH),
-        "]".repeat(MAX_DEPTH)
-    );
+fn the_scan_steps_aside_at_parser_errors_depth_and_the_document_end() {
+    let nested = |depth| format!("{}x{}", "[".repeat(depth), "]".repeat(depth));
+    let deep = format!("deep: {}\n", nested(MAX_DEPTH));
     let issue = yaml::parse(&format!("{deep}{}", laughs()), "deep.yaml", 1).unwrap_err();
-    assert_eq!(
-        issue.message,
-        "YAML value exceeds 128 nesting levels; reduce its nesting"
-    );
+    assert_eq!(issue.message, TOO_DEEP);
+    let copy = format!("base: &base {}\ncopy: [*base]\n", nested(MAX_DEPTH - 1));
+    let issue = yaml::parse(&format!("{copy}{}", laughs()), "copy.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, TOO_DEEP);
+    let location = issue.location.unwrap();
+    assert_eq!((location.line, location.column), (2, 8));
     let second = format!("title: First\n---\n{}", laughs());
     let issue = yaml::parse(&second, "second.yaml", 1).unwrap_err();
     assert_eq!(issue.message, "expected one YAML document");
     let unknown = format!("first: *nope\n{}", laughs());
     let issue = yaml::parse(&unknown, "unknown.yaml", 1).unwrap_err();
     assert_eq!(issue.message, "while parsing node, found unknown anchor");
+}
+
+/// An alias that is itself deeper than the limit fails with the depth
+/// message, also when no earlier alias names its anchor and when it refers to
+/// its own unfinished anchor. A shallow recursive alias keeps its message.
+#[test]
+fn an_alias_past_the_depth_limit_fails_with_the_depth_message() {
+    let around = |inner: &str| format!("{}{inner}{}", "[".repeat(MAX_DEPTH), "]".repeat(MAX_DEPTH));
+    let deep = format!("a: &a x\nb: {}\n", around("*a"));
+    let issue = yaml::parse(&deep, "deep.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, TOO_DEEP);
+    let location = issue.location.unwrap();
+    assert_eq!((location.line, location.column), (2, 132));
+    let recursive = format!("a: &a {}\n", around("*a"));
+    let issue = yaml::parse(&recursive, "recursive.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, TOO_DEEP);
+    let location = issue.location.unwrap();
+    assert_eq!((location.line, location.column), (1, 135));
+    let issue = yaml::parse("a: &a [*a]\n", "recursive.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, "unknown or recursive YAML alias");
+}
+
+/// Other builder failures do not stop the scan, so an alias expansion past
+/// the budget is reported before them.
+#[test]
+fn an_expansion_past_the_budget_is_reported_before_a_later_builder_failure() {
+    let duplicate = format!("x: 1\nx: 2\n{}", laughs());
+    let issue = yaml::parse(&duplicate, "duplicate.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, OVER_BUDGET);
+    let issue = yaml::parse("x: 1\nx: 2\n", "duplicate.yaml", 1).unwrap_err();
+    assert_eq!(issue.message, "duplicate key x");
+}
+
+/// A value or an alias copy that reaches exactly the depth limit is valid, so
+/// the scan keeps counting after it. Otherwise a file could put such an alias
+/// before a chain to pass the budget.
+#[test]
+fn values_and_alias_copies_at_the_depth_limit_still_count() {
+    let nested = format!(
+        "{}x{}",
+        "[".repeat(MAX_DEPTH - 1),
+        "]".repeat(MAX_DEPTH - 1)
+    );
+    let text = format!("base: &base {nested}\ncopy: *base\nmore: *base\n");
+    assert!(scan(&text, 2 * MAX_DEPTH).is_ok());
+    assert_eq!(stop(&text, 2 * MAX_DEPTH - 1), (3, 6));
 }

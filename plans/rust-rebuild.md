@@ -2385,6 +2385,25 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         inference, and accept the `lightningcss` gap. Decision: item 36 option
         B (nesting report decision 10 B), applied by default (user rule),
         2026-10-20.
+  - [x] Restore "or remove it" in the advice for an empty wrapper in a
+        keyframes name, and make the wrapper table test follow each piece of
+        advice to a stylesheet that scopes. Decision: nesting report finding 19
+        options A and C, approved by the orchestrator on 2026-10-20.
+  - [x] Keep the height of each anchored value in the YAML alias scan, so it
+        steps aside at an alias copy that is too deep, and narrow its comment
+        to the three places where it steps aside. Decision: nesting report
+        finding 20 option B, approved by the orchestrator on 2026-10-20.
+  - [x] Let the YAML builder's anchor step alone decide which anchors to
+        keep, and build each kept copy after that check, so unaliased anchors
+        copy no positions. Decision: nesting report finding 21 option B,
+        approved by the orchestrator on 2026-10-20.
+  - [x] Fix the open CSS Modules problems from the nesting reviews, each
+        with a failing test first: wrappers still open at the end of input,
+        wrappers nested in keyframes names, CSS line breaks and character
+        columns in diagnostics, statements without a block in a rule list,
+        comments before `composes`, and the plain-data limit messages.
+        Requested by the orchestrator on 2026-10-20. Only the section-reader
+        follow-up for finding 22 stays open, under the review TODO.
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
@@ -3068,6 +3087,17 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - 9: settled by Decision 36 on 2026-10-14.
   - 11: settled on 2026-10-14; the format inventory page carries the Status
     line.
+  - Follow-up: classify CSS statements without a block once in the section
+    reader, for the module check, the renamer, and the token check. Effort
+    Medium. Covers M14 nesting report finding 22: a wrapper left open at the
+    end of input in a declaration block gets the generic syntax message,
+    which the wrapper table test pins (option A, kept by the orchestrator on
+    2026-10-20). Previous examples: `.c{}.y`, where the token check fired
+    instead of the syntax check.
+  - `crates/mokly-css/src/module_integrity.rs:20`: the CSS Modules token
+    check always reports line 1, column 1, though its catalogue row shows
+    `{line}:{column}`. Found by the M14 nesting round 6 review. Separate
+    branch.
 
 ## Post-merge follow-up (non-blocking)
 
