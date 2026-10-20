@@ -138,6 +138,10 @@ are independent of render order. Rules keep first-appearance order.
 The binary deduplicates rules by identity across fragments and places them in
 the document head before configured stylesheets. Unknown styling libraries
 contribute only the `<style>` elements in the fragment.
+Page-wide sheets retain their owners. The comparison engine keeps a
+page-component rule only when it matches outside every nested registered
+instance, or when matching is unresolved. Kept rules emit per-rule evidence;
+an owned rule with no match on either side emits none.
 
 ## Markers In Fragments
 

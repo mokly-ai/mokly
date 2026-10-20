@@ -132,6 +132,11 @@ impl Engine {
                     .evidence
                     .rules
                     .extend(attributed.pages[index].clone());
+                view.document
+                    .evidence
+                    .rules
+                    .sort_by_key(review_order::rule_key);
+                view.document.evidence.rules.dedup();
                 instance_proofs.append(&mut view.proofs);
                 if let Some(component) = &component
                     && view.root_changed
@@ -154,14 +159,16 @@ impl Engine {
                 for rule in &view.document.evidence.rules {
                     if let EvidenceOwner::Component { path } = &rule.owner
                         && Some(path) == component.as_ref()
+                        && rule.status != RuleStatus::Excluded
                     {
+                        impact.insert(path.clone());
                         own_impact
                             .dependencies
                             .insert((path.clone(), rule.stylesheet.clone()));
                     }
                 }
                 let direct = attributed.component_pages.contains(&index)
-                    || view.document.evidence.rules.iter().any(|rule| rule.owner == EvidenceOwner::Entry && rule.status != RuleStatus::Excluded)
+                    || view.document.evidence.rules.iter().any(|rule| rule.status != RuleStatus::Excluded && (rule.owner == EvidenceOwner::Entry || matches!(&rule.owner, EvidenceOwner::Component { path } if Some(path) == component.as_ref())))
                     || view.document.evidence.resources.iter().any(|resource| resource.owner == EvidenceOwner::Entry || matches!(&resource.owner, EvidenceOwner::Component { path } if Some(path) == component.as_ref()));
                 if direct
                     && matches!(

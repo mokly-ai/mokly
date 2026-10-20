@@ -68,9 +68,10 @@ impl Index {
                 break;
             }
             let instance = &self.instances[index];
-            if instance.path == owner {
-                output.insert(instance.key.clone());
+            if instance.path != owner {
+                break;
             }
+            output.insert(instance.key.clone());
             parent = instance.parent;
         }
     }

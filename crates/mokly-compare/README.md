@@ -123,6 +123,10 @@ matching runs in `mokly-css` under its own contract.
 Both sides retain trusted sidecar style owners. Owned rule sets are normalized
 and deduplicated. Candidate component moves map their source owner identity
 before testing style equality. Authored owner attributes supply no trusted proof.
+Owned rules emit selector evidence under the containing public document route.
+Page components keep matches outside nested registered instances. Instance
+proof excludes matches inside different nested components. Unresolved owned
+rules use the conservative entry record; unused rules change no view.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds a bounded base capture over its pinned source, the
 original cached head generation, view states, reasons, ownership

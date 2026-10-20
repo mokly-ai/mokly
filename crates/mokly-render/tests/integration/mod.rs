@@ -11,6 +11,7 @@ mod definition_tests;
 mod dependency_tests;
 mod invocation_paths_tests;
 mod lazy_tests;
+mod owned_rule_tests;
 mod ownership_tests;
 mod postcss_contract_tests;
 mod process_counts;

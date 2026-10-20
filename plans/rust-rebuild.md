@@ -366,6 +366,18 @@ fixture, cold and warm, on the optimized release binary. HTML retains its
 5,000 ms budget. Defer compilation cache redesign, option A, and partial
 readiness rather than blocking this acceptance round on further startup work.
 
+**Comparison defaults (2026-10-20, applied by default (user rule)):**
+
+- Orchestrator item 39 B: retain page-wide CSS-in-JS owners. A rule changes
+  the page component only with a match outside every nested registered
+  instance. This prevents duplicate parent Changes rows without discarding
+  trusted owners. Alternatives: A, ownerless sheets; C, per-instance sidecar
+  attribution.
+- Orchestrator item 40 A, after 39 B: emit per-rule evidence for owned rules.
+  A changed owned rule with no match on either side emits no record and
+  changes no view. This keeps Details aligned with the rule contract.
+  Alternative B retains the direct material path and changes the contract.
+
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in

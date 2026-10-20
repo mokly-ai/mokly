@@ -63,6 +63,10 @@ analysis fills it.
   only the entry owner. Ownerless head rules use the same own-page proof,
   with matches restricted to their input owner under
   [style ownership](./mokly-comparison.md#style-ownership).
+- Trusted sidecar rules retain their declared component owners for matched
+  records. Unresolved records keep the entry owner. The page component keeps matches outside every
+  nested registered instance. An instance keeps matches outside different
+  nested components. An owned rule with no kept match emits no record.
 - Records of equal rules in different stylesheets stay separate records,
   because `stylesheet` differs; the rule identity joins their proof, not their
   records.

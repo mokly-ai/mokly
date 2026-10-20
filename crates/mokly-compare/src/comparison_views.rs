@@ -167,17 +167,24 @@ pub(crate) fn collect(
             )),
             _ => None,
         };
+        let owned = owned_styles::compare(
+            [
+                before_document.map_or(&[], |document| document.tree.as_slice()),
+                after_document.map_or(&[], |document| document.tree.as_slice()),
+            ],
+            [before_tree.as_ref(), after_tree.as_ref()],
+            paths,
+            &format!(
+                "static/mokly-generated/{}",
+                after_route
+                    .as_ref()
+                    .or(before_route.as_ref())
+                    .map_or("", String::as_str)
+            ),
+            memo,
+        )?;
         if let Some(comparison) = &mut comparison {
-            let changes = owned_styles::compare(
-                [
-                    before_document.map_or(&[], |document| document.tree.as_slice()),
-                    after_document.map_or(&[], |document| document.tree.as_slice()),
-                ],
-                [before_tree.as_ref(), after_tree.as_ref()],
-                paths,
-                memo,
-            )?;
-            owned_styles::apply(comparison, component.as_deref(), &changes);
+            owned_styles::apply(comparison, &owned);
         }
         let inline = inline_styles::compare(
             before_document.map(|document| document.tree.as_slice()),
@@ -224,7 +231,7 @@ pub(crate) fn collect(
                 state,
                 ignored_ids,
                 evidence: ViewEvidence {
-                    rules: Vec::new(),
+                    rules: owned.rules,
                     resources: evidence,
                 },
             },

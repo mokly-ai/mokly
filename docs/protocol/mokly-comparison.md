@@ -82,7 +82,11 @@ element belongs to those components. Composition retains trusted owner
 annotations through HTML normalization and graph caching on both sides. An
 authored `data-mokly-owners` attribute does not create that annotation.
 Compare normalized rule sets per owner; formatting and duplicate copies do
-not change material. Collected rules use the per-rule records of the
+not change material. A rule changes the page component only when it matches
+outside every nested registered instance. An owned instance keeps matches
+outside its nested instances of other components. Unresolved rules use the
+conservative entry record. A changed rule that matches nothing on either side produces no
+record and changes no view. Collected rules use the per-rule records of the
 [membership contract](./mokly-css-attribution-membership.md). Rule evidence
 supplies their material and affected-consumer effects under the
 [component change rules](./mokly-component-changes.md). Linked stylesheets

@@ -180,6 +180,7 @@ impl MoveEvidence for RenderedMoves<'_> {
                     )),
                 ],
                 &style_paths,
+                &format!("static/mokly-generated/{}", right_plan.route),
                 self.memo.as_ref(),
             )?;
             let owner = matches!(after.content, EntryContent::Component { .. }).then_some(
@@ -189,8 +190,8 @@ impl MoveEvidence for RenderedMoves<'_> {
                     .as_deref()
                     .unwrap_or(&after.metadata.path),
             );
-            owned_styles::apply(&mut comparison, owner, &owned);
-            if comparison.changed {
+            owned_styles::apply(&mut comparison, &owned);
+            if comparison.changed || owned.changes_owner(owner) {
                 return Ok(false);
             }
             for resource in resources
