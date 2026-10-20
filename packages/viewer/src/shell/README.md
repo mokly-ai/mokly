@@ -64,7 +64,11 @@ the data it reads.
 native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
 carrying their entry-kind glyph, and a screen or component's variants as a
 container the row's chevron button discloses, because a row cannot be both a
-link and a `<summary>`. `nav_tree.ts` lists a folder's own document, page, or
+link and a `<summary>`. `nav_disclosure.ts` records interactive folder and
+section choices during summary activation, before queued toggle events.
+Search therefore receives the last choice as its pre-filter baseline.
+Non-interactive summaries retain native behavior.
+`nav_tree.ts` lists a folder's own document, page, or
 use case as the folder's first child row, labelled `Overview` when its title
 is the folder's title, and renders a folder whose own page is a screen or
 component as that entry's row, whose container holds the variants and then

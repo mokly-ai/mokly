@@ -373,6 +373,8 @@ The browser leaves the page before the fixture closes its process and directory.
 watched publication and disclosure cases.
 `toggleFolder` waits for an unfiltered click's saved disclosure choice before
 returning. Filtered clicks keep storage unchanged under the disclosure contract.
+`disclosure_order.spec.ts` holds folder and section close events across search.
+It checks mouse and keyboard activation, reveal, and baseline restoration.
 
 `large_changes` and `large_watch` run the opt-in large-fixture harness with
 small HTML and React inputs. They verify native base preparation, delivered
