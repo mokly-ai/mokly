@@ -3,10 +3,10 @@
 
 use crate::modules::{scope, scoped_name};
 
-const PATH: &str = "ui/table.module.css";
+pub(crate) const PATH: &str = "ui/table.module.css";
 
 /// Where a wrapper appears, and the catalogued words for an empty one there.
-struct Context {
+pub(crate) struct Context {
     /// Text before the wrapper.
     before: &'static str,
     /// Text after the wrapper.
@@ -29,16 +29,24 @@ const SCOPE: Context = Context {
     holds: "selector",
     action: "add a selector inside it or remove it",
 };
+/// A keyframes prelude where a name follows the wrapper.
 const KEYFRAMES: Context = Context {
     before: "@keyframes ",
     after: " spin{to{opacity:0}}",
     holds: "keyframes name",
-    action: "add the name inside it",
+    action: "add the name inside it or remove it",
+};
+/// A keyframes prelude whose only name is inside the wrapper.
+const WRAPPED_KEYFRAMES: Context = Context {
+    before: "@keyframes ",
+    after: "{to{opacity:0}}",
+    holds: "keyframes name",
+    action: "add the name inside it or remove it",
 };
 
 /// A nesting level: the text that opens and closes it, and whether the
 /// scanner reads its statements as declarations.
-struct Level {
+pub(crate) struct Level {
     open: &'static str,
     close: &'static str,
     declarations: bool,
@@ -69,7 +77,7 @@ const DOCUMENT: Level = Level {
 
 /// One context at one level: a stylesheet whose local names scope there, its
 /// scoped text with `{h}` for the generated prefix, and its sorted exports.
-struct Row {
+pub(crate) struct Row {
     context: Context,
     level: Level,
     source: &'static str,
@@ -77,7 +85,7 @@ struct Row {
     exports: &'static [&'static str],
 }
 
-const ROWS: [Row; 9] = [
+pub(crate) const ROWS: [Row; 12] = [
     Row {
         context: SELECTOR,
         level: TOP,
@@ -141,12 +149,33 @@ const ROWS: [Row; 9] = [
         scoped: "@-moz-document url-prefix(){@keyframes {h}spin{to{opacity:0}}.{h}a{animation:{h}spin 1s}}",
         exports: &["a", "spin"],
     },
+    Row {
+        context: WRAPPED_KEYFRAMES,
+        level: TOP,
+        source: "@keyframes :local(spin){to{opacity:0}}.a{animation:spin 1s}",
+        scoped: "@keyframes {h}spin{to{opacity:0}}.{h}a{animation:{h}spin 1s}",
+        exports: &["a", "spin"],
+    },
+    Row {
+        context: WRAPPED_KEYFRAMES,
+        level: GROUPING,
+        source: "@media all{@keyframes :local(spin){to{opacity:0}}}.a{animation:spin 1s}",
+        scoped: "@media all{@keyframes {h}spin{to{opacity:0}}}.{h}a{animation:{h}spin 1s}",
+        exports: &["a", "spin"],
+    },
+    Row {
+        context: WRAPPED_KEYFRAMES,
+        level: DOCUMENT,
+        source: "@-moz-document url-prefix(){@keyframes :local(spin){to{opacity:0}}.a{animation:spin 1s}}",
+        scoped: "@-moz-document url-prefix(){@keyframes {h}spin{to{opacity:0}}.{h}a{animation:{h}spin 1s}}",
+        exports: &["a", "spin"],
+    },
 ];
 
 /// Empty wrapper contents; `None` leaves the wrapper open at the end of input.
-const FORMS: [Option<&str>; 4] = [Some(""), Some(" "), Some("/**/"), None];
+pub(crate) const FORMS: [Option<&str>; 4] = [Some(""), Some(" "), Some("/**/"), None];
 /// The wrapper levels around the empty wrapper: none, or one `:local()`.
-const OUTERS: [&str; 2] = ["", ":local("];
+pub(crate) const OUTERS: [&str; 2] = ["", ":local("];
 /// How the syntax check reports a stylesheet that it cannot parse.
 const SYNTAX: &str = "[mokly-css/build-invalid] could not transform CSS";
 
@@ -155,7 +184,7 @@ const SYNTAX: &str = "[mokly-css/build-invalid] could not transform CSS";
 /// rejects the stylesheet first: a wrapper left open at the end of input
 /// inside a declaration block leaves a statement without a block, which
 /// reads as a declaration.
-fn empty_wrapper(
+pub(crate) fn empty_wrapper(
     row: &Row,
     outer: &str,
     form: Option<&str>,
@@ -203,5 +232,5 @@ fn scoped_contexts_scope_names_and_reject_empty_wrappers_at_every_level() {
             }
         }
     }
-    assert_eq!((catalogued, syntax), (132, 12));
+    assert_eq!((catalogued, syntax), (176, 16));
 }

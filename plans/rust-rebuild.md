@@ -2090,6 +2090,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         inference, and accept the `lightningcss` gap. Decision: item 36 option
         B (nesting report decision 10 B), applied by default (user rule),
         2026-10-20.
+  - [x] Restore "or remove it" in the advice for an empty wrapper in a
+        keyframes name, and make the wrapper table test follow each piece of
+        advice to a stylesheet that scopes. Decision: nesting report finding 19
+        options A and C, approved by the orchestrator on 2026-10-20.
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and

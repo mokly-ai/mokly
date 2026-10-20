@@ -216,7 +216,7 @@ fn empty_wrappers_and_icss_fail_only_where_names_are_scoped() {
         (".a{@scope (:import(x)){color:red}}", "authored ICSS rule"),
         (
             "@keyframes :local() spin{to{opacity:0}}.a{animation:spin 1s}",
-            ":local() has no keyframes name in ui/preludes.module.css:1:12; add the name inside it",
+            ":local() has no keyframes name in ui/preludes.module.css:1:12; add the name inside it or remove it",
         ),
     ] {
         let error = scope(path, source).unwrap_err().to_string();

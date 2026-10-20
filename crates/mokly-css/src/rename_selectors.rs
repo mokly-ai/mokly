@@ -201,7 +201,7 @@ impl Renamer<'_> {
             Wrapped::KeyframesName => self.error(
                 offset,
                 &format!("CSS Modules :{name}() has no keyframes name"),
-                "add the name inside it",
+                "add the name inside it or remove it",
             ),
         }
     }
