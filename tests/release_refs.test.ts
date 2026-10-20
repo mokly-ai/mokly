@@ -14,7 +14,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-test("releases require a complete immutable CLI and viewer tag pair", () => {
+test("releases accept a root CLI tag with an optional new viewer tag", () => {
   const input = {
     eventName: "push",
     releaseCreated: "true",
@@ -28,11 +28,11 @@ test("releases require a complete immutable CLI and viewer tag pair", () => {
   });
   assert.throws(
     () => resolvePublishRefs({ ...input, releaseCreated: "false" }),
-    /tag pair/,
+    /requires the root CLI/,
   );
-  assert.throws(
-    () => resolvePublishRefs({ ...input, viewerReleaseCreated: "false" }),
-    /tag pair/,
+  assert.deepEqual(
+    resolvePublishRefs({ ...input, viewerReleaseCreated: "false" }),
+    { cli: "v0.8.0", viewer: "" },
   );
   assert.equal(
     resolvePublishRefs({
@@ -57,7 +57,6 @@ test("releases require a complete immutable CLI and viewer tag pair", () => {
     "viewer-v01.1.0",
     "viewer-v0.1.0\nother",
     "viewer-v0.1.0; echo unsafe",
-    "",
   ])
     assert.throws(() =>
       resolvePublishRefs({
@@ -198,3 +197,30 @@ async function resolveRefOutputs(
   const lines = (await fs.readFile(output, "utf8")).trim().split("\n");
   return Object.fromEntries(lines.map((line) => line.split("=", 2)));
 }
+
+test("CLI-only releases verify the earlier viewer tag and reject a moved remote tag", async (t) => {
+  const fixture = await taggedFixture(t);
+  await fs.writeFile(path.join(fixture.root, "core.txt"), "core-only change");
+  await fixture.git("add", "core.txt");
+  await fixture.git("commit", "-m", "fix: core only");
+  await fixture.git("tag", "-f", "v0.8.0");
+  const head = await fixture.git("rev-parse", "HEAD");
+  await execute("git", ["fetch", fixture.root, "HEAD"], {
+    cwd: fixture.remote,
+  });
+  await execute("git", ["update-ref", "refs/tags/v0.8.0", head], {
+    cwd: fixture.remote,
+  });
+  assert.equal(await verifyReleaseRefs(fixture.root, "v0.8.0", ""), head);
+  await assert.rejects(
+    verifyReleaseRefs(fixture.root, "v0.8.0", "viewer-v0.1.0"),
+    /one commit/,
+  );
+  await execute("git", ["update-ref", "refs/tags/viewer-v0.1.0", head], {
+    cwd: fixture.remote,
+  });
+  await assert.rejects(
+    verifyReleaseRefs(fixture.root, "v0.8.0", ""),
+    /one commit/,
+  );
+});

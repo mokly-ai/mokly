@@ -13,6 +13,7 @@ import {
   directory,
   removeOutput,
 } from "./helpers/static_publication.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 test(
   "publication includes the pinned comparison and an older receiver rejects it without fallback",
@@ -28,17 +29,20 @@ test(
         );
         let output: string | undefined;
         try {
-          const result = await command(
-            root,
-            "publish",
-            [
-              "--repository=example.com/team/site",
-              `--endpoint=${server.endpoint}`,
-              "--token=private/a==",
-            ],
-            status ? "plain" : "rich",
-            {},
-            context.signal,
+          const result = await observeBuild(
+            server,
+            command(
+              root,
+              "publish",
+              [
+                "--repository=example.com/team/site",
+                `--endpoint=${server.endpoint}`,
+                "--token=private/a==",
+              ],
+              status ? "plain" : "rich",
+              {},
+              context.signal,
+            ),
           ).result;
           output = directory(result.stdout);
           assert.equal(result.code, status ? 1 : 0, result.stderr);
@@ -49,7 +53,14 @@ test(
             server.metadata[0]!.comparisonPath,
             local.index.comparisonUrl,
           );
-          const inventory = await files(output);
+          const inventory = status
+            ? new Map(
+                [...(await files(output))].map(([name, bytes]) => [
+                  name.replaceAll("\\", "/"),
+                  bytes,
+                ]),
+              )
+            : server.completedInventories[0]!;
           verifyInventory(
             [...inventory].map(([name, bytes]) => [
               name.replaceAll("\\", "/"),
@@ -61,7 +72,11 @@ test(
           assert.equal(envelope.comparisonPath, local.index.comparisonUrl);
           for (const [name, bytes] of previous) {
             if (name !== ".mokly-export-artifact")
-              assert.deepEqual(inventory.get(name), bytes, name);
+              assert.deepEqual(
+                inventory.get(name.replaceAll("\\", "/")),
+                bytes,
+                name,
+              );
           }
           if (status) {
             assert.match(

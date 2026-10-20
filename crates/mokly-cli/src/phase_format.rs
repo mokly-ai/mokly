@@ -29,3 +29,14 @@ pub(super) fn duration(value: Duration) -> String {
         format!("{}m {:02}s", value.as_secs() / 60, value.as_secs() % 60)
     }
 }
+
+/// Format one bounded successful phase or command line.
+pub(super) fn success(style: &Style, text: &str) -> String {
+    let glyph = if style.ascii { "+" } else { "✔" };
+    let glyph = if style.color {
+        format!("\x1b[32m{glyph}\x1b[0m")
+    } else {
+        glyph.into()
+    };
+    format!("{}\n", bounded(&format!("  {glyph} {text}"), style.columns))
+}

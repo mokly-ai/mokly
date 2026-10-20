@@ -3,10 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { detailKey } from "../src/catalogue/detail_fences.js";
-import type { ManifestPage, ManifestV10 } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
 import { ShellMain } from "../src/shell/views.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
@@ -77,35 +74,6 @@ test("an added document shows Added without a terminal line", () => {
     '<section class="mbk-comparison-evidence" data-page-evidence="">' +
       `<h3>Comparison details</h3><p>Compared with the branch point on ${BASE}.</p></section>`,
   );
-});
-
-test("a catalogue without published records reads only its Changes list", () => {
-  const page = fixture.pages.find((item) => item.path === "guide");
-  assert.ok(page);
-  const entry: ManifestPage = {
-    path: "guide",
-    kind: "page",
-    title: page.title,
-    description: page.details.description,
-    relatedDocs: [],
-    sourcePath: page.details.sourcePath,
-  };
-  const manifest: ManifestV10 = currentManifest({
-    folders: [],
-    schemaVersion: 10,
-    generatedBy: "mokly",
-    sourceFiles: [entry.sourcePath],
-    entries: [entry],
-  });
-  const listed = (changedEntries: readonly string[]) =>
-    renderPage(createCatalogue(manifest), { changedEntries });
-  const changed = listed(["guide"]);
-  assert.deepEqual(status(changed), ["Changed"]);
-  assert.doesNotMatch(changed, /mbk-evidence-files|Examined and excluded/);
-  assert.deepEqual(status(listed([])), ["Unmodified"]);
-  const unknown = renderPage(createCatalogue(manifest));
-  assert.deepEqual(status(unknown), []);
-  assert.equal(section(unknown), undefined);
 });
 
 test("Changes that are not ready show no page status or comparison details", () => {

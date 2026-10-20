@@ -55,7 +55,16 @@ uses normal discovery. Comparisons are included by default: `--base` overrides
 `review.base` (default `origin/main`). `--no-changes` skips base lookup and
 comparison generation, including removed entries and comparison assets and
 controls. It rejects an explicit `--base`. Both modes build and validate the
-catalogue, and a build warning fails the command before any upload.
+catalogue. Build warnings fail the command before output installation or upload
+only with `--strict`. Without it, warnings print and publication continues.
+Strict mode is opt-in so recoverable authoring warnings do not block publication.
+
+After a successful publication or an already-published response, delete exactly
+the private build snapshot. Remove its parent only when empty. Preserve sibling
+files and symlink targets. A failed or cancelled upload retains its snapshot.
+If snapshot removal fails, report its path as a warning and keep publication
+successful. The receiver has already accepted it. Retaining every successful
+snapshot would leave unused output behind.
 
 Publish requires a Git checkout with a commit even without comparisons, to
 identify the uploaded revision. With comparisons enabled, the base side renders

@@ -1,7 +1,7 @@
 import type { DetailRequest } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "../src/catalogue/types.js";
 
 import {
@@ -14,7 +14,7 @@ declare global {
     evidence: EvidenceProbe;
     startEvidence(
       index: CatalogueReadModel,
-      details: readonly (readonly [DetailRequest, EntryDetailV1])[],
+      details: readonly (readonly [DetailRequest, EntryDetailV2])[],
       origin: string,
       cross: boolean,
       sibling: "ready" | "pending" | "unavailable",

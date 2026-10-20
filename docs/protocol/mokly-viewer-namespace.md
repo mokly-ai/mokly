@@ -14,9 +14,9 @@ protocol names that contain `mokly` are fixed.
 | Path below `mokly-viewer/`                                   | Purpose                                                         | Where         |
 | ------------------------------------------------------------ | --------------------------------------------------------------- | ------------- |
 | `index.json`                                                 | the catalogue index v7                                          | Serve, output |
-| `entries/<entry path>.json`                                  | one entry detail v1 per current entry                           | Serve, output |
+| `entries/<entry path>.json`                                  | one entry detail v2 per current entry                           | Serve, output |
 | `diffs/generations/<generation>/review.json`                 | review result v8                                                | Serve, output |
-| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v1 of a removed entry                          | Serve, output |
+| `diffs/generations/<generation>/entries/<entry path>.json`   | the entry detail v2 of a removed entry                          | Serve, output |
 | `diffs/generations/<generation>/snapshots/**`, `previews/**` | snapshot documents and resources, removed page preview metadata | Serve, output |
 | `client/**`, `shell.css`, `fonts/**`                         | the shell bundle, the inspector, styles, and fonts              | Serve, output |
 | `live.json`                                                  | the live descriptor v3                                          | Serve only    |

@@ -46,7 +46,7 @@ authored case of each segment when written into URLs.
 | `view/<path>/index.html`                                                    | the same stub, one per current and removed entry       |
 | `404.html`                                                                  | the same stub                                          |
 | `mokly-viewer/index.json`                                                   | the catalogue index v7                                 |
-| `mokly-viewer/entries/<entry path>.json`                                    | one entry detail v1 per current entry                  |
+| `mokly-viewer/entries/<entry path>.json`                                    | one entry detail v2 per current entry                  |
 | `mokly-viewer/diffs/generations/<generation>/**`                            | the comparison generation                              |
 | `static/mokly-generated/<route>`                                            | rendered views and documents                           |
 | `static/<closure path>`                                                     | referenced authored resources                          |

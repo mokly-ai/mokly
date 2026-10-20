@@ -8,7 +8,7 @@ import { comparisonGeneration } from "./snapshot_identity.js";
 import type {
   CatalogueReadModel,
   CatalogueRecord,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "./types.js";
 
 /** One requested detail: a current path, or a removed record's identity. */
@@ -19,8 +19,8 @@ export interface DetailRequest {
 
 /** The outcome of comparing one validated detail with the installed index. */
 export type DetailFence =
-  | { kind: "accepted"; detail: EntryDetailV1 }
-  | { kind: "revision"; detail: EntryDetailV1 }
+  | { kind: "accepted"; detail: EntryDetailV2 }
+  | { kind: "revision"; detail: EntryDetailV2 }
   | { kind: "deployment" }
   | { kind: "rejected" };
 
@@ -42,7 +42,7 @@ export function detailKey(request: DetailRequest): string {
 export function fenceDetail(
   index: CatalogueReadModel,
   request: DetailRequest,
-  detail: EntryDetailV1,
+  detail: EntryDetailV2,
 ): DetailFence {
   if (request.snapshotId === undefined) {
     if (detail.deploymentId === undefined) return { kind: "rejected" };
@@ -91,13 +91,20 @@ export function currentEntry(
 function matches(
   index: CatalogueReadModel,
   entry: CatalogueRecord,
-  detail: EntryDetailV1,
+  detail: EntryDetailV2,
   historical: boolean,
 ): boolean {
   if (detail.entry.path !== entry.path || detail.entry.kind !== entry.kind)
     return false;
   if (entry.kind !== "screen" && entry.kind !== "component")
     return detail.views.length === 0;
+  if (
+    !detail.controlOrder ||
+    detail.controlOrder.length !== Object.keys(entry.controls).length ||
+    new Set(detail.controlOrder).size !== detail.controlOrder.length ||
+    detail.controlOrder.some((key) => !Object.hasOwn(entry.controls, key))
+  )
+    return false;
   const axes = (views: readonly { viewport: string; colorScheme: string }[]) =>
     canonicalJson(views.map((view) => [view.viewport, view.colorScheme]));
   if (axes(detail.views) !== axes(entry.views)) return false;

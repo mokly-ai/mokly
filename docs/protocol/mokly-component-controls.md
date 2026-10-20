@@ -24,26 +24,14 @@ derived ones; a declared control must name a declared prop, and optionality
 and types come only from the schema. A prop whose shape has no control is
 shown but not editable. The read model carries the result as `controls`:
 
-```ts
-interface ComponentControlLabel {
-  label?: string;
-  description?: string;
-}
+The [generated control type](../../packages/viewer/src/generated/catalogue/ComponentControl.ts)
+defines its data shape.
 
-type ComponentControl = ComponentControlLabel &
-  (
-    | { kind: "text"; maxLength?: number }
-    | { kind: "boolean" }
-    | { kind: "number"; minimum?: number; maximum?: number; step?: number }
-    | {
-        kind: "select";
-        options: readonly {
-          label: string;
-          value: string | number | boolean | null;
-        }[];
-      }
-  );
-```
+Controls keep their explicit declaration order. Derived controls follow schema
+property order. Inferred schemas use first-seen prop order: own props first,
+then variant props in variant order. Uneditable properties are omitted.
+Each visual entry's detail carries that order in `controlOrder`. Saved variants
+inherit it. The viewer follows the detail's order instead of sorting prop names.
 
 Text length is a non-negative integer of Unicode code points, as the schema's
 `maxLength` counts; the shell checks it itself and never uses the input's
@@ -52,11 +40,18 @@ are finite, ordered, and never negative zero; `step` is finite and positive
 and counts from zero, with the first offered value the smallest multiple at
 or above `minimum`. A number control offers only values the schema accepts.
 Select options are non-empty, have non-empty labels, and unique values the
-schema accepts.
+schema accepts. A declared `step` must be a multiple of schema `multipleOf`.
+It must also be integral for an `integer` prop. An incompatible step fails the
+build with `component-controls`, because it would offer invalid values.
 The read model stores effective number limits for declared controls. Each
 bound uses the control's own value, else the schema's `minimum` or `maximum`.
 Step uses the control's own value, else the schema's `multipleOf`, else 1 for
 an integer, else no step. Parents and saved variants carry the same limits.
+Saved props or story args outside their controls produce `props-control-bounds`
+build warnings. This includes complete merged variants and Storybook hints.
+The viewer accepts these saved values when they satisfy the prop schema.
+The values still render. `--strict` makes the warnings fatal. Live validation
+keeps the complete merged-props check so every accepted preview meets its bounds.
 
 A control starts from the shown entry's props, that is the entry's own props or
 a variant's merged props, updates the preview after validation, and has a label

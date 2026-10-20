@@ -107,8 +107,9 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "Verify immutable tags",
     "Install dependencies",
     "Audit workspace dependencies",
-    "Select verification evidence",
     "Set up Rust",
+    "Audit Rust dependencies",
+    "Select verification evidence",
     "Install Chromium for verification and smoke",
     "Run complete verification",
     "Prepare exact publish artifacts",
@@ -143,11 +144,20 @@ test("release workflow selects only releases and isolates OIDC publish", async (
     "npx playwright install --with-deps chromium",
   );
   const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
-  for (const name of ["Set up Rust", "Run complete verification"])
+  assert.equal(
+    publish.steps.find((step) => step.name === "Run complete verification")?.if,
+    fallbackCondition,
+  );
+  for (const name of ["Set up Rust", "Audit Rust dependencies"])
     assert.equal(
       publish.steps.find((step) => step.name === name)?.if,
-      fallbackCondition,
+      undefined,
+      `${name} must run with reused evidence too`,
     );
+  assert.equal(
+    publish.steps.find((step) => step.name === "Audit Rust dependencies")?.run,
+    "npm run dependencies:check:rust",
+  );
   const evidence = publish.steps.find(
     (step) => step.name === "Select verification evidence",
   );

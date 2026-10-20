@@ -26,6 +26,7 @@ interface RegistryVerifierModule {
   verifyRegistry(
     options: {
       distTag?: string;
+      sourceRef?: string;
       localReport: PackageReport;
       mode: "guard" | "verify";
       repositoryRoot: string;
@@ -198,3 +199,43 @@ async function registryVerifier(): Promise<RegistryVerifierModule> {
   ).href;
   return (await import(url)) as RegistryVerifierModule;
 }
+
+test("reused viewer verification checks its tag commit without requiring latest", async (t) => {
+  const root = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "mokly-viewer-reuse-"),
+  );
+  t.after(() => fs.promises.rm(root, { recursive: true, force: true }));
+  await fs.promises.mkdir(path.join(root, ".context"));
+  const registry = await registryVerifier();
+  const report = packageReport();
+  const calls: string[][] = [];
+  assert.equal(
+    await registry.verifyRegistry(
+      {
+        localReport: report,
+        repositoryRoot: root,
+        mode: "verify",
+        sourceRef: "viewer-v0.1.0",
+      },
+      {
+        execute: async (file, args) => {
+          calls.push([file, ...args]);
+          if (file === "git") {
+            assert.deepEqual(args, ["rev-parse", "viewer-v0.1.0^{commit}"]);
+            return commandResult("d".repeat(40));
+          }
+          if (args[0] === "pack")
+            return commandResult(JSON.stringify([report]));
+          if (args[0] === "view")
+            return commandResult(JSON.stringify({ gitHead: "d".repeat(40) }));
+          return commandResult("");
+        },
+        wait: async () => assert.fail("no propagation wait"),
+        write: () => undefined,
+      },
+    ),
+    true,
+  );
+  assert.ok(calls.every((args) => !args.includes("dist-tags")));
+  assert.deepEqual(calls.at(-1), ["npm", "audit", "signatures"]);
+});

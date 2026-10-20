@@ -17,7 +17,7 @@ import {
   comparisonPublication,
   currentBinary,
 } from "./helpers/static_publication_changes.js";
-import { verifyReceived } from "./helpers/static_received.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 test(
   "ready publications upload CSS and binary deltas and reuse a comparison after an unrelated commit",
@@ -47,26 +47,28 @@ test(
           await git(root, "commit", "-qm", `publication ${change}`);
         }
         const attempts = new Map(server.attempts);
-        const result = await command(
-          root,
-          "publish",
-          [
-            `--config=${config}`,
-            "--base=requested-base",
-            "--repository=example.com/team/site",
-            `--endpoint=${server.endpoint}`,
-            "--token=private/a==",
-          ],
-          "plain",
-          {},
-          context.signal,
+        const result = await observeBuild(
+          server,
+          command(
+            root,
+            "publish",
+            [
+              `--config=${config}`,
+              "--base=requested-base",
+              "--repository=example.com/team/site",
+              `--endpoint=${server.endpoint}`,
+              "--token=private/a==",
+            ],
+            "plain",
+            {},
+            context.signal,
+          ),
         ).result;
         const output = directory(result.stdout);
         outputs.push(output);
         assert.equal(result.code, 0, result.stderr);
         assert.equal(result.stderr, "");
         const received = server.completedInventories.at(-1)!;
-        await verifyReceived(received, output);
         const index = readCatalogueIndex(
           JSON.parse(received.get("mokly-viewer/index.json")!.toString()),
         );

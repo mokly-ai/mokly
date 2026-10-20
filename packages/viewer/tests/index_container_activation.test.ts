@@ -1,55 +1,75 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
+import type { CatalogueNode } from "../src/catalogue/types.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
-import type { ShellContext } from "../src/shell/context.js";
 import type { ShellRoute } from "../src/shell/routes.js";
+import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
-const screen = (path: string, title: string, variantOf?: string) =>
-  ({
-    colorSchemes: ["light"],
-    description: title,
-    kind: "screen",
-    path,
-    relatedDocs: [],
-    sourcePath: `specs/${path}.mockup.tsx`,
-    tags: [],
-    title,
-    useCasePaths: [],
-    ...(variantOf ? { variantOf } : {}),
-  }) as unknown as ManifestEntry;
+import {
+  publishedScreen,
+  publishedScreensModel,
+} from "./published_screens_fixture.js";
 
-/** Profile is its folder's own page, with a variant, a member folder, and members. */
-const entries = [
-  screen("account/profile", "Profile"),
-  screen("account/profile/unverified", "Unverified email", "account/profile"),
-  screen("account/profile/security", "Security"),
-  screen("account/profile/notifications", "Notifications"),
-  screen("account/profile/devices/phone", "Phone"),
+/** Profile, under Account, has a variant, a member folder, and members. */
+const screens = [
+  ["account/profile", "Profile"],
+  ["account/profile/unverified", "Unverified email", "account/profile"],
+  ["account/profile/security", "Security"],
+  ["account/profile/notifications", "Notifications"],
+  ["account/profile/devices/phone", "Phone"],
+] as const;
+const tree: CatalogueNode[] = [
+  {
+    kind: "folder",
+    path: "account",
+    title: "Account",
+    children: [
+      {
+        kind: "entry",
+        path: "account/profile",
+        children: [
+          { kind: "entry", path: "account/profile/unverified" },
+          {
+            kind: "folder",
+            path: "account/profile/devices",
+            title: "Devices",
+            children: [
+              { kind: "entry", path: "account/profile/devices/phone" },
+            ],
+          },
+          { kind: "entry", path: "account/profile/notifications" },
+          { kind: "entry", path: "account/profile/security" },
+        ],
+      },
+    ],
+  },
 ];
-const manifest: ManifestV10 = currentManifest({
-  entries,
-  folders: [],
-  generatedBy: "mokly",
-  schemaVersion: 10,
-  sourceFiles: [],
-});
-const catalogue = createCatalogue(manifest);
 
+/** The entry that Changes activation opens when Changes lists `changed`. */
 function opened(
   changed: readonly string[],
   selection: Partial<ViewerSelection> = {},
   requested = "account/profile",
 ): string {
-  const context: ShellContext = {
-    base: "main",
-    changedEntries: changed,
-    changesStatus: "ready",
+  const model = publishedScreensModel({
+    screens: screens.map(([path, title, variantOf]) =>
+      publishedScreen(
+        path,
+        title,
+        changed.includes(path) ? "changed" : "unmodified",
+        variantOf,
+      ),
+    ),
+    tree,
+  });
+  const catalogue = viewerCatalogue(model);
+  const selected = {
+    ...defaultSelection,
+    view: "changes" as const,
+    ...selection,
   };
   const entry = catalogue.byPath.get(requested);
   assert.ok(entry);
@@ -58,8 +78,8 @@ function opened(
   };
   const activated = changesActivation(
     catalogue,
-    context,
-    { ...defaultSelection, view: "changes", ...selection },
+    viewerContext(model, selected),
+    selected,
     route,
   );
   assert.equal(activated.view.kind, "target");

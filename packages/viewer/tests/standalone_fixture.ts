@@ -10,7 +10,7 @@ import { timeFixturePhase } from "../../../tests/helpers/fixture_timing.js";
 import { serveStaticFiles } from "../../../tests/helpers/static_server.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "../src/catalogue/types.js";
 import { viewRoute } from "../src/data.js";
 
@@ -105,8 +105,8 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
       await fs.readFile(path.join(root, "mokly-viewer/index.json"), "utf8"),
     ) as CatalogueReadModel;
     const details: {
-      current: Record<string, EntryDetailV1>;
-      removed: Record<string, EntryDetailV1>;
+      current: Record<string, EntryDetailV2>;
+      removed: Record<string, EntryDetailV2>;
     } = { current: {}, removed: {} };
     for (const entry of [...index.screens, ...index.components]) {
       details.current[entry.path] = JSON.parse(
@@ -114,7 +114,7 @@ async function createCrossOriginFixture(options: BrowserSourceOptions) {
           path.join(root, "mokly-viewer/entries", `${entry.path}.json`),
           "utf8",
         ),
-      ) as EntryDetailV1;
+      ) as EntryDetailV2;
     }
     await writeBrowserFile(
       root,

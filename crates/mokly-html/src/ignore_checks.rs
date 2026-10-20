@@ -1,26 +1,15 @@
 //! Validate authored ignore wrappers before consuming their attributes.
 
+use mokly_catalogue::template_types::ignore_attribute_allowed;
+
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::Element;
 
-pub(crate) fn attributes(element: &Element) -> Result<()> {
-    let allowed: &[&str] = match element.name.as_str() {
-        "mokly-ignore" => &["id", "material-key", "mokly-if", "mokly-viewport"],
-        "mokly-ignore-scope" => &["enabled", "mokly-if", "mokly-viewport"],
-        _ => return Ok(()),
-    };
-    if let Some(attribute) = element
+pub(crate) fn attributes(element: &mut Element) {
+    element
         .attributes
-        .iter()
-        .find(|attribute| !allowed.contains(&attribute.name.as_str()))
-    {
-        return Err(invalid(
-            Code::HtmlElement,
-            format!("unknown attribute {} on <{}>", attribute.name, element.name),
-        ));
-    }
-    Ok(())
+        .retain(|attribute| ignore_attribute_allowed(&element.name, &attribute.name));
 }
 
 pub(crate) fn id(value: &str) -> Result<()> {

@@ -14,7 +14,9 @@ import { smokeServe } from "./smoke_serve.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 const directory = path.resolve(process.argv[2] ?? ".context/release-artifact");
-const packages = await inspectReleaseSet(repositoryRoot, directory);
+const packages = await inspectReleaseSet(repositoryRoot, directory, {
+  reuseViewer: process.env.VIEWER_REF === "",
+});
 const root = await fs.mkdtemp(
   path.join(os.tmpdir(), "mokly-release-consumer-"),
 );

@@ -10,7 +10,7 @@ import {
   publish,
   removeOutput,
 } from "./helpers/static_publication.js";
-import { verifyReceived } from "./helpers/static_received.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 for (const replan of ["nonempty", "empty"] as const)
   test(
@@ -21,10 +21,13 @@ for (const replan of ["nonempty", "empty"] as const)
       const server = await exchange({ replan });
       let output: string | undefined;
       try {
-        const result = await publish(root, server.endpoint, "rich", {
-          args: ["--upload-concurrency=1"],
-          signal: context.signal,
-        }).result;
+        const result = await observeBuild(
+          server,
+          publish(root, server.endpoint, "rich", {
+            args: ["--upload-concurrency=1"],
+            signal: context.signal,
+          }),
+        ).result;
         output = directory(result.stdout);
         assert.equal(result.code, 0, result.stderr);
         assert.equal(result.stderr, "");
@@ -33,7 +36,6 @@ for (const replan of ["nonempty", "empty"] as const)
         assert.equal(server.completionAttempts, 2);
         assert.equal(server.completed, 1);
         assert.equal(server.completedInventories.length, 1);
-        await verifyReceived(server.completedInventories[0]!, output);
         const [first, second] = server.missingSets;
         assert.ok(first && first.length > 1);
         assert.deepEqual(second, replan === "nonempty" ? [first[0]] : []);

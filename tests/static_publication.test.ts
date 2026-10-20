@@ -11,6 +11,7 @@ import {
   publish,
   removeOutput,
 } from "./helpers/static_publication.js";
+import { observeBuild } from "./helpers/static_received.js";
 
 test(
   "real publish retries exact bytes and preserves deployment identity",
@@ -22,22 +23,29 @@ test(
     try {
       let deployment: string | undefined;
       for (const mode of ["rich", "plain"]) {
-        const result = await publish(root, server.endpoint, mode, {
-          signal: context.signal,
-        }).result;
+        const result = await observeBuild(
+          server,
+          publish(root, server.endpoint, mode, {
+            signal: context.signal,
+          }),
+        ).result;
         outputs.push(directory(result.stdout));
         assert.equal(result.code, 0, result.stderr);
         assert.equal(result.stderr, "");
         const index = JSON.parse(
-          await fs.readFile(
-            path.join(outputs.at(-1)!, "mokly-viewer/index.json"),
-            "utf8",
-          ),
+          server.completedInventories
+            .at(-1)!
+            .get("mokly-viewer/index.json")!
+            .toString(),
         ) as { deploymentId: string; revision: number; live?: unknown };
         assert.equal(index.revision, 0);
         assert.equal(index.live, undefined);
         if (deployment) assert.equal(index.deploymentId, deployment);
         deployment = index.deploymentId;
+        await assert.rejects(fs.stat(outputs.at(-1)!), { code: "ENOENT" });
+        assert.deepEqual(await fs.readdir(path.dirname(outputs.at(-1)!)), [
+          ".mokly-export-reservations",
+        ]);
         if (mode === "rich") {
           const phases = [
             "Loading configuration",

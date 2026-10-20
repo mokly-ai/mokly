@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use mokly_model::public_detail::{EntryDetailV1, InputChange, Workspace};
+use mokly_model::public_detail::{EntryDetailV2, InputChange, Workspace};
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner};
 
 use crate::comparison_error::CompareResult;
@@ -12,7 +12,7 @@ use crate::projection_context::Context;
 
 pub(crate) fn append(
     path: &str,
-    detail: &EntryDetailV1,
+    detail: &EntryDetailV2,
     workspace: &mut Workspace,
     classification: &EntryClassification,
     context: &Context<'_>,

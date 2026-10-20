@@ -1,5 +1,7 @@
 //! Prepare a parent while retaining invalid definitions for identity and relationships.
 
+use std::collections::BTreeSet;
+
 use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{SourceLocation, VisualEntry};
 use mokly_model::controls;
@@ -37,6 +39,7 @@ pub(crate) fn prepare(
             prop_schema: inferred.clone(),
             props: input.props.clone(),
             controls: Default::default(),
+            control_order: Vec::new(),
         },
         validator: None,
         issues: parsed.issues.clone(),
@@ -96,6 +99,18 @@ pub(crate) fn prepare(
                 .as_ref()
                 .map(|controls| declared_controls::effective(validator.schema(), controls))
                 .unwrap_or_else(|| controls::derive(validator.schema()));
+            parent.visual.control_order = input
+                .control_order
+                .iter()
+                .filter(|key| parent.visual.controls.contains_key(*key))
+                .cloned()
+                .collect();
+            let mut ordered: BTreeSet<_> = parent.visual.control_order.iter().cloned().collect();
+            for key in parent.visual.controls.keys() {
+                if ordered.insert(key.clone()) {
+                    parent.visual.control_order.push(key.clone());
+                }
+            }
             parent.validator = Some(validator);
         }
         Err(issue) => parent.issues.push(issue),

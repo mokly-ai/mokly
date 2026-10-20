@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { EntryDetailV1 } from "../packages/viewer/src/generated/catalogue/EntryDetailV1.js";
+import type { EntryDetailV2 } from "../packages/viewer/src/generated/catalogue/EntryDetailV2.js";
 
 import { build, git, json, screen, write } from "./helpers/static_changes.js";
 import { publicationFixture } from "./helpers/static_publication.js";
@@ -106,7 +106,7 @@ test(
           fs.stat(path.join(moved.output, `view/${name}/index.html`)),
           { code: "ENOENT" },
         );
-      const historical = await json<EntryDetailV1>(
+      const historical = await json<EntryDetailV2>(
         moved.output,
         `${path.posix.dirname(moved.index.comparisonUrl!)}/entries/card/compact.json`,
       );
@@ -156,7 +156,7 @@ test(
         screen('<ui-button mokly-instance="button" label="New" />'),
       );
       const built = await build(root);
-      const button = await json<EntryDetailV1>(
+      const button = await json<EntryDetailV2>(
         built.output,
         "mokly-viewer/entries/button.json",
       );
@@ -166,7 +166,7 @@ test(
       assert.ok(
         button.workspace!.affected.some((use) => use.entryPath === "affected"),
       );
-      const affected = await json<EntryDetailV1>(
+      const affected = await json<EntryDetailV2>(
         built.output,
         "mokly-viewer/entries/affected.json",
       );
@@ -176,7 +176,7 @@ test(
         ),
       );
       assert.equal(affected.workspace!.comparisonEligible, true);
-      const home = await json<EntryDetailV1>(
+      const home = await json<EntryDetailV2>(
         built.output,
         "mokly-viewer/entries/home.json",
       );
