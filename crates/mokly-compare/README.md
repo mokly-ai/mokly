@@ -37,6 +37,9 @@ Links and submodules supply no regular source bytes. It lists
 regular files below exact configured roots and exposes batched blob reads.
 Compose a reader and cancellation graph for each comparison generation. The catalogue applies its roots, globs, and source rules to
 these files. HTML reads require no extraction or package manager.
+HTML-only comparison uses working dependencies for package stylesheets on both
+sides. The CLI compares dependency identities through Git and emits
+`base-dependencies` when they differ, including a package-only upgrade.
 
 `SystemLocations` hashes the canonical repository path under the operating
 system's cache directory; Windows honors an absolute `LOCALAPPDATA` value. `DiskCache` has separate source and dependency

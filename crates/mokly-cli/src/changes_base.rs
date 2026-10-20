@@ -3,8 +3,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config::{ConfigLoader, Loader};
+use mokly_catalogue::config::{ConfigLoader, Loader, relative};
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
+use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::discovery::{Discoverer, Discovery, Inventory, SourceKind};
 use mokly_catalogue::preparation::{Builder, CatalogueBuilder};
 use mokly_cli::cancellation::Cancellation;
@@ -12,6 +13,9 @@ use mokly_cli::cancelled_work::CancellableTree;
 use mokly_cli::version::VERSION;
 use mokly_compare::base_render::{BaseProvider, BaseRequest};
 use mokly_compare::error::{Error, Result};
+use mokly_compare::inputs::{InputReader, SourceInputs};
+use mokly_compare::working_inputs::{SystemWorkingInputs, WorkingInputs};
+use mokly_git::tree::Limits;
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTree;
@@ -68,6 +72,11 @@ impl BaseProvider for NativeBase {
         } else {
             None
         };
+        let warning = if needs_sidecar {
+            None
+        } else {
+            html_dependencies(request, &config)?
+        };
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
@@ -85,10 +94,11 @@ impl BaseProvider for NativeBase {
             discovery: Arc::new(Discovered(inventory)),
             definitions: runtime.clone(),
         };
-        let catalogue = match builder.prepare(&config, None) {
+        let mut catalogue = match builder.prepare(&config, None) {
             Ok(catalogue) => catalogue,
             Err(source) => return Err(Error::Catalogue { source }),
         };
+        catalogue.warnings.extend(warning);
         if self.cancellation.requested() {
             return Err(Error::Cancelled);
         }
@@ -102,6 +112,21 @@ impl BaseProvider for NativeBase {
             Err(source) => Err(Error::Graph { source }),
         }
     }
+}
+
+fn html_dependencies(
+    request: &BaseRequest<'_>,
+    config: &ResolvedConfig,
+) -> Result<Option<Warning>> {
+    let reader: &dyn InputReader = &SourceInputs;
+    let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
+    let working: &dyn WorkingInputs = &SystemWorkingInputs;
+    let head = working.read(request.repository.as_ref(), &base, Limits::default())?;
+    Ok((base != head).then(|| Warning {
+        code: "base-dependencies",
+        subject: WarningSubject::Configuration(relative(&config.file, &config.repo_root)),
+        message: "Base dependencies differ. HTML comparison uses working-tree dependencies.".into(),
+    }))
 }
 
 struct Discovered(Inventory);

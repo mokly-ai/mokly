@@ -146,6 +146,18 @@ commit's sources are extracted on demand into the bounded cache outside the
 repository that the [architecture page](../architecture/rust-core.md#render-graph)
 names, keyed by the commit, and the sidecar bundles from that directory.
 
+### HTML Package Styles
+
+An HTML-only catalogue without a renderer or PostCSS uses working-tree
+dependencies for package stylesheets on both sides. It needs no extraction,
+Node process, or package installation. Compare dependency identities with Git.
+When they differ, emit a configuration-subject `base-dependencies` warning.
+Under `--strict`, that warning fails the build. Equal Git clean identities
+produce no warning. The warning makes a package-only upgrade visible even
+when both sides render the same installed CSS.
+
+### JavaScript Package Selection
+
 Repository-owned packages, including workspaces and local directory packages,
 always come from the side's own sources. During module resolution, a real
 path inside a repository root and outside every `node_modules` directory maps

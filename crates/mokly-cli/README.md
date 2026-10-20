@@ -105,6 +105,10 @@ An HTML-only catalogue without a renderer or PostCSS starts no sidecar and
 needs no package lookup result. A configured renderer contributes its complete
 bundle source inventory even when the catalogue has only HTML entries. Direct execution uses `node` from `PATH` when the shim has not
 supplied `MOKLY_NODE_EXECUTABLE`.
+HTML-only base comparison reads dependency identities through Git. Package
+stylesheets use working-tree dependencies on both sides. Different identities
+emit `base-dependencies`; `--strict` fails before output replacement. Equal
+clean identities remain warning-free. No Node process or install is needed.
 Static builds keep the input-change outcome when historical PostCSS evidence
 disagrees with its pinned Git source. They preserve the earlier output.
 They also check selected base package inputs before base document callbacks.

@@ -391,6 +391,14 @@ readiness rather than blocking this acceptance round on further startup work.
   rendered sources, so no consumer needs Git path discovery. Alternatives:
   A, retain and rename the span; C, add unused Git discovery.
 
+- Orchestrator item 27 B (2026-10-20, applied by default (user rule)): HTML-only
+  catalogues without a renderer or PostCSS use working-tree dependencies for
+  package CSS on both sides. Compare dependency identities with Git and emit
+  `base-dependencies` when they differ. Strict builds fail on that warning.
+  This preserves the no-Node HTML boundary and exposes dependency-only edits.
+  Alternatives: A, install base packages; C, prepare a base side when package
+  CSS is reached.
+
 **Comparison filter follow-up (2026-10-20):**
 
 - Orchestrator item 11 A is the selected default under the user rule.
