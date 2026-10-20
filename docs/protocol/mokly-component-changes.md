@@ -69,8 +69,7 @@ Serve's background classification, the selected comparison, watched updates,
 `build`, and `publish` use one materiality policy and one classifier over the
 same composed trees, so Changes rows, counts, on-demand results, and built
 output agree. Every catalogue, with or without registered components, follows
-it. A changed Git path is candidate evidence, never a reason to classify a
-consumer as changed. The classifier reads the catalogue model and the render
+it. The classifier reads the catalogue model and the render
 cache of both sides; it generates no snapshot and copies no asset. Opening All
 or Changes, navigating, changing viewport or scheme in Current, and a watch
 notification generate no comparison. Classification is cached by the head and

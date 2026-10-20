@@ -32,8 +32,8 @@ reachable only from the base ref do not enter the comparison. No command
 checks the base commit out over the working tree, and nothing is written into
 the repository.
 
-The engine compares every view of every entry, with or without changed Git
-paths, because a changed component, stylesheet, or resource reaches views
+The engine compares every view of every entry, regardless of source edits,
+because a changed component, stylesheet, or resource reaches views
 whose own sources did not change. Git blob and tree reads are bounded in count
 and bytes, and a file's mode is checked before its blob is accepted, so a
 symlink or a non-regular file is rejected. A read that cannot complete makes

@@ -20,8 +20,7 @@ reads the composed trees of the two [sides](./mokly-comparison.md#sides). No
 rule reads a source file or a repository path on its own.
 
 - A source edit alone never lists an entry. An unreferenced public file alone
-  never lists an entry and never supplies evidence. A changed Git path is
-  candidate evidence, not a reason.
+  never lists an entry and never supplies evidence.
 - Reviewable metadata is the address, the titles, the descriptions, the
   rationale, the tags, the related-document links, the use case steps and
   memberships, and the view structure: the set of viewports and colour
