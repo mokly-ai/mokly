@@ -27,9 +27,9 @@ import { commitBaseSources } from "./serve_comparison_git.js";
 
 /**
  * The waits between index reads while a publication is pending. A watched
- * edit publishes within about a second, and the default backoff of
- * `expect.poll` can add up to a second after that. Playwright consumes the
- * array that it receives, so each wait passes a copy.
+ * edit publishes after a rebuild and a classification, and the default
+ * backoff of `expect.poll` waits up to one second between reads. Playwright
+ * consumes the array that it receives, so each wait passes a copy.
  */
 const PUBLICATION_POLL_INTERVALS: readonly number[] = [50, 100, 200];
 
