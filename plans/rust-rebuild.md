@@ -2053,9 +2053,9 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
           472 samples at 50 ms intervals. Both budgets passed. Product release
           preparation preceded measurement; installed binary verification passed.
           Evidence: `.context/m14-round3/isolated-react/.context/setup.json`.
-- [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
-      through build, serve, Changes, and watch; save the evidence
-      under `.context/rust-rebuild/`.
+- [ ] Run the fixture and the Mokly Cloud catalogue through build, serve,
+      Changes, and watch; save the evidence under `.context/rust-rebuild/`.
+      The bookfolio run is a post-merge follow-up (user, 2026-10-20).
   - [x] Port and verify Mokly Cloud in a scratch copy with Build, Serve,
         source Changes, and watched screen, component, and stylesheet edits.
         Keep the source repository unchanged.
@@ -2070,7 +2070,6 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
   - [ ] Decide compiled-recipe retention between comparisons: R19-1, severity
         Medium, effort Large. Recommended C: a byte-bounded cache with compiler
         and resolution input revalidation. Agree its budget before implementation.
-  - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
       The M5 memory follow-up removes quadratic ancestor-list retention and
@@ -2614,6 +2613,10 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     line.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Run the bookfolio catalogue through build, serve, Changes, and watch
+      after the user supplies access. The user took it out of the rebuild
+      scope on 2026-10-20.
 
 - [ ] Remove the duplicate base render between validation and capture: one
       bounded, ordered collector that keeps aggregate errors, warnings,
