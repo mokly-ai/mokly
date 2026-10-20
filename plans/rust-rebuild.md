@@ -2593,14 +2593,18 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
        such an entry, open it from Affected screens, and depict its pane
        heading. Option A keeps the band hidden and corrects the first
        sentence.
-    2. A variant of an affected component names no changed components.
-       Severity Medium, effort Small. The affected records name the parent
-       as the consumer, so `projection_affected.rs` gives `relatedComponents`
-       to the parent's detail only. A variant page without a loaded review
-       then reads "No changes to this saved view." while its preview changed.
-       Recommended: B, also index each record by the variant whose views its
-       evidence names. Option A documents that only the parent page explains
-       the shared change.
+    2. Related components follow the parent, not the changed views.
+       Severity Medium, effort Medium. The affected records name the parent
+       as the consumer for every view of a component, so `projection_affected.rs`
+       gives `relatedComponents` to the parent's detail only. A variant page
+       without a loaded review then reads "No changes to this saved view."
+       while its preview changed. A parent page whose variant alone uses the
+       changed component claims a shared change in its own preview (hub
+       review finding 1, merged here by the orchestrator on 2026-10-20).
+       Recommended: B, key `relatedComponents` by the entry whose views each
+       evidence item names, in place of the parent, and update the Status
+       Lines rule. Option A documents that only the parent page explains the
+       shared change.
   - Hub review of `rebuild/defaults-viewer`, finding 5, raised on
     2026-10-20: no artboard shows the pane heading “Components this screen
     uses changed”. Severity Low. The shell shows it in a loaded comparison
