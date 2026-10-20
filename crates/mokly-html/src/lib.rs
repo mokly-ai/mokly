@@ -87,6 +87,9 @@ mod parser_tests;
 #[path = "_tests_/props_tests.rs"]
 mod props_tests;
 #[cfg(test)]
+#[path = "_tests_/raw_text_context_tests.rs"]
+mod raw_text_context_tests;
+#[cfg(test)]
 #[path = "_tests_/safety_tests.rs"]
 mod safety_tests;
 #[cfg(test)]

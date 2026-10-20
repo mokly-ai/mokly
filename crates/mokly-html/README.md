@@ -54,6 +54,8 @@ repair. This keeps later text in the correct mode when a nested tag was popped.
 Normalization checks the predicted plaintext start against its reparsed repair
 identity. If the parser did not create an HTML `plaintext` element there, it
 retries with every text node escaped before restoring metadata.
+Every raw-text tag uses the namespace returned by the parser-context helper.
+An HTML tag grafted into foreign content therefore keeps its text escaped.
 
 `tree::Node` has explicit region nodes. Comparison consumes those nodes.
 Sidecar style elements carry typed owner annotations through HTML reparsing.

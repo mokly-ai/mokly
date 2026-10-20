@@ -49,6 +49,14 @@ impl Frame {
 pub(crate) struct Token {
     id: usize,
     index: usize,
+    namespace: Namespace,
+}
+
+impl Token {
+    /// Whether this serialized start tag enters the HTML parser namespace.
+    pub(crate) fn is_html(self) -> bool {
+        self.namespace == Namespace::Html
+    }
 }
 
 /// Region annotations are transparent; both tree walks enter and leave only elements.
@@ -75,6 +83,7 @@ impl TextMode {
             return Token {
                 id,
                 index: self.open.len(),
+                namespace: Namespace::Html,
             };
         }
         let name = element.name.to_ascii_lowercase();
@@ -115,6 +124,7 @@ impl TextMode {
         let token = Token {
             id,
             index: self.open.len(),
+            namespace,
         };
         self.names
             .entry(name.clone())

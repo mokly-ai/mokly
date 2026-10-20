@@ -416,6 +416,12 @@ readiness rather than blocking this acceptance round on further startup work.
 
 **Comparison filter follow-up (2026-10-20):**
 
+- Defaults-engine round 3 finding 4 A (2026-10-20, approved): decide every
+  raw-text tag from the parser-context namespace returned at element entry.
+  Preserve raw text at HTML integration points and escape foreign grafts.
+  This shares the namespace rule across all raw-text elements without settling
+  the broader parser-driven text-mode decision.
+
 - Defaults-engine round 3 finding 2 B (2026-10-20, approved): confirm the
   predicted plaintext element against the reparsed HTML namespace and repair
   identity. Retry with all text escaped when it does not agree. This covers

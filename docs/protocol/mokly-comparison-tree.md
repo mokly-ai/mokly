@@ -50,5 +50,7 @@ clones and later nodes. Authored characters and entity spellings stay literal.
 The parsed element must confirm the predicted HTML plaintext start. If it
 does not, composition retries with all text escaped so authored text stays inert.
 Serialization omits private markers and attributes inside plaintext mode. Other
-HTML text modes keep their escaping rules. `pre`, `textarea`, and `listing`
+HTML text modes follow the parser-context namespace, including component grafts
+inside SVG and MathML. Foreign raw-text tag names keep text escaped.
+`pre`, `textarea`, and `listing`
 preserve the leading line feed that the HTML parser would otherwise remove.

@@ -77,7 +77,7 @@ pub(crate) fn document(nodes: &[Node], escape_text: bool) -> Serialized {
                 } else {
                     mode.leave(token, &element.name);
                 }
-                let raw = element.is_html()
+                let raw = token.is_html()
                     && raw_text(&element.name)
                     && (element.name != "plaintext" || mode.plaintext());
                 pending.extend(
