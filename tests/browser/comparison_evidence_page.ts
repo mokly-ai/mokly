@@ -40,14 +40,22 @@ export const INSPECTOR_VIEWPORTS = [
   ["mobile", { width: 390, height: 844 }],
 ] as const;
 
+/** The one Comparison details heading, then the branch-point sentence. */
+async function expectComparisonDetails(evidence: Locator): Promise<void> {
+  await expect(evidence).toBeVisible();
+  await expect(
+    evidence.getByRole("heading", { name: "Comparison details", exact: true }),
+  ).toHaveCount(1);
+  await expect(evidence.locator("p").first()).toHaveText(BASE);
+}
+
 /** Select the Details tab and return the comparison details it shows. */
 export async function openEvidence(page: Page): Promise<Locator> {
   const tab = page.getByRole("tab", { name: "Details", exact: true });
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   await expect(tab).toHaveAttribute("aria-selected", "true");
   const evidence = page.locator("[data-workspace-evidence]");
-  await expect(evidence).toBeVisible();
-  await expect(evidence.locator("p").first()).toHaveText(BASE);
+  await expectComparisonDetails(evidence);
   return evidence;
 }
 
@@ -61,20 +69,22 @@ export async function openPageEvidence(page: Page): Promise<Locator> {
   if (!(await details.evaluate((element) => element.hasAttribute("open"))))
     await details.locator("summary").click();
   const evidence = page.locator("[data-page-evidence]");
-  await expect(evidence).toBeVisible();
-  await expect(evidence.locator("p").first()).toHaveText(BASE);
+  await expectComparisonDetails(evidence);
   return evidence;
 }
 
 /** A listed file: its own path text, then each nested lead and its styles. */
 export type EvidenceFile = [path: string, outcomes: [string, string[]][]];
 
-/** The one changed-files list as it is grouped, or none when it is absent. */
+/**
+ * The one changed-files list as it is grouped. Any other number of lists
+ * reads as that count alone, so a poll for the expected files keeps waiting.
+ */
 export function evidenceFiles(scope: Locator): Promise<EvidenceFile[]> {
   return scope.evaluate((panel) => {
-    const list = panel.querySelector(".mbk-evidence-files");
-    if (!list) return [];
-    return [...list.children].map((item): EvidenceFile => {
+    const lists = panel.querySelectorAll(".mbk-evidence-files");
+    if (lists.length !== 1) return [[`${lists.length} file lists`, []]];
+    return [...lists[0]!.children].map((item): EvidenceFile => {
       const outcomes: [string, string[]][] = [];
       for (const child of item.children)
         if (child.tagName === "P")
