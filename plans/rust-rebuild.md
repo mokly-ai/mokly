@@ -2102,6 +2102,13 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         keep, and build each kept copy after that check, so unaliased anchors
         copy no positions. Decision: nesting report finding 21 option B,
         approved by the orchestrator on 2026-10-20.
+  - [x] Fix the open CSS Modules problems from the nesting reviews, each
+        with a failing test first: wrappers still open at the end of input,
+        wrappers nested in keyframes names, CSS line breaks and character
+        columns in diagnostics, statements without a block in a rule list,
+        comments before `composes`, and the plain-data limit messages.
+        Requested by the orchestrator on 2026-10-20. Only the section-reader
+        follow-up for finding 22 stays open, under the review TODO.
 - [x] Replace the old baseline-output cold reset with M9 leased-cache preparation
       and delivered Changes measurements in the M14 harness.
       Evidence: `.context/m14-harness/changes-tests-3.log` and
