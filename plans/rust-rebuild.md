@@ -2306,9 +2306,11 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         Retain original-run retry selection and immutable archive checks.
         Evidence: `.context/ci-release-checks/decision81-red.log` and
         `.context/ci-release-checks/decision81-green.log`.
-  - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
-    Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
-    the design evidence upload. The hub owns the user decision.
+  - [x] User decision 80 (2026-10-20): add no upload policy test for CI gates
+        hub review finding 5C. Keep the existing design upload overwrite fix
+        and the specific release workflow assertions. The alternative was a
+        new general policy check for every fixed-name upload. The user chose
+        the direct fixes without that additional gate.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.
