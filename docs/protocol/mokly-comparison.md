@@ -91,6 +91,8 @@ record and changes no view. Collected rules use the per-rule records of the
 supplies their material and affected-consumer effects under the
 [component change rules](./mokly-component-changes.md). Linked stylesheets
 use the same [CSS attribution](./mokly-css-attribution.md) rules.
+Page-component filtering does not discard independent actual-instance proof,
+including proof from a nested instance of the same component.
 
 Head `<style>` elements without owners use the same rule identities and
 catalogue-wide own-page proof as linked CSS. Diff their rules between the

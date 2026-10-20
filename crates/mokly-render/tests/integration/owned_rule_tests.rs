@@ -3,7 +3,7 @@
 use std::fs;
 
 use mokly_model::evidence::{EvidenceOwner, RuleStatus};
-use mokly_model::review::ReviewState;
+use mokly_model::review::{EntryChangeReason, ReviewState};
 
 use super::base_styles_tests::{compare, consumer};
 
@@ -126,4 +126,43 @@ fn matched_owned_rules_share_the_document_with_unused_ownerless_rules() {
             }
         );
     }
+}
+
+#[test]
+fn self_nested_owned_rules_keep_actual_instance_proof_without_changing_own_views() {
+    let base = consumer("'red'");
+    let head = consumer("'blue'");
+    for (consumer, color) in [(&base, "red"), (&head, "blue")] {
+        fs::write(
+            consumer.root().join("owned/card.mockup.tsx"),
+            format!("import {{defineComponent}} from '@mokly/mokly';
+                export const card=defineComponent({{title:'Card',description:'',relatedDocs:[],element:'ui-card',
+                propSchema:{{type:'object',additionalProperties:false,required:['outer'],properties:{{outer:{{type:'boolean'}}}}}},
+                props:{{outer:true}},render:(props)=>props.outer ? <main><card.Component outer={{false}}/></main> :
+                <><style>{{`.leaf{{color:{color}}}`}}</style><p className='leaf'>Leaf</p></>}});"),
+        ).unwrap();
+        fs::write(
+            consumer.root().join("owned/home.screen.html"),
+            "---\ntitle: Home\n---\n<p>Unrelated</p>",
+        )
+        .unwrap();
+    }
+    let result = compare(&base, &head);
+    assert_eq!(result.snapshot.changed_entries, ["card"]);
+    let card = result
+        .entries
+        .iter()
+        .find(|entry| entry.path == "card")
+        .unwrap();
+    assert!(card.reasons.contains(&EntryChangeReason::Implementation));
+    assert!(
+        card.documents
+            .iter()
+            .all(|view| view.state == ReviewState::Unchanged)
+    );
+    assert!(
+        card.documents
+            .iter()
+            .all(|view| view.evidence.rules.is_empty())
+    );
 }

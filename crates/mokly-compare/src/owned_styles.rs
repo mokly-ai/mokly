@@ -22,6 +22,12 @@ pub(crate) struct Changes {
     pub(crate) rules: Vec<RuleEvidence>,
 }
 
+/// Page evidence and exact instance proof have independent ownership reductions.
+struct OwnedRuleProof {
+    records: Vec<RuleEvidence>,
+    instances: BTreeSet<String>,
+}
+
 pub(crate) fn compare(
     nodes: [&[Node]; 2],
     trees: [Option<&MatchTree>; 2],
@@ -47,23 +53,33 @@ pub(crate) fn compare(
             continue;
         }
         let matching = match_document(&diff, trees[0], trees[1]);
-        let records = records(&matching, owner, trees, route);
-        if records.is_empty() {
-            continue;
-        }
-        changes.owners.insert(owner.clone());
-        changes.rules.extend(records);
         let indices = indices.get_or_insert_with(|| {
             [
                 owned_style_instances::index(nodes[0], paths),
                 owned_style_instances::index(nodes[1], &BTreeMap::new()),
             ]
         });
-        changes
-            .instances
-            .extend(owned_style_instances::matched(&matching, owner, indices));
+        let proof = prove(&matching, owner, trees, indices, route);
+        if !proof.records.is_empty() {
+            changes.owners.insert(owner.clone());
+        }
+        changes.rules.extend(proof.records);
+        changes.instances.extend(proof.instances);
     }
     Ok(changes)
+}
+
+fn prove(
+    matching: &DocumentMatching,
+    owner: &str,
+    trees: [Option<&MatchTree>; 2],
+    indices: &[owned_style_instances::Index; 2],
+    route: &str,
+) -> OwnedRuleProof {
+    OwnedRuleProof {
+        records: records(matching, owner, trees, route),
+        instances: owned_style_instances::matched(matching, owner, indices),
+    }
 }
 
 pub(crate) fn apply(comparison: &mut MaterialComparison, changes: &Changes) {

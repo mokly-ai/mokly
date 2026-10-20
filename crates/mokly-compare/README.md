@@ -130,6 +130,8 @@ Page components keep matches outside nested registered instances. Instance
 proof excludes matches inside different nested components. Unresolved owned
 rules use the conservative entry record and supply no instance proof. Unused
 rules change no view.
+Page records and exact instance proof are reduced independently. A nested
+instance can supply implementation evidence even when its page keeps no rule.
 It releases parsed documents after collecting canonical and containment proof.
 The retained result holds a bounded base capture over its pinned source, the
 original cached head generation, view states, reasons, ownership

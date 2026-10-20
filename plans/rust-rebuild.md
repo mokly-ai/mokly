@@ -1183,6 +1183,18 @@ decisions: `.context/rust-rebuild/delegation/m7/merge-decisions-round23.md`.
       the misleading timing stage and Git-input wording. Keep output exclusions
       for source capture and resource comparison. Keep publish checkout checks.
 
+- [x] Apply defaults-engine review finding 1, High, option B. Keep owned-rule
+      page evidence and exact instance proof in independent result fields.
+      Self-nested style changes retain implementation evidence without changing
+      the component's own view states.
+      Evidence: `.context/defaults-engine/implementation-review-1.md`.
+- Outside scope: `tests/sidecar_postcss_loader_evidence.test.ts` and
+  `tests/static_postcss_base_evidence.test.ts` require loader hooks absent on
+  Node 22.14.0. Both files pass all seven tests on Node 24.21.0. Separate branch.
+- Outside scope: `tests/browser/static_deployment.spec.ts:79` matched two
+  transient headings during a deployment reload. The second remote gate passed
+  the same test. Suspected source: reload ordering. Separate branch.
+
 At completion Serve and the CLI classify changes against the Git base with
 tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
