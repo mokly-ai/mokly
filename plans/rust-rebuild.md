@@ -2895,6 +2895,24 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
         certificates. The Rust audit then failed on every branch.
         `Cargo.lock` takes the patched 0.103.16 as a reviewed dependency
         change, and only that entry changes.
+  - [x] F18 review, on 2026-10-20: finding 36, a re-export of
+        `branchPointPaths` in `tests/browser/branch_point_test.ts` that item
+        1 left without a reader, is fixed by option A. The full report is
+        `.context/m10/f18/review_1.md`.
+  - F18 review decision for the user: extend the unused internal export
+    check to the test helper trees. Severity Low, effort Medium. Covers
+    finding 36. Previous examples: `ec52f856` and `fe3624df`. Recommended: B,
+    check `tests/browser`, `tests/helpers`, and `packages/viewer/tests` with
+    a shrinking baseline of their 47 current entries, and leave the
+    catalogue fixtures out.
+  - Outside the F18 review scope:
+    - `packages/viewer/src/shell/layout_breakpoint.ts`: its header and
+      `packages/viewer/src/shell/README.md` say that every shell and viewer
+      rule reads `NARROW_SHELL`, but the phone layout and the compact search
+      use their own widths. Separate branch.
+    - `packages/viewer/src/shell/css_previews.ts`: in the embedded viewer,
+      the `24rem` width limit of the preview note follows the host page's
+      root font size, but its 13px text does not. Separate branch.
   - [x] F15 review finding 33: the delivery spec selected the reused-parent
         check by its case name. Applied A as follow-up F18 item 1, as the
         orchestrator directed on 2026-10-20. The case's delivery facts hold
