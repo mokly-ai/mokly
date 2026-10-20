@@ -2497,6 +2497,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [x] CI round 5, item 1 (2026-10-20): use measured per-test costs to assign
+      all discovered browser specs to four whole-file shards in hosted CI and
+      the remote executor. Keep the 1.25 test-count share limit. Use the
+      current inventory for membership and a median cost for new specs.
+      The assignment target is within 15 percent by duration. Tests check
+      assignments and coverage, not elapsed time. Hosted confirmation belongs
+      to the hub. Scheduling inputs come from run `39455750846` at `b1f3c86f`.
+      Evidence: `.context/ci-shard-balance/partition.json` and
+      `.context/ci-shard-balance/shard-green.log`.
+
 - [ ] Move the 0.14-era notes in `npm-release-notes.md` and the format note to
       the history page at close-out; retain their links and migration content.
       Commit `05923728` already moved the Publish Checkout, Removed Public

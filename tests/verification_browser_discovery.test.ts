@@ -5,6 +5,7 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 import { promisify } from "node:util";
 
+import { browserFileArguments } from "../scripts/verification/browser-partition.mjs";
 import {
   discoverBrowserTests,
   summarizeObservedFiles,
@@ -86,6 +87,52 @@ test("browser discovery attributes helper-defined tests to their spec files", as
   const inventory = await discoverBrowserTests(root);
   assert.deepEqual(inventory.files, SPEC_FILES);
   assert.deepEqual(attribution(inventory.tests), ATTRIBUTION);
+});
+
+test("browser shards assign expensive whole specs before cheap specs", async (context) => {
+  const root = await miniatureProject(context, SHARED_HELPER_PROJECT);
+  const options = {
+    project: "chromium",
+    weights: {
+      "tests/browser/direct.spec.ts": 1,
+      "tests/browser/first.spec.ts": 20,
+      "tests/browser/second.spec.ts": 1,
+    },
+  };
+  const first = await discoverBrowserTests(root, {
+    ...options,
+    shard: { index: 1, total: 2 },
+  });
+  const second = await discoverBrowserTests(root, {
+    ...options,
+    shard: { index: 2, total: 2 },
+  });
+  assert.deepEqual(first.files, ["tests/browser/first.spec.ts"]);
+  assert.deepEqual(second.files, [
+    "tests/browser/direct.spec.ts",
+    "tests/browser/second.spec.ts",
+  ]);
+  assert.deepEqual(attribution([...first.tests, ...second.tests]), ATTRIBUTION);
+  const eventPath = path.join(root, "shard-events.json");
+  await execute(
+    process.execPath,
+    [
+      path.join(root, "node_modules/@playwright/test/cli.js"),
+      "test",
+      `--reporter=${path.join(repositoryRoot, "scripts/verification/playwright-reporter.mjs")}`,
+      ...browserFileArguments(first.files),
+    ],
+    {
+      cwd: root,
+      env: { ...process.env, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath },
+    },
+  );
+  const events = JSON.parse(await fs.readFile(eventPath, "utf8")) as {
+    assignedTests: AttributedTest[];
+    observedTests: AttributedTest[];
+  };
+  assert.deepEqual(attribution(events.assignedTests), attribution(first.tests));
+  assert.deepEqual(attribution(events.observedTests), attribution(first.tests));
 });
 
 test("the verification reporter attributes helper-defined tests to their spec files", async (context) => {

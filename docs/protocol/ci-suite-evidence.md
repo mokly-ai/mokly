@@ -190,30 +190,31 @@ a function, in any JavaScript or TypeScript module under `tests/`.
 
 ## Browser Shard Balance
 
-Playwright assigns whole spec files to the four `chromium` shards and balances
-them by test count. The evidence aggregate requires browser shard file
+Hosted CI and remote verification assign whole spec files to four `chromium`
+shards using measured per-test costs. The evidence aggregate requires file
 assignments to be pairwise disjoint; every browser spec therefore stays whole,
 and no spec uses parallel mode.
 
-The aggregate also bounds balance. After the browser test assignments prove
-disjoint and complete, `validateShardReports` in
-`scripts/verification/report-validation.mjs` applies the bound in
-`scripts/verification/shard-balance.mjs`. The limit is the `fullTests`
-inventory divided by the shard count, times `BROWSER_SHARD_SHARE_LIMIT` (1.25),
-rounded up. The group fails at the first shard whose `assignedTests` count
+The aggregate also bounds shard size. After the browser test assignments prove
+disjoint and complete, the limit is the complete test inventory divided by
+the shard count, times 1.25, rounded up. The group fails at the first shard whose test count
 exceeds that limit, with this message:
 
 ```text
 browser shard <index>/<total> holds <count> of <inventory> tests, above the limit of <limit>; split a large spec into smaller spec files
 ```
 
-The bound uses test counts because that is what Playwright balances; shard
-durations stay a measurement from the shard reports. It runs wherever shard
+Scheduling keeps this count bound while balancing estimated work. Every
+discovered test must run, including tests without a prior duration sample.
+Rebalancing targets shard durations within 15 percent of each other.
+Durations stay observations, not passing conditions for tests.
+The count bound runs wherever shard
 reports are validated: `Required CI`, the remote Testbox gate, and release
 evidence validation, where a shard above the limit makes the evidence invalid
 and stops the publish. The local sequential gate runs unsharded and does not
-apply it. No test lists the Playwright inventory to check balance; a tooling
-test checks the bound with synthetic shard reports.
+apply it. Synthetic assignments test the scheduling and count policies without
+asserting elapsed time. The [verification script reference](../../scripts/verification/README.md#browser-partitioning)
+describes the scheduling inputs and discovery boundary.
 
 ## Acceptance Measurement
 
