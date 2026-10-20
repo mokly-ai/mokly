@@ -286,10 +286,13 @@ whether the page received the response or cancelled the request first.
 preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
 publication, and Serve keeps no test seam. `serve_generation_collection.ts`
-emulates the collection of an idle generation: its next renewal and every
-later request for its files answer 404, a selected comparison then gets a new
-generation, and an advertised generation returns when the viewer reacquires
-its `review.json`.
+fails the next renewal of a generation: that renewal and every later request
+for the generation's files answer 404. For a selected generation this
+emulates Serve's collection of an idle generation, and the comparison then
+gets a new generation. Serve keeps an advertised classification generation's
+`review.json` and recaptures its snapshots, so for that generation the
+failure only exercises the shell's reacquire, and the generation returns when
+the shell reacquires its `review.json`.
 Specs that run the same comparison checks on the copied output and on Serve
 register them from a `*_cases.ts` module. The copied output registers the
 alignment, input, and Scroll together memory cases in

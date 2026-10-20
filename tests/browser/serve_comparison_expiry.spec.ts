@@ -1,9 +1,12 @@
 /**
- * Expired generations in Serve. A generation expires after 60 idle seconds,
- * which a browser spec cannot wait for, so `collectGeneration` emulates the
- * collection: the next renewal answers 404 and the generation's files are
- * gone. The shell must then reacquire the comparison or preview before it
- * shows the new view, and never request an old document address.
+ * Failed renewals in Serve. A selected generation expires after 60 idle
+ * seconds, which a browser spec cannot wait for, so `collectGeneration`
+ * emulates the collection: the next renewal answers 404 and the generation's
+ * files are gone. Serve keeps an advertised classification generation's
+ * JSON and recaptures its snapshots, so the removed-preview journeys use the
+ * same failed renewal only to exercise the shell's reacquire of the
+ * advertised URL. The shell must reacquire the comparison or preview before
+ * it shows the new view, and never request an old document address.
  */
 
 import { expect, type Page } from "@playwright/test";

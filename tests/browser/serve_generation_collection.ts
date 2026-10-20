@@ -1,5 +1,5 @@
 /**
- * Emulated generation collection for Serve journeys. Serve collects an idle
+ * Failed renewals for Serve journeys. Serve collects an idle selected
  * generation after 60 seconds, which a browser spec cannot wait for, so
  * `page.route` makes the generation's files disappear as a collection does.
  * Serve itself keeps no test seam.
@@ -9,22 +9,26 @@ import type { Page } from "@playwright/test";
 
 import { SELECTED_ENDPOINT } from "./serve_comparison_ui.js";
 
-/** One emulated collection. */
+/** One emulated failed renewal. */
 export interface CollectedGeneration {
   /** Each request that reached the generation while it was gone. */
   refused(): string[];
 }
 
 /**
- * Collect the generation of `review` at its next renewal. That HEAD answers
- * 404, and while the generation is gone every request for one of its files
+ * Fail the next renewal of the generation of `review`. That HEAD answers 404,
+ * and while the generation is gone every request for one of its files
  * answers 404 too, so a viewer that reuses an old address fails.
  *
- * A selected generation stays gone. The next request to the stable endpoint
- * then captures a new generation, as Serve does once the old one is
- * collected; the emulation forwards that one request as a refresh. An
- * advertised classification generation comes back when the viewer reacquires
- * its `review.json`, as Serve restores its snapshots from the base capture.
+ * A selected generation stays gone, as after Serve collects it. The next
+ * request to the stable endpoint then captures a new generation; the
+ * emulation forwards that one request as a refresh.
+ *
+ * Serve keeps the `review.json` of the classification generation that the
+ * index advertises, and recaptures its snapshots on request, so that renewal
+ * does not fail in Serve. The emulation fails it only to exercise the
+ * shell's reacquire of the advertised URL: the generation comes back when
+ * the shell reacquires its `review.json`.
  */
 export async function collectGeneration(
   page: Page,

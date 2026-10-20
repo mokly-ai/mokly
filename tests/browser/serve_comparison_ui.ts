@@ -155,7 +155,8 @@ export async function holdRenewal(page: Page): Promise<HeldRenewal> {
     const response = await route.fetch();
     arrived.resolve();
     await released.promise;
-    // A request that the page cancelled can no longer be fulfilled.
+    // Fulfilling a request that the page cancelled may fail or do nothing;
+    // the outcome comes from the browser's events, not from this call.
     await route.fulfill({ response }).catch(() => undefined);
   });
   return {
