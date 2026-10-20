@@ -2508,6 +2508,39 @@ CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decis
       Actual hosted confirmation belongs to the hub.
       Evidence: `.context/ci-shard-hosted/hosted/`, `replay.json`, and `timings.md`.
 
+- [x] CI round 7, item 2 (2026-10-20): record the hosted and same-tree
+      Testbox observations. Hosted run `39496386627` at `410bf844` observed
+      these whole-job minutes, including setup:
+
+      | Job | Observed minutes | Limit minutes | Three times observation |
+      | --- | ---: | ---: | ---: |
+      | Repository | 20.37 | 30 | 61.10 |
+      | Viewer | 10.48 | 30 | 31.45 |
+      | Static delivery | 20.15 | 60 | 60.45 |
+      | Browser 1 | 12.98 | 60 | 38.95 |
+      | Browser 2 | 22.23 | 60 | 66.70 |
+      | Browser 3 | 20.43 | 60 | 61.30 |
+      | Browser 4 | 19.05 | 60 | 57.15 |
+
+      All browser reports passed, but native job failures failed Required CI.
+      Those failed native durations do not establish successful typical values.
+      User item 100 owns the guard shortfalls. No guard or runner changes here.
+      Same-tree remote run `20261020T202330Z-1033054` passed the complete gate.
+      Its browser command minutes were 15.90, 16.53, 15.28, and 17.55.
+      Whole Testbox jobs took 23.35, 23.15, 22.35, and 24.37 minutes against
+      30-minute limits. Repository, Viewer, and delivery jobs took 21.35,
+      15.27, and 24.37 minutes. The observed minimum job margin was 5.63 minutes.
+      The new assignment replays hosted test work at 9.89 minutes per shard,
+      a 0.023-percent maximum/minimum difference. Testbox replay costs are
+      12.09, 9.24, 9.74, and 9.17 minutes. Adding the largest observed
+      non-test command overhead gives a maximum 19.18-minute command estimate.
+      Adding the largest whole-job overhead gives 25.99 minutes, with an
+      estimated 4.01-minute margin. These are extrapolations, not new measured
+      runs or upper-bound guarantees. Fixture and runner costs can vary.
+      The hub owns actual hosted confirmation of the 15-percent target.
+      Source reports, exact identities, calculations, and limitations:
+      `.context/ci-shard-hosted/timings.md` and `replay.json`.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after
