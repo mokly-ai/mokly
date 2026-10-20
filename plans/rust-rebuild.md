@@ -1622,7 +1622,7 @@ Tags: mockup
       The shell offers no comparison for such a screen, so no artboard draws
       its pane heading; the open decision on affected-only comparisons under
       the final review TODO owns that depiction.
-- [ ] Item 25 B: draw the desktop component canvas at the fixed 1024px layout
+- [x] Item 25 B: draw the desktop component canvas at the fixed 1024px layout
       width, and state it in the component design.
 - [ ] Item 35 A: confirm that the design catalogue depicts the
       `implementation` sentence.

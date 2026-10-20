@@ -92,6 +92,12 @@
 .ce-canvas--mobile {
   max-width: 390px;
 }
+/* The current desktop canvas keeps the shell's fixed 1024px layout width in
+   every window, so a component's desktop view has one layout width. */
+.ce-canvas--desktop.ce-canvas--current {
+  flex: none;
+  width: 1024px;
+}
 .ce-canvas-label {
   border-bottom: 1px solid var(--chrome-border);
   color: var(--chrome-muted);
