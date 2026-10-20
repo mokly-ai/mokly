@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { detailKey } from "../src/catalogue/detail_fences.js";
 import type {
   CatalogueReadModel,
-  EntryDetailV1,
+  EntryDetailV2,
 } from "../src/catalogue/types.js";
 import { parseReviewResult } from "../src/review/result_validation.js";
 import type { ReviewResult } from "../src/review/types.js";
@@ -36,7 +36,7 @@ const ACTION = { path: "components/action", title: "Action" } as const;
 function details(
   edit: {
     changes?: CatalogueReadModel["screens"][number]["changes"];
-    detail?: (detail: EntryDetailV1) => void;
+    detail?: (detail: EntryDetailV2) => void;
   },
   loaded?: ReviewResult,
 ): string {
@@ -71,12 +71,12 @@ function details(
 }
 
 /** The detail of a screen that uses changed Action. */
-function usesAction(detail: EntryDetailV1) {
+function usesAction(detail: EntryDetailV2) {
   detail.workspace!.relatedComponents = [ACTION];
 }
 
 /** A view rule that changed Action owns, which the screen keeps. */
-function keepsActionRule(detail: EntryDetailV1) {
+function keepsActionRule(detail: EntryDetailV2) {
   detail.views[0]!.resourceEvidence = {
     rules: [
       {
