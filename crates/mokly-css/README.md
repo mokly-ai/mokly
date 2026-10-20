@@ -70,6 +70,12 @@ Other selectors retain their normal matching. The limit rounds down from a
 eightfold safety factor. It leaves room for caller and selector frames.
 `MatchTree` preserves parsed element relationships and component containment;
 the HTML adapter omits ignored regions and inert template contents.
+`ContainmentPath` shares immutable parent links between elements, copied
+matching trees, embedded documents, and detached match proof. It visits
+regions innermost first and releases deep paths iteratively. Head proof
+selects the shared supplier path; linked proof retains only the physical path.
+Callers read `MatchProof::regions()` for the permitted ancestry. The stored
+path stays private, so a caller cannot read a receiver through a head proof.
 
 `attribution::attribute` joins equal rule observations, collects unfiltered
 own-page matches, and filters nested components before one record reduction.
@@ -132,7 +138,8 @@ CSS that each parser and pipeline survives on a 2 MiB worker stack. Run it with
 
 - [Compiler](./src/compiler.rs) and [delivery](./src/delivery.rs).
 - [Rule collection](./src/rule_collection.rs), [diff](./src/rules.rs), and [matching](./src/rule_matching.rs).
-- [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs), and [parsed cache](./src/parsed_cache.rs).
+- [Attribution](./src/attribution.rs), [document arena](./src/match_tree.rs),
+  [shared containment](./src/containment.rs), and [parsed cache](./src/parsed_cache.rs).
 - [CSS Modules](./src/modules.rs) and [module checks](./src/module_checks.rs).
 - [CSS references](./src/syntax.rs), [paths](./src/paths.rs), and [errors](./src/error.rs).
 - [Token arena](./src/token_tree.rs) and [statement sections](./src/token_sections.rs).

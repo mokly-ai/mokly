@@ -9,10 +9,10 @@ Plain false false 80:
 "Mokly listening at http://127.0.0.1:4173\n"
 
 Rich false false 80:
-"  mokly 0.14.0                                     comparing against origin/main\n  examples/basic/mokly.config.json\n\n  ┌─────────────────────────┐\n  │  http://127.0.0.1:4173  │\n  └─────────────────────────┘\n  watching sources and styles · press h for shortcuts\n"
+"  mokly 0.15.0                                     comparing against origin/main\n  examples/basic/mokly.config.json\n\n  ┌─────────────────────────┐\n  │  http://127.0.0.1:4173  │\n  └─────────────────────────┘\n  watching sources and styles · press h for shortcuts\n"
 
 Rich true false 80:
-"  mokly 0.14.0                                     comparing against origin/main\n  examples/basic/mokly.config.json\n\n\u{1b}[36m  ┌─────────────────────────┐\u{1b}[0m\n\u{1b}[1;36m  │  http://127.0.0.1:4173  │\u{1b}[0m\n\u{1b}[36m  └─────────────────────────┘\u{1b}[0m\n\u{1b}[2m  snapshot\u{1b}[0m\n"
+"  mokly 0.15.0                                     comparing against origin/main\n  examples/basic/mokly.config.json\n\n\u{1b}[36m  ┌─────────────────────────┐\u{1b}[0m\n\u{1b}[1;36m  │  http://127.0.0.1:4173  │\u{1b}[0m\n\u{1b}[36m  └─────────────────────────┘\u{1b}[0m\n\u{1b}[2m  snapshot\u{1b}[0m\n"
 
 Rich false true 32:
-"  mokly 0.14.0 comparing agains…\n  examples/basic/mokly.config.j…\n\n  +-------------------------+\n  |  http://127.0.0.1:4173  |\n  +-------------------------+\n  watching sources and styles\n"
+"  mokly 0.15.0 comparing agains…\n  examples/basic/mokly.config.j…\n\n  +-------------------------+\n  |  http://127.0.0.1:4173  |\n  +-------------------------+\n  watching sources and styles\n"

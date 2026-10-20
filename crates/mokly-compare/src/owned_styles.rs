@@ -89,10 +89,9 @@ impl Changes {
                             return false;
                         }
                         let own_page = matched
-                            .regions
-                            .iter()
+                            .regions()
                             .any(|region| region.root && region.path == owner);
-                        let nested = matched.regions.iter().rev().find(|region| !region.root);
+                        let nested = matched.regions().find(|region| !region.root);
                         if own_page {
                             nested.is_none()
                         } else {

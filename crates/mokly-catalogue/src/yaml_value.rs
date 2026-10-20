@@ -43,6 +43,24 @@ pub(crate) fn discard(value: Value) {
     }
 }
 
+/// The number of levels between a value and its deepest descendant, without
+/// recursion. A scalar and an empty container have height 0.
+pub(crate) fn height(value: &Value) -> usize {
+    let mut deepest = 0;
+    let mut pending = vec![(value, 0)];
+    while let Some((value, depth)) = pending.pop() {
+        deepest = deepest.max(depth);
+        match value {
+            Value::Array(values) => pending.extend(values.iter().map(|value| (value, depth + 1))),
+            Value::Object(values) => {
+                pending.extend(values.values().map(|value| (value, depth + 1)));
+            }
+            _ => {}
+        }
+    }
+    deepest
+}
+
 /// Copy a value of any depth without recursion.
 pub(crate) fn copy(value: &Value) -> Value {
     let mut pending = vec![Step::Visit(value)];

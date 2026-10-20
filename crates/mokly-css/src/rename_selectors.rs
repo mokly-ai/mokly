@@ -86,7 +86,11 @@ impl Renamer<'_> {
                         Token::Function(name) if *name == "global" || *name == "local" => {
                             let child = tokens.children(next);
                             if tokens.next_significant(&mut child.clone()).is_none() {
-                                return Err(self.empty_wrapper(node.start, name));
+                                return Err(self.empty_wrapper(
+                                    node.start,
+                                    name,
+                                    Wrapped::Selector,
+                                ));
                             }
                             frame.range = lookahead;
                             let wrapper = (node.start, after.end, after.after);
@@ -159,7 +163,7 @@ impl Renamer<'_> {
                     }
                     let child = tokens.children(next);
                     if tokens.next_significant(&mut child.clone()).is_none() {
-                        return Err(self.empty_wrapper(node.start, name));
+                        return Err(self.empty_wrapper(node.start, name, Wrapped::KeyframesName));
                     }
                     frame.local = false;
                     let wrapper = (node.start, function.end, function.after);
@@ -186,12 +190,20 @@ impl Renamer<'_> {
     }
 
     /// The catalogued failure for a `:global()` or `:local()` with no content.
-    fn empty_wrapper(&self, offset: usize, name: &str) -> error::CssError {
-        self.error(
-            offset,
-            &format!("CSS Modules :{name}() has no selector"),
-            "add a selector inside it or remove it",
-        )
+    /// The words name what the wrapper must hold where it appears.
+    fn empty_wrapper(&self, offset: usize, name: &str, wrapped: Wrapped) -> error::CssError {
+        match wrapped {
+            Wrapped::Selector => self.error(
+                offset,
+                &format!("CSS Modules :{name}() has no selector"),
+                "add a selector inside it or remove it",
+            ),
+            Wrapped::KeyframesName => self.error(
+                offset,
+                &format!("CSS Modules :{name}() has no keyframes name"),
+                "add the name inside it",
+            ),
+        }
     }
 
     fn icss(&self, offset: usize, selector: &str) -> error::CssError {
@@ -226,6 +238,15 @@ impl Selector {
             atoms: Vec::new(),
         }
     }
+}
+
+/// What a `:global()` or `:local()` wrapper holds where it appears.
+#[derive(Clone, Copy)]
+enum Wrapped {
+    /// A selector, in a selector or an `@scope` prelude.
+    Selector,
+    /// The name in a keyframes prelude.
+    KeyframesName,
 }
 
 /// One keyframes-name level: the prelude or a `:local()` argument.

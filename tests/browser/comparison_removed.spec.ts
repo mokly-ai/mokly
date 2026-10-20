@@ -123,10 +123,11 @@ for (const changed of [false, true])
     await page.getByRole("button", { name: "Side by side" }).click();
     await expect(page.locator("[data-current-screen]")).toBeHidden();
     await expect(page.locator("[data-diff-stage]")).toBeVisible();
-    // Each shown viewport keeps its previous version and a missing side.
+    // Each shown viewport keeps its previous version and a missing side,
+    // worded with the design catalogue's copy.
     const panes = changed ? 2 : 1;
     await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(panes);
-    await expect(page.locator(".mb-pane--after .mb-pane-missing")).toHaveCount(
-      panes,
+    await expect(page.locator(".mb-pane--after .mb-pane-missing")).toHaveText(
+      Array.from({ length: panes }, () => "This variant has been removed."),
     );
   });

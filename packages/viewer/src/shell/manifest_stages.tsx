@@ -7,6 +7,7 @@ import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { useNarrowLayout } from "./narrow_layout.js";
 import { framePath } from "./stage_sources.js";
 
 interface FragmentSources {
@@ -127,42 +128,51 @@ export function FramesStage(props: {
   );
 }
 
+/** One step's desktop view in a browser frame, or its mobile view in a phone. */
 function FlowScreen(props: {
   fragment?: string;
   stepIndex: number;
   hasDarkFragments: boolean;
   screen: ManifestScreen;
+  viewport: "desktop" | "mobile";
 }) {
-  const screen = props.screen;
-  const desktop = fragmentSources(
+  const { screen, viewport } = props;
+  const sources = fragmentSources(
     screen,
-    "desktop",
+    viewport,
     props.hasDarkFragments,
     props.fragment,
   );
   const fallback = isSchemeFallback(screen, props.hasDarkFragments);
+  const frame = (
+    <iframe
+      className="mbk-frag"
+      data-mokly-fragment-frame={props.stepIndex === 0 ? "" : undefined}
+      data-fragment-dark={sources.dark}
+      data-fragment-light={sources.light}
+      sandbox="allow-same-origin"
+      src={fragmentSrc(
+        viewRoute(screen.path, viewport, "light"),
+        props.fragment,
+      )}
+      title={`${screen.title} — ${viewport}`}
+    />
+  );
   return (
     <div
       className="mbk-flow-screen"
       data-color-scheme-fallback={fallback ? "" : undefined}
     >
-      <BrowserFrame
-        address={screen.address ?? entryRoute(screen.path)}
-        frameKey={`${screen.path}:flow:${props.stepIndex}`}
-      >
-        <iframe
-          className="mbk-frag"
-          data-mokly-fragment-frame={props.stepIndex === 0 ? "" : undefined}
-          data-fragment-dark={desktop.dark}
-          data-fragment-light={desktop.light}
-          sandbox="allow-same-origin"
-          src={fragmentSrc(
-            viewRoute(screen.path, "desktop", "light"),
-            props.fragment,
-          )}
-          title={`${screen.title} — desktop`}
-        />
-      </BrowserFrame>
+      {viewport === "mobile" ? (
+        <PhoneFrame>{frame}</PhoneFrame>
+      ) : (
+        <BrowserFrame
+          address={screen.address ?? entryRoute(screen.path)}
+          frameKey={`${screen.path}:flow:${props.stepIndex}`}
+        >
+          {frame}
+        </BrowserFrame>
+      )}
     </div>
   );
 }
@@ -172,6 +182,7 @@ export function UseCaseFlowStage(props: {
   entry: ManifestUseCase;
   fragment?: string;
 }) {
+  const viewport = useNarrowLayout() ? "mobile" : "desktop";
   return (
     <div className="mbk-flow" data-mokly-scroll="flow">
       <div className="flow-track">
@@ -198,8 +209,10 @@ export function UseCaseFlowStage(props: {
                     ? { fragment: props.fragment }
                     : {})}
                   hasDarkFragments={props.catalogue.hasDarkFragments}
+                  key={viewport}
                   screen={screen}
                   stepIndex={index}
+                  viewport={viewport}
                 />
               ) : null}
             </section>

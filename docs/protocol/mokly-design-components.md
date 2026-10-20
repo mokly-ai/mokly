@@ -157,7 +157,7 @@ tokens, resets, cross-component selectors and screen layout in configured
 sheets. All these files use the same kept own-page match rule; none has an owner
 record that decides attribution.
 
-Declare each component's public CSS in its `stylesheets` array for linking.
+Declare each component's local CSS in its `stylesheets` array for bundled delivery.
 Different components can share one file. A declaring path only says which
 component inserted a link. Shared fixtures, navigation tables, icons and mixed helpers
 do not establish path-based ownership or evidence. Only rendered resources,
@@ -169,7 +169,7 @@ the render graph. Keep render transformations in the view module; registration o
 validated props and the actual viewport to that renderer. Test real source
 edits to saved variants and control labels as well as implementation source edits.
 
-Each registered component declares its exclusive public sheet through
+Each registered component declares its exclusive local stylesheet through
 `libraryMetadata`. Route rules select only required mixed/global stylesheets;
 place `$componentStylesheets` between shared base CSS and context/layout
 overrides. Mokly inserts actual rendered component links in first-render,
@@ -184,7 +184,7 @@ resource in the current view. Test a closed Top bar picker and an empty Tag pick
 alongside their populated variants so nested CSS edits do not become parent or
 screen changes through unused stylesheet links. No shared global sheet is filtered
 out as a substitute for matching changed rules to component output.
-Observe new public CSS through the existing watch configuration/resource graph;
+Observe declared CSS inputs through the existing watch configuration/resource graph;
 do not copy the same rules into standalone stories and screen stylesheets.
 
 Keep descendant and state selectors working in situ and in the minimal host,

@@ -4,7 +4,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Delivery
 
-A configured local stylesheet, and CSS that an entry module, a stories file,
+A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,
 or the renderer module imports with `import "./theme.css"` or
 `import styles from "./card.module.css"`, reach documents one way. Mokly
 bundles each delivery root into one stylesheet on `lightningcss` in the Rust
@@ -26,7 +26,7 @@ The routes are relative to the `static/mokly-generated/` namespace of the
 [artifact path contract](./mokly-artifact-paths.md):
 `styles/<repository-relative root module path>.css` for the bundle of a
 module root, `styles/<repository-relative stylesheet path>` for the bundle
-of a configured local stylesheet, and `assets/<repository-relative asset
+of a configured or component-declared local stylesheet, and `assets/<repository-relative asset
 path>` for an asset. The module extension is kept before `.css`:
 `src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and the
 configured `design/base.css` delivers `styles/design/base.css`; the two
@@ -50,10 +50,10 @@ on every platform.
 
 ## Roots, Collection And Deduplication
 
-The delivery roots are each configured local stylesheet, the configured
-renderer module, and every entry module and stories file that reaches CSS,
+The delivery roots are each configured or component-declared local stylesheet,
+the configured renderer module, and every entry module and stories file that reaches CSS,
 sorted by repository-relative POSIX path within each kind. There are no
-other delivery roots. A configured stylesheet root has that file as its only
+other delivery roots. A local stylesheet root has that file as its only
 direct stylesheet; nothing is pruned from it or by it. A module that exports
 only a
 folder record is still a root. Two entries that share a stylesheet each

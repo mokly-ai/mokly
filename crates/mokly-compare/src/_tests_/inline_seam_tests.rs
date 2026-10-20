@@ -23,8 +23,10 @@ fn inline_rules_without_own_page_proof_keep_entry_records() {
             regions: vec![Containment {
                 path: "card".into(),
                 root: false,
-            }],
-            input_regions: vec![],
+            }]
+            .into_iter()
+            .collect(),
+            input_regions: Default::default(),
             owner: EvidenceOwner::Entry,
         }],
     };
@@ -74,14 +76,18 @@ fn inline_own_page_proof_joins_rule_identity_across_document_routes() {
             regions: vec![Containment {
                 path: "card".into(),
                 root,
-            }],
+            }]
+            .into_iter()
+            .collect(),
             input_regions: if owner == EvidenceOwner::Entry {
-                vec![]
+                Default::default()
             } else {
                 vec![Containment {
                     path: "card".into(),
                     root,
                 }]
+                .into_iter()
+                .collect()
             },
             owner,
         }],

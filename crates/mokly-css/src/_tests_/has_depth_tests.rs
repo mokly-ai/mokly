@@ -26,8 +26,8 @@ fn chain(depth: usize) -> MatchTree {
                     vec![]
                 },
                 text: false,
-                regions: vec![],
-                input_regions: vec![],
+                regions: Default::default(),
+                input_regions: Default::default(),
                 owner: EvidenceOwner::Entry,
             })
             .collect(),

@@ -175,8 +175,8 @@ Different inputs install each npm lockfile root selected by configuration
 ancestors and `moduleResolution.packageRoots`. A nested app with no root
 lockfile is valid.
 An independent configured package lock gets its own install. Prefer
-`npm-shrinkwrap.json` over `package-lock.json` at each root. Unsupported
-managers and absent supported lockfiles use the fallback tier.
+`npm-shrinkwrap.json` over `package-lock.json` at each root. Only npm installs
+are supported. pnpm, Yarn, Bun, or absent npm lockfiles use the fallback tier.
 
 The install key length-frames all manifest and lockfile paths and bytes, the
 npm version, and the selected install roots. Local package paths, archives,

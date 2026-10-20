@@ -35,10 +35,14 @@ export function ComparisonDetails({
 }) {
   if (!comparison) return null;
   const detail = comparison.status === "unmodified" ? undefined : comparison;
+  const affected = "affected" in comparison ? comparison : undefined;
   const excludedStylesheets =
-    comparison.status === "unmodified"
+    "excludedStylesheets" in comparison
       ? comparison.excludedStylesheets
       : undefined;
+  const stylesheets = detail?.stylesheets ?? affected?.stylesheets;
+  const changedComponents =
+    detail?.changedComponents ?? affected?.changedComponents;
   const prop = detail?.propChange;
   const styleCopy =
     subject === "component" ? COMPONENT_STYLE_COPY : SCREEN_STYLE_COPY;
@@ -80,10 +84,10 @@ export function ComparisonDetails({
           </ul>
         </>
       ) : null}
-      {detail?.stylesheets ? (
+      {stylesheets ? (
         <StylesheetEvidenceList
           lead={styleCopy.files}
-          stylesheets={detail.stylesheets}
+          stylesheets={stylesheets}
         />
       ) : null}
       {prop ? (
@@ -113,11 +117,11 @@ export function ComparisonDetails({
           </table>
         </>
       ) : null}
-      {detail?.changedComponents?.length ? (
+      {changedComponents?.length ? (
         <>
           <h4>Changed components used here</h4>
           <ul className="ce-usage-list">
-            {detail.changedComponents.map((component) => (
+            {changedComponents.map((component) => (
               <li key={component.to}>
                 <MockLink to={component.to}>{component.title}</MockLink>
               </li>
@@ -125,6 +129,7 @@ export function ComparisonDetails({
           </ul>
         </>
       ) : null}
+      {affected ? <p>{SCREEN_STYLE_COPY.sharedImpact}</p> : null}
       {excludedStylesheets ? <p>No changes to this saved view.</p> : null}
     </section>
   );

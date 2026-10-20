@@ -258,29 +258,30 @@ function renderEvidence({
   const data = {
     base: "main",
     status: "Changed",
-    change: {
-      kind: "screen",
-      after: { id: "home", route: "home/index.html", title: "Home" },
-      reasons,
-    },
     components: [],
     comparisonEligible: true,
     comparisons: true,
     entry: { id: "home", kind: "screen", route: "home/index.html" },
     inputChanges: [],
     relatedComponents: [],
-    resourceEvidence: excluded.length
-      ? [
-          {
-            colorScheme: "light",
-            excludedResources: excluded.map((path) => ({
-              path,
-              reason: "no-matching-rule" as const,
-            })),
-            viewport: "mobile",
-          },
-        ]
-      : [],
+    resourceEvidence:
+      excluded.length || reasons.length
+        ? [
+            {
+              colorScheme: "light",
+              ...(reasons.length ? { reasons } : {}),
+              ...(excluded.length
+                ? {
+                    excludedResources: excluded.map((path) => ({
+                      path,
+                      reason: "no-matching-rule" as const,
+                    })),
+                  }
+                : {}),
+              viewport: "mobile",
+            },
+          ]
+        : [],
     usedBy: [],
     affected: [],
     removed: false,

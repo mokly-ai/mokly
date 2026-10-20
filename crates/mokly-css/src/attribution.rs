@@ -6,6 +6,7 @@ use mokly_model::evidence::{EvidenceOwner, RuleEvidence, RuleStatus};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::review_order::rule_key;
 
+use crate::containment::ContainmentPath;
 use crate::match_tree::{Containment, MatchTree};
 use crate::rule_matching::DocumentMatching;
 use crate::{attribution_membership, observation};
@@ -19,14 +20,19 @@ pub type OwnPageMatches = BTreeMap<RuleIdentity, BTreeSet<String>>;
 /// Proof retained after the parsed document is released.
 #[derive(Clone, Debug)]
 pub struct MatchProof {
-    /// Inclusive physical containment, from outermost to innermost.
-    pub regions: Vec<Containment>,
+    /// Shared physical containment, visited innermost first.
+    pub(crate) regions: ContainmentPath,
     /// Resolved input owner for the inline-style seam.
     pub owner: EvidenceOwner,
-    /// Inclusive supplier ancestry for inline rules.
-    pub input_regions: Vec<Containment>,
     /// Explicit sidecar owner, independent of copies on other documents.
     pub trusted_owner: Option<String>,
+}
+
+impl MatchProof {
+    /// Visit allowed ancestry innermost first; head proof exposes supplier ancestry.
+    pub fn regions(&self) -> impl Iterator<Item = &Containment> {
+        self.regions.iter()
+    }
 }
 
 /// One selector outcome, detached from its document arena.
@@ -80,6 +86,16 @@ pub fn observe(
     before: Option<&MatchTree>,
     after: Option<&MatchTree>,
 ) -> Vec<RuleObservation> {
+    observe_ancestry(stylesheet, matching, before, after, false)
+}
+
+pub(crate) fn observe_ancestry(
+    stylesheet: &str,
+    matching: &DocumentMatching,
+    before: Option<&MatchTree>,
+    after: Option<&MatchTree>,
+    inputs: bool,
+) -> Vec<RuleObservation> {
     match matching {
         DocumentMatching::Unresolved(_) => vec![RuleObservation {
             stylesheet: stylesheet.into(),
@@ -120,9 +136,12 @@ pub fn observe(
                                     }?;
                                     let element = tree.elements.get(matched.element)?;
                                     Some(MatchProof {
-                                        regions: element.regions.clone(),
+                                        regions: if inputs {
+                                            element.input_regions.clone()
+                                        } else {
+                                            element.regions.clone()
+                                        },
                                         owner: element.owner.clone(),
-                                        input_regions: element.input_regions.clone(),
                                         trusted_owner: None,
                                     })
                                 })

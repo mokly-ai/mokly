@@ -10,8 +10,7 @@ pub(crate) fn own_root(matched: &MatchProof, component: &str) -> bool {
         .as_deref()
         .is_none_or(|owner| owner == component)
         && matched
-            .regions
-            .iter()
+            .regions()
             .any(|region| region.root && region.path == component)
 }
 
@@ -20,7 +19,7 @@ pub(crate) fn kept(
     component: &str,
     unfiltered: Option<&BTreeSet<String>>,
 ) -> bool {
-    !matched.regions.iter().any(|region| {
+    !matched.regions().any(|region| {
         !region.root
             && region.path != component
             && unfiltered.is_some_and(|paths| paths.contains(&region.path))
@@ -33,9 +32,7 @@ pub(crate) fn owner(
     unfiltered: Option<&BTreeSet<String>>,
 ) -> Option<String> {
     if let Some(region) = matched
-        .regions
-        .iter()
-        .rev()
+        .regions()
         .find(|region| changed.is_some_and(|paths| paths.contains(&region.path)))
     {
         return Some(region.path.clone());
@@ -44,7 +41,7 @@ pub(crate) fn owner(
         .trusted_owner
         .as_ref()
         .filter(|owner| {
-            matched.regions.iter().any(|region| &region.path == *owner)
+            matched.regions().any(|region| &region.path == *owner)
                 && kept(matched, owner, unfiltered)
         })
         .cloned()

@@ -1,6 +1,6 @@
 import type { ViewerTheme } from "../viewer/types.js";
 
-import type { ShellEvidence, LiveChangesStatus } from "./metadata.js";
+import type { LiveChangesStatus } from "./metadata.js";
 
 /** Route-independent context shared by every view of one shell root. */
 export interface ShellContext {
@@ -27,8 +27,6 @@ export interface ShellContext {
   materialEntries?: readonly string[];
   /** Whether on-demand comparison serving is available. */
   comparisons?: boolean;
-  /** Validated lightweight component evidence, independent of snapshots. */
-  componentChanges?: ShellEvidence;
   /** Validated logical fragment applied to the routed target's frames. */
   fragment?: string;
   /** Exact removed record selected for this route. */
@@ -42,9 +40,5 @@ export interface ShellContext {
 export function materialChangedEntries(
   context: ShellContext,
 ): readonly string[] | undefined {
-  return (
-    context.materialEntries ??
-    context.componentChanges?.changedEntries ??
-    context.changedEntries
-  );
+  return context.materialEntries ?? context.changedEntries;
 }

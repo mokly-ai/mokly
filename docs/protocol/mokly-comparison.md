@@ -185,6 +185,12 @@ Third-party dependencies follow three tiers:
    `base-dependencies` warning names the selected lockfile when one exists and
    gives the fallback reason.
 
+Base dependency installation supports npm only. When installation is needed,
+pnpm, Yarn, and Bun repositories use tier three with the `base-dependencies`
+warning. Equal dependency identities still use tier one without an install or
+an unsupported-manager warning. Repository-owned workspace sources retain
+their side-local mapping for every package manager.
+
 A base whose sources fail the current validation makes Changes unavailable
 with those diagnostics.
 The [base preparation contract](./mokly-base-preparation.md) defines input

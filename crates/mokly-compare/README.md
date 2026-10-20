@@ -129,6 +129,8 @@ Owned rules enter the same catalogue-wide evidence reducer as linked and
 ownerless head CSS. Equal rule identities join across document routes and
 owner sets. The shared nested test keeps supplier input ancestry and
 self-nested copies. Each source uses matched, unresolved, or excluded records.
+Physical and supplier ancestry use separate shared paths. Each instance key
+retains one supplier path, and linked proof retains only physical ancestry.
 Exact owned-instance proof uses the same unfiltered own-page sets after the
 catalogue pass, and retains only paired instances with unchanged caller inputs.
 Own render, resource, and rule impact share one unchanged-input check. Saved
@@ -141,8 +143,11 @@ are reused per route; public resource bytes and stylesheet diffs have explicit
 cache bounds. Opaque resources compare SHA-256 digests; oversized blobs and
 working files are streamed without retaining their bytes. Remaining source
 budgets make Changes unavailable with the path and limit. Actual-instance implementation reasons preserve own view states. Removed previews read the same
-pinned base generation. `Lookup` resolves explicit before/after references,
+pinned base generation. `Lookup` indexes kind-aware, case-folded identities once per projection batch.
+It resolves explicit before/after references,
 accepted moves, removed records, counterparts, and variant parents.
+`projection_reference::References` uses this lookup for original metadata and
+current or retained destinations. It owns no second identity index.
 Affected usage groups a variant under its own resolved destination when its
 original parent has none. Evidence keeps the original side's paths, and no
 group links to a different-kind replacement at the parent's path.

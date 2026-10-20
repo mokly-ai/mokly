@@ -48,7 +48,9 @@ to this screen:”. A rule inside an unchanged component invocation can appear
 in that list. Uncertain changes have a separate explanation beside it.
 
 A component-only style change can leave a screen under Affected screens with
-no Changes row of its own. That screen keeps the changed styles it uses. On the
+no Changes row of its own. That screen keeps the changed styles it uses, links
+each changed component, and ends its details with “Shared component changes
+affect this preview. This page has no independent entry in Changes.” On the
 component's own page the details say “Changed styles that apply to this
 component:”. A component page with only a wrapper change has its own
 saved-view row, says “Changed styles that apply to this saved view:”, and that
