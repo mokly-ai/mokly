@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
 use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
+use crate::command::program_for_platform;
 use crate::remote::contracts::{Clock, Interrupt, LogSink, Logs, Output};
 use crate::remote::error::{Error, Operation, Result};
 
@@ -205,7 +206,7 @@ impl SystemProcess {
 
 /// Configure a request without starting it or reading ambient state.
 fn build_command(request: &Request) -> Command {
-    let mut command = Command::new(&request.program);
+    let mut command = Command::new(program_for_platform(&request.program, std::env::consts::OS));
     command
         .args(&request.args)
         .current_dir(&request.cwd)

@@ -188,6 +188,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        env:
+          BLACKSMITH_BYPASS_CHECKOUT: ${{ runner.os != 'Linux' && 'true' || 'false' }}
         with:
           fetch-depth: 0
       - name: Set up Node.js

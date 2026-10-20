@@ -90,7 +90,7 @@ impl CommandRunner for SystemCommandRunner {
 
 /// Configure a subprocess without starting it or reading ambient state.
 fn build_command(spec: &CommandSpec) -> Command {
-    let mut command = Command::new(&spec.program);
+    let mut command = Command::new(program_for_platform(&spec.program, std::env::consts::OS));
     command.args(spec.args.iter().map(OsStr::new));
     if let Some(directory) = spec.working_directory() {
         command.current_dir(directory);
@@ -102,6 +102,20 @@ fn build_command(spec: &CommandSpec) -> Command {
         command.env_remove(name);
     }
     command
+}
+
+/// Select installed Node command shims without changing arguments or explicit paths.
+pub(crate) fn program_for_platform<'a>(program: &'a str, os: &str) -> &'a str {
+    match (os, program) {
+        ("windows", "npm") => "npm.cmd",
+        ("windows", "npx") => "npx.cmd",
+        ("windows", "corepack") => "corepack.cmd",
+        ("windows", "pnpm") => "pnpm.cmd",
+        ("windows", "pnpx") => "pnpx.cmd",
+        ("windows", "yarn") => "yarn.cmd",
+        ("windows", "yarnpkg") => "yarnpkg.cmd",
+        _ => program,
+    }
 }
 
 fn shell_quote(value: &str) -> String {
