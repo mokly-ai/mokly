@@ -1,0 +1,111 @@
+/**
+ * Inspector copy and readers for the stylesheet Details specs on comparison
+ * copies. The copy is fixed by docs/protocol/mokly-css-evidence-shell.md.
+ */
+
+import { expect, type Locator, type Page } from "@playwright/test";
+
+export const BASE = "Compared with the branch point on fixture-base.";
+export const FILES_LEAD = "Changes to these files may affect this screen:";
+export const MATCHED_LEAD = "Changed styles that apply to this screen:";
+export const OUTSIDE_LEAD =
+  "These changed styles also apply outside the changed components on this screen:";
+export const UNRESOLVED_LEAD =
+  "This change can apply anywhere on the screen, so the screen stays in Changes:";
+export const EXCLUDED_LEAD =
+  "This stylesheet changed, but none of the changed styles apply to this screen.";
+export const EXAMINED_LEAD = "Examined and excluded:";
+export const SCREEN_TERMINAL = "No changes to this screen.";
+export const COMPONENT_FILES_LEAD =
+  "Changes to these files may affect this component:";
+export const COMPONENT_LEAD = "Changed styles that apply to this component:";
+export const SAVED_VIEW_LEAD = "Changed styles that apply to this saved view:";
+export const SAVED_VIEW_UNRESOLVED_LEAD =
+  "This change can apply anywhere on the saved view, so the saved view stays in Changes:";
+export const VARIANT_TERMINAL = "No changes to this saved view.";
+export const SHARED = "Shared component changes affect this preview.";
+export const PAGE_FILES_LEAD = "Changes to these files may affect this page:";
+export const PAGE_MATCHED_LEAD = "Changed styles that apply to this page:";
+export const PAGE_OUTSIDE_LEAD =
+  "These changed styles also apply outside the changed components on this page:";
+export const PAGE_UNRESOLVED_LEAD =
+  "This change can apply anywhere on the page, so the page stays in Changes:";
+export const PAGE_EXCLUDED_LEAD =
+  "This stylesheet changed, but none of the changed styles apply to this page.";
+export const PAGE_TERMINAL = "No changes to this page.";
+
+/** The desktop inspector dock and the mobile inspector sheet. */
+export const INSPECTOR_VIEWPORTS = [
+  ["desktop", { width: 1440, height: 1000 }],
+  ["mobile", { width: 390, height: 844 }],
+] as const;
+
+/** Select the Details tab and return the comparison details it shows. */
+export async function openEvidence(page: Page): Promise<Locator> {
+  const tab = page.getByRole("tab", { name: "Details", exact: true });
+  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+  const evidence = page.locator("[data-workspace-evidence]");
+  await expect(evidence).toBeVisible();
+  await expect(evidence.locator("p").first()).toHaveText(BASE);
+  return evidence;
+}
+
+/**
+ * Open a whole page's Details and return its comparison details. The panel
+ * keeps its last choice, so open it only while it is closed.
+ */
+export async function openPageEvidence(page: Page): Promise<Locator> {
+  const details = page.locator("[data-mokly-details]");
+  await expect(details).toBeVisible();
+  if (!(await details.evaluate((element) => element.hasAttribute("open"))))
+    await details.locator("summary").click();
+  const evidence = page.locator("[data-page-evidence]");
+  await expect(evidence).toBeVisible();
+  await expect(evidence.locator("p").first()).toHaveText(BASE);
+  return evidence;
+}
+
+/** A listed file: its own path text, then each nested lead and its styles. */
+export type EvidenceFile = [path: string, outcomes: [string, string[]][]];
+
+/** The one changed-files list as it is grouped, or none when it is absent. */
+export function evidenceFiles(scope: Locator): Promise<EvidenceFile[]> {
+  return scope.evaluate((panel) => {
+    const list = panel.querySelector(".mbk-evidence-files");
+    if (!list) return [];
+    return [...list.children].map((item): EvidenceFile => {
+      const outcomes: [string, string[]][] = [];
+      for (const child of item.children)
+        if (child.tagName === "P")
+          outcomes.push([child.textContent?.trim() ?? "", []]);
+        else
+          outcomes
+            .at(-1)?.[1]
+            .push(
+              ...[...child.querySelectorAll("code")].map(
+                (code) => code.textContent ?? "",
+              ),
+            );
+      return [item.firstChild?.textContent?.trim() ?? "", outcomes];
+    });
+  });
+}
+
+/**
+ * The card's spacing: the first file's nested sentence and style list, and
+ * the first paragraph after a list. An absent part reads as an empty string.
+ */
+export function evidenceSpacing(scope: Locator) {
+  return scope.evaluate((panel) => {
+    const margin = (selector: string) => {
+      const element = panel.querySelector(selector);
+      return element ? getComputedStyle(element).marginTop : "";
+    };
+    return {
+      sentence: margin(".mbk-evidence-files > li > p"),
+      styles: margin(".mbk-evidence-files > li > ul"),
+      afterList: margin("ul + p"),
+    };
+  });
+}
