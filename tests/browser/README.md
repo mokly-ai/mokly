@@ -194,6 +194,7 @@ A pure move is included even when its kind is `unmodified`.
 | `consumers/archive/status`         | `consumers/status`               | changed      | yes      | Moved component consumer                         |
 | `consumers/archive/status/default` | `consumers/status/default`       | changed      | yes      | Moved saved consumer                             |
 | `consumers/archive/receipt`        | `consumers/receipt`              | changed      | yes      | Moved screen consumer                            |
+| `parent`                           | —                                | unmodified   | no       | The folder's own page, a component index         |
 | `parent/archive/action`            | `parent/action`                  | unmodified   | yes      | Moved parent with its own unchanged view         |
 | `parent/archive/action/primary`    | `parent/action/primary`          | changed      | yes      | Continue becomes Submit                          |
 | `parent/action/secondary`          | —                                | removed      | yes      | Former parent title Action                       |
