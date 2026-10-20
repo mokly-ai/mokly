@@ -33,8 +33,10 @@ shutdown. A background pass fills usage after readiness and yields to foreground
 renders. A completed pass publishes complete consumer lists. Watched Serve attaches a native observer before module evaluation. It buffers
 startup edits and coalesces filesystem events by path. The same serialized
 queue handles these events and the rich-mode `r` shortcut. A new generation
-restarts the usage pass. Configuration changes attach a candidate observer
-before a second validation pass when roots change. Exact additions extend
+restarts the usage pass. The initial generation follows the same lease lifetime
+as later generations. Replacement releases it after active work finishes.
+Configuration changes attach a candidate observer before a second validation
+pass when roots change. Exact additions extend
 the active observer. Resource callbacks queue their inputs outside render
 tasks. A failed attempt accepts repair events from watched directories.
 `repoRoot` changes require a restart. Sidecar count and timeout are process

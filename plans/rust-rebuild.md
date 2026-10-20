@@ -1128,6 +1128,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
       branch-point lookup serves every shell.
       Evidence: `.context/rust-rebuild/m9-lookup-and-matching/example-lookup-parity.json`
       and `branch-point-browser.log` there.
+      Restart integration decisions: `.context/rust-rebuild/m9-lookup-and-matching/restart-merge/merge-decisions.md`.
 - [x] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
 - [x] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
@@ -1410,13 +1411,13 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [x] Keep a view that exists on one side out of implementation impact when
       its entry has both sides; adding Dark to a light-only catalogue made
       every build and Serve classification invalid.
-- [ ] Close the large-fixture Changes reference gap: the old captures have
+- [x] Close the large-fixture Changes reference gap: the old captures have
       no Changes result or rule evidence, and all four catalogue captures
       are byte-identical. Use the stylesheet-edit reference for CSS evidence;
       prove large-scale Changes with the Rust implementation.
   - [x] Prove bounded full-comparison work at 128 and 512 component parents
         with variants, and shared before/after CSS parse reuse.
-  - [ ] Complete reviews, resource inventories, and closures for the two
+  - [x] Complete reviews, resource inventories, and closures for the two
         distinct large states: the unrelated-rule edit and the watch edits.
         Use one sidecar, a detached run, an external 60-minute guard, and the
         same 1.85 GB process-family PSS bound. The earlier external ten-minute
@@ -1428,6 +1429,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
         field in both completed results before accepting the artifacts.
         Evidence: `.context/rust-rebuild/sweeps/m9-references.md`.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-17.md`.
+        Completed evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -2049,9 +2051,16 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         source Changes, and watched screen, component, and stylesheet edits.
         Keep the source repository unchanged.
         Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-18.md`.
-  - [ ] Profile the memory guard stops in repeated Mokly Cloud comparisons.
+  - [x] Profile the memory guard stops in repeated Mokly Cloud comparisons.
         Separate retained generation data from allocator residency before
         changing cache limits or rendering behaviour.
+        Release the startup generation after its publication handoff. Verify
+        disposal while Serve stays open across two source replacements.
+        Evidence: `/home/vercel-sandbox/mokly/.context/rust-rebuild/delegation/m9-compare/report-19.md`.
+        Merge decisions: `/home/vercel-sandbox/mokly/.context/rust-rebuild/m14-cloud-memory/merge-decisions.md`.
+  - [ ] Decide compiled-recipe retention between comparisons: R19-1, severity
+        Medium, effort Large. Recommended C: a byte-bounded cache with compiler
+        and resolution input revalidation. Agree its budget before implementation.
   - [ ] Verify bookfolio after the user supplies access.
 - [x] Make tree conversion, composition, serialization, destruction, and all
       tree walks iterative; remove dependence on the temporary 64 MiB stacks.
@@ -2070,6 +2079,10 @@ its mutation runs: `.context/rust-rebuild/m5-example/round10/mutations/`.
         Evidence: `.context/m14-nesting/report.md`.
   - [x] Keep CSS Modules name ranges after an attribute selector, so
         `.a[x]:global(.b)` no longer fails the token check.
+  - [x] Limit the CSS Modules empty-wrapper and ICSS checks to selectors and
+        `@scope` preludes; other at-rule preludes stay as authored, as
+        css-loader does. Decision: nesting report item 13 option A, approved
+        by the orchestrator on 2026-10-20.
   - [ ] Decide on depth limits for the remaining recursion: `lightningcss`,
         serde-derived prop and schema traversal, and schema inference
         (pending user decision).
@@ -2150,6 +2163,7 @@ Integration batch 6 decisions: `.context/integration-6-merge-decisions.md`.
 Integration batch 7 decisions: `.context/integration-7-merge-decisions.md`.
 Integration batch 8 decisions: `.context/integration-8-merge-decisions.md`.
 Integration batch 9 decisions: `.context/integration-9-merge-decisions.md`.
+Integration batch 10 decisions: `.context/integration-10-merge-decisions.md`.
 F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 ## Milestone 15: Verification, close-out, and review
@@ -2340,6 +2354,9 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         keep the parent with only the selected variant, preserving parent-owned
         evidence instead of returning 503. The Card Featured browser case
         verifies both panes. Evidence: `.context/f5/report.md`.
+  - [x] Switch the three Serve specs that used the Badge family back to the
+        Card family now that decision 6 has landed. Done by `1baf1aa8` on
+        2026-10-20.
   - [x] Batch 8 restores the Card family in the selected comparison,
         expiry, and renewal-pane journeys after the F5 integration.
   - [x] M10 Serve and moved rows review 1, findings 1 to 4, fixed on
@@ -2362,6 +2379,8 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         the kept port. The sweep procedure now states this rule. Covers
         review 3 findings 1 and 2 and review 4 finding 2; previous examples
         0858e172, 4d6a21a4, and abf52983. Evidence: `.context/f5/report.md`.
+  - M10 Serve and moved rows decision 10 was decided A by the orchestrator on
+    2026-10-20. The line above records how followups-f5 applied it.
   - [x] M10 Serve and moved rows review 4, findings 12 and 13, fixed on
         2026-10-20: the restored removed-variant journey keeps its parent
         unchanged (`bd05ab75`, B), and the poll comment names no duration
@@ -2370,16 +2389,24 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         that described a failed advertised renewal as Serve's collection, and
         a README clause that gave the 404 rule a wrong scope. Fixed by
         `814fc1b1` and `0571ba15`.
-  - M10 Serve and moved rows review 5, open finding 15 for the user: the
-    emulated collection of a selected generation starts only at its renewal,
-    so a pane document request before the renewal still reaches the old
-    generation. Severity Low, effort Small. Recommended: B, collect a selected
-    generation at once and arm the helper after every pane document loaded.
-  - M10 Serve and moved rows review 6, open finding 18 for the user: the
-    helper module, function, and interface still say "collection", although
-    the removed-preview journeys use them only to fail a renewal. Severity
-    Low, effort Small. Recommended: A, keep the names; option C, one helper
-    per generation kind, fits the change for finding 15.
+  - [x] M10 Serve and moved rows review 5, finding 15: the emulated collection
+        of a selected generation started only at its renewal. Fixed by
+        `3f93a581` (B) on 2026-10-20: the generation is gone once the pane
+        documents have loaded. The rewrite also stops a refresh that already
+        asks for one from leaving a later plain request to be forced.
+  - [x] M10 Serve and moved rows review 6, finding 18: the helper names said
+        "collection". Renamed by `a58da357` on 2026-10-20, as the orchestrator
+        asked: `serve_generation_removal.ts`, `removeGeneration`, and
+        `RemovedGeneration`.
+  - [x] M10 Serve and moved rows review 7, on 2026-10-20: the Card parent
+        panes prove each side again by their `.accent` colour (`06158d40`),
+        and the plan dates decision 10 again after merge `8fa9f338` kept only
+        the f5 line.
+  - M10 Serve and moved rows decision 21 for the user: one shared Card pane
+    check that proves each pane's side. Severity Low, effort Small. Covers
+    review 7 finding 19. Previous examples: 0a9a8be8, bd05ab75, and
+    d371e17c. Recommended: B, one helper in
+    `tests/browser/serve_comparison_ui.ts` for every Card pane check.
   - Outside the scope of the M10 Serve and moved rows review:
     - `docs/protocol/mokly-selected-comparisons.md:132-134`: the
       Verification paragraph asks for an advanced server clock, and Serve
@@ -2397,10 +2424,6 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - `tests/browser/branch_point_checks.ts:242`: the comment calls the check
       keys the shared case names, but no key equals a name in
       `tests/fixtures/branch_point_cases.json`. Separate branch.
-    - `tests/browser/serve_generation_collection.ts:63-80`: when the first
-      stable-endpoint request after the failed renewal already asks for a
-      refresh, the next plain request also becomes a refresh. No journey does
-      this. Separate branch.
   - Outside integration batch 6: `tests/browser/shell_client_routes.spec.ts:81`,
     "Back and Forward restore each route's stage scroll", expected 120 but
     received 0, then passed all five isolated repeats. Suspected source:
@@ -2409,6 +2432,13 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     - [x] Resolve in F6 by waiting for each scripted position in history state
           before navigation. Retain every offset and route assertion.
           Evidence: `.context/f6/report.md`.
+  - [x] Resolve F7's watched-update disclosure flake. Wait for unfiltered folder
+        clicks to save their choice before the next action. Keep all assertions
+        and the filter's pre-search baseline. Evidence: `.context/f7/report.md`.
+  - [x] Fix F7 review 1: record folder and section choices during activation,
+        so a delayed native toggle cannot put the close after search. Keep
+        native fallback behavior and a controlled mouse/keyboard regression.
+        Evidence: `.context/f7/post-push-review.md` and `.context/f7/report.md`.
   - [x] Resolve the inherited M14 input fingerprint replay flake
         `installing_bindings_on_a_fresh_worker_replays_describe_first`.
         Fixed by `9962e08c`, which seeds the shared fixture's generation epoch.

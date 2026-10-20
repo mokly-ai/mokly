@@ -124,6 +124,11 @@ fn module_bundle(depth: usize) {
     assert!(bundle("deep.module.css", rules(depth)).contains("color: red"));
 }
 
+/// A probe that rejects every depth, which no search may accept.
+fn broken(_depth: usize) {
+    panic!("this probe rejects every depth");
+}
+
 const PROBES: &[Probe] = &[
     ("lightningcss_rules", lightningcss_rules),
     ("lightningcss_media", lightningcss_media),
@@ -134,6 +139,7 @@ const PROBES: &[Probe] = &[
     ("rule_collection", rule_collection),
     ("stylesheet_bundle", stylesheet_bundle),
     ("module_bundle", module_bundle),
+    ("broken", broken),
 ];
 
 #[test]
@@ -171,4 +177,10 @@ fn css_pipelines_survive_authored_nesting() {
         let limit = search(CHILD, name, LIBRARY_CAP);
         assert!(limit.depth >= SURVIVED, "{name}: {limit:?}");
     }
+}
+
+#[test]
+#[should_panic(expected = "broken: no depth passes: a rejected result at depth 1")]
+fn a_search_fails_when_its_probe_fails_at_depth_one() {
+    search(CHILD, "broken", LIBRARY_CAP);
 }

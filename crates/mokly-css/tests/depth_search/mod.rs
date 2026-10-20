@@ -55,8 +55,16 @@ pub fn run_child(probes: &[Probe]) {
 /// Binary-search the deepest passing depth up to `cap` in child processes.
 ///
 /// `child_test` names the ignored test that calls [`run_child`]. A deeper
-/// input never uses less stack, so the passing depths form one prefix.
+/// input never uses less stack, so the passing depths form one prefix that
+/// starts at depth 1. The search panics when depth 1 does not pass, because a
+/// probe that rejects its smallest input has no such prefix.
 pub fn search(child_test: &str, name: &str, cap: usize) -> Limit {
+    if let Err(failure) = attempt(child_test, name, 1) {
+        panic!(
+            "{name}: no depth passes: {}",
+            describe(&failure, "at depth 1")
+        );
+    }
     let Err(mut failure) = attempt(child_test, name, cap) else {
         return report(
             name,
@@ -66,7 +74,7 @@ pub fn search(child_test: &str, name: &str, cap: usize) -> Limit {
             },
         );
     };
-    let (mut passing, mut failing) = (0, cap);
+    let (mut passing, mut failing) = (1, cap);
     while failing - passing > 1 {
         let middle = passing + (failing - passing) / 2;
         match attempt(child_test, name, middle) {
@@ -113,10 +121,7 @@ fn attempt(child_test: &str, name: &str, depth: usize) -> Result<(), Failure> {
 fn report(name: &str, limit: Limit) -> Limit {
     let next = match &limit.failure {
         None => "the search cap".to_owned(),
-        Some(Failure::StackOverflow) => "a stack overflow at the next level".to_owned(),
-        Some(Failure::Rejected(stderr)) => {
-            format!("a rejected result at the next level: {}", panic(stderr))
-        }
+        Some(failure) => describe(failure, "at the next level"),
     };
     eprintln!(
         "{name}: {} levels parse on a {} KiB stack; {next}",
@@ -124,6 +129,14 @@ fn report(name: &str, limit: Limit) -> Limit {
         WORKER_STACK / 1024
     );
     limit
+}
+
+/// One line that says why a child failed, and where.
+fn describe(failure: &Failure, place: &str) -> String {
+    match failure {
+        Failure::StackOverflow => format!("a stack overflow {place}"),
+        Failure::Rejected(stderr) => format!("a rejected result {place}: {}", panic(stderr)),
+    }
 }
 
 /// The first panic message in a child's stderr and the place it names.

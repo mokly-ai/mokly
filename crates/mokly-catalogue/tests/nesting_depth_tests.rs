@@ -6,6 +6,7 @@
 //! deeper than the deepest front matter that validation accepts.
 
 use mokly_catalogue::error::CatalogueError;
+use mokly_model::limits;
 use tempfile::TempDir;
 use yaml_rust2::parser::{Event, Parser};
 
@@ -19,7 +20,7 @@ const CHILD: &str = "depth_probe_child";
 /// The search stops at this depth when nothing overflows.
 const CAP: usize = 100_000;
 /// The props depth that validation accepts, counted from the props map.
-const PROPS: usize = 64;
+const PROPS: usize = limits::MAX_DEPTH;
 /// Validation accepts no deeper front matter: variant props sit three levels
 /// below the root and allow `PROPS` more.
 const VALID: usize = 3 + PROPS;
@@ -74,14 +75,15 @@ fn front_matter_props(depth: usize) {
 }
 
 /// Prepare a screen whose variant props reach `depth` levels below their props
-/// map: a `deep` array holds `depth - 1` nested sequences. The schema accepts
-/// any array, so the props bound decides the result. The body cannot read an
-/// array prop, so the only warning is the unused prop.
+/// map: `deep` nests `depth - 1` sequences around an empty array, so it is an
+/// array at every depth. The schema accepts any array, so the props bound
+/// decides the result. The body cannot read an array prop, so the only
+/// warning is the unused prop.
 fn front_matter_valid(depth: usize) {
     let directory = TempDir::new().unwrap();
     support::write(directory.path(), "mokly.config.json", "{}");
     let source = format!(
-        "---\ntitle: Deep\npropSchema:\n  type: object\n  additionalProperties: false\n  properties:\n    deep:\n      type: array\nvariants:\n  - slug: deeper\n    title: Deeper\n    props:\n      deep:\n        {}leaf\n---\n<p>Deep</p>\n",
+        "---\ntitle: Deep\npropSchema:\n  type: object\n  additionalProperties: false\n  properties:\n    deep:\n      type: array\nvariants:\n  - slug: deeper\n    title: Deeper\n    props:\n      deep:\n        {}[]\n---\n<p>Deep</p>\n",
         "- ".repeat(depth - 1)
     );
     support::write(directory.path(), "specs/deep.screen.html", &source);
