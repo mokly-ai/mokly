@@ -6,32 +6,36 @@ use cssparser::Token;
 
 use crate::token_tree::Tokens;
 
-/// How the statements of one block end and read. lightningcss parses rules
-/// strictly in the stylesheet, in style rules, and in the grouping rules among
-/// them: a rule without a block there fails the stylesheet. In a keyframes or
-/// `@document` block, and in an at-rule block that holds declarations or
-/// text, lightningcss keeps, drops, or rejects text instead.
+/// How the statements of one block end and read. The grammar of a block
+/// depends on its statement and on the grammar of the block around it, as
+/// `nested()` picks it. lightningcss parses rules strictly in the stylesheet,
+/// in style rules, and in the grouping rules among them: a rule without a
+/// block there fails the stylesheet. In a keyframes or `@document` block, and
+/// in an at-rule block that holds declarations or text, lightningcss keeps,
+/// drops, or rejects text instead.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Grammar {
-    /// The stylesheet, and the block of a conditional, layer, scope, or
-    /// starting-style rule in it: a statement ends at its `{}` block or at
-    /// `;`, and it is a rule or an at-rule.
+    /// A rule list: the stylesheet, and the block of a conditional, layer,
+    /// scope, or starting-style rule in a rule list. A statement ends at its
+    /// `{}` block or at `;`, and it is a rule or an at-rule.
     Rules,
-    /// A style rule's block and an `@-moz-document` block, and the block of a
-    /// conditional, layer, scope, starting-style, or `@-moz-document` rule in
-    /// one: a custom property runs through its `{}` blocks to the next `;`,
-    /// and a statement without a block that starts with an identifier and a
-    /// colon is a declaration. Every other statement is a rule or an at-rule.
+    /// A style block: the block of a style rule or an `@-moz-document` rule
+    /// in a rule list or a style block, and the block of a conditional,
+    /// layer, scope, or starting-style rule in a style block. A custom
+    /// property runs through its `{}` blocks to the next `;`, and a statement
+    /// without a block that starts with an identifier and a colon is a
+    /// declaration. Every other statement is a rule or an at-rule, except the
+    /// text that [`Statement::Text`] names.
     Style,
-    /// A keyframes or `@document` block, and a grouping block in one, which
-    /// lightningcss does not parse as rules: statements end and read as in
-    /// [`Grammar::Rules`], and the other blocks they open are
-    /// [`Grammar::Declarations`].
+    /// The block of a keyframes or `@document` rule in a rule list, and the
+    /// block of a grouping rule in one, which lightningcss does not parse as
+    /// rules: statements end and read as in [`Grammar::Rules`], and the other
+    /// blocks they open are [`Grammar::Declarations`].
     Lenient,
-    /// Any other block, such as `@font-face`, a keyframe, or an unknown
-    /// at-rule, and every block in one: statements end as in
-    /// [`Grammar::Style`], and a statement without a block is a declaration
-    /// or text.
+    /// Any other block, such as `@font-face`, a keyframe, an unknown at-rule,
+    /// or a rule's block in a [`Grammar::Lenient`] block, and every block in
+    /// one: statements end as in [`Grammar::Style`], and a statement without
+    /// a block is a declaration or text.
     Declarations,
 }
 

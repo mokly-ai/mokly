@@ -121,8 +121,9 @@ fn blocks_open_the_grammar_that_lightningcss_parses() {
 
 /// Where lightningcss reads no rules, a statement without a block stays as
 /// authored: in an unknown at-rule, `@font-face`, a first `@charset` that
-/// cssparser skips, an at-rule after `-->`, a keyframe, and a `@document`
-/// block. An `@value` there still fails.
+/// cssparser skips, an at-rule after `-->`, a keyframe, and a style rule in
+/// a keyframes or `@document` block, and as an unknown keyframes at-rule in a
+/// style rule. An `@value` there still fails.
 #[test]
 fn statements_without_a_block_stay_as_authored_where_lightningcss_reads_no_rules() {
     let path = "ui/text.module.css";

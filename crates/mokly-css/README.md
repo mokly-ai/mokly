@@ -49,25 +49,37 @@ CSS inputs by their authored paths.
 `mokly_{first-12-SHA256-path-digits}_{local}`. The map is suitable for the
 sidecar's CSS Modules table. Plain CSS has no map. Declaration-list at-rules
 retain their values. An independent token check rejects scoping that changes
-anything beyond local names and the module scope/composition syntax. The
-renamer, the module check, and the token check share one statement grammar,
-and the section reader classifies each statement once for all three, as
-`lightningcss` reads the block that holds it. In the stylesheet and in its
-conditional, layer, scope, and starting-style blocks, every statement is a
-rule or an at-rule. In a style rule, in an `@-moz-document` block, and in
-those grouping blocks nested in them, a custom property runs through its `{}`
-blocks to the next `;` and keeps its value as authored. There, a statement
-without a block is a declaration when it starts with an identifier and a
-colon, and otherwise a rule or an at-rule, also while it is still open at the
-end of input. An at-rule under a keyframes name that `lightningcss` does not
-know stays as authored text there. In any other block, such as `@font-face`,
-a keyframe, or an unknown at-rule, where `lightningcss` keeps, drops, or
-rejects text, a statement without a block is a declaration or text that stays
-as authored, except that `@value` fails. Keyframes and `@document` blocks read
-their statements as rules. Declaration-only at-rules such as `@font-face` end a
-non-custom statement at its first `{}` block, as postcss does. A nested
-at-rule keeps its prelude as authored, except the keyframes name and an
-`@scope` selector.
+anything beyond local names and the module scope/composition syntax.
+
+The renamer, the module check, and the token check share one statement
+grammar. The section reader classifies each statement once for all three, as
+`lightningcss` reads the block that holds it. The grammar of a block depends
+on its statement and on the block around it:
+
+- The stylesheet is a rule list. The block of a conditional, layer, scope, or
+  starting-style rule in a rule list is a rule list too. Every statement in a
+  rule list is a rule or an at-rule.
+- The block of a style rule or an `@-moz-document` rule in a rule list or in
+  a style block is a style block. The block of a conditional, layer, scope,
+  or starting-style rule in a style block is a style block too. There, a
+  custom property runs through its `{}` blocks to the next `;` and keeps its
+  value as authored. A statement without a block is a declaration when it
+  starts with an identifier and a colon. Any other statement is a rule or an
+  at-rule, also while it is still open at the end of input. An at-rule under
+  a keyframes name that `lightningcss` does not know stays as authored text.
+- The block of a keyframes or `@document` rule in a rule list, and the block
+  of a grouping rule in one, reads its statements as rules.
+- Every other block is a declarations block, for example `@font-face`, a
+  keyframe, an unknown at-rule, or a rule's block in a keyframes or
+  `@document` block. A rule that starts with an HTML comment token also opens
+  one, because cssparser skips that token in the stylesheet. `lightningcss`
+  keeps, drops, or rejects the text of a declarations block. A statement
+  without a block there is a declaration or text that stays as authored,
+  except that `@value` fails.
+
+Declaration-only at-rules such as `@font-face` end a non-custom statement at
+its first `{}` block, as postcss does. A nested at-rule keeps its prelude as
+authored, except the keyframes name and an `@scope` selector.
 
 `rule_collection::collect` returns a complete rule list or a whole-sheet parse
 failure. `rules::diff` cancels equal occurrences before pairing declaration
