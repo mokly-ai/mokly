@@ -2268,11 +2268,16 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
         No complete static-delivery, daily Rust audit, or native job sample is
         available. The hub owns hosted measurements after integration.
         Evidence and exact trees: `.context/ci-gates-hub-fixes/timings.md`.
-  - [ ] Review RUSTSEC-2026-0235 by 2027-01-31 or the next `lightningcss`
-        update, whichever comes first. CI gates hub review finding 9A tracks
-        the exception for `lightningcss` 1.0.0-alpha.72 with `bundler` through
-        `parcel_sourcemap` 2.1.1 to `rkyv` 0.7.46. Recheck the source-map
-        exposure and the available fixes before retaining the exception.
+  - [x] User decision 79 (2026-10-20): apply option B for CI gates hub review
+        finding 9. Enforce the RUSTSEC-2026-0235 review conditions in the shared
+        Rust audit command. Fail after 2027-01-31 UTC, when locked `lightningcss`
+        changes from 1.0.0-alpha.72, or when another advisory is ignored.
+        Replace the open manual review task with tests for the date boundary,
+        dependency versions, effective ignore settings, and command failures.
+        The alternative was reminder-only tracking. Keep every other advisory
+        failing and retain informational warnings. Evidence:
+        `.context/ci-release-checks/decision79-green.log` and
+        `.context/ci-release-checks/decision79-smoke.log`.
   - [x] User decision 77 (2026-10-20): apply option B for CI gates hub review
         findings 2 and 3. Reject release PRs that keep a changed viewer's version
         or release the viewer without the CLI. Compare reused viewer source
@@ -2296,9 +2301,6 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
   - Follow-up: require rerun-safe fixed-name artifact uploads. Effort Small.
     Covers CI gates hub review finding 5C. Previous examples: `d53d5a47` and
     the design evidence upload. The hub owns the user decision.
-  - Follow-up: enforce the Rust exception's date, locked version, and sole ID.
-    Effort Medium. Covers CI gates hub review finding 9B. Previous example:
-    the npm exception expiry and dependency-path checks. The hub owns the user decision.
   - [x] Fix CI-gates review finding 1 with option B: validate delivery reports
         in the parent process. A suppressed reporter failure cannot pass a
         skipped or incomplete run. Keep the real Playwright regression.

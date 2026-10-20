@@ -21,7 +21,7 @@
     "build": "cargo xtask build-native && npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
-    "dependencies:check:rust": "cargo install cargo-audit --version 0.22.2 --locked && cargo audit --file Cargo.lock",
+    "dependencies:check:rust": "node scripts/verification/audit-rust.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
