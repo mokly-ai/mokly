@@ -2497,6 +2497,17 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
 
 CLI defaults fix1 merge decisions: `.context/defaults-cli-fix1/final-merge-decisions.md`.
 
+- [x] CI round 7, item 1 (2026-10-20): refresh the shared browser cost table
+      from all four successful hosted reports of run `39496386627` at
+      `410bf844`. Use measured per-spec mean test costs from the hosted
+      2-vCPU runners. Keep four whole-file shards, dynamic discovery, every
+      test, and the 1.25 count cap. Current assignments have 492, 556, 683,
+      and 518 tests under the 703-test cap. Replay against the same-tree
+      Testbox reports supports one shared table with command and job margin.
+      No environment selector or second table is needed on this evidence.
+      Actual hosted confirmation belongs to the hub.
+      Evidence: `.context/ci-shard-hosted/hosted/`, `replay.json`, and `timings.md`.
+
 - [x] CI round 6, item 1 (2026-10-20): report the actual number of
       successfully probed Testboxes. The mocked regression checks all seven
       probes, the message before suite execution, and no success message after

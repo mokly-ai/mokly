@@ -46,18 +46,18 @@ If no complete nonempty assignment fits, every spec still executes and the
 aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. They combine per-test observations
-from hosted run `39455750846` at `b1f3c86f` and remote runs
-`20261020T191118Z-972099` at `300c4dae` and `20261020T194406Z-997895` at
-`ec47233e`. All three browser report sets passed. The first remote complete
-gate failed its repository audit on a new advisory. The second gate passed.
+inputs in estimated milliseconds per test. They use the four successful browser
+reports from hosted run `39496386627` at `410bf844`. The complete workflow
+failed in its native jobs. The reports contain all 2,249 browser tests in
+267 whole specs on the hosted 2-vCPU runners.
 
-For each sample and `specFile`, sum `observedTests.durationMs` and divide by
-its observed test count. Average the available per-test sample costs for each
-file and round to three decimal places. A file absent from an older sample
-uses the available samples. Refresh from complete, successful browser report
-sets and retain the source reports and calculations under `.context/`.
-Report fixture and whole-job durations separately to check the actual balance.
+For each `specFile`, sum `observedTests.durationMs`, divide by its observed
+test count, and round to three decimal places. Use a complete successful
+hosted browser report set when refreshing these costs. Retain the source
+reports and calculations under `.context/`. Replay the same proposed file
+assignment against Testbox observations to check its command and job margin.
+The two environments use this one table. Report fixture and whole-job
+durations separately; replay estimates do not establish actual job balance.
 
 The scheduler multiplies each weight by the current discovered test count.
 New specs use the median known per-test weight. Removed specs cannot enter
