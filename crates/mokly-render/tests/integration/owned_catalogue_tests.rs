@@ -155,3 +155,79 @@ fn unused_registry_rules_get_one_excluded_document_record() {
         }
     }
 }
+
+#[test]
+fn forwarded_slots_keep_the_exact_supplier_through_a_repeated_component() {
+    let base = consumer("'black'");
+    let head = consumer("'black'");
+    for (consumer, color) in [(&base, "red"), (&head, "blue")] {
+        write(
+            consumer,
+            "styles.tsx",
+            &format!(
+                "import {{createGlobalStyle}} from 'styled-components'; export const Styles=createGlobalStyle`.slot{{color:{color}}}`;"
+            ),
+        );
+        write(consumer, "parent.mockup.tsx", "import {defineComponent} from '@mokly/mokly';
+            import {child} from './child.mockup'; import {Styles} from './styles';
+            export const parent=defineComponent({title:'Parent',description:'',relatedDocs:[],element:'ui-parent',
+            propSchema:{type:'object',additionalProperties:false,required:['outer'],properties:{outer:{type:'boolean'}}},
+            props:{outer:false},slots:['children'],render:props=>props.outer ?
+            <><Styles/><child.Component><span className='slot'>Supplier</span></child.Component></> :
+            <section>{props.children ?? <p>Empty</p>}</section>});");
+        write(consumer, "child.mockup.tsx", &format!("import {{defineComponent}} from '@mokly/mokly';
+            import {{parent}} from './parent.mockup'; import {{Styles}} from './styles';
+            export const child=defineComponent({{title:'Child',description:'',relatedDocs:[],element:'ui-child',
+            {SCHEMA}slots:['children'],render:props=><><Styles/><p className='slot'>Child own</p>
+            <parent.Component outer={{false}}>{{props.children}}</parent.Component></>}});"));
+        write(
+            consumer,
+            "home.screen.html",
+            "---\ntitle: Home\n---\n<ui-parent outer=\"true\"></ui-parent>",
+        );
+        write(consumer, "whole.mockup.tsx", "import {defineScreen} from '@mokly/mokly';
+            import {parent} from './parent.mockup';
+            export const whole=defineScreen({title:'Whole',description:'',relatedDocs:[],render:()=> <parent.Component outer={true}/>});");
+    }
+    let result = compare(&base, &head);
+    assert_eq!(
+        result.snapshot.changed_entries,
+        ["child", "parent", "whole"]
+    );
+    let entry = |path: &str| {
+        result
+            .entries
+            .iter()
+            .find(|entry| entry.path == path)
+            .unwrap()
+    };
+    for view in &entry("home").documents {
+        assert_eq!(view.state, ReviewState::Unchanged);
+        let owners: Vec<_> = view
+            .evidence
+            .rules
+            .iter()
+            .map(|rule| rule.owner.clone())
+            .collect();
+        assert_eq!(
+            owners,
+            [
+                EvidenceOwner::Component {
+                    path: "child".into()
+                },
+                EvidenceOwner::Component {
+                    path: "parent".into()
+                }
+            ]
+        );
+    }
+    for view in &entry("whole").documents {
+        assert_eq!(view.state, ReviewState::Changed);
+        assert!(
+            view.evidence
+                .rules
+                .iter()
+                .any(|rule| rule.owner == EvidenceOwner::Entry)
+        );
+    }
+}

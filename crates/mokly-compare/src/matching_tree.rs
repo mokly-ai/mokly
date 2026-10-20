@@ -52,7 +52,14 @@ impl Context<'_> {
         owner: &EvidenceOwner,
     ) {
         let mut regions = regions.to_vec();
-        let mut inputs = regions.clone();
+        let mut inputs: Vec<_> = regions
+            .iter()
+            .cloned()
+            .map(|region| InputRegion {
+                region,
+                instance_key: None,
+            })
+            .collect();
         let mut owner = owner.clone();
         let mut pending: Vec<_> = nodes
             .iter()
@@ -85,7 +92,13 @@ impl Context<'_> {
                                 root: matches!(region.kind, RegionKind::Root { .. }),
                             };
                             regions.push(containment.clone());
-                            inputs.push(containment);
+                            inputs.push(InputRegion {
+                                region: containment,
+                                instance_key: match &region.kind {
+                                    RegionKind::Instance { key, .. } => Some(key.clone()),
+                                    _ => None,
+                                },
+                            });
                             EvidenceOwner::Component { path }
                         }
                         RegionKind::Slot {
@@ -110,12 +123,14 @@ impl Context<'_> {
                     {
                         let mut supplied = inputs.clone();
                         if matches!(supplier, ComponentInputOwner::Entry) {
-                            supplied.retain(|region| region.root);
-                        } else if let EvidenceOwner::Component { path } = &next_owner {
+                            supplied.retain(|input| input.region.root);
+                        } else if let ComponentInputOwner::Instance { instance_key } = supplier {
                             supplied.truncate(
                                 supplied
                                     .iter()
-                                    .rposition(|region| &region.path == path)
+                                    .rposition(|input| {
+                                        input.instance_key.as_ref() == Some(instance_key)
+                                    })
                                     .map_or(0, |index| index + 1),
                             );
                         } else {
@@ -141,7 +156,7 @@ impl Context<'_> {
                         children: Vec::new(),
                         text: false,
                         regions: regions.to_vec(),
-                        input_regions: inputs.clone(),
+                        input_regions: inputs.iter().map(|input| input.region.clone()).collect(),
                         owner: owner.clone(),
                     });
                     if let Some(parent) = parent {
@@ -175,7 +190,14 @@ enum Step<'a> {
 
 enum InputRestore {
     Truncate(usize),
-    Replace(Vec<Containment>),
+    Replace(Vec<InputRegion>),
+}
+
+/// A component path can repeat; a slot always selects its exact supplier instance.
+#[derive(Clone)]
+struct InputRegion {
+    region: Containment,
+    instance_key: Option<String>,
 }
 
 #[cfg(test)]

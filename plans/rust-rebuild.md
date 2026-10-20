@@ -2314,6 +2314,12 @@ F2 duplicate-fix reconciliation: `.context/f2-reconcile/merge-decisions.md`.
     user decision 74 C in `rebuild/defaults-engine-deps`.
   - [x] Defaults-engine hub review 1, finding 5: apply user decision 75 C
         through one reducer for owned, ownerless head, and linked CSS.
+  - [x] Defaults-engine round 2 review, finding 1: retain exact supplier
+        instance keys with input ancestry. A repeated component path cannot
+        select the receiving copy instead of the supplying instance. This
+        implements decision 73 without changing its contract. Evidence:
+        `.context/defaults-engine-round2/supplier-red.log` and
+        `.context/defaults-engine-round2/supplier-integration-green.log`.
   - Defaults-engine round 1 smoke: an HTML component's own `plaintext` page
     loses its root range and fails static detail validation. Severity Medium,
     effort Medium. Recommended: preserve own-page root ownership after repair;
